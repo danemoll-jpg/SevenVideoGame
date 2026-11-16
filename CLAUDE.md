@@ -27,7 +27,7 @@ apply to every asset and scene:
 
 ## Folder layout
 - `Art/Source/` — raw generated models (e.g. `7_normal_v2.glb`). Never edit in place; cleanup writes to `Art/Export/`.
-- `Art/Reference/` — approved concept/reference images.
+- `Art/Reference/` — approved concept/reference images. **`Art/Reference/README.md` indexes every image and what to use it for** — check it before designing any character, effect or world.
 - `Art/Export/` — Blender outputs ready for Mixamo/Unity.
 - `Art/Mixamo/7/` and `Art/Mixamo/YBot/` — Dan's Mixamo downloads (see TODO for exact names).
 - `Tools/Blender/` — Blender scripts. `Tools/Model/` — non-Blender model scripts.

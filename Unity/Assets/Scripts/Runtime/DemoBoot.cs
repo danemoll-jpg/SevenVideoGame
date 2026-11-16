@@ -8,12 +8,16 @@ namespace Seven
     ///   -mute            AudioListener.volume = 0 before any sound can play (every automated run uses it).
     ///   -room            start in the Round 1 training room (FightDemo_Room) instead of the outdoor world.
     ///   -capture <dir>   scripted check run: plays a fixed sequence, writes screenshots + capture_log.txt, quits.
+    ///                    Never forces fullscreen.
+    ///   -screen-* / -window-mode / -popupwindow   window set on the command line: no forced fullscreen.
+    /// Normal launch (none of the above): borderless fullscreen at native resolution.
     /// </summary>
     public static class DemoBoot
     {
         public static bool Muted { get; private set; }
         public static string CaptureDir { get; private set; }
         public static bool Room { get; private set; }
+        public static bool WindowFromCommandLine { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -24,6 +28,7 @@ namespace Seven
                 if (args[i] == "-mute") Muted = true;
                 if (args[i] == "-room") Room = true;
                 if (args[i] == "-capture" && i + 1 < args.Length) CaptureDir = args[i + 1];
+                if (args[i].StartsWith("-screen-") || args[i] == "-window-mode" || args[i] == "-popupwindow") WindowFromCommandLine = true;
             }
             if (Muted)
             {
@@ -31,7 +36,9 @@ namespace Seven
                 AudioListener.pause = true;
             }
             if (CaptureDir != null) Application.runInBackground = true;
-            Debug.Log($"[Seven] boot: muted={Muted} listenerVolume={AudioListener.volume} capture={CaptureDir ?? "-"}");
+            bool forceFullscreen = CaptureDir == null && !WindowFromCommandLine && !Application.isEditor;
+            FullscreenToggle.Install(forceFullscreen);
+            Debug.Log($"[Seven] boot: muted={Muted} listenerVolume={AudioListener.volume} capture={CaptureDir ?? "-"} forceFullscreen={forceFullscreen} mode={Screen.fullScreenMode}");
         }
     }
 }

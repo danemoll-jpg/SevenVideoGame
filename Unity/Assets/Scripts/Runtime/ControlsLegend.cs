@@ -16,7 +16,7 @@ namespace Seven
         public bool ShowXbox = true;
         [System.NonSerialized] public bool AutoSwitch = true;   // check runs force a mode
 
-        enum G { Face, Bumper, Trigger, DPadUp, Stick, StickClick, Menu, Key, WideKey, Mouse }
+        enum G { Face, Bumper, Trigger, DPadUp, Stick, StickClick, Menu, View, Key, WideKey, Mouse }
         struct Row { public (G g, string t)[] Glyphs; public string Label; public Row(string label, params (G, string)[] glyphs) { Label = label; Glyphs = glyphs; } }
 
         static readonly Row[] XboxRows =
@@ -34,6 +34,7 @@ namespace Seven
             new Row("orbit camera", (G.Stick, "R")),
             new Row("re-center camera", (G.StickClick, "R3")),
             new Row("reset", (G.Menu, "")),
+            new Row("fullscreen on/off", (G.View, "")),
         };
 
         static readonly Row[] KeyRows =
@@ -51,6 +52,7 @@ namespace Seven
             new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
             new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
             new Row("reset", (G.WideKey, "Esc")),
+            new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
 
         GameObject _xboxPanel, _keyPanel;
@@ -147,7 +149,7 @@ namespace Seven
 
         static float GlyphWidth(G g) => g switch
         {
-            G.Bumper => 34f, G.Trigger => 30f, G.WideKey => 50f, G.Menu => 30f, _ => 22f,
+            G.Bumper => 34f, G.Trigger => 30f, G.WideKey => 50f, G.Menu => 30f, G.View => 30f, _ => 22f,
         };
 
         Text AddText(Transform parent, string s, Vector2 pos, Vector2 size, int fontSize, TextAnchor anchor)
@@ -270,6 +272,15 @@ namespace Seven
                     float bars = 0f;
                     for (int i = -1; i <= 1; i++) bars = Mathf.Max(bars, Fill(RoundRect(x, y, cx, cy + i * h * 0.17f, w * 0.2f, line * 0.45f, 0.5f)));
                     return Mathf.Max(frame, bars);
+                }
+                case G.View:
+                {
+                    // Xbox View button: two overlapping windows inside the button frame.
+                    float frame = Stroke(RoundRect(x, y, cx, cy, cx - m, cy - m - h * 0.08f, h * 0.2f), line);
+                    float bw = w * 0.16f, bh = h * 0.14f, off = w * 0.06f;
+                    float back = Stroke(RoundRect(x, y, cx + off, cy + off, bw, bh, 1f), line * 0.7f);
+                    float front = Fill(RoundRect(x, y, cx - off, cy - off, bw, bh, 1f));
+                    return Mathf.Max(frame, Mathf.Max(back, front));
                 }
                 case G.Key:
                 case G.WideKey:

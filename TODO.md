@@ -17,6 +17,29 @@
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
 ## Current Objective — Round 2: orbit camera, telekinesis showcase, foggy outdoor world
+
+### Quick fix QF1 (Dan, 2026-11-16) — demo opens fullscreen
+1. The demo starts **fullscreen (borderless, the monitor's native resolution)** on a normal launch, even if an
+   earlier test run left Unity's saved setting at windowed (force it at startup when no `-screen-*` flag is given).
+   Player Settings default: Fullscreen Window, native resolution.
+2. **F11** and the **Xbox View button** toggle fullscreen ↔ windowed (Alt+Enter keeps working). Add it to both legends.
+3. Check runs stay windowed/minimized: they pass `-screen-fullscreen 0` explicitly and `-capture` must never force
+   fullscreen. Never steal focus while testing.
+4. Also commit Dan's new reference images (`Art/Reference/kyle_*.jpg`, `Art/Reference/README.md`) and the CLAUDE.md
+   pointer to the index. Rebuild the exe, update this section with per-item status, commit and push.
+**QF1 status 2026-11-16 (exe rebuilt, check run muted/minimized):**
+- **1. Fullscreen on normal launch — done (code + settings; not launched fullscreen here, that would take focus — Dan to
+  confirm).** `FullscreenToggle` (installed by `DemoBoot` before the first scene) forces borderless `FullScreenWindow`
+  at the display's native resolution whenever there is no `-capture` and no `-screen-*` / `-window-mode` /
+  `-popupwindow` flag, overriding any saved windowed setting. Player Settings: Fullscreen Window, native resolution.
+- **2. F11 / Xbox View toggle — done.** F11 or View (`selectButton`) switches fullscreen ↔ windowed 1600×900 (80% of
+  the screen if smaller); Alt+Enter left on (`allowFullscreenSwitch`). Row "fullscreen on/off" added to both legends
+  (new View-button glyph / F11 key): `Docs/Previews/qf1/legends_fullscreen_row.png`. Toggle not pressed here (focus rule).
+- **3. Check runs stay windowed — done, verified.** Check run with `-screen-fullscreen 0 -screen-width 1280
+  -screen-height 720`: Player.log `forceFullscreen=False mode=Windowed`, captures 1280×720, started minimized at Below
+  Normal, no focus taken; audio listenerVolume 0, output RMS 0.000000; monochrome max |R−G|,|G−B| = 0. The toggle
+  ignores input during `-capture` runs.
+- **4. Reference images + index committed — done.**
 Goal: the same fight demo, but in an outdoor world with the fog and glow of Kyle's concept art
 (`Art/Reference/kyle_world_mood.jpg`), a camera the player orbits with the right stick, and a telekinesis move that
 reads clearly as a power.

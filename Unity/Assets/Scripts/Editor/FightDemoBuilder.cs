@@ -964,7 +964,9 @@ namespace Seven.EditorTools
             PlayerSettings.productName = "7 The Observer - Fight Demo";
             PlayerSettings.runInBackground = true;
             PlayerSettings.resizableWindow = true;
-            PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;
+            PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;   // QF1: borderless, native resolution
+            PlayerSettings.defaultIsNativeResolution = true;
+            PlayerSettings.allowFullscreenSwitch = true;                        // Alt+Enter
             PlayerSettings.defaultScreenWidth = 1600;
             PlayerSettings.defaultScreenHeight = 900;
         }
