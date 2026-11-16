@@ -78,5 +78,15 @@ shot("side", (6, 0, H * 0.5 + eye), mid, ortho=H * 1.1)
 # Face close-up from slightly to the side and above, so both orbs/pigtails are visible too.
 head = (0, 0, H * 0.90)
 shot("face", (0.35, -0.75, H * 0.93), head, lens=85, res=(1000, 1000))
-# Back-of-head close-up: both hair-tie orbs and pigtail tone vs scalp hair.
+# Back-of-head close-ups with studio light + specular so the metal hair ties read as shiny.
+sh.light = "STUDIO"
+sh.show_specular_highlight = True
+# Workbench darkens fully metallic materials (no environment to reflect); for the preview only, show the metal
+# hair ties as bright polished silver. The exported material itself is unchanged.
+for m in bpy.data.materials:
+    if "hairtie_metal" in m.name:
+        m.diffuse_color = (0.9, 0.9, 0.9, 1)
+        m.metallic = 0.35
+        m.roughness = 0.15
+shot("head_top", (0.0, 0.5, H * 1.12), head, lens=50, res=(1000, 1000))
 shot("head_back", (-0.3, 0.8, H * 0.95), head, lens=85, res=(1000, 1000))

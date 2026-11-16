@@ -23,21 +23,30 @@ a block and a finisher; the bot gets knocked down, gets back up dazed. Nothing d
   tutorial/readme assets removed. Check: `git lfs ls-files` lists the GLB; Unity batch create exited 0.
 - **2. Blender cleanup — done.** `Tools/Blender/cleanup_7.py` → `Art/Export/7_v2_mixamo.fbx` (5.4 MB, texture embedded)
   + `Art/Export/Textures/7_v2_basecolor.jpg` (original 4K JPEG bytes, not re-encoded). **49,999 tris** (body 47,439 +
-  orbs 2,560, orbs left undecimated so they stay round); one object `7_v2`, two material slots `7_body` /
-  `7_hairtie_glow`; 1.700 m tall, origin at feet centre, transforms applied, faces −Y in Blender (Mixamo front).
+  hair ties 3,072, left undecimated so they stay round); one object `7_v2`, two material slots `7_body` /
+  `7_hairtie_metal`; 1.700 m tall, origin at feet centre, transforms applied, faces −Y in Blender (Mixamo front).
   Seam duplicates are welded before decimating: a no-weld test opened hairline cracks across the face.
   Check: re-imported FBX reports 49,999 tris, bbox z 0.000–1.700, both slots, 4096² image.
   LODs (CLAUDE.md pipeline) **deferred** to Stage B: they must come from the rigged mesh, so build them in Unity after Mixamo.
 - **3. Previews — done.** `Tools/Blender/preview_7.py` (Workbench, flat light, grayscale, gray background) →
-  `Docs/Previews/7_v2_{front,back,side,face,head_back}.png`, all looked at. Orbs present and white on both pigtails;
+  `Docs/Previews/7_v2_{front,back,side,face,head_top,head_back}.png`, all looked at. Hair ties present on both pigtails;
   pigtails same tone as scalp hair (a few lighter streaks inside the left pigtail); no decimation holes seen; feet on
   the floor; face and hands read fine. Known: soft light/dark smudges on the chin and on top of the shoulders appear in
   both weld and no-weld builds, so they are most likely in the Tripo texture, not caused by decimation.
 - **4. STOP — done.** Waiting for Dan's Mixamo files. Audio: no game/player run happened in Stage A (Blender + Unity
   batch project creation only), so no audio level to measure; the muted-run proof starts with the first run in Stage B.
 
+- **2b. Hair ties changed to metal cuffs (Dan, 2026-11-16) — done.** Per `Art/Reference/7_ref_hairties_back.jpg` the
+  glowing orbs are replaced by a thick polished-silver cuff around each pigtail base, fitted over the model's original
+  band ties (torus R 0.0165, tube 0.003 stretched ×2.4 into a band, source units; constants at the top of
+  `cleanup_7.py`). Material `7_hairtie_metal` (metallic 1, roughness 0.12, light gray, **no glow**). The old orbs remain
+  as a fallback: 5th script arg `orb`. Check: re-imported FBX has 49,999 tris (body 46,927 + cuffs 3,072), slots
+  `7_body` / `7_hairtie_metal`; `head_top` / `head_back` previews show both cuffs seated on the pigtails. Workbench
+  can't show chrome reflections, so those two close-ups show the cuffs as bright satin silver (preview-only display).
+
 #### For Dan to check (Stage A)
-- `Docs/Previews/7_v2_front.png`, `7_v2_back.png`, `7_v2_side.png`, `7_v2_face.png`, `7_v2_head_back.png`.
+- `Docs/Previews/7_v2_front.png`, `7_v2_back.png`, `7_v2_side.png`, `7_v2_face.png`, `7_v2_head_top.png`,
+  `7_v2_head_back.png` — especially the cuffs vs `Art/Reference/7_ref_hairties_back.jpg` (size/thickness are tweakable).
 - **Standing-rule question:** the Tripo outfit leaves a band of bare upper thigh between the shorts and the over-knee
   boots; `CLAUDE.md` asks for full-coverage outfits. Fix before rigging (regenerate with leggings / longer shorts) or
   accept? Fixing after Mixamo means re-rigging and re-downloading every animation.
@@ -85,7 +94,8 @@ Y Bot → `Art/Mixamo/YBot/`
 
 ### Stage B — Code (after Dan's Mixamo files are in place)
 5. **Import.** Both characters as **Humanoid** rigs; animations retargeted. Materials: 7 body = URP Lit with the
-   base-color texture (grayscale); hair-tie orbs = white emissive (soft white glow via URP Bloom, no color);
+   base-color texture (grayscale); hair-tie cuffs = URP Lit metallic 1 / smoothness ~0.9, light gray, with a
+   reflection probe so they read as chrome (no glow — changed from orbs 2026-11-16);
    Y Bot = neutral light-gray matte. Keep the pre-Mixamo FBX as a fallback asset.
 6. **Arena scene** `Unity/Assets/Scenes/FightDemo.unity`: plain monochrome training room (gray floor, soft fog,
    one key light), fixed 3/4 side camera framing both fighters full-body, gentle follow.
@@ -98,13 +108,13 @@ Y Bot → `Art/Mixamo/YBot/`
      No health bars, no death states.
    - A small on-screen key legend (white text).
 8. **Checks** (all muted, no focus stealing): build a Windows exe; capture off-screen screenshots of idle, a punch
-   connecting, the block, the knockdown and the get-up; confirm the orbs glow white, everything is monochrome, and
+   connecting, the block, the knockdown and the get-up; confirm the cuffs read as shiny metal, everything is monochrome, and
    7's feet stay on the floor. Report audio level = 0.
 9. End of round: update `TODO.md` (per-item status, "For Dan to check") and `CLAUDE.md` (commands, where things
    stand), commit and push.
 
 ### For Dan to check (after Stage B)
-- Play `FightDemo` and try every key. Does the fighting read clearly? Do the orbs and pigtails look right in motion?
+- Play `FightDemo` and try every key. Does the fighting read clearly? Do the hair-tie cuffs and pigtails look right in motion?
 
 ## Next Steps (Do Not Start Yet)
 - **Launcher / auto-update** (copy from `C:\Users\danmo\chastain_rush`) and releases repo — deferred until there is
@@ -115,4 +125,4 @@ Y Bot → `Art/Mixamo/YBot/`
 ## Technical Notes / Blockers
 - `7_normal_v2.glb` is ~59 MB; it must go through Git LFS.
 - Mixamo strips materials; reassign materials in Unity (Stage B item 5).
-- Emission strength from glTF (`KHR_materials_emissive_strength`) won't survive FBX — set glow in Unity.
+- FBX does not carry PBR metallic/smoothness reliably — set the cuff material up in Unity (Stage B item 5).

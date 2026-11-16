@@ -1,14 +1,17 @@
 """Clean up 7's generated model for Mixamo / Unity.
 
 Run headless from the repo root:
-  F:\\blender\\blender.exe --background --factory-startup --python Tools/Blender/cleanup_7.py -- [repo_root] [target_tris] [weld 1|0] [out_fbx]
+  F:\\blender\\blender.exe --background --factory-startup --python Tools/Blender/cleanup_7.py -- [repo_root] [target_tris] [weld 1|0] [out_fbx] [ring|orb]
 
 Input : Art/Source/7_normal_v2.glb   (never modified)
 Output: Art/Export/7_v2_mixamo.fbx   (FBX, Path Mode Copy + embedded texture)
         Art/Export/Textures/7_v2_basecolor.jpg
 
-Steps: merge seam duplicates -> decimate the body to ~target (orbs kept round) -> join orbs into the body
-(two material slots: 7_body / 7_hairtie_glow) -> scale to 1.70 m -> apply transforms -> origin at the feet
+Hair ties: "ring" (default, per Art/Reference/7_ref_hairties_back.jpg) builds a glossy metal cuff over each of the
+model's original band ties; "orb" keeps the old glowing spheres from the source GLB (fallback).
+
+Steps: merge seam duplicates -> decimate the body to ~target (hair ties kept undecimated) -> join the ties into the
+body (two material slots: 7_body / 7_hairtie_metal or 7_hairtie_glow) -> scale to 1.70 m -> apply transforms -> origin at the feet
 (floor centre) -> facing -Y in Blender (Blender "front"), which is what Mixamo expects.
 """
 import bpy, bmesh, os, sys
@@ -17,7 +20,16 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 ROOT = os.path.abspath(argv[0]) if len(argv) > 0 else os.getcwd()
 TARGET_TRIS = int(argv[1]) if len(argv) > 1 else 50000
 WELD = (argv[2] != "0") if len(argv) > 2 else True  # weld seam duplicates before decimating
+HAIRTIE = argv[4] if len(argv) > 4 else "ring"
 TARGET_HEIGHT = 1.70
+
+# Ring cuffs, in source units (Blender coords of the GLB: 0.979 m tall, faces -Y). Centre/axis fitted to the
+# original band ties under the orbs; per side x is mirrored.
+RING_CENTER = (0.044, 0.040, 0.957)
+RING_AXIS = (1.0, 0.25, 0.30)   # roughly along the pigtail where it leaves the tie (mirrored in x)
+RING_MAJOR = 0.0165              # centre radius of the cuff
+RING_MINOR = 0.0030              # tube radius (thickness ~6 mm in source units)
+RING_WIDTH = 2.4                 # stretch along the axis -> a wide band, not a thin wire
 
 SRC = os.path.join(ROOT, "Art", "Source", "7_normal_v2.glb")
 OUT_DIR = os.path.join(ROOT, "Art", "Export")
@@ -39,21 +51,53 @@ bpy.ops.wm.read_factory_settings(use_empty=True)
 bpy.ops.import_scene.gltf(filepath=SRC)
 body = bpy.data.objects["7_body"]
 orbs = bpy.data.objects["7_hairtie_orbs"]
-log("source tris body", tris(body), "orbs", tris(orbs))
+log("source tris body", tris(body), "orbs", tris(orbs), "hairtie mode", HAIRTIE)
 
 # --- materials: friendly names, keep slots separate -------------------------------------------
 body_mat = body.data.materials[0]
 body_mat.name = "7_body"
-glow_mat = orbs.data.materials[0]
-glow_mat.name = "7_hairtie_glow"
-# FBX keeps diffuse + emissive colour but not glTF emissive strength; make both white so the orbs
-# read as white everywhere (real glow is set up in Unity).
-bsdf = glow_mat.node_tree.nodes.get("Principled BSDF")
-if bsdf:
-    bsdf.inputs["Base Color"].default_value = (1, 1, 1, 1)
-    bsdf.inputs["Emission"].default_value = (1, 1, 1, 1)
-    if "Emission Strength" in bsdf.inputs:
-        bsdf.inputs["Emission Strength"].default_value = 1.0
+if HAIRTIE == "orb":
+    tie_mat = orbs.data.materials[0]
+    tie_mat.name = "7_hairtie_glow"
+    # FBX keeps diffuse + emissive colour but not glTF emissive strength; make both white so the orbs
+    # read as white everywhere (real glow is set up in Unity).
+    bsdf = tie_mat.node_tree.nodes.get("Principled BSDF")
+    if bsdf:
+        bsdf.inputs["Base Color"].default_value = (1, 1, 1, 1)
+        bsdf.inputs["Emission"].default_value = (1, 1, 1, 1)
+        if "Emission Strength" in bsdf.inputs:
+            bsdf.inputs["Emission Strength"].default_value = 1.0
+    ties = orbs
+else:
+    from mathutils import Matrix, Vector
+    bpy.data.objects.remove(orbs)
+    tie_mat = bpy.data.materials.new("7_hairtie_metal")
+    tie_mat.use_nodes = True
+    bsdf = tie_mat.node_tree.nodes["Principled BSDF"]
+    bsdf.inputs["Base Color"].default_value = (0.8, 0.8, 0.8, 1)   # polished silver/chrome, no glow
+    bsdf.inputs["Metallic"].default_value = 1.0
+    bsdf.inputs["Roughness"].default_value = 0.12
+    tie_mat.diffuse_color = (0.8, 0.8, 0.8, 1)
+    rings = []
+    for side in (-1, 1):
+        bpy.ops.mesh.primitive_torus_add(major_radius=RING_MAJOR, minor_radius=RING_MINOR,
+                                         major_segments=48, minor_segments=16)
+        r = bpy.context.active_object
+        axis = Vector((side * RING_AXIS[0], RING_AXIS[1], RING_AXIS[2])).normalized()
+        m = (Matrix.Translation((side * RING_CENTER[0], RING_CENTER[1], RING_CENTER[2]))
+             @ axis.to_track_quat("Z", "Y").to_matrix().to_4x4()
+             @ Matrix.Diagonal((1, 1, RING_WIDTH, 1)))
+        r.data.transform(m)
+        r.data.materials.append(tie_mat)
+        rings.append(r)
+    bpy.ops.object.select_all(action="DESELECT")
+    for r in rings:
+        r.select_set(True)
+    bpy.context.view_layer.objects.active = rings[0]
+    bpy.ops.object.join()
+    ties = bpy.context.view_layer.objects.active
+    ties.name = "7_hairtie_rings"
+log("hair ties", ties.name, tris(ties), "tris, material", tie_mat.name)
 
 # --- texture: save the base-colour image next to the export -----------------------------------
 img = next(n.image for n in body_mat.node_tree.nodes if n.type == "TEX_IMAGE" and n.image)
@@ -76,8 +120,8 @@ if WELD:
     bm.to_mesh(body.data)
     bm.free()
 
-# --- decimate the body only (orbs stay round) ---------------------------------------------------
-body_target = TARGET_TRIS - tris(orbs)
+# --- decimate the body only (hair ties stay round) ---------------------------------------------
+body_target = TARGET_TRIS - tris(ties)
 ratio = body_target / tris(body)
 bpy.context.view_layer.objects.active = body
 mod = body.modifiers.new("decimate", "DECIMATE")
@@ -89,9 +133,9 @@ body.select_set(True)
 bpy.ops.object.modifier_apply(modifier=mod.name)
 log("decimated body ratio %.5f -> %d tris" % (ratio, tris(body)))
 
-# --- join orbs into the body (two material slots survive) ---------------------------------------
+# --- join the hair ties into the body (two material slots survive) ------------------------------
 bpy.ops.object.select_all(action="DESELECT")
-orbs.select_set(True)
+ties.select_set(True)
 body.select_set(True)
 bpy.context.view_layer.objects.active = body
 bpy.ops.object.join()
@@ -120,10 +164,10 @@ mn = [min(w[i] for w in ws) for i in range(3)]
 mx = [max(w[i] for w in ws) for i in range(3)]
 log("final bbox min", [round(x, 3) for x in mn], "max", [round(x, 3) for x in mx], "scale", round(s, 4))
 
-# Facing check: the hair-tie orbs sit at the back of the head; they must be on +Y (character faces -Y).
-glow_idx = [i for i, sl in enumerate(ob.material_slots) if sl.material == glow_mat][0]
-oy = [ws[vi].y for p in me.polygons if p.material_index == glow_idx for vi in p.vertices]
-log("orbs mean y %.3f (positive = behind = character faces -Y)" % (sum(oy) / len(oy)))
+# Facing check: the hair ties sit at the back of the head; they must be on +Y (character faces -Y).
+tie_idx = [i for i, sl in enumerate(ob.material_slots) if sl.material == tie_mat][0]
+oy = [ws[vi].y for p in me.polygons if p.material_index == tie_idx for vi in p.vertices]
+log("hair ties mean y %.3f (positive = behind = character faces -Y)" % (sum(oy) / len(oy)))
 log("FINAL TRIS", tris(ob))
 
 # --- export ---------------------------------------------------------------------------------------
