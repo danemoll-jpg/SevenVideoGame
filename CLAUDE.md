@@ -10,6 +10,10 @@ apply to every asset and scene:
 - **Strictly monochrome.** Black, white and grays only. No colored glows, lights, UI or effects. Glow = white emission.
 - **Non-sexual presentation.** Full-coverage outfits, neutral poses, no camera framing or art emphasis on her body.
 - **7 is clearly an adult** in every model and outfit.
+- **World look (Kyle, via Dan, 2026-11-16): every world uses the fog/glow atmosphere** of
+  `Art/Reference/kyle_world_mood.jpg` — dark foreground silhouettes against a bright, glowing, misty distance;
+  strong ground fog; soft light sources inside the fog; huge structures fading into the haze. Start every scene from
+  the reusable `Atmosphere` setup (Round 2) instead of building fog from scratch.
 
 ## Tech Stack
 - Unity **6000.6.1f1**, **URP**, **Input System only** (same as Woodstock Rush / Chastain Rush, so systems can be ported).
@@ -67,9 +71,6 @@ apply to every asset and scene:
   Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
 
 ## Where things stand
-**Round 1 complete (2026-11-16): playable fight demo**, waiting for Dan to play it. Exe:
-`Unity\Builds\FightDemo\SevenFightDemo.exe` (not in git; rebuild with the command above). 7 (Mixamo-rigged
-`Art/Export/7_v2_mixamo.fbx`: 1.70 m, polished metal cuff hair ties, flat glowing forehead dot) spars with Y Bot in
-a monochrome training room: punches, kicks, block, dodge, telekinesis push, finisher → knockdown → get up → dazed →
-recovers. Check shots and log in `Docs/Previews/round1/`. Status and known limitations in `TODO.md`. Dan approved the
-model for now; the outfit's bare-thigh gap may be revisited in a later model pass.
+**Round 1 complete (2026-11-16)** — playable fight demo, exe at `Unity\Builds\FightDemo\SevenFightDemo.exe`
+(details in `TODO-ARCHIVE.md`). **Current objective: Round 2** — right-stick orbit camera, telekinesis lift showcase,
+outdoor fog/glow world matching `Art/Reference/kyle_world_mood.jpg`, reusable `Atmosphere` setup. See `TODO.md`.
