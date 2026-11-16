@@ -14,10 +14,24 @@ namespace Seven
         public float PunchSpeed = 0.6f;          // slow, telegraphed
         public Vector2 PunchEvery = new Vector2(3f, 4.5f);
 
-        public enum Mode { Idle, Hit, Punch, Stagger, Down, GetUp, Dazed }
+        public enum Mode { Idle, Hit, Punch, Stagger, Down, GetUp, Dazed, Lifted }
         public Mode Current { get; private set; } = Mode.Idle;
 
         public bool IsDown => Current == Mode.Down || Current == Mode.GetUp;
+        public bool IsLifted => Current == Mode.Lifted;
+        public bool CanLift => !IsDown && Current != Mode.Lifted;
+
+        [Header("Telekinesis lift")]
+        public float LiftHeight = 0.8f;           // metres above the ground while held
+        public float LiftRiseTime = 0.45f;
+        /// <summary>Current height above the ground (eases up while lifted, eases down when set down).</summary>
+        public float Height { get; private set; }
+        public float MaxHeightThisLift { get; private set; }
+        /// <summary>Raised when the bot touches down after being thrown.</summary>
+        public event Action Landed;
+        float _heightVel, _liftTime;
+        bool _thrown;
+        protected override float ExtraHeight => Height;
 
         /// <summary>Raised when the bot's punch resolves: true = 7 blocked/dodged it.</summary>
         public event Action<bool> PunchResolved;
@@ -45,7 +59,8 @@ namespace Seven
         {
             base.Update();
             if (Seven == null) return;
-            if (!IsDown) FaceTowards(Seven.transform.position, Current == Mode.Punch ? 90f : 200f);
+            if (!IsDown) FaceTowards(Seven.transform.position, Current == Mode.Punch ? 90f : Current == Mode.Lifted ? 60f : 200f);
+            UpdateHeight();
 
             switch (Current)
             {
@@ -68,8 +83,10 @@ namespace Seven
                 case Mode.Stagger:
                     if (Tn >= 0.8f) ToIdle();
                     break;
+                case Mode.Lifted:
+                    break;
                 case Mode.Down:
-                    if (Tn >= 1.0f) { Current = Mode.GetUp; Play("get_up", 0.2f); }
+                    if (Tn >= 1.0f && Height < 0.01f) { Current = Mode.GetUp; Play("get_up", 0.2f); }
                     break;
                 case Mode.GetUp:
                     if (Tn >= 0.97f) { Current = Mode.Dazed; Play("dazed", 0.25f); _dazedUntil = Time.time + 2f; }
@@ -78,6 +95,49 @@ namespace Seven
                     if (Time.time >= _dazedUntil) ToIdle();
                     break;
             }
+        }
+
+        void UpdateHeight()
+        {
+            if (Current == Mode.Lifted)
+            {
+                _liftTime += Time.deltaTime;
+                float target = LiftHeight + 0.07f * Mathf.Sin(_liftTime * 2.3f);   // slow hover bob
+                Height = Mathf.SmoothDamp(Height, target, ref _heightVel, LiftRiseTime);
+                MaxHeightThisLift = Mathf.Max(MaxHeightThisLift, Height);
+            }
+            else if (Height > 0f)
+            {
+                // Set down safely: ease to the ground, never drop.
+                Height = Mathf.SmoothDamp(Height, 0f, ref _heightVel, _thrown ? 0.22f : 0.3f, 4f);
+                if (Height < 0.004f)
+                {
+                    Height = 0f; _heightVel = 0f;
+                    if (_thrown) { _thrown = false; Landed?.Invoke(); }
+                }
+            }
+        }
+
+        /// <summary>7 holds the bot with telekinesis: it floats up and hangs there, struggling.</summary>
+        public void BeginLift(SevenFighter by)
+        {
+            if (!CanLift) return;
+            Current = Mode.Lifted;
+            _liftTime = 0f;
+            MaxHeightThisLift = 0f;
+            Play("dazed", 0.3f, 0.75f);        // woozy flailing loop reads as struggling in the air
+        }
+
+        /// <summary>7 lets go: pushed back several metres while being set down, lands, gets up dazed, recovers.</summary>
+        public void ReleaseLift(Vector3 dir, float distance)
+        {
+            if (Current != Mode.Lifted) return;
+            _thrown = true;
+            Current = Mode.Down;
+            dir.y = 0f;
+            transform.rotation = Quaternion.LookRotation(-dir);   // faces 7, falls back away from her
+            Play("knocked_down", 0.15f);
+            Slide(dir, distance, 0.8f);
         }
 
         void ToIdle()

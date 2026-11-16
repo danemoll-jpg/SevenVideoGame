@@ -11,8 +11,6 @@ namespace Seven
     [RequireComponent(typeof(Animator))]
     public abstract class FighterBase : MonoBehaviour
     {
-        public static readonly Vector2 ArenaHalf = new Vector2(8.5f, 5.5f);
-
         protected Animator Anim;
         readonly Dictionary<string, float> _len = new Dictionary<string, float>();
 
@@ -81,12 +79,13 @@ namespace Seven
             transform.position += d;
         }
 
+        /// <summary>Height above the ground (the bot while held by telekinesis).</summary>
+        protected virtual float ExtraHeight => 0f;
+
         protected void ClampToArena()
         {
-            var p = transform.position;
-            p.x = Mathf.Clamp(p.x, -ArenaHalf.x, ArenaHalf.x);
-            p.z = Mathf.Clamp(p.z, -ArenaHalf.y, ArenaHalf.y);
-            p.y = 0f;
+            var p = Ground.ClampToArena(transform.position);
+            p.y = Ground.Height(p.x, p.z) + ExtraHeight;
             transform.position = p;
         }
 

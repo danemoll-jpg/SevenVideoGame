@@ -6,7 +6,7 @@ namespace Seven
     /// <summary>Input System actions for the fight demo (keyboard + gamepad), built in code.</summary>
     public class FightInput : MonoBehaviour
     {
-        public InputAction Move, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset;
+        public InputAction Move, Look, Recenter, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset;
 
         static InputAction Button(string name, params string[] paths)
         {
@@ -23,6 +23,11 @@ namespace Seven
                 .With("Left", "<Keyboard>/a").With("Right", "<Keyboard>/d");
             Move.AddBinding("<Gamepad>/leftStick");
 
+            // Camera orbit: right stick (mouse drag with the right button is read directly in FightCamera).
+            Look = new InputAction("look", InputActionType.Value, expectedControlType: "Vector2");
+            Look.AddBinding("<Gamepad>/rightStick");
+            Recenter = Button("recenter", "<Gamepad>/rightStickPress", "<Mouse>/middleButton", "<Keyboard>/c");
+
             Jab = Button("jab", "<Keyboard>/1", "<Gamepad>/buttonWest");
             Cross = Button("cross", "<Keyboard>/2", "<Gamepad>/buttonNorth");
             Hook = Button("hook", "<Keyboard>/3", "<Gamepad>/rightShoulder");
@@ -37,7 +42,7 @@ namespace Seven
             foreach (var a in All()) a.Enable();
         }
 
-        InputAction[] All() => new[] { Move, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset };
+        InputAction[] All() => new[] { Move, Look, Recenter, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset };
 
         void OnDestroy()
         {

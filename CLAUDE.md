@@ -13,7 +13,9 @@ apply to every asset and scene:
 - **World look (Kyle, via Dan, 2026-11-16): every world uses the fog/glow atmosphere** of
   `Art/Reference/kyle_world_mood.jpg` — dark foreground silhouettes against a bright, glowing, misty distance;
   strong ground fog; soft light sources inside the fog; huge structures fading into the haze. Start every scene from
-  the reusable `Atmosphere` setup (Round 2) instead of building fog from scratch.
+  the reusable `Atmosphere` setup instead of building fog from scratch: `Unity/Assets/Atmosphere/Atmosphere.prefab`
+  (component + volume profile + `SevenHeightFog` full-screen pass + lights + `Glow*` sources). Knobs, recipe and
+  cost in `Docs/ATMOSPHERE.md`.
 
 ## Tech Stack
 - Unity **6000.6.1f1**, **URP**, **Input System only** (same as Woodstock Rush / Chastain Rush, so systems can be ported).
@@ -60,17 +62,27 @@ apply to every asset and scene:
 - Measure Mixamo clips (frames, limb-extension peaks = hit timings): a throwaway Blender script over `Art/Mixamo/*/*.fbx`
   (bone `mixamorig:*Hand/*Foot` distance from Hips per frame); results recorded in `TODO.md` Stage B item 5.
 - **Build everything** (copy Mixamo FBX into Assets, Humanoid import, grayscale texture, materials, animators,
-  `FightDemo` scene, Windows exe at `Unity\Builds\FightDemo\SevenFightDemo.exe`):
+  Atmosphere prefab/profile/fog renderer feature, generated world meshes (`Assets/Art/World/Generated`, git-ignored),
+  scenes `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room), Windows exe at
+  `Unity\Builds\FightDemo\SevenFightDemo.exe`):
   `Unity.exe -batchmode -nographics -quit -projectPath C:\Users\danmo\SevenVideoGame\Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine -logFile <file>`
   (start with `Start-Process -WindowStyle Hidden`, then `.PriorityClass = 'BelowNormal'`; ~5 min; exit code 0 = ok).
-  The scene is generated: change `FightDemoBuilder.cs`, not the scene by hand.
+  The scenes are generated: change `FightDemoBuilder.cs`, not the scenes by hand. If the exe crashes with
+  "level0 is corrupted", check the build log for "script is missing" (every MonoBehaviour must live in a file of the
+  same name), then delete `Unity\Builds\FightDemo` and build again.
 - **Check run** (muted, off-screen, never takes focus): start through `Win32_Process.Create` with
   `Win32_ProcessStartup.ShowWindow = 7` (minimized, not activated) and `PriorityClass = 16384` (Below Normal):
   `SevenFightDemo.exe -mute -capture <dir> -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -logFile <dir>\Player.log`
-  → `<dir>\01_idle.png … 14_head_back.png` + `capture_log.txt` (audio level, feet height, states), quits by itself (~30 s).
+  → `<dir>\01_wide.png … 17_head_front.png` (orbit angles, legends, punch, telekinesis lift start/held/release/landing,
+  knockdown) + `capture_log.txt` (audio level, feet vs. the ground under each foot, camera height, lift height and
+  timing), quits by itself (~50 s). Extra switches: `-quick` (look shots only, ~5 s), `-atmofile <json>` (override
+  Atmosphere knobs without rebuilding), `-room` (start in the Round 1 room).
   Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
+- Play: run the exe normally; Xbox controller or keyboard/mouse (the legend bottom-left switches automatically).
 
 ## Where things stand
-**Round 1 complete (2026-11-16)** — playable fight demo, exe at `Unity\Builds\FightDemo\SevenFightDemo.exe`
-(details in `TODO-ARCHIVE.md`). **Current objective: Round 2** — right-stick orbit camera, telekinesis lift showcase,
-outdoor fog/glow world matching `Art/Reference/kyle_world_mood.jpg`, reusable `Atmosphere` setup. See `TODO.md`.
+**Round 1 complete (2026-11-16)** — playable fight demo (details in `TODO-ARCHIVE.md`).
+**Round 2 built (2026-11-16), waiting for Dan to play and check** — the same exe (`Unity\Builds\FightDemo\SevenFightDemo.exe`)
+now opens on a foggy outdoor hill in Kyle's mood, with a right-stick orbit camera, camera-relative movement, hold-to-lift
+telekinesis, an Xbox/keyboard legend in uGUI and the reusable `Atmosphere` setup. Per-item status and screenshots are in
+`TODO.md` (previews in `Docs/Previews/round2/`).

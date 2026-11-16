@@ -22,6 +22,44 @@ Goal: the same fight demo, but in an outdoor world with the fog and glow of Kyle
 reads clearly as a power.
 Commit the repo as it is before changing anything (safety checkpoint).
 
+### STATUS 2026-11-16: built and exe-verified off-screen — waiting for Dan to play
+Safety checkpoint committed + pushed first (`a4d91b4`). Optional clips `7_tk_hold.fbx` / `ybot_float.fbx` were **not**
+present, so the lift holds the peak pose of `7_telekinesis` and the bot hangs in a slowed `dazed` loop.
+Checks below come from the final check run (`Docs/Previews/round2/capture_log.txt`).
+- **1. Orbit camera — done.** `FightCamera`: right stick orbits (170°/s yaw, 95°/s pitch, 520°/s² ramp, stops 2× faster),
+  RMB + drag, R3 / middle mouse / C re-centre to the 3/4 framing (smooth, 0.25 s). Pitch clamped −5…60° (asked 80 → 60).
+  Auto-distance kept. Never below ground: camera pulls in if terrain blocks the view and stays ≥0.35 m above the ground
+  (lowest measured 0.65 m at pitch −5). Movement is camera-relative (stick up at yaw 138° moved exactly along the camera's
+  forward: dot = 1.000); 7 snaps to face the bot when attacking within range, from any angle.
+- **2. Telekinesis showcase — done.** Tap T / d-pad up = push (unchanged). Hold = lift: hands glow and light up, forehead
+  dot pulses (emission ×4 → up to ×14), motes + ripple rings travel to the bot, bot rises to 0.79–0.83 m with a slow bob,
+  white aura + motes around it, 31 rocks/grass clumps near 7 float up and orbit. Release → bot pushed back (2.8 → 5.3 m,
+  arena edge stops it), eased down (landed 0.95 s after release), knocked-down → get up → dazed → recovered. Auto-release
+  at 4.01 s. Nothing is hurt.
+- **3. Outdoor world — done (mood matched; for Dan to judge).** `FightDemo.unity` is now the hill world; the room is kept
+  as `FightDemo_Room.unity` (exe `-room`). Dark grassy rise (140k short blades, 3% tilt, curving down at the edge), fog
+  sea below, ring-terrace complexes with glowing lips and towers rising out of it on the right, a dark overhead arc
+  sweeping from the top-left, glow sources inside the fog, heavy Bloom, saturation −100. Feet measured against the
+  ground under each foot: toe bones −0.1…5 cm, lowest mesh point −1.3…0 cm (no floating, no sinking).
+  Side-by-side with Kyle's art: `Docs/Previews/round2/side_by_side_01_wide.png` (+ `_01b_wide_level`). Honest read:
+  same mood (dark silhouetted foreground, bright glowing fog bank, terraces/towers fading, dark arc on top). Weaker
+  than the painting: less glow wrapping the fighters' legs, smoother fog (no wisps / light shafts), terraces crisper and
+  a bit higher than Kyle's, simpler structure shapes. Next tuning steps if Dan wants closer: more ground fog near the
+  fighters, light-shaft cards, softer terrace edges.
+- **4. Reusable Atmosphere — done.** `Unity/Assets/Atmosphere/Atmosphere.prefab` + `Atmosphere_Volume.asset` +
+  `SevenHeightFog` full-screen pass (one pass, no ray marching — Steam Deck-friendly, not yet profiled on a Deck).
+  Knobs and recipe in `Docs/ATMOSPHERE.md`; `-atmofile <json>` tunes it without rebuilding. Recorded in `CLAUDE.md`.
+- **4b. Xbox legend — done.** uGUI (Screen Space – Camera, so it shows in captures): monochrome glyphs (face buttons,
+  LB/RB, LT/RT, d-pad up, sticks, R3, Menu) on a dark panel; keyboard/mouse legend when the last input was keys/mouse,
+  Xbox by default. Captured both (`08_legend_xbox.png`, `09_legend_keys.png`); over the brightest fog the top rows
+  are slightly soft from Bloom bleeding in. The automatic switch itself was only
+  checked in code (captures force each mode) — Dan to try with a real pad.
+- **5. Checks — done.** Exe rebuilt; shots listed below. Monochrome check max |R−G|,|G−B| = 0 on every shot; audio
+  listener volume 0, output RMS 0.000000 (start and end); no focus taken (minimized, not activated, Below Normal). `-room` quick run: room scene still loads, monochrome 0.
+- **6. End of round — done.** This file, `CLAUDE.md`, `Docs/ATMOSPHERE.md`; committed and pushed.
+Found on the way: `WorldGround` first lived in `Ground.cs`, so the player dropped it ("script is missing") and the
+exe crashed with "level0 is corrupted" — fixed by its own file (`CLAUDE.md` notes the symptom).
+
 1. **Orbit camera (right stick).** Right stick orbits the camera around 7: full 360° yaw, pitch clamped to about
    −5°…60°, smooth with a little acceleration. Keyboard/mouse: hold right mouse button and drag. R3 (and middle
    mouse or C) re-centers to the current 3/4 framing. Keep the auto-distance so both fighters stay in view when
@@ -69,9 +107,15 @@ FBX for Unity, 30 fps, without skin; closest match if the name differs.
 - `Art/Mixamo/YBot/ybot_float.fbx` — Falling Idle (for the bot hanging in the air)
 
 ### For Dan to check (after Round 2)
-- Orbit the camera with the right stick during a fight — does it feel right, and does movement still make sense?
-- Hold telekinesis on the bot — does it read as a power?
-- Does the world feel like Kyle's art?
+Run `Unity\Builds\FightDemo\SevenFightDemo.exe` (with the Xbox pad). Screenshots in `Docs/Previews/round2/`.
+- Does the world feel like Kyle's art? → `side_by_side_01_wide.png`, `side_by_side_01b_wide_level.png`, `01_wide.png`
+- Orbit the camera with the right stick during a fight — feel, speed, re-centre (R3), and does movement still make
+  sense? → `02_orbit_000.png` … `05_orbit_270.png`, `06_orbit_top_pitch60.png`, `07_orbit_low_pitch-5.png`
+- Hold telekinesis on the bot — does it read as a power? → `11_tk_start.png`, `12_tk_held.png`, `12b_tk_held_side.png`,
+  `13_tk_release.png`, `14_tk_landing.png`, `15_tk_dazed.png`
+- Legend readable, glyphs right, switches to keys when you touch the keyboard? → `08_legend_xbox.png`, `09_legend_keys.png`
+- Punch and knockdown still fine on the hill → `10_punch_connect.png`, `16_knockdown.png`
+- OPEN for Dan: the optional `7_tk_hold.fbx` / `ybot_float.fbx` would make the lift poses better — still wanted?
 
 ## Next Steps (Do Not Start Yet)
 - **Launcher / auto-update** (copy from `C:\Users\danmo\chastain_rush`) and releases repo — deferred until there is

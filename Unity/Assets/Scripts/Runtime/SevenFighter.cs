@@ -11,7 +11,7 @@ namespace Seven
         public FightInput Input;
         public float WalkSpeed = 1.6f;
 
-        public enum Mode { Free, Attack, Block, Dodge, Flinch }
+        public enum Mode { Free, Attack, Block, Dodge, Flinch, Lift }
         public Mode Current { get; private set; } = Mode.Free;
 
         /// <summary>Raised when one of 7's attacks connects (attack state name).</summary>
@@ -21,6 +21,18 @@ namespace Seven
         [NonSerialized] public bool ScriptDriven;
         [NonSerialized] public Vector2 ScriptMove;
         [NonSerialized] public bool ScriptBlockHeld;
+        [NonSerialized] public bool ScriptTkHeld;
+
+        [Header("Telekinesis lift (hold T / d-pad up)")]
+        public float MaxLiftSeconds = 4f;
+        public float ThrowDistance = 3.5f;
+        /// <summary>Telekinesis phase for the effects: charging (wind-up), lifting (holding the bot), released.</summary>
+        public enum TkPhase { None, Charging, Lifting, Released }
+        public TkPhase Tk { get; private set; }
+        public float TkPhaseTime { get; private set; }     // seconds in the current phase
+        public float LiftSeconds { get; private set; }
+        public event Action LiftStarted, LiftReleased;
+        bool _tkLetGo;   // the button was released since the move started -> tap = push
 
         public bool IsBlocking => Current == Mode.Block;
         public bool IsDodging => Current == Mode.Dodge && Tn > 0.06f && Tn < 0.7f;
@@ -60,10 +72,11 @@ namespace Seven
 
         Vector2 MoveInput => ScriptDriven ? ScriptMove : (Input != null ? Input.Move.ReadValue<Vector2>() : Vector2.zero);
         bool BlockHeld => ScriptDriven ? ScriptBlockHeld : (Input != null && Input.Block.IsPressed());
+        bool TkHeld => ScriptDriven ? ScriptTkHeld : (Input != null && Input.Telekinesis.IsPressed());
 
         public void DoAttack(string state)
         {
-            if (Current == Mode.Block || Current == Mode.Dodge || Current == Mode.Flinch) return;
+            if (Current == Mode.Block || Current == Mode.Dodge || Current == Mode.Flinch || Current == Mode.Lift) return;
             if (Current == Mode.Attack && Tn < _atk.End) return;
             _atk = Array.Find(Attacks, a => a.State == state);
             if (_atk == null) return;
@@ -71,11 +84,14 @@ namespace Seven
             Current = Mode.Attack;
             if (Bot != null && Dist() < _atk.Range * 1.6f) SnapFace(Bot.transform.position);
             Play(state, 0.08f);
+            if (_atk.Push) { _tkLetGo = false; SetTk(TkPhase.Charging); }
         }
+
+        void SetTk(TkPhase p) { Tk = p; TkPhaseTime = 0f; }
 
         public void DoDodge()
         {
-            if (Current == Mode.Dodge || Current == Mode.Flinch) return;
+            if (Current == Mode.Dodge || Current == Mode.Flinch || Current == Mode.Lift) return;
             if (Current == Mode.Attack && Tn < _atk.End) return;
             Current = Mode.Dodge;
             Play("dodge", 0.08f);
@@ -84,6 +100,7 @@ namespace Seven
         /// <summary>The bot's punch landed on an unguarded 7: short push back, no injury.</summary>
         public void GetHit(Vector3 dir)
         {
+            if (Current == Mode.Lift) ReleaseLift();
             Current = Mode.Flinch;
             _flinchUntil = Time.time + 0.35f;
             Freeze(false);
@@ -110,6 +127,9 @@ namespace Seven
         protected override void Update()
         {
             base.Update();
+            TkPhaseTime += Time.deltaTime;
+            if (!TkHeld) _tkLetGo = true;
+            if (Tk == TkPhase.Released && TkPhaseTime > 1.2f) SetTk(TkPhase.None);
             if (!ScriptDriven && Input != null)
             {
                 if (Input.Jab.WasPressedThisFrame()) DoAttack("jab");
@@ -126,7 +146,13 @@ namespace Seven
             {
                 case Mode.Free: UpdateFree(); break;
                 case Mode.Attack:
-                    while (_hitIdx < _atk.Hits.Length && Tn >= _atk.Hits[_hitIdx]) { TryHit(); _hitIdx++; }
+                    while (_hitIdx < _atk.Hits.Length && Tn >= _atk.Hits[_hitIdx])
+                    {
+                        _hitIdx++;
+                        if (_atk.Push && !_tkLetGo && TryStartLift()) return;
+                        TryHit();
+                    }
+                    if (_atk.Push && Tk == TkPhase.Charging && _hitIdx >= _atk.Hits.Length) SetTk(TkPhase.Released);
                     if (Tn >= 0.97f || (Tn >= _atk.End && (MoveInput.sqrMagnitude > 0.04f || BlockHeld))) ToFree();
                     break;
                 case Mode.Block:
@@ -140,8 +166,41 @@ namespace Seven
                 case Mode.Flinch:
                     if (Time.time >= _flinchUntil) ToFree();
                     break;
+                case Mode.Lift:
+                    LiftSeconds += Time.deltaTime;
+                    if (Bot != null) FaceTowards(Bot.transform.position, 90f);
+                    if (!TkHeld || LiftSeconds >= MaxLiftSeconds) ReleaseLift();
+                    break;
             }
             KeepApartFromBot();
+        }
+
+        /// <summary>Button still held at the moment the push would land: lift the bot instead.</summary>
+        bool TryStartLift()
+        {
+            if (Bot == null || !Bot.CanLift) return false;
+            var to = Bot.transform.position - transform.position; to.y = 0f;
+            if (to.magnitude > _atk.Range || Vector3.Dot(transform.forward, to.normalized) < 0.5f) return false;
+            Current = Mode.Lift;
+            LiftSeconds = 0f;
+            Freeze(true);                      // hold the peak (hands-forward) pose of the magic attack
+            Bot.BeginLift(this);
+            SetTk(TkPhase.Lifting);
+            LiftStarted?.Invoke();
+            HitLanded?.Invoke("telekinesis_lift");
+            return true;
+        }
+
+        /// <summary>Let go: the bot is pushed back several metres and set down safely.</summary>
+        public void ReleaseLift()
+        {
+            if (Current != Mode.Lift) return;
+            Freeze(false);                     // finish the push gesture
+            Current = Mode.Attack;
+            var dir = Bot.transform.position - transform.position; dir.y = 0f;
+            Bot.ReleaseLift(dir.normalized, ThrowDistance);
+            SetTk(TkPhase.Released);
+            LiftReleased?.Invoke();
         }
 
         void ToFree()
