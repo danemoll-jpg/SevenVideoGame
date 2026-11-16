@@ -16,7 +16,34 @@
 Goal: a short playable scene where 7 spars with a humanoid training bot (Mixamo **Y Bot**) using punches, kicks,
 a block and a finisher; the bot gets knocked down, gets back up dazed. Nothing dies.
 
-### Stage A — Code (before Dan)
+### Stage A — STATUS 2026-11-16: done, STOPPED for Dan
+- **1. Repo setup — done.** Git LFS (`.gitattributes`: glb/fbx/png/jpg/psd/wav) before the first commit; checkpoint
+  commit pushed with the GLB as an LFS object. Unity `.gitignore`, folder layout, Unity 6000.6.1f1 project in `Unity/`
+  from the URP Blank template (URP 17.6.0, Input System 1.20.0, `activeInputHandler: 1` = Input System only); template
+  tutorial/readme assets removed. Check: `git lfs ls-files` lists the GLB; Unity batch create exited 0.
+- **2. Blender cleanup — done.** `Tools/Blender/cleanup_7.py` → `Art/Export/7_v2_mixamo.fbx` (5.4 MB, texture embedded)
+  + `Art/Export/Textures/7_v2_basecolor.jpg` (original 4K JPEG bytes, not re-encoded). **49,999 tris** (body 47,439 +
+  orbs 2,560, orbs left undecimated so they stay round); one object `7_v2`, two material slots `7_body` /
+  `7_hairtie_glow`; 1.700 m tall, origin at feet centre, transforms applied, faces −Y in Blender (Mixamo front).
+  Seam duplicates are welded before decimating: a no-weld test opened hairline cracks across the face.
+  Check: re-imported FBX reports 49,999 tris, bbox z 0.000–1.700, both slots, 4096² image.
+  LODs (CLAUDE.md pipeline) **deferred** to Stage B: they must come from the rigged mesh, so build them in Unity after Mixamo.
+- **3. Previews — done.** `Tools/Blender/preview_7.py` (Workbench, flat light, grayscale, gray background) →
+  `Docs/Previews/7_v2_{front,back,side,face,head_back}.png`, all looked at. Orbs present and white on both pigtails;
+  pigtails same tone as scalp hair (a few lighter streaks inside the left pigtail); no decimation holes seen; feet on
+  the floor; face and hands read fine. Known: soft light/dark smudges on the chin and on top of the shoulders appear in
+  both weld and no-weld builds, so they are most likely in the Tripo texture, not caused by decimation.
+- **4. STOP — done.** Waiting for Dan's Mixamo files. Audio: no game/player run happened in Stage A (Blender + Unity
+  batch project creation only), so no audio level to measure; the muted-run proof starts with the first run in Stage B.
+
+#### For Dan to check (Stage A)
+- `Docs/Previews/7_v2_front.png`, `7_v2_back.png`, `7_v2_side.png`, `7_v2_face.png`, `7_v2_head_back.png`.
+- **Standing-rule question:** the Tripo outfit leaves a band of bare upper thigh between the shorts and the over-knee
+  boots; `CLAUDE.md` asks for full-coverage outfits. Fix before rigging (regenerate with leggings / longer shorts) or
+  accept? Fixing after Mixamo means re-rigging and re-downloading every animation.
+- The model is in an A-pose (arms ~45°); Mixamo auto-rig accepts that.
+
+### Stage A — Code (before Dan) — original spec
 1. **Repo setup.** Before the first commit, set up Git LFS (`git lfs install`, `.gitattributes` for
    glb/fbx/png/jpg/psd/wav) so the 59 MB GLB never lands in plain git history; then commit the repo as-is
    (safety checkpoint) and add a Unity `.gitignore`. Create the folder layout from `CLAUDE.md`. Create the Unity

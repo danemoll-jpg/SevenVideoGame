@@ -42,9 +42,22 @@ apply to every asset and scene:
 3. One heavy job at a time at Below Normal priority. Clean up temp files at the end of each round.
 
 ## Commands
-<!-- Fill in during Round 1: Blender path, cleanup script command, Unity batch build / screenshot commands. -->
+- Blender 3.6.1: `F:\blender\blender.exe` (not under Program Files, not on PATH).
+  Unity 6000.6.1f1: `C:\Program Files\Unity\Hub\Editor\6000.6.1f1\Editor\Unity.exe`.
+- Clean up 7 (from repo root):
+  `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_7.py -- C:/Users/danmo/SevenVideoGame 50000`
+  (args: repo root, target tris, weld 1|0 (default 1), optional output FBX path for experiments).
+- Previews: `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/preview_7.py -- C:/Users/danmo/SevenVideoGame`
+  (args: repo root, optional FBX, optional output dir).
+- Launch Blender/Unity jobs with `Start-Process ... -WindowStyle Hidden -PassThru`, then `$p.PriorityClass = 'BelowNormal'`;
+  one at a time.
+- Unity project was created with: `Unity.exe -batchmode -nographics -quit -createProject C:\Users\danmo\SevenVideoGame\Unity
+  -cloneFromTemplate "<Editor>\Data\Resources\PackageManager\ProjectTemplates\com.unity.template.urp-blank-17.2.1.tgz" -logFile <file>`.
+- Unity batch build / screenshot commands: to be added in Stage B.
 
 ## Where things stand
-New project. Repo created by Dan, empty before Round 1. A first textured model of 7 exists
-(`Art/Source/7_normal_v2.glb`, from Tripo, pigtail color fixed and glowing orb hair ties added in chat).
-Current objective: **Round 1 — fight-demo proof of concept** (see `TODO.md`).
+**Round 1 Stage A done (2026-11-16), stopped for Dan.** Repo on Git LFS; Unity 6000.6.1f1 URP project in `Unity/`
+(Input System only). `Art/Export/7_v2_mixamo.fbx` is the cleaned 7 (49,999 tris, 1.70 m, origin at feet, two material
+slots `7_body` / `7_hairtie_glow`), previews in `Docs/Previews/7_v2_*.png`. Next: Dan uploads to Mixamo and drops the
+files listed in `TODO.md`; then Stage B (import, arena, fight controller, checks). Open question for Dan: bare-thigh
+gap between shorts and boots vs the full-coverage rule.
