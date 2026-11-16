@@ -10,6 +10,9 @@ Output: Art/Export/7_v2_mixamo.fbx   (FBX, Path Mode Copy + embedded texture)
 Hair ties: "ring" (default, per Art/Reference/7_ref_hairties_back.jpg) builds a glossy metal cuff over each of the
 model's original band ties; "orb" keeps the old glowing spheres from the source GLB (fallback).
 
+Forehead: the generated model has a raised disc on the forehead; 7's mark is a flat glowing dot. The disc is pressed
+flat onto the forehead surface and a thin conforming dot (material 7_forehead_glow, white emissive) is laid on top.
+
 Steps: merge seam duplicates -> decimate the body to ~target (hair ties kept undecimated) -> join the ties into the
 body (two material slots: 7_body / 7_hairtie_metal or 7_hairtie_glow) -> scale to 1.70 m -> apply transforms -> origin at the feet
 (floor centre) -> facing -Y in Blender (Blender "front"), which is what Mixamo expects.
@@ -30,6 +33,10 @@ RING_AXIS = (1.0, 0.25, 0.30)   # roughly along the pigtail where it leaves the 
 RING_MAJOR = 0.0165              # centre radius of the cuff
 RING_MINOR = 0.0030              # tube radius (thickness ~6 mm in source units)
 RING_WIDTH = 2.4                 # stretch along the axis -> a wide band, not a thin wire
+
+# Forehead dot (source units). The guess is refined from the geometry; the dot radius follows the measured disc.
+GEM_GUESS = (0.0006, 0.929)      # (x, z) of the raised disc on the forehead
+DOT_LIFT = 0.0003                # dot sits this far in front of the flattened forehead
 
 SRC = os.path.join(ROOT, "Art", "Source", "7_normal_v2.glb")
 OUT_DIR = os.path.join(ROOT, "Art", "Export")
@@ -110,6 +117,86 @@ img.filepath = TEX  # FBX Path Mode Copy / embed reads from here
 img.reload()
 log("texture saved", TEX, tuple(img.size))
 
+# --- forehead: press the raised disc flat, build a flat glowing dot ----------------------------
+import numpy as np
+from mathutils import Vector as _V
+
+
+def _fit(pts):
+    x, z = pts[:, 0], pts[:, 2]
+    A = np.stack([np.ones_like(x), x, z, x * x, x * z, z * z], 1)
+    return np.linalg.lstsq(A, pts[:, 1], rcond=None)[0]
+
+
+def _ev(c, x, z):
+    return c[0] + c[1] * x + c[2] * z + c[3] * x * x + c[4] * x * z + c[5] * z * z
+
+
+me_b = body.data
+P = np.array([v.co[:] for v in me_b.vertices])
+gx, gz = GEM_GUESS
+front = P[:, 1] < -0.03
+d = np.hypot(P[:, 0] - gx, P[:, 2] - gz)
+ring = front & (d > 0.0068) & (d < 0.012) & (P[:, 2] < 0.938)
+c = _fit(P[ring])
+for _ in range(4):  # robust: drop outliers (hair strands, brows) and refit
+    rr = P[ring]
+    keep = np.abs(rr[:, 1] - _ev(c, rr[:, 0], rr[:, 2])) < 0.0008
+    c = _fit(rr[keep])
+res = P[:, 1] - _ev(c, P[:, 0], P[:, 2])
+gem = front & (d < 0.009) & (res < -0.0003)
+gx, gz = float(P[gem, 0].mean()), float(P[gem, 2].mean())
+d = np.hypot(P[:, 0] - gx, P[:, 2] - gz)
+gem = front & (d < 0.0075) & (res < -0.0002)
+gem_r = float(np.percentile(d[gem], 95))
+log("forehead disc: %d verts, centre x %.4f z %.4f, radius %.4f, max height %.4f"
+    % (gem.sum(), gx, gz, gem_r, -res[gem].min()))
+for i in np.nonzero(gem)[0]:
+    v = me_b.vertices[int(i)].co
+    v.y = _ev(c, v.x, v.z) - 0.00015  # a hair in front of the skin so the old disc cannot poke through the dot
+me_b.update()
+P2 = np.array([v.co[:] for v in me_b.vertices])
+res2 = P2[:, 1] - _ev(c, P2[:, 0], P2[:, 2])
+log("forehead after flatten: max height in disc area %.5f" % (-res2[front & (d < 0.0075)].min()))
+
+dot_mat = bpy.data.materials.new("7_forehead_glow")
+dot_mat.use_nodes = True
+db = dot_mat.node_tree.nodes["Principled BSDF"]
+db.inputs["Base Color"].default_value = (1, 1, 1, 1)
+db.inputs["Emission"].default_value = (1, 1, 1, 1)
+if "Emission Strength" in db.inputs:
+    db.inputs["Emission Strength"].default_value = 1.0
+dot_mat.diffuse_color = (1, 1, 1, 1)
+DOT_R = gem_r * 1.06  # covers the old disc and its dark texture outline
+SEG, RINGS = 40, 4
+verts = [(gx, _ev(c, gx, gz) - DOT_LIFT, gz)]
+for k in range(1, RINGS + 1):
+    rad = DOT_R * k / RINGS
+    for j in range(SEG):
+        a = 2 * np.pi * j / SEG
+        x, z = gx + rad * np.cos(a), gz + rad * np.sin(a)
+        verts.append((x, _ev(c, x, z) - DOT_LIFT, z))
+faces = []
+for j in range(SEG):  # centre fan, wound so normals face -Y (out of the forehead)
+    faces.append((0, 1 + (j + 1) % SEG, 1 + j))
+for k in range(1, RINGS):
+    o0, o1 = 1 + (k - 1) * SEG, 1 + k * SEG
+    for j in range(SEG):
+        j1 = (j + 1) % SEG
+        faces.append((o0 + j, o0 + j1, o1 + j1, o1 + j))
+dot_me = bpy.data.meshes.new("7_forehead_dot")
+dot_me.from_pydata(verts, [], faces)
+dot_me.update()
+dot_me.materials.append(dot_mat)
+dot = bpy.data.objects.new("7_forehead_dot", dot_me)
+bpy.context.scene.collection.objects.link(dot)
+n0 = dot_me.polygons[0].normal
+if n0.y > 0:  # make sure the dot faces out of the forehead
+    for poly in dot_me.polygons:
+        poly.flip()
+    dot_me.update()
+log("forehead dot radius %.4f, %d tris, normal y %.2f" % (DOT_R, tris(dot), dot_me.polygons[0].normal.y))
+
 # --- weld seam duplicates so decimation does not open cracks along UV seams ---------------------
 if WELD:
     bm = bmesh.new()
@@ -121,7 +208,7 @@ if WELD:
     bm.free()
 
 # --- decimate the body only (hair ties stay round) ---------------------------------------------
-body_target = TARGET_TRIS - tris(ties)
+body_target = TARGET_TRIS - tris(ties) - tris(dot)
 ratio = body_target / tris(body)
 bpy.context.view_layer.objects.active = body
 mod = body.modifiers.new("decimate", "DECIMATE")
@@ -136,6 +223,7 @@ log("decimated body ratio %.5f -> %d tris" % (ratio, tris(body)))
 # --- join the hair ties into the body (two material slots survive) ------------------------------
 bpy.ops.object.select_all(action="DESELECT")
 ties.select_set(True)
+dot.select_set(True)
 body.select_set(True)
 bpy.context.view_layer.objects.active = body
 bpy.ops.object.join()

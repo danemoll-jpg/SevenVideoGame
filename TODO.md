@@ -44,6 +44,13 @@ a block and a finisher; the bot gets knocked down, gets back up dazed. Nothing d
   `7_body` / `7_hairtie_metal`; `head_top` / `head_back` previews show both cuffs seated on the pigtails. Workbench
   can't show chrome reflections, so those two close-ups show the cuffs as bright satin silver (preview-only display).
 
+- **2c. Forehead mark made flat (Dan, 2026-11-16) — done.** The model had a raised disc on the forehead (3.0 mm proud,
+  r 5.6 mm in source units). `cleanup_7.py` presses it onto a surface fitted to the surrounding forehead (now ≤0.16 mm)
+  and lays a flat conforming dot over it (r 5.9 mm, 280 tris, 0.3 mm off the skin) with its own material
+  `7_forehead_glow` (white emissive). FBX now has **three** slots: `7_body` / `7_hairtie_metal` / `7_forehead_glow`;
+  49,999 tris (body 46,647 + cuffs 3,072 + dot 280). Check: `7_v2_forehead.png` (flat, no leftover rim) and
+  `7_v2_forehead_side.png` (no bump in profile).
+
 #### For Dan to check (Stage A)
 - `Docs/Previews/7_v2_front.png`, `7_v2_back.png`, `7_v2_side.png`, `7_v2_face.png`, `7_v2_head_top.png`,
   `7_v2_head_back.png` — especially the cuffs vs `Art/Reference/7_ref_hairties_back.jpg` (size/thickness are tweakable).
@@ -95,7 +102,8 @@ Y Bot → `Art/Mixamo/YBot/`
 ### Stage B — Code (after Dan's Mixamo files are in place)
 5. **Import.** Both characters as **Humanoid** rigs; animations retargeted. Materials: 7 body = URP Lit with the
    base-color texture (grayscale); hair-tie cuffs = URP Lit metallic 1 / smoothness ~0.9, light gray, with a
-   reflection probe so they read as chrome (no glow — changed from orbs 2026-11-16);
+   reflection probe so they read as chrome (no glow — changed from orbs 2026-11-16); forehead dot (`7_forehead_glow`)
+   = white emissive, soft white glow via URP Bloom (no color);
    Y Bot = neutral light-gray matte. Keep the pre-Mixamo FBX as a fallback asset.
 6. **Arena scene** `Unity/Assets/Scenes/FightDemo.unity`: plain monochrome training room (gray floor, soft fog,
    one key light), fixed 3/4 side camera framing both fighters full-body, gentle follow.

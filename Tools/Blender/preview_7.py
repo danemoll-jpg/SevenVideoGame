@@ -88,5 +88,7 @@ for m in bpy.data.materials:
         m.diffuse_color = (0.9, 0.9, 0.9, 1)
         m.metallic = 0.35
         m.roughness = 0.15
+shot("forehead", (0.0, -0.45, H * 0.945), (0, 0, H * 0.94), lens=85, res=(1000, 1000))
+shot("forehead_side", (0.40, -0.22, H * 0.945), (0, -0.05, H * 0.94), lens=85, res=(1000, 1000))
 shot("head_top", (0.0, 0.5, H * 1.12), head, lens=50, res=(1000, 1000))
 shot("head_back", (-0.3, 0.8, H * 0.95), head, lens=85, res=(1000, 1000))
