@@ -59,5 +59,5 @@ apply to every asset and scene:
 **Round 1 Stage A done (2026-11-16), stopped for Dan.** Repo on Git LFS; Unity 6000.6.1f1 URP project in `Unity/`
 (Input System only). `Art/Export/7_v2_mixamo.fbx` is the cleaned 7 (49,999 tris, 1.70 m, origin at feet, two material
 slots `7_body` / `7_hairtie_metal`; hair ties are now polished metal cuffs, not glowing orbs), previews in `Docs/Previews/7_v2_*.png`. Next: Dan uploads to Mixamo and drops the
-files listed in `TODO.md`; then Stage B (import, arena, fight controller, checks). Open question for Dan: bare-thigh
-gap between shorts and boots vs the full-coverage rule.
+files listed in `TODO.md`; then Stage B (import, arena, fight controller, checks). Dan approved the model as is for now
+(2026-11-16); the outfit's bare-thigh gap may be revisited in a later model pass.

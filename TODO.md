@@ -47,9 +47,9 @@ a block and a finisher; the bot gets knocked down, gets back up dazed. Nothing d
 #### For Dan to check (Stage A)
 - `Docs/Previews/7_v2_front.png`, `7_v2_back.png`, `7_v2_side.png`, `7_v2_face.png`, `7_v2_head_top.png`,
   `7_v2_head_back.png` — especially the cuffs vs `Art/Reference/7_ref_hairties_back.jpg` (size/thickness are tweakable).
-- **Standing-rule question:** the Tripo outfit leaves a band of bare upper thigh between the shorts and the over-knee
-  boots; `CLAUDE.md` asks for full-coverage outfits. Fix before rigging (regenerate with leggings / longer shorts) or
-  accept? Fixing after Mixamo means re-rigging and re-downloading every animation.
+- **DECIDED (Dan, 2026-11-16): go with this model for now** — metal cuffs accepted as built, and the current outfit
+  (bare-thigh band between shorts and over-knee boots) accepted for Round 1. Revisit the outfit in a later model pass
+  (fixing it then means re-rigging and re-downloading the Mixamo animations).
 - The model is in an A-pose (arms ~45°); Mixamo auto-rig accepts that.
 
 ### Stage A — Code (before Dan) — original spec
