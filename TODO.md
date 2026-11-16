@@ -99,7 +99,47 @@ Y Bot → `Art/Mixamo/YBot/`
 - `ybot_knocked_down.fbx` — Knocked Down · `ybot_get_up.fbx` — Getting Up · `ybot_dazed.fbx` — Dizzy Idle (or Stunned)
 - `ybot_punch.fbx` — Punching (so the bot can throw a slow attack for 7 to block/dodge)
 
-### Stage B — Code (after Dan's Mixamo files are in place)
+### Stage B — STATUS 2026-11-16: done (round 1 complete, waiting for Dan to play it)
+Mixamo files: Dan's downloads renamed to the list above. Substitutes: 7_run = Fast Run, 7_jump = Jumping,
+7_fight_idle = Bouncing Fight Idle, 7_cross = **Jab Cross** (a 1-2 combo, lands two hits), 7_finisher = Flying Kick,
+7_telekinesis = Standing 2H Magic Attack 01, ybot_hit_body = Big Stomach Hit, **ybot_knocked_down = Stunned** (Knocked
+Down only existed holding a gun; Stunned falls to the floor: hips 0.90 → 0.15 m, and Getting Up starts at 0.12 m).
+Everything is built by one headless command (`FightDemoBuilder.BuildAllFromCommandLine`, see CLAUDE.md).
+- **5. Import — done.** FBX copied into `Unity/Assets/Art/Characters/{7,YBot}`; both Humanoid (avatars valid),
+  clips retargeted via Copy From Other avatar; idle/walk/run/fight_idle/dazed loop; rotation + height baked into pose;
+  horizontal root motion kept only for finisher (2.1 m leap), dodge (0.5 m back), knocked_down (1 m back), get_up.
+  Materials remapped by name: `7_body` (URP Lit, grayscale copy of the texture), `7_hairtie_metal` (light gray,
+  metallic 0.7, smoothness 0.86 — full metallic 1.0 reflected the room as near-black, so lowered), `7_forehead_glow`
+  (white emission ×4 → Bloom), Y Bot light/dark gray matte. Pre-Mixamo FBX kept as `Characters/7/Fallback/7_v2_premixamo.fbx`.
+  Hit timings measured from limb-extension peaks in Blender (jab 0.28, cross 0.20+0.33, hook 0.33, roundhouse 0.43,
+  mma kick 0.40, finisher 0.29, telekinesis 0.49, bot punch 0.40).
+  **LODs still deferred:** two characters in one small room need none; build them when a scene has crowds.
+- **6. Arena — done.** `Assets/Scenes/FightDemo.unity`: gray floor + darker sparring mat, gray walls, pillars, white
+  emissive light strips, exp² fog, one directional key light with soft shadows, flat ambient, realtime reflection probe,
+  global volume (Bloom, Neutral tonemap, vignette, **saturation −100** as a monochrome guarantee). Fixed 3/4 camera
+  (pitch 9°, yaw 18°) framing both fighters, distance grows with their separation, SmoothDamp follow.
+- **7. Fight controller — done.** `Scripts/Runtime/`: `SevenFighter`, `TrainingBot`, `FighterBase`, `FightInput`
+  (Input System, keyboard + gamepad), `FightCamera`, `FightDirector` (legend + reset), `DemoBoot` (-mute / -capture).
+  Keys as specified; gamepad: X jab, Y jab-cross, RB hook, B roundhouse, A mma kick, LT block, LB dodge, RT finisher,
+  d-pad up telekinesis, Start reset, left stick move. Hits play hit_head/hit_body + knockback; bot punches every
+  3–4.5 s at 0.6 speed when within 1.7 m; blocked/dodged punch → bot staggers back; unblocked → 7 is pushed back
+  0.35 m (no damage). Finisher → Knocked Down → Getting Up → Dazed 2 s → Fighting Idle. No health, no death.
+  Legend = white text on a translucent black box, bottom-left.
+- **8. Checks — done.** Exe `Unity/Builds/FightDemo/SevenFightDemo.exe` (125 MB, not in git). Check run started
+  minimized/not activated, Below Normal, `-mute -capture`: whole sequence passed with no timeouts. Results in
+  `Docs/Previews/round1/` (14 shots + `capture_log.txt`). **Audio: listener volume 0, output RMS 0.000000** (start and
+  end). **Monochrome: max R/G/B difference in any pixel of any shot = 0.** **Feet: lowest mesh point 0.001–0.002 m**
+  above the floor (idle, after finisher, end). Forehead dot glows white; cuffs read as metal with highlights.
+  Not verifiable off-screen: the key legend (IMGUI draws to the window, not the capture texture) — seen only in code.
+- **9. Wrap-up — done.** This file, CLAUDE.md, commit + push.
+
+#### Known limitations (Round 1)
+- Walking sideways/backwards while facing the bot uses the forward walk clip (no strafe animations downloaded).
+- Jump and run clips are imported but unused (no key for them in the spec).
+- The bot never walks; it stays where hits leave it and turns to face 7.
+- Cuffs are mid-silver, darker than the reference's bright chrome; brighter room or a stronger probe would help.
+
+### Stage B — original spec
 5. **Import.** Both characters as **Humanoid** rigs; animations retargeted. Materials: 7 body = URP Lit with the
    base-color texture (grayscale); hair-tie cuffs = URP Lit metallic 1 / smoothness ~0.9, light gray, with a
    reflection probe so they read as chrome (no glow — changed from orbs 2026-11-16); forehead dot (`7_forehead_glow`)
@@ -122,7 +162,9 @@ Y Bot → `Art/Mixamo/YBot/`
    stand), commit and push.
 
 ### For Dan to check (after Stage B)
-- Play `FightDemo` and try every key. Does the fighting read clearly? Do the hair-tie cuffs and pigtails look right in motion?
+- Play `Unity\Builds\FightDemo\SevenFightDemo.exe` and try every key. Does the fighting read clearly? Do the hair-tie
+  cuffs and pigtails look right in motion? Is the room bright enough?
+- Check shots: `Docs/Previews/round1/01_idle.png` … `14_head_back.png` (punch 03, block 04, knockdown 08, get-up 09).
 
 ## Next Steps (Do Not Start Yet)
 - **Launcher / auto-update** (copy from `C:\Users\danmo\chastain_rush`) and releases repo — deferred until there is

@@ -53,12 +53,23 @@ apply to every asset and scene:
   one at a time.
 - Unity project was created with: `Unity.exe -batchmode -nographics -quit -createProject C:\Users\danmo\SevenVideoGame\Unity
   -cloneFromTemplate "<Editor>\Data\Resources\PackageManager\ProjectTemplates\com.unity.template.urp-blank-17.2.1.tgz" -logFile <file>`.
-- Unity batch build / screenshot commands: to be added in Stage B.
+- Measure Mixamo clips (frames, limb-extension peaks = hit timings): a throwaway Blender script over `Art/Mixamo/*/*.fbx`
+  (bone `mixamorig:*Hand/*Foot` distance from Hips per frame); results recorded in `TODO.md` Stage B item 5.
+- **Build everything** (copy Mixamo FBX into Assets, Humanoid import, grayscale texture, materials, animators,
+  `FightDemo` scene, Windows exe at `Unity\Builds\FightDemo\SevenFightDemo.exe`):
+  `Unity.exe -batchmode -nographics -quit -projectPath C:\Users\danmo\SevenVideoGame\Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine -logFile <file>`
+  (start with `Start-Process -WindowStyle Hidden`, then `.PriorityClass = 'BelowNormal'`; ~5 min; exit code 0 = ok).
+  The scene is generated: change `FightDemoBuilder.cs`, not the scene by hand.
+- **Check run** (muted, off-screen, never takes focus): start through `Win32_Process.Create` with
+  `Win32_ProcessStartup.ShowWindow = 7` (minimized, not activated) and `PriorityClass = 16384` (Below Normal):
+  `SevenFightDemo.exe -mute -capture <dir> -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -logFile <dir>\Player.log`
+  → `<dir>\01_idle.png … 14_head_back.png` + `capture_log.txt` (audio level, feet height, states), quits by itself (~30 s).
+  Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
 
 ## Where things stand
-**Round 1 Stage A done (2026-11-16), stopped for Dan.** Repo on Git LFS; Unity 6000.6.1f1 URP project in `Unity/`
-(Input System only). `Art/Export/7_v2_mixamo.fbx` is the cleaned 7 (49,999 tris, 1.70 m, origin at feet, two material
-slots `7_body` / `7_hairtie_metal` / `7_forehead_glow`; hair ties are polished metal cuffs, the forehead mark is a
-flat glowing dot), previews in `Docs/Previews/7_v2_*.png`. Next: Dan uploads to Mixamo and drops the
-files listed in `TODO.md`; then Stage B (import, arena, fight controller, checks). Dan approved the model as is for now
-(2026-11-16); the outfit's bare-thigh gap may be revisited in a later model pass.
+**Round 1 complete (2026-11-16): playable fight demo**, waiting for Dan to play it. Exe:
+`Unity\Builds\FightDemo\SevenFightDemo.exe` (not in git; rebuild with the command above). 7 (Mixamo-rigged
+`Art/Export/7_v2_mixamo.fbx`: 1.70 m, polished metal cuff hair ties, flat glowing forehead dot) spars with Y Bot in
+a monochrome training room: punches, kicks, block, dodge, telekinesis push, finisher → knockdown → get up → dazed →
+recovers. Check shots and log in `Docs/Previews/round1/`. Status and known limitations in `TODO.md`. Dan approved the
+model for now; the outfit's bare-thigh gap may be revisited in a later model pass.
