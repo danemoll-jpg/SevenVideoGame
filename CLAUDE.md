@@ -188,14 +188,7 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–8 + QF3 + QF4 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` 0.8.2 (build 802), published
-through the launcher (`danemoll-jpg/seven-releases`, `game-802` Latest; `game-801`, `game-800` + `starter-800` before):
-Chapter 1 "The Moon Prison" (laser cell, city reveal, tractor beam, free saucer exploration, SFX + music, pause menu,
-Continue) plus the demos (fluid fight, saucer + gallery TV, Ratwing). Check-run switch added in Round 8: `-fightcombo`
-(combo timing log). QF3: no phantom walls, subtitles without "(thought)", static curled lap cat, nothing of the ship
-left after the reveal, no excavators, mouse cursor hidden in play (`CursorPolicy.cs`: shown on menus only after the mouse
-moves). QF4: the cat can never enter the cell (`ChapterCat.NoCat`, sub-stepped moves) and every story wait on the cat has
-a watchdog (scene 1 starts by itself 20 s after the cat sits down); conversation cameras keep the speakers in clear view
-(`ChapterCamera.Subjects`, `Talk()`); the real Scree (tail tucked down — design approved 2026-11-17) is the hall guard,
-gate guards and the bay / terrace workers. Details in `TODO.md` / `TODO-ARCHIVE.md`. **Current objective: none** —
-waiting for Dan's review; every round ends with a published release.
+**Rounds 1–8 + QF1–QF4 complete (2026-11-17), release 0.8.2** — Chapter 1 "The Moon Prison" (voiced, music, SFX,
+city reveal, real Scree) plus the demos. History in `TODO-ARCHIVE.md`. **Current objective: Round 9** — Chapter 1 as the
+tutorial: traversal (jump, ledges, shimmy, climb, drop, crouch, telekinesis stone) and controls taught as they're needed
+(no permanent legend). See `TODO.md`.

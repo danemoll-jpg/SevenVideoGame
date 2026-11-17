@@ -6,6 +6,11 @@
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Round 7, Round 8, QF3, QF4 — done (2026-11-17), releases 0.8.0–0.8.2.** Laser cell door + hidden release + dark
+  energy point in the cell, city reveal (6b), tractor-beam boarding, SFX, re-voiced 7, music, pause menu / Continue /
+  Quit, free saucer exploration; saucer look pass, gallery sofa, Ratwing flip re-key, fluid fighting, launcher; phantom
+  walls removed, curled lap cat, clean reveal, hidden cursor; opening watchdogs (25/25), clear dialogue cameras, the
+  real Scree (1.9 m, tail tucked). Round 7/8/QF3 records in `TODO-ARCHIVE.md`; QF4 record below.
 - **Quick fix QF3 — phantom walls, subtitles, curled lap cat, reveal band, excavators, mouse cursor — done
   (2026-11-17), exe-verified off-screen; release 0.8.1 (`game-801`) published.** Status in "Quick fix QF3" below.
 - **Round 8 — saucer look + cat rig, gallery sofa/preload, Ratwing drop, fluid fighting, launcher + first release 0.8.0 —
@@ -48,107 +53,87 @@
   Script kept as `Tools/Model/fix_v1_to_v2.py`. Source facts: 0.98 m tall, ~1.95M triangles, one 4K base-color texture.
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
-## Round 7 — Chapter 1 fixes + sound effects + music — done (2026-11-17), exe-verified off-screen; Dan to play
-Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Round 7". Checks: muted autopilot start to finish (45 shots,
-0 soft-locks, output peak 0.000000 every run), monochrome max |R−G|,|G−B| = 0 over all chapter shots, all demos load.
-1. **Laser door — done.** 9 white beams + soft halos flush with the cell's inner face (z 1.315); the walkable cell ends
-   there. Check: 5 runs into the beams (straight, both diagonals, running) → furthest root z 1.050 = she stays inside
-   (fixed a one-frame overshoot: 7 is now clamped after moving). Hum (3D) at the beams; they switch off top to bottom.
-2. **Hidden release + energy point — done.** Release panel inside a new guard alcove west of the cell; the cat walks
-   out of sight, paws it; 7 hears a click + power-down. Check: 1,452 rays from a grid inside the cell → 0 reach the
-   panel; panel never in frame/visible in any in-cell shot. Forehead dot dark in the cell, relights (fade + shimmer
-   sound) as she steps past the dead beams (z 2.11). Close-ups `08/09_s02_energy_point_*`.
-3. **Tractor beam — done.** Ramp removed. Clamps release → saucer lifts 2.2 m and hovers; 8-blade iris opens; a soft
-   cone + floor glow; scene 8 at the edge of the light; 7 floats up (upright, arms drifting out — procedural), then the
-   cat (held mid-jump frame, legs hanging); iris shuts, light fades, liftoff. **Not done: hair drifting** (the pigtails
-   have no bones). Shots `30–37`.
-3b. **City reveal (6b) — done, first pass; judge it against Kyle's art.** New `FightDemoBuilderCity.cs`: the prison
-   bolted into the base of a colossal stepped host structure (pipes, fence, lamps, freight lifts), four colossal
-   siblings, a hollow-Moon shell (R 3 km) with terraces down to a basin, 5 pyramids around a dark depression, aligned
-   rings, ~150 stepped buildings / towers / bridges climbing the curve overhead, 4 conveyors with moving lights, 3
-   excavators, the "quiet district" that starts up, the terrace edge that breaks and falls with dust. 25.8k tris.
-   Fog blends to a city preset as she walks out (bright haze in every direction, overhead key light). Timing: ~6 s of
-   only sound + main theme, then the voiced 6b lines, scene 7 from the terrace. `cityRevealDialogue` / `-cityreveal
-   primary|alternate|off` (alternate set voiced; the check run played primary). Shots `24–29`. Known: the wide shot is
-   dominated by the host wall and 7 is too small to read; the far city is simple boxes (fog hides it).
-3c. **Dan's clips — done:** `7_sneak_walk` (sneaking), `7_touch_wall` (older wall + vision; held at frame ~45/98),
-   `7_look_around` (city-reveal turn + idle variety after 11 s), `ybot_float` (bot held by telekinesis). TK hold: slow
-   breathing, hip sway, faint arm/hand tremble, forearms follow the bot (procedural layer, a few degrees).
-3d. **No "To be continued" — done.** After scene 11 free exploration (chair + reveal, gallery TV, sofa; cat roams /
-   naps / lap), "Explore the ship" once. Pause menu (Start / Esc): Resume · Settings (music / SFX / voice) · Main menu ·
-   Quit, confirms on both. Main menu: Quit (confirm), **Continue** when the save exists (saved at liftoff). Check:
-   `-continue` → explore, sit, cat on lap; pause/settings/quit-confirm shots `43–45`. Check runs use a test save key
-   and delete it.
-4. **SFX — done.** 33 ElevenLabs sound effects (`Tools/Audio/generate_sfx.py`, `Docs/SFX-LIST.md`,
-   `Unity/Assets/Audio/SFX/*.wav`, loops cross-faded at the seam). `laser_hum` / `step_metal_3` came back near-silent
-   and were re-prompted once.
-4b. **7 re-voiced — done.** Eleven v3 (`eleven_v3`, stability 0.5 "natural", similarity 0.8) with audio tags from a
-   delivery note per line (`Tools/Voice/seven_delivery.json`, shown in `Docs/VOICE-LINES.md`); 44 lines (39 old + 5
-   new 6b). Old takes kept in `Unity/Assets/Audio/Voice/_v1/`. The cat untouched (+4 new 6b lines). Not listened to by
-   Code — Dan to judge whether she is still flat.
-5. **Mix — done.** Buses: voice 1.0 > SFX 0.55 > music 0.42 (ducked to 35 % under dialogue) > ambience 0.28; 3D hum at
-   the beams, footsteps at the feet (metal/rock by zone), cat paws, Scree steps, TK, stones, doors, clamps, saucer hum,
-   beam, iris, liftoff, fridge, menu. `AudioKit.cs`.
-6. **Music — done.** `MusicSystem.cs`: menu = main_theme; cell → ruins moon_prison; vision = silence; reveal swell
-   main_theme; bay moon_prison; beam + liftoff main_theme; aboard aboard_saucer; fight / Ratwing none. 2.5 s cross-fades,
-   loops, ducking; missing file = silence. Volume sliders in the pause menu (saved in PlayerPrefs).
-7. **Checks — done.** Sound check (the only unmuted step): 5 SFX (laser_power_down, release_click, energy_point,
-   tractor_beam, menu_confirm), each ≤ 1.2 s, **5.35 s of sound**, peaks 0.009 / 0.39 / 0.39 / 0.27 / 0.39, then 0.000000.
-   Demos: fight 19 shots, saucer 21, Ratwing 16, gallery 21 (17/17 input tests), menu — all output 0.
-8. **Docs + commit — done** (this entry, CLAUDE.md).
+## Current Objective — Round 9: Chapter 1 as the tutorial — traversal + controls taught as you need them (Dan, 2026-11-17)
+Commit the repo as it is first (safety checkpoint). Goal: give the beginning more meat. The design calls for ~30%
+Tomb-Raider-style traversal and Chapter 1 has none yet; Chapter 1 is also partly the tutorial, so **no permanent button
+legend** — each control is introduced the first time the player needs it. Target length after this: ~20–25 min.
+All standing rules apply (monochrome, Kyle's fog/glow, non-sexual presentation, **7 never kills**).
 
-### For Dan to check (Round 7)
-- Walk into the laser door; the cat leaving and the click you only hear; the forehead dot relighting as you step out.
-- The city reveal: does it feel like Kyle's paintings? (wide shot, up the curve, pyramids, the falling stone).
-- The tractor beam (7 and the cat floating up) — and whether the missing hair drift matters.
-- 7's new voice takes vs. `_v1/` (four lines flagged short/long: s02_02, s06_07, s11_01, s06b_a03).
-- Music levels / ducking, the SFX (several came back at 0 dBFS raw — listen for clipping), pause-menu sliders.
-- After the chapter: explore the saucer; quit the game from the menu; start again and use Continue.
+### Controls (one scheme for the chapter; document it in `CLAUDE.md`)
+1. **Chapter control scheme** (Xbox / keyboard), proposed — adjust if something clashes, and say what you changed:
+   left stick / WASD move · right stick / mouse camera · **A / Space jump** (also grabs ledges when jumping at them) ·
+   **X / E interact** (doors, release, touch the wall, sit) · **B / C crouch-sneak** (toggle) · **B / Space while hanging
+   = let go** (drop) · **RT / right mouse telekinesis** on a highlighted object · R3 camera re-center · Start / Esc pause.
+   Move today's "A / E interact" prompts to X / E. The fight demo keeps its own controls and legend.
+2. **No permanent legend in Chapter 1.** Remove the bottom-left legend in the chapter. Instead:
+   - **Teaching prompts:** the first time a control is needed, a small, clean prompt appears (glyph + one or two words,
+     monochrome, lower middle), stays until the player does it (or ~6 s after they clearly have), then fades. Order:
+     move + camera (start of the cell, after a short beat) → interact (cell door / scene 1) → crouch-sneak (first
+     time it helps — before the Scree, or a low pipe earlier) → jump (first gap) → grab ledge / climb / shimmy / let go
+     (first ledge) → telekinesis (first heavy stone, see 5) → sit (saucer chair).
+   - **Context prompts** after that: only when standing at something usable (e.g. "X Touch", "X Sit"), small and quiet.
+   - Pause menu gets a **Controls** page with the full map (Xbox / keyboard), and Settings gets **Button hints: On / Off**.
+   - Xbox glyphs by default, keys after keyboard use (existing system). No colored glyphs.
 
-## Round 8 — saucer look, gallery extras, Ratwing flip, fluid fighting, launcher + first release — done (2026-11-17)
-Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Round 8". Previews: `Docs/Previews/round8/`. All runs muted
-(output 0.000000), off-screen, Below Normal, one heavy job at a time.
-1. **Saucer look pass — done, cat rig improved (not perfect).** Near city cluster near-black, fewer/larger towers
-   (77 vs 178), few glowing lips, stronger in-fog glows (0.32 → 0.5); a dark overhead hull-edge ring frames the revealed
-   view; seated camera moved to the side (yaw 74°, clear of the chair shell); cat lap lift 0.125 → 0.165 m (check: gap
-   +0.044 m above her thighs, 0 cat vertices inside her). Cat rig (`cleanup_cat.py`): joints fitted to the mesh, bone-heat
-   weights + smoothing, ≤ 4 influences, same 24 bones / clips; worst stretch roughly halved (sit 5.97× → 2.51×, sleep
-   9.45× → 3.26×) — `cat_rig_before_after.png`, `cat_rig_notes.txt`. Still rough: deep sit/sleep folds (needs extra
-   bones or corrective shapes). Not a third-party (AccuRig/Tripo) rig.
-2. **Gallery extras — done.** 7 walks to the sofa and sits (stand_to_sit → sitting_idle) while browsing, camera over her
-   shoulder; stands up when leaving. Legend: d-pad left/right glyph. Images decoded once while the main menu is idle
-   (check: "24 of 24 from the preload cache … 0 s here"); 17/17 gallery input tests pass.
-3. **Ratwing flip — done.** Re-keyed in `cleanup_ratwing.py`: release → head-first beat → wings snap half-open to brake →
-   swing upright around the hips over 0.85 s (eased both ends) while the legs come down and reach → crouch landing at
-   7.9 s (was 7.55); feet 0 mm off ceiling/floor. Contact sheet `ratwing_flip_before_after.png`; in game `05_mid_drop`.
-4. **Fluid fighting — done.** 0.2 s input buffer; combo cancels (a different move may cut the recovery 0.07 s after a
-   blow lands); forward step-in (≤ 0.45 m); smooth turn to the target (no snap); dodge / block interrupt recovery;
-   40–80 ms hit-pause + camera nudge; bot reaction fade 0.06 → 0.03 s; blends 0.08–0.15 s. Check (`-fightcombo`):
-   input → move 0.000–0.015 s; move → next move jab→cross 0.78 s, →hook 0.79, →mma_kick 0.56, →roundhouse 0.94 vs.
-   old rules 1.12 / 1.28 / 0.86 / 1.15 s **and every one of those early presses was dropped before** (needed a 2nd
-   press); combo of 5 in 2.8 s with 6 connects; dodge out of a recovery starts in 0.018 s. Not exercised: a press during
-   the late dodge (test still reports it not starting — check by hand).
-5. **Launcher — done; first release published (see CLAUDE.md "Auto-update launcher").** Copied from chastain_rush
-   (untouched): `Launcher/` (C++), `LauncherBridge.cs`, `Tools/*Launcher*.py`, `Docs/LAUNCHER.md` (Windows + Steam Deck),
-   monochrome icon/cover art. `SevenLauncher.exe`, new signing key (`Builds/PublisherPrivate/`, git-ignored), releases repo
-   `danemoll-jpg/seven-releases` (created, public). Release 0.8.0 (build 800) + starter zip — published 2026-11-17: `game-800` (Latest, 88 MB game.zip, signed catalog) and `starter-800`
-   (`Seven-Starter-0.8.0.zip`, launcher status check PASS) at https://github.com/danemoll-jpg/seven-releases/releases.
-   Not tested: the windowed launcher starting the game and the ready handshake on Dan's PC / the Deck (Dan to try).
-6. **Checks — done.** Chapter 1 start to finish: 45 shots, 0 soft-locks, laser door holds (z 1.050), line of sight 0/1,452, monochrome max 0. Fight / saucer / Ratwing / gallery / menu / Continue all
-   load and pass. Sound check (only unmuted step): 5 SFX, 5.34 s of sound, then 0.000000. Fixed during the checks: 7 and
-   the cat could be snapped across a wall into another walkable zone on a frame hitch (movement now sub-stepped / jump
-   steps rejected); the city's glowing carts were built at the origin (inside the cell) until placed on their tracks.
+### Traversal (Tomb Raider style, short and readable)
+3. **Moves for 7:** jump (standing + running), **ledge grab** when jumping at a ledge, **hang**, **shimmy** left / right,
+   **climb up** (pull up / mantle), **let go** to drop, **drop down** from a ledge edge onto a ledge below, low
+   **mantle** over waist-high obstacles, **crouch-sneak** (Dan's `7_sneak_walk`). Climbable edges read clearly but stay
+   in style — pale worn stone lips / scuffed metal edges catching the light, never painted markers or colors.
+   Assisted, forgiving controls (snap to ledges within a small radius, no pixel-perfect jumps).
+4. **Falls never kill.** A fall into a drop or chasm fades to white and returns 7 to the last safe ledge (no death, no
+   injury animation) — in keeping with the game's tone.
+5. **Telekinesis taught before the Scree:** in the ruins, a heavy stone block or fallen slab blocks the way or is
+   needed as a step — **RT** moves it into place. This teaches the power that she then uses for the Scree distraction.
+   Her energy point brightens while she uses it (visual only for now; energy limits come later).
+6. **Where the traversal goes** (keep every story beat and its order from `Docs/DIALOGUE.md` exactly as is):
+   - **Prison, after scene 3:** a broken catwalk section → the first **jump** across a gap; a low pipe run → **crouch**
+     under; a short wall with a ledge → first **ledge grab + climb up**.
+   - **Scene 4 → the older passage:** the gap into the ancient structures is up a cracked wall → **climb**, then a
+     **shimmy** along a ledge over a dark drop, then **drop down** into the ruins.
+   - **Ruins before the vision:** a short multi-step route — jumps between broken terraces, a hang-and-shimmy, the
+     **telekinesis** stone (item 5) — then the Scree encounter as now.
+   - **After the vision, before the city reveal:** a climb up out of the ruins to the mining passage that leads onto
+     the terrace — so the reveal arrives after an effortful climb.
+   - **Down to the impound** after the reveal: a couple of drops and ledges to reach the bay.
+7. **The cat leads the routes.** He hops ahead to the next ledge or gap and waits there (cats jump well — he shows the
+   way without UI), then rejoins her. He never blocks a jump or a ledge. Keep the 8 m catch-up rule (out of sight).
+8. **Mixamo clips** (Dan downloads — see below; use them if present, keyframe or pose stand-ins if not, and report
+   which). Retarget to 7 as Humanoid; strip root motion where the controller drives movement.
+   **Status 2026-11-17: Dan's clips are in** `Art/Mixamo/7/` — `7_hang_idle`, `7_shimmy` (**one direction only — mirror it
+   for the other side**), `7_climb_up` (Braced Hang To Crouch), `7_jump_to_hang`, `7_hang_drop` (Freehang Drop),
+   `7_running_jump`, `7_fall_idle`, `7_landing` (Falling To Landing), `7_landing_hard` (Hard Landing — for big drops),
+   `7_wall_climb` (Climbing Up Wall — use for the cracked-wall climbs), `7_crouch_idle`. Alternates in
+   `Art/Mixamo/7/alt/` (`7_climbing_a` / `_b` = "Climbing" variants, `7_hang_idle_b`, `7_jumping_up`, `7_running_jump_b`):
+   look at them and pick the best one for each role — **use one of the "Climbing" alternates for the waist-high mantle**
+   if it fits, otherwise a trimmed `7_climb_up`. Report which file you used for each move.
+8b. **The vision object — one of Kyle's floating shapes (Dan, 2026-11-17).** Replace the glowing wall inscription she
+   touches for the first vision (scene 6) with a shape from Kyle's telekinesis painting (`Art/Reference/kyle_7_telekinesis.jpg`):
+   a **glowing white wireframe dodecahedron** (12 pentagon faces — the shape ancient astronomers tied to the heavens,
+   fitting the Moon's Astronomical Age), about 0.6 m across, hovering above a worn pale-stone pedestal in an alcove,
+   rotating very slowly with a faint pulse, lighting the stone around it — styled like Kyle's: thin bright edges with a
+   soft glow, monochrome. Prompt: X "Touch". When she reaches out (`7_touch_wall`), the edges flare, the light swells to
+   white → the vision as now (contents still generic). Afterwards the shape dims to a faint glow. The "symbol she saw in
+   the vision" that opens the passage becomes the same dodecahedron outline glowing on the sealed door. One shape
+   constant so Dan can swap to another of Kyle's shapes (tetrahedron, cube, octahedron) without other changes.
+   Capture: the shape in its alcove, the touch flare, the outline on the door.
 
-### For Dan to check (Round 8)
-- Saucer: does the city below read like Kyle (dark near, pale far)? The seated camera; the cat on your lap.
-- The cat walking / sitting / washing / sleeping with the new rig (sleep and deep sit still fold a little).
-- Gallery: sit on the sofa, browse with the d-pad; entering the saucer should not hitch.
-- Ratwing: the drop and swing upright — weighty enough, any pop?
-- Fight demo: mash jab → cross → hook → kicks; does it flow now? Dodge / block out of a combo.
-- Launcher: download the starter zip from the seven-releases page, run SevenLauncher.exe, install, play; on the Steam
-  Deck add it as a non-Steam game with Proton (Docs/LAUNCHER.md).
+9. **Checks** (muted, off-screen, never steal focus): rebuild; automated playthrough start to finish with traversal
+   (scripted inputs) — no soft-locks, every jump / ledge / shimmy completes; deliberate falls reset to the last safe ledge;
+   each teaching prompt appears once at the right moment and clears; no legend visible in the chapter; captures of every
+   traversal spot + every teaching prompt (Xbox + keys); cat waiting at each next ledge; 7's hands on the ledge while
+   hanging (measure the gap); monochrome 0; audio 0 except a brief reported sound check if new SFX (footstep on ledge,
+   grab, land). Measure the chapter's new length.
+10. Publish a release, update `TODO.md` / `CLAUDE.md`, commit and push, report in ~20 lines.
 
-## Current Objective — none (QF4 done 2026-11-17; waiting for Dan's review)
+### For Dan (before Code starts, optional but better): Mixamo clips for 7
+FBX for Unity, 30 fps, keyframe reduction none, **without skin**, character = 7 → `Art/Mixamo/7/`. Closest match is fine.
+`7_hang_idle.fbx` (Hanging Idle / Braced Hang) · `7_shimmy_left.fbx`, `7_shimmy_right.fbx` (Braced Hang Shimmy, In Place
+off) · `7_climb_up.fbx` (Braced Hang To Crouch / Climbing) · `7_jump_to_hang.fbx` (Jumping Up / Jump To Hang) ·
+`7_hang_drop.fbx` (Hang Drop / Drop Down) · `7_running_jump.fbx` (Running Jump) · `7_fall_idle.fbx` (Falling Idle) ·
+`7_landing.fbx` (Falling To Landing / Hard Landing) · `7_mantle.fbx` (Climbing / Vault, waist-high) ·
+`7_crouch_idle.fbx` (Crouching Idle).
+
 
 ## Quick fix QF4 — cat/opening, dialogue cameras, the real Scree — done (2026-11-17), exe-verified off-screen; release 0.8.2
 Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Quick fix QF4". Previews + logs: `Docs/Previews/qf4/`. Every run
@@ -205,61 +190,6 @@ monochrome max |R−G|,|G−B| = 0 over all 92 final-build shots. No audio chang
 - Opening runs: `Docs/Previews/qf4/opening/01_op01_scene1_0.png … 05_op05_scene1_4.png` + the 25-line PASS log.
 - Play: stand idle in the cell — scene 1 should start by itself ~20 s after the cat sits down outside; the cat never
   comes in. The launcher should offer the 0.8.2 update.
-
-## Quick fix QF3 — Dan's playthrough of Rounds 7 + 8 — done (2026-11-17), exe-verified off-screen; release 0.8.1
-Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Quick fix QF3". Previews + logs: `Docs/Previews/qf3/`. Every run
-muted (output peak 0.000000 / listener 0), minimized-not-activated, Below Normal, one heavy job at a time; monochrome
-max |R−G|,|G−B| = 0 over all 117 release-build shots. No audio changed, so no sound check.
-1. **Phantom walls — done.** Cause: the city's host building was built from nested full-height boxes (and tier 0 as four
-   boxes around the passage mouth), so the inner faces of the upper tiers (fronts at z −32 … +15, sides) and the
-   mouth's side walls / "lintel" (x 15.1 and 17.9, y 1–30 m, the full depth of the host) cut straight through the prison.
-   Dan's slab = the lintel's face seen from the catwalk east of x 17.9. Now the host is only its outer surface (each
-   tier sits on the one below, no bottoms, a hole in the front face for the mouth); the Moon shell + terraces are cut
-   away under the host's footprint (they showed below the catwalk). **Proof** (`FightDemoBuilderPhantomCheck.cs`, run by
-   every build, `Docs/Previews/qf3/phantom_check.txt`): city triangles in any walkable volume (14 zones, floor +0.2 …
-   +2.2 m) **0**; city triangles inside the host volume, i.e. visible from the prison **0**. Non-city renderers without a
-   collider in walkable volumes: 81, all intentional props kept out by zone obstacles or meant to be walked past (laser
-   beams/halos, lamps, rubble, vision ghosts/ruins, saucer, clamps, carts, cradle, lever, drill, ramp rails) — no slabs.
-   Shots vs. Round 6: `prison_round6_vs_qf3.png` (identical framing, no new slabs). City reveal intact (`city_reveal_qf3.png`).
-2. **"(thought)" dropped — done.** Speaker name only for 7 and the cat (`ChapterUI.cs`); the cat's lines stay italic.
-   Check: `13_s04_older_wall.png` / `14_s05_scree_guard.png` show "CAT".
-3. **Cat on her lap — done (static curled cat).** The rig cannot fold the scanned cat (tried a rig "lap" pose: stubby
-   legs, barely curled). `cleanup_cat.py` now also writes `Art/Export/cat/cat_v1_lap.fbx`: the rest mesh with the legs
-   squashed flat under the belly (paws tucked), the tail laid down and kept round, the head lowered/turned 16°/22°,
-   body + tail bent 290° into a ring (0.32 × 0.26 m, 0.23 m high; Blender views in `cat_lap_blender/`). On landing the
-   cat swaps to it under a burst of motes, is settled onto her thighs by measuring both meshes (1.5 cm columns), and
-   only breathes (slow scale pulse); it swaps back when she stands. **Check:** smallest gap to her thighs **+0.0 cm**,
-   no cat vertex inside her thighs (median gap 4.6 cm — her thighs are round), **5.7 cm clear of her forearms/hands**;
-   close-ups `08_lap_closeup`, `08c_lap_front`, `08d_lap_left`, `08e_lap_right`, `08f_lap_above_left`, seated camera
-   `07_seated`; vs. Round 3 / Round 8 in `before_after_lap_reveal.png`. Known: the swap from the landing jump pose to
-   the curled pose is instant (hidden by the shimmer); the tail root is a little lumpy up close.
-4. **Black band after the reveal — done.** It was the Round 8 overhead hull-edge ring (never dissolved) — removed. The
-   new reveal audit in the check run also found the gallery TV screen and the fridge door (non-dissolving materials)
-   and far wall edges beyond the wave (15.5 m vs 14.5 m): fridge door now dissolvable, non-dissolving ship parts hide as
-   the wave passes, wave radius 17.5 m. **Check:** "reveal audit: 68 ship renderers checked, 0 remain visible";
-   shots from the seated camera `12_revealed_wide` + `13_revealed_over_shoulder`, `13b_revealed_far`,
-   `13c_revealed_left`, `13d_revealed_below`, `13e_revealed_above_behind` — only 7, the chair and the cat.
-5. **Excavators removed — done.** In their place three slim freight-lift masts with a small glowing car riding up and
-   down (9 lifts in the city now); conveyors, lifts, the falling terrace stone kept. Check: `27_c04_*`, `28_c05_*`.
-6. **Mouse cursor — done.** `CursorPolicy.cs`: hidden during play; shown only on the main menu / pause menu after the
-   mouse moves (keys / pad hide it again); never locked (right-drag orbit still works). Check: `cursorVisible=False` in
-   all 45 Chapter 1 shots. Not testable off-screen: the menu case (needs a real mouse) — Dan to check.
-7. **Checks, release, docs — done.** Chapter 1 start to finish (45 shots, 0 soft-locks, laser door holds z 1.050, line of
-   sight 0/1,452) on the first build and again from checkpoint 4 on the release build (22 shots, 0 soft-locks); saucer
-   (28 shots incl. lap + reveal audit), gallery (17/17 input tests), menu. **Release 0.8.1 (build 801) published
-   2026-11-17:** `game-801` (Latest, 19 of 233 files changed) at https://github.com/danemoll-jpg/seven-releases/releases
-   — the launcher updates 0.8.0 installs. No new starter zip (optional; `starter-800` updates itself).
-
-### For Dan to check (QF3)
-- Walk the whole prison, especially the catwalk looking back west and out over the void: no slabs
-  (`Docs/Previews/qf3/prison_round6_vs_qf3.png`, proof `phantom_check.txt`).
-- Sit in the chair, let the cat jump up: does the curled cat read as a real cat on your lap? Is the instant swap at
-  landing noticeable? (`08c_lap_front.png`, `08d_lap_left.png`, `before_after_lap_reveal.png`)
-- Reveal the ship from the chair: nothing left but 7, the chair and the cat (`12_revealed_wide.png`, `13c–13e`).
-- City reveal without the excavators — enough mining activity? (`27_c04_pyramids_and_depression.png`)
-- Mouse cursor: gone while playing; appears on the menus only when you move the mouse.
-- Subtitles: "CAT" / "7" without "(thought)".
-- The launcher should offer the 0.8.1 update.
 
 ## Next Steps (Do Not Start Yet)
 - **Scree model** — done in QF4; Scree design approved 2026-11-17 — tail tucked down.
