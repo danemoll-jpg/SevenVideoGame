@@ -98,7 +98,6 @@ apply to every asset and scene:
   automatically). Esc / Start = back to the menu; fight reset = Backspace / d-pad down.
 
 ## Where things stand
-**Rounds 1–4 + QF2 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe`: demo picker with the fight demo
-(fog/glow hill), the saucer mock-up and **Ratwing** (10 s cave scene: hangs asleep, wakes, unfurls, drops, lands;
-scripted Blender rig + keyframes, `cleanup_ratwing.py` → `FightDemoBuilderRatwing.cs`). Rounds 1–3 in
-`TODO-ARCHIVE.md`, Round 4 record in `TODO.md`. **Next:** waiting for Dan's review of Round 4 and the next round.
+**Rounds 1–4 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with a demo picker: fight demo (fog/glow
+hill), saucer mock-up (cat, sit, reveal), Ratwing cave scene. Details in `TODO-ARCHIVE.md`. **Current objective: Round 5** —
+Kyle's art gallery TV on the saucer (`Art/Gallery/` + `gallery.json`, loaded at runtime). See `TODO.md`.

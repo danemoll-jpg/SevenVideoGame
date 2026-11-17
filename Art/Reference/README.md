@@ -7,6 +7,7 @@ Note: some images carry a red "7" logo; the game itself stays strictly monochrom
 Some of the older pieces show a high-cut bodysuit or posed, body-focused framing; those predate the confirmed rule that
 7 is presented non-sexually (full-coverage outfit, neutral poses, no camera emphasis on her body). Follow the approved
 model (`7_ref_regular_*.png`) for her outfit and framing, not those pieces.
+(This applies to building the game. The in-game art gallery shows Kyle's pieces as drawn — Dan, 2026-11-17.)
 
 ## 7 — character
 | File | What it shows | Use it for |

@@ -6,6 +6,10 @@
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **QF2 + Round 4 — Ratwing cave scene — done (2026-11-17), exe-verified off-screen; Dan to watch.** Build now at
+  `Unity\Builds\Seven\SevenDemo.exe`. Ratwing (2.1 m, 55k tris, scripted 38-bone rig with wing spars) hangs asleep,
+  wakes, unfurls, drops and lands in a fog-lit cave (third demo-picker entry). Full record in `TODO-ARCHIVE.md` →
+  "QF2 + Round 4". Old `Unity\Builds\FightDemo` can be deleted by Dan.
 - **Round 4 + QF2 — done (2026-11-17), exe-verified off-screen; Dan to watch.** Build moved to
   `Unity\Builds\Seven\SevenDemo.exe`; Ratwing cave scene (rigged + keyframed in Blender) on the demo picker. Record below.
 - **Round 3 — saucer mock-up — done (2026-11-16), exe-verified off-screen; Dan to play.** Demo picker (Fight / Saucer),
@@ -27,59 +31,40 @@
   Script kept as `Tools/Model/fix_v1_to_v2.py`. Source facts: 0.98 m tall, ~1.95M triangles, one 4K base-color texture.
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
-## Current Objective — Round 4 done (2026-11-17), exe-verified off-screen; waiting for Dan to watch it
-Next round not set yet. Round 4 record below (move it to `TODO-ARCHIVE.md` when the next round starts).
+## Current Objective — Round 5: Kyle's art gallery TV on the saucer
+Commit the repo as it is before changing anything (safety checkpoint).
+Dan's idea: a TV on 7's ship where players scroll through Kyle G. Anderson's artwork. Small and playable, like the
+other demos. All standing rules apply (monochrome, fog/glow look, non-sexual presentation).
 
-### Quick fix QF2 (Dan, 2026-11-16) — build folder name — **done**
-Builder writes `Unity\Builds\Seven\SevenDemo.exe` (product "7: The Observer — Demo", set in `ConfigurePlayer`); paths
-updated in `CLAUDE.md` (no README/legend named the exe). Rebuilt; muted off-screen `-fight` and `-saucer` runs passed
-(audio RMS 0, monochrome max 0). Old `Unity\Builds\FightDemo` left in place — **Dan can delete it.**
+1. **Gallery content folder** `Art/Gallery/`: copy Kyle's images there (start from every `Art/Reference/kyle_*.jpg`) plus
+   `Art/Gallery/gallery.json` — one entry per image, in display order: `file`, `title` (short, plain; from the
+   reference index), `include` (true/false). Credit line for every image: "Art by Kyle G. Anderson".
+   The builder copies the included images into the build (`StreamingAssets/Gallery/`) and the game **loads the list and
+   images at runtime**, so Dan can add or reorder art by editing the folder + JSON and rebuilding (document how in
+   `CLAUDE.md`; if adding images straight into the built `StreamingAssets/Gallery/` works without a rebuild, say so).
+2. **Default `include` values: all `true`.** DECIDED (Dan, 2026-11-17): the gallery shows Kyle's original artwork as he
+   drew it — the non-sexual presentation rule governs the game itself (models, outfits, animation, camera), not this
+   gallery of his art. `include` stays in the JSON so Dan can still hide or reorder pieces later.
+3. **The TV on the saucer:** a lounge nook on the deck with a curved sofa facing a large retro-futurist screen
+   (rounded, softly glowing bezel, fits the ship's curves). When nobody is using it, it slowly cycles through the
+   included art (cross-fade every ~8 s) so it reads as a lit screen from across the deck.
+4. **Viewing mode:** near the screen a prompt shows (A / E: "View art"). The camera eases to face the screen; the image
+   fills the screen at its own aspect ratio (no stretching). Controls: left / right (d-pad, left stick, LB / RB,
+   ← / →) previous / next with a quick cross-fade, wraps around; **Y / F = full view** (image fills the whole display,
+   letterboxed) and back; **B / Esc = leave**. Caption under the image: title, "Art by Kyle G. Anderson", "n / N".
+   Legend shows these controls (Xbox glyphs by default, keys after keyboard use).
+5. **Monochrome:** show the art in grayscale like everything else (keep saturation −100) — a few of Kyle's pieces carry
+   a red "7" logo, which will appear gray. Keep the screen readable (bloom must not wash out the images; exclude the
+   screen from bloom or tone it down while viewing).
+6. **Checks** (muted, off-screen, never take focus): rebuild; capture the TV across the deck (idle slideshow), viewing
+   mode, next/previous, full view, leaving, both legends. Verify the image count matches the included entries, aspect
+   ratios are preserved (measure), monochrome max |R−G|,|G−B| = 0, audio 0. Saucer sit/reveal and the other demos still
+   work (quick regression).
+7. End of round: update `TODO.md` (per-item status, "For Dan to check") and `CLAUDE.md`, commit and push.
 
-### Round 4 — Ratwing hangs asleep in a cave, wakes, drops and lands — **done**
-Third demo-picker entry **Ratwing** (also `-ratwing`): a 10 s scene, then "A: replay  /  Menu: back" (keys: "Enter:
-replay  /  Esc: back"); A skips to the end once it has been seen in full; Esc / Start back to the menu.
-1. **Cleanup — done.** `Tools/Blender/cleanup_ratwing.py` (~2 min): 2.1 m standing height (`HEIGHT`, head top; wing hooks
-   reach ~2.2 m), origin between the feet, facing −Y → 55,000 tris, X-symmetric, membranes and claws protected
-   (vertex-group weighted collapse): **0 hole (boundary) edges**; the membranes keep 73 % of the budget (body ~15k).
-   One material, double-sided in Unity; texture grayscale 2048. Metrics in `Art/Export/ratwing/ratwing_metrics.txt`.
-2. **Rig — done, with one deviation:** a scripted 38-bone deform rig fitted from mesh slices (hips/spine/chest/neck/
-   head, **jaw**, **eyes** (glint), arms, digitigrade legs with toes; per wing: root, upper, 3 two-segment finger spars
-   found from the membrane's trailing-edge cusps) instead of a Rigify metarig — a Rigify control rig would have to be
-   baked back to deform bones for the FBX anyway (same approach as the Round 3 cat). Membranes get angular "fan"
-   weights (folding compresses them like a fan). Wing edge stretch (× rest length, 99th pct / max): wrapped 1.19 / 2.5,
-   full spread 1.77 / 2.7 (worst edges are where the wing joins the back), stance 1.12 / 2.3. No tearing visible.
-3. **Sequence — done.** Clips `sequence` (10 s @ 30 fps) + `idle` (2 s loop), all keyed by script (`seq_pose`,
-   poses `P_SLEEP … P_STANCE`): asleep hanging by the feet with wings wrapped as a cloak, breathing + sway → eyes snap
-   on at 3.55 s, head lifts and turns → wings unfurl past full spread, hiss (jaw) → drop with a half-roll upright,
-   wings half open → crouch landing at 7.55 s, wings spread → rises to a hunched stance, breathing. Feet pinned to the
-   ledge while hanging and to the floor after landing on every frame.
-4. **Cave scene — done.** `Assets/Scenes/Ratwing.unity` from `FightDemoBuilderRatwing.cs`: noisy rock shell, 70
-   stalactites + stalagmites, boulders, a rock ledge with a flat underside at 4.2 m (`RatwingCeil` = Blender `CEIL`),
-   a ragged mouth (rim boulders) onto bright fog with huge spires fading out, `Atmosphere_Cave` prefab variant
-   (dark interior, bright mouth), a cave-only post volume (tighter bloom, +contrast, saturation −100), 4 faint light
-   shafts, drifting haze particles, dust puff at touchdown. Ratwing reads as a dark silhouette against the mouth.
-5. **Camera — done.** Push-in while asleep, hold on the eyes, pull back for the 3.2 m wingspan, follows his hips down
-   during the drop, wide on the landing. A-skip after the first full viewing (per session).
-6. **Checks — done** (rebuild + muted, minimized/not-activated, Below Normal run, ~17 s): eye glints on at 3.59 s;
-   **hanging: feet top 0.0–0.2 mm under the ledge over 249 samples, raycast to the ledge surface 0.0–0.2 mm**; lowest
-   point while hanging 1.92 m above the floor; **landed: lowest foot 0.1 mm below to 0.2 mm above the floor** (66
-   samples, raycast agrees); wingspan 3.24 m; replay restarts (T=0.99 s after 1 s), skip jumps to the stance;
-   **audio output RMS 0.000000 (listener 0)** at start and end; **monochrome max |R−G|,|G−B| = 0** on every shot (also
-   menu + `-fight -quick` regression). Wing holes/tearing: none seen in the full-fold and full-spread shots.
-   Not perfect: from the close-up angle only one eye glint shows (the other sits behind the cheek); hands stay outside
-   the wing cloak while hanging.
-7. **End of round — done:** this file, `CLAUDE.md`, commit + push.
-
-### For Dan to check (Round 4)
-- Run `Unity\Builds\Seven\SevenDemo.exe` → **Ratwing**. Does the wake-up read as menacing and the drop/landing feel
-  weighty? Is 2.1 m the right size (one constant: `HEIGHT` in `cleanup_ratwing.py`)?
-- Shots in `Docs/Previews/round4/`: `01_cave_wide`, `02_asleep`, `02b_asleep_close` (wing cloak), `03_eyes_open`,
-  `03b_eyes_close`, `04_wings_spread`, `04b_wings_spread_close` (membranes), `05_mid_drop`, `06_landing` (dust),
-  `07_crouch`, `08_final_stance`, `09_prompt_pad` / `09b_prompt_keys`, `10_stance_side`, `10b_stance_back`,
-  `11_after_skip`, `00_menu`; Blender contact sheets `blender_sequence_front.png` / `_side.png`,
-  `blender_head_wake_hiss.png`; logs `capture_log.txt`, `ratwing_metrics.txt`.
-- Taste calls: cave brightness (`Atmosphere_Cave` knobs, try with `-atmofile`), dust amount, how long he hangs asleep.
-- Old `Unity\Builds\FightDemo` can be deleted.
+### For Dan to check (after Round 5)
+- Walk to the TV on the saucer and browse. Does it feel right? Is the order good?
+- To add more of Kyle's art: drop the file in `Art/Gallery/`, add a line to `gallery.json`, rebuild (exact steps in `CLAUDE.md`).
 
 ## Next Steps (Do Not Start Yet)
 - **Hair ties → glowing round clips** (Kyle's art: `kyle_7_face_hairclips`, `kyle_7_riding_fog`, `kyle_world_mood`)
