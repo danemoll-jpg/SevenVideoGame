@@ -3,7 +3,8 @@ using UnityEngine.SceneManagement;
 
 namespace Seven
 {
-    /// <summary>Scene glue: Esc / Start resets the scene, -room loads the old training room, -capture starts the check run.</summary>
+    /// <summary>Scene glue: Backspace / d-pad down resets the scene, Esc / Start goes back to the demo picker,
+    /// -room loads the old training room, -capture starts the check run.</summary>
     public class FightDirector : MonoBehaviour
     {
         public SevenFighter Seven;
@@ -29,8 +30,9 @@ namespace Seven
 
         void Update()
         {
-            if (DemoBoot.CaptureDir == null && Input != null && Input.Reset.WasPressedThisFrame())
-                SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (DemoBoot.CaptureDir != null || Input == null) return;
+            if (Input.Reset.WasPressedThisFrame()) SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+            if (Input.Menu.WasPressedThisFrame()) SceneManager.LoadScene(DemoMenu.SceneName);
         }
     }
 }

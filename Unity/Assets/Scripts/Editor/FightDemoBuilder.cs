@@ -13,12 +13,13 @@ using UnityEngine.Rendering.Universal;
 namespace Seven.EditorTools
 {
     /// <summary>
-    /// Builds the fight demo (Round 2: outdoor fog/glow world + Round 1 room) from the repo's art folders, start to finish, so it can run headless:
+    /// Builds every demo (Round 3: demo picker + saucer, see FightDemoBuilderSaucer.cs; Round 2: outdoor fog/glow world;
+    /// Round 1 room) from the repo's art folders, start to finish, so it can run headless:
     ///   Unity.exe -batchmode -quit -projectPath Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine
     /// Steps: copy Mixamo FBX files into Assets -> Humanoid import settings -> grayscale texture + materials ->
     /// animator controllers -> FightDemo scene -> Windows player (Unity/Builds/FightDemo/SevenFightDemo.exe).
     /// </summary>
-    public static class FightDemoBuilder
+    public static partial class FightDemoBuilder
     {
         const string CharRoot = "Assets/Art/Characters";
         const string SevenDir = CharRoot + "/7";
@@ -32,8 +33,10 @@ namespace Seven.EditorTools
         static string RepoRoot => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
         static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         public static string ExePath => Path.Combine(ProjectRoot, "Builds", "FightDemo", "SevenFightDemo.exe");
+        /// <summary>Build order: the demo picker first.</summary>
+        static string[] AllScenes => new[] { MenuScenePath, ScenePath, RoomScenePath, SaucerScenePath };
 
-        static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed" };
+        static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle" };
         static readonly string[] RootMotion = { "finisher", "dodge", "knocked_down", "get_up" };
 
         static void Log(string s) => Debug.Log("[FightDemoBuilder] " + s);
@@ -71,7 +74,8 @@ namespace Seven.EditorTools
             var atmo = BuildAtmosphere();
             BuildRoomScene(sevenCtl, botCtl, mats);
             BuildOutdoorScene(sevenCtl, botCtl, mats, atmo);
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(ScenePath, true), new EditorBuildSettingsScene(RoomScenePath, true) };
+            BuildRound3(sevenCtl, atmo);
+            EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
             ConfigurePlayer();
             AssetDatabase.SaveAssets();
             Log("BuildAll done");
@@ -90,7 +94,16 @@ namespace Seven.EditorTools
                         File.Copy(f, to, true);
                 }
             }
-            CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "7"), SevenDir, "*.fbx");
+            CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "7"), SevenDir, "7_*.fbx");
+            // Round 3 sit clips: Dan's Mixamo downloads keep Mixamo's names; copy them under the 7_ state names.
+            foreach (var (from, to) in new[] { ("Stand To Sit.fbx", "7_stand_to_sit.fbx"), ("Seated Idle.fbx", "7_sitting_idle.fbx"),
+                                               ("Sitting Idle.fbx", "7_sitting_idle.fbx"), ("Sit To Stand.fbx", "7_sit_to_stand.fbx") })
+            {
+                var f = Path.Combine(RepoRoot, "Art", "Mixamo", "7", from);
+                var dst = Path.Combine(ProjectRoot, SevenDir, to);
+                if (File.Exists(f) && (!File.Exists(dst) || File.GetLastWriteTimeUtc(f) > File.GetLastWriteTimeUtc(dst) || new FileInfo(f).Length != new FileInfo(dst).Length))
+                    File.Copy(f, dst, true);
+            }
             CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "YBot"), BotDir, "*.fbx");
 
             // Pre-Mixamo model kept as a fallback asset (not used by the scene).
@@ -317,7 +330,8 @@ namespace Seven.EditorTools
             var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
             go.name = name;
             go.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(facing));
-            var anim = go.GetComponent<Animator>() ?? go.AddComponent<Animator>();
+            var anim = go.GetComponent<Animator>();
+            if (anim == null) anim = go.AddComponent<Animator>();
             if (anim.avatar == null) anim.avatar = AssetDatabase.LoadAllAssetsAtPath(fbx).OfType<Avatar>().First();
             anim.runtimeAnimatorController = ctl;
             anim.applyRootMotion = true;
@@ -961,7 +975,7 @@ namespace Seven.EditorTools
         static void ConfigurePlayer()
         {
             PlayerSettings.companyName = "Dan";
-            PlayerSettings.productName = "7 The Observer - Fight Demo";
+            PlayerSettings.productName = "7 The Observer - Demos";
             PlayerSettings.runInBackground = true;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;   // QF1: borderless, native resolution
@@ -978,7 +992,7 @@ namespace Seven.EditorTools
             Directory.CreateDirectory(Path.GetDirectoryName(ExePath));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { ScenePath, RoomScenePath },
+                scenes = AllScenes,
                 locationPathName = ExePath,
                 target = BuildTarget.StandaloneWindows64,
                 options = BuildOptions.None,

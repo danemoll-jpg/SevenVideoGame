@@ -9,14 +9,19 @@ namespace Seven
     /// On-screen controls legend in uGUI (rendered by the fight camera, so it shows up in off-screen captures).
     /// Shows Xbox controller glyphs by default and switches to the keyboard/mouse legend automatically when the last
     /// input came from keyboard or mouse. Monochrome: white glyphs on a dark translucent panel, no button colours.
+    /// Layouts: the fight demo, and the saucer's two contexts (walking / seated). Optional centre-bottom prompt
+    /// ("A Sit") for context actions.
     /// </summary>
     public class ControlsLegend : MonoBehaviour
     {
         public Camera Cam;
         public bool ShowXbox = true;
+        public enum Layout { Fight, SaucerWalk, SaucerSeated }
+        public Layout Set = Layout.Fight;
+        bool _saucer;
         [System.NonSerialized] public bool AutoSwitch = true;   // check runs force a mode
 
-        enum G { Face, Bumper, Trigger, DPadUp, Stick, StickClick, Menu, View, Key, WideKey, Mouse }
+        enum G { Face, Bumper, Trigger, DPadUp, DPadDown, Stick, StickClick, Menu, View, Key, WideKey, Mouse }
         struct Row { public (G g, string t)[] Glyphs; public string Label; public Row(string label, params (G, string)[] glyphs) { Label = label; Glyphs = glyphs; } }
 
         static readonly Row[] XboxRows =
@@ -33,7 +38,8 @@ namespace Seven
             new Row("move", (G.Stick, "L")),
             new Row("orbit camera", (G.Stick, "R")),
             new Row("re-center camera", (G.StickClick, "R3")),
-            new Row("reset", (G.Menu, "")),
+            new Row("reset", (G.DPadDown, "")),
+            new Row("demo menu", (G.Menu, "")),
             new Row("fullscreen on/off", (G.View, "")),
         };
 
@@ -51,9 +57,54 @@ namespace Seven
             new Row("move", (G.Key, "W"), (G.Key, "A"), (G.Key, "S"), (G.Key, "D")),
             new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
             new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
-            new Row("reset", (G.WideKey, "Esc")),
+            new Row("reset", (G.WideKey, "Bksp")),
+            new Row("demo menu", (G.WideKey, "Esc")),
             new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
+
+        // Saucer: walking around the ship.
+        static readonly Row[] SaucerWalkXbox =
+        {
+            new Row("move", (G.Stick, "L")),
+            new Row("orbit camera", (G.Stick, "R")),
+            new Row("re-center camera", (G.StickClick, "R3")),
+            new Row("sit (near the chair)", (G.Face, "A")),
+            new Row("demo menu", (G.Menu, "")),
+            new Row("fullscreen on/off", (G.View, "")),
+        };
+        static readonly Row[] SaucerWalkKeys =
+        {
+            new Row("move", (G.Key, "W"), (G.Key, "A"), (G.Key, "S"), (G.Key, "D")),
+            new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
+            new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
+            new Row("sit (near the chair)", (G.Key, "E")),
+            new Row("demo menu", (G.WideKey, "Esc")),
+            new Row("fullscreen on/off", (G.WideKey, "F11")),
+        };
+        // Saucer: seated in the chair.
+        static readonly Row[] SaucerSeatedXbox =
+        {
+            new Row("stand up", (G.Face, "B")),
+            new Row("reveal / return the ship", (G.Face, "Y")),
+            new Row("orbit camera", (G.Stick, "R")),
+            new Row("re-center camera", (G.StickClick, "R3")),
+            new Row("demo menu", (G.Menu, "")),
+            new Row("fullscreen on/off", (G.View, "")),
+        };
+        static readonly Row[] SaucerSeatedKeys =
+        {
+            new Row("stand up", (G.Key, "Q")),
+            new Row("reveal / return the ship", (G.Key, "R")),
+            new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
+            new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
+            new Row("demo menu", (G.WideKey, "Esc")),
+            new Row("fullscreen on/off", (G.WideKey, "F11")),
+        };
+
+        readonly Dictionary<(Layout, bool), GameObject> _panels = new Dictionary<(Layout, bool), GameObject>();
+        GameObject _promptX, _promptK;
+        Text _promptTextX, _promptTextK;
+        bool _promptOn;
 
         GameObject _xboxPanel, _keyPanel;
         Font _font;
@@ -75,18 +126,54 @@ namespace Seven
             scaler.referenceResolution = new Vector2(1280, 720);
             scaler.matchWidthOrHeight = 1f;
 
-            _xboxPanel = BuildPanel(canvasGo.transform, "XboxLegend", XboxRows);
-            _keyPanel = BuildPanel(canvasGo.transform, "KeyLegend", KeyRows);
+            _saucer = Set != Layout.Fight;
+            if (!_saucer)
+            {
+                _panels[(Layout.Fight, true)] = _xboxPanel = BuildPanel(canvasGo.transform, "XboxLegend", XboxRows);
+                _panels[(Layout.Fight, false)] = _keyPanel = BuildPanel(canvasGo.transform, "KeyLegend", KeyRows);
+            }
+            else
+            {
+                _panels[(Layout.SaucerWalk, true)] = BuildPanel(canvasGo.transform, "WalkXbox", SaucerWalkXbox);
+                _panels[(Layout.SaucerWalk, false)] = BuildPanel(canvasGo.transform, "WalkKeys", SaucerWalkKeys);
+                _panels[(Layout.SaucerSeated, true)] = BuildPanel(canvasGo.transform, "SeatedXbox", SaucerSeatedXbox);
+                _panels[(Layout.SaucerSeated, false)] = BuildPanel(canvasGo.transform, "SeatedKeys", SaucerSeatedKeys);
+                _promptX = BuildPrompt(canvasGo.transform, "PromptXbox", G.Face, "A", out _promptTextX);
+                _promptK = BuildPrompt(canvasGo.transform, "PromptKeys", G.Key, "E", out _promptTextK);
+            }
             Apply();
         }
 
         public void SetMode(bool xbox) { ShowXbox = xbox; Apply(); }
+        public void SetLayout(Layout l) { Set = l; Apply(); }
+
+        /// <summary>Centre-bottom context prompt (saucer: "Sit" near the chair). Glyph: A / E.</summary>
+        public void Prompt(string label)
+        {
+            _promptOn = !string.IsNullOrEmpty(label);
+            if (_promptTextX != null && _promptOn) { _promptTextX.text = label; _promptTextK.text = label; }
+            Apply();
+        }
 
         void Apply()
         {
-            if (_xboxPanel == null) return;
-            _xboxPanel.SetActive(ShowXbox);
-            _keyPanel.SetActive(!ShowXbox);
+            if (_panels.Count == 0) return;
+            foreach (var kv in _panels) kv.Value.SetActive(kv.Key.Item1 == Set && kv.Key.Item2 == ShowXbox);
+            if (_promptX != null) { _promptX.SetActive(_promptOn && ShowXbox); _promptK.SetActive(_promptOn && !ShowXbox); }
+        }
+
+        GameObject BuildPrompt(Transform parent, string name, G g, string glyph, out Text label)
+        {
+            var panel = new GameObject(name, typeof(RectTransform));
+            panel.transform.SetParent(parent, false);
+            var rt = (RectTransform)panel.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(0f, 90f);
+            rt.sizeDelta = new Vector2(150f, 40f);
+            panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
+            AddGlyph(panel.transform, g, glyph, new Vector2(14f, 6f), new Vector2(28f, 28f));
+            label = AddText(panel.transform, "", new Vector2(52f, 4f), new Vector2(90f, 32f), 20, TextAnchor.MiddleLeft);
+            return panel;
         }
 
         void Update()
@@ -256,6 +343,14 @@ namespace Seven
                     // Rounded top, flat bottom.
                     float d = RoundRect(x, y, cx, cy - h * 0.06f, cx - m - w * 0.06f, cy - m, w * 0.32f);
                     return Stroke(d, line);
+                }
+                case G.DPadDown:
+                {
+                    float arm = w * 0.17f, len = cx - m;
+                    float v = RoundRect(x, y, cx, cy, arm, len, 2f);
+                    float hz = RoundRect(x, y, cx, cy, len, arm, 2f);
+                    float down = RoundRect(x, y, cx, cy - len * 0.55f, arm - line, len * 0.42f, 1.5f);   // filled "down" arm
+                    return Mathf.Max(Stroke(Mathf.Min(v, hz), line), Fill(down));
                 }
                 case G.DPadUp:
                 {

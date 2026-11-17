@@ -33,15 +33,15 @@ namespace Seven
 
         public float Length(string state) => _len.TryGetValue(state, out var l) ? l : 1f;
 
-        protected void Play(string state, float fade = 0.12f, float speed = 1f, bool restart = true)
+        protected void Play(string state, float fade = 0.12f, float speed = 1f, bool restart = true, float startNormalized = 0f)
         {
             if (!restart && State == state) return;
             State = state;
-            Tn = 0f;
+            Tn = startNormalized;
             _speed = speed;
             _frozen = false;
             Anim.speed = speed;
-            Anim.CrossFadeInFixedTime(state, fade, 0, 0f);
+            Anim.CrossFadeInFixedTime(state, fade, 0, startNormalized * Length(state));
         }
 
         protected void Freeze(bool frozen)
@@ -68,8 +68,11 @@ namespace Seven
                 transform.position += _slideVel * Time.deltaTime;
                 _slideVel = Vector3.MoveTowards(_slideVel, Vector3.zero, _slideDecel * Time.deltaTime);
             }
-            ClampToArena();
+            if (Grounded) ClampToArena();
         }
+
+        /// <summary>False while the character is carried by something else (7 seated in her chair).</summary>
+        protected virtual bool Grounded => true;
 
         void OnAnimatorMove()
         {

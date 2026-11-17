@@ -22,7 +22,7 @@
   Script kept as `Tools/Model/fix_v1_to_v2.py`. Source facts: 0.98 m tall, ~1.95M triangles, one 4K base-color texture.
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
-## Current Objective — Round 3: saucer mock-up (walk the ship, cat on her lap, ship fades to show the city)
+## Current Objective — Round 3: saucer mock-up — DONE (see status below); waiting for Dan to play
 Proof of concept, playable but small, like the fight demo. All standing rules apply: strictly monochrome,
 Kyle's fog/glow world look (`Atmosphere` prefab), non-sexual presentation, 7 never kills.
 Commit the repo as it is before changing anything (safety checkpoint).
@@ -85,12 +85,69 @@ the older concept doc: the game is strictly monochrome. The cat: **black**, play
    `Art/Reference/kyle_world_mood.jpg` in `Docs/Previews/round3/` and judge the mood honestly.
 10. End of round: update `TODO.md` (per-item status, "For Dan to check") and `CLAUDE.md`, commit and push.
 
+### Round 3 status (2026-11-16) — built and exe-verified off-screen; Dan to play
+Check run: `SevenFightDemo.exe -mute -saucer -capture <dir>` (~70 s). Shots + log in `Docs/Previews/round3/`
+(`saucer_capture_log.txt`). Every shot monochrome (max |R−G|,|G−B| = 0), audio level 0 throughout.
+
+1. **Demo picker — done.** `Menu` scene first: Fight demo / Saucer demo (stick or d-pad + A; W/S or arrows + Enter).
+   Esc / Start in either demo returns to it. `-fight` / `-saucer` skip it (`-room` and plain `-capture` still go to
+   the fight). Fight **reset moved** from Esc/Start to **Backspace / d-pad down** (legend updated). Check:
+   `00_menu.png`; fight check run still completes (bot recovers, audio 0, monochrome 0).
+2. **Cat model — done, with a simpler rig than planned.** `Tools/Blender/cleanup_cat.py` → `Art/Export/cat/cat_v1_rigged.fbx`:
+   body squared to −Y (the source stood turned 21°), head straightened (5° left after that, not 30°), 18k tris, 0.25 m
+   at the shoulder, origin between the feet, grayscale 2K texture. **Not Rigify's cat metarig** (it would still need
+   every bone placed by hand): a 24-bone quadruped rig fitted to the mesh by script, distance-based weights, and
+   scripted clips idle / walk / sit / wash / jump / sleep (grounded per frame: paws/rump on the floor). The source has
+   **no separate whiskers** (one mesh), so they decimated away; 10 thin procedural whisker strips replace them.
+   Fur: `Seven/DissolveLit` with a white rim 0.35 + smoothness 0.55; eyes come from the texture. Previews only in the
+   game shots (crude rig: some stretching at the chest in walk; sleep is a C-curl with the head up).
+3. **Saucer interior — done.** `Assets/Scenes/Saucer.unity` from `FightDemoBuilderSaucer.cs`: 16 m round deck, low
+   dome with 4 concentric ribs, white cove light + 8 soft point lights, dark banded carpet, polished curved wall
+   panels with seams, 3 curved built-in sofas, round table + 3 poufs + 2 side tables, 6 potted plants, 2 nooks with
+   benches. Egg pod chair on a tulip pedestal facing a wide curved window + glass floor strip looking down. Collision:
+   analytic (round wall, nook side walls, furniture circles); camera stays under the dome/inside the wall. Not done:
+   no exterior hull view, so "bigger inside" is only implied.
+4. **City below — done.** 200 m below: ~180 stepped towers in 11 clusters with white light bands, 4 ring terraces.
+   `Atmosphere_Above.prefab` = "from above" variant of the Atmosphere prefab (`Docs/ATMOSPHERE.md`).
+5. **Walking and the cat — done.** Same camera-relative walk + orbit camera; cat roams at **2× (`CatCompanion.RoamScale`)**:
+   follows, wanders, sits, washes, naps (when 7 stands still). Check: 7's lowest point while walking −0.016…+0.004 m;
+   cat paws −0.001…+0.002 m.
+6. **Sit — done (real clips).** A / E near the chair: she walks to the spot, turns to the window, Stand To Sit →
+   Seated Idle (Dan's `Stand To Sit` / `Seated Idle` / `Sit To Stand`; the clips don't line up — hips 0.47 m back and
+   9 cm lower at the end of Stand To Sit — so her hips are pinned to the seat while seated). Cat trots over, hops
+   with a white shimmer + motes shrinking 2× → 1×, curls up asleep on her lap and rides it. B / Q: cat hops off and
+   grows back. Checks: seated 2.5 s after A; cat hop 4.2 s after A; **lap gap +0.004 m, 0 of 12 231 cat vertices
+   below her thigh surface**. Not done: her forearms rest on her knees in Seated Idle and can touch the cat's back.
+7. **Reveal — done.** Y / R while seated: everything but 7, the chair shell and the cat dissolves in a noisy wave from
+   the chair (white edge glow, rising white motes; lights and glass fade as it passes), chair tilts 9°, camera eases
+   out to a wide side view. Again → rebuilds from the outside in. Standing while revealed returns the ship first
+   (4.2 s), then she stands. Shots `11`–`14`.
+8. **Legend — done.** Xbox/keys auto-switch; walking and seated layouts + a centre "A Sit" / "E Sit" prompt near the
+   chair. Shots `03`, `04`, `09`, `10`.
+9. **Checks — done** (list above). Mood vs. Kyle (`compare_revealed_vs_kyle.png`), honestly: the fog-buried towers
+   rising out of a bright haze are there, but the frame is **too flat and washed out** — no dark foreground or dark
+   overhead mass, weak in-fog glows, plain box towers. Needs a tuning pass (see Next Steps).
+10. **End of round — done** (this file, `CLAUDE.md`, commit + push).
+
+Other: the over-the-shoulder seated camera still clips the egg chair's back at some orbit angles; the chair was made
+a lower pod to help. Fight demo unchanged otherwise.
+
 ### For Dan to check (after Round 3)
-- Walk the ship: does it feel like 7's saucer (curvy, carpeted, plants, bigger inside)?
-- Sit down: does the cat's hop + shrink onto her lap read well? Is the roaming size right?
-- Reveal: does the ship fading away and the view of the city land the moment?
+- Menu: `Docs/Previews/round3/00_menu.png`. Play: run the exe, pick **Saucer demo**.
+- Walk the ship: does it feel like 7's saucer (curvy, carpeted, plants, bigger inside)? — `01_ship_wide.png`,
+  `01b_ship_wide_back.png`, `01c_window_chair.png`
+- Cat: roaming size right (2×)? — `02_cat_wander.png`, `02b_cat_wash.png`
+- Sit down: does the hop + shrink onto her lap read? — `05_sit_down.png`, `06_cat_hop_shimmer.png`, `07_seated.png`,
+  `08_lap_closeup.png`, `08b_lap_cat_only.png` (7 hidden)
+- Reveal: does the ship fading away land the moment? — `11_reveal_half.png`, `12_revealed_wide.png`,
+  `13_revealed_over_shoulder.png`, `13b_revealed_far.png`, `14_ship_back.png`, `compare_revealed_vs_kyle.png`
+- Stand up: `15_stand_cat_hops_off.png`, `16_after_stand.png`. Legends: `03`, `04`, `09`, `10`.
+- Decide: fight reset is now Backspace / d-pad down (Esc / Start = menu) — OK?
 
 ## Next Steps (Do Not Start Yet)
+- **Saucer look pass:** darker city near the ship / dark overhead hull edge for Kyle's silhouette contrast, stronger
+  in-fog glows, less boxy towers; seated camera vs. chair back; cat on-lap pose clear of her forearms; better cat rig
+  (proper fitting or a Tripo/AccuRig quadruped rig) if the cat stays a main character.
 - **Launcher / auto-update** (copy from `C:\Users\danmo\chastain_rush`) and releases repo — deferred until there is
   more than a demo. OPEN for Dan: publish every round once it exists? Default: yes.
 - **Bubble helmet, hover bike, saucer, cat companion models** — deferred; need concept images and prompts first.

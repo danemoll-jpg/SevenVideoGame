@@ -6,7 +6,7 @@ namespace Seven
     /// <summary>Input System actions for the fight demo (keyboard + gamepad), built in code.</summary>
     public class FightInput : MonoBehaviour
     {
-        public InputAction Move, Look, Recenter, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset;
+        public InputAction Move, Look, Recenter, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset, Menu;
 
         static InputAction Button(string name, params string[] paths)
         {
@@ -37,12 +37,13 @@ namespace Seven
             Dodge = Button("dodge", "<Keyboard>/shift", "<Gamepad>/leftShoulder");
             Finisher = Button("finisher", "<Keyboard>/f", "<Gamepad>/rightTrigger");
             Telekinesis = Button("telekinesis", "<Keyboard>/t", "<Gamepad>/dpad/up");
-            Reset = Button("reset", "<Keyboard>/escape", "<Gamepad>/start");
+            Reset = Button("reset", "<Keyboard>/backspace", "<Gamepad>/dpad/down");
+            Menu = Button("menu", "<Keyboard>/escape", "<Gamepad>/start");     // back to the demo picker
 
             foreach (var a in All()) a.Enable();
         }
 
-        InputAction[] All() => new[] { Move, Look, Recenter, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset };
+        InputAction[] All() => new[] { Move, Look, Recenter, Jab, Cross, Hook, Roundhouse, MmaKick, Block, Dodge, Finisher, Telekinesis, Reset, Menu };
 
         void OnDestroy()
         {

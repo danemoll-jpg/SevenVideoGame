@@ -53,6 +53,9 @@ apply to every asset and scene:
 - Clean up 7 (from repo root):
   `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_7.py -- C:/Users/danmo/SevenVideoGame 50000`
   (args: repo root, target tris, weld 1|0 (default 1), optional output FBX path for experiments).
+- Cat (Round 3): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_cat.py -- C:/Users/danmo/SevenVideoGame 18000 [preview_dir]`
+  → `Art/Export/cat/cat_v1_rigged.fbx` (+ grayscale texture): squares the body, straightens the head, decimates,
+  0.25 m shoulder, scripted 24-bone rig + clips idle/walk/sit/wash/jump/sleep. Must run before the Unity build.
 - Previews: `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/preview_7.py -- C:/Users/danmo/SevenVideoGame`
   (args: repo root, optional FBX, optional output dir).
 - Launch Blender/Unity jobs with `Start-Process ... -WindowStyle Hidden -PassThru`, then `$p.PriorityClass = 'BelowNormal'`;
@@ -63,7 +66,8 @@ apply to every asset and scene:
   (bone `mixamorig:*Hand/*Foot` distance from Hips per frame); results recorded in `TODO.md` Stage B item 5.
 - **Build everything** (copy Mixamo FBX into Assets, Humanoid import, grayscale texture, materials, animators,
   Atmosphere prefab/profile/fog renderer feature, generated world meshes (`Assets/Art/World/Generated`, git-ignored),
-  scenes `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room), Windows exe at
+  scenes `Menu` (demo picker, first) + `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room) +
+  `Saucer` (Round 3; built by `FightDemoBuilderSaucer.cs`, cat from `Art/Export/cat/`, `Atmosphere_Above` prefab), Windows exe at
   `Unity\Builds\FightDemo\SevenFightDemo.exe`):
   `Unity.exe -batchmode -nographics -quit -projectPath C:\Users\danmo\SevenVideoGame\Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine -logFile <file>`
   (start with `Start-Process -WindowStyle Hidden`, then `.PriorityClass = 'BelowNormal'`; ~5 min; exit code 0 = ok).
@@ -76,11 +80,14 @@ apply to every asset and scene:
   → `<dir>\01_wide.png … 17_head_front.png` (orbit angles, legends, punch, telekinesis lift start/held/release/landing,
   knockdown) + `capture_log.txt` (audio level, feet vs. the ground under each foot, camera height, lift height and
   timing), quits by itself (~50 s). Extra switches: `-quick` (look shots only, ~5 s), `-atmofile <json>` (override
-  Atmosphere knobs without rebuilding), `-room` (start in the Round 1 room).
+  Atmosphere knobs without rebuilding), `-room` (start in the Round 1 room), `-fight` (skip the menu).
+  **Saucer check run:** same with `-saucer` → `01_ship_wide.png … 16_after_stand.png` + `capture_log.txt` (audio, feet /
+  paws vs. the floor, lap gap, reveal timings), ~70 s. **Menu shot:** `-capture <dir> -menu` → `00_menu.png`.
   Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
-- Play: run the exe normally; Xbox controller or keyboard/mouse (the legend bottom-left switches automatically).
+- Play: run the exe normally → demo picker; Xbox controller or keyboard/mouse (the legend bottom-left switches
+  automatically). Esc / Start = back to the menu; fight reset = Backspace / d-pad down.
 
 ## Where things stand
-**Rounds 1–2 + QF1 complete (2026-11-16)** — playable fight demo on the fog/glow hill (details in
-`TODO-ARCHIVE.md`). **Current objective: Round 3** — saucer mock-up: walk the ship, the black cat hops onto 7's lap
-when she sits, and the ship fades away to show her above the city. See `TODO.md`.
+**Rounds 1–3 + QF1 complete (2026-11-16)** — demo picker; fight demo on the fog/glow hill; saucer mock-up (walk the
+ship, the black cat hops onto 7's lap, the ship dissolves to show her above the city). Round 3 status and Dan's
+checklist in `TODO.md`; earlier rounds in `TODO-ARCHIVE.md`. **Next:** Dan plays Round 3 and picks the next round.
