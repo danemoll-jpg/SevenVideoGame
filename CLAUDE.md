@@ -132,7 +132,6 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–6 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with the picker: **Chapter 1 "The Moon
-Prison"** (first real chapter, scenes 1–11 of `Docs/DIALOGUE.md`, voiced) on top, then the fight demo, saucer mock-up
-(cat, sit, reveal, art-gallery TV) and the Ratwing cave. Details in `TODO.md` (Round 6) and `TODO-ARCHIVE.md`.
-**Current objective: none** — waiting for Dan's review of Chapter 1 (see `TODO.md` "For Dan to check").
+**Rounds 1–6 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe`: Chapter 1 "The Moon Prison" (voiced, playable)
+plus the demos (fight, saucer + gallery TV, Ratwing). Details in `TODO-ARCHIVE.md`. **Current objective: Round 7** — Dan's
+Chapter 1 fixes (laser cell door, hidden release, tractor-beam boarding), ElevenLabs SFX, music system (`Docs/MUSIC.md`). See `TODO.md`.

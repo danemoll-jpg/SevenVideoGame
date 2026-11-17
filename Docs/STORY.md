@@ -4,11 +4,13 @@
 
 7 is imprisoned on Earth’s hollow Moon, where Tunneler controls a mining operation and exploits an alien people called the Scree. The reason for her imprisonment is initially a mystery.
 
-A black cat arrives to rescue her. She assumes he is an ordinary animal until he communicates telepathically. The feline race sent him, but he does not know the larger purpose behind his assignment.
+Her cell's laser field dampens her powers — her energy point stays dark until she is free. A black cat arrives to rescue her. She assumes he is an ordinary animal until he communicates telepathically. The feline race sent him, but he does not know the larger purpose behind his assignment.
 
 They meet for the first time during the rescue. He helps her escape, and she comes to trust him through his actions. Their first main objective is to recover her confiscated saucer.
 
-The proposed escape takes them through ancient structures beneath the mining facility. Touching a ruin triggers a historical vision. Its exact contents remain undecided, but the intended function is to help her progress while revealing something she cannot explain.
+The proposed escape takes them through ancient structures beneath the mining facility. Touching a ruin triggers a historical vision. Its exact contents remain undecided, but the intended function is to help her progress while revealing something she cannot explain. They then emerge from the confined passages into an open area, and 7 looks back: for the first time she sees the city in its full majesty — the prison is only a small part of it, and the view opens across the immense interior of the hollow Moon.
+
+The opening order is: first meeting → cell rescue → escape through the ruins and first vision → emergence and city reveal → saucer recovery and boarding → first meal and conversation.
 
 Together, they recover her ship and escape immediate captivity.
 

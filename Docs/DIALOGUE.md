@@ -162,9 +162,50 @@ The passage opens.
 
 **CAT:** Agreed.
 
+## 6b  The city reveal
+
+**Situation:** After the prison escape and before boarding the saucer, 7 and the cat emerge from a rough mining passage onto a narrow stone terrace. She walks a few steps, then turns back to see where they escaped.
+
+For the first time, she sees the city in its full majesty: an ancient city built across the inside of the Moon, so enormous that 7 initially mistakes part of it for the landscape. The prison is embedded in the base of a colossal structure; its machinery, fences and pipes look like recent additions attached to something much older. As she looks upward, she realizes the structure is only one of many.
+
+Beyond it, the city stretches across the inner curve of the Moon. Broad terraces descend into a basin, then rise again in the distance. Farther away, buildings climb the curved horizon until they almost seem to hang overhead. Pale towers and bridges emerge from layers of gray atmospheric distance.
+
+*Proposed visual features:*
+- **Ancient lunar architecture:** immense stepped buildings, slender observation towers and circular structures aligned with one another. Their purpose feels astronomical, fitting the Moon’s Astronomical Age. Smooth pale surfaces contrast with deep black openings.
+- **A quiet center:** several monumental pyramids surround a dark circular depression. From this distance, 7 cannot tell whether it is a courtyard, an opening or something buried. It gives the player a landmark to remember without explaining the final chamber.
+- **Tunneler’s operation cutting through it:** conveyors cross old avenues, excavators bite into terraces, and freight lifts move along the walls. The Scree and their machinery are tiny against the buildings. Some districts are occupied; others stand silent. The mining looks productive and relentless — the player can see that he is dismantling parts of a civilization to reach what lies beneath them before anyone explains it.
+
+*Proposed lighting:* a broad, diffuse source somewhere above the visible city, still unexplained. It catches the pale upper surfaces while the streets remain dark. Everything stays grayscale; the scale comes from layers, silhouettes and tiny moving lights or vehicles — not colored glows.
+
+The camera gives the city room to fill the frame. Music and environmental sound carry the moment. There is no immediate objective announcement or joke. **The player gets several seconds to look before either character speaks**, hearing distant machinery, wind through the terrace and the faint life of the city below. The cat notices that she has stopped and waits beside her.
+
+*Possible exchange — proposed (primary):*
+
+**7:** All this was above us?
+
+**CAT:** Most of it.
+
+She follows the rising curve of the city with her eyes.
+
+**7:** Someone built this.
+
+**CAT:** Yes.
+
+A distant section of machinery starts moving. Stone falls from an ancient terrace.
+
+**7:** And they’re taking it apart.
+
+Then she spots — or the cat points out — the impound area holding her saucer (scene 7). The ship becomes a small, recognizable destination within this enormous place, and the player starts moving again.
+
+*Earlier proposed alternative:* **7:** I didn’t know all this was here. / **CAT:** You couldn’t see much from where they put you. / She continues looking. / **7:** How old is it? / **CAT:** I don’t know. / A quiet pause.
+
+The reveal does three jobs at once: the first great sense of wonder, showing the damage Tunneler causes, and making the player want to explore the history beneath his operation. All visual specifics here are proposals.
+
+The opening order should preserve this explicitly: first meeting → cell rescue → escape through the ruins and first vision → emergence and city reveal → saucer recovery and boarding → first meal and conversation.
+
 ## 7  Seeing the saucer
 
-**Situation:** They reach a viewpoint over the impound area.
+**Situation:** From the terrace at the end of the city reveal (6b), she spots — or the cat points out — the impound area holding her saucer. (Earlier placement: a separate viewpoint over the impound area.)
 
 **7:** There. That’s my ship.
 
