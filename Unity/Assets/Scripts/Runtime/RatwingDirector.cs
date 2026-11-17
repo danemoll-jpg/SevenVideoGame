@@ -20,7 +20,7 @@ namespace Seven
         public Material Additive;
         public float CeilingY = 4.2f;
 
-        public const float Length = 10f, TouchDown = 7.55f, EyesOpen = 3.55f;
+        public const float Length = 10f, TouchDown = 7.9f, EyesOpen = 3.55f;     // Round 8: re-keyed drop (cleanup_ratwing.py T_DOWN)
         public static bool SeenOnce;
 
         /// <summary>Seconds into the sequence (from the Animator); Length or more once it is over.</summary>
@@ -77,13 +77,9 @@ namespace Seven
                 if (_prompt != null && !_prompt.activeSelf) { _prompt.SetActive(true); RefreshPrompt(); }
             }
 
-            if (DemoBoot.CaptureDir != null) return;
+            if (DemoBoot.CaptureDir != null || PauseMenu.IsOpen) return;
             var kb = Keyboard.current; var gp = Gamepad.current;
-            if ((kb != null && kb.escapeKey.wasPressedThisFrame) || (gp != null && gp.startButton.wasPressedThisFrame))
-            {
-                SceneManager.LoadScene(DemoMenu.SceneName);
-                return;
-            }
+            // Round 7: Esc / Start open the pause menu (PauseMenu) instead of leaving directly.
             bool a = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
                      || (gp != null && gp.buttonSouth.wasPressedThisFrame);
             if (a)

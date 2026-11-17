@@ -74,27 +74,88 @@ namespace Seven
         bool BlockHeld => ScriptDriven ? ScriptBlockHeld : (Input != null && Input.Block.IsPressed());
         bool TkHeld => ScriptDriven ? ScriptTkHeld : (Input != null && Input.Telekinesis.IsPressed());
 
-        public void DoAttack(string state)
+        // ------------------------------------------------------------ Round 8: fluid fighting
+        [Header("Feel (Round 8)")]
+        [Tooltip("A press during a move is kept this long and fires at the first moment it may (input buffer).")]
+        public float BufferTime = 0.2f;
+        [Tooltip("After a blow lands (or whiffs), this many seconds later a different move may cancel the rest of it.")]
+        public float CancelDelay = 0.07f;
+        public float AttackFade = 0.08f, ChainFade = 0.1f, ReturnFade = 0.12f;
+        [Tooltip("Hit-pause on connect (real seconds) and camera nudge.")]
+        public float HitPause = 0.05f, FinisherPause = 0.08f, HitNudge = 0.035f;
+        string _buffered; float _bufferedAt; bool _dodgeBuffered; float _dodgeAt;
+        float _attackStart;
+        /// <summary>Check runs: (state, time) every time a move actually starts; (state, press time) for every press.</summary>
+        public event Action<string, float> MoveStarted, Pressed;
+
+        bool InRecovery => Current == Mode.Attack && _hitIdx >= _atk.Hits.Length && Tn >= LastHit(_atk) + CancelDelay / Mathf.Max(0.05f, Length(_atk.State));
+        static float LastHit(Attack a) => a.Hits[a.Hits.Length - 1];
+
+        bool CanStart(string state)
         {
-            if (Current == Mode.Block || Current == Mode.Dodge || Current == Mode.Flinch || Current == Mode.Lift) return;
-            if (Current == Mode.Attack && Tn < _atk.End) return;
-            _atk = Array.Find(Attacks, a => a.State == state);
-            if (_atk == null) return;
-            _hitIdx = 0;
-            Current = Mode.Attack;
-            if (Bot != null && Dist() < _atk.Range * 1.6f) SnapFace(Bot.transform.position);
-            Play(state, 0.08f);
-            if (_atk.Push) { _tkLetGo = false; SetTk(TkPhase.Charging); }
+            switch (Current)
+            {
+                case Mode.Free: return true;
+                case Mode.Attack:
+                    if (Tn >= _atk.End) return true;
+                    // combo chain: a different move may cancel the recovery once this one's blow has landed
+                    return state != _atk.State && !_atk.Finisher && InRecovery;
+                case Mode.Dodge: return Tn >= 0.62f;
+                default: return false;
+            }
         }
 
-        void SetTk(TkPhase p) { Tk = p; TkPhaseTime = 0f; }
+        public void DoAttack(string state)
+        {
+            Pressed?.Invoke(state, Time.time);
+            if (Array.Find(Attacks, a => a.State == state) == null) return;
+            if (CanStart(state)) StartAttack(state);
+            else if (Current != Mode.Lift) { _buffered = state; _bufferedAt = Time.time; }
+        }
+
+        void StartAttack(string state)
+        {
+            bool chained = Current == Mode.Attack;
+            _buffered = null;
+            Freeze(false);
+            _atk = Array.Find(Attacks, a => a.State == state);
+            _hitIdx = 0;
+            Current = Mode.Attack;
+            _attackStart = Time.time;
+            if (Bot != null)
+            {
+                // small step in to close the distance (never through the bot)
+                float d = Dist();
+                if (!_atk.Push && d > _atk.Range * 0.72f && d < _atk.Range * 1.8f)
+                    Slide(Bot.transform.position - transform.position, Mathf.Min(d - _atk.Range * 0.72f, 0.45f), 0.2f);
+            }
+            Play(state, chained ? ChainFade : AttackFade);
+            MoveStarted?.Invoke(state, Time.time);
+            if (_atk.Push) { _tkLetGo = false; SetTk(TkPhase.Charging); }
+        }        void SetTk(TkPhase p) { Tk = p; TkPhaseTime = 0f; }
 
         public void DoDodge()
         {
-            if (Current == Mode.Dodge || Current == Mode.Flinch || Current == Mode.Lift) return;
-            if (Current == Mode.Attack && Tn < _atk.End) return;
+            Pressed?.Invoke("dodge", Time.time);
+            // dodge interrupts an attack's recovery (after its blow) and a flinch after a short moment
+            bool ok = Current == Mode.Free || Current == Mode.Block
+                      || (Current == Mode.Attack && (Tn >= _atk.End || _hitIdx >= _atk.Hits.Length))
+                      || (Current == Mode.Flinch && Time.time >= _flinchUntil - 0.2f);
+            if (!ok) { if (Current != Mode.Lift && Current != Mode.Dodge) { _dodgeBuffered = true; _dodgeAt = Time.time; } return; }
+            _dodgeBuffered = false; _buffered = null;
+            Freeze(false);
             Current = Mode.Dodge;
             Play("dodge", 0.08f);
+            MoveStarted?.Invoke("dodge", Time.time);
+        }
+
+        System.Collections.IEnumerator HitStop(float seconds)
+        {
+            if (PauseMenu.IsOpen || seconds <= 0f) yield break;
+            Time.timeScale = 0.05f;
+            float t0 = Time.realtimeSinceStartup;
+            while (Time.realtimeSinceStartup - t0 < seconds) { if (PauseMenu.IsOpen) yield break; yield return null; }
+            if (!PauseMenu.IsOpen) Time.timeScale = 1f;
         }
 
         /// <summary>The bot's punch landed on an unguarded 7: short push back, no injury.</summary>
@@ -130,7 +191,7 @@ namespace Seven
             TkPhaseTime += Time.deltaTime;
             if (!TkHeld) _tkLetGo = true;
             if (Tk == TkPhase.Released && TkPhaseTime > 1.2f) SetTk(TkPhase.None);
-            if (!ScriptDriven && Input != null)
+            if (!ScriptDriven && Input != null && !PauseMenu.IsOpen)
             {
                 if (Input.Jab.WasPressedThisFrame()) DoAttack("jab");
                 if (Input.Cross.WasPressedThisFrame()) DoAttack("cross");
@@ -142,10 +203,20 @@ namespace Seven
                 if (Input.Dodge.WasPressedThisFrame()) DoDodge();
             }
 
+            // buffered presses fire at the first frame they may
+            if (_buffered != null && Time.time - _bufferedAt > BufferTime) _buffered = null;
+            if (_dodgeBuffered && Time.time - _dodgeAt > BufferTime) _dodgeBuffered = false;
+            if (_dodgeBuffered) { var c = Current; DoDodge(); if (Current == Mode.Dodge && c != Mode.Dodge) _dodgeBuffered = false; }
+            if (_buffered != null && CanStart(_buffered)) StartAttack(_buffered);
+
             switch (Current)
             {
                 case Mode.Free: UpdateFree(); break;
                 case Mode.Attack:
+                    // smooth turn toward the target at the start of the move (no snapping)
+                    if (Bot != null && Time.time - _attackStart < 0.18f && Dist() < _atk.Range * 1.8f) FaceTowards(Bot.transform.position, 1100f);
+                    // block can interrupt the recovery
+                    if (BlockHeld && _hitIdx >= _atk.Hits.Length && !_atk.Finisher) { Freeze(false); Current = Mode.Block; Play("block", 0.08f); MoveStarted?.Invoke("block", Time.time); break; }
                     while (_hitIdx < _atk.Hits.Length && Tn >= _atk.Hits[_hitIdx])
                     {
                         _hitIdx++;
@@ -203,10 +274,43 @@ namespace Seven
             LiftReleased?.Invoke();
         }
 
+        /// <summary>
+        /// Round 7 (3c): the telekinesis hold is the frozen peak pose of the telekinesis clip; this layers a little
+        /// life on top: slow breathing in the chest, a slight sway from the hips, a faint strain tremble in the arms
+        /// and hands, and a small hand adjustment that follows the bot's height. Subtle by design (degrees, not tens).
+        /// </summary>
+        void LateUpdate()
+        {
+            if (Current != Mode.Lift) { _holdW = 0f; return; }
+            _holdW = Mathf.MoveTowards(_holdW, 1f, Time.deltaTime * 2.5f);      // ease the layer in
+            float t = LiftSeconds, w = _holdW;
+            void Rot(HumanBodyBones b, Vector3 axisLocal, float deg)
+            {
+                var tr = Bone(b); if (tr != null) tr.localRotation *= Quaternion.AngleAxis(deg * w, axisLocal);
+            }
+            float breathe = Mathf.Sin(t * 2f * Mathf.PI / 3.6f);                    // ~3.6 s breath
+            float sway = Mathf.Sin(t * 2f * Mathf.PI / 5.3f + 0.7f);
+            float strain = Mathf.Clamp01(LiftSeconds / MaxLiftSeconds) * 0.6f + 0.4f;   // grows the longer she holds
+            float trem(float seed) => (Mathf.PerlinNoise(t * 7.5f, seed) - 0.5f) * 2f;
+            Rot(HumanBodyBones.Chest, Vector3.right, -1.6f * breathe);
+            Rot(HumanBodyBones.UpperChest, Vector3.right, -1.0f * breathe);
+            Rot(HumanBodyBones.Hips, Vector3.forward, 1.3f * sway);
+            Rot(HumanBodyBones.Spine, Vector3.forward, -0.9f * sway);
+            foreach (var (b, seed, amp) in new[] { (HumanBodyBones.RightUpperArm, 1.1f, 0.7f), (HumanBodyBones.LeftUpperArm, 2.3f, 0.7f),
+                                                   (HumanBodyBones.RightLowerArm, 3.7f, 0.9f), (HumanBodyBones.LeftLowerArm, 4.1f, 0.9f),
+                                                   (HumanBodyBones.RightHand, 5.3f, 1.6f), (HumanBodyBones.LeftHand, 6.7f, 1.6f) })
+                Rot(b, new Vector3(trem(seed), trem(seed + 9f), trem(seed + 17f)).normalized, amp * strain * Mathf.Abs(trem(seed + 31f) + 0.4f));
+            // The hands follow the bot a little as it bobs (raise / lower the forearms a degree or two).
+            float follow = Bot != null ? Mathf.Clamp((Bot.Height - Bot.LiftHeight) * 30f, -3f, 3f) : 0f;
+            Rot(HumanBodyBones.RightLowerArm, Vector3.right, -follow);
+            Rot(HumanBodyBones.LeftLowerArm, Vector3.right, -follow);
+        }
+        float _holdW;
+
         void ToFree()
         {
             Current = Mode.Free;
-            Play("fight_idle", 0.18f);
+            Play("fight_idle", ReturnFade);
         }
 
         void UpdateFree()
@@ -226,13 +330,13 @@ namespace Seven
                 var v = (fwd * m.y + right * m.x);
                 if (v.sqrMagnitude > 1f) v.Normalize();
                 transform.position += v * WalkSpeed * Time.deltaTime;
-                if (State != "walk") Play("walk", 0.15f, 1f, false);
+                if (State != "walk") Play("walk", 0.12f, 1f, false);
                 if (Bot != null && Dist() < 6f) FaceBot(540f);
                 else FaceTowards(transform.position + v, 540f);
             }
             else
             {
-                if (State != "fight_idle") Play("fight_idle", 0.2f, 1f, false);
+                if (State != "fight_idle") Play("fight_idle", 0.15f, 1f, false);
                 FaceBot(240f);
             }
         }
@@ -253,7 +357,14 @@ namespace Seven
             bool landed;
             if (_atk.Push) landed = Bot.Push(to.normalized, 1.6f);
             else landed = Bot.TakeHit(_atk.Head, to.normalized, _atk.Knock, _atk.Finisher);
-            if (landed) HitLanded?.Invoke(_atk.State);
+            if (landed)
+            {
+                HitLanded?.Invoke(_atk.State);
+                StartCoroutine(HitStop(_atk.Finisher ? FinisherPause : HitPause));
+                var cam = CameraTransform != null ? CameraTransform.GetComponent<FightCamera>() : null;
+                if (cam != null) cam.Shake(_atk.Finisher ? HitNudge * 2f : HitNudge);
+            }
+
         }
 
         void KeepApartFromBot()

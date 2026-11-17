@@ -25,6 +25,15 @@ Unity/Assets/AssetStoreTools*
 # Builds / local scratch
 Builds/
 local/
+# Launcher (Round 8): the publisher signing key is SECRET (never commit, print, delete or replace);
+# launcher binaries, release drafts and starter packages are build outputs.
+Builds/PublisherPrivate/
+**/PublisherPrivate/
+*.pem
+Builds/Launcher/
+Builds/LauncherRelease-*/
+Builds/LauncherStarter-*/
+Temp/
 # OS / editors
 .DS_Store
 Thumbs.db

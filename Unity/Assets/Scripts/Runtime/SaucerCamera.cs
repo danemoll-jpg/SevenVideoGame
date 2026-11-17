@@ -23,7 +23,7 @@ namespace Seven
         public float WalkDistance = 3.3f, WalkLookHeight = 1.15f, WalkPitch = 12f;
         public float MinPitch = -5f, MaxPitch = 55f;
         [Header("Seated / revealed (relative to the chair's facing)")]
-        public float SeatedYawOffset = 38f, SeatedPitch = 30f, SeatedDistance = 2.9f;   // yaw 0 = behind her, looking where the chair faces
+        public float SeatedYawOffset = 74f, SeatedPitch = 24f, SeatedDistance = 2.7f;    // Round 8: from the side, clear of the chair shell   // yaw 0 = behind her, looking where the chair faces
         public float RevealYawOffset = 72f, RevealPitch = 20f, RevealDistance = 6.8f;
         public float SeatedMinPitch = 12f;
         [Header("Ship shell (camera stays inside while the ship is there)")]

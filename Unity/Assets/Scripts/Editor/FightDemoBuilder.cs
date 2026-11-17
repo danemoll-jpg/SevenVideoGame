@@ -36,7 +36,7 @@ namespace Seven.EditorTools
         /// <summary>Build order: the demo picker first.</summary>
         static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath };
 
-        static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle" };
+        static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle", "sneak_walk", "float" };
         static readonly string[] RootMotion = { "finisher", "dodge", "knocked_down", "get_up" };
 
         static void Log(string s) => Debug.Log("[FightDemoBuilder] " + s);
@@ -73,6 +73,7 @@ namespace Seven.EditorTools
             var botCtl = BuildController(BotDir, "ybot_", AnimDir + "/TrainingBot.controller", "fight_idle");
             var atmo = BuildAtmosphere();
             var bank = BuildVoiceBank();               // Round 6 (before the menu + saucer scenes, which reference it)
+            BuildAudioBanks();                         // Round 7: Resources/Audio/SfxBank + MusicBank (by name, missing = silence)
             BuildRoomScene(sevenCtl, botCtl, mats);
             BuildOutdoorScene(sevenCtl, botCtl, mats, atmo);
             BuildRound3(sevenCtl, atmo);
@@ -474,6 +475,7 @@ namespace Seven.EditorTools
             probe.center = center;
             probe.resolution = 128;
             probe.hdr = true;
+            probe.cullingMask = ~(1 << 20);      // Round 7: never reflect the city (layer 20) into interiors
         }
 
         // ------------------------------------------------------------------------------- Atmosphere
@@ -979,6 +981,7 @@ namespace Seven.EditorTools
         {
             PlayerSettings.companyName = "Dan";
             PlayerSettings.productName = "7: The Observer — Demo";   // QF2
+            PlayerSettings.bundleVersion = Seven.LauncherBridge.Version;   // Round 8: launcher release version
             PlayerSettings.runInBackground = true;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;   // QF1: borderless, native resolution
@@ -1001,6 +1004,8 @@ namespace Seven.EditorTools
                 options = BuildOptions.None,
             });
             Log($"player build {report.summary.result}: {ExePath} ({report.summary.totalSize / 1e6:0.0} MB, {report.summary.totalErrors} errors)");
+            if (report.summary.result == BuildResult.Succeeded)
+                File.WriteAllText(Path.Combine(Path.GetDirectoryName(ExePath), "version.txt"), Seven.LauncherBridge.Version);   // checked by Tools/Prepare-*.py
             return report.summary.result == BuildResult.Succeeded;
         }
     }

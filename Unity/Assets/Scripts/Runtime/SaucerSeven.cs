@@ -37,7 +37,10 @@ namespace Seven
         Vector3 _anchorFrom;
         float _seatedHipsHeight = 0.646f;   // Sitting Idle hips above the root (clip), refined at runtime
 
-        protected override bool Grounded => Current != Mode.Seated && Current != Mode.SittingDown && transform.parent == null;
+        protected override bool Grounded => Current != Mode.Seated && Current != Mode.SittingDown && transform.parent == null && !OnSofa;
+        /// <summary>Round 8: sitting on the gallery sofa while browsing (GalleryTV moves her; no ground clamp, no walking).</summary>
+        [NonSerialized] public bool OnSofa;
+        public void PlayClip(string state, float fade, float speed = 1f) => Play(state, fade, speed);
 
         public Vector3 StandSpot => ChairPivot.position + ChairPivot.forward * SitBackOffset + Vector3.ProjectOnPlane(SeatPoint.position - ChairPivot.position, Vector3.up);
         public bool NearChair => Current == Mode.Free && Flat(transform.position - StandSpot).magnitude < SitReach;
@@ -108,6 +111,7 @@ namespace Seven
 
         void UpdateFree()
         {
+            if (OnSofa) return;
             if (Frozen) { if (State != "idle") Play("idle", 0.2f, 1f, false); return; }
             var m = MoveInput;
             if (m.sqrMagnitude > 0.04f)
@@ -126,7 +130,7 @@ namespace Seven
             if (Ground.IgnoreObstacle == 0 && Ground.Obstacles.Count > 0
                 && (new Vector2(transform.position.x, transform.position.z) - Ground.Obstacles[0].C).magnitude > Ground.Obstacles[0].R + 0.3f)
                 Ground.IgnoreObstacle = -1;
-            if (!ScriptDriven && Input != null && Input.Sit.WasPressedThisFrame() && NearChair) RequestSit();
+            if (!ScriptDriven && Input != null && !PauseMenu.IsOpen && Input.Sit.WasPressedThisFrame() && NearChair) RequestSit();
         }
 
         void UpdateToChair()

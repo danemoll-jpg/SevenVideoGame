@@ -27,7 +27,7 @@ SHOULDER_HEIGHT = 0.25          # real house cat (Unity scales the roaming cat u
 SRC = os.path.join(ROOT, "Art", "Source", "cat", "cat_v1.glb")
 OUT_DIR = os.path.join(ROOT, "Art", "Export", "cat")
 TEX_DIR = os.path.join(OUT_DIR, "Textures")
-FBX = os.path.join(OUT_DIR, "cat_v1_rigged.fbx")
+FBX = os.environ.get("CAT_FBX_OUT") or os.path.join(OUT_DIR, "cat_v1_rigged.fbx")   # env override = experiments
 TEX = os.path.join(TEX_DIR, "cat_v1_basecolor.jpg")
 os.makedirs(TEX_DIR, exist_ok=True)
 FPS = 30
@@ -248,30 +248,129 @@ wmat = bpy.data.materials.new("cat_whisker")
 whisk_obj.data.materials.clear()
 whisk_obj.data.materials.append(wmat)
 
-# ------------------------------------------------------------------ fit the rig from mesh slices
+LEGS = ("FL", "FR", "HL", "HR")
+
+# ------------------------------------------------------------------ fit the rig from mesh cross-sections
+# Round 8: every joint is placed at the centre of the mesh cross-section around it (slab centroids / mean-shift),
+# instead of fixed fractions of the shoulder height, so the bones run through the middle of legs, body, neck and tail.
 def band(pred):
     pts = [c for c in co if pred(c)]
     return (sum(pts, Vector()) / len(pts), len(pts)) if pts else (None, 0)
 
+
+def mid_extent(pts, axis):
+    vals = [getattr(c, axis) for c in pts]
+    return (min(vals) + max(vals)) / 2 if vals else None
+
+
 ymin = min(c.y for c in co); ymax = max(c.y for c in co)
-# Leg columns: low vertices split by side and front/back.
+
+
+def trace_leg(sx, front):
+    """Walk up one leg from the paw: slab every 4 mm, centre = centroid of the slab verts within r of the previous
+    centre (mean-shift in xy). Stops where the section opens into the body (belly)."""
+    def col(c):
+        return c.x * sx > 0.0 and ((c.y < 0) == front)
+    base = [c for c in co if c.z < 0.025 * H / 0.25 and col(c)]
+    p = sum(base, Vector()) / len(base)
+    p = Vector((p.x, p.y, 0.0))
+    line = []
+    r = 0.022 * H / 0.25
+    z = 0.006
+    while z < 0.75 * H:
+        q = Vector((p.x, p.y))
+        for _ in range(4):
+            near = [c for c in co if abs(c.z - z) < 0.004 and col(c) and (c.xy - q).length < r]
+            if len(near) < 4:
+                break
+            q = Vector((mid_extent(near, "x"), mid_extent(near, "y")))
+        if len(near) < 4:
+            break
+        wid = max((c.xy - q).length for c in near)
+        if wid > 0.85 * r and z > 0.2 * H:
+            break               # the section fills the search circle: the leg has opened into the body
+        p = Vector((q.x, q.y, z))
+        line.append((p.copy(), wid))
+        z += 0.004
+    return line
+
+
 legs = {}
 for name, sx, front in (("FL", 1, True), ("FR", -1, True), ("HL", 1, False), ("HR", -1, False)):
-    def inleg(c, z0, z1):
-        return z0 <= c.z < z1 and c.x * sx > 0.002 and ((c.y < 0) == front)
-    pts = {}
-    for key, z0, z1 in (("toe", 0.0, 0.02 * H / 0.25), ("ankle", 0.10 * H, 0.16 * H), ("knee", 0.36 * H, 0.44 * H), ("top", 0.58 * H, 0.66 * H)):
-        p, n = band(lambda c: inleg(c, z0, z1))
-        pts[key] = p
-    legs[name] = pts
-    log(name, {k: (tuple(round(x, 3) for x in v) if v else None) for k, v in pts.items()})
+    line = trace_leg(sx, front)
+    pts_ = [p for p, _ in line]
+
+    def at_z(zq):
+        best = min(pts_, key=lambda p: abs(p.z - zq))
+        return best.copy()
+
+    def extreme(z0, z1, key):
+        cand = [p for p in pts_ if z0 * H <= p.z <= z1 * H]
+        return (min(cand, key=key) if cand else at_z((z0 + z1) / 2 * H)).copy()
+
+    toe_band, _ = band(lambda c: c.z < 0.02 * H / 0.25 and c.x * sx > 0.0 and ((c.y < 0) == front))
+    toe = Vector((toe_band.x, min(c.y for c in co if c.z < 0.02 and c.x * sx > 0.0 and ((c.y < 0) == front)) + 0.01 * H / 0.25
+                  if front else toe_band.y - 0.012 * H / 0.25, 0.005))
+    if front:
+        ankle = at_z(0.12 * H)                                   # wrist
+        knee = extreme(0.36, 0.52, key=lambda p: -p.y)           # elbow: the leg's rearmost point under the chest
+    else:
+        ankle = extreme(0.18, 0.34, key=lambda p: -p.y)          # hock: rearmost point of the lower hind leg
+        knee = extreme(0.38, 0.55, key=lambda p: p.y)            # stifle: foremost point of the thigh
+    top_z = (0.70 if front else 0.66) * H
+    # Shoulder / hip joint: continue the upper leg line into the body, pulled toward the midline (inside the body).
+    top_xy = pts_[-1] if pts_ else knee
+    top = Vector((top_xy.x * 0.8, top_xy.y, top_z))
+    legs[name] = {"toe": toe, "ankle": ankle, "knee": knee, "top": top, "line_top": pts_[-1].z if pts_ else 0}
+    log(name, "trace", len(line), "pts up to z", round(legs[name]["line_top"], 3),
+        {k: tuple(round(x, 3) for x in v) for k, v in legs[name].items() if k != "line_top"})
+
+# Mirror-average the shoulder / hip joints left-right (the lower joints follow each leg's own stance).
+for a_, b_ in (("FL", "FR"), ("HL", "HR")):
+    for k in ("top",):
+        pa, pb_ = legs[a_][k], legs[b_][k]
+        x = (abs(pa.x) + abs(pb_.x)) / 2
+        y = (pa.y + pb_.y) / 2
+        z = (pa.z + pb_.z) / 2
+        legs[a_][k] = Vector((x, y, z))
+        legs[b_][k] = Vector((-x, y, z))
+
 
 # Body line
 def body_y(front):
-    return sum(legs[n]["knee"].y for n in (("FL", "FR") if front else ("HL", "HR"))) / 2
+    return sum(legs[n]["top"].y for n in (("FL", "FR") if front else ("HL", "HR"))) / 2
+
 
 yF, yH = body_y(True), body_y(False)
-spine_z = 0.74 * H
+
+
+def body_centre(y0, half=0.012):
+    """Centre of the torso cross-section at y0 (above the legs): mid of the top/bottom extents of |x| < 3 cm."""
+    sl = [c for c in co if abs(c.y - y0) < half and abs(c.x) < 0.03 * H / 0.25 and c.z > 0.42 * H]
+    if len(sl) < 6:
+        return None
+    top = max(c.z for c in sl)
+    bot = min(c.z for c in sl)
+    return top, bot
+
+
+def spine_point(y0):
+    tb = body_centre(y0)
+    if tb is None:
+        return Vector((0, y0, 0.74 * H))
+    top, bot = tb
+    return Vector((0, y0, bot + 0.58 * (top - bot)))       # spine sits a little above the section's middle
+
+
+sp_h = spine_point(yH)
+sp_m = spine_point((yH + yF) / 2)
+sp_f = spine_point(yF)
+spine_z = sp_m.z
+log("spine points", [tuple(round(x, 3) for x in p) for p in (sp_h, sp_m, sp_f)])
+# Hip / shoulder joints just below the spine line at the leg tops.
+for n in ("FL", "FR", "HL", "HR"):
+    ref = sp_f if n[0] == "F" else sp_h
+    legs[n]["top"].z = min(legs[n]["top"].z, ref.z - 0.03 * H / 0.25)
 tail_pts = []
 # Tail: march from the base (behind the hind legs, just above the back line) upward along the tail's vertices.
 tail_v = [c for c in co if c.y > yH - 0.01 and c.z > 0.8 * H]
@@ -287,7 +386,9 @@ for i in range(60):
     near = [c for c in tail_v if (c - q).length < 0.018]
     if len(near) < 6:
         break
-    q2 = sum(near, Vector()) / len(near)
+    # Centre of the tail's cross-section at q (verts in a thin slab across the march direction).
+    ring = [c for c in near if abs((c - q).dot(dirv)) < 0.005]
+    q2 = sum(ring, Vector()) / len(ring) if len(ring) >= 4 else sum(near, Vector()) / len(near)
     nd = (q2 - p)
     if nd.length < 1e-4:
         break
@@ -296,13 +397,43 @@ for i in range(60):
         break
     dirv = (dirv * 0.5 + nd * 0.5).normalized()
     p = p + dirv * step
+    ring = [c for c in tail_v if (c - p).length < 0.018 and abs((c - p).dot(dirv)) < 0.005]
+    if len(ring) >= 4:
+        p = sum(ring, Vector()) / len(ring)
     tail_pts.append(p.copy())
 log("tail points", len(tail_pts), "tip", tuple(round(x, 3) for x in tail_pts[-1]))
 
 tip_y = min(c.y for c in co)
 muzzle, _ = band(lambda c: c.y < tip_y + 0.02 and c.z > 0.8 * H)
 skull, _ = band(lambda c: c.y < tip_y + 0.09 and c.z > 0.95 * H)
-neck_base = Vector((0, yF - 0.02, spine_z + 0.03))
+
+def shift(guess, r, it=8, pred=None):
+    """Mean-shift: centroid of the verts within r of the guess (repeated)."""
+    p = guess.copy()
+    for _ in range(it):
+        near = [c for c in co if (c - p).length < r and (pred is None or pred(c))]
+        if len(near) < 5:
+            break
+        p = sum(near, Vector()) / len(near)
+    return p
+
+
+def yz_centre(y0, zmin, half=0.006):
+    """Middle of the top/bottom extent of the |x| < 2 cm slab at y0, above zmin."""
+    sl = [c for c in co if abs(c.y - y0) < half and abs(c.x) < 0.02 and c.z > zmin]
+    if len(sl) < 4:
+        return None
+    return (max(c.z for c in sl) + min(c.z for c in sl)) / 2
+
+
+head_c = shift(Vector((0, skull.y + 0.01, skull.z)), 0.032, pred=lambda c: c.z > 0.8 * H)
+head_c.x = 0.0
+hz = yz_centre(head_c.y + 0.022, 0.8 * H)
+head_base = Vector((0, head_c.y + 0.022, (hz if hz else head_c.z) - 0.004))       # atlas: behind the skull centre
+nz = yz_centre(yF - 0.012, sp_f.z - 0.02)
+neck_base = Vector((0, yF - 0.012, nz if nz else sp_f.z + 0.02))
+log("head centre", tuple(round(x, 3) for x in head_c), "atlas", tuple(round(x, 3) for x in head_base),
+    "neck base", tuple(round(x, 3) for x in neck_base))
 
 arm_data = bpy.data.armatures.new("CatRig")
 arm = bpy.data.objects.new("CatRig", arm_data)
@@ -324,14 +455,13 @@ def bone(name, h, t, parent=None, roll_to=Vector((0, 0, 1)), connect=False):
 
 
 bone("root", Vector((0, 0, 0)), Vector((0, -0.08 * H, 0)))
-hips_h = Vector((0, yH, spine_z))
-mid = Vector((0, (yH + yF) / 2, spine_z + 0.01))
+hips_h = sp_h.copy()
+mid = sp_m.copy()
 bone("pelvis", hips_h, mid, "root")
-bone("spine", mid, Vector((0, yF, spine_z + 0.02)), "pelvis", connect=True)
-bone("chest", Vector((0, yF, spine_z + 0.02)), neck_base + Vector((0, -0.02, 0.0)), "spine", connect=True)
-head_base = Vector((0, skull.y + 0.03, skull.z - 0.01))
-bone("neck", neck_base + Vector((0, -0.02, 0.0)), head_base, "chest", connect=True)
-bone("head", head_base, Vector((0, muzzle.y, muzzle.z + 0.01)), "neck", connect=True)
+bone("spine", mid, sp_f, "pelvis", connect=True)
+bone("chest", sp_f, neck_base, "spine", connect=True)
+bone("neck", neck_base, head_base, "chest", connect=True)
+bone("head", head_base, Vector((0, muzzle.y + 0.004, muzzle.z + 0.004)), "neck", connect=True)
 prev = "pelvis"
 # Resample the tail polyline (rump -> tip) to 6 equal bones.
 poly = [hips_h + Vector((0, 0.02, 0.0))] + tail_pts
@@ -352,9 +482,7 @@ for i in range(6):
 for name, pts in legs.items():
     front = name[0] == "F"
     sx = 1 if name[1] == "L" else -1
-    top = Vector((pts["knee"].x * 0.75, pts["knee"].y, 0.66 * H))
-    knee, ankle, toe = pts["knee"], pts["ankle"], pts["toe"]
-    toe = Vector((toe.x, toe.y - 0.02 * H / 0.25, 0.005))
+    top, knee, ankle, toe = pts["top"], pts["knee"], pts["ankle"], pts["toe"]
     par = "chest" if front else "pelvis"
     bone(f"{name}_upper", top, knee, par, roll_to=Vector((0, 1, 0)))
     bone(f"{name}_lower", knee, ankle, f"{name}_upper", roll_to=Vector((0, 1, 0)), connect=True)
@@ -409,7 +537,91 @@ def weights_for(obj, head_only=False):
     obj.parent = arm
 
 
-weights_for(cat)
+def influence_stats(obj):
+    n = [sum(1 for g in v.groups if g.weight > 1e-4) for v in obj.data.vertices]
+    return max(n), sum(1 for x in n if x == 0)
+
+
+def heat_weights(obj):
+    """Blender bone heat (automatic weights), then guards, smoothing over the mesh, max 4 influences, normalized.
+    Verts the heat solver leaves empty fall back to the distance weights."""
+    arm_data.bones["root"].use_deform = False
+    # Bone heat is unreliable at real cat size (0.25 m); solve at 10x, then put the scale back.
+    for o in (obj, arm):
+        o.scale = (10, 10, 10)
+    bpy.context.view_layer.update()
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    arm.select_set(True)
+    bpy.context.view_layer.objects.active = arm
+    obj.vertex_groups.clear()
+    bpy.ops.object.parent_set(type="ARMATURE_AUTO")
+    obj.parent = None
+    for o in (obj, arm):
+        o.scale = (1, 1, 1)
+    for m in list(obj.modifiers):
+        if m.type == "ARMATURE":
+            obj.modifiers.remove(m)
+    bpy.context.view_layer.update()
+    heat = {g.name: g for g in obj.vertex_groups}
+    for n in bones:
+        if n not in heat:
+            heat[n] = obj.vertex_groups.new(name=n)
+    gname = {g.index: g.name for g in obj.vertex_groups}
+    empty = [v.index for v in obj.data.vertices if not any(g.weight > 1e-4 for g in v.groups)]
+    log(f"bone heat: {len(obj.vertex_groups)} groups, {len(empty)} verts without weight -> distance fallback")
+    if empty:
+        tmp = bpy.data.objects.new("tmp_w", obj.data.copy())
+        weights_for(tmp)
+        tg = {g.index: g.name for g in tmp.vertex_groups}
+        for i in empty:
+            for g in tmp.data.vertices[i].groups:
+                heat[tg[g.group]].add([i], g.weight, "REPLACE")
+        md = tmp.data
+        bpy.data.objects.remove(tmp)
+        bpy.data.meshes.remove(md)
+    # Guards: a leg never moves the other side or the other end of the body; the tail never moves the belly/flanks;
+    # the upper legs fade out over the back and flanks (no dragged belly/back when a leg swings).
+    yMid = (yH + yF) / 2
+    for v in obj.data.vertices:
+        p = v.co
+        for g in list(v.groups):
+            n = gname.get(g.group)
+            if n is None or n == "root":
+                continue
+            w = g.weight
+            if n[:2] in LEGS:
+                sx = 1 if n[1] == "L" else -1
+                w *= smooth(-0.004, 0.006, p.x * sx)
+                w *= smooth(-0.03, 0.0, (yMid - p.y) if n[0] == "F" else (p.y - yMid))
+                if n.endswith("_upper"):
+                    tz = legs[n[:2]]["top"].z
+                    w *= 1.0 - smooth(tz + 0.0, tz + 0.04, p.z)
+            elif n.startswith("tail"):
+                w *= smooth(yH - 0.02, yH + 0.005, p.y) if n == "tail1" else smooth(yH - 0.005, yH + 0.02, p.y)
+            if w != g.weight:
+                g.weight = w
+    if "root" in heat:
+        obj.vertex_groups.remove(heat["root"])
+    bpy.ops.object.select_all(action="DESELECT")
+    obj.select_set(True)
+    bpy.context.view_layer.objects.active = obj
+    bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
+    bpy.ops.object.vertex_group_smooth(group_select_mode="ALL", factor=0.5, repeat=4, expand=0.0)
+    bpy.ops.object.vertex_group_clean(group_select_mode="ALL", limit=0.01)
+    bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
+    bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
+    for n in bones:
+        if n not in obj.vertex_groups:
+            obj.vertex_groups.new(name=n)
+    m = obj.modifiers.new("Armature", "ARMATURE")
+    m.object = arm
+    obj.parent = arm
+    mx, nz = influence_stats(obj)
+    log(f"weights: max influences {mx}, unweighted verts {nz}")
+
+
+heat_weights(cat)
 weights_for(whisk_obj, head_only=True)
 log("weights done")
 

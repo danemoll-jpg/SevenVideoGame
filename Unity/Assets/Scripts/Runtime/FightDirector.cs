@@ -21,6 +21,7 @@ namespace Seven
                 SceneManager.LoadScene("FightDemo_Room");
                 return;
             }
+            if (DemoBoot.CaptureDir != null && DemoBoot.FightCombo) { gameObject.AddComponent<FightComboRun>().Init(this); return; }
             if (DemoBoot.CaptureDir != null)
             {
                 var run = gameObject.AddComponent<CaptureRun>();
@@ -30,9 +31,9 @@ namespace Seven
 
         void Update()
         {
-            if (DemoBoot.CaptureDir != null || Input == null) return;
+            if (DemoBoot.CaptureDir != null || Input == null || PauseMenu.IsOpen) return;
             if (Input.Reset.WasPressedThisFrame()) SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
-            if (Input.Menu.WasPressedThisFrame()) SceneManager.LoadScene(DemoMenu.SceneName);
+            // Round 7: Esc / Start open the pause menu (PauseMenu) instead of leaving directly.
         }
     }
 }

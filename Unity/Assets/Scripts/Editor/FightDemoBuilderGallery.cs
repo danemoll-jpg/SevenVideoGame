@@ -47,7 +47,7 @@ namespace Seven.EditorTools
             Log($"gallery copied to StreamingAssets/Gallery: {on} included, {off} off, {missing} missing");
         }
 
-        struct TvRefs { public Transform tv; public Renderer screen; public Light light; }
+        struct TvRefs { public Transform tv; public Renderer screen; public Light light; public Vector3 sofaRoot, sofaFacing; }
 
         /// <summary>Rounded rectangle (half sizes, corner radius) as a closed loop of points with outward normals.</summary>
         static List<(Vector2 p, Vector2 n)> RoundRectLoop(float hw, float hh, float r, int seg = 8)
@@ -160,7 +160,10 @@ namespace Seven.EditorTools
             const int nObs = 5;
             for (int i = 0; i <= nObs; i++) { var p = o + Polar(3.95f, Mathf.Lerp(a0, a1, (float)i / nObs), 0f); obstacles.Add(new Vector3(p.x, p.z, 0.45f)); }
             Log($"gallery TV at {tv.position} ({TvSize.x}x{TvSize.y} m), sofa ends at {o + Polar(3.95f, a0, 0f)} / {o + Polar(3.95f, a1, 0f)}");
-            return new TvRefs { tv = tv, screen = screen.GetComponent<Renderer>(), light = light };
+            // Round 8: where 7 sits while browsing (middle of the sofa, facing the screen).
+            var sofaRoot = o + Polar(3.8f, f, 0f);
+            var sofaFacing = (o - sofaRoot); sofaFacing.y = 0f;
+            return new TvRefs { tv = tv, screen = screen.GetComponent<Renderer>(), light = light, sofaRoot = sofaRoot, sofaFacing = sofaFacing.normalized };
         }
 
         static Material GalleryUiMaterial()

@@ -689,12 +689,26 @@ P_CROUCH = both({**wings(0.0, root_yaw=-6, upper_roll=-6, spread=3),
                  "hips": E(p=24), "spine": E(p=12), "chest": E(p=6), "neck": E(p=-22), "head": E(p=-26),
                  "thigh.L": E(p=-78, r=-6), "shin.L": E(p=112), "foot.L": E(p=-40), "toes.L": E(p=6),
                  "upper_arm.L": E(r=20, y=-30), "forearm.L": E(p=-20), "hand.L": E(p=10), "jaw": E(p=10)})
+# Round 8: the readable drop. Wings snap half-open to brake right after the release; legs reach for the floor
+# before touchdown (they come down under him while the body swings upright around the hips).
+P_BRAKE = both({**wings(0.18, root_yaw=-4, upper_roll=-4, spread=2),
+                "upper_arm.L": E(r=-12, y=-10), "forearm.L": E(p=-30), "hand.L": E(p=-12),
+                "thigh.L": E(p=-35), "shin.L": E(p=55), "foot.L": E(p=-15),
+                "spine": E(p=-6), "chest": E(p=-6), "neck": E(p=6), "head": E(p=4), "jaw": E(p=8)})
+P_REACH = both({**wings(0.12, root_yaw=-6, upper_roll=-6, spread=3),
+                "hips": E(p=6), "spine": E(p=4), "chest": E(p=2), "neck": E(p=-10), "head": E(p=-14),
+                "thigh.L": E(p=-18, r=-8), "shin.L": E(p=22), "foot.L": E(p=-28), "toes.L": E(p=-6),
+                "upper_arm.L": E(r=6, y=-20), "forearm.L": E(p=-25), "hand.L": E(p=0), "jaw": E(p=10)})
 P_STANCE = both({**wings(0.28, root_yaw=14, upper_roll=6),
                  "hips": E(p=10), "spine": E(p=8), "chest": E(p=7), "neck": E(p=-10), "head": E(p=-14),
                  "thigh.L": E(p=-22, r=-4), "shin.L": E(p=38), "foot.L": E(p=-16),
                  "upper_arm.L": E(r=-6, y=-24), "forearm.L": E(p=-38, y=-10), "hand.L": E(p=-12), "jaw": E(p=6)})
 
-T_WAKE, T_UNFURL, T_DROP, T_DOWN, T_RISE, T_END = 3.5, 4.5, 6.5, 7.55, 8.5, 10.0
+# Round 8 re-key (Dan: the half-roll upright read as a snap). Release at T_DROP -> head-first drop for a beat ->
+# wings snap half-open to brake (T_BRAKE) -> the body swings round from the hips over T_SWING0..T_SWING1 (0.85 s,
+# eased) while the legs arc down under him -> legs reach -> crouch landing at T_DOWN; no frame where the pose jumps.
+T_WAKE, T_UNFURL, T_DROP, T_DOWN, T_RISE, T_END = 3.5, 4.5, 6.5, 7.9, 8.8, 10.0
+T_BRAKE, T_SWING0, T_SWING1 = 6.72, 6.78, 7.63
 SEQ_FRAMES = int(T_END * FPS)
 IDLE_FRAMES = 60
 
@@ -724,16 +738,23 @@ def seq_pose(t):
         hiss = smooth(T_UNFURL + 0.4, T_UNFURL + 0.75, t) * (1 - smooth(T_DROP - 0.5, T_DROP - 0.1, t))
         pose = addp(pose, {"jaw": E(p=14 * hiss), "head": E(p=6 * hiss)})
     elif t < T_DOWN:
-        pose = blend(P_STRETCH, P_FALL, smooth(T_DROP, T_DROP + 0.45, t))
-        pose = blend(pose, P_CROUCH, smooth(T_DOWN - 0.12, T_DOWN, t))
+        # head-first drop (wings folding a little) -> brake (wings snap half open) -> fall pose while swinging -> reach
+        pose = blend(P_STRETCH, P_FALL, smooth(T_DROP, T_BRAKE - 0.02, t))
+        pose = blend(pose, P_BRAKE, smooth(T_BRAKE - 0.04, T_BRAKE + 0.12, t))
+        pose = blend(pose, P_FALL, smooth(T_BRAKE + 0.2, T_SWING0 + 0.5, t) * 0.6)
+        pose = blend(pose, P_REACH, smooth(T_SWING1 - 0.25, T_DOWN - 0.05, t))
+        pose = blend(pose, P_CROUCH, smooth(T_DOWN - 0.1, T_DOWN + 0.18, t) * 0.0)
     elif t < T_RISE:
-        pose = blend(P_FALL, P_CROUCH, smooth(T_DOWN - 0.12, T_DOWN, t))
+        # crouch landing absorbs over ~0.3 s (ease in from the reach - no snap)
+        pose = blend(P_REACH, P_CROUCH, smooth(T_DOWN - 0.02, T_DOWN + 0.3, t))
         pose = blend(pose, stance_pose(t, 0.0), smooth(T_RISE - 0.15, T_RISE + 0.9, t))
     else:
         pose = blend(P_CROUCH, stance_pose(t, smooth(T_RISE + 0.6, T_END - 0.4, t)), smooth(T_RISE - 0.15, T_RISE + 0.9, t))
     # root: hanging upside down (half-roll about the facing axis), slight pendulum sway, then the half-roll back
     sway = math.sin(2 * math.pi * t / 4.0) * 2.5 * (1 - smooth(T_WAKE, T_UNFURL, t) * 0.6) * (1 - smooth(T_DROP - 0.3, T_DROP, t))
-    roll = 180.0 * (1 - smooth(T_DROP + 0.1, T_DOWN - 0.2, t))
+    # the swing upright: eased both ends over T_SWING0..T_SWING1 (smoothstep twice = gentle start and finish)
+    s = smooth(T_SWING0, T_SWING1, t)
+    roll = 180.0 * (1 - s * s * (3 - 2 * s))
     rq = Quaternion(AY, math.radians(roll)) @ Quaternion(AX, math.radians(sway))
     mode = "hang" if t <= T_DROP else ("ground" if t >= T_DOWN else "drop")
     return pose, rq, eyes, mode
@@ -872,8 +893,10 @@ for f in range(SEQ_FRAMES + 1):
         land_gap.append(low)
     else:
         u = (t - T_DROP) / (T_DOWN - T_DROP)
+        # height: falls fast for the head-first beat, the wings brake it, then it settles onto the floor
+        fz = 0.55 * u ** 1.5 + 0.45 * smooth(0, 1, u)
         target = Vector((lerp(P_RELEASE.x, P_LAND.x, smooth(0, 1, u)), lerp(P_RELEASE.y, P_LAND.y, smooth(0, 1, u)),
-                         lerp(P_RELEASE.z, P_LAND.z, u ** 1.7)))
+                         lerp(P_RELEASE.z, P_LAND.z, fz)))
         set_pose(pose, rq, (0, 0, 0), eyes)
         loc = target - hips_world()
         set_pose(pose, rq, loc, eyes)
@@ -933,7 +956,8 @@ if PREVIEW:
         po = bpy.data.objects.new(nm, pm)
         scn.collection.objects.link(po)
     arm.animation_data.action = clips["sequence"][0]
-    for tt in (0.0, 1.5, 3.9, 5.2, 5.8, 6.8, 7.1, 7.4, 7.6, 8.2, 9.0, 10.0):
+    for tt in (0.0, 1.5, 3.9, 5.2, 5.8, 6.5, 6.7, 6.9, 7.1, 7.3, 7.5, 7.7, 7.9, 8.2, 9.0, 10.0):
+
         scn.frame_set(int(tt * FPS))
         for vn, d in (("front", Vector((0.0, -1, 0.05))), ("side", Vector((1, -0.15, 0.05)))):
             shoot(os.path.join(PREVIEW, f"rw_{int(tt * 10):03d}_{vn}.png"), Vector((0, LAND_Z / 2, 2.25)), d, 5.0)

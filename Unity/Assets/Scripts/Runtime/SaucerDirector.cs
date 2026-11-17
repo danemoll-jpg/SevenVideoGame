@@ -26,6 +26,7 @@ namespace Seven
         void Start()
         {
             if (Chapter1State.Aboard) ChapterMode = true;
+            PauseMenu.EscapeOwned = () => Gallery != null && Gallery.OwnsEscape;
             if (DemoBoot.CaptureDir != null && !ChapterMode)
             {
                 if (DemoBoot.Gallery && Gallery != null) gameObject.AddComponent<GalleryCaptureRun>().Init(this);
@@ -51,9 +52,8 @@ namespace Seven
             if (live)
             {
                 // Esc leaves the gallery view first; Start still opens the demo menu from anywhere.
-                var kb = UnityEngine.InputSystem.Keyboard.current;
-                bool escForGallery = Gallery != null && Gallery.OwnsEscape && kb != null && kb.escapeKey.wasPressedThisFrame;
-                if (Input.Menu.WasPressedThisFrame() && !escForGallery) { Chapter1State.Reset(); SceneManager.LoadScene(DemoMenu.SceneName); return; }
+                // Round 7: Esc / Start open the pause menu (PauseMenu); Esc still leaves the gallery view first.
+                if (PauseMenu.IsOpen) return;
                 if (Input.Reveal.WasPressedThisFrame() && !ChapterMode) PressReveal();
                 if (Input.Stand.WasPressedThisFrame()) PressStand();
             }

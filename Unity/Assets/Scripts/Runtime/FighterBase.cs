@@ -32,6 +32,8 @@ namespace Seven
         }
 
         public float Length(string state) => _len.TryGetValue(state, out var l) ? l : 1f;
+        /// <summary>True when the controller has a clip of this name (optional Mixamo clips).</summary>
+        public bool HasState(string state) => _len.ContainsKey(state);
 
         protected void Play(string state, float fade = 0.12f, float speed = 1f, bool restart = true, float startNormalized = 0f)
         {

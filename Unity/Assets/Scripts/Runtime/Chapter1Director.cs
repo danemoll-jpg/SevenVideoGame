@@ -25,8 +25,10 @@ namespace Seven
         public Material Additive;
 
         [Header("Props")]
-        public Transform DoorBars;
-        public Renderer DoorField;
+        [Tooltip("Round 7: laser door (beam, halo pairs) set flush in the cell opening.")]
+        public Transform LaserDoor;
+        public Renderer[] LaserBeams;
+        public Light LaserLight;
         public Renderer ReleaseLight;
         public Transform OldWallSlab;
         public ScreeGuard Guard;
@@ -35,7 +37,16 @@ namespace Seven
         public Renderer InscriptionGlow;
         public GameObject VisionWhole, VisionRuins;
         public Transform SealedDoorSlab;
-        public Transform Saucer, SaucerRamp, Lever;
+        public Transform Saucer, Lever;
+        [Tooltip("Round 7: tractor beam boarding (no ramp): belly iris hatch, cone of light, its spot light and floor glow.")]
+        public Transform Hatch, Beam;
+        public Light BeamLight;
+        public Renderer BeamFloor, HatchGlow;
+        [Tooltip("Round 7 (6b): the city inside the Moon and the scene's Atmosphere (blended to the city look).")]
+        public CityMotion City;
+        public Atmosphere Atmo;
+        [Tooltip("6b dialogue set: primary | alternate | off (-cityreveal switch overrides).")]
+        public string CityRevealDialogue = "primary";
         public Transform[] Clamps;
         public Renderer[] RimGlow;
         public Light SaucerUnderLight;
@@ -67,7 +78,65 @@ namespace Seven
                 StartCoroutine(TrackCat());
             }
             SetupCheckpoint(Chapter1State.Checkpoint);
+            SetupAudio();
+            if (Auto) { AudioKit.Log = s => Cap.Log("audio: " + s); LineOfSightCheck(); }
             StartCoroutine(Flow());
+        }
+
+        // ------------------------------------------------------------------------------------------ Round 7 audio
+        AudioSource _hum, _amb, _saucerHum;
+        void SetupAudio()
+        {
+            int cp = Chapter1State.Checkpoint;
+            if (cp < 4 || !_cityLook) { _amb = AudioKit.Loop("amb_cavern", null, null, 1f, AudioKit.Bus.Ambience); MusicSystem.Play("moon_prison", 2f); }
+            else { _amb = AudioKit.Loop("amb_city", null, null, 1f, AudioKit.Bus.Ambience); MusicSystem.Play("moon_prison", 2f); }
+            if (cp == 0 && LaserDoor != null) _hum = AudioKit.Loop("laser_hum", LaserDoor, null, 0.7f, AudioKit.Bus.Sfx, 1.2f, 14f);
+            var f7 = Seven.gameObject.AddComponent<Footsteps>();
+            f7.Stride = 0.75f; f7.Volume = 0.5f;
+            f7.Surface = () => { var p = Seven.transform.position; var z = Ground.ZoneName(p.x, p.z); return z == "Cell" || z == "CellDoor" || z == "Corridor" || z == "Alcove" || z == "RampTop" || z == "Ramp" ? "step_metal_" : "step_rock_"; };
+            f7.Enabled = () => Seven.Current == ChapterSeven.Mode.Free && Seven.Speed > 0.1f;
+            var fc = Cat.gameObject.AddComponent<Footsteps>();
+            fc.Stride = 0.3f; fc.Volume = 0.22f; fc.MaxDistance = 8f; fc.Surface = () => "paw_";
+            var fg = Guard.gameObject.AddComponent<Footsteps>();
+            fg.Stride = 0.8f; fg.Volume = 0.5f; fg.Surface = () => "scree_step_";
+        }
+
+        IEnumerator SwapAmbience(string to, float seconds)
+        {
+            var old = _amb;
+            _amb = AudioKit.Loop(to, null, null, 0f, AudioKit.Bus.Ambience);
+            if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, 1f, seconds));
+            if (old != null) yield return AudioKit.Fade(old, 0f, seconds, true);
+        }
+
+        /// <summary>Round 7 check: no straight line from anywhere inside the cell reaches the hidden release panel,
+        /// and the panel is not inside the frame of any camera shot taken from inside the cell.</summary>
+        void LineOfSightCheck()
+        {
+            var target = MoonLayout.ReleasePanel + Vector3.forward * 0.06f;      // the panel's visible face
+            int rays = 0, clear = 0;
+            for (float x = -1.35f; x <= 1.36f; x += 0.27f)
+                for (float z = -1.35f; z <= 1.06f; z += 0.24f)
+                    foreach (var y in new[] { 0.35f, 1.0f, 1.55f, 1.75f })
+                        foreach (var off in new[] { Vector3.zero, new Vector3(0.18f, 0.22f, 0f), new Vector3(-0.18f, -0.22f, 0f) })
+                        {
+                            rays++;
+                            if (!Physics.Linecast(new Vector3(x, y, z), target + off, out _, ~0, QueryTriggerInteraction.Ignore)) clear++;
+                        }
+            Cap.Log($"line of sight cell -> hidden release panel: {rays} rays from a grid inside the cell, {clear} unobstructed (must be 0)");
+            if (DemoBoot.Quick)
+                foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+                    if (r.enabled && r.bounds.Contains(new Vector3(0.2f, 0.45f, 0.2f))) Cap.Log($"renderer covering the cell's lower middle: {r.name} ({r.GetType().Name}) layer {r.gameObject.layer} bounds {r.bounds.min}..{r.bounds.max} mat {(r.sharedMaterial != null ? r.sharedMaterial.name + "/" + r.sharedMaterial.shader.name : "-")}");
+        }
+        void ShotFrameCheck(string shot)
+        {
+            var cam = Cam.GetComponent<Camera>();
+            var p = cam.transform.position;
+            bool inCell = p.x > -1.6f && p.x < 1.6f && p.z < MoonLayout.CellWallZ0 && p.z > -1.6f;
+            var vp = cam.WorldToViewportPoint(MoonLayout.ReleasePanel);
+            bool inFrame = vp.z > 0f && vp.x > 0f && vp.x < 1f && vp.y > 0f && vp.y < 1f;
+            bool seen = inFrame && !Physics.Linecast(p, MoonLayout.ReleasePanel + Vector3.forward * 0.06f, out _, ~0, QueryTriggerInteraction.Ignore);
+            if (inCell) Cap.Log($"release panel in shot '{shot}' (camera inside the cell): in frame={inFrame}, visible={seen} (must be false)");
         }
 
         Material Mat(Renderer r) { if (!_mats.TryGetValue(r, out var m)) { m = r.material; _mats[r] = m; } return m; }
@@ -79,14 +148,17 @@ namespace Seven
         void SetupCheckpoint(int cp)
         {
             bool doorOpen = cp >= 1, wallOpen = cp >= 2, sealedOpen = cp >= 4;
+            _cityLook = cp >= 4;
             SetZone("CellDoor", doorOpen);
+            SetZone("Alcove", doorOpen);
             SetZone("Passage0", wallOpen); SetZone("Passage1", wallOpen);
             SetZone("VisionExit", sealedOpen);
-            SetZone("SaucerRamp", false);
             Ground.IgnoreObstacle = -1;
             Show(Seven.gameObject, true); Show(Cat.gameObject, true);
-            DoorBars.localPosition = doorOpen ? new Vector3(0f, 2.6f, 0f) : Vector3.zero;
-            DoorField.gameObject.SetActive(!doorOpen);
+            foreach (var b in LaserBeams) if (b != null) b.enabled = !doorOpen;
+            if (LaserLight != null) LaserLight.enabled = !doorOpen;
+            Seven.SetEnergyPoint(doorOpen ? 1f : 0f);       // the laser field dampens her powers: dark inside the cell
+            if (_cityLook) StartCoroutine(CityLook(0f));
             OldWallSlab.localPosition = wallOpen ? new Vector3(0f, -2.7f, 0f) : Vector3.zero;
             SealedDoorSlab.localPosition = sealedOpen ? new Vector3(0f, -3.3f, 0f) : Vector3.zero;
             VisionWhole.SetActive(false); VisionRuins.SetActive(true);
@@ -176,14 +248,15 @@ namespace Seven
             yield return null;
         }
 
-        IEnumerator Shot(string name) { if (Auto) yield return Cap.Shot(name); }
+        IEnumerator Shot(string name) { if (Auto) { ShotFrameCheck(name); yield return Cap.Shot(name); } }
+        bool _cityLook;
 
         readonly Dictionary<string, string> _shotOnLine = new Dictionary<string, string>
         {
             { "s01_03_cat", "s01_first_contact" }, { "s02_03_cat", "s02_cat_at_release" }, { "s02_06_7", "s02_door_open_which_way" },
             { "s03_05_7", "s03_walk_and_talk" }, { "s04_02_cat", "s04_older_wall" }, { "s05_01_cat", "s05_scree_guard" },
             { "s05_04_7", "s05_slipped_past" }, { "s06_02_cat", "s06_vision_during_far_voice" }, { "s06_07_7", "s06_after_vision" },
-            { "s07_01_7", "s07_saucer_from_ledge" }, { "s08_02_cat", "s08_at_the_ramp" },
+            { "s08_02_cat", "s08_at_the_edge_of_the_light" },
         };
         void OnLineForShots(VoiceBank.Line l)
         {
@@ -204,9 +277,10 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ input
         void Update()
         {
+            if (PauseMenu.IsOpen) return;
             if (!Auto)
             {
-                if (Input.Menu.WasPressedThisFrame()) { Chapter1State.Reset(); SceneManager.LoadScene(DemoMenu.SceneName); return; }
+                // Round 7: Esc / Start open the pause menu (PauseMenu) instead of leaving directly.
                 if (Input.Restart.WasPressedThisFrame() && !Dlg.Busy) { SceneManager.LoadScene(SceneManager.GetActiveScene().name); return; }
             }
             bool near = PromptNear;
@@ -241,6 +315,7 @@ namespace Seven
             yield return UI.Fade(0f, 1.8f);
             Seven.Lock(false);
             yield return Shot("s01_cell_start");
+            if (Auto) yield return LaserCollisionCheck();
             // The cat slips out of the small opening and sits outside the cell, watching her.
             yield return Wait(1.5f);
             Cat.GoTo(MoonLayout.CatWaitOutside, Cat.StrollSpeed, MoonLayout.DoorApproach);
@@ -250,46 +325,66 @@ namespace Seven
             if (Auto) yield return AutoWalk(MoonLayout.DoorApproach);
             yield return Until(() => Dist7(MoonLayout.DoorApproach) < 0.75f && Cat.Arrived, "7 at the door", 40f);
 
-            // Scene 1: first contact.
+            // Scene 1: first contact (through the laser beams).
             yield return Cutscene(true);
             Objective(null);
             Cam.Shot(new Vector3(0.45f, 1.75f, 4.3f), new Vector3(-0.05f, 1.3f, 0.9f), 1.4f);
+            yield return Wait(1.0f);
+            yield return Shot("s01_laser_door_on");
+            if (Auto && DemoBoot.Quick) { Cap.Finish("quick chapter check (first shots only)"); yield break; }
             yield return Dlg.PlayScene(1);
             Checkpoint(0);
 
-            // Scene 2: the cat opens the cell.
+            // Scene 2: the cat goes out of sight to a hidden release; she only hears it.
             yield return Dlg.PlayScene(2, 1, 1);            // "Stand back from the door."
             Cam.Follow();
             Seven.Lock(false);
             Objective("Stand back from the door");
             StartCoroutine(Dlg.PlayScene(2, 2, 3));        // "You know how to open it?" / "I wouldn't have asked..."
-            Cat.GoTo(MoonLayout.CrateFoot, Cat.TrotSpeed, MoonLayout.CrateTop);
+            SetZone("Alcove", true);
+            Cat.Lead(new List<Vector3> { MoonLayout.AlcoveMouth, MoonLayout.CrateFoot }, 99f);
             if (Auto) yield return AutoWalk(new Vector3(0.1f, 0f, -0.35f));
             yield return Until(() => Seven.transform.position.z < 0.15f, "7 stands back", 40f);
-            yield return Until(() => Cat.Arrived && !Dlg.Busy, "cat at the crate", 20f);
+            yield return Until(() => Cat.Arrived && !Dlg.Busy, "cat in the guard alcove (out of sight)", 25f);
             Seven.Lock(true);
-            Cam.Shot(new Vector3(-0.9f, 1.7f, 4.6f), new Vector3(0.9f, 0.9f, 2.0f), 1.0f);
-            Cat.Hop(MoonLayout.CrateTop, 0.8f, 0.55f);
-            yield return Until(() => Cat.Arrived, "cat on the crate", 6f);
+            // From inside the cell: 7 and the beams; the cat is somewhere off to the left, out of sight.
+            Cam.Shot(new Vector3(0.85f, 1.55f, -1.25f), new Vector3(0.05f, 1.15f, 1.6f), 1.0f);
+            Objective(null);
+            Cat.Hop(MoonLayout.CrateTop, 0.8f, 0.5f);
+            yield return Until(() => Cat.Arrived, "cat on the crate in the alcove", 6f);
+            if (Auto)
+            {
+                // Check-run only view (the player never sees this): the cat at the hidden release.
+                Cam.Shot(MoonLayout.AlcoveMouth + new Vector3(0.6f, 1.5f, 1.4f), MoonLayout.ReleasePanel + Vector3.down * 0.3f, 0.01f, true, 60f);
+                yield return Wait(0.05f);
+                yield return Shot("s02_checkonly_cat_at_hidden_release");
+                Cam.Shot(new Vector3(0.85f, 1.55f, -1.25f), new Vector3(0.05f, 1.15f, 1.6f), 0.01f, true);
+            }
             yield return Wait(0.4f);
             Cat.Paw();
             yield return Wait(0.7f);
+            AudioKit.Play("release_click", MoonLayout.ReleasePanel, 1f, 0f, AudioKit.Bus.Sfx, 18f);
             Glow(ReleaseLight, 4f);
-            yield return Shot("s02_cat_paws_release");
-            yield return OpenCellDoor();
+            yield return Wait(0.35f);
+            yield return Shot("s02_heard_click_beams_on");
+            yield return LasersOff();
+            yield return Shot("s02_beams_off");
             Glow(ReleaseLight, 0.8f);
-            Cat.Hop(new Vector3(0.9f, 0f, 3.2f), 0.7f, 0.35f);
-            yield return Wait(0.8f);
-            Cat.Hold(MoonLayout.CellDoor + Vector3.forward * 0.6f);
+            Cat.Hop(MoonLayout.CrateFoot, 0.6f, 0.3f);
+            yield return Until(() => Cat.Arrived, "cat down from the crate", 4f);
+            Cat.Lead(new List<Vector3> { MoonLayout.AlcoveMouth, new Vector3(-0.4f, 0f, 2.9f) }, 99f);
             Cam.Follow();
             Seven.Lock(false);
             Objective("Step out");
+            if (Auto) yield return FaceShot("s02_energy_point_dark_closeup");
             if (Auto) yield return AutoWalk(new Vector3(0f, 0f, 1.6f), new Vector3(0.1f, 0f, 2.8f));
             yield return Until(() => Seven.transform.position.z > 2.2f, "7 steps out", 40f);
             yield return Cutscene(true);
+            yield return Until(() => Cat.Arrived, "cat back from the alcove", 8f);
+            Cat.Hold(Seven.transform.position);
             var face = Flat(Cat.transform.position - Seven.transform.position);
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(face), 360f * Time.deltaTime); yield return null; }
-            Cam.Shot(new Vector3(2.9f, 1.8f, 4.3f), new Vector3(0.3f, 1.0f, 2.8f), 1.1f);
+            Cam.Shot(new Vector3(1.6f, 1.75f, 4.4f), new Vector3(-0.2f, 1.0f, 2.7f), 1.1f);
             yield return Dlg.PlayScene(2, 4, 6);           // Thank you / You're welcome / Which way?
             Cat.Hold(MoonLayout.VentMouth);                // looks toward the small opening he used
             yield return Dlg.PlayScene(2, 7, 8);
@@ -297,18 +392,76 @@ namespace Seven
             Checkpoint(1);
         }
 
-        IEnumerator OpenCellDoor()
+        /// <summary>The energy point relights as she steps out past the dead beams (watched every frame).</summary>
+        IEnumerator EnergyPointWatch()
         {
-            var from = DoorBars.localPosition; var to = new Vector3(0f, 2.6f, 0f);
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
+            while (Seven.EnergyPoint < 0.5f)
             {
-                DoorBars.localPosition = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t));
-                DoorField.gameObject.SetActive(t < 0.3f && Mathf.Repeat(t * 30f, 1f) > 0.4f);
+                if (Seven.transform.position.z > MoonLayout.CellWallZ1 + 0.15f)
+                {
+                    Seven.SetEnergyPoint(1f, 1.6f);
+                    AudioKit.Play("energy_point", null, 0.8f);
+                    if (Auto) { Cap.Log($"energy point relights at z {Seven.transform.position.z:0.00} (beams at {MoonLayout.LaserZ:0.00})"); yield return Wait(1.9f); yield return FaceShot("s02_energy_point_relit_closeup"); }
+                    yield break;
+                }
                 yield return null;
             }
-            DoorBars.localPosition = to;
-            DoorField.gameObject.SetActive(false);
+        }
+
+        /// <summary>Check runs only: a short face close-up (the energy point), then back to the normal camera.</summary>
+        IEnumerator FaceShot(string name)
+        {
+            var head = Seven.Bone(HumanBodyBones.Head);
+            if (head == null) yield break;
+            var c = head.position + Vector3.up * 0.06f;
+            bool wasShot = Cam.InShot;
+            Cam.Shot(c + Seven.transform.forward * 0.75f + Vector3.up * 0.05f, c, 0.01f, true, 40f);
+            yield return null;
+            yield return Shot(name);
+            if (!wasShot) Cam.Follow();
+        }
+
+        /// <summary>Beams switch off one by one (top to bottom) after the click; the hum dies; the doorway opens.</summary>
+        IEnumerator LasersOff()
+        {
+            AudioKit.Play("laser_power_down", LaserDoor.position + Vector3.up * 1.2f, 1f, 0f, AudioKit.Bus.Sfx, 16f);
+            if (_hum != null) StartCoroutine(AudioKit.Fade(_hum, 0f, 1.6f, true));
+            for (int i = MoonLayout.LaserCount - 1; i >= 0; i--)
+            {
+                for (int k = 0; k < 2; k++)
+                {
+                    int idx = i * 2 + k;
+                    if (idx < LaserBeams.Length && LaserBeams[idx] != null) LaserBeams[idx].enabled = false;
+                }
+                if (LaserLight != null) LaserLight.intensity *= 0.82f;
+                yield return Wait(0.17f);
+            }
+            if (LaserLight != null) LaserLight.enabled = false;
             SetZone("CellDoor", true);
+            StartCoroutine(EnergyPointWatch());
+            if (Auto) Cap.Log("laser door: all beams off, doorway open");
+        }
+
+        /// <summary>Check: drive 7 straight and diagonally into the beams from several spots; she must stay inside.</summary>
+        IEnumerator LaserCollisionCheck()
+        {
+            float maxZ = float.MinValue; var start = Seven.transform.position;
+            var tries = new[] { (new Vector3(0f, 0f, 0.2f), new Vector3(0f, 0f, 1f)), (new Vector3(-0.9f, 0f, 0.2f), new Vector3(0.6f, 0f, 1f)),
+                                (new Vector3(0.9f, 0f, 0.2f), new Vector3(-0.6f, 0f, 1f)), (new Vector3(0.3f, 0f, 0.6f), new Vector3(0.15f, 0f, 1f)),
+                                (new Vector3(-0.3f, 0f, 0.6f), new Vector3(-1f, 0f, 0.4f)) };
+            foreach (var (from, dir) in tries)
+            {
+                Seven.Place(from, dir);
+                for (float t = 0f; t < 1.4f; t += Time.deltaTime)
+                {
+                    Seven.ScriptMove = dir.normalized; Seven.ScriptRun = true;
+                    maxZ = Mathf.Max(maxZ, Seven.transform.position.z);
+                    yield return null;
+                }
+                Seven.ScriptMove = Vector3.zero; Seven.ScriptRun = false;
+            }
+            Seven.Place(start, Vector3.forward);
+            Cap.Log($"laser door collision: 5 runs into the beams (straight, diagonal, running) - 7's furthest z {maxZ:0.000} (root; beams at z {MoonLayout.LaserZ:0.000}, body radius 0.25) -> {(maxZ + 0.25f <= MoonLayout.LaserZ + 0.001f ? "stays inside" : "REACHED THE BEAMS")}");
         }
 
         IEnumerator Scene3And4()
@@ -337,6 +490,7 @@ namespace Seven
             Seven.Release();
             // The old stones give: the slab sinks and opens a gap into the structures beneath the facility.
             Burst(MoonLayout.OldWall + Vector3.forward * 0.2f, 60, 1.2f);
+            AudioKit.Play("stone_door", MoonLayout.OldWall, 1f, 0f, AudioKit.Bus.Sfx, 25f);
             var from = OldWallSlab.localPosition; var to = new Vector3(0f, -2.7f, 0f);
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.2f) { OldWallSlab.localPosition = Vector3.Lerp(from, to, t * t); yield return null; }
             OldWallSlab.localPosition = to;
@@ -412,6 +566,7 @@ namespace Seven
         IEnumerator FallStone()
         {
             _stoneDown = true;
+            AudioKit.Play("stone_fall", MoonLayout.StoneRest, 1f, 0.05f, AudioKit.Bus.Sfx, 30f);
             var a = MoonLayout.StoneRest; var b = MoonLayout.StoneLand;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 0.75f)
             {
@@ -477,6 +632,12 @@ namespace Seven
             yield return Wait(1.3f);
             yield return Shot("s06_vision_before");
             // Wash to white; the ruins appear whole, with pale glowing figures; the cat is heard faintly, far away.
+            // The music fades out: the vision plays no track, only its own shimmer.
+            MusicSystem.Stop(1.2f);
+            AudioKit.Play("vision_whoosh", null, 0.9f);
+            var shimmer = AudioKit.Loop("vision_shimmer", null, null, 0f, AudioKit.Bus.Sfx);
+            if (shimmer != null) StartCoroutine(AudioKit.Fade(shimmer, 0.7f, 1.5f));
+            if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, 0.25f, 1.0f));
             Glow(InscriptionGlow, 6f);
             yield return UI.Fade(1f, 0.9f, 1f);
             VisionRuins.SetActive(false); VisionWhole.SetActive(true);
@@ -490,6 +651,9 @@ namespace Seven
             yield return Shot("s06_vision_during");
             yield return Until(() => !Dlg.Busy && Time.time - visionStart > 7.6f, "vision length", 20f);
             yield return UI.Fade(1f, 0.8f, 1f);
+            AudioKit.Play("vision_whoosh", null, 0.6f);
+            if (shimmer != null) StartCoroutine(AudioKit.Fade(shimmer, 0f, 1.6f, true));
+            if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, 1f, 2.5f));
             StopCoroutine(ghostRoutine);
             VisionWhole.SetActive(false); VisionRuins.SetActive(true);
             Show(Cat.gameObject, true);
@@ -507,6 +671,7 @@ namespace Seven
             Glow(InscriptionGlow, 7f);
             TkStream(MoonLayout.Inscription);
             Burst(MoonLayout.SealedDoor + Vector3.up * 1.0f, 80, 1.3f);
+            AudioKit.Play("stone_door", MoonLayout.SealedDoor + Vector3.up, 1f, 0f, AudioKit.Bus.Sfx, 25f);
             var from = SealedDoorSlab.localPosition; var to = new Vector3(0f, -3.3f, 0f);
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.6f) { SealedDoorSlab.localPosition = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t)); yield return null; }
             SetZone("VisionExit", true);
@@ -514,6 +679,7 @@ namespace Seven
             yield return Shot("s06_passage_opens");
             Seven.Release(); Seven.Lock(true);
             yield return Dlg.PlayScene(6, 13, 15);
+            MusicSystem.Play("moon_prison", 4f);
             yield return Cutscene(false);
             Cat.Follow();
             Checkpoint(4);
@@ -535,16 +701,145 @@ namespace Seven
             }
         }
 
-        IEnumerator Scene7And8()
+        // ------------------------------------------------------------------------------------------ 6b: the city reveal
+        /// <summary>Blend the Atmosphere to the city look: distant layers visible, haze bright in every direction
+        /// (also up the curve), a broad unexplained glow high above, the basin buried in soft valley haze.</summary>
+        IEnumerator CityLook(float seconds)
+        {
+            _cityLook = true;
+            if (Atmo == null) yield break;
+            var a = Atmo;
+            float[] from = { a.FogStart, a.GroundDensity, a.GroundBase, a.GroundFalloff, a.GroundRange, a.ValleyDensity, a.ValleyBase, a.ValleyFalloff, a.DistanceDensity, a.HazeHeight, a.SkyDistance, a.NearBrightness, a.FarBrightness, a.BrightnessDistance, a.ZenithBrightness, a.GlowIntensity, a.GlowRadius, a.MaxFog };
+            float[] to = { 8f, 0.010f, MoonLayout.Bay, 2.2f, 45f, 0.0026f, -200f, 120f, 0.00021f, 6000f, 7000f, 0.12f, 1.2f, 2200f, 1.0f, 0.38f, 34f, 0.97f };
+            // the scene's shadowed key light swings overhead: one broad source above the city (pale tops, dark streets)
+            Light key = null;
+            foreach (Transform c in a.transform) if (c.name == "BackLight") key = c.GetComponent<Light>();
+            var keyR0 = key != null ? key.transform.rotation : Quaternion.identity; float keyI0 = key != null ? key.intensity : 1f;
+            var keyR1 = Quaternion.Euler(68f, 205f, 0f);
+            // glow sources: one broad source far above the visible city + soft lights deep in the haze
+            var glowPos = new[] { new Vector3(-200f, 1900f, -1600f), new Vector3(16f, -120f, -900f), new Vector3(-700f, 200f, -1700f), new Vector3(800f, 300f, -1500f),
+                                  new Vector3(16f, 900f, -3600f), new Vector3(-1500f, 600f, -400f), new Vector3(1500f, 500f, -300f), new Vector3(16f, 2600f, 300f) };
+            var glowScale = new[] { new Vector3(36f, 2.2f, 1f), new Vector3(6f, 0.7f, 1f), new Vector3(9f, 0.8f, 1f), new Vector3(9f, 0.8f, 1f),
+                                    new Vector3(18f, 1.2f, 1f), new Vector3(12f, 0.8f, 1f), new Vector3(12f, 0.8f, 1f), new Vector3(24f, 1.0f, 1f) };
+            var glows = new List<Transform>();
+            foreach (Transform c in a.transform) if (c.name.StartsWith("Glow")) glows.Add(c);
+            var gp0 = glows.ConvertAll(g => g.position); var gs0 = glows.ConvertAll(g => g.localScale);
+            for (float t = seconds > 0f ? 0f : 1f; t <= 1f + 1e-4f; t += seconds > 0f ? Time.deltaTime / seconds : 2f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t));
+                float L(int i) => Mathf.Lerp(from[i], to[i], u);
+                a.FogStart = L(0); a.GroundDensity = L(1); a.GroundBase = L(2); a.GroundFalloff = L(3); a.GroundRange = L(4);
+                a.ValleyDensity = L(5); a.ValleyBase = L(6); a.ValleyFalloff = L(7); a.DistanceDensity = Mathf.Exp(Mathf.Lerp(Mathf.Log(from[8]), Mathf.Log(to[8]), u));
+                a.HazeHeight = Mathf.Exp(Mathf.Lerp(Mathf.Log(from[9]), Mathf.Log(to[9]), u)); a.SkyDistance = L(10);
+                a.NearBrightness = L(11); a.FarBrightness = L(12); a.BrightnessDistance = L(13); a.ZenithBrightness = L(14);
+                a.GlowIntensity = L(15); a.GlowRadius = L(16); a.MaxFog = L(17);
+                for (int i = 0; i < glows.Count && i < glowPos.Length; i++) { glows[i].position = Vector3.Lerp(gp0[i], glowPos[i], u); glows[i].localScale = Vector3.Lerp(gs0[i], glowScale[i], u); }
+                if (key != null) { key.transform.rotation = Quaternion.Slerp(keyR0, keyR1, u); key.intensity = Mathf.Lerp(keyI0, 1.35f, u); }
+                if (seconds <= 0f) break;
+                yield return null;
+            }
+            if (Auto) Cap.Log("atmosphere: city look applied");
+        }
+
+        IEnumerator LookAlong(Vector3 pos, Vector3 look0, Vector3 look1, float seconds, float fov)
+        {
+            for (float t = 0f; t < 1f; t += Time.deltaTime / seconds)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Cam.Shot(pos, Vector3.Lerp(look0, look1, u), 0.02f, true, fov);
+                yield return null;
+            }
+        }
+
+        string RevealSet => DemoBoot.CityRevealDialogue != "primary" ? DemoBoot.CityRevealDialogue : CityRevealDialogue;
+        IEnumerator RevealLines(int from, int to, int altFrom, int altTo)
+        {
+            if (RevealSet == "off") { yield return Wait(2.4f * (to - from + 1)); yield break; }
+            if (RevealSet == "alternate") { if (altFrom > 0) yield return Dlg.PlayScene(66, altFrom, altTo); else yield return Wait(1.5f); yield break; }
+            yield return Dlg.PlayScene(65, from, to);
+        }
+
+        IEnumerator Scene6bReveal()
         {
             Objective("Find the way out");
-            if (Auto) StartCoroutine(AutoWalk(new Vector3(16.5f, MoonLayout.Lower, -41f), MoonLayout.Viewpoint));
-            yield return Until(() => Seven.transform.position.z < MoonLayout.ViewpointZ, "impound viewpoint", 40f);
+            StartCoroutine(WatchCityBlend());
+            if (Auto) StartCoroutine(AutoWalk(new Vector3(16.5f, MoonLayout.Lower, -41f), new Vector3(16.5f, MoonLayout.Lower, -43.8f)));
+            yield return Until(() => Seven.transform.position.z < MoonLayout.ViewpointZ, "out onto the terrace", 40f);
+            // Emergence: no objective, no joke. She walks a few steps, then turns back to see where they escaped.
             yield return Cutscene(true);
-            Cam.Shot(new Vector3(14.6f, MoonLayout.Lower + 2.4f, -43.0f), MoonLayout.SaucerCentre + Vector3.up * 1.2f, 1.4f, false, 30f);
+            Objective(null);
+            MusicSystem.Play("main_theme", 4f);
+            StartCoroutine(SwapAmbience("amb_city", 3f));
+            Seven.ScriptDriven = true;
+            Cat.GoTo(MoonLayout.RevealSpot + new Vector3(1.1f, 0f, 0.6f), Cat.StrollSpeed, MoonLayout.RevealSpot);
+            Cam.Shot(new Vector3(18.2f, MoonLayout.Lower + 1.5f, -48.6f), new Vector3(16.4f, MoonLayout.Lower + 1.2f, -43f), 1.6f);
+            Seven.Lock(false);
+            for (float t0 = Time.time; Dist7(MoonLayout.RevealSpot) > 0.2f && Time.time - t0 < 6f;)
+            { Seven.ScriptMove = Flat(MoonLayout.RevealSpot - Seven.transform.position).normalized * 0.7f; yield return null; }
+            Seven.ScriptMove = Vector3.zero;
+            Seven.Lock(true);
+            Seven.ScriptDriven = Auto;
+            // turns back toward the colossal structure the prison is bolted into
+            var back = Vector3.forward;
+            for (float t = 0f; t < 1.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(back), 160f * Time.deltaTime); yield return null; }
+            Seven.LookAround(0.8f);
+            // Shot A: wide from out over the bay - 7 tiny on the terrace, the host rising above, the city around.
+            var aPos = new Vector3(-46f, -4f, -150f);
+            Cam.Shot(aPos, new Vector3(14f, 40f, -40f), 0.01f, true, 54f);
+            StartCoroutine(LookAlong(aPos, new Vector3(14f, 40f, -40f), new Vector3(10f, 110f, -20f), 8f, 54f));
+            yield return Wait(3.0f);
+            yield return Shot("c01_terrace_wide_before_dialogue");
+            yield return Wait(2.8f);                                 // several seconds of only sound and the theme
+            // "All this was above us?" / "Most of it." - looking up the host: only one of many.
+            var bPos = new Vector3(14.2f, MoonLayout.Lower + 0.8f, -47.3f);
+            StartCoroutine(LookAlong(bPos, Seven.transform.position + new Vector3(0f, 1.6f, 0f), new Vector3(-340f, 520f, -40f), 6.5f, 62f));
+            yield return RevealLines(1, 2, 1, 2);
+            yield return Shot("c02_looking_up_one_of_many");
+            // She follows the rising curve of the city: she turns to the open side and the camera tilts up along it.
+            for (float t = 0f; t < 1.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(new Vector3(-0.15f, 0f, -1f)), 150f * Time.deltaTime); yield return null; }
+            var cPos = new Vector3(17.6f, 5.5f, -42.5f);           // above and behind her, clear of the railing
+            yield return LookAlong(cPos, new Vector3(16f, -170f, -800f), new Vector3(-200f, 1900f, -4300f), 7.5f, 62f);
+            yield return Shot("c03_up_the_curve");
+            yield return RevealLines(3, 4, 3, 4);                     // "Someone built this." / "Yes."
+            // The quiet centre: pyramids around the dark depression.
+            Cam.Shot(new Vector3(16f, 30f, -62f), MoonLayout.BasinCenter + new Vector3(-60f, -10f, 0f), 0.01f, true, 30f);
+            yield return Wait(2.2f);
+            yield return Shot("c04_pyramids_and_depression");
+            // A distant section of machinery starts moving; stone falls from an ancient terrace.
+            if (City != null) City.StartMachinery();
+            Cam.Shot(new Vector3(16f, 30f, -62f), MoonLayout.FallingStoneAt + new Vector3(0f, -70f, 12f), 0.01f, true, 30f);
+            yield return Wait(1.6f);
+            if (City != null) StartCoroutine(City.DropStone());
+            yield return Wait(2.6f);
+            yield return Shot("c05_stone_falls");
+            yield return Wait(1.0f);
+            if (RevealSet == "primary") yield return Dlg.PlayScene(65, 5, 5);      // "And they're taking it apart."
+            else yield return Wait(1.5f);
+            // Scene 7: she spots the impound bay holding her saucer, small but recognisable by its rim glow.
+            for (float t = 0f; t < 0.8f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(MoonLayout.SaucerCentre - Seven.transform.position)), 200f * Time.deltaTime); yield return null; }
+            Cam.Shot(Seven.transform.position + new Vector3(-1.3f, 1.9f, 1.6f), MoonLayout.SaucerCentre + Vector3.up * 1.2f, 1.2f, false, 34f);
+            yield return Wait(1.4f);
+            yield return Shot("c06_saucer_spotted");
             yield return Dlg.PlayScene(7);
+            Seven.Release();
             yield return Cutscene(false);
             Checkpoint(4);
+        }
+
+        IEnumerator WatchCityBlend()
+        {
+            while (!_cityLook)
+            {
+                if (Seven.transform.position.z < MoonLayout.CityBlendZ) { yield return CityLook(3.5f); yield break; }
+                yield return null;
+            }
+        }
+
+        // ------------------------------------------------------------------------------------------ 7-8: bay, beam
+        IEnumerator Scene7And8()
+        {
+            yield return Scene6bReveal();
+            MusicSystem.Play("moon_prison", 5f);
             Objective("Get down to the bay and release the saucer");
             Cat.Lead(new List<Vector3> { new Vector3(21.5f, MoonLayout.Lower, -47f), new Vector3(21.5f, MoonLayout.Lower, -50f), new Vector3(21.5f, MoonLayout.Bay, -70.6f), new Vector3(21f, MoonLayout.Bay, -72.4f) }, 6f);
             Prompt("Telekinesis: clamp release lever", MoonLayout.Lever, 8.5f, true);
@@ -560,14 +855,16 @@ namespace Seven
             yield return Cutscene(false);
             Cat.Follow();
             Objective("Board the saucer");
-            if (Auto) yield return AutoWalk(new Vector3(MoonLayout.RampFoot.x + 1.5f, MoonLayout.Bay, -75f), MoonLayout.RampFoot + Vector3.right * 0.6f);
-            yield return Until(() => Dist7(MoonLayout.RampFoot) < 2.2f, "at the saucer ramp", 60f);
+            if (Auto) yield return AutoWalk(MoonLayout.BeamApproach, MoonLayout.BeamEdge);
 
-            // Scene 8.
+            yield return Until(() => Dist7(MoonLayout.BeamCentre) < 3.9f, "at the edge of the light", 60f);
+
+            // Scene 8, at the edge of the light.
             yield return Cutscene(true);
             Objective(null);
-            Cat.GoTo(MoonLayout.RampFoot + new Vector3(1.0f, 0f, 1.2f), Cat.TrotSpeed, Seven.transform.position);
-            Cam.Shot(MoonLayout.RampFoot + new Vector3(3.6f, 1.85f, 3.8f), MoonLayout.RampFoot + new Vector3(-1.2f, 1.3f, 0f), 1.2f);
+            MusicSystem.Play("main_theme", 3f);
+            Cat.GoTo(MoonLayout.BeamEdge + new Vector3(0.7f, 0f, 1.0f), Cat.TrotSpeed, MoonLayout.BeamCentre);
+            Cam.Shot(MoonLayout.BeamCentre + new Vector3(6.6f, 1.7f, 4.6f), MoonLayout.BeamCentre + new Vector3(1.4f, 1.6f, 0f), 1.2f, false, 50f);
             yield return Dlg.PlayScene(8);
             Checkpoint(4);
             yield return Board();
@@ -578,6 +875,7 @@ namespace Seven
             var l0 = Lever.localRotation;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 0.5f) { Lever.localRotation = l0 * Quaternion.Euler(Mathf.Lerp(0f, 70f, t), 0f, 0f); yield return null; }
             yield return Wait(0.3f);
+            AudioKit.Play("clamps_release", MoonLayout.SaucerCentre + Vector3.up, 1f, 0f, AudioKit.Bus.Sfx, 45f);
             var starts = new List<Vector3>();
             foreach (var c in Clamps) starts.Add(c.position);
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.2f)
@@ -591,51 +889,118 @@ namespace Seven
                 yield return null;
             }
             if (SaucerUnderLight != null) SaucerUnderLight.intensity = 3f;
-            // Ramp lowers.
-            var r0 = SaucerRamp.localRotation;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f) { SaucerRamp.localRotation = Quaternion.Slerp(r0, Quaternion.Euler(0f, 0f, 0f), Mathf.SmoothStep(0f, 1f, t)); yield return null; }
-            yield return Shot("s07_saucer_released");
-            if (Auto) Cap.Log("saucer released: clamps open, rim glow up, ramp down");
+            _saucerHum = AudioKit.Loop("saucer_hum", Saucer, null, 0.9f, AudioKit.Bus.Sfx, 3f, 45f);
+            // The saucer lifts a little and hovers; the iris hatch opens and a soft cone of light shines down.
+            var s0 = Saucer.position;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f) { Saucer.position = s0 + Vector3.up * MoonLayout.HoverLift * Mathf.SmoothStep(0f, 1f, t); yield return null; }
+            StartCoroutine(Hover(s0 + Vector3.up * MoonLayout.HoverLift));
+            Ground.IgnoreObstacle = 0;             // obstacle 0 = the saucer: she can walk under it now
+            yield return Iris(true);
+            yield return BeamOn(true);
+            yield return Shot("s07_saucer_released_beam_on");
+            if (Auto) Cap.Log("saucer released: clamps open, rim glow up, hovering, iris open, tractor beam on (no ramp)");
+        }
+
+        bool _hovering;
+        IEnumerator Hover(Vector3 at)
+        {
+            _hovering = true;
+            for (float t = 0f; _hovering; t += Time.deltaTime) { Saucer.position = at + Vector3.up * Mathf.Sin(t * 1.1f) * 0.05f; yield return null; }
+        }
+
+        IEnumerator Iris(bool open)
+        {
+            AudioKit.Play("hatch_iris", Hatch.position, 1f, 0f, AudioKit.Bus.Sfx, 25f);
+            if (HatchGlow != null) Glow(HatchGlow, open ? 3f : 0.4f);
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.1f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, open ? t : 1f - t);
+                for (int i = 0; i < Hatch.childCount; i++)
+                {
+                    var b = Hatch.GetChild(i);
+                    b.localRotation = Quaternion.Euler(0f, i * 45f + u * 50f, 0f);
+                    b.localPosition = b.localRotation * new Vector3(MoonLayout.HatchRadius * 0.95f * u, 0.01f * u, 0f);
+                }
+                yield return null;
+            }
+        }
+
+        IEnumerator BeamOn(bool on)
+        {
+            if (on) { Beam.gameObject.SetActive(true); AudioKit.Play("tractor_beam", MoonLayout.BeamCentre + Vector3.up * 2f, 0.8f, 0f, AudioKit.Bus.Sfx, 35f); }
+            for (float t = 0f; t < 1f; t += Time.deltaTime / (on ? 1.3f : 1.6f))
+            {
+                float u = Mathf.SmoothStep(0f, 1f, on ? t : 1f - t);
+                Beam.localScale = new Vector3(Mathf.Lerp(0.6f, 1f, u), Mathf.Max(0.001f, u), Mathf.Lerp(0.6f, 1f, u));
+                if (BeamLight != null) BeamLight.intensity = 3.2f * u;
+                yield return null;
+            }
+            if (!on) Beam.gameObject.SetActive(false);
+        }
+
+        /// <summary>Float one of them up the beam into the hatch (upright, slow, a gentle turn), then hide them.</summary>
+        IEnumerator Rise(Transform who, float seconds, float turn, System.Action<float> each = null)
+        {
+            var p0 = who.position;
+            float top = Saucer.position.y + MoonLayout.SaucerBaseY - 0.1f;
+            var r0 = who.rotation;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / seconds)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                var c = new Vector3(MoonLayout.BeamCentre.x, 0f, MoonLayout.BeamCentre.z);
+                var p = Vector3.Lerp(new Vector3(p0.x, 0f, p0.z), c, Mathf.Clamp01(t * 2.5f));
+                p.y = Mathf.Lerp(p0.y, top + 0.3f, u);
+                who.position = p;
+                who.rotation = r0 * Quaternion.Euler(0f, turn * u, 0f);
+                each?.Invoke(t);
+                if (UnityEngine.Random.value < 0.5f) { _motes.transform.position = c + Vector3.up * UnityEngine.Random.Range(0f, top - MoonLayout.Bay) + UnityEngine.Random.insideUnitSphere * 0.8f; _motes.Emit(1); }
+                yield return null;
+            }
+            Show(who.gameObject, false);
         }
 
         IEnumerator Board()
         {
-            // 7 goes first, the cat after her; both vanish into the hull; the ramp closes; liftoff.
-            var top = MoonLayout.SaucerCentre + new Vector3(5.25f, 0f, 0f);
-            var path = new[] { MoonLayout.RampFoot, top };
-            Ground.IgnoreObstacle = 0;             // obstacle 0 = the saucer
-            SetZone("SaucerRamp", true);
+            // 7 steps into the cone first and floats gently up, drawn in through the hatch; then the cat.
             Seven.Lock(false); Seven.ScriptDriven = true;
-            Cam.Shot(MoonLayout.SaucerCentre + new Vector3(13f, 3.2f, 8f), MoonLayout.SaucerCentre + new Vector3(3f, 1.2f, 0f), 1.6f);
-            float rampLen = 2.3f, rampTopY = MoonLayout.SaucerBaseY + 0.25f;
-            foreach (var p in path)
-            {
-                float t0 = Time.time;
-                while (Dist7(p) > 0.25f && Time.time - t0 < 10f)
-                {
-                    Seven.ScriptMove = Flat(p - Seven.transform.position).normalized * 0.8f;
-                    yield return null;
-                }
-            }
+            Cam.Shot(MoonLayout.BeamCentre + new Vector3(9.5f, 2.0f, 6.5f), MoonLayout.BeamCentre + new Vector3(0f, 2.3f, 0f), 1.6f, false, 46f);
+            for (float t0 = Time.time; Dist7(MoonLayout.BeamCentre) > 0.35f && Time.time - t0 < 8f;)
+            { Seven.ScriptMove = Flat(MoonLayout.BeamCentre - Seven.transform.position).normalized * 0.7f; yield return null; }
             Seven.ScriptMove = Vector3.zero;
-            Show(Seven.gameObject, false);
-            Cat.Scripted("walk");
-            var c0 = Cat.transform.position;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.8f)
+            Seven.Lock(true);
+            Seven.BeginFloat();
+            bool s7a = false, s7b = false;
+            yield return Rise(Seven.transform, 4.2f, 40f, t =>
             {
-                var p = Vector3.Lerp(c0, top, t);
-                float along = Mathf.InverseLerp(MoonLayout.RampFoot.x, MoonLayout.RampFoot.x - rampLen, p.x);
-                p.y = MoonLayout.Bay + rampTopY * Mathf.Clamp01(along);
-                Cat.transform.position = p;
-                var d = Flat(top - c0); if (d.sqrMagnitude > 1e-4f) Cat.transform.rotation = Quaternion.LookRotation(d);
+                if (!s7a && t > 0.35f) { s7a = true; StartCoroutine(Shot("s08_7_rising")); }
+                if (!s7b && t > 0.75f) { s7b = true; StartCoroutine(Shot("s08_7_drawn_into_hatch")); }
+            });
+            yield return Wait(0.5f);
+            Cat.Scripted("walk");
+            for (float t0 = Time.time; Flat(Cat.transform.position - MoonLayout.BeamCentre).magnitude > 0.2f && Time.time - t0 < 5f;)
+            {
+                var d = Flat(MoonLayout.BeamCentre - Cat.transform.position);
+                Cat.transform.position += d.normalized * Mathf.Min(d.magnitude, 1.4f * Time.deltaTime);
+                Cat.transform.rotation = Quaternion.RotateTowards(Cat.transform.rotation, Quaternion.LookRotation(d), 360f * Time.deltaTime);
                 yield return null;
             }
-            Show(Cat.gameObject, false);
-            var r0 = SaucerRamp.localRotation;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.2f) { SaucerRamp.localRotation = Quaternion.Slerp(r0, Quaternion.Euler(0f, 0f, 80f), t); yield return null; }
+            Cat.Floating();                              // paws dangling (held jump frame), tail free
+            bool sc = false;
+            yield return Rise(Cat.transform, 3.4f, -60f, t => { if (!sc && t > 0.45f) { sc = true; StartCoroutine(Shot("s08_cat_rising")); } });
+            // The hatch irises shut, the light fades, liftoff as before.
+            yield return Wait(0.4f);
+            StartCoroutine(BeamOn(false));
+            yield return Wait(0.5f);
+            StartCoroutine(Iris(false));
+            yield return Wait(0.5f);
+            yield return Shot("s08_hatch_closing");
+            yield return Wait(0.8f);
+            _hovering = false;
             // Liftoff: a wide shot from the bay corner.
             Cam.Shot(new Vector3(29f, MoonLayout.Bay + 3f, -61f), MoonLayout.SaucerCentre + Vector3.up * 2f, 0.4f, true);
             Burst(MoonLayout.SaucerCentre + Vector3.up * 0.3f, 160, 4f);
+            AudioKit.Play("liftoff", null, 0.9f);
+            if (_saucerHum != null) StartCoroutine(AudioKit.Fade(_saucerHum, 0f, 3f, true));
             var s0 = Saucer.position;
             float dur = 7.5f;
             bool shot1 = false, shot2 = false;
@@ -653,8 +1018,10 @@ namespace Seven
                 yield return null;
             }
             yield return UI.Fade(1f, 1.2f);
-            if (Auto) Cap.Log($"moon level done in {Time.time - Chapter1State.StartedAt:0.0}s game time; lines so far {Chapter1State.Played.Count}; cat max distance while following/leading {Cap.CatMaxBehind:0.00} m; cat catch-ups {Cat.CatchUps}");
+            if (Auto) Cap.Log($"moon level done in {Time.time - Chapter1State.StartedAt:0.0}s game time; lines so far {Chapter1State.Played.Count}; cat max distance while following/leading {Cap.CatMaxBehind:0.00} m; cat catch-ups {Cat.CatchUps}; 7 footsteps {Seven.GetComponent<Footsteps>()?.Count}");
             Chapter1State.Aboard = true;
+            SaveGame.SaveChapter1Aboard();             // Round 7: Continue = explore the saucer after the chapter
+            MusicSystem.Play("aboard_saucer", 3f);
             SceneManager.LoadScene("Saucer");
         }
 
@@ -701,6 +1068,8 @@ namespace Seven
         void TkStream(Vector3 target) => StartCoroutine(TkStreamRoutine(target));
         IEnumerator TkStreamRoutine(Vector3 target)
         {
+            AudioKit.Play("tk_gather", Seven.transform.position + Vector3.up * 1.2f, 0.7f, 0.04f, AudioKit.Bus.Sfx, 20f);
+            AudioKit.Play("tk_push", target, 0.9f, 0.05f, AudioKit.Bus.Sfx, 25f);
             var hand = Seven.Bone(HumanBodyBones.RightHand);
             var sh = _motes.shape; sh.radius = 0.08f;
             for (float t = 0f; t < 0.7f; t += Time.deltaTime)

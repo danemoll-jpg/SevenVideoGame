@@ -125,7 +125,8 @@ namespace Seven
             Current = Mode.Lifted;
             _liftTime = 0f;
             MaxHeightThisLift = 0f;
-            Play("dazed", 0.3f, 0.75f);        // woozy flailing loop reads as struggling in the air
+            // Round 7 (3c): Dan's Mixamo "float" clip (hanging in the air) when present; else the woozy dazed loop.
+            if (HasState("float")) Play("float", 0.3f, 0.9f); else Play("dazed", 0.3f, 0.75f);
         }
 
         /// <summary>7 lets go: pushed back several metres while being set down, lands, gets up dazed, recovers.</summary>
@@ -191,7 +192,7 @@ namespace Seven
                 return true;
             }
             Current = Mode.Hit;
-            Play(head ? "hit_head" : "hit_body", 0.06f);
+            Play(head ? "hit_head" : "hit_body", 0.03f);     // Round 8: the reaction starts on the hit frame
             Slide(dir, knock, 0.25f);
             return true;
         }

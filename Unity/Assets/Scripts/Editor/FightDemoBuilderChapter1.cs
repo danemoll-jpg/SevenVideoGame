@@ -317,6 +317,7 @@ namespace Seven.EditorTools
             BuildAncient(world, m, props);
             BuildBay(world, m, props);
             BuildVista(world, m);
+            props.city = BuildCity(world, m);
             AddProbe(new Vector3(8f, 1.5f, 2f), new Vector3(40f, 8f, 10f), Vector3.zero);
             AddProbe(new Vector3(16.5f, L.Lower + 2f, -24f), new Vector3(20f, 8f, 34f), Vector3.zero);
             AddProbe(L.SaucerCentre + Vector3.up * 3f, new Vector3(40f, 14f, 32f), Vector3.zero);
@@ -329,10 +330,10 @@ namespace Seven.EditorTools
             float sx = L.SaucerCentre.x, sz = L.SaucerCentre.z;
             wg.Zones = new[]
             {
-                Z("SaucerRamp", sx + 4.7f, sz - 1f, L.RampFoot.x + 0.1f, sz + 1f, L.Bay + 1.3f, L.Bay, 0, false),
                 Z("Cell", -1.6f, -1.6f, 1.6f, L.CellWallZ0, 0f),
                 Z("CellDoor", -L.DoorHalf, 0.6f, L.DoorHalf, 2.6f, 0f, float.NaN, 1, false),
                 Z("Corridor", -8f, 2.0f, L.BarricadeX - 0.4f, 4.6f, 0f),
+                Z("Alcove", L.AlcoveX.x, L.AlcoveBackZ, L.AlcoveX.y, 2.7f, 0f, float.NaN, 1, false),   // on from scene 2
                 Z("Passage0", L.PassageX.x, 0.0f, L.PassageX.y, 2.6f, 0f, float.NaN, 1, false),
                 Z("Hall", L.HallMin.x, L.HallMin.y, L.HallMax.x, L.HallMax.y, L.Lower),
                 Z("Passage1", L.PassageX.x, -9.5f, L.PassageX.y, 0.6f, L.Lower * 9.5f / 9f, -L.Lower * 0.6f / 9f, 1, false),
@@ -345,7 +346,8 @@ namespace Seven.EditorTools
                 Z("Bay", L.BayMin.x, L.BayMin.y, L.BayMax.x, L.BayMax.y, L.Bay),
             };
             var obstacles = new List<Vector3> { new Vector3(sx, sz, L.SaucerRadius + 0.3f) };   // 0 = the saucer
-            obstacles.Add(new Vector3(L.CrateTop.x, L.CrateTop.z, 0.45f));
+            obstacles.Add(new Vector3(L.CrateTop.x, L.CrateTop.z, 0.3f));
+            for (int i = 0; i < 6; i++) { var pp = L.SaucerCentre + Polar(3.5f, i * 60f + 30f, 0f); obstacles.Add(new Vector3(pp.x, pp.z, 0.3f)); }   // cradle posts
             foreach (var p in L.Pillars) obstacles.Add(new Vector3(p.x, p.z, L.PillarR));
             obstacles.Add(new Vector3(L.StonePillar.x, L.StonePillar.z, 0.6f));
             obstacles.Add(new Vector3(L.Lever.x, L.Lever.z, 0.7f));
@@ -360,7 +362,7 @@ namespace Seven.EditorTools
             var cam = camGo.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.55f, 0.55f, 0.55f);
-            cam.fieldOfView = 52f; cam.nearClipPlane = 0.05f; cam.farClipPlane = 2000f;
+            cam.fieldOfView = 52f; cam.nearClipPlane = 0.08f; cam.farClipPlane = 15000f;     // Round 7: the city reaches ~6 km
             camGo.AddComponent<AudioListener>();
             var camData = cam.GetUniversalAdditionalCameraData();
             camData.renderPostProcessing = true; camData.requiresDepthTexture = true;
@@ -404,10 +406,11 @@ namespace Seven.EditorTools
             var d = dirGo.AddComponent<Seven.Chapter1Director>();
             d.Seven = s7; d.Cat = cat; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend;
             d.Additive = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Fx_additive.mat");
-            d.DoorBars = props.doorBars; d.DoorField = props.doorField; d.ReleaseLight = props.releaseLight;
+            d.LaserDoor = props.laserDoor; d.LaserBeams = props.laserBeams.ToArray(); d.LaserLight = props.laserLight; d.ReleaseLight = props.releaseLight;
             d.OldWallSlab = props.oldWall; d.Guard = g; d.GateGuards = gates.ToArray(); d.Stone = props.stone;
             d.InscriptionGlow = props.inscription; d.VisionWhole = props.visionWhole; d.VisionRuins = props.visionRuins;
-            d.SealedDoorSlab = props.sealedDoor; d.Saucer = props.saucer; d.SaucerRamp = props.saucerRamp; d.Lever = props.lever;
+            d.SealedDoorSlab = props.sealedDoor; d.Saucer = props.saucer; d.Hatch = props.hatch; d.Beam = props.beam; d.BeamLight = props.beamLight; d.BeamFloor = props.beamFloor; d.HatchGlow = props.hatchGlow; d.Lever = props.lever;
+            d.City = props.city; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
             d.Clamps = props.clamps.ToArray(); d.RimGlow = props.rimGlow.ToArray(); d.SaucerUnderLight = props.underLight;
 
             EditorSceneManager.SaveScene(scene, Chapter1ScenePath);
@@ -416,8 +419,12 @@ namespace Seven.EditorTools
 
         class Props
         {
-            public Transform doorBars, oldWall, stone, sealedDoor, saucer, saucerRamp, lever;
-            public Renderer doorField, releaseLight, inscription;
+            public Transform laserDoor, oldWall, stone, sealedDoor, saucer, hatch, beam, lever;
+            public Renderer releaseLight, inscription, hatchGlow, beamFloor;
+            public List<Renderer> laserBeams = new List<Renderer>();
+            public Light laserLight, beamLight;
+            public Vector3 releasePanel;
+            public Seven.CityMotion city;
             public GameObject visionWhole, visionRuins;
             public List<Transform> clamps = new List<Transform>();
             public List<Renderer> rimGlow = new List<Renderer>();
@@ -510,25 +517,44 @@ namespace Seven.EditorTools
             Lamp("Cell_Lamp", new Vector3(0f, 2.82f, -0.6f), 5f, 0.9f, m.glow, root, new Vector3(0.9f, 0.05f, 0.12f));
             // Long rock face of the cell block, with the cell door, the older wall section and the cat's small opening.
             float zf0 = L.CellWallZ0, zf1 = L.CellWallZ1;
-            Block("Face_A", new Vector3(-9f, -0.3f, zf0), new Vector3(-L.DoorHalf, 7f, zf1), m.rock, root);
+            // Round 7: the face west of the door is split around the guard alcove (the hidden release).
+            float ax0 = L.AlcoveX.x, ax1 = L.AlcoveX.y;
+            Block("Face_A0", new Vector3(-9f, -0.3f, zf0), new Vector3(ax0, 7f, zf1), m.rock, root);
+            Block("Face_A_AlcoveLintel", new Vector3(ax0, 2.4f, zf0), new Vector3(ax1, 7f, zf1), m.rock, root);
+            Block("Face_A1", new Vector3(ax1, -0.3f, zf0), new Vector3(-L.DoorHalf, 7f, zf1), m.rock, root);
+            Block("Alcove_WallW", new Vector3(ax0 - 0.5f, -0.3f, L.AlcoveBackZ - 0.4f), new Vector3(ax0, 2.9f, zf0), m.rock, root);
+            Block("Alcove_WallE", new Vector3(ax1, -0.3f, L.AlcoveBackZ - 0.4f), new Vector3(-2.1f, 2.9f, zf0), m.rock, root);
+            Block("Alcove_Back", new Vector3(ax0 - 0.5f, -0.3f, L.AlcoveBackZ - 0.4f), new Vector3(-2.1f, 2.9f, L.AlcoveBackZ), m.rock, root);
+            Block("Alcove_Ceiling", new Vector3(ax0 - 0.5f, 2.4f, L.AlcoveBackZ - 0.4f), new Vector3(-2.1f, 2.9f, zf1), m.rock, root);
+            Block("Alcove_Floor", new Vector3(ax0, -0.25f, L.AlcoveBackZ), new Vector3(ax1, 0f, zf1), m.metalDark, root);
+            Block("Alcove_Bench", new Vector3(ax1 - 0.42f, 0f, L.AlcoveBackZ), new Vector3(ax1, 0.42f, L.AlcoveBackZ + 0.95f), m.metal, root);
+            Lamp("Alcove_Lamp", new Vector3(-3.0f, 2.32f, 1.1f), 2.6f, 0.5f, m.glow, root, new Vector3(0.3f, 0.04f, 0.1f));
             Block("Face_Lintel", new Vector3(-L.DoorHalf, 2.45f, zf0), new Vector3(L.DoorHalf, 7f, zf1), m.rock, root);
             Block("Face_B", new Vector3(L.DoorHalf, -0.3f, zf0), new Vector3(L.PassageX.x - 0.1f, 7f, zf1), m.rock, root);
             Block("Face_OldTop", new Vector3(L.PassageX.x - 0.1f, 2.6f, zf0), new Vector3(L.PassageX.y + 0.1f, 7f, zf1), m.rock, root);
             Block("Face_C", new Vector3(L.PassageX.y + 0.1f, -0.3f, zf0), new Vector3(34f, 7f, zf1), m.rock, root);
-            // Door bars + energy field (DoorBars slide up 2.6 m into the lintel when the release is pawed).
-            var bars = new GameObject("DoorBars").transform; bars.SetParent(root, false); bars.position = new Vector3(0f, 0f, 1.65f);
-            var bv = new List<Vector3>(); var bt = new List<int>();
-            for (int i = 0; i < 7; i++) { float x = Mathf.Lerp(-0.52f, 0.52f, i / 6f); Sweep(bv, bt, new[] { new Vector3(x, 0f, 0f), new Vector3(x, 2.45f, 0f) }, 0.028f, false, 8); }
-            foreach (var y in new[] { 0.9f, 2.0f }) AddBox(bv, bt, new Vector3(0f, y, 0f), new Vector3(1.15f, 0.06f, 0.06f));
-            var barsGo = MeshObject("Bars", SaveMesh(SmoothFinish(bv, bt), "Moon_DoorBars"), m.metal, bars);
-            var fv = new List<Vector3>(); var ft = new List<int>();
-            for (int i = 0; i < 26; i++) { float y = 0.05f + i * 0.092f; Quad(fv, ft, new Vector3(-0.58f, y, 0f), new Vector3(-0.58f, y + 0.03f, 0f), new Vector3(0.58f, y + 0.03f, 0f), new Vector3(0.58f, y, 0f)); }
-            var field = MeshObject("Field", SaveMesh(Colored(Finish(fv, ft), p => 0.35f), "Moon_DoorField"), m.field, bars, false);
-            field.transform.localPosition = new Vector3(0f, 0f, -0.02f);
-            props.doorBars = bars; props.doorField = field.GetComponent<Renderer>();
-            // Release panel (the cat paws it from the crate) + the crate.
-            Block("ReleasePanel", L.ReleasePanel - new Vector3(0.2f, 0.25f, 0.03f), L.ReleasePanel + new Vector3(0.2f, 0.25f, 0.05f), m.metalDark, root);
-            props.releaseLight = Block("ReleaseLight", L.ReleasePanel + new Vector3(-0.12f, -0.05f, 0.05f), L.ReleasePanel + new Vector3(0.12f, 0.05f, 0.07f), m.glow, root, false).GetComponent<Renderer>();
+            // Round 7: laser door - horizontal white beams set exactly in the cell opening, flush with the inner wall face.
+            // Walking is limited by the walkable zones (the "Cell" zone ends at CellWallZ0), so the beams are solid.
+            var laser = new GameObject("LaserDoor").transform; laser.SetParent(root, false); laser.position = new Vector3(0f, 0f, L.LaserZ);
+            Block("LaserEmitterW", new Vector3(-L.DoorHalf, 0f, L.LaserZ - 0.04f), new Vector3(-L.DoorHalf + 0.06f, 2.45f, L.LaserZ + 0.08f), m.metalDark, laser);
+            Block("LaserEmitterE", new Vector3(L.DoorHalf - 0.06f, 0f, L.LaserZ - 0.04f), new Vector3(L.DoorHalf, 2.45f, L.LaserZ + 0.08f), m.metalDark, laser);
+            for (int i = 0; i < L.LaserCount; i++)
+            {
+                float y = L.LaserY(i);
+                var beam = Block("Beam" + i, new Vector3(-L.DoorHalf + 0.06f, y - 0.011f, L.LaserZ - 0.011f), new Vector3(L.DoorHalf - 0.06f, y + 0.011f, L.LaserZ + 0.011f), m.glow, laser, false);
+                beam.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+                var hv = new List<Vector3>(); var ht = new List<int>();
+                Quad(hv, ht, new Vector3(-L.DoorHalf + 0.06f, y - 0.022f, 0f), new Vector3(-L.DoorHalf + 0.06f, y + 0.022f, 0f), new Vector3(L.DoorHalf - 0.06f, y + 0.022f, 0f), new Vector3(L.DoorHalf - 0.06f, y - 0.022f, 0f));
+                var halo = MeshObject("Halo" + i, SaveMesh(Colored(Finish(hv, ht), p => 0.2f), "Moon_LaserHalo" + i), m.field, laser, false);
+                props.laserBeams.Add(beam.GetComponent<Renderer>());
+                props.laserBeams.Add(halo.GetComponent<Renderer>());      // pairs: beam, halo
+            }
+            props.laserLight = PointLight("LaserLight", new Vector3(0f, 1.2f, L.LaserZ + 0.25f), 3.2f, 0.9f, laser);
+            props.laserDoor = laser;
+            // Release panel inside the guard alcove (the cat paws it from a small crate) - out of sight of the cell.
+            Block("ReleasePanel", L.ReleasePanel - new Vector3(0.2f, 0.25f, 0.03f), L.ReleasePanel + new Vector3(0.2f, 0.25f, 0.03f), m.metalDark, root);
+            props.releaseLight = Block("ReleaseLight", L.ReleasePanel + new Vector3(-0.12f, -0.05f, 0.03f), L.ReleasePanel + new Vector3(0.12f, 0.05f, 0.05f), m.glow, root, false).GetComponent<Renderer>();
+            props.releasePanel = L.ReleasePanel;
             Block("Crate", new Vector3(L.CrateTop.x - L.CrateSize.x * 0.5f, 0f, L.CrateTop.z - L.CrateSize.z * 0.5f), new Vector3(L.CrateTop.x + L.CrateSize.x * 0.5f, L.CrateSize.y, L.CrateTop.z + L.CrateSize.z * 0.5f), m.crate, root);
             // The cat's small opening: a dark vent at the foot of the wall.
             Block("Vent", new Vector3(L.VentMouth.x - 0.24f, 0f, zf1 - 0.04f), new Vector3(L.VentMouth.x + 0.24f, 0.36f, zf1 + 0.01f), m.black, root, false);
@@ -807,28 +833,52 @@ namespace Seven.EditorTools
             props.underLight = ul;
             var col = saucer.gameObject.AddComponent<CapsuleCollider>();
             col.direction = 0; col.center = new Vector3(0f, b0 + 0.6f, 0f); col.radius = 0.9f; col.height = 11f;
-            // Ramp: hinged at the hull edge (+X side), open = sloping down to the floor (pivot rotation 0), closed = 80 deg.
-            var hinge = new GameObject("RampPivot").transform; hinge.SetParent(saucer, false);
-            hinge.localPosition = new Vector3(4.9f, b0 + 0.3f, 0f);
-            float rampLen = Mathf.Sqrt(Mathf.Pow(L.RampFoot.x - (L.SaucerCentre.x + 4.9f), 2f) + Mathf.Pow(b0 + 0.3f, 2f));
-            float slope = Mathf.Atan2(b0 + 0.3f, L.RampFoot.x - (L.SaucerCentre.x + 4.9f)) * Mathf.Rad2Deg;
-            var plate = GameObject.CreatePrimitive(PrimitiveType.Cube); plate.name = "RampPlate";
-            UnityEngine.Object.DestroyImmediate(plate.GetComponent<Collider>());
-            plate.transform.SetParent(hinge, false);
-            plate.transform.localRotation = Quaternion.Euler(0f, 0f, -slope);
-            plate.transform.localPosition = plate.transform.localRotation * new Vector3(rampLen * 0.5f, -0.04f, 0f);
-            plate.transform.localScale = new Vector3(rampLen, 0.08f, 1.9f);
-            plate.GetComponent<MeshRenderer>().sharedMaterial = m.hullUnder;
-            var rampGlow = GameObject.CreatePrimitive(PrimitiveType.Cube); rampGlow.name = "RampGlow";
-            UnityEngine.Object.DestroyImmediate(rampGlow.GetComponent<Collider>());
-            rampGlow.transform.SetParent(plate.transform, false);
-            rampGlow.transform.localPosition = new Vector3(0f, 0.6f, 0.45f); rampGlow.transform.localScale = new Vector3(0.95f, 0.3f, 0.03f);
-            rampGlow.GetComponent<MeshRenderer>().sharedMaterial = m.rim;
-            hinge.localRotation = Quaternion.Euler(0f, 0f, 80f);
-            props.saucer = saucer; props.saucerRamp = hinge;
+            // Round 7: no ramp. An iris hatch in the belly (8 blades that slide out under the hull) over a white glow
+            // disc, and a soft cone of light from the hatch to the floor (shown when the saucer hovers HoverLift up).
+            var hatch = new GameObject("Hatch").transform; hatch.SetParent(saucer, false); hatch.localPosition = new Vector3(0f, b0 - 0.105f, 0f);
+            for (int i = 0; i < 8; i++)
+            {
+                var blade = new GameObject("Blade" + i).transform; blade.SetParent(hatch, false);
+                blade.localRotation = Quaternion.Euler(0f, i * 45f, 0f);
+                var hv = new List<Vector3>(); var ht = new List<int>();
+                var c0 = Vector3.zero; var c1 = Polar(L.HatchRadius + 0.05f, -26f, 0f); var c2 = Polar(L.HatchRadius + 0.05f, 26f, 0f);
+                Quad(hv, ht, c0, c2, c1, c0); Quad(hv, ht, c0, c1, c2, c0);
+                MeshObject("BladeMesh", SaveMesh(Finish(hv, ht), "Saucer_HatchBlade" + i), m.metalDark, blade, false);
+            }
+            var hg = new List<Vector3>(); var hgt = new List<int>();
+            Ellipsoid(hg, hgt, Vector3.zero, new Vector3(L.HatchRadius, 0.04f, L.HatchRadius), 6, 24);
+            props.hatchGlow = MeshObject("HatchGlow", SaveMesh(SmoothFinish(hg, hgt), "Saucer_HatchGlow"), m.rim, saucer, false).GetComponent<Renderer>();
+            props.hatchGlow.transform.localPosition = new Vector3(0f, b0 - 0.02f, 0f);
+            props.hatch = hatch;
+            // Beam cone: pivot at the hatch, length = hover height of the belly above the floor; vertex alpha fades down.
+            float beamLen = b0 - 0.1f + L.HoverLift;
+            var beam = new GameObject("TractorBeam").transform; beam.SetParent(saucer, false); beam.localPosition = new Vector3(0f, b0 - 0.1f, 0f);
+            var cone = Lathe(new[] { new Vector2(L.HatchRadius * 0.95f, 0f), new Vector2(L.BeamFloorRadius, -beamLen) }, 0f, 360f, 48);
+            var cm = SaveMesh(Colored(cone, pp => Mathf.Lerp(0.42f, 0.1f, Mathf.Clamp01(-pp.y / beamLen))), "Saucer_BeamCone");
+            MeshObject("Cone", cm, m.field, beam, false);
+            var inner = Lathe(new[] { new Vector2(L.HatchRadius * 0.55f, 0f), new Vector2(L.BeamFloorRadius * 0.6f, -beamLen) }, 0f, 360f, 32);
+            MeshObject("ConeCore", SaveMesh(Colored(inner, pp => Mathf.Lerp(0.3f, 0.06f, Mathf.Clamp01(-pp.y / beamLen))), "Saucer_BeamCore"), m.field, beam, false);
+            var fv = new List<Vector3>(); var ft = new List<int>();
+            for (int k = 0; k < 48; k++)
+            {
+                var a = Polar(L.BeamFloorRadius * 1.25f, k * 7.5f, 0f); var b = Polar(L.BeamFloorRadius * 1.25f, (k + 1) * 7.5f, 0f);
+                Quad(fv, ft, Vector3.zero, b, a, Vector3.zero);
+            }
+            var floorMesh = Finish(fv, ft);
+            floorMesh.colors = floorMesh.vertices.Select(pp => new Color(1f, 1f, 1f, Mathf.Lerp(0.45f, 0f, pp.magnitude / (L.BeamFloorRadius * 1.25f)))).ToArray();
+            var floorGo = MeshObject("BeamFloor", SaveMesh(floorMesh, "Saucer_BeamFloor"), m.field, beam, false);
+            floorGo.transform.localPosition = new Vector3(0f, -beamLen + 0.03f, 0f);
+            props.beamFloor = floorGo.GetComponent<Renderer>();
+            var bl = new GameObject("BeamLight").AddComponent<Light>();
+            bl.transform.SetParent(beam, false); bl.transform.localPosition = new Vector3(0f, -0.2f, 0f); bl.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            bl.type = LightType.Spot; bl.spotAngle = 60f; bl.range = 9f; bl.intensity = 0f; bl.shadows = LightShadows.None;
+            props.beamLight = bl;
+            props.beam = beam;
+            beam.gameObject.SetActive(false);
+            props.saucer = saucer;
             // Cradle (stays when she lifts off) and clamps.
             var cr = new List<Vector3>(); var crt = new List<int>();
-            AddRing(cr, crt, L.SaucerCentre, 2.6f, 4.6f, 0.18f, 0f, 360f, 64);
+            AddRing(cr, crt, L.SaucerCentre, 2.6f, 4.6f, 0.05f, 0f, 360f, 64);      // flat: 7 walks over it to the beam
             for (int i = 0; i < 6; i++) AddBox(cr, crt, L.SaucerCentre + Polar(3.5f, i * 60f + 30f, (b0 + 0.18f) * 0.5f), new Vector3(0.35f, b0, 0.35f));
             MeshObject("Cradle", SaveMesh(Finish(cr, crt), "Moon_Cradle"), m.metalDark, root);
             foreach (var a in new[] { 45f, 135f, 225f, 315f })
@@ -880,15 +930,9 @@ namespace Seven.EditorTools
                 var bpos = new Vector3(Mathf.Lerp(-90f, 110f, R()), -50f, south ? Mathf.Lerp(-260f, -120f, R()) : Mathf.Lerp(90f, 260f, R()));
                 Spike(av, at, bpos, Mathf.Lerp(5f, 14f, R()), Mathf.Lerp(50f, 120f, R()), false, rnd);
             }
-            MeshObject("AncientShapes", SaveMesh(SmoothFinish(av, at), "Moon_AncientShapes"), m.ancientDark, root, false);
-            // The hollow Moon's far rock shell (very far, mostly lost in haze).
-            var sv = new List<Vector3>(); var st = new List<int>();
-            for (int i = 0; i < 26; i++)
-            {
-                float a = i / 26f * Mathf.PI * 2f;
-                Lump(sv, st, new Vector3(Mathf.Cos(a) * 420f, Mathf.Lerp(-20f, 60f, R()), Mathf.Sin(a) * 420f), new Vector3(90f, 160f, 90f), 0.3f, 600 + i);
-            }
-            MeshObject("FarShell", SaveMesh(SmoothFinish(sv, st), "Moon_FarShell"), m.rock, root, false);
+            // Round 7: the old rings + spikes clashed with the city (BuildCity) - no longer added to the scene.
+            // MeshObject("AncientShapes", SaveMesh(SmoothFinish(av, at), "Moon_AncientShapes"), m.ancientDark, root, false);
+            // (Round 7: the old far rock shell at 420 m is gone - the city inside the Moon replaces it, see BuildCity.)
         }
     }
 }

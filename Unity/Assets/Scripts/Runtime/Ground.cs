@@ -47,6 +47,9 @@ namespace Seven
             return null;
         }
 
+        /// <summary>Name of the walkable zone at a point (footstep surfaces), or null.</summary>
+        public static string ZoneName(float x, float z) { var zn = ZoneAt(x, z); return zn != null ? zn.Name : null; }
+
         public static float Height(float x, float z)
         {
             if (Current == Shape.Hill) return WorldGround.HillHeight(x, z);

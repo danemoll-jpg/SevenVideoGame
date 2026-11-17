@@ -13,8 +13,12 @@ namespace Seven
     /// </summary>
     public class TelepathySoundCheck : MonoBehaviour
     {
+        public static bool Running { get; private set; }
+        void Awake() { Running = true; }
+
         IEnumerator Start()
         {
+            if (DemoBoot.SoundCheckSfx) { yield return SfxCheck(); yield break; }
             var log = new StringBuilder();
             float t0 = Time.realtimeSinceStartup;
             void L(string s) { log.AppendLine($"[{Time.realtimeSinceStartup - t0,6:0.00}s] {s}"); Debug.Log("[Seven] soundcheck " + s); }
@@ -52,6 +56,47 @@ namespace Seven
             yield return null; yield return null;
             AudioListener.GetOutputData(l, 0);
             float after = 0f; foreach (var v in l) after = Mathf.Max(after, Mathf.Abs(v));
+            L($"after mute: output peak {after:0.000000}, listenerVolume={AudioListener.volume}");
+            Write(dir, log);
+        }
+
+        /// <summary>
+        /// Round 7: the short unmuted SFX check (-soundcheck sfx): plays a few of the new sound effects one after
+        /// another (each cut at <see cref="SfxSeconds"/>), measures each one's output peak, mutes again, measures 0.
+        /// </summary>
+        public static readonly string[] SfxIds = { "laser_power_down", "release_click", "energy_point", "tractor_beam", "menu_confirm" };
+        const float SfxSeconds = 1.2f;
+        IEnumerator SfxCheck()
+        {
+            var log = new StringBuilder();
+            float t0 = Time.realtimeSinceStartup;
+            void L(string s) { log.AppendLine($"[{Time.realtimeSinceStartup - t0,6:0.00}s] {s}"); Debug.Log("[Seven] soundcheck " + s); }
+            var dir = DemoBoot.CaptureDir ?? Path.Combine(Application.temporaryCachePath, "soundcheck");
+            Directory.CreateDirectory(dir);
+            float[] buf = new float[1024];
+            L($"before: listenerVolume={AudioListener.volume} paused={AudioListener.pause}");
+            AudioListener.pause = false; AudioListener.volume = 1f;
+            L($"UNMUTED (volume 1) - {SfxIds.Length} SFX, each cut after {SfxSeconds:0.0}s, through the SFX bus (gain {AudioKit.Gain(AudioKit.Bus.Sfx):0.00})");
+            float start = Time.realtimeSinceStartup;
+            foreach (var id in SfxIds)
+            {
+                var src = AudioKit.Play(id);
+                if (src == null) { L($"  {id}: no file - skipped"); continue; }
+                float peak = 0f, s0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - s0 < Mathf.Min(SfxSeconds, src.clip.length))
+                {
+                    AudioListener.GetOutputData(buf, 0);
+                    foreach (var v in buf) peak = Mathf.Max(peak, Mathf.Abs(v));
+                    yield return null;
+                }
+                if (src != null) src.Stop();
+                L($"  {id}: clip {src.clip.length:0.00}s, played {Time.realtimeSinceStartup - s0:0.00}s, output peak {peak:0.0000}");
+            }
+            AudioListener.volume = 0f; AudioListener.pause = true;
+            L($"MUTED AGAIN after {Time.realtimeSinceStartup - start:0.00}s of sound in total");
+            yield return null; yield return null;
+            AudioListener.GetOutputData(buf, 0);
+            float after = 0f; foreach (var v in buf) after = Mathf.Max(after, Mathf.Abs(v));
             L($"after mute: output peak {after:0.000000}, listenerVolume={AudioListener.volume}");
             Write(dir, log);
         }

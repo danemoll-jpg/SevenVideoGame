@@ -27,7 +27,7 @@ namespace Seven
         public float StrollSpeed = 0.45f, TrotSpeed = 1.1f;
         public float FollowDistance = 3.2f, BodyRadius = 0.18f;   // radius at scale 1
         [Tooltip("Lap height above the middle of her thighs (m).")]
-        public float LapLift = 0.125f;
+        public float LapLift = 0.165f;     // Round 8: a little higher, clear of her forearms
         public float HopTime = 0.75f, HopHeight = 0.35f;
 
         public enum Mode { Roam, ToChair, Waiting, HopUp, OnLap, HopDown }

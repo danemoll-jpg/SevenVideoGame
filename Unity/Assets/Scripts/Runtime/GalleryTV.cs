@@ -107,8 +107,63 @@ namespace Seven
         }
 
         // ------------------------------------------------------------------------------- loading
+        // ------------------------------------------------------------------ Round 8: preload (no hitch on the saucer)
+        static List<Item> _cache;
+        static bool _caching, _cacheDone;
+        static int _cacheIncluded; static float _cacheSeconds; static string _cacheLog = "", _cacheCredit;
+        class PreloadHost : MonoBehaviour { }
+        /// <summary>Decode + grayscale + downscale every included image once, while the main menu is idle, and keep
+        /// them for the whole session. The saucer then shows the gallery the moment it loads.</summary>
+        public static void Preload()
+        {
+            if (_caching || _cacheDone) return;
+            _caching = true;
+            var go = new GameObject("GalleryPreload"); DontDestroyOnLoad(go);
+            go.AddComponent<PreloadHost>().StartCoroutine(PreloadRoutine());
+        }
+        static IEnumerator PreloadRoutine()
+        {
+            float t0 = Time.realtimeSinceStartup;
+            var items = new List<Item>(); var log = new System.Text.StringBuilder();
+            GalleryFile g = null;
+            var json = Path.Combine(GalleryDir, JsonName);
+            try { if (File.Exists(json)) g = JsonUtility.FromJson<GalleryFile>(File.ReadAllText(json)); } catch (Exception e) { log.AppendLine("gallery.json unreadable: " + e.Message); }
+            if (g?.images != null)
+            {
+                _cacheCredit = g.credit;
+                foreach (var e in g.images)
+                {
+                    if (e == null || !e.include || string.IsNullOrEmpty(e.file)) continue;
+                    _cacheIncluded++;
+                    var path = Path.Combine(GalleryDir, e.file);
+                    if (!File.Exists(path)) { log.AppendLine("missing file: " + e.file); continue; }
+                    Item it = null;
+                    try { it = LoadImageStatic(path, e, 2048); } catch (Exception ex) { log.AppendLine($"{e.file}: {ex.Message}"); }
+                    if (it != null) items.Add(it); else log.AppendLine("could not decode: " + e.file);
+                    yield return null;
+                }
+            }
+            _cache = items; _cacheSeconds = Time.realtimeSinceStartup - t0; _cacheLog = log.ToString();
+            _cacheDone = true; _caching = false;
+            Debug.Log($"[Seven] gallery preloaded: {items.Count} of {_cacheIncluded} images in {_cacheSeconds:0.00}s");
+        }
+        /// <summary>True when this saucer visit used the preloaded images (no decode on scene start).</summary>
+        public bool FromPreload { get; private set; }
+
         IEnumerator Load()
         {
+            while (_caching) yield return null;
+            if (_cacheDone && _cache != null)
+            {
+                Items.AddRange(_cache);
+                if (!string.IsNullOrEmpty(_cacheCredit)) Credit = _cacheCredit;
+                IncludedInJson = _cacheIncluded; LoadSeconds = 0f; FromPreload = true;
+                if (Items.Count > 0) { Index = 0; _prev = -1; _fade = 1f; Apply(); }
+                Loaded = true;
+                LoadLog = $"gallery: {Items.Count} of {IncludedInJson} included images from the preload cache (decoded in the menu in {_cacheSeconds:0.00}s; 0 s here)\n" + _cacheLog;
+                Debug.Log("[Seven] " + LoadLog);
+                yield break;
+            }
             float t0 = Time.realtimeSinceStartup;
             var log = new System.Text.StringBuilder();
             var json = Path.Combine(GalleryDir, JsonName);
@@ -144,7 +199,8 @@ namespace Seven
             Debug.Log("[Seven] " + LoadLog);
         }
 
-        Item LoadImage(string path, GalleryEntry e)
+        Item LoadImage(string path, GalleryEntry e) => LoadImageStatic(path, e, MaxSide);
+        static Item LoadImageStatic(string path, GalleryEntry e, int MaxSide)
         {
             var src = new Texture2D(2, 2, TextureFormat.RGBA32, false);
             if (!src.LoadImage(File.ReadAllBytes(path), false)) { Destroy(src); return null; }
@@ -210,11 +266,40 @@ namespace Seven
             _idleTimer = 0f;
         }
 
+        // ------------------------------------------------------------------ Round 8: 7 sits on the sofa while browsing
+        [Header("Sofa (Round 8)")]
+        public bool SitOnSofa = true;
+        public Vector3 SofaRoot, SofaFacing;
+        Vector3 _standPos; Quaternion _standRot; bool _onSofa;
+        bool UseSofa => SitOnSofa && SofaFacing.sqrMagnitude > 0.5f;
+        IEnumerator MoveSeven(Vector3 to, Quaternion rot, float seconds, string clip, string after)
+        {
+            var p0 = Seven.transform.position; var r0 = Seven.transform.rotation;
+            Seven.PlayClip(clip, 0.2f);
+            float len = Mathf.Max(0.3f, Seven.Length(clip));
+            for (float t = 0f; t < 1f; t += Time.deltaTime / seconds)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Seven.transform.SetPositionAndRotation(Vector3.Lerp(p0, to, u), Quaternion.Slerp(r0, rot, u));
+                yield return null;
+            }
+            Seven.transform.SetPositionAndRotation(to, rot);
+            float rest = len - seconds;
+            for (float t = 0f; t < rest; t += Time.deltaTime) yield return null;
+            if (after != null) Seven.PlayClip(after, 0.3f);
+        }
+
         public void Enter()
         {
             if (Current != State.Off || Items.Count == 0) return;
             Current = State.Entering;
             _ease = 0f;
+            if (UseSofa)
+            {
+                _standPos = Seven.transform.position; _standRot = Seven.transform.rotation;
+                Seven.OnSofa = true; _onSofa = true;
+                StartCoroutine(MoveSeven(SofaRoot, Quaternion.LookRotation(SofaFacing), 0.9f, "stand_to_sit", "sitting_idle"));
+            }
             _easeFromPos = Cam.transform.position; _easeFromRot = Cam.transform.rotation;
             _easeFromFocus = _easeFromPos + Cam.transform.forward * Vector3.Distance(_easeFromPos, transform.position);
             Cam.Hold = true;
@@ -237,10 +322,20 @@ namespace Seven
             Cam.Hold = false;
             _ease = 0f;
             _showSevenAt = Time.time + EaseSeconds * 0.55f;
+            if (_onSofa) StartCoroutine(StandUpFromSofa());
+        }
+        IEnumerator StandUpFromSofa()
+        {
+            var front = SofaRoot + SofaFacing * 0.55f;
+            yield return MoveSeven(front, Quaternion.LookRotation(SofaFacing), 0.9f, "sit_to_stand", "idle");
+            Seven.OnSofa = false; _onSofa = false;
         }
 
-        public Vector3 ViewPos => transform.position - transform.forward * ViewDistance;
-        public Quaternion ViewRot => Quaternion.LookRotation(transform.forward);
+        /// <summary>Seated: over her right shoulder to the screen. Standing (old): square in front of the screen.</summary>
+        public Vector3 ViewPos => UseSofa
+            ? SofaRoot + Vector3.up * 1.3f - SofaFacing * 1.0f + Vector3.Cross(Vector3.up, SofaFacing) * 0.42f
+            : transform.position - transform.forward * ViewDistance;
+        public Quaternion ViewRot => UseSofa ? Quaternion.LookRotation(transform.position + Vector3.up * 0.05f - ViewPos) : Quaternion.LookRotation(transform.forward);
 
         bool InZone(Vector3 p)
         {
@@ -275,7 +370,7 @@ namespace Seven
         // -------------------------------------------------------------------------------- update
         void Update()
         {
-            ReadInput();
+            if (!PauseMenu.IsOpen) ReadInput();
             float dt = Time.deltaTime;
             if (_fade < 1f) _fade = Mathf.Min(1f, _fade + dt / _fadeDur);
             if (Current == State.Off && Items.Count > 1 && _fade >= 1f)
@@ -289,8 +384,9 @@ namespace Seven
                 if (_ease >= 1f) { Current = State.Off; Seven.Frozen = false; }
             }
             if (_sevenHidden && _showSevenAt > 0f && Time.time >= _showSevenAt) { SetSevenVisible(true); _showSevenAt = -1f; }
-            if (InView && Seven != null)
+            if (InView && Seven != null && !_onSofa)
             {
+
                 // 7 turns to the screen.
                 var d = transform.position - Seven.transform.position; d.y = 0f;
                 if (d.sqrMagnitude > 0.01f) Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(d), 240f * dt);
@@ -306,7 +402,7 @@ namespace Seven
             if (Current == State.Entering)
             {
                 _ease = Mathf.Min(1f, _ease + Time.deltaTime / EaseSeconds);
-                if (_ease > 0.35f && !_sevenHidden && SevenBlocksView()) SetSevenVisible(false);
+                if (_ease > 0.35f && !_sevenHidden && !_onSofa && SevenBlocksView()) SetSevenVisible(false);
                 if (_ease >= 1f) Current = State.Viewing;
             }
             float e = Mathf.SmoothStep(0f, 1f, _ease);
@@ -460,7 +556,7 @@ namespace Seven
 
         void OnDestroy()
         {
-            foreach (var it in Items) if (it.Tex != null) Destroy(it.Tex);
+            if (!FromPreload) foreach (var it in Items) if (it.Tex != null) Destroy(it.Tex);     // preloaded ones live for the session
             if (_noBloom != null && _noBloom.profile != null) Destroy(_noBloom.profile);
         }
     }

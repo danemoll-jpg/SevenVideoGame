@@ -687,3 +687,131 @@ they see her impounded saucer → release it, board, escape → aboard the sauce
 - **Scree**: ask Kyle for a concept (placeholder now). **Optional Mixamo clips** (item 17).
 
 
+
+---
+# Archived 2026-11-17: Round 7
+
+## (was Current Objective) — Round 7: Chapter 1 fixes from Dan's playthrough + sound effects + music
+Commit the repo as it is before changing anything (safety checkpoint).
+
+### Fixes (Dan, 2026-11-17)
+1. **Cell door → laser beams, at the opening.** The barred door sits too far back — 7 could walk through. Replace it
+   with a row of horizontal **white laser beams** (monochrome glow, soft hum) set exactly in the cell opening, flush
+   with the walls. Solid collision; beams switch off one by one when released. Check: drive 7 into the beams from
+   several angles — she must stay inside (measure her position).
+2. **The release must be out of her reach and sight.** If 7 could see the lock she could work it with telekinesis.
+   Move the release out of view of the cell — around a corner or inside a guard alcove down the corridor. The cat
+   walks out of sight to work it; 7 (and the player) only hear it (click + beams powering down), then he walks back.
+   Check: line-of-sight from every point inside the cell to the release panel is blocked (raycasts), and it is not
+   in any camera shot taken from inside the cell.
+   **DECIDED (Dan, 2026-11-17): the laser field dampens her powers.** Her forehead **energy point** is dark the whole
+   time she's in the cell and relights (soft brightening glow, small shimmer sound) as she steps out past the dead
+   beams. This is why she can't telekinesis her way out; it is also the first use of Kyle's energy-point idea.
+3. **Board by tractor beam, no ramp.** Remove the ramp/bridge. After the clamps release, the saucer lifts a little
+   and hovers; a soft cone of white light shines down from an iris hatch in its belly. Scene 8 plays at the edge of
+   the light ("Get aboard" → "After you" → …): 7 steps into the cone first and floats gently up (upright, arms
+   slightly out, hair drifting), drawn in through the hatch; then the cat floats up (paws dangling, tail curling).
+   The hatch irises shut, the light fades, liftoff as before. The classic UFO "sucked up" moment.
+
+3b. **New beat — the city reveal (Dan, 2026-11-17). Full description: scene 6b in `Docs/DIALOGUE.md` — build from it.**
+   After the ruins and the first vision, they come out of a rough mining passage onto a **narrow stone terrace**. 7 walks
+   a few steps and **turns back**. Build the view (Dan's proposals — follow them closely):
+   - The **prison is embedded in the base of a colossal ancient structure**; its machinery, fences and pipes are recent
+     add-ons bolted to something much older. Looking up, it is only one of many.
+   - The **city spans the inside of the Moon**: broad terraces descend into a basin and rise again; farther off,
+     buildings climb the **curved horizon until they almost hang overhead**; pale towers and bridges emerge from
+     layers of gray distance. Part of it reads as landscape at first.
+   - **Ancient lunar architecture:** immense stepped buildings, slender observation towers, circular structures aligned
+     with each other (astronomical feel); smooth pale surfaces, deep black openings.
+   - **A quiet center:** several monumental pyramids around a **dark circular depression** — a landmark, unexplained.
+   - **Tunneler's operation cutting through it:** conveyors across old avenues, excavators biting into terraces,
+     freight lifts moving along walls, tiny Scree and machines, some districts busy, others silent. Productive and
+     relentless — he is visibly dismantling the city to reach what lies beneath.
+   - **Lighting:** one broad, diffuse, unexplained source somewhere above the visible city; it catches pale upper
+     surfaces while streets stay dark. Strictly grayscale: scale from layers, silhouettes and **tiny moving lights /
+     vehicles**, not glows. Use the `Atmosphere` setup with many depth layers.
+   - Build it for the view (big distant geometry, impostors / LODs are fine); keep it reasonable to run.
+   - **Most important (Dan): it must feel like Kyle's art come to life.** Lean on the fog and glow to do the work —
+     like his paintings, most of the city should be **suggested, not detailed**: big soft silhouettes dissolving into
+     bright haze, only the nearest structure and a few key shapes (the prison's colossal host building, the pyramids
+     and dark depression, a conveyor or excavator) read clearly; everything farther away is layered shapes fading into
+     glowing mist. Prefer fewer, larger forms and soft atmospheric layering over lots of small detail. Judge it side by
+     side with `kyle_world_mood`, `kyle_7_riding_city`, `kyle_world_sweeper` and `kyle_7_cliff_light` — if it looks
+     more like a detailed 3D city than a painting, add fog and remove detail.
+   **Timing:** camera gives the city room to fill the frame; **several seconds of only sound** (distant machinery, wind
+   on the terrace, faint city life) and the main theme before anyone speaks; no objective text, no joke; the cat waits
+   beside her. **Dialogue (voice it):** 7 "All this was above us?" / CAT "Most of it." / (she follows the curve of the
+   city — camera tilts up along it) / 7 "Someone built this." / CAT "Yes." / (a distant section of machinery starts
+   moving; **stone falls from an ancient terrace** — staged, visible) / 7 "And they're taking it apart."
+   Then **she spots the impound bay holding her saucer** from the terrace (or the cat points it out): scene 7's lines
+   play here; the saucer is small but recognizable (its rim glow). Control returns; they head down to it.
+   The earlier proposed lines ("I didn't know all this was here." …) are an **alternative**: voice them too and put both
+   sets on a switch (`cityRevealDialogue = primary | alternate | off`, default primary).
+   **Opening order must be exactly:** first meeting → cell rescue → escape through the ruins and first vision →
+   emergence and city reveal → saucer recovery and boarding → first meal and conversation.
+   Captures: terrace wide before dialogue, looking up the curve, the pyramids + depression, the falling stone, the
+   saucer spotted.
+
+3c. **Dan's optional Mixamo clips — use them if present** (check at the start of the round): `Art/Mixamo/7/7_sneak_walk.fbx`
+   (sneaking past the Scree), `7_touch_wall.fbx` (the first vision + the older wall), `7_look_around.fbx` (idle variety /
+   the city reveal turn), `Art/Mixamo/YBot/ybot_float.fbx` (the bot
+   hanging in the lift). Replace the stand-ins (slowed walk, held poses) where a clip exists; report which were used.
+   **No `7_tk_hold.fbx` (Dan, 2026-11-17: nothing on Mixamo fits).** Keep the held peak pose of `7_telekinesis` for the
+   lift, but give it life procedurally: slow breathing, a slight sway of the body, a faint strain/tremble in the arms
+   and hands, and a small hand adjustment as the bot moves (layered on top of the pose — Animation Rigging / IK or an
+   additive offset). Subtle, never shaky.
+
+3d. **No "To be continued" — the chapter ends in free exploration of the saucer, and the game gets an exit (Dan, 2026-11-17).**
+   - After scene 11 (the cat chooses to stay), there is no end card and no return to the menu. The player keeps control
+     of 7 and can **explore the whole saucer** freely: the deck, the galley, her chair with the reveal, the art-gallery
+     TV and the sofa. The cat stays aboard and does his roaming / napping behaviour (normal house-cat size for now), and
+     still hops onto her lap when she sits in her chair. `aboard_saucer` music plays.
+   - A quiet objective line once, then it disappears: e.g. "Explore the ship".
+   - **Exit:** the pause menu (Start / Esc) gets **Resume · Settings (music / SFX / voice volume) · Main menu · Quit
+     game**, with a confirm on Main menu / Quit. The main menu also gets a **Quit** entry. Quit closes the game
+     cleanly (`Application.Quit`). Esc must no longer jump straight to the menu without asking.
+   - **Continue:** save the chapter state when they reach the saucer, and add **Continue** at the top of the main menu
+     when a save exists — it loads straight into exploring the saucer after the chapter. "Chapter 1 — The Moon
+     Prison" still starts the chapter from the beginning.
+   - Remove the "To be continued" sting from the music plan (`main_theme` no longer plays at an end card).
+
+### Sound effects (ElevenLabs Sound Effects API)
+4. Generate SFX with the ElevenLabs sound-effects endpoint, key only from `ELEVENLABS_API_KEY` (never in the repo,
+   logs or chat). Keep the prompt list in `Docs/SFX-LIST.md` (id, prompt, duration, where used) and the generator in
+   `Tools/Audio/`. Save to `Unity/Assets/Audio/SFX/<id>.wav`. Style: quiet, atmospheric, natural — nothing cartoony.
+   At least: cavern ambience (wind, distant drills), laser-door hum + beams powering down, the hidden release click,
+   7's footsteps (rock, metal catwalk), soft cat paw steps, telekinesis (gathering hum + push whoosh), crate knocked
+   over / stone rolling, Scree guard footsteps, vision (white-wash whoosh + soft glassy shimmer), ancient stone door
+   sinking, clamp hydraulics releasing, saucer idle hum, tractor beam (rising soft tone), hatch iris, liftoff,
+   saucer interior ambience, fridge door, menu move / confirm.
+5. Wire them in with a small mix: dialogue always on top, SFX under it, ambience lowest. 3D sounds placed in the
+   world (hum at the beams, footsteps at the feet).
+
+4b. **7 sounds monotone — regenerate her lines with more variation (Dan, 2026-11-17).** The cat is fine; leave his
+   lines. For every 7 line in `Docs/VOICE-LINES.md`, add a short delivery note from the scene's context (e.g. curious,
+   wary, startled, sincere, wry, awed, quiet, determined) and regenerate with more expressive settings: prefer the
+   **Eleven v3** model with audio tags from those notes (e.g. `[curious]`, `[whispers]`, `[softly]`, `[surprised]`) if
+   the API offers it; otherwise lower **stability (~0.30–0.35)**, raise **style (~0.4–0.5)**, keep similarity high, and
+   use the previous/next line as context for intonation. Keep her soft and gentle — variation, not drama. Keep the old
+   files in `Unity/Assets/Audio/Voice/_v1/` so Dan can compare; regenerate the new 6b city-reveal lines the same way.
+   Report the settings/model used. If she is still flat, say so — Dan can redesign the voice (description in chat).
+
+### Music (Suno — Dan makes the tracks)
+6. **Music system:** three tracks from `Docs/MUSIC.md` — `main_theme` (menu, the city-reveal swell, tractor beam /
+   liftoff), `moon_prison` (cell through the ruins, including sneaking), `aboard_saucer` (inside the
+   ship). The first vision fades the music out and plays no track. Cross-fade ~2–3 s, duck under dialogue, loop
+   cleanly; files loaded by name from `Unity/Assets/Audio/Music/`, missing file = silence, no errors. Add music / SFX /
+   voice volume sliders in a small pause menu (Start / Esc).
+
+### Checks and wrap-up
+7. **Checks** (never steal focus): rebuild; muted automated playthrough start to finish; captures of the laser door
+   (on / off), the cat leaving to the hidden release, the tractor beam (7 rising, cat rising, hatch closing).
+   **Sound:** one short unmuted sound check of a few SFX (say which and for how long); prove the rest of the runs were
+   muted (level 0). Monochrome max 0. Demos still load.
+8. End of round: update `TODO.md` (per-item status, "For Dan to check") and `CLAUDE.md`, commit and push.
+
+### For Dan (in parallel)
+- Make the music in Suno from `Docs/MUSIC.md` and drop the MP3s into `Unity/Assets/Audio/Music/` (any time; Code's
+  system picks them up on the next build).
+- Music: **done** — Dan's three tracks are in `Unity/Assets/Audio/Music/` (`main_theme`, `moon_prison`, `aboard_saucer`).
+

@@ -21,7 +21,7 @@ namespace Seven
         bool _saucer;
         [System.NonSerialized] public bool AutoSwitch = true;   // check runs force a mode
 
-        enum G { Face, Bumper, Trigger, DPadUp, DPadDown, Stick, StickClick, Menu, View, Key, WideKey, Mouse }
+        enum G { Face, Bumper, Trigger, DPadUp, DPadDown, DPadLR, Stick, StickClick, Menu, View, Key, WideKey, Mouse }
         struct Row { public (G g, string t)[] Glyphs; public string Label; public Row(string label, params (G, string)[] glyphs) { Label = label; Glyphs = glyphs; } }
 
         static readonly Row[] XboxRows =
@@ -39,7 +39,7 @@ namespace Seven
             new Row("orbit camera", (G.Stick, "R")),
             new Row("re-center camera", (G.StickClick, "R3")),
             new Row("reset", (G.DPadDown, "")),
-            new Row("demo menu", (G.Menu, "")),
+            new Row("pause menu", (G.Menu, "")),
             new Row("fullscreen on/off", (G.View, "")),
         };
 
@@ -58,7 +58,7 @@ namespace Seven
             new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
             new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
             new Row("reset", (G.WideKey, "Bksp")),
-            new Row("demo menu", (G.WideKey, "Esc")),
+            new Row("pause menu", (G.WideKey, "Esc")),
             new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
 
@@ -70,7 +70,7 @@ namespace Seven
             new Row("re-center camera", (G.StickClick, "R3")),
             new Row("sit (near the chair)", (G.Face, "A")),
             new Row("view art (near the TV)", (G.Face, "A")),
-            new Row("demo menu", (G.Menu, "")),
+            new Row("pause menu", (G.Menu, "")),
             new Row("fullscreen on/off", (G.View, "")),
         };
         static readonly Row[] SaucerWalkKeys =
@@ -80,7 +80,7 @@ namespace Seven
             new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
             new Row("sit (near the chair)", (G.Key, "E")),
             new Row("view art (near the TV)", (G.Key, "E")),
-            new Row("demo menu", (G.WideKey, "Esc")),
+            new Row("pause menu", (G.WideKey, "Esc")),
             new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
         // Saucer: seated in the chair.
@@ -90,7 +90,7 @@ namespace Seven
             new Row("reveal / return the ship", (G.Face, "Y")),
             new Row("orbit camera", (G.Stick, "R")),
             new Row("re-center camera", (G.StickClick, "R3")),
-            new Row("demo menu", (G.Menu, "")),
+            new Row("pause menu", (G.Menu, "")),
             new Row("fullscreen on/off", (G.View, "")),
         };
         static readonly Row[] SaucerSeatedKeys =
@@ -99,17 +99,17 @@ namespace Seven
             new Row("reveal / return the ship", (G.Key, "R")),
             new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
             new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
-            new Row("demo menu", (G.WideKey, "Esc")),
+            new Row("pause menu", (G.WideKey, "Esc")),
             new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
 
         // Round 5: viewing Kyle's art on the TV.
         static readonly Row[] GalleryXbox =
         {
-            new Row("previous / next (or d-pad, left stick)", (G.Bumper, "LB"), (G.Bumper, "RB")),
+            new Row("previous / next (or LB RB, left stick)", (G.DPadLR, "")),
             new Row("full view on/off", (G.Face, "Y")),
             new Row("leave the TV", (G.Face, "B")),
-            new Row("demo menu", (G.Menu, "")),
+            new Row("pause menu", (G.Menu, "")),
             new Row("fullscreen on/off", (G.View, "")),
         };
         static readonly Row[] GalleryKeys =
@@ -130,7 +130,7 @@ namespace Seven
             new Row("interact · skip line", (G.Face, "A")),
             new Row("telekinesis (when shown)", (G.Face, "X")),
             new Row("restart from checkpoint", (G.DPadDown, "")),
-            new Row("menu", (G.Menu, "")),
+            new Row("pause menu", (G.Menu, "")),
         };
         static readonly Row[] ChapterKeys =
         {
@@ -141,7 +141,7 @@ namespace Seven
             new Row("interact · skip line (Enter)", (G.Key, "E")),
             new Row("telekinesis (when shown)", (G.Key, "T")),
             new Row("restart from checkpoint", (G.WideKey, "Bksp")),
-            new Row("menu", (G.WideKey, "Esc")),
+            new Row("pause menu", (G.WideKey, "Esc")),
         };
 
         readonly Dictionary<(Layout, bool), GameObject> _panels = new Dictionary<(Layout, bool), GameObject>();
@@ -418,6 +418,15 @@ namespace Seven
                     float hz = RoundRect(x, y, cx, cy, len, arm, 2f);
                     float down = RoundRect(x, y, cx, cy - len * 0.55f, arm - line, len * 0.42f, 1.5f);   // filled "down" arm
                     return Mathf.Max(Stroke(Mathf.Min(v, hz), line), Fill(down));
+                }
+                case G.DPadLR:
+                {
+                    float arm = w * 0.17f, len = cx - m;
+                    float v = RoundRect(x, y, cx, cy, arm, len, 2f);
+                    float hz = RoundRect(x, y, cx, cy, len, arm, 2f);
+                    float left = RoundRect(x, y, cx - len * 0.55f, cy, len * 0.42f, arm - line, 1.5f);    // filled left arm
+                    float right = RoundRect(x, y, cx + len * 0.55f, cy, len * 0.42f, arm - line, 1.5f);   // filled right arm
+                    return Mathf.Max(Stroke(Mathf.Min(v, hz), line), Mathf.Max(Fill(left), Fill(right)));
                 }
                 case G.DPadUp:
                 {

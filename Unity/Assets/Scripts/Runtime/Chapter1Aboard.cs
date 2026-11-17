@@ -8,8 +8,9 @@ namespace Seven
 {
     /// <summary>
     /// Chapter 1 aboard the saucer (scenes 9-11), in the Round 3 saucer scene: the larger interior, the first meal at the
-    /// galley refrigerator, the cat choosing to stay; a quiet beat, the cat settles on the sofa, "To be continued", then
-    /// back to the menu. Only active when <see cref="Chapter1State.Aboard"/> is set (otherwise the saucer demo runs).
+    /// galley refrigerator, the cat choosing to stay; then (Round 7) no end card: free exploration of the whole saucer
+    /// (chair + reveal, gallery TV, sofa; the cat roams and naps). The menu's Continue starts straight in exploration.
+    /// Only active when <see cref="Chapter1State.Aboard"/> is set (otherwise the saucer demo runs).
     /// The cat stays house-cat size here (scale 1).
     /// </summary>
     public class Chapter1Aboard : MonoBehaviour
@@ -41,6 +42,8 @@ namespace Seven
             Cat.transform.SetPositionAndRotation(new Vector3(-0.2f, 0f, -5.4f), Quaternion.LookRotation(new Vector3(0.3f, 0f, 1f)));
             if (FridgeLight != null) FridgeLight.enabled = false;
             Dlg.LineStarted += l => { if (!Chapter1State.Played.Contains(l.Id)) Chapter1State.Played.Add(l.Id); };
+            AudioKit.Loop("amb_saucer", null, null, 1f, AudioKit.Bus.Ambience);
+            MusicSystem.Play("aboard_saucer", 2.5f);
             if (Auto)
             {
                 ChapterCapture.Ensure();
@@ -55,7 +58,8 @@ namespace Seven
                     if (l.Id == "s11_08_cat") StartCoroutine(ShotLater("s11_perhaps_i_should_stay"));
                 };
             }
-            StartCoroutine(Flow());
+            if (Auto) AudioKit.Log = s => Cap.Log("audio: " + s);
+            StartCoroutine(Chapter1State.Explore ? Explore(true) : Flow());
         }
 
         IEnumerator ShotLater(string name) { yield return Wait(0.35f); yield return Cap.Shot(name); }
@@ -145,6 +149,7 @@ namespace Seven
             Cat.ForceTarget = CatMealSpot;
             var d0 = FridgeDoor.localRotation;
             if (FridgeLight != null) FridgeLight.enabled = true;
+            AudioKit.Play("fridge_open", FridgeDoor.position, 0.9f, 0f, AudioKit.Bus.Sfx, 12f);
             for (float t = 0f; t < 1f; t += Time.deltaTime / 0.9f) { FridgeDoor.localRotation = d0 * Quaternion.Euler(0f, -105f * Mathf.SmoothStep(0f, 1f, t), 0f); yield return null; }
             yield return Dlg.PlayScene(10, 1, 1);
             // "She turns to look at him."
@@ -155,6 +160,7 @@ namespace Seven
             Cat.ForceTarget = null; Cat.ForceAction = "sit";
             yield return Wait(1.2f);
             // Scene 11: choosing to stay.
+            AudioKit.Play("fridge_close", FridgeDoor.position, 0.9f, 0f, AudioKit.Bus.Sfx, 12f);
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) { FridgeDoor.localRotation = Quaternion.Slerp(FridgeDoor.localRotation, d0, t / 0.6f); yield return null; }
             FridgeDoor.localRotation = d0;
             if (FridgeLight != null) FridgeLight.enabled = false;
@@ -162,47 +168,69 @@ namespace Seven
             Seven.Frozen = false;
             yield return Wait(1.5f);     // a quiet beat
 
-            // The cat settles on the sofa (if furniture holds him up he simply appears there off-camera: never stuck).
-            Shot(SofaCamPos, SofaCamLook);
-            Cat.ForceAction = null; Cat.ForceTarget = SofaVia;
-            float tc = Time.time;
-            while (Flat(Cat.transform.position - SofaVia).magnitude > 0.35f && Time.time - tc < 6f) yield return null;
-            Cat.ForceTarget = SofaFront;
-            tc = Time.time;
-            while (Flat(Cat.transform.position - SofaFront).magnitude > 0.3f && Time.time - tc < 6f) yield return null;
-            if (Flat(Cat.transform.position - SofaFront).magnitude > 0.3f)
-            {
-                if (Auto) Cap.Log($"cat could not walk to the sofa (at {Cat.transform.position}) - placed there");
-                Cat.transform.position = SofaFront;
-            }
-            else if (Auto) Cap.Log("ok: cat walked to the sofa");
-            Cat.enabled = false;
-            var anim = Cat.Anim;
-            anim.speed = 1f; anim.CrossFadeInFixedTime("jump", 0.1f, 0);
-            var from = Cat.transform.position;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.8f)
-            {
-                float u = Mathf.InverseLerp(0.3f, 0.85f, t);
-                var p = Vector3.Lerp(from, SofaSeat, Mathf.SmoothStep(0f, 1f, u)); p.y += Mathf.Sin(u * Mathf.PI) * 0.3f;
-                Cat.transform.position = p;
-                var f = Flat(SofaSeat - from); if (f.sqrMagnitude > 1e-4f) Cat.transform.rotation = Quaternion.LookRotation(f);
-                yield return null;
-            }
-            Cat.transform.position = SofaSeat;
-            anim.CrossFadeInFixedTime("sleep", 0.6f, 0);
-            var ff = Flat(Seven.transform.position - SofaSeat);
-            yield return Wait(1.6f);
-            if (Auto) yield return Cap.Shot("s11_cat_settles_on_sofa");
-            yield return Wait(1.5f);
-            yield return UI.Fade(1f, 2f);
-            StartCoroutine(UI.Title("To be continued", 1.2f, 2.6f, 1.0f));
-            yield return Wait(2.0f);
-            if (Auto) yield return Cap.Shot("s11_to_be_continued");
-            yield return Wait(2.8f);
-            if (Auto) { Finish(); yield break; }
-            Chapter1State.Reset();
-            SceneManager.LoadScene(DemoMenu.SceneName);
+            // Round 7 (3d): no "To be continued". The player keeps 7 and explores the whole saucer.
+            yield return Explore(false);
         }
+
+        /// <summary>
+        /// Free exploration after scene 11 (or straight from the menu's Continue): deck, galley, her chair with the
+        /// reveal, the gallery TV and sofa. The cat roams / naps as on the demo saucer (house-cat size) and still hops
+        /// onto her lap when she sits. A quiet objective once. Check runs walk her to the chair, sit, open the pause menu.
+        /// </summary>
+        IEnumerator Explore(bool fromContinue)
+        {
+            if (fromContinue)
+            {
+                Seven.transform.SetPositionAndRotation(new Vector3(-1.2f, 0f, -4.6f), Quaternion.LookRotation(new Vector3(0.2f, 0f, 1f)));
+                yield return Wait(0.3f);
+                yield return UI.Fade(0f, 1.4f);
+            }
+            Seven.Frozen = false;
+            Director.Cam.Hold = false;
+            Director.ChapterMode = false;              // the chair's reveal works again
+            Director.PromptOverride = null;
+            Cat.ForceAction = null; Cat.ForceTarget = null;
+            Cat.enabled = true;
+            Cat.RoamScale = 1f; Cat.LapScale = 1f; Cat.transform.localScale = Vector3.one;
+            Explored = true;
+            if (Auto) Cap.Log($"free exploration of the saucer begins ({(fromContinue ? "Continue from the menu" : "after scene 11")}); music {MusicSystem.Current}");
+            Objective("Explore the ship");
+            yield return Wait(5f);
+            Objective(null);
+            if (!Auto) yield break;
+
+            // ---- check run: explore a little, sit in the chair (the cat comes to her lap), pause menu, finish.
+            Seven.ScriptDriven = true;
+            yield return Cap.Shot(fromContinue ? "x01_continue_exploring" : "s11_free_exploration");
+            yield return AutoWalk(new Vector3(1.5f, 0f, -2.5f), Seven.StandSpot);
+            Seven.RequestSit();
+            float t0 = Time.time;
+            while (!Seven.IsSeated && Time.time - t0 < 8f) yield return null;
+            Cap.Log($"sit in her chair after the chapter: seated={Seven.IsSeated}");
+            t0 = Time.time;
+            while (Cat.Current != CatCompanion.Mode.OnLap && Time.time - t0 < 25f) yield return null;
+            Cap.Log($"cat on her lap after the chapter: {Cat.Current == CatCompanion.Mode.OnLap} (cat scale {Cat.Scale:0.00})");
+            yield return Cap.Shot(fromContinue ? "x02_continue_seated_cat" : "s11_explore_seated_cat_on_lap");
+            if (fromContinue) { SaveGame.ClearTestSave(); Cap.Finish($"continue check run finished: soft-lock suspicions {Cap.Soft}"); yield break; }
+            // the pause menu (Start / Esc): Resume · Settings · Main menu · Quit
+            PauseMenu.ScriptInput = true;
+            PauseMenu.I.Open();
+            yield return null;
+            yield return Cap.Shot("s12_pause_menu");
+            PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);    // Settings
+            PauseMenu.I.Handle(0, -1, false, false);                                          // music -10 %
+            Cap.Log($"pause menu settings: music {AudioKit.MusicVolume:0.0} sfx {AudioKit.SfxVolume:0.0} voice {AudioKit.VoiceVolume:0.0} (check runs never save these)");
+            yield return Cap.Shot("s12_pause_settings");
+            PauseMenu.I.Handle(0, 1, false, false);                                           // back to 100 %
+            PauseMenu.I.Handle(0, 0, false, true);                                            // back
+            PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);   // Quit game -> confirm
+            yield return Cap.Shot("s12_pause_quit_confirm");
+            PauseMenu.I.Handle(0, 0, false, true);                                            // No / back
+            PauseMenu.I.Close();
+            Cap.Log($"pause menu closed; timeScale {Time.timeScale}");
+            Finish();
+        }
+        public bool Explored { get; private set; }
 
         void Finish()
         {
@@ -214,7 +242,10 @@ namespace Seven
             Cap.Log($"voice lines: bank {bank.Lines.Count}, with audio {bank.Lines.Count - noClip.Count}, played+subtitled {played.Count}; " +
                     $"not played: [{string.Join(", ", missing)}]; no audio: [{string.Join(", ", noClip)}]; total voice length {total:0.0}s");
             Cap.Log($"cat max distance from 7 while following/leading on the Moon level: {Cap.CatMaxBehind:0.00} m");
+            Cap.Log($"save written for Continue: {SaveGame.HasChapter1Save} (test key; removed now)");
+            SaveGame.ClearTestSave();
             Cap.Finish($"chapter 1 check run finished: soft-lock suspicions {Cap.Soft}, shots {Chapter1State.ShotCount}, game time {Time.time:0.0}s since boot");
+
         }
     }
 }

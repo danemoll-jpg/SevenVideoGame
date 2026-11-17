@@ -107,11 +107,45 @@ apply to every asset and scene:
   28_s11_to_be_continued.png` + `capture_log.txt` (objectives, checkpoints, any "SOFT-LOCK?" timeouts with positions, voice
   lines played vs. bank, cat distance, audio peak). **Telepathy sound check** (the one allowed unmuted step):
   `SevenDemo.exe -mute -soundcheck -capture <dir> …` → `soundcheck_log.txt` (~2 s of sound, then muted again).
-- **Voices**: `python Tools/Voice/make_line_list.py` (DIALOGUE.md → `Docs/VOICE-LINES.md` + `Unity/Assets/Audio/Voice/voice_lines.json`),
-  then `python Tools/Voice/generate_voices.py [--force] [--only <id> …]` (ElevenLabs, key only from `ELEVENLABS_API_KEY`,
-  voices "Seven" / "Cat" by name) → `Unity/Assets/Audio/Voice/<scene>/<id>.mp3`; Build everything makes `VoiceBank.asset`.
-- Play: run the exe normally → demo picker; Xbox controller or keyboard/mouse (the legend bottom-left switches
-  automatically). Esc / Start = back to the menu; fight reset = Backspace / d-pad down.
+  **SFX sound check** (Round 7): `-mute -soundcheck sfx -capture <dir> …` → 5 SFX, ≤ 1.2 s each (~5.4 s of sound), muted again.
+  Round 7 switches: `-ch1cp <n>` (start Chapter 1 at checkpoint n; 4 = the city reveal onward, ~3 min check run),
+  `-continue` (like the menu's Continue: explore the saucer after the chapter), `-cityreveal primary|alternate|off`.
+  Chapter 1 check-run extras in `capture_log.txt`: laser-door collision (furthest z), line of sight cell → hidden
+  release (must be 0), release panel in in-cell shots, energy point, every sound/music cue (`audio:` lines).
+- **City reveal (Round 7, scene 6b)**: `FightDemoBuilderCity.cs` (host structure, hollow-Moon shell, terraces,
+  pyramids, Tunneler's machines; layer 20, single-sided outward faces so it vanishes from inside the host; reflection
+  probes ignore layer 20); runtime motion `CityMotion.cs`; fog blend `Chapter1Director.CityLook` (city preset numbers there).
+- **Audio (Round 7)**: SFX `python Tools/Audio/generate_sfx.py [--force] [--only <id> …]` (ElevenLabs sound
+  generation, key only from `ELEVENLABS_API_KEY`) → `Unity/Assets/Audio/SFX/<id>.wav`, list in `Docs/SFX-LIST.md`.
+  Music = Dan's Suno MP3s in `Unity/Assets/Audio/Music/` (`Docs/MUSIC.md`). Build everything makes
+  `Assets/Resources/Audio/SfxBank|MusicBank.asset` (by name; missing file = silence). Mix buses + volumes:
+  `AudioKit.cs`; music cues/cross-fades/ducking: `MusicSystem.cs`; pause menu + Continue save: `PauseMenu.cs`.
+- **Voices**: `python Tools/Voice/make_line_list.py` (DIALOGUE.md → `Docs/VOICE-LINES.md` + `Unity/Assets/Audio/Voice/voice_lines.json`;
+  6b = scenes 65 primary / 66 alternate; 7's delivery notes from `Tools/Voice/seven_delivery.json`),
+  then `python Tools/Voice/generate_voices.py [--speaker seven|cat] [--model v3|v2] [--force] [--only <id> …]` (ElevenLabs, key
+  only from `ELEVENLABS_API_KEY`, voices "Seven" / "Cat" by name; 7 = Eleven v3 + audio tags, the cat = multilingual v2)
+  → `Unity/Assets/Audio/Voice/<scene>/<id>.mp3` (7's Round 6 takes kept in `_v1/`); Build everything makes `VoiceBank.asset`.
+- Play: run the exe normally → main menu (Continue when a Chapter 1 save exists · Chapter 1 · demos · Quit); Xbox
+  controller or keyboard/mouse (the legend bottom-left switches automatically). Esc / Start = pause menu (Resume ·
+  Settings · Main menu · Quit, with confirms); fight reset / checkpoint restart = Backspace / d-pad down.
+
+- **Auto-update launcher + releases (Round 8; every round now ends with a published release)** — details and
+  player instructions (Windows, Steam Deck/Proton) in `Docs/LAUNCHER.md`. `SevenLauncher.exe` (C++, `Launcher/`)
+  installs/updates the game from GitHub releases of `danemoll-jpg/seven-releases` (public), verifies the signed catalog
+  and starts `versions/<build>/SevenDemo.exe -sevenLauncherReady … -sevenLauncherNonce …` (`LauncherBridge.cs` answers).
+  Signing key: `Builds/PublisherPrivate/launcher-signing.pem` (git-ignored; made once by `python Tools/New-LauncherKey.py`;
+  **never delete, print or replace it**). Version: `LauncherBridge.Version` / `Build` (0.<round>.<fix>, build =
+  round×100+fix; bump every round); Build everything writes `Unity\Builds\Seven\version.txt`. gh: `GH` env var or
+  `C:/Users/danmo/Racer/Builds/PublisherTools/...` (not on PATH).
+  1. Launcher (only if `Launcher/` changed): `powershell -File Tools/Build-Launcher.ps1 -CoreOnly`, then `powershell -File Tools/Build-Launcher.ps1`
+     (VS 18 vcvars64, hidden/Below Normal) → `Builds\Launcher\SevenLauncher.exe` + `LauncherChecks.exe`.
+  2. First release of a series: `python Tools/Prepare-LauncherRelease.py --version 0.8.0 --build 800 --notes "…" --out Builds/LauncherRelease-800`;
+     later rounds: `python Tools/Prepare-ComponentUpdate.py game --previous-catalog Builds/LauncherRelease-<prev>/assets/update-catalog.json
+     --previous-manifest Builds/LauncherRelease-<prev>/assets/game-manifest.json --out Builds/LauncherRelease-<n> --version 0.<r>.0 --build <n> --notes "…"`.
+  3. `python Tools/Publish-LauncherRelease.py Builds/LauncherRelease-<n>` (dry run), then add `--publish --confirm-repository danemoll-jpg/seven-releases`
+     (becomes Latest; `--resume-draft` if the draft isn't listed yet).
+  4. Starter zip for new players: `python Tools/Package-LauncherStarter.py --release Builds/LauncherRelease-<n> --out Builds/LauncherStarter-<n>`,
+     then publish it the same way (never Latest; after step 3).
 
 ## Kyle's art gallery (TV on the saucer) — how to add or change art
 - The art lives in `Art/Gallery/` (Git LFS) with `Art/Gallery/gallery.json`: one line per image, in display order:
@@ -132,6 +166,8 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–6 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe`: Chapter 1 "The Moon Prison" (voiced, playable)
-plus the demos (fight, saucer + gallery TV, Ratwing). Details in `TODO-ARCHIVE.md`. **Current objective: Round 7** — Dan's
-Chapter 1 fixes (laser cell door, hidden release, tractor-beam boarding), ElevenLabs SFX, music system (`Docs/MUSIC.md`). See `TODO.md`.
+**Rounds 1–7 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe`: Chapter 1 "The Moon Prison" (voiced,
+laser cell, city reveal, tractor beam, free saucer exploration after the chapter, SFX + music, pause menu, Continue)
+plus the demos (fight, saucer + gallery TV, Ratwing). Details in `TODO.md` / `TODO-ARCHIVE.md`. **Current objective:
+Round 8** — saucer look pass + cat rig, gallery extras, Ratwing flip, fluid fighting, auto-update launcher + first
+release. See `TODO.md`.

@@ -76,6 +76,13 @@ namespace Seven
         }
         /// <summary>Scripted: an outside script moves him (liftoff boarding etc.).</summary>
         public void Scripted(string clip) { Current = Mode.Scripted; PlayClip(clip); }
+        /// <summary>Round 7 tractor beam: held mid-air frame of the jump clip (legs hanging), drifting very slowly.</summary>
+        public void Floating()
+        {
+            Current = Mode.Scripted; _clip = "float";
+            Anim.CrossFadeInFixedTime("jump", 0.25f, 0, 0.42f * 0.8f);
+            Anim.speed = 0.04f;
+        }
 
         // ------------------------------------------------------------------------------------------ motion
         bool MoveTo(Vector3 target, float speed, float arrive = 0.12f)

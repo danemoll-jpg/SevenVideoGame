@@ -19,7 +19,12 @@ namespace Seven
         public float DefaultGap = 0.45f;
 
         AudioSource _seven, _cat, _catFar;
-        public bool Busy { get; private set; }
+        bool _busy;
+        public bool Busy { get => _busy; private set { if (_busy != value) _busyCount += value ? 1 : -1; _busy = value; } }
+        static int _busyCount;
+        /// <summary>Any dialogue playing anywhere (music ducks under it).</summary>
+        public static bool AnyBusy => _busyCount > 0;
+        void OnDestroy() { if (_busy) _busyCount--; _busy = false; }
         public VoiceBank.Line Current { get; private set; }
         public readonly List<string> Played = new List<string>();
         /// <summary>Check runs: skip lines automatically (seconds of each line actually waited).</summary>
@@ -32,6 +37,7 @@ namespace Seven
             _seven = MakeSource("Voice_7", false, false);
             _cat = MakeSource("Voice_Cat_Telepathy", true, false);
             _catFar = MakeSource("Voice_Cat_Far", true, true);
+            foreach (var s in new[] { _seven, _cat, _catFar }) AudioKit.Track(s, AudioKit.Bus.Voice);   // Round 7: voice bus on top
         }
 
         /// <summary>The telepathy treatment (also used by the sound check).</summary>
@@ -64,7 +70,7 @@ namespace Seven
 
         void Update()
         {
-            if (!Busy || DemoBoot.CaptureDir != null) return;
+            if (!Busy || DemoBoot.CaptureDir != null || PauseMenu.IsOpen) return;
             var kb = Keyboard.current; var gp = Gamepad.current;
             if ((kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) || (gp != null && gp.buttonSouth.wasPressedThisFrame))
                 _skip = true;

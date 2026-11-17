@@ -148,7 +148,7 @@ namespace Seven.EditorTools
         struct ShipMats
         {
             public Material floor, carpet, wall, dome, rib, seam, cove, sofaBase, fabric, table, pot, leaf, stem, frame, glass,
-                chairShell, chairLining, pedestal, city, cityGlow, cityGround, bench;
+                chairShell, chairLining, pedestal, city, cityGlow, cityGround, bench, cityNear;
         }
 
         static ShipMats BuildSaucerMaterials()
@@ -174,6 +174,7 @@ namespace Seven.EditorTools
                 chairLining = Dissolve("Chair_lining", Gray(0.2f), 0.08f, false),
                 pedestal = Dissolve("Chair_pedestal", Gray(0.75f), 0.85f, true, 0.4f),
                 city = Lit("City_tower", Gray(0.32f), 0.3f),
+                cityNear = Lit("City_tower_near", Gray(0.045f), 0.15f),     // Round 8: dark silhouettes right below the ship
                 cityGlow = Lit("City_glow", Color.white, 0.5f),
                 cityGround = Lit("City_ground", Gray(0.08f), 0.1f),
             };
@@ -669,34 +670,41 @@ namespace Seven.EditorTools
             float R() => (float)rnd.NextDouble();
             var tv = new List<Vector3>(); var tt = new List<int>();
             var gv = new List<Vector3>(); var gt = new List<int>();
-            // Clusters (centre xz, radius, towers). The first sits ahead of and below the window.
+            // Round 8 look pass (Kyle: fog does the work): fewer, larger, softer forms; the cluster right below the window
+            // is near-black (silhouettes against the bright haze), farther ones pale and swallowed by the fog; only a
+            // few glowing lips, the soft light comes from glows inside the fog (Atmosphere_Above).
+            var nv = new List<Vector3>(); var nt = new List<int>();
             var clusters = new List<(Vector2 c, float r, int n)>
             {
-                (new Vector2(0f, 95f), 70f, 26), (new Vector2(-150f, 40f), 60f, 16), (new Vector2(170f, 120f), 70f, 18),
-                (new Vector2(30f, 300f), 90f, 22), (new Vector2(-260f, 260f), 90f, 16), (new Vector2(300f, -60f), 80f, 14),
-                (new Vector2(-280f, -180f), 90f, 14), (new Vector2(40f, -280f), 90f, 16), (new Vector2(0f, -40f), 50f, 10),
-                (new Vector2(420f, 400f), 120f, 14), (new Vector2(-480f, 40f), 120f, 12),
+                (new Vector2(0f, 95f), 75f, 11), (new Vector2(-150f, 40f), 65f, 7), (new Vector2(170f, 120f), 75f, 8),
+                (new Vector2(30f, 300f), 95f, 9), (new Vector2(-260f, 260f), 95f, 7), (new Vector2(300f, -60f), 85f, 6),
+                (new Vector2(-280f, -180f), 95f, 6), (new Vector2(40f, -280f), 95f, 7), (new Vector2(0f, -40f), 55f, 5),
+                (new Vector2(420f, 400f), 130f, 6), (new Vector2(-480f, 40f), 130f, 5),
             };
+            int ci = 0;
             foreach (var (c, r, n) in clusters)
+            {
+                bool near = ci++ == 0 || c.magnitude < 110f;
                 for (int i = 0; i < n; i++)
                 {
                     float a = R() * Mathf.PI * 2f, d = Mathf.Sqrt(R()) * r;
                     var p = new Vector3(c.x + Mathf.Cos(a) * d, CityY, c.y + Mathf.Sin(a) * d);
-                    float w = Mathf.Lerp(10f, 26f, R()), h = Mathf.Lerp(35f, 165f, R() * R() + 0.15f);
+                    float w = Mathf.Lerp(20f, 44f, R()), h = Mathf.Lerp(50f, 190f, R() * R() + 0.15f);
                     float yaw = R() * 90f;
-                    int tiers = 1 + rnd.Next(3);
+                    int tiers = 1 + rnd.Next(2);
                     float y = CityY, ww = w;
                     for (int k = 0; k < tiers; k++)
                     {
-                        float th = h * (k == 0 ? 0.6f : 0.4f / (tiers - 1));
-                        AddBox(tv, tt, new Vector3(p.x, y + th * 0.5f, p.z), new Vector3(ww, th, ww * Mathf.Lerp(0.7f, 1.2f, R())), yaw);
-                        // Glowing bands near the top of each tier.
-                        AddBox(gv, gt, new Vector3(p.x, y + th - 2.2f, p.z), new Vector3(ww + 0.8f, 0.9f, ww + 0.8f), yaw);
-                        y += th; ww *= Mathf.Lerp(0.55f, 0.8f, R());
+                        float th = h * (k == 0 ? 0.7f : 0.3f);
+                        AddBox(near ? nv : tv, near ? nt : tt, new Vector3(p.x, y + th * 0.5f, p.z), new Vector3(ww, th, ww * Mathf.Lerp(0.8f, 1.15f, R())), yaw);
+                        if (!near && R() < 0.35f) AddBox(gv, gt, new Vector3(p.x, y + th - 2.4f, p.z), new Vector3(ww + 0.6f, 0.7f, ww + 0.6f), yaw);
+                        y += th; ww *= Mathf.Lerp(0.6f, 0.8f, R());
                     }
-                    AddBox(gv, gt, new Vector3(p.x, y + 4f, p.z), new Vector3(0.8f, 8f, 0.8f), yaw);   // antenna light
+                    if (R() < 0.3f) AddBox(gv, gt, new Vector3(p.x, y + 4f, p.z), new Vector3(0.8f, 8f, 0.8f), yaw);   // a few antenna lights
                 }
+            }
             Obj("CityTowers", Finish(tv, tt), m.city, city, false);
+            Obj("CityTowersNear", Finish(nv, nt), m.cityNear, city, false);
             Obj("CityLights", Finish(gv, gt), m.cityGlow, city, false);
             // Ring terraces like the hill world's, rising out of the fog below.
             var rings = new[] { (new Vector3(-60f, CityY + 20f, 170f), 1.3f, 4, 11), (new Vector3(230f, CityY + 10f, 300f), 1.8f, 5, 12),
@@ -721,10 +729,11 @@ namespace Seven.EditorTools
             a.DistanceDensity = 0.0016f; a.HazeHeight = 40f;
             a.NearBrightness = 0.8f; a.FarBrightness = 1.02f; a.BrightnessDistance = 450f; a.ZenithBrightness = 0.34f;
             a.NoiseStrength = 0.5f; a.NoiseScale = 0.006f; a.NoiseSpeed = 0.004f; a.NoiseFadeDistance = 600f;
-            a.GlowIntensity = 0.32f; a.GlowRadius = 60f;
+            a.GlowIntensity = 0.5f; a.GlowRadius = 70f;            // Round 8: stronger soft lights inside the fog
             var glows = new[]
             {
-                (new Vector3(0f, CityY + 60f, 110f), new Vector3(1.2f, 1.1f, 1f)), (new Vector3(-170f, CityY + 50f, 60f), new Vector3(1f, 0.9f, 1f)),
+                (new Vector3(0f, CityY + 60f, 110f), new Vector3(1.4f, 1.4f, 1f)), (new Vector3(-170f, CityY + 50f, 60f), new Vector3(1f, 1.1f, 1f)),
+
                 (new Vector3(190f, CityY + 60f, 140f), new Vector3(1f, 0.9f, 1f)), (new Vector3(40f, CityY + 60f, 330f), new Vector3(1.4f, 1f, 1f)),
                 (new Vector3(-280f, CityY + 50f, 280f), new Vector3(1.2f, 0.8f, 1f)), (new Vector3(60f, CityY + 50f, -300f), new Vector3(1.2f, 0.8f, 1f)),
                 (new Vector3(700f, -40f, 700f), new Vector3(5f, 1.6f, 1f)),
@@ -756,6 +765,12 @@ namespace Seven.EditorTools
 
             var refs = BuildShip(sm);
             BuildCity(new GameObject("World").transform, sm);
+            // Round 8: a dark overhead hull edge (the saucer's rim overhang) framing the top of the view when the ship is
+            // revealed - Kyle's dark foreground silhouette against the bright haze. Not dissolvable; hidden behind the
+            // walls while the ship is solid.
+            var edgeMat = Dissolve("Saucer_hull_edge", Gray(0.03f), 0.25f, false, 0.2f);
+            var edge = Lathe(new[] { new Vector2(7.55f, 3.55f), new Vector2(9.5f, 3.25f), new Vector2(12.5f, 2.85f), new Vector2(12.9f, 3.05f), new Vector2(12.4f, 3.5f), new Vector2(9.6f, 3.95f), new Vector2(7.55f, 4.15f) }, 0f, 360f, 96);
+            Obj("HullEdgeSilhouette", edge, edgeMat, null, false);
             AddProbe(new Vector3(0f, 1.6f, 0f), new Vector3(20f, 4.5f, 20f), new Vector3(0f, 0.4f, 0f));
 
             var wg = new GameObject("WorldGround").AddComponent<Seven.WorldGround>();
@@ -843,6 +858,7 @@ namespace Seven.EditorTools
             var gtv = refs.tv.tv.gameObject.AddComponent<Seven.GalleryTV>();
             gtv.Screen = refs.tv.screen; gtv.UiMaterial = GalleryUiMaterial(); gtv.ScreenLight = refs.tv.light;
             gtv.Seven = s7; gtv.Cam = scam; gtv.Input = input; gtv.Reveal = rev; gtv.ScreenSize = TvSize;
+            gtv.SofaRoot = refs.tv.sofaRoot; gtv.SofaFacing = refs.tv.sofaFacing;
             dir.Gallery = gtv;
 
             // Round 6: Chapter 1 aboard (scenes 9-11), active only when the chapter loads this scene.
