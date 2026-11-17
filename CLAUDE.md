@@ -121,6 +121,7 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–5 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with a demo picker: fight demo (fog/glow
-hill), saucer mock-up (cat, sit, reveal, **and Kyle's art gallery TV** in the back nook), Ratwing cave scene.
-Rounds 1–4 in `TODO-ARCHIVE.md`, Round 5 record in `TODO.md`. **Next:** waiting for Dan's review of Round 5.
+**Rounds 1–5 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with a demo picker: fight demo, saucer
+mock-up (cat, sit, reveal, art-gallery TV), Ratwing cave scene. Details in `TODO-ARCHIVE.md`. **Current objective: Round 6** —
+Chapter 1 "The Moon Prison", the real opening (story `Docs/STORY.md`, script `Docs/DIALOGUE.md`, voices `Docs/VOICES.md`;
+ElevenLabs key only from `ELEVENLABS_API_KEY`). See `TODO.md`.

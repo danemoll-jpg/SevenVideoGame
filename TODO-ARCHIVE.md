@@ -473,3 +473,58 @@ replay  /  Esc: back"); A skips to the end once it has been seen in full; Esc / 
 - Old `Unity\Builds\FightDemo` can be deleted.
 
 
+---
+# Archived 2026-11-17: Round 5
+
+## Round 5 — Kyle's art gallery TV on the saucer — done (2026-11-17), exe-verified off-screen; Dan to browse
+Checkpoint commit `5416d4b` before any change. Dan's idea: a TV on 7's ship where players scroll through Kyle G. Anderson's
+artwork. Check run: `SevenDemo.exe -mute -gallery -capture <dir>` (~85 s); shots + logs in `Docs/Previews/round5/`.
+
+1. **Gallery content folder — done.** `Art/Gallery/` = all 24 `Art/Reference/kyle_*.jpg` + `gallery.json` (`credit`
+   "Art by Kyle G. Anderson", then one line per image: `file`, short plain `title` from the reference index, `include`).
+   The builder copies `gallery.json` + included images to `StreamingAssets/Gallery/` (git-ignored copy); the game loads
+   the list and images at runtime (`GalleryTV.cs`). How to add art: `CLAUDE.md` → "Kyle's art gallery". Adding straight
+   into the built `SevenDemo_Data/StreamingAssets/Gallery/` works without a rebuild by design (read at every saucer
+   start, from that folder — confirmed by the log path); adding a brand-new file there was not separately tested.
+   Check: log "loaded 24, included in gallery.json 24, image files 24 -> MATCH".
+2. **Default `include` — done: all 24 `true`** (Dan's decision). Default-off images: **none**.
+3. **The TV on the saucer — done.** The back nook (335°) is now a lounge nook: 2.8 × 1.4 m rounded screen with a light
+   glossy bezel and a soft white glow line, a low curved console with a glow strip, and a curved sofa out on the deck
+   facing it (old nook bench removed there). Idle slideshow: cross-fade 1.6 s, then 8 s hold; the picture throws a soft
+   light into the nook (follows the image brightness). Screen + sofa dissolve with the reveal. Check: `G01`, `G02`
+   (mid cross-fade), `G03`; log "next automatic step 8.8 s later (expected ~8.8 s)".
+4. **Viewing mode — done.** Prompt "A / E View art" in front of the sofa; camera eases (0.9 s) to face the screen
+   (2.4 m, 0° off its normal), 7 stands still facing it and is hidden only if she would block the view. ← → / LB RB /
+   d-pad / left stick = previous / next (0.3 s cross-fade, wraps both ways), Y / F = full view (letterboxed) and back,
+   B / Esc = leave (camera eases back behind her; Esc no longer jumps to the menu while viewing, Start still does).
+   Caption: title, "Art by Kyle G. Anderson", n / N. Legends: new "view art" row while walking, own layout while viewing
+   (Xbox by default, keys after keyboard use). Checks: `G04`–`G17`, `G20`, `G21`; **real-input test 17/17 PASS** (every key
+   and pad binding driven through virtual devices: E/A enter, arrows/RB/LB/d-pad/stick step, F/Y full, Esc/B leave and
+   Esc stays in the saucer, 7 free to move after). Fix on the way: the walk camera now accepts the wall nooks as "inside
+   the ship" (before, 7 standing in a nook collapsed the camera into her head).
+5. **Monochrome — done.** Images are converted to grayscale on load (single-channel textures; screen and full-view
+   shaders output v, v, v), so the red "7" logos show gray. Bloom is switched off by a high-priority volume while viewing
+   (fades in/out 0.5 s), screen brightness 0.92 then. Check: max |R−G|,|G−B| = **0** over all 21 gallery shots and every
+   regression shot.
+6. **Checks — done.** Muted (audio listener 0, output RMS 0.000000 at start and end of every run), off-screen
+   (minimized, never activated, Below Normal, one job at a time). Image count MATCH (24/24/24). **Aspect ratios
+   measured** (image area drawn solid white, bounding box measured in the rendered frame) for all 24 images: worst
+   error 0.3 % on the screen and 0.3 % in full view (= 1 px rounding). Regression: saucer run (sit 2.48 s, cat on lap
+   gap +0.004 m, reveal/return/stand all fine), Ratwing run, fight `-quick`, menu shot — all completed, no exceptions.
+   Note: loading the 24 images takes ~7 s in the background at the start of the saucer scene (one image per frame, the
+   TV shows the first piece as soon as it is in; small hitches during that time).
+7. **End of round — done.** `TODO.md`, `CLAUDE.md` (how to add art, `-gallery` check run), committed and pushed.
+
+### For Dan to check (after Round 5)
+- Play: exe → **Saucer demo** → walk to the TV nook (to 7's right, slightly behind her, at the start) → A / E.
+  Does it feel right? Is the order good (edit `Art/Gallery/gallery.json`)? Are the titles OK?
+- Screenshots `Docs/Previews/round5/`: `G01_tv_across_deck`, `G02_tv_idle_crossfade`, `G03_nook`,
+  `G04_prompt_walk_xbox`, `G05_prompt_walk_keys`, `G07_view_xbox`, `G08_view_keys`, `G09_next_crossfade`,
+  `G12_wrap_to_last`, `G13_view_narrowest`, `G14_full_xbox`, `G15_full_keys`, `G16_full_widest`, `G21_left`
+  (+ `G18/G19_probe_*` = aspect measurement frames). Logs: `capture_log.txt`, `R_saucer_capture_log.txt`.
+- Default-off images: **none** (all 24 on, per your decision).
+- To add more of Kyle's art: drop the file in `Art/Gallery/`, add a line to `gallery.json`, rebuild (steps in `CLAUDE.md`).
+- Ideas not done (say if wanted): 7 sitting on the TV sofa while watching; a d-pad left/right glyph in the legend
+  instead of LB/RB; preloading thumbnails so the first seconds after entering the saucer have no hitches.
+
+
