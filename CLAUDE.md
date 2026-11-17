@@ -55,7 +55,10 @@ apply to every asset and scene:
   (args: repo root, target tris, weld 1|0 (default 1), optional output FBX path for experiments).
 - Cat (Round 3): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_cat.py -- C:/Users/danmo/SevenVideoGame 18000 [preview_dir]`
   → `Art/Export/cat/cat_v1_rigged.fbx` (+ grayscale texture): squares the body, straightens the head, decimates,
-  0.25 m shoulder, scripted 24-bone rig + clips idle/walk/sit/wash/jump/sleep. Must run before the Unity build.
+  0.25 m shoulder, scripted 24-bone rig + clips idle/walk/sit/wash/jump/sleep. QF3: also `cat_v1_lap.fbx`, the static
+  curled lap cat (legs squashed under the belly, tail laid down, body bent `LAP_CURL_DEG` 290 deg into a ring; `LAP_*`
+  knobs; `CAT_LAP_OUT` = experiments; previews `cat_lapmesh_*.png`); `CatCompanion` swaps it in on her lap and settles it
+  onto her thighs by measuring both meshes. Must run before the Unity build (~4 min).
 - Ratwing (Round 4): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_ratwing.py -- C:/Users/danmo/SevenVideoGame 55000 [preview_dir]`
   (~2 min) → `Art/Export/ratwing/ratwing_v1_rigged.fbx` (+ grayscale texture, `ratwing_metrics.txt`): 2.1 m (`HEIGHT`),
   decimate with the membranes/claws protected, scripted 38-bone rig (body + wing root/upper + 3 two-segment finger
@@ -92,7 +95,8 @@ apply to every asset and scene:
   timing), quits by itself (~50 s). Extra switches: `-quick` (look shots only, ~5 s), `-atmofile <json>` (override
   Atmosphere knobs without rebuilding), `-room` (start in the Round 1 room), `-fight` (skip the menu).
   **Saucer check run:** same with `-saucer` → `01_ship_wide.png … 16_after_stand.png` + `capture_log.txt` (audio, feet /
-  paws vs. the floor, lap gap, reveal timings), ~70 s. **Ratwing check run:** same with `-ratwing` →
+  paws vs. the floor, lap contact = smallest/median gap + clearance to her hands, QF3 reveal audit = ship renderers still
+  visible when revealed (must be 0), reveal timings; QF3 shots `08c–08f` lap, `13c–13e` revealed), ~80 s. **Ratwing check run:** same with `-ratwing` →
   `01_cave_wide.png … 11_after_skip.png` + `capture_log.txt` (audio, eye-glint timing, feet vs. ledge while hanging and
   vs. floor after landing incl. raycasts, wingspan, replay/skip), ~25 s. **Gallery check run:** same with `-gallery`
   (implies `-saucer`) → `G01_tv_across_deck.png … G21_left.png` + `capture_log.txt` (image count vs. JSON vs. files,
@@ -105,7 +109,12 @@ apply to every asset and scene:
   Flow + checkpoints: `Chapter1Director.cs`. Switches: `-chapter1`, `-ch1aboard` (start at scene 9).
   **Chapter 1 check run:** `SevenDemo.exe -mute -chapter1 -capture <dir> …` (autopilot, ~4.5 min) → `01_s01_cell_start.png …
   28_s11_to_be_continued.png` + `capture_log.txt` (objectives, checkpoints, any "SOFT-LOCK?" timeouts with positions, voice
-  lines played vs. bank, cat distance, audio peak). **Telepathy sound check** (the one allowed unmuted step):
+  lines played vs. bank, cat distance, audio peak, `cursorVisible` per shot).
+  **Phantom-wall proof (QF3):** every build runs `FightDemoBuilderPhantomCheck.cs` on the Chapter 1 scene →
+  `Docs/Previews/qf3/phantom_check.txt` + build log: city (layer 20) triangles in a walkable volume and inside the host
+  structure must both be **0**; it also lists every non-city renderer without a collider in a walkable volume (props).
+  Build the city host as its outer surface only (never nested boxes: their inner faces cut through the prison).
+  **Telepathy sound check** (the one allowed unmuted step):
   `SevenDemo.exe -mute -soundcheck -capture <dir> …` → `soundcheck_log.txt` (~2 s of sound, then muted again).
   **SFX sound check** (Round 7): `-mute -soundcheck sfx -capture <dir> …` → 5 SFX, ≤ 1.2 s each (~5.4 s of sound), muted again.
   Round 7 switches: `-ch1cp <n>` (start Chapter 1 at checkpoint n; 4 = the city reveal onward, ~3 min check run),
@@ -166,8 +175,10 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–8 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` 0.8.0, published through the launcher
-(`danemoll-jpg/seven-releases`, `game-800` + `starter-800`): Chapter 1 "The Moon Prison" (laser cell, city reveal,
-tractor beam, free saucer exploration, SFX + music, pause menu, Continue) plus the demos (fluid fight, saucer + gallery
-TV, Ratwing). Check-run switch added in Round 8: `-fightcombo` (combo timing log). Details in `TODO.md` /
+**Rounds 1–8 + QF3 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` 0.8.1 (build 801), published through
+the launcher (`danemoll-jpg/seven-releases`, `game-801` Latest; `game-800` + `starter-800` before): Chapter 1 "The Moon
+Prison" (laser cell, city reveal, tractor beam, free saucer exploration, SFX + music, pause menu, Continue) plus the
+demos (fluid fight, saucer + gallery TV, Ratwing). Check-run switch added in Round 8: `-fightcombo` (combo timing log).
+QF3: no phantom walls, subtitles without "(thought)", static curled lap cat, nothing of the ship left after the reveal,
+no excavators, mouse cursor hidden in play (`CursorPolicy.cs`: shown on menus only after the mouse moves). Details in `TODO.md` /
 `TODO-ARCHIVE.md`. **Current objective: none** — waiting for Dan's review; every round ends with a published release.

@@ -42,6 +42,58 @@ namespace Seven.EditorTools
         }
         static void ABox(List<Vector3> v, List<int> t, Vector3 min, Vector3 max) => OBox(v, t, (min + max) * 0.5f, max - min, Quaternion.identity);
 
+        /// <summary>QF3: axis-aligned box faces without a bottom (front = -z optional, back = +z optional).</summary>
+        static void HostFaces(List<Vector3> v, List<int> t, Vector3 a, Vector3 b, bool front, bool back = true)
+        {
+            if (front) FrontRect(v, t, a.x, a.y, b.x, b.y, a.z);
+            if (back) CF(v, t, new Vector3(b.x, a.y, b.z), new Vector3(b.x, b.y, b.z), new Vector3(a.x, b.y, b.z), new Vector3(a.x, a.y, b.z));
+            CF(v, t, new Vector3(a.x, a.y, b.z), new Vector3(a.x, b.y, b.z), new Vector3(a.x, b.y, a.z), new Vector3(a.x, a.y, a.z));   // -x
+            CF(v, t, new Vector3(b.x, a.y, a.z), new Vector3(b.x, b.y, a.z), new Vector3(b.x, b.y, b.z), new Vector3(b.x, a.y, b.z));   // +x
+            CF(v, t, new Vector3(a.x, b.y, a.z), new Vector3(a.x, b.y, b.z), new Vector3(b.x, b.y, b.z), new Vector3(b.x, b.y, a.z));   // top
+        }
+        /// <summary>A rectangle in the plane z facing -z.</summary>
+        static void FrontRect(List<Vector3> v, List<int> t, float x0, float y0, float x1, float y1, float z)
+            => CF(v, t, new Vector3(x0, y0, z), new Vector3(x0, y1, z), new Vector3(x1, y1, z), new Vector3(x1, y0, z));
+
+        /// <summary>QF3: the host's footprint (the prison and its cavern live inside it). City surfaces under it are cut.</summary>
+        public static bool InHostFootprint(Vector3 p) => p.x > -115f && p.x < 145f && p.z > L.HostFrontZ && p.z < 80f;
+        /// <summary>Cut every triangle along the footprint's four edges and drop the pieces inside it (winding kept).</summary>
+        static void DropUnderHost(List<Vector3> v, List<int> t)
+        {
+            var planes = new (Vector3 n, float d)[] { (Vector3.right, -115f), (Vector3.right, 145f), (Vector3.forward, L.HostFrontZ), (Vector3.forward, 80f) };
+            var nv = new List<Vector3>(v.Count); var nt = new List<int>(t.Count);
+            for (int i = 0; i < t.Count; i += 3)
+            {
+                var pieces = new List<List<Vector3>> { new List<Vector3> { v[t[i]], v[t[i + 1]], v[t[i + 2]] } };
+                foreach (var (n, d) in planes)
+                {
+                    var next = new List<List<Vector3>>();
+                    foreach (var poly in pieces) { var (lo, hi) = SplitPoly(poly, n, d); if (lo.Count >= 3) next.Add(lo); if (hi.Count >= 3) next.Add(hi); }
+                    pieces = next;
+                }
+                foreach (var poly in pieces)
+                {
+                    var c = Vector3.zero; foreach (var p in poly) c += p; c /= poly.Count;
+                    if (InHostFootprint(c)) continue;
+                    int b0 = nv.Count; nv.AddRange(poly);
+                    for (int k = 1; k + 1 < poly.Count; k++) { nt.Add(b0); nt.Add(b0 + k); nt.Add(b0 + k + 1); }
+                }
+            }
+            v.Clear(); v.AddRange(nv); t.Clear(); t.AddRange(nt);
+        }
+        static (List<Vector3>, List<Vector3>) SplitPoly(List<Vector3> poly, Vector3 n, float d)
+        {
+            var lo = new List<Vector3>(); var hi = new List<Vector3>();
+            for (int i = 0; i < poly.Count; i++)
+            {
+                var a = poly[i]; var b = poly[(i + 1) % poly.Count];
+                float da = Vector3.Dot(a, n) - d, db = Vector3.Dot(b, n) - d;
+                if (da <= 0f) lo.Add(a); if (da >= 0f) hi.Add(a);
+                if ((da < 0f && db > 0f) || (da > 0f && db < 0f)) { var p = Vector3.Lerp(a, b, da / (da - db)); lo.Add(p); hi.Add(p); }
+            }
+            return (lo, hi);
+        }
+
         /// <summary>Flip every triangle whose normal points away from what <paramref name="want"/> says.</summary>
         static void Orient(List<Vector3> v, List<int> t, Func<Vector3, Vector3> want)
         {
@@ -118,18 +170,25 @@ namespace Seven.EditorTools
             {
                 var v = new List<Vector3>(); var t = new List<int>();
                 var wv = new List<Vector3>(); var wt = new List<int>();
+                // QF3: the tiers used to be nested full-height boxes (and tier 0 four boxes around the passage mouth).
+                // Their inner faces (upper tiers' fronts/sides, the mouth's side walls and lintel) cut through the
+                // prison as huge "phantom walls". Now the host is built as its outer surface only: every tier sits on
+                // the one below (from its top up), no bottoms, and tier 0's front face has a hole for the passage mouth.
+                float prevTop = -120f;
                 for (int k = 0; k < 7; k++)
                 {
                     float zf = L.HostFrontZ + k * 9.5f, top = 30f + k * 58f, inset = k * 15f;
                     if (k == 0)
                     {
-                        // the lowest tier leaves the mouth of the rough mining passage open (x 15.1..17.9, up to y 1)
-                        ABox(v, t, new Vector3(-115f, -120f, zf), new Vector3(L.PassageX.x - 0.5f, top, 80f));
-                        ABox(v, t, new Vector3(L.PassageX.y + 0.5f, -120f, zf), new Vector3(145f, top, 80f));
-                        ABox(v, t, new Vector3(L.PassageX.x - 0.5f, 1.0f, zf), new Vector3(L.PassageX.y + 0.5f, top, 80f));
-                        ABox(v, t, new Vector3(L.PassageX.x - 0.5f, -120f, zf), new Vector3(L.PassageX.y + 0.5f, L.Lower - 0.7f, 80f));
+                        float hx0 = L.PassageX.x - 0.5f, hx1 = L.PassageX.y + 0.5f, hy0 = L.Lower - 0.7f, hy1 = 1.0f;
+                        FrontRect(v, t, -115f, -120f, hx0, top, zf);          // left of the mouth
+                        FrontRect(v, t, hx1, -120f, 145f, top, zf);           // right of it
+                        FrontRect(v, t, hx0, hy1, hx1, top, zf);              // above it
+                        FrontRect(v, t, hx0, -120f, hx1, hy0, zf);            // below it
+                        HostFaces(v, t, new Vector3(-115f, -120f, zf), new Vector3(145f, top, 80f), false);
                     }
-                    else ABox(v, t, new Vector3(-115f + inset, -120f, zf), new Vector3(145f - inset, top, 80f));
+                    else HostFaces(v, t, new Vector3(-115f + inset, prevTop, zf), new Vector3(145f - inset, top, 80f), true);
+                    prevTop = top;
                     // a few deep black openings on each tier face (suggested, not detailed)
                     int n = 2 + (k % 3);
                     for (int w = 0; w < n; w++)
@@ -141,7 +200,8 @@ namespace Seven.EditorTools
                     }
                 }
                 // the base below the terrace and bay: a sheer wall down into the haze
-                ABox(v, t, new Vector3(-115f, -150f, -112f), new Vector3(145f, L.Bay - 0.6f, L.HostFrontZ));
+                // (no +z face: it would face into the host's interior, coplanar with tier 0's front)
+                HostFaces(v, t, new Vector3(-115f, -150f, -112f), new Vector3(145f, L.Bay - 0.6f, L.HostFrontZ), true, back: false);
                 CityObject("HostStructure", v, t, host, root);
                 CityObject("HostOpenings", wv, wt, dark, root);
                 // Tunneler's recent additions: pipes along the face, a fence on the first setback, lamps, vents, lifts.
@@ -187,6 +247,7 @@ namespace Seven.EditorTools
                         CF(v, t, S(i, j), S(i + 1, j), S(i + 1, j + 1), S(i, j + 1));
                     }
                 Orient(v, t, ShellUp);
+                DropUnderHost(v, t);            // QF3: nothing of the shell under the host (it showed below the catwalk)
                 CityObject("MoonShell", v, t, shellMat, root);
                 // terraces: concentric flat steps from the quiet centre outward (lathe, faces toward the sphere centre)
                 var tv = new List<Vector3>(); var tt = new List<int>();
@@ -202,6 +263,7 @@ namespace Seven.EditorTools
                         CF(tv, tt, p00, p01, p11, p10);
                     }
                 Orient(tv, tt, ShellUp);
+                DropUnderHost(tv, tt);          // QF3: likewise the terraces
                 CityObject("Terraces", tv, tt, pale, root);
                 // terrace walls hide their stepped edges with a darker band on the risers (a separate dark ring per step)
             }
@@ -316,8 +378,8 @@ namespace Seven.EditorTools
                 CityObject("Giants", sv, st, host, root);
             }
 
-            // ---- 5. Tunneler's operation cutting through it: conveyors over old avenues with carts of light, excavators
-            // biting into terraces, the quiet district that starts up during the reveal, the terrace edge that breaks.
+            // ---- 5. Tunneler's operation cutting through it: conveyors over old avenues with carts of light, freight lifts
+            // along the mining sites, the quiet district that starts up during the reveal, the terrace edge that breaks.
             {
                 var mv = new List<Vector3>(); var mt = new List<int>();
                 var routes = new[]
@@ -344,22 +406,17 @@ namespace Seven.EditorTools
                     conveyors.Add(new Seven.CityMotion.Conveyor { Path = path.Select(p => p + Vector3.up * 1.6f).ToArray(), Carts = carts.ToArray(), Speed = 7f + R() * 5f, Quiet = quiet });
                     ci++;
                 }
-                // excavators: dark bodies with a long arm (pivot) and bucket
-                foreach (var (p0, yaw, quiet) in new[] { (new Vector3(-120f, 0f, -322f), 200f, true), (new Vector3(260f, 0f, -640f), 130f, false), (new Vector3(-330f, 0f, -780f), 60f, false) })
+                // QF3 (Dan): the excavators read as poorly drawn and are gone. In their place: slim freight-lift masts
+                // at the mining sites, each with a small glowing car riding up and down (mining activity as moving light).
+                foreach (var (p0, h) in new[] { (new Vector3(-120f, 0f, -322f), 70f), (new Vector3(260f, 0f, -640f), 95f), (new Vector3(-330f, 0f, -780f), 85f) })
                 {
                     var p = p0; p.y = CityGround(p.x, p.z);
-                    var q = Quaternion.Euler(0f, yaw, 0f);
-                    OBox(mv, mt, p + Vector3.up * 8f, new Vector3(30f, 16f, 22f), q);
-                    var pivot = new GameObject("ExcavatorArm").transform; pivot.SetParent(root, false);
-                    pivot.position = p + Vector3.up * 16f; pivot.rotation = q;
-                    var av = new List<Vector3>(); var at = new List<int>();
-                    OBox(av, at, new Vector3(0f, 10f, 22f), new Vector3(4f, 4f, 48f), Quaternion.Euler(-18f, 0f, 0f));
-                    OBox(av, at, new Vector3(0f, 2f, 46f), new Vector3(9f, 8f, 7f), Quaternion.identity);
-                    var armGo = CityObject("ArmMesh" + p0.x, av, at, machine, pivot);
-                    armGo.transform.localPosition = Vector3.zero; armGo.transform.localRotation = Quaternion.identity;
-                    var lamp = Car("ExcavatorLamp" + p0.x, new Vector3(1.6f, 1.2f, 1.2f), glow, pivot);
-                    lamp.localPosition = new Vector3(0f, 6f, 4f);
-                    arms.Add(new Seven.CityMotion.Arm { Pivot = pivot, Swing = 24f + R() * 14f, Period = 11f + R() * 8f, Phase = R(), Quiet = quiet });
+                    ABox(mv, mt, p + new Vector3(-2.2f, 0f, -0.6f), p + new Vector3(-1.2f, h, 0.6f));
+                    ABox(mv, mt, p + new Vector3(1.2f, 0f, -0.6f), p + new Vector3(2.2f, h, 0.6f));
+                    ABox(mv, mt, p + new Vector3(-3f, h, -1.2f), p + new Vector3(3f, h + 2f, 1.2f));
+                    var car = Car("MineLift" + p0.x, new Vector3(2.2f, 2.6f, 2.2f), glow, root);
+                    car.position = p + Vector3.up * (h * 0.5f);
+                    lifts.Add(new Seven.CityMotion.Lift { Car = car, Bottom = p + Vector3.up * 3f, Top = p + Vector3.up * (h - 3f), Period = 22f + R() * 14f, Phase = R() });
                 }
                 CityObject("Machines", mv, mt, machine, root);
                 // the ancient terrace whose edge breaks: a stepped building in the quiet district with a loose block on top
@@ -388,7 +445,7 @@ namespace Seven.EditorTools
 
             motion.Conveyors = conveyors.ToArray(); motion.Lifts = lifts.ToArray(); motion.Arms = arms.ToArray();
             foreach (var tr in root.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = CityLayer;
-            Log($"city: {root.GetComponentsInChildren<MeshFilter>().Sum(f => f.sharedMesh.triangles.Length / 3)} triangles, {conveyors.Count} conveyors, {lifts.Count} lifts, {arms.Count} excavator arms");
+            Log($"city: {root.GetComponentsInChildren<MeshFilter>().Sum(f => f.sharedMesh.triangles.Length / 3)} triangles, {conveyors.Count} conveyors, {lifts.Count} lifts, {arms.Count} excavator arms (QF3: none)");
             return motion;
         }
 

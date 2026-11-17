@@ -1,0 +1,51 @@
+[  0.00s] saucer capture start, muted=True, listenerVolume=0
+[  7.01s] audio: listenerVolume=0 paused=True outputRMS=0.000000
+[  8.10s] shot 01_ship_wide: seven=idle/Free cat=Roam/wash scale 2.00 reveal=0.00
+[  9.37s] shot 01b_ship_wide_back: seven=idle/Free cat=Roam/wash scale 2.00 reveal=0.00
+[ 10.63s] shot 01c_window_chair: seven=idle/Free cat=Roam/wash scale 2.00 reveal=0.00
+[ 10.63s] ship bounds check: camera inside clamp radius 7.3, ceiling at centre 3.75 m
+[ 11.78s] 7 walking: lowest mesh point above the floor min -0.001 max -0.001 m over 1 samples (0 = touching)
+[ 17.80s] 7 walking: lowest mesh point above the floor min -0.008 max 0.004 m over 170 samples (0 = touching)
+[ 19.37s] shot 02_cat_wander: seven=idle/Free cat=Roam/goto scale 2.00 reveal=0.00
+[ 21.80s] cat walking at scale 2.00: lowest mesh point above the floor min -0.001 max 0.003 m over 120 samples
+[ 23.37s] shot 02b_cat_wash: seven=idle/Free cat=Roam/wash scale 2.00 reveal=0.00
+[ 26.79s] 7 walking: lowest mesh point above the floor min -0.015 max 0.004 m over 94 samples (0 = touching)
+[ 34.79s] 7 walking: lowest mesh point above the floor min -0.008 max 0.004 m over 211 samples (0 = touching)
+[ 34.84s] near chair: True
+[ 34.93s] shot 03_legend_walk_xbox: seven=idle/Free cat=Roam/wander scale 2.00 reveal=0.00
+[ 35.01s] shot 04_legend_walk_keys: seven=idle/Free cat=Roam/wander scale 2.00 reveal=0.00
+[ 37.13s] shot 05_sit_down: seven=stand_to_sit/SittingDown cat=ToChair/wander scale 2.00 reveal=0.00
+[ 37.43s] seated 2.48s after the request; hips above root 0.650 m, hips (0.00, 0.65, 4.43), seat target (0.00, 0.65, 4.40)
+[ 37.43s] waiting for the hop: cat ToChair at (0.80, 0.00, 3.95), launch spot distance 1.31 m
+[ 38.43s] TIMEOUT waiting for -
+[ 38.43s] waiting for the hop: cat ToChair at (0.93, 0.00, 5.04), launch spot distance 0.21 m
+[ 38.89s] cat hop starts 3.95s after the sit request
+[ 39.35s] shot 06_cat_hop_shimmer: seven=sitting_idle/Seated cat=HopUp/wander scale 1.72 reveal=0.00
+[ 39.35s] cat mid-hop: scale 1.72
+[ 42.24s] shot 07_seated: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.20s] lap check: 152 contact columns (cat 12199 verts, thigh 1259 verts) -> smallest gap +0.0 cm, median gap 4.6 cm; clearance to her forearms/hands 5.7 cm (2357 arm verts); cat scale 1.00, clip OnLap
+[ 43.29s] shot 08_lap_closeup: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.39s] shot 08c_lap_front: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.49s] shot 08d_lap_left: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.59s] shot 08e_lap_right: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.70s] shot 08f_lap_above_left: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.77s] shot 08b_lap_cat_only: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.90s] shot 09_legend_seated_xbox: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 43.99s] shot 10_legend_seated_keys: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 46.09s] shot 11_reveal_half: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.50
+[ 56.67s] shot 12_revealed_wide: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=1.00
+[ 60.12s] lap check: 152 contact columns (cat 12199 verts, thigh 1264 verts) -> smallest gap +0.0 cm, median gap 4.6 cm; clearance to her forearms/hands 5.8 cm (2355 arm verts); cat scale 1.00, clip OnLap
+[ 60.12s] revealed: chair tilt 9.0 deg, camera pos (-6.07, 2.73, 2.72)
+[ 60.22s] shot 13_revealed_over_shoulder: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=1.00
+[ 60.35s] shot 13b_revealed_far: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=1.00
+[ 60.45s] shot 13c_revealed_left: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=1.00
+[ 60.58s] shot 13d_revealed_below: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=1.00
+[ 60.66s] shot 13e_revealed_above_behind: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=1.00
+[ 60.66s] reveal audit: 68 ship renderers checked, 0 remain visible when revealed (must be 0; 7, chair, cat, city kept)
+[ 66.39s] shot 14_ship_back: seven=sitting_idle/Seated cat=OnLap/wander scale 1.00 reveal=0.00
+[ 74.69s] stand requested while revealed: ship back after 4.20s (reveal 0.00), then standing
+[ 75.13s] shot 15_stand_cat_hops_off: seven=sit_to_stand/StandingUp cat=HopDown/wander scale 1.23 reveal=0.00
+[ 77.71s] shot 16_after_stand: seven=idle/Free cat=Roam/sit scale 2.00 reveal=0.00
+[ 77.72s] after standing: cat scale 2.00, 7 hips above root 0.909, 7 lowest -0.004 m
+[ 77.72s] audio: listenerVolume=0 paused=True outputRMS=0.000000
+[ 77.72s] capture done

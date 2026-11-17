@@ -104,7 +104,7 @@ namespace Seven
         {
             Build();
             _subPanel.SetActive(true);
-            _subName.text = telepathic ? speaker.ToUpperInvariant() + "  (thought)" : speaker.ToUpperInvariant();
+            _subName.text = speaker.ToUpperInvariant(); // QF3: no "(thought)" — 7 and the cat both speak telepathically
             _subText.text = text;
             _subText.fontStyle = telepathic ? FontStyle.Italic : FontStyle.Normal;
             _subText.color = far ? new Color(1f, 1f, 1f, 0.55f) : Color.white;

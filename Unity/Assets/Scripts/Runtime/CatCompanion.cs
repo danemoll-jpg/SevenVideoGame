@@ -26,8 +26,8 @@ namespace Seven
         public float StrideSpeed = 0.16f;
         public float StrollSpeed = 0.45f, TrotSpeed = 1.1f;
         public float FollowDistance = 3.2f, BodyRadius = 0.18f;   // radius at scale 1
-        [Tooltip("Lap height above the middle of her thighs (m).")]
-        public float LapLift = 0.165f;     // Round 8: a little higher, clear of her forearms
+        [Tooltip("First guess of the lap height above the middle of her thighs (m); the cat then settles onto her thighs.")]
+        public float LapLift = 0.085f;     // QF3: first guess for the hop; on landing the static lap cat is settled onto her thighs (SettleOffset)
         public float HopTime = 0.75f, HopHeight = 0.35f;
 
         public enum Mode { Roam, ToChair, Waiting, HopUp, OnLap, HopDown }
@@ -57,7 +57,10 @@ namespace Seven
         void Start()
         {
             transform.localScale = Vector3.one * RoamScale;
-            _renderers = GetComponentsInChildren<Renderer>();
+            _renderers = GetComponentsInChildren<Renderer>(true);
+            foreach (var t in GetComponentsInChildren<Transform>(true)) if (t.name == "CatLap") _lapMesh = t;
+            _skinned = GetComponentsInChildren<SkinnedMeshRenderer>(true);
+            ShowLapMesh(false);
             _mpb = new MaterialPropertyBlock();
             foreach (var r in _renderers)
                 if (r.sharedMaterial != null && r.sharedMaterial.HasProperty(RimId)) { _baseRim = r.sharedMaterial.GetFloat(RimId); break; }
@@ -80,7 +83,7 @@ namespace Seven
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
         Vector3 LaunchPoint => Flat(ChairPivot.position + ChairPivot.right * 0.95f + ChairPivot.forward * 0.85f);
-        Vector3 LapPoint => Seven.LapPoint(LapLift);
+        Vector3 LapPoint => Seven.LapPoint(LapLift + _settle);
         Quaternion LapRotation => Quaternion.LookRotation(-ChairPivot.right, ChairPivot.up);   // curled across her lap
 
         /// <summary>Walk toward the target; returns true on arrival.</summary>
@@ -184,6 +187,7 @@ namespace Seven
 
         void StartHop(Vector3 to, float scaleTo, Mode m)
         {
+            ShowLapMesh(false);
             Current = m;
             _hopT = 0f;
             _hopFrom = transform.position;
@@ -214,11 +218,104 @@ namespace Seven
             if (_hopT >= 1f)
             {
                 transform.localScale = Vector3.one * _scaleTo;
-                if (Current == Mode.HopUp) { Current = Mode.OnLap; _lapSince = Time.time; PlayClip("idle", 0.2f); }
+                if (Current == Mode.HopUp)
+                {
+                    // QF3: swap to the static curled lap cat (under a burst of motes) and settle it onto her thighs.
+                    Current = Mode.OnLap; _lapSince = Time.time; _settled = false; _settle = 0f;
+                    PlayClip("sleep", 0.1f);
+                    ShowLapMesh(true);
+                    _motes.Emit(50);
+                }
                 else { Current = Mode.Roam; transform.rotation = Quaternion.LookRotation(Flat(transform.forward)); Choose("sit", 3f); }
             }
         }
         float _lapSince, _toChairTime, _detour;
+        bool _settled;
+        float _settle;
+        Transform _lapMesh;
+        SkinnedMeshRenderer[] _skinned;
+        public bool LapMeshShown => _lapMesh != null && _lapMesh.gameObject.activeSelf;
+
+        /// <summary>QF3: the static curled cat (child "CatLap") replaces the rigged cat while it lies on her lap.</summary>
+        void ShowLapMesh(bool on)
+        {
+            if (_lapMesh == null) return;
+            _lapMesh.gameObject.SetActive(on);
+            _lapMesh.localScale = Vector3.one;
+            foreach (var r in _skinned) r.enabled = !on;
+        }
+
+        /// <summary>
+        /// QF3: how far (along the chair's up) the cat must move so its underside just touches the top of her thighs.
+        /// Both skinned meshes are baked; in 1.5 cm columns of the chair plane, the cat's lowest point is compared with
+        /// her thigh surface (vertices near the hip-knee bones only, not her hands); the closest column decides.
+        /// Returns the extra lift to add (negative = lower the cat). contactGap = remaining smallest gap after the move (0).
+        /// </summary>
+        public float SettleOffset(out LapContact contact)
+        {
+            contact = MeasureLap();
+            if (contact.Columns == 0) return _settle;
+            return _settle - contact.MinGap;
+        }
+
+        public struct LapContact { public int Columns; public float MinGap, MedianGap; public int CatVerts, ThighVerts; }
+
+        public LapContact MeasureLap()
+        {
+            var up = ChairPivot.up; var o = transform.position;
+            var right = ChairPivot.right; var fwd = ChairPivot.forward;
+            const float cell = 0.015f;
+            var catLow = new System.Collections.Generic.Dictionary<long, float>();
+            int nc = 0, nt = 0;
+            foreach (var p in BakeWorld(transform))
+            {
+                var d = p - o; long k = Key(Vector3.Dot(d, right), Vector3.Dot(d, fwd), cell);
+                float h = Vector3.Dot(d, up); nc++;
+                if (!catLow.TryGetValue(k, out var cur) || h < cur) catLow[k] = h;
+            }
+            Vector3 la = Seven.Bone(HumanBodyBones.LeftUpperLeg).position, lb = Seven.Bone(HumanBodyBones.LeftLowerLeg).position;
+            Vector3 ra = Seven.Bone(HumanBodyBones.RightUpperLeg).position, rb = Seven.Bone(HumanBodyBones.RightLowerLeg).position;
+            var top = new System.Collections.Generic.Dictionary<long, float>();
+            foreach (var p in BakeWorld(Seven.transform))
+            {
+                if (Mathf.Min(SegD(p, la, lb), SegD(p, ra, rb)) > 0.12f) continue;
+                var d = p - o; long k = Key(Vector3.Dot(d, right), Vector3.Dot(d, fwd), cell);
+                if (!catLow.ContainsKey(k)) continue;
+                float h = Vector3.Dot(d, up); nt++;
+                if (!top.TryGetValue(k, out var cur) || h > cur) top[k] = h;
+            }
+            var gaps = new System.Collections.Generic.List<float>();
+            foreach (var kv in top) gaps.Add(catLow[kv.Key] - kv.Value);
+            gaps.Sort();
+            return new LapContact { Columns = gaps.Count, MinGap = gaps.Count > 0 ? gaps[0] : 0f, MedianGap = gaps.Count > 0 ? gaps[gaps.Count / 2] : 0f, CatVerts = nc, ThighVerts = nt };
+        }
+
+        static long Key(float a, float b, float cell) => ((long)Mathf.FloorToInt(a / cell) << 32) ^ (uint)Mathf.FloorToInt(b / cell);
+        static float SegD(Vector3 p, Vector3 a, Vector3 b) { var ab = b - a; float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / ab.sqrMagnitude); return (p - (a + ab * t)).magnitude; }
+        static readonly System.Collections.Generic.List<Vector3> _bakeVerts = new System.Collections.Generic.List<Vector3>();
+        static Mesh _bakeMesh;
+        public static System.Collections.Generic.List<Vector3> BakeWorld(Transform root)
+        {
+            var list = new System.Collections.Generic.List<Vector3>();
+            if (_bakeMesh == null) _bakeMesh = new Mesh();
+            foreach (var smr in root.GetComponentsInChildren<SkinnedMeshRenderer>())
+            {
+                if (!smr.enabled || !smr.gameObject.activeInHierarchy || smr.sharedMesh == null || smr.sharedMesh.vertexCount < 200) continue;   // body meshes (not whiskers)
+                smr.BakeMesh(_bakeMesh, true);
+                _bakeMesh.GetVertices(_bakeVerts);
+                var m = smr.transform.localToWorldMatrix;
+                foreach (var v in _bakeVerts) list.Add(m.MultiplyPoint3x4(v));
+            }
+            foreach (var mf in root.GetComponentsInChildren<MeshFilter>())     // the static lap cat
+            {
+                var mr = mf.GetComponent<MeshRenderer>();
+                if (mr == null || !mr.enabled || mf.sharedMesh == null || mf.sharedMesh.vertexCount < 200) continue;
+                mf.sharedMesh.GetVertices(_bakeVerts);
+                var m = mf.transform.localToWorldMatrix;
+                foreach (var v in _bakeVerts) list.Add(m.MultiplyPoint3x4(v));
+            }
+            return list;
+        }
 
         void Update()
         {
@@ -242,7 +339,6 @@ namespace Seven
                 case Mode.HopDown:
                     UpdateHop(); break;
                 case Mode.OnLap:
-                    if (Time.time - _lapSince > 0.6f) PlayClip("sleep", 0.6f);
                     break;
             }
             // Shimmer: brighter rim while changing size.
@@ -262,6 +358,13 @@ namespace Seven
                 // Ride on her lap: follow her thighs (they move with her breathing and the chair's tilt).
                 transform.position = LapPoint;
                 transform.rotation = LapRotation;
+                // QF3: settle onto her thighs right after landing (measured once: no gap, no sinking in), then breathe.
+                if (!_settled) { _settled = true; _settle = SettleOffset(out _); transform.position = LapPoint; }
+                if (_lapMesh != null)
+                {
+                    float b = Mathf.Sin((Time.time - _lapSince) * Mathf.PI * 2f / 3.6f);
+                    _lapMesh.localScale = new Vector3(1f + 0.012f * b, 1f + 0.022f * b, 1f + 0.012f * b);
+                }
             }
             var sh = _motes.shape;
             sh.radius = 0.22f * Scale;

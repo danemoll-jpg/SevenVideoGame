@@ -6,6 +6,8 @@
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Quick fix QF3 — phantom walls, subtitles, curled lap cat, reveal band, excavators, mouse cursor — done
+  (2026-11-17), exe-verified off-screen; release 0.8.1 (`game-801`) published.** Status in "Quick fix QF3" below.
 - **Round 8 — saucer look + cat rig, gallery sofa/preload, Ratwing drop, fluid fighting, launcher + first release 0.8.0 —
   done (2026-11-17), exe-verified off-screen; Dan to play / install via the launcher.** Status in "Round 8" below.
 - **Round 7 — Chapter 1 fixes, city reveal, SFX, re-voiced 7, music, pause menu / Continue — done (2026-11-17),
@@ -146,38 +148,62 @@ Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Round 8". Previews: `Doc
 - Launcher: download the starter zip from the seven-releases page, run SevenLauncher.exe, install, play; on the Steam
   Deck add it as a non-Steam game with Proton (Docs/LAUNCHER.md).
 
-## Current Objective — Quick fix QF3: Dan's playthrough of Rounds 7 + 8 (2026-11-17)
-Commit the repo as it is first (safety checkpoint). Screenshots from Dan: `Docs/Previews/dan/qf3_cat_lap.png`,
-`Docs/Previews/dan/qf3_phantom_wall.png`.
+## Current Objective — none (QF3 done 2026-11-17; waiting for Dan's review)
 
-1. **Phantom walls in the prison (regression — not in the Round 6 build).** Throughout the prison there are now big
-   flat walls/blocks that you can walk straight through but that block the view (Dan's shot: a huge dark slab over the
-   catwalk rails). Most likely the city-reveal / "host building" geometry from `FightDemoBuilderCity.cs` (or atmosphere
-   cards) overlapping the prison spaces — renderers with no colliders. Find every one and remove or move it so nothing
-   from the city intrudes into the prison, corridors, catwalks, ruins or impound. Keep the city reveal view itself
-   intact. **Check:** walk the whole chapter path; list every renderer whose bounds intersect a walkable area and has no
-   collider (should be 0 apart from intentional props like fog/particles); compare each scene shot against the Round 6
-   shots (`Docs/Previews/round6/`) — no new slabs.
-2. **Subtitles: drop "(thought)".** 7 and the cat both talk in thoughts (telepathy), so the label adds nothing. Show just
-   the speaker name for both (`ChapterUI.cs`).
-3. **Cat on her lap — fix properly (Dan: worse than the first version).** In Dan's shot he floats stretched out across
-   her stomach/forearm, legs dangling. He should **lie curled on her thighs** like a real cat: body resting on top of
-   both thighs, paws tucked, tail wrapped around, head resting on a paw or up, settled into the lap (no floating gap,
-   not sinking in, clear of her forearms and hands). If the rig can't make a good curled pose, use a dedicated static
-   curled-cat pose/mesh for the lap (sculpted or posed once in Blender) with only a gentle breathing motion. Her hands:
-   one resting near/on him is fine. **Check:** close-ups from the front, both sides and over her shoulder (seated
-   camera); measure gap to her thighs (~0–1 cm) and penetration (0); compare with Round 3's `08_lap_closeup.png` — it
-   must look clearly better.
-4. **Saucer reveal: a black band stays when the ship fades.** Something isn't dissolving — most likely the Round 8 dark
-   overhead hull-edge ring. Everything of the ship must fade (or the ring must fade with it) so only 7, the chair and
-   the cat remain. **Check:** revealed shots from the seated camera and 3 other angles — no leftover ship geometry.
-5. **City reveal: remove the "wrecker" (excavator).** It reads as poorly drawn. Remove the excavators from the view;
-   keep conveyors, lifts and the falling terrace stone (that shows the mining). If the view needs more mining activity,
-   use a few tiny moving lights or freight lifts instead.
-6. **Hide the mouse cursor** during gameplay (it shows in Dan's shot); show it only in menus when the mouse is used.
-7. Checks as usual (muted except a brief reported sound check if any audio changes; off-screen; never steal focus),
-   rebuild, **publish a release** through the launcher pipeline, update `TODO.md` / `CLAUDE.md`, commit and push,
-   report in a few lines per item.
+## Quick fix QF3 — Dan's playthrough of Rounds 7 + 8 — done (2026-11-17), exe-verified off-screen; release 0.8.1
+Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Quick fix QF3". Previews + logs: `Docs/Previews/qf3/`. Every run
+muted (output peak 0.000000 / listener 0), minimized-not-activated, Below Normal, one heavy job at a time; monochrome
+max |R−G|,|G−B| = 0 over all 117 release-build shots. No audio changed, so no sound check.
+1. **Phantom walls — done.** Cause: the city's host building was built from nested full-height boxes (and tier 0 as four
+   boxes around the passage mouth), so the inner faces of the upper tiers (fronts at z −32 … +15, sides) and the
+   mouth's side walls / "lintel" (x 15.1 and 17.9, y 1–30 m, the full depth of the host) cut straight through the prison.
+   Dan's slab = the lintel's face seen from the catwalk east of x 17.9. Now the host is only its outer surface (each
+   tier sits on the one below, no bottoms, a hole in the front face for the mouth); the Moon shell + terraces are cut
+   away under the host's footprint (they showed below the catwalk). **Proof** (`FightDemoBuilderPhantomCheck.cs`, run by
+   every build, `Docs/Previews/qf3/phantom_check.txt`): city triangles in any walkable volume (14 zones, floor +0.2 …
+   +2.2 m) **0**; city triangles inside the host volume, i.e. visible from the prison **0**. Non-city renderers without a
+   collider in walkable volumes: 81, all intentional props kept out by zone obstacles or meant to be walked past (laser
+   beams/halos, lamps, rubble, vision ghosts/ruins, saucer, clamps, carts, cradle, lever, drill, ramp rails) — no slabs.
+   Shots vs. Round 6: `prison_round6_vs_qf3.png` (identical framing, no new slabs). City reveal intact (`city_reveal_qf3.png`).
+2. **"(thought)" dropped — done.** Speaker name only for 7 and the cat (`ChapterUI.cs`); the cat's lines stay italic.
+   Check: `13_s04_older_wall.png` / `14_s05_scree_guard.png` show "CAT".
+3. **Cat on her lap — done (static curled cat).** The rig cannot fold the scanned cat (tried a rig "lap" pose: stubby
+   legs, barely curled). `cleanup_cat.py` now also writes `Art/Export/cat/cat_v1_lap.fbx`: the rest mesh with the legs
+   squashed flat under the belly (paws tucked), the tail laid down and kept round, the head lowered/turned 16°/22°,
+   body + tail bent 290° into a ring (0.32 × 0.26 m, 0.23 m high; Blender views in `cat_lap_blender/`). On landing the
+   cat swaps to it under a burst of motes, is settled onto her thighs by measuring both meshes (1.5 cm columns), and
+   only breathes (slow scale pulse); it swaps back when she stands. **Check:** smallest gap to her thighs **+0.0 cm**,
+   no cat vertex inside her thighs (median gap 4.6 cm — her thighs are round), **5.7 cm clear of her forearms/hands**;
+   close-ups `08_lap_closeup`, `08c_lap_front`, `08d_lap_left`, `08e_lap_right`, `08f_lap_above_left`, seated camera
+   `07_seated`; vs. Round 3 / Round 8 in `before_after_lap_reveal.png`. Known: the swap from the landing jump pose to
+   the curled pose is instant (hidden by the shimmer); the tail root is a little lumpy up close.
+4. **Black band after the reveal — done.** It was the Round 8 overhead hull-edge ring (never dissolved) — removed. The
+   new reveal audit in the check run also found the gallery TV screen and the fridge door (non-dissolving materials)
+   and far wall edges beyond the wave (15.5 m vs 14.5 m): fridge door now dissolvable, non-dissolving ship parts hide as
+   the wave passes, wave radius 17.5 m. **Check:** "reveal audit: 68 ship renderers checked, 0 remain visible";
+   shots from the seated camera `12_revealed_wide` + `13_revealed_over_shoulder`, `13b_revealed_far`,
+   `13c_revealed_left`, `13d_revealed_below`, `13e_revealed_above_behind` — only 7, the chair and the cat.
+5. **Excavators removed — done.** In their place three slim freight-lift masts with a small glowing car riding up and
+   down (9 lifts in the city now); conveyors, lifts, the falling terrace stone kept. Check: `27_c04_*`, `28_c05_*`.
+6. **Mouse cursor — done.** `CursorPolicy.cs`: hidden during play; shown only on the main menu / pause menu after the
+   mouse moves (keys / pad hide it again); never locked (right-drag orbit still works). Check: `cursorVisible=False` in
+   all 45 Chapter 1 shots. Not testable off-screen: the menu case (needs a real mouse) — Dan to check.
+7. **Checks, release, docs — done.** Chapter 1 start to finish (45 shots, 0 soft-locks, laser door holds z 1.050, line of
+   sight 0/1,452) on the first build and again from checkpoint 4 on the release build (22 shots, 0 soft-locks); saucer
+   (28 shots incl. lap + reveal audit), gallery (17/17 input tests), menu. **Release 0.8.1 (build 801) published
+   2026-11-17:** `game-801` (Latest, 19 of 233 files changed) at https://github.com/danemoll-jpg/seven-releases/releases
+   — the launcher updates 0.8.0 installs. No new starter zip (optional; `starter-800` updates itself).
+
+### For Dan to check (QF3)
+- Walk the whole prison, especially the catwalk looking back west and out over the void: no slabs
+  (`Docs/Previews/qf3/prison_round6_vs_qf3.png`, proof `phantom_check.txt`).
+- Sit in the chair, let the cat jump up: does the curled cat read as a real cat on your lap? Is the instant swap at
+  landing noticeable? (`08c_lap_front.png`, `08d_lap_left.png`, `before_after_lap_reveal.png`)
+- Reveal the ship from the chair: nothing left but 7, the chair and the cat (`12_revealed_wide.png`, `13c–13e`).
+- City reveal without the excavators — enough mining activity? (`27_c04_pyramids_and_depression.png`)
+- Mouse cursor: gone while playing; appears on the menus only when you move the mouse.
+- Subtitles: "CAT" / "7" without "(thought)".
+- The launcher should offer the 0.8.1 update.
 
 ## Next Steps (Do Not Start Yet)
 - **First vision contents** — still undecided (Dan, 2026-11-17). Keep it generic until he decides.

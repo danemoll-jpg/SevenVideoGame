@@ -229,6 +229,14 @@ namespace Seven
             Place(hips.position + chair.up * 0.75f + chair.forward * 0.55f + chair.right * 0.9f, cat.transform.position);
             yield return Frames(2);
             yield return Shot("08_lap_closeup");
+            // QF3: the curled cat from the front, both sides and over her shoulder.
+            foreach (var (nm, off) in new[] { ("08c_lap_front", chair.forward * 1.6f + chair.up * 0.75f), ("08d_lap_left", -chair.right * 1.0f + chair.forward * 0.25f + chair.up * 0.3f),
+                                              ("08e_lap_right", chair.right * 1.0f + chair.forward * 0.25f + chair.up * 0.3f), ("08f_lap_above_left", chair.forward * 0.45f + chair.up * 1.1f - chair.right * 0.6f) })
+            {
+                Place(cat.transform.position + off, cat.transform.position);
+                yield return Frames(2);
+                yield return Shot(nm);
+            }
             // Same view with 7 hidden: the cat's curled pose on its own.
             var sr = seven.GetComponentsInChildren<Renderer>();
             foreach (var r in sr) r.enabled = false;
@@ -261,6 +269,14 @@ namespace Seven
             Place(chair.position + new Vector3(9f, 3.5f, -7f), chair.position + Vector3.down * 1.5f);
             yield return Frames(2);
             yield return Shot("13b_revealed_far");
+            // QF3: more angles on the revealed ship (nothing of it may remain: no band, no ring, no hull edge).
+            foreach (var (nm, off) in new[] { ("13c_revealed_left", new Vector3(-7f, 1.5f, 4f)), ("13d_revealed_below", new Vector3(3f, -6f, 5f)), ("13e_revealed_above_behind", new Vector3(-2f, 7f, -6f)) })
+            {
+                Place(chair.position + off, chair.position + Vector3.up * 0.6f);
+                yield return Frames(2);
+                yield return Shot(nm);
+            }
+            RevealAudit(rev);
             cam.Hold = false;
 
             // Return.
@@ -288,45 +304,56 @@ namespace Seven
             Finish("done");
         }
 
-        /// <summary>The cat on her lap: lowest cat point vs. the top of 7's mesh right under it.</summary>
+        /// <summary>
+        /// QF3: the cat on her lap. Column by column (1.5 cm cells in the chair plane) the cat's underside vs. the top of
+        /// her thighs: smallest gap (must be ~0, never below -0.5 cm = sinking in), median gap, and the clearance from
+        /// the cat to her forearms / hands (mesh vertices near the lower-arm and hand bones).
+        /// </summary>
         void LapCheck()
         {
             var cat = _d.Cat; var seven = _d.Seven;
-            // 7's top surface under the cat's footprint.
-            var catPts = BakeWorld(cat.transform);
-            var sevenPts = BakeWorld(seven.transform);
-            var up = seven.ChairPivot.up;
-            var o = seven.Hips.position;       // heights are measured along the chair's up from her hips
-            float catLow = float.MaxValue;
-            foreach (var p in catPts) { float h = Vector3.Dot(p - o, up); if (h < catLow) catLow = h; }
-            // For each of 7's vertices within the cat's footprint (in the plane of the chair), the highest one.
-            var c = cat.transform.position;
-            float sevenTop = float.MinValue;
-            int inFoot = 0, below = 0;
-            float worst = 0f;
-            // Her thighs only: vertices near either hip->knee segment (not her hands / forearms resting on them).
-            Vector3 la = seven.Bone(HumanBodyBones.LeftUpperLeg).position, lb = seven.Bone(HumanBodyBones.LeftLowerLeg).position;
-            Vector3 ra = seven.Bone(HumanBodyBones.RightUpperLeg).position, rb = seven.Bone(HumanBodyBones.RightLowerLeg).position;
-            float SegD(Vector3 p, Vector3 a, Vector3 b) { var ab = b - a; float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / ab.sqrMagnitude); return (p - (a + ab * t)).magnitude; }
-            foreach (var p in sevenPts)
+            var lc = cat.MeasureLap();
+            var catPts = CatCompanion.BakeWorld(cat.transform);
+            var arms = new System.Collections.Generic.List<Vector3>();
+            var segs = new[] { (HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand), (HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand),
+                               (HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleDistal), (HumanBodyBones.RightHand, HumanBodyBones.RightMiddleDistal) };
+            float SegD(Vector3 p, Vector3 a, Vector3 b) { var ab = b - a; float t = Mathf.Clamp01(Vector3.Dot(p - a, ab) / Mathf.Max(ab.sqrMagnitude, 1e-8f)); return (p - (a + ab * t)).magnitude; }
+            foreach (var p in CatCompanion.BakeWorld(seven.transform))
+                foreach (var (ba, bb) in segs)
+                {
+                    var ta = seven.Bone(ba); var tb = seven.Bone(bb);
+                    if (ta == null || tb == null) continue;
+                    if (SegD(p, ta.position, tb.position) < 0.055f) { arms.Add(p); break; }
+                }
+            float armClear = float.MaxValue;
+            foreach (var q in arms) foreach (var p in catPts) { float d = (p - q).sqrMagnitude; if (d < armClear) armClear = d; }
+            armClear = arms.Count > 0 ? Mathf.Sqrt(armClear) : -1f;
+            Log($"lap check: {lc.Columns} contact columns (cat {lc.CatVerts} verts, thigh {lc.ThighVerts} verts) -> smallest gap {lc.MinGap * 100f:+0.0;-0.0} cm, median gap {lc.MedianGap * 100f:0.0} cm; " +
+                $"clearance to her forearms/hands {armClear * 100f:0.0} cm ({arms.Count} arm verts); cat scale {cat.Scale:0.00}, clip {cat.Current}");
+        }
+
+        /// <summary>QF3: every visible renderer of the ship that does not dissolve (or lies beyond the wave) when revealed.</summary>
+        void RevealAudit(ShipReveal rev)
+        {
+            var keep = new System.Collections.Generic.List<Transform> { _d.Seven.transform, _d.Cat.transform, _d.Seven.ChairPivot };
+            foreach (var n in new[] { "World", "Atmosphere_Above", "ShipReveal" }) { var g = GameObject.Find(n); if (g != null) keep.Add(g.transform); }
+            bool Kept(Transform t) { foreach (var k in keep) if (t == k || t.IsChildOf(k)) return true; return false; }
+            int stays = 0, checkedN = 0;
+            var c = rev.Center.position;
+            foreach (var r in UnityEngine.Object.FindObjectsByType<Renderer>(FindObjectsSortMode.None))
             {
-                if (Mathf.Min(SegD(p, la, lb), SegD(p, ra, rb)) > 0.11f) continue;
-                var off = p - c; off -= up * Vector3.Dot(off, up);
-                if (off.magnitude > 0.12f) continue;
-                float h = Vector3.Dot(p - o, up);
-                inFoot++;
-                sevenTop = Mathf.Max(sevenTop, h);
+                if (!r.enabled || r.forceRenderingOff || !r.gameObject.activeInHierarchy || r is ParticleSystemRenderer || Kept(r.transform)) continue;
+                checkedN++;
+                bool dissolves = true;
+                foreach (var m in r.sharedMaterials) if (m == null || !m.HasProperty("_Dissolvable") || m.GetFloat("_Dissolvable") < 0.5f) dissolves = false;
+                var b = r.bounds; float far = 0f;
+                for (int i = 0; i < 8; i++) { var corner = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)); far = Mathf.Max(far, Vector3.Distance(corner, c)); }
+                if (dissolves && far <= rev.Radius) continue;
+                stays++;
+                string path = r.name; for (var t = r.transform.parent; t != null; t = t.parent) path = t.name + "/" + path;
+                Log($"reveal audit: STAYS {path} (dissolvable={dissolves}, farthest {far:0.0} m vs wave {rev.Radius:0.0} m)");
             }
-            // Penetration: cat vertices that are below 7's top surface near them.
-            foreach (var p in catPts)
-            {
-                float hc = Vector3.Dot(p - o, up);
-                if (hc > sevenTop) continue;
-                below++;
-                worst = Mathf.Max(worst, sevenTop - hc);
-            }
-            Log($"lap check (heights above her hips): cat lowest {catLow:0.000}, 7's thigh top under the cat {sevenTop:0.000} (from {inFoot} verts) -> gap {catLow - sevenTop:+0.000;-0.000} m; " +
-                $"cat verts below that top: {below}/{catPts.Length} (deepest {worst:0.000} m); cat scale {cat.Scale:0.00}");
+            Log($"reveal audit: {checkedN} ship renderers checked, {stays} remain visible when revealed (must be 0; 7, chair, cat, city kept)");
         }
 
         static Vector3[] BakeWorld(Transform root)

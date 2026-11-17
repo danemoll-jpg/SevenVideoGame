@@ -21,6 +21,7 @@ namespace Seven.EditorTools
         const string SaucerScenePath = "Assets/Scenes/Saucer.unity";
         const string CatDir = CharRoot + "/Cat";
         const string CatFbx = CatDir + "/cat_v1_rigged.fbx";
+        const string CatLapFbx = CatDir + "/cat_v1_lap.fbx";
         const string AtmoAbovePath = AtmoDir + "/Atmosphere_Above.prefab";
         const float CityY = -200f;
 
@@ -96,7 +97,7 @@ namespace Seven.EditorTools
             imp.animationCompression = ModelImporterAnimationCompression.KeyframeReduction;
             imp.SaveAndReimport();
             var clips = imp.defaultClipAnimations;
-            var loops = new[] { "idle", "walk", "sit", "wash", "sleep" };
+            var loops = new[] { "idle", "walk", "sit", "wash", "sleep", "lap" };
             foreach (var c in clips)
             {
                 var n = c.takeName.Contains("|") ? c.takeName.Substring(c.takeName.LastIndexOf('|') + 1) : c.takeName;
@@ -108,6 +109,20 @@ namespace Seven.EditorTools
             imp.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), "cat_fur"), mats.fur);
             imp.AddRemap(new AssetImporter.SourceAssetIdentifier(typeof(Material), "cat_whisker"), mats.whisker);
             imp.SaveAndReimport();
+
+            // QF3: the static curled lap cat (no rig, no animation; readable so the lap contact can be measured)
+            var lapSrc = Path.Combine(RepoRoot, "Art", "Export", "cat", "cat_v1_lap.fbx");
+            if (File.Exists(lapSrc))
+            {
+                File.Copy(lapSrc, Path.Combine(ProjectRoot, CatLapFbx), true);
+                AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+                var li = (ModelImporter)AssetImporter.GetAtPath(CatLapFbx);
+                li.animationType = ModelImporterAnimationType.None;
+                li.importAnimation = false;
+                li.isReadable = true;
+                li.materialImportMode = ModelImporterMaterialImportMode.None;
+                li.SaveAndReimport();
+            }
 
             var path = AnimDir + "/Cat.controller";
             AssetDatabase.DeleteAsset(path);
@@ -401,7 +416,7 @@ namespace Seven.EditorTools
             Cube("FridgeInside", fridge, new Vector3(0f, 0.95f, 0.2f), new Vector3(0.7f, 1.75f, 0.12f), m.cove);
             foreach (var y in new[] { 0.55f, 0.95f, 1.35f }) Cube("Shelf", fridge, new Vector3(0f, y, 0.27f), new Vector3(0.68f, 0.02f, 0.06f), m.frame);
             var hinge = new GameObject("FridgeDoor").transform; hinge.SetParent(fridge, false); hinge.localPosition = new Vector3(-0.41f, 0f, 0.28f);
-            Cube("DoorPanel", hinge, new Vector3(0.41f, 0.95f, 0.03f), new Vector3(0.82f, 1.88f, 0.06f), m.chairShell);
+            Cube("DoorPanel", hinge, new Vector3(0.41f, 0.95f, 0.03f), new Vector3(0.82f, 1.88f, 0.06f), m.table);       // QF3: dissolvable (was the chair-shell material and stayed after the reveal)
             Cube("Handle", hinge, new Vector3(0.74f, 1.05f, 0.08f), new Vector3(0.03f, 0.5f, 0.04f), m.frame);
             var l = new GameObject("FridgeLight").AddComponent<Light>();
             l.transform.SetParent(fridge, false); l.transform.localPosition = new Vector3(0f, 1.3f, 0.55f);
@@ -765,12 +780,8 @@ namespace Seven.EditorTools
 
             var refs = BuildShip(sm);
             BuildCity(new GameObject("World").transform, sm);
-            // Round 8: a dark overhead hull edge (the saucer's rim overhang) framing the top of the view when the ship is
-            // revealed - Kyle's dark foreground silhouette against the bright haze. Not dissolvable; hidden behind the
-            // walls while the ship is solid.
-            var edgeMat = Dissolve("Saucer_hull_edge", Gray(0.03f), 0.25f, false, 0.2f);
-            var edge = Lathe(new[] { new Vector2(7.55f, 3.55f), new Vector2(9.5f, 3.25f), new Vector2(12.5f, 2.85f), new Vector2(12.9f, 3.05f), new Vector2(12.4f, 3.5f), new Vector2(9.6f, 3.95f), new Vector2(7.55f, 4.15f) }, 0f, 360f, 96);
-            Obj("HullEdgeSilhouette", edge, edgeMat, null, false);
+            // QF3: the Round 8 dark overhead hull-edge ring is gone - it did not dissolve and stayed as a black band over
+            // the revealed view (Dan). After the reveal only 7, her chair and the cat remain.
             AddProbe(new Vector3(0f, 1.6f, 0f), new Vector3(20f, 4.5f, 20f), new Vector3(0f, 0.4f, 0f));
 
             var wg = new GameObject("WorldGround").AddComponent<Seven.WorldGround>();
@@ -835,6 +846,23 @@ namespace Seven.EditorTools
             }
             var cb = new Bounds(catRoot.transform.position, Vector3.zero);
             foreach (var r in model.GetComponentsInChildren<Renderer>()) cb.Encapsulate(r.bounds);
+            // QF3: the static curled lap cat (cleanup_cat.py), same frame as the rigged model; CatCompanion swaps it in.
+            var lapAsset = AssetDatabase.LoadAssetAtPath<GameObject>(CatLapFbx);
+            if (lapAsset != null)
+            {
+                var lap = (GameObject)PrefabUtility.InstantiatePrefab(lapAsset);
+                lap.name = "CatLap";
+                lap.transform.SetParent(model.transform, false);
+                foreach (var mr in lap.GetComponentsInChildren<MeshRenderer>())
+                {
+                    bool wh = mr.name.ToLowerInvariant().Contains("whisk");
+                    mr.sharedMaterials = mr.sharedMaterials.Select(_ => wh ? catMats.whisker : catMats.fur).ToArray();
+                    mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.On;
+                }
+                lap.SetActive(false);
+                Log($"cat lap mesh added ({lap.GetComponentsInChildren<MeshFilter>(true).Sum(f => f.sharedMesh.triangles.Length / 3)} tris)");
+            }
+            else Log("cat lap mesh missing: run Tools/Blender/cleanup_cat.py (Art/Export/cat/cat_v1_lap.fbx)");
             Log($"cat bind-pose bounds size {cb.size} (scale 1: expect ~0.40 m tall incl. raised tail, 0.25 m shoulder)");
             var cat = catRoot.AddComponent<Seven.CatCompanion>();
             cat.Seven = s7; cat.Anim = canim; cat.ChairPivot = refs.chairPivot;

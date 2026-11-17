@@ -15,12 +15,14 @@ namespace Seven
         public Transform ChairPivot;
         public float TiltDegrees = 9f;
         public float Duration = 4.2f;
-        public float MaxRadius = 14.5f;
+        public float MaxRadius = 17.5f;          // QF3: was 14.5 - the far wall panels / nooks (up to 15.5 m from the seat) stayed
         public float EdgeWidth = 0.7f, EdgeGlow = 2.6f, NoiseScale = 1.1f, NoiseAmplitude = 1.0f;
         public float ShipRadius = 9.8f, ShipHeight = 3.9f;
         public Material Additive;
         public List<Light> InteriorLights = new List<Light>();
         public List<Renderer> Glass = new List<Renderer>();
+        /// <summary>QF3: ship parts with a non-dissolving material (e.g. the gallery TV screen): hidden as the wave passes.</summary>
+        readonly List<Renderer> _solid = new List<Renderer>();
 
         public float Progress { get; private set; }   // 0 = ship whole, 1 = fully revealed
         public float Target { get; private set; }
@@ -51,6 +53,15 @@ namespace Seven
             _mpb = new MaterialPropertyBlock();
             foreach (var g in Glass) _glassBase.Add(g.sharedMaterial.GetColor(BaseColorId));
             _chairRest = ChairPivot.localRotation;
+            var ship = GameObject.Find("Ship");
+            if (ship != null)
+                foreach (var r in ship.GetComponentsInChildren<Renderer>(true))
+                {
+                    if (r is ParticleSystemRenderer || Glass.Contains(r) || r.transform.IsChildOf(ChairPivot)) continue;
+                    bool dissolves = true;
+                    foreach (var m in r.sharedMaterials) if (m == null || !m.HasProperty("_Dissolvable") || m.GetFloat("_Dissolvable") < 0.5f) dissolves = false;
+                    if (!dissolves) _solid.Add(r);
+                }
             _motes = MakeMotes();
             Apply();
         }
@@ -88,6 +99,12 @@ namespace Seven
                 _mpb.SetColor(BaseColorId, col);
                 Glass[i].SetPropertyBlock(_mpb);
                 Glass[i].enabled = a > 0.01f;
+            }
+            foreach (var r in _solid)
+            {
+                if (r == null) continue;
+                float d = Vector3.Distance(r.bounds.ClosestPoint(c), c);
+                r.forceRenderingOff = Radius > d + 0.3f;
             }
             ChairPivot.localRotation = _chairRest * Quaternion.Euler(TiltDegrees * e, 0f, 0f);
         }

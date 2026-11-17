@@ -353,6 +353,7 @@ namespace Seven.EditorTools
             obstacles.Add(new Vector3(L.Lever.x, L.Lever.z, 0.7f));
             obstacles.AddRange(props.extraObstacles);
             wg.ZoneObstacles = obstacles.ToArray();
+            PhantomCheck(wg);       // QF3: nothing phantom in the walkable spaces, no city surface inside the host
 
             // 7, the cat, the camera.
             var seven = Spawn(SevenDir + "/7_character.fbx", "7", L.SevenStart, Vector3.forward, sevenCtl);

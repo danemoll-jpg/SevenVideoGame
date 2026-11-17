@@ -687,8 +687,11 @@ def set_pose(pose, root_loc):
     for b in pb:
         b.rotation_quaternion = Quaternion()
         b.location = Vector()
-    for n, (p, y, r) in pose.items():
-        pb[n].rotation_quaternion = rot(n, p, y, r)
+        b.scale = Vector((1, 1, 1))
+    for n, v in pose.items():
+        pb[n].rotation_quaternion = rot(n, *v[:3])
+        if len(v) > 3:          # QF3: optional uniform bone scale (the lap pose tucks the legs into the belly)
+            pb[n].scale = Vector((v[3], v[3], v[3]))
     pb["root"].location = REST["root"].inverted() @ Vector(root_loc)
 
 
@@ -717,6 +720,7 @@ def key_all(frame):
     for b in pb:
         b.keyframe_insert("rotation_quaternion", frame=frame)
         b.keyframe_insert("location", frame=frame)
+        b.keyframe_insert("scale", frame=frame)
 
 
 def new_action(name):
@@ -915,6 +919,157 @@ log("exported", FBX, "tris", tris(cat), "+ whiskers", tris(whisk_obj), "bones", 
 dims = [max(c[i] for c in co) - min(c[i] for c in co) for i in range(3)]
 log(f"final size x{dims[0]:.3f} y{dims[1]:.3f} z{dims[2]:.3f} m (shoulder {SHOULDER_HEIGHT} m)")
 
+# ------------------------------------------------------------------ QF3: static curled lap cat
+# The rig cannot fold this scanned cat into a convincing curl (Dan: "worse than the first version"), so the lap cat is a
+# dedicated static mesh, shaped once from the rest mesh: legs squashed flat under the belly (paws tucked), the tail laid
+# down onto the lap, the head lowered and turned a little, then body + tail bent around a vertical axis beside the neck
+# into a ring around the head. Unity swaps it in on landing and only breathes it (a slow scale pulse).
+LAP_FBX = os.environ.get("CAT_LAP_OUT") or os.path.join(OUT_DIR, "cat_v1_lap.fbx")
+LAP_CURL_DEG = float(os.environ.get("LAP_CURL_DEG", "290"))     # ring angle from the neck to the tail tip
+LAP_LEG_K = float(os.environ.get("LAP_LEG_K", "0.06"))          # leg height kept (fraction) below the belly line
+LAP_BELLY = float(os.environ.get("LAP_BELLY", "0.56"))          # belly line (x shoulder height; torso bottom ~0.53)
+LAP_HEAD_PITCH = float(os.environ.get("LAP_HEAD_PITCH", "-16")) # chin down (degrees)
+LAP_HEAD_YAW = float(os.environ.get("LAP_HEAD_YAW", "22"))      # head turned toward the inside of the ring
+LAP_SIDE = 1.0                                                  # +1: the ring curls to the cat's left (+X)
+
+
+def dominant_groups(ob):
+    gi = {g.index: g.name for g in ob.vertex_groups}
+    out = []
+    for v in ob.data.vertices:
+        w = {}
+        for g in v.groups:
+            n = gi[g.group]
+            k = "tail" if n.startswith("tail") else ("leg" if n[:2] in LEGS else ("head" if n in ("head", "neck") else "body"))
+            w[k] = w.get(k, 0.0) + g.weight
+        out.append(w)
+    return out
+
+
+_tc = tail_chain
+_tseg = [(_tc[i + 1] - _tc[i]).length for i in range(6)]
+_tlen = sum(_tseg)
+_r_tail = 0.012 * H / 0.25
+_tdrop = 0.45 * _tlen
+_floor = LAP_BELLY * H * (1.0 - LAP_LEG_K)                       # paw level after the legs are squashed
+
+
+def _new_tail(s):
+    a = _tc[0]
+    if s <= _tdrop:
+        u = s / _tdrop
+        return Vector((0.0, a.y + s * 0.85, a.z + (_floor + _r_tail + 0.002 - a.z) * (u * u * (3 - 2 * u))))
+    return Vector((0.0, a.y + _tdrop * 0.85 + (s - _tdrop), _floor + _r_tail + 0.002))
+
+
+def _new_tan(s):
+    return (_new_tail(min(_tlen, s + 0.004)) - _new_tail(max(0.0, s - 0.004))).normalized()
+
+
+def _project_tail(p):
+    best = (1e9, 0.0, _tc[0], Vector((0, 1, 0)))
+    acc = 0.0
+    for i in range(6):
+        a, b = _tc[i], _tc[i + 1]
+        ab = b - a
+        t = max(0.0, min(1.0, (p - a).dot(ab) / max(ab.length_squared, 1e-9)))
+        c = a + ab * t
+        d = (p - c).length
+        if d < best[0]:
+            best = (d, acc + _tseg[i] * t, c, ab.normalized())
+        acc += _tseg[i]
+    return best
+
+
+_qh = Quaternion((0, 0, 1), math.radians(LAP_HEAD_YAW * LAP_SIDE)) @ Quaternion((1, 0, 0), math.radians(LAP_HEAD_PITCH))
+
+
+def lap_shape(pts, groups):
+    """Rest positions -> laid tail, squashed legs, lowered head (no floor shift, no bend yet)."""
+    zb = LAP_BELLY * H
+    out = []
+    for p, g in zip(pts, groups):
+        tot = sum(g.values()) or 1.0
+        wt, wl, wh = g.get("tail", 0) / tot, g.get("leg", 0) / tot, g.get("head", 0) / tot
+        q = p.copy()
+        if wt > 0.01:
+            _, s, c, tan = _project_tail(p)
+            laid = _new_tail(s) + tan.rotation_difference(_new_tan(s)) @ (p - c)
+            q = q.lerp(laid, smooth(0.1, 0.7, wt))
+        if q.z < zb and wt < 0.9:      # (the laid tail keeps its round section)
+            k = LAP_LEG_K if wl > 0.3 else 1.0 - (1.0 - LAP_LEG_K) * smooth(0.0, 0.3, wl)
+            k = k + (1.0 - k) * smooth(0.1, 0.9, wt)
+            q.z = zb + (q.z - zb) * k
+        if wh > 0.01:
+            q = q.lerp(neck_base + _qh @ (q - neck_base), min(1.0, wh * 1.2))
+        out.append(q)
+    return out
+
+
+def lap_bend(pts, ya, R):
+    """Bend around a vertical axis at x = side*R from y = ya backward (the head side, y < ya, stays rigid)."""
+    out = []
+    for p in pts:
+        if p.y <= ya:
+            out.append(p.copy())
+            continue
+        phi = (p.y - ya) / R
+        rho = R - p.x * LAP_SIDE
+        out.append(Vector(((R - rho * math.cos(phi)) * LAP_SIDE, ya + rho * math.sin(phi), p.z)))
+    return out
+
+
+for b in pb:
+    b.rotation_quaternion = Quaternion()
+    b.location = Vector()
+    b.scale = Vector((1, 1, 1))
+arm.animation_data.action = None
+bpy.context.view_layer.update()
+_rest = [v.co.copy() for v in cat.data.vertices]
+_grp = dominant_groups(cat)
+_body = lap_shape(_rest, _grp)
+_wt = [g.get("tail", 0) / (sum(g.values()) or 1.0) for g in _grp]
+_sf = [0.5 * (1.0 - smooth(0.35, 0.85, w)) for w in _wt]     # the tail itself keeps its exact (round) shape
+# smooth the displacement field over the mesh edges: no tears where the tail / legs meet the body
+_disp = [q - p for q, p in zip(_body, _rest)]
+_nb = [[] for _ in _rest]
+for e in cat.data.edges:
+    a_, b_ = e.vertices
+    _nb[a_].append(b_)
+    _nb[b_].append(a_)
+for _ in range(int(os.environ.get("LAP_SMOOTH", "8"))):
+    _disp = [d.lerp(sum((_disp[j] for j in _nb[i]), Vector()) / len(_nb[i]), _sf[i]) if _nb[i] else d for i, d in enumerate(_disp)]
+_body = [p + d for p, d in zip(_rest, _disp)]
+_whisk = lap_shape([v.co.copy() for v in whisk_obj.data.vertices], [{"head": 1.0} for _ in whisk_obj.data.vertices])
+_ya = neck_base.y + 0.01 * H / 0.25
+_len = max(q.y for q in _body) - _ya
+_R = _len / math.radians(LAP_CURL_DEG)
+_body, _whisk = lap_bend(_body, _ya, _R), lap_bend(_whisk, _ya, _R)
+_zmin = min(q.z for q in _body)
+_cx = (min(q.x for q in _body) + max(q.x for q in _body)) / 2
+_cy = (min(q.y for q in _body) + max(q.y for q in _body)) / 2
+_off = Vector((_cx, _cy, _zmin))
+lap_objs = []
+for src, pts in ((cat, _body), (whisk_obj, _whisk)):
+    me = src.data.copy()
+    for v, p in zip(me.vertices, pts):
+        v.co = p - _off
+    me.update()
+    ob = bpy.data.objects.new(src.name.replace("cat_", "cat_lap_") if src.name.startswith("cat_") else src.name + "_lap", me)
+    bpy.context.scene.collection.objects.link(ob)
+    lap_objs.append(ob)
+_b = [p - _off for p in _body]
+log(f"lap cat: neck->tail tip {_len:.3f} m bent {LAP_CURL_DEG:.0f} deg (radius {_R:.3f} m); footprint "
+    f"{max(q.x for q in _b) - min(q.x for q in _b):.3f} x {max(q.y for q in _b) - min(q.y for q in _b):.3f} m, "
+    f"height {max(q.z for q in _b):.3f} m (at shoulder height {H} m)")
+for o in bpy.data.objects:
+    o.select_set(o in lap_objs)
+bpy.context.view_layer.objects.active = lap_objs[0]
+bpy.ops.export_scene.fbx(filepath=LAP_FBX, use_selection=True, object_types={"MESH"}, apply_scale_options="FBX_SCALE_ALL",
+                         axis_forward="-Z", axis_up="Y", use_mesh_modifiers=False, mesh_smooth_type="FACE",
+                         add_leaf_bones=False, bake_anim=False, path_mode="COPY", embed_textures=False)
+log("exported", LAP_FBX, "tris", tris(lap_objs[0]), "+ whiskers", tris(lap_objs[1]))
+
 # ------------------------------------------------------------------ previews
 if PREVIEW:
     os.makedirs(PREVIEW, exist_ok=True)
@@ -932,7 +1087,25 @@ if PREVIEW:
     scn.collection.objects.link(camo)
     scn.camera = camo
     views = {"side": Vector((1.5, 0, 0.18)), "front34": Vector((0.9, -1.2, 0.35)), "top": Vector((0.001, 0, 1.5))}
+    only = [x for x in os.environ.get("CAT_PREVIEW_CLIPS", "").split(",") if x]
+    # QF3: the static lap cat from every side (and from below: the side that rests on her thighs)
+    for o in (cat, whisk_obj):
+        o.hide_render = True
+    lap_views = dict(views)
+    lap_views.update({"front": Vector((0.001, -1.5, 0.25)), "back": Vector((0.001, 1.5, 0.25)), "otherside": Vector((-1.5, 0, 0.18)), "below": Vector((0.001, 0.0, -1.5))})
+    for vn, loc in lap_views.items():
+        camo.location = loc
+        d = Vector((0, 0, 0.07)) - loc
+        camo.rotation_euler = d.to_track_quat("-Z", "Y").to_euler()
+        scn.render.filepath = os.path.join(PREVIEW, f"cat_lapmesh_{vn}.png")
+        bpy.ops.render.render(write_still=True)
+    for o in lap_objs:
+        o.hide_render = True
+    for o in (cat, whisk_obj):
+        o.hide_render = False
     for name, (act, frames) in clips.items():
+        if only and name not in only:
+            continue
         arm.animation_data.action = act
         for fr in sorted(set([0, frames // 4, frames // 2, (3 * frames) // 4])):
             scn.frame_set(fr)

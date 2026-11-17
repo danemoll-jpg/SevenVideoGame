@@ -71,7 +71,7 @@ namespace Seven
             var file = $"{Chapter1State.ShotCount:00}_{name}.png";
             File.WriteAllBytes(Path.Combine(DemoBoot.CaptureDir, file), tex.EncodeToPNG());
             Destroy(tex);
-            Log($"shot {file}  audioPeak={_peak:0.000000}");
+            Log($"shot {file}  audioPeak={_peak:0.000000}  cursorVisible={Cursor.visible}");
         }
 
         public void Finish(string summary)
