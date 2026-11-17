@@ -68,15 +68,15 @@ apply to every asset and scene:
   Atmosphere prefab/profile/fog renderer feature, generated world meshes (`Assets/Art/World/Generated`, git-ignored),
   scenes `Menu` (demo picker, first) + `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room) +
   `Saucer` (Round 3; built by `FightDemoBuilderSaucer.cs`, cat from `Art/Export/cat/`, `Atmosphere_Above` prefab), Windows exe at
-  `Unity\Builds\FightDemo\SevenFightDemo.exe`):
+  `Unity\Builds\Seven\SevenDemo.exe`, product name "7: The Observer — Demo" (QF2; the old `Builds\FightDemo` is obsolete)):
   `Unity.exe -batchmode -nographics -quit -projectPath C:\Users\danmo\SevenVideoGame\Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine -logFile <file>`
   (start with `Start-Process -WindowStyle Hidden`, then `.PriorityClass = 'BelowNormal'`; ~5 min; exit code 0 = ok).
   The scenes are generated: change `FightDemoBuilder.cs`, not the scenes by hand. If the exe crashes with
   "level0 is corrupted", check the build log for "script is missing" (every MonoBehaviour must live in a file of the
-  same name), then delete `Unity\Builds\FightDemo` and build again.
+  same name), then delete `Unity\Builds\Seven` and build again.
 - **Check run** (muted, off-screen, never takes focus): start through `Win32_Process.Create` with
   `Win32_ProcessStartup.ShowWindow = 7` (minimized, not activated) and `PriorityClass = 16384` (Below Normal):
-  `SevenFightDemo.exe -mute -capture <dir> -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -logFile <dir>\Player.log`
+  `SevenDemo.exe -mute -capture <dir> -screen-fullscreen 0 -screen-width 1280 -screen-height 720 -logFile <dir>\Player.log`
   → `<dir>\01_wide.png … 17_head_front.png` (orbit angles, legends, punch, telekinesis lift start/held/release/landing,
   knockdown) + `capture_log.txt` (audio level, feet vs. the ground under each foot, camera height, lift height and
   timing), quits by itself (~50 s). Extra switches: `-quick` (look shots only, ~5 s), `-atmofile <json>` (override

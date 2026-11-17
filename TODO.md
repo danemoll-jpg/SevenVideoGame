@@ -28,7 +28,10 @@
 ## Current Objective — Round 4: Ratwing wakes (short animated scene)
 Commit the repo as it is before changing anything (safety checkpoint). **Do Quick fix QF2 first** (below), then Round 4.
 
-### Quick fix QF2 (Dan, 2026-11-16) — build folder name
+### Quick fix QF2 (Dan, 2026-11-16) — build folder name — **done (2026-11-17)**
+Builder writes `Unity\Builds\Seven\SevenDemo.exe` (product "7: The Observer — Demo"); paths updated in `CLAUDE.md`
+(no README/legend named the exe). Rebuilt; muted off-screen `-fight` and `-saucer` runs passed (audio RMS 0, monochrome
+max 0). Old `Unity\Builds\FightDemo` left in place — **Dan can delete it.**
 The build now holds both demos, so `Builds\FightDemo\SevenFightDemo.exe` no longer makes sense.
 1. Build to **`Unity\Builds\Seven\SevenDemo.exe`** (product name "7: The Observer — Demo"). Change the builder
    script's output path (not just the folder), so every future build goes there.

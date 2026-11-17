@@ -17,7 +17,7 @@ namespace Seven.EditorTools
     /// Round 1 room) from the repo's art folders, start to finish, so it can run headless:
     ///   Unity.exe -batchmode -quit -projectPath Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine
     /// Steps: copy Mixamo FBX files into Assets -> Humanoid import settings -> grayscale texture + materials ->
-    /// animator controllers -> FightDemo scene -> Windows player (Unity/Builds/FightDemo/SevenFightDemo.exe).
+    /// animator controllers -> FightDemo scene -> Windows player (Unity/Builds/Seven/SevenDemo.exe).
     /// </summary>
     public static partial class FightDemoBuilder
     {
@@ -32,7 +32,7 @@ namespace Seven.EditorTools
 
         static string RepoRoot => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
         static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
-        public static string ExePath => Path.Combine(ProjectRoot, "Builds", "FightDemo", "SevenFightDemo.exe");
+        public static string ExePath => Path.Combine(ProjectRoot, "Builds", "Seven", "SevenDemo.exe");   // QF2
         /// <summary>Build order: the demo picker first.</summary>
         static string[] AllScenes => new[] { MenuScenePath, ScenePath, RoomScenePath, SaucerScenePath };
 
@@ -975,7 +975,7 @@ namespace Seven.EditorTools
         static void ConfigurePlayer()
         {
             PlayerSettings.companyName = "Dan";
-            PlayerSettings.productName = "7 The Observer - Demos";
+            PlayerSettings.productName = "7: The Observer — Demo";   // QF2
             PlayerSettings.runInBackground = true;
             PlayerSettings.resizableWindow = true;
             PlayerSettings.fullScreenMode = FullScreenMode.FullScreenWindow;   // QF1: borderless, native resolution
