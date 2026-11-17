@@ -59,6 +59,7 @@ namespace Seven.EditorTools
             camGo.AddComponent<AudioListener>();
             var menu = new GameObject("DemoMenu").AddComponent<Seven.DemoMenu>();
             menu.Cam = cam;
+            menu.Bank = AssetDatabase.LoadAssetAtPath<Seven.VoiceBank>(VoiceBankPath);   // -soundcheck
             EditorSceneManager.SaveScene(scene, MenuScenePath);
             Log("scene saved " + MenuScenePath);
         }
@@ -361,7 +362,53 @@ namespace Seven.EditorTools
             return WallProfile[WallProfile.Length - 1].x;
         }
 
-        struct ShipRefs { public Transform chairPivot, seat; public List<Light> lights; public List<Renderer> glass; public List<Vector3> obstacles; public TvRefs tv; }
+        struct ShipRefs { public Transform chairPivot, seat; public List<Light> lights; public List<Renderer> glass; public List<Vector3> obstacles; public TvRefs tv; public GalleyRefs galley; }
+
+        // ---- Round 6: galley nook (Chapter 1 scene 10: 7 opens the refrigerator).
+        const int GalleyNook = 0;                  // index into NookAngles (205 deg)
+        const float FridgeAngle = 214.5f, FridgeR = 9.3f;
+        struct GalleyRefs { public Transform fridgeDoor; public Light fridgeLight; }
+
+        static GameObject Cube(string name, Transform parent, Vector3 localPos, Vector3 localScale, Material mat)
+        {
+            var go = GameObject.CreatePrimitive(PrimitiveType.Cube); go.name = name;
+            UnityEngine.Object.DestroyImmediate(go.GetComponent<Collider>());
+            go.transform.SetParent(parent, false); go.transform.localPosition = localPos; go.transform.localScale = localScale;
+            go.GetComponent<MeshRenderer>().sharedMaterial = mat;
+            return go;
+        }
+
+        static GalleyRefs BuildGalley(Transform nook, ShipMats m, float a0, float a1)
+        {
+            var g = new GalleyRefs();
+            // Curved counter along the nook wall, a glossy top, wall cabinets and a soft glow strip under them.
+            var bv = new List<Vector3>(); var bt = new List<int>();
+            AddRing(bv, bt, Vector3.zero, 9.05f, 9.68f, 0.88f, a0 + 2f, FridgeAngle - 4.5f, 20);
+            Obj("Galley_Counter", Finish(bv, bt), m.sofaBase, nook);
+            var tv = new List<Vector3>(); var tt = new List<int>();
+            AddRing(tv, tt, Vector3.up * 0.88f, 9.0f, 9.7f, 0.05f, a0 + 1.5f, FridgeAngle - 4.2f, 20);
+            AddRing(tv, tt, Vector3.up * 1.55f, 9.35f, 9.7f, 0.55f, a0 + 2f, FridgeAngle - 4.5f, 20);
+            Obj("Galley_Top", Finish(tv, tt), m.table, nook);
+            var lv = new List<Vector3>(); var lt = new List<int>();
+            Sweep(lv, lt, Enumerable.Range(0, 17).Select(i => Polar(9.33f, Mathf.Lerp(a0 + 2.5f, FridgeAngle - 5f, i / 16f), 1.52f)).ToList(), 0.015f, false, 6);
+            Obj("Galley_Glow", SmoothFinish(lv, lt), m.cove, nook, false);
+            // Refrigerator: tall box facing the deck centre, the door hinged on its left edge.
+            var fridge = new GameObject("Fridge").transform; fridge.SetParent(nook, false);
+            fridge.position = Polar(FridgeR, FridgeAngle, 0f);
+            fridge.rotation = Quaternion.LookRotation(-Polar(1f, FridgeAngle, 0f));      // +Z faces the deck
+            Cube("FridgeBody", fridge, new Vector3(0f, 0.95f, -0.05f), new Vector3(0.82f, 1.9f, 0.62f), m.table);
+            Cube("FridgeInside", fridge, new Vector3(0f, 0.95f, 0.2f), new Vector3(0.7f, 1.75f, 0.12f), m.cove);
+            foreach (var y in new[] { 0.55f, 0.95f, 1.35f }) Cube("Shelf", fridge, new Vector3(0f, y, 0.27f), new Vector3(0.68f, 0.02f, 0.06f), m.frame);
+            var hinge = new GameObject("FridgeDoor").transform; hinge.SetParent(fridge, false); hinge.localPosition = new Vector3(-0.41f, 0f, 0.28f);
+            Cube("DoorPanel", hinge, new Vector3(0.41f, 0.95f, 0.03f), new Vector3(0.82f, 1.88f, 0.06f), m.chairShell);
+            Cube("Handle", hinge, new Vector3(0.74f, 1.05f, 0.08f), new Vector3(0.03f, 0.5f, 0.04f), m.frame);
+            var l = new GameObject("FridgeLight").AddComponent<Light>();
+            l.transform.SetParent(fridge, false); l.transform.localPosition = new Vector3(0f, 1.3f, 0.55f);
+            l.type = LightType.Point; l.range = 2.2f; l.intensity = 1.6f; l.shadows = LightShadows.None; l.enabled = false;
+            g.fridgeDoor = hinge; g.fridgeLight = l;
+            return g;
+        }
+
 
         static ShipRefs BuildShip(ShipMats m)
         {
@@ -421,7 +468,8 @@ namespace Seven.EditorTools
                     Quad(side, sideT, p0, p0 + Vector3.up * NookH, p1 + Vector3.up * NookH, p1);
                 }
                 Obj($"Nook{k}_Sides", Finish(side, sideT), m.wall, nook);
-                if (k != TvNook)     // Round 5: the TV nook has a console + screen instead of the bench
+                if (k == GalleyNook) refs.galley = BuildGalley(nook, m, a0, a1);   // Round 6: galley (counter + fridge)
+                else if (k != TvNook)     // Round 5: the TV nook has a console + screen instead of the bench
                 {
                     var bv = new List<Vector3>(); var btri = new List<int>();
                     AddRing(bv, btri, Vector3.zero, 9.0f, 9.65f, 0.4f, a0 + 3f, a1 - 3f, 20);
@@ -439,7 +487,7 @@ namespace Seven.EditorTools
                 var lv = new List<Vector3>(); var lt = new List<int>();
                 Sweep(lv, lt, Enumerable.Range(0, 21).Select(i => Polar(NookR - 0.25f, Mathf.Lerp(a0 + 2f, a1 - 2f, i / 20f), NookH - 0.06f)).ToList(), 0.02f, false, 6);
                 Obj($"Nook{k}_Glow", SmoothFinish(lv, lt), m.cove, nook, false);
-                Plant(nook, $"Nook{k}_Plant", Polar(8.6f, k == 0 ? a0 + 5f : a1 - 3.5f, 0f), 1.0f, 300 + k, m, refs.obstacles);
+                if (k != GalleyNook) Plant(nook, $"Nook{k}_Plant", Polar(8.6f, k == 0 ? a0 + 5f : a1 - 3.5f, 0f), 1.0f, 300 + k, m, refs.obstacles);
             }
             refs.tv = BuildGalleryNook(walls, m, refs.obstacles);
 
@@ -796,6 +844,20 @@ namespace Seven.EditorTools
             gtv.Screen = refs.tv.screen; gtv.UiMaterial = GalleryUiMaterial(); gtv.ScreenLight = refs.tv.light;
             gtv.Seven = s7; gtv.Cam = scam; gtv.Input = input; gtv.Reveal = rev; gtv.ScreenSize = TvSize;
             dir.Gallery = gtv;
+
+            // Round 6: Chapter 1 aboard (scenes 9-11), active only when the chapter loads this scene.
+            var chGo = new GameObject("Chapter1Aboard");
+            var chUi = chGo.AddComponent<Seven.ChapterUI>(); chUi.Cam = cam;
+            var chDlg = chGo.AddComponent<Seven.DialoguePlayer>();
+            chDlg.Bank = AssetDatabase.LoadAssetAtPath<Seven.VoiceBank>(VoiceBankPath); chDlg.UI = chUi;
+            var ch = chGo.AddComponent<Seven.Chapter1Aboard>();
+            ch.Director = dir; ch.Dlg = chDlg; ch.UI = chUi;
+            ch.FridgeDoor = refs.galley.fridgeDoor; ch.FridgeLight = refs.galley.fridgeLight;
+            ch.FridgeSpot = Polar(8.25f, FridgeAngle, 0f); ch.FridgeFacing = Polar(1f, FridgeAngle, 0f);
+            ch.CatMealSpot = Polar(7.6f, 204f, 0f);
+            ch.SofaFront = Polar(6.2f, 160f, 0f); ch.SofaSeat = Polar(6.95f, 160f, 0.5f); ch.SofaVia = Polar(5.4f, 182f, 0f);
+            ch.GalleyCamPos = Polar(4.6f, 196f, 1.75f); ch.GalleyCamLook = Polar(8.1f, 210f, 1.15f);
+            ch.SofaCamPos = Polar(4.4f, 176f, 1.35f); ch.SofaCamLook = Polar(6.95f, 160f, 0.55f);
 
             EditorSceneManager.SaveScene(scene, SaucerScenePath);
             Log("scene saved " + SaucerScenePath);

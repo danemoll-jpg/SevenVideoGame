@@ -16,7 +16,7 @@ namespace Seven
     {
         public Camera Cam;
         public bool ShowXbox = true;
-        public enum Layout { Fight, SaucerWalk, SaucerSeated, GalleryView }
+        public enum Layout { Fight, SaucerWalk, SaucerSeated, GalleryView, Chapter }
         public Layout Set = Layout.Fight;
         bool _saucer;
         [System.NonSerialized] public bool AutoSwitch = true;   // check runs force a mode
@@ -120,10 +120,34 @@ namespace Seven
             new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
 
+        // Chapter 1 (Moon level).
+        static readonly Row[] ChapterXbox =
+        {
+            new Row("move", (G.Stick, "L")),
+            new Row("run (hold)", (G.Bumper, "LB")),
+            new Row("orbit camera", (G.Stick, "R")),
+            new Row("re-center camera", (G.StickClick, "R3")),
+            new Row("interact · skip line", (G.Face, "A")),
+            new Row("telekinesis (when shown)", (G.Face, "X")),
+            new Row("restart from checkpoint", (G.DPadDown, "")),
+            new Row("menu", (G.Menu, "")),
+        };
+        static readonly Row[] ChapterKeys =
+        {
+            new Row("move", (G.Key, "W"), (G.Key, "A"), (G.Key, "S"), (G.Key, "D")),
+            new Row("run (hold)", (G.WideKey, "Shift")),
+            new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
+            new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
+            new Row("interact · skip line (Enter)", (G.Key, "E")),
+            new Row("telekinesis (when shown)", (G.Key, "T")),
+            new Row("restart from checkpoint", (G.WideKey, "Bksp")),
+            new Row("menu", (G.WideKey, "Esc")),
+        };
+
         readonly Dictionary<(Layout, bool), GameObject> _panels = new Dictionary<(Layout, bool), GameObject>();
-        GameObject _promptX, _promptK;
-        Text _promptTextX, _promptTextK;
-        bool _promptOn;
+        GameObject _promptX, _promptK, _tkX, _tkK;
+        Text _promptTextX, _promptTextK, _tkTextX, _tkTextK;
+        bool _promptOn, _tkOn;
 
         GameObject _xboxPanel, _keyPanel;
         Font _font;
@@ -159,8 +183,12 @@ namespace Seven
                 _panels[(Layout.SaucerSeated, false)] = BuildPanel(canvasGo.transform, "SeatedKeys", SaucerSeatedKeys);
                 _panels[(Layout.GalleryView, true)] = BuildPanel(canvasGo.transform, "GalleryXbox", GalleryXbox);
                 _panels[(Layout.GalleryView, false)] = BuildPanel(canvasGo.transform, "GalleryKeys", GalleryKeys);
+                _panels[(Layout.Chapter, true)] = BuildPanel(canvasGo.transform, "ChapterXbox", ChapterXbox);
+                _panels[(Layout.Chapter, false)] = BuildPanel(canvasGo.transform, "ChapterKeys", ChapterKeys);
                 _promptX = BuildPrompt(canvasGo.transform, "PromptXbox", G.Face, "A", out _promptTextX);
                 _promptK = BuildPrompt(canvasGo.transform, "PromptKeys", G.Key, "E", out _promptTextK);
+                _tkX = BuildPrompt(canvasGo.transform, "PromptTkXbox", G.Face, "X", out _tkTextX);
+                _tkK = BuildPrompt(canvasGo.transform, "PromptTkKeys", G.Key, "T", out _tkTextK);
             }
             Apply();
         }
@@ -171,8 +199,25 @@ namespace Seven
         /// <summary>Centre-bottom context prompt (saucer: "Sit" near the chair). Glyph: A / E.</summary>
         public void Prompt(string label)
         {
-            _promptOn = !string.IsNullOrEmpty(label);
-            if (_promptTextX != null && _promptOn) { _promptTextX.text = label; _promptTextK.text = label; }
+            bool on = !string.IsNullOrEmpty(label);
+            if (on == _promptOn && (!on || _promptTextX == null || _promptTextX.text == label)) return;
+            _promptOn = on;
+            if (_promptTextX != null && _promptOn) { _promptTextX.text = label; _promptTextK.text = label; Fit(_promptX, label); Fit(_promptK, label); }
+            Apply();
+        }
+
+        static void Fit(GameObject panel, string label)
+        {
+            if (panel != null) ((RectTransform)panel.transform).sizeDelta = new Vector2(Mathf.Max(170f, 70f + label.Length * 10.5f), 40f);
+        }
+
+        /// <summary>Centre-bottom telekinesis prompt (Chapter 1). Glyph: X / T.</summary>
+        public void PromptTk(string label)
+        {
+            bool on = !string.IsNullOrEmpty(label);
+            if (on == _tkOn && (!on || _tkTextX == null || _tkTextX.text == label)) return;
+            _tkOn = on;
+            if (_tkTextX != null && on) { _tkTextX.text = label; _tkTextK.text = label; Fit(_tkX, label); Fit(_tkK, label); }
             Apply();
         }
 
@@ -181,6 +226,7 @@ namespace Seven
             if (_panels.Count == 0) return;
             foreach (var kv in _panels) kv.Value.SetActive(kv.Key.Item1 == Set && kv.Key.Item2 == ShowXbox);
             if (_promptX != null) { _promptX.SetActive(_promptOn && ShowXbox); _promptK.SetActive(_promptOn && !ShowXbox); }
+            if (_tkX != null) { _tkX.SetActive(_tkOn && ShowXbox); _tkK.SetActive(_tkOn && !ShowXbox); }
         }
 
         GameObject BuildPrompt(Transform parent, string name, G g, string glyph, out Text label)

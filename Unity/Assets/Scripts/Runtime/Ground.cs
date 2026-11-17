@@ -10,7 +10,7 @@ namespace Seven
     /// </summary>
     public static class Ground
     {
-        public enum Shape { Flat, Hill, Deck }
+        public enum Shape { Flat, Hill, Deck, Zones }
         public static Shape Current = Shape.Flat;
         public static Vector2 ArenaHalf = new Vector2(8.5f, 5.5f);   // flat room: rectangle
         public static Vector3 ArenaCenter = Vector3.zero;              // hill: circle
@@ -25,7 +25,39 @@ namespace Seven
         /// <summary>Temporarily ignored obstacle (7's chair while she walks into it to sit).</summary>
         public static int IgnoreObstacle = -1;
 
-        public static float Height(float x, float z) => Current == Shape.Hill ? WorldGround.HillHeight(x, z) : 0f;
+        // ---- Zones (Chapter 1 level): union of walkable rectangles, each flat or sloped along X or Z (ramps).
+        public class Zone
+        {
+            public string Name; public Vector2 Min, Max; public float Y0, Y1; public int SlopeAxis; public bool Enabled = true;
+            public float HeightAt(float x, float z)
+            {
+                if (Mathf.Approximately(Y0, Y1)) return Y0;
+                float u = SlopeAxis == 0 ? Mathf.InverseLerp(Min.x, Max.x, x) : Mathf.InverseLerp(Min.y, Max.y, z);
+                return Mathf.Lerp(Y0, Y1, u);
+            }
+            public bool Contains(float x, float z, float pad = 0f) => x >= Min.x + pad && x <= Max.x - pad && z >= Min.y + pad && z <= Max.y - pad;
+        }
+        public static readonly List<Zone> Zones = new List<Zone>();
+        public static Zone FindZone(string name) => Zones.Find(z => z.Name == name);
+
+        static Zone ZoneAt(float x, float z)
+        {
+            // First enabled zone in list order wins (special zones such as the saucer ramp come first).
+            foreach (var zn in Zones) if (zn.Enabled && zn.Contains(x, z)) return zn;
+            return null;
+        }
+
+        public static float Height(float x, float z)
+        {
+            if (Current == Shape.Hill) return WorldGround.HillHeight(x, z);
+            if (Current == Shape.Zones)
+            {
+                var zn = ZoneAt(x, z);
+                if (zn == null) { float best = float.MaxValue; foreach (var q in Zones) { if (!q.Enabled) continue; var c = new Vector2(Mathf.Clamp(x, q.Min.x, q.Max.x), Mathf.Clamp(z, q.Min.y, q.Max.y)); float d = (c - new Vector2(x, z)).sqrMagnitude; if (d < best) { best = d; zn = q; } } }
+                return zn != null ? zn.HeightAt(Mathf.Clamp(x, zn.Min.x, zn.Max.x), Mathf.Clamp(z, zn.Min.y, zn.Max.y)) : 0f;
+            }
+            return 0f;
+        }
         public static float Height(Vector3 p) => Height(p.x, p.z);
 
         static bool InSector(float a, Sector s)
@@ -52,6 +84,34 @@ namespace Seven
                 var d = new Vector2(p.x - ArenaCenter.x, p.z - ArenaCenter.z);
                 if (d.magnitude > ArenaRadius) d = d.normalized * ArenaRadius;
                 p.x = ArenaCenter.x + d.x; p.z = ArenaCenter.z + d.y;
+            }
+            else if (Current == Shape.Zones)
+            {
+                var q = new Vector2(p.x, p.z);
+                for (int i = 0; i < Obstacles.Count; i++)
+                {
+                    if (i == IgnoreObstacle) continue;
+                    var o = Obstacles[i];
+                    var d = q - o.C;
+                    float min = o.R + bodyRadius;
+                    if (d.sqrMagnitude < min * min) q = o.C + (d.sqrMagnitude > 1e-8f ? d.normalized : Vector2.right) * min;
+                }
+                bool inside = false;
+                foreach (var zn in Zones) if (zn.Enabled && zn.Contains(q.x, q.y, bodyRadius)) { inside = true; break; }
+                if (!inside)
+                {
+                    float best = float.MaxValue; Vector2 bq = q;
+                    foreach (var zn in Zones)
+                    {
+                        if (!zn.Enabled) continue;
+                        float pad = Mathf.Min(bodyRadius, (zn.Max.x - zn.Min.x) * 0.45f, (zn.Max.y - zn.Min.y) * 0.45f);
+                        var c = new Vector2(Mathf.Clamp(q.x, zn.Min.x + pad, zn.Max.x - pad), Mathf.Clamp(q.y, zn.Min.y + pad, zn.Max.y - pad));
+                        float d = (c - q).sqrMagnitude;
+                        if (d < best) { best = d; bq = c; }
+                    }
+                    q = bq;
+                }
+                p.x = q.x; p.z = q.y;
             }
             else if (Current == Shape.Deck)
             {

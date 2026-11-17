@@ -6,6 +6,9 @@
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Round 6 — Chapter 1 "The Moon Prison" — done (2026-11-17), exe-verified off-screen (autopilot playthrough,
+  0 soft-locks); Dan to play.** Voiced (78 ElevenLabs lines, telepathic cat), cell → Scree hall → vision → impound →
+  liftoff → saucer galley → "To be continued". Per-item status in the Round 6 section below.
 - **Round 5 — Kyle's art gallery TV on the saucer — done (2026-11-17), exe-verified off-screen; Dan to browse.**
   `Art/Gallery/` + `gallery.json` (all 24 on), loaded at runtime; TV nook with idle slideshow, browse / full view.
   Full record in `TODO-ARCHIVE.md` → "Round 5".
@@ -36,7 +39,68 @@
   Script kept as `Tools/Model/fix_v1_to_v2.py`. Source facts: 0.98 m tall, ~1.95M triangles, one 4K base-color texture.
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
-## Current Objective — Round 6: Chapter 1 "The Moon Prison" (first real playable chapter)
+## Current Objective — none: waiting for Dan's review of Round 6 (next round TBD)
+
+## Round 6: Chapter 1 "The Moon Prison" (first real playable chapter) — plan as given, status below
+
+### Round 6 status (2026-11-17) — per item
+Check run: `SevenDemo.exe -mute -chapter1 -capture <dir>` (autopilot, ~4.5 min) — cell → "To be continued" with
+**0 soft-lock suspicions**, 28 shots, all 78 lines played + subtitled, audio peak 0.000000, monochrome max diff 0.
+Record: `Docs/Previews/round6/` (`capture_log.txt`, `soundcheck_log.txt`, `00_menu.png`, `01_…`–`28_…png`).
+1. **done** — `Docs/VOICE-LINES.md`: 78 lines (scenes 1–11, ids `s01_01_7` … `s11_10_cat`, pauses from the stage
+   directions). Generator `Tools/Voice/make_line_list.py` (also writes `Unity/Assets/Audio/Voice/voice_lines.json`).
+2. **done** — 78/78 files via ElevenLabs (`Tools/Voice/generate_voices.py`; voices "Seven" / "Cat" looked up by name;
+   key only from `ELEVENLABS_API_KEY`): `Unity/Assets/Audio/Voice/<scene>/<id>.mp3` (mp3 → Git LFS), 143.8 s total.
+   Settings: 7 stability 0.55 / speed 0.95, cat stability 0.62 / speed 0.92 (`eleven_multilingual_v2`).
+3. **done** — telepathy treatment on every cat line (`DialoguePlayer.MakeSource`): mono, centred, a bit quieter,
+   high-pass 170 Hz, low-pass 7.2 kHz, short soft room (0.38 s). Vision: faint "far away" variant (quieter, darker,
+   2.2 s reverb). **Sound check** (the only unmuted step, `-soundcheck`): one cat line, **1.84 s of sound**, peak 0.18,
+   left = right (centred), muted again → 0. The reverb tail measured 0 after the clip ended (it fits inside the clip's
+   own trailing silence) — Dan to judge the amount by ear.
+4. **done** — subtitles (speaker name, cat lines in italics marked "(thought)", white on a soft dark band) + dialogue
+   player with the script's pauses; A / Enter skips the current line.
+5. **done (proof-of-concept look)** — hollow-Moon cavern in Kyle's fog/glow style (`Atmosphere_Moon` prefab): dark cell
+   block and catwalk over a bright misty void, rails, mining carts, drills, lamps, scaffolds, huge half-buried ancient
+   rings/monoliths fading into the haze; ancient hall + vision chamber; impound bay.
+6. **done** — cell with barred door + energy field; the cat comes out of the small vent and sits outside; scene 1 at the
+   door; scene 2: "stand back", the cat hops onto a crate, paws the release, bars slide up, 7 steps out.
+7. **done** — walk-and-talk (scene 3) along the catwalk; two Scree at a lit gate behind a barricade (visible, not
+   fightable); "Look closer" (A / E) at the older wall → scene 4 → the old stones sink, passage down.
+8. **done** — one Scree guard (lamp shows where it looks; view cone + line of sight) blocks the ancient hall. Telekinesis
+   (X / T) knocks the loose stone off a broken pillar → the guard goes to study the noise → 7 slips past on the far side.
+   Being seen = fade + reset to the hall entrance (no combat, no harm). Check run: walked into view once on purpose →
+   reset (`10_s05_spotted.png`), then stone + sneak path worked.
+9. **done** — touch the glowing inscription: white wash, the chamber whole (columns, arches, glowing frieze, the
+   symbol) with 9 pale glowing faceless figures, cat lines faint and far away; 8.4 s; back to ruins; rest of scene 6;
+   7's gesture (the symbol she saw) sinks the sealed door. Vision content kept generic.
+10. **done** — ledge view of the bay (scene 7), ramp down, telekinesis on the clamp lever (clamps retract, rim glow up,
+    ship ramp lowers), scene 8 at the ramp, 7 boards first, then the cat; ramp closes; liftoff shot; fade.
+11. **done** — Round 3 saucer reused; galley nook added (curved counter, wall cabinets, refrigerator with a door that
+    opens and an inside light). Scene 9 on arrival, scene 10 at the fridge, scene 11, a quiet beat, the cat walks to the
+    sofa and curls up asleep, "To be continued", back to the menu. Cat house-cat size (scale 1) throughout.
+12. **done** — `ChapterCat`: follows, waits at interaction points, leads (to the release crate, along the catwalk, down
+    to the bay), hops/paws. Catch-up (> 8 m behind and out of view → reappears near 7 out of view) exists; **not
+    triggered** in the check run (max distance while following/leading 5.4 m).
+13. **done** — objective line (top left), A / E and X / T prompts with Xbox glyphs / keys, chapter legend. Checkpoint per
+    scene; the spotted fail state resets only the hall. Backspace / d-pad down restarts from the last checkpoint
+    (reloads the level) — **not exercised by the check run**.
+14. **done** — "Chapter 1 — The Moon Prison" at the top of the menu; `-chapter1` (and `-ch1aboard` = start at scene 9).
+15. **done** — `Scree_placeholder` (gray Y Bot + hood with the face in shadow + robe, 7's Humanoid idle/walk) for the
+    guard, gate guards and two bay workers; `Docs/MODELS-NEEDED.md` entry (needs Kyle's design).
+16. **done** — procedural saucer exterior (flat disc, glowing rim, dark glossy upper hull, belly glow, hinged ramp,
+    cradle + 4 clamps); `MODELS-NEEDED.md` "procedural for now".
+17. **not done (Dan's step, optional)** — Mixamo clips for 7, save in `Art/Mixamo/7/`: `7_sneak_walk.fbx` ("Sneak
+    Walking"), `7_touch_wall.fbx` ("Button Pushing" or similar), `7_look_around.fbx` ("Looking Around"). Substitutes now:
+    sneak = walk at 0.62× (1.25 m/s), touch = telekinesis clip held at 45 %, look-around = none.
+18. **done** — rebuild ok; autopilot playthrough with 0 soft-locks; shots per scene + vision before/during/after +
+    saucer + liftoff (subtitles visible); voice files 78 = subtitles 78 (ids matched, none missing); cat ≤ 5.4 m behind;
+    monochrome 0; audio 0 except the sound check. Demos still load: menu, fight (`-quick`), saucer (21 shots), gallery
+    (input test 17/17), Ratwing (16 shots) — all 0 exceptions, audio 0.
+19. **done** — this file, `CLAUDE.md`, commit + push.
+Not verified: real controller/keyboard play of the chapter (only the autopilot ran), the real length with every line
+played in full (estimate 8–12 min: 144 s of voice + walking + the Scree room), checkpoint restart key, cat catch-up.
+Scene 12 waits for the vision content (as planned).
+
 Commit the repo as it is before changing anything (safety checkpoint) — it includes Dan's new `Docs/STORY.md`,
 `Docs/DIALOGUE.md` and `Docs/VOICES.md`. **Read all three first.** Proof-of-concept quality like the demos, but this is
 the real opening of the game: it should play start to finish in roughly 10–15 minutes.
@@ -118,8 +182,17 @@ they see her impounded saucer → release it, board, escape → aboard the sauce
 19. End of round: update `TODO.md` (per-item status, "For Dan to check") and `CLAUDE.md`, commit and push.
 
 ### For Dan to check (after Round 6)
-- Play **Chapter 1** start to finish. Do the voices and the telepathy effect work? Does the vision land? Is it the
-  right length? What should the Scree look like (ask Kyle for a concept)?
+- **Play Chapter 1** start to finish (menu → "Chapter 1 — The Moon Prison"). Does it flow? Right length? Any spot where
+  you get stuck (Backspace / d-pad down restarts from the checkpoint)?
+- **Voices + telepathy**: do the "Seven" and "Cat" deliveries fit? Is the cat's "inside your head" treatment too
+  strong / too subtle (reverb amount especially)? Any line to regenerate → `python Tools/Voice/generate_voices.py --force --only <id>`.
+- **The vision** (`Docs/Previews/round6/13_s06_vision_before.png`, `14_…during_far_voice.png`, `15_…during.png`,
+  `16_…after.png`): does it land? Figures too bright?
+- **Look**: cell `02_s01_first_contact.png`, catwalk `06_s03_walk_and_talk.png`, gate `07_s04_guarded_route.png`, ancient
+  hall `09_s05_scree_guard.png`, bay `19_s07_saucer_from_ledge.png` / `20_s07_saucer_released.png`, liftoff
+  `22_s08_liftoff_rising.png`, galley `25_s10_free_range.png`, sofa `27_s11_cat_settles_on_sofa.png`, end `28_s11_to_be_continued.png`
+  (all in `Docs/Previews/round6/`).
+- **Scree**: ask Kyle for a concept (placeholder now). **Optional Mixamo clips** (item 17).
 
 ## Next Steps (Do Not Start Yet)
 - **Hair ties → glowing round clips** (Kyle's art: `kyle_7_face_hairclips`, `kyle_7_riding_fog`, `kyle_world_mood`)

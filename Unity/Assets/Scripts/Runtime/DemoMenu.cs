@@ -8,7 +8,7 @@ using UnityEngine.UI;
 namespace Seven
 {
     /// <summary>
-    /// Demo picker (first scene): "Fight demo" / "Saucer demo" / "Ratwing". Pad: stick or d-pad + A. Keys: W/S or arrows + Enter
+    /// Demo picker (first scene): "Chapter 1 — The Moon Prison" (-chapter1) / "Fight demo" / "Saucer demo" / "Ratwing". Pad: stick or d-pad + A. Keys: W/S or arrows + Enter
     /// or Space. Strictly monochrome uGUI drawn by the menu camera (so it can be captured off-screen).
     /// -fight / -room / -capture skip to the fight demo, -saucer to the saucer, -ratwing to the Ratwing cave; -capture -menu screenshots the menu.
     /// </summary>
@@ -16,8 +16,9 @@ namespace Seven
     {
         public const string SceneName = "Menu";
         public Camera Cam;
+        public VoiceBank Bank;          // for the -soundcheck run
 
-        static readonly (string label, string scene)[] Items = { ("Fight demo", "FightDemo"), ("Saucer demo", "Saucer"), ("Ratwing", "Ratwing") };
+        static readonly (string label, string scene)[] Items = { ("Chapter 1 — The Moon Prison", "Chapter1"), ("Fight demo", "FightDemo"), ("Saucer demo", "Saucer"), ("Ratwing", "Ratwing") };
         int _sel;
         Text[] _labels;
         Image[] _marks;
@@ -27,6 +28,9 @@ namespace Seven
         void Start()
         {
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
+            if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }
+            if (DemoBoot.Chapter1Aboard) { Chapter1State.StartAboard(); return; }
+            if (DemoBoot.Chapter1) { SceneManager.LoadScene("Chapter1"); return; }
             if (DemoBoot.Saucer) { SceneManager.LoadScene("Saucer"); return; }
             if (DemoBoot.Ratwing) { SceneManager.LoadScene("Ratwing"); return; }
             if (DemoBoot.Fight || DemoBoot.Room || DemoBoot.CaptureDir != null) { SceneManager.LoadScene("FightDemo"); return; }
@@ -52,11 +56,11 @@ namespace Seven
             _marks = new Image[Items.Length];
             for (int i = 0; i < Items.Length; i++)
             {
-                var y = -10 - i * 64;
+                var y = 10 - i * 60;
                 var bar = new GameObject("Item" + i, typeof(RectTransform));
                 bar.transform.SetParent(canvasGo.transform, false);
                 var rt = (RectTransform)bar.transform;
-                rt.anchoredPosition = new Vector2(0, y); rt.sizeDelta = new Vector2(360, 50);
+                rt.anchoredPosition = new Vector2(0, y); rt.sizeDelta = new Vector2(i == 0 ? 460 : 360, 50);
                 _marks[i] = bar.AddComponent<Image>();
                 _labels[i] = Text(bar.transform, Items[i].label, Vector2.zero, 28, Color.white);
             }
@@ -104,7 +108,7 @@ namespace Seven
             if (d != 0) { _sel = (_sel + d + Items.Length) % Items.Length; Refresh(); }
             bool go = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
                       || (gp != null && gp.buttonSouth.wasPressedThisFrame);
-            if (go) SceneManager.LoadScene(Items[_sel].scene);
+            if (go) { Chapter1State.Reset(); SceneManager.LoadScene(Items[_sel].scene); }
         }
 
         IEnumerator Shot()

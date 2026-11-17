@@ -27,6 +27,11 @@ namespace Seven
         public static bool Quick { get; private set; }
         public static bool Gallery { get; private set; }
         public static bool WindowFromCommandLine { get; private set; }
+        /// <summary>-chapter1: start Chapter 1 "The Moon Prison". -ch1aboard: start at its saucer part (scenes 9-11).</summary>
+        public static bool Chapter1 { get; private set; }
+        public static bool Chapter1Aboard { get; private set; }
+        /// <summary>-soundcheck: the one short unmuted telepathy sound check (plays one cat line, measures, quits).</summary>
+        public static bool SoundCheck { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -40,6 +45,9 @@ namespace Seven
                 if (args[i] == "-saucer") Saucer = true;
                 if (args[i] == "-ratwing") Ratwing = true;
                 if (args[i] == "-menu") MenuShot = true;
+                if (args[i] == "-chapter1") Chapter1 = true;
+                if (args[i] == "-ch1aboard") { Chapter1 = true; Chapter1Aboard = true; }
+                if (args[i] == "-soundcheck") SoundCheck = true;
                 if (args[i] == "-quick") Quick = true;
                 if (args[i] == "-gallery") { Gallery = true; Saucer = true; }
                 if (args[i] == "-capture" && i + 1 < args.Length) CaptureDir = args[i + 1];
@@ -53,7 +61,7 @@ namespace Seven
             if (CaptureDir != null) Application.runInBackground = true;
             bool forceFullscreen = CaptureDir == null && !WindowFromCommandLine && !Application.isEditor;
             FullscreenToggle.Install(forceFullscreen);
-            Debug.Log($"[Seven] boot: muted={Muted} listenerVolume={AudioListener.volume} capture={CaptureDir ?? "-"} fight={Fight} saucer={Saucer} ratwing={Ratwing} forceFullscreen={forceFullscreen} mode={Screen.fullScreenMode}");
+            Debug.Log($"[Seven] boot: muted={Muted} listenerVolume={AudioListener.volume} capture={CaptureDir ?? "-"} fight={Fight} saucer={Saucer} ratwing={Ratwing} chapter1={Chapter1} forceFullscreen={forceFullscreen} mode={Screen.fullScreenMode}");
         }
     }
 }

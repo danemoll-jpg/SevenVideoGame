@@ -73,7 +73,7 @@ apply to every asset and scene:
   (bone `mixamorig:*Hand/*Foot` distance from Hips per frame); results recorded in `TODO.md` Stage B item 5.
 - **Build everything** (copy Mixamo FBX into Assets, Humanoid import, grayscale texture, materials, animators,
   Atmosphere prefab/profile/fog renderer feature, generated world meshes (`Assets/Art/World/Generated`, git-ignored),
-  scenes `Menu` (demo picker, first) + `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room) +
+  scenes `Menu` (demo picker, first) + `Chapter1` (Round 6 Moon level, `FightDemoBuilderChapter1.cs`, voice bank from `Unity/Assets/Audio/Voice`) + `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room) +
   `Saucer` (Round 3; built by `FightDemoBuilderSaucer.cs`, cat from `Art/Export/cat/`, `Atmosphere_Above` prefab) +
   `Ratwing` (Round 4 cave; `FightDemoBuilderRatwing.cs`, model from `Art/Export/ratwing/`, `Atmosphere_Cave` prefab) +
   the art gallery TV on the saucer (Round 5; `FightDemoBuilderGallery.cs` copies `Art/Gallery` to `Assets/StreamingAssets/Gallery`,
@@ -99,6 +99,17 @@ apply to every asset and scene:
   idle timing, next/prev/wrap, aspect ratio of every image measured on the screen and in full view, a real-input test of
   every key/pad binding through virtual devices, audio), ~85 s. **Menu shot:** `-capture <dir> -menu` → `00_menu.png`.
   Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
+- **Chapter 1 (Round 6)**: scene `Chapter1` (Moon level, built by `FightDemoBuilderChapter1.cs`; layout numbers in
+  `Runtime/MoonLayout.cs`; `Atmosphere_Moon` prefab; walkable areas = `Ground.Shape.Zones`, rectangles that must
+  overlap ≥ 0.6 m) → scenes 9–11 run in the `Saucer` scene (`Chapter1Aboard`, galley nook in `FightDemoBuilderSaucer.cs`).
+  Flow + checkpoints: `Chapter1Director.cs`. Switches: `-chapter1`, `-ch1aboard` (start at scene 9).
+  **Chapter 1 check run:** `SevenDemo.exe -mute -chapter1 -capture <dir> …` (autopilot, ~4.5 min) → `01_s01_cell_start.png …
+  28_s11_to_be_continued.png` + `capture_log.txt` (objectives, checkpoints, any "SOFT-LOCK?" timeouts with positions, voice
+  lines played vs. bank, cat distance, audio peak). **Telepathy sound check** (the one allowed unmuted step):
+  `SevenDemo.exe -mute -soundcheck -capture <dir> …` → `soundcheck_log.txt` (~2 s of sound, then muted again).
+- **Voices**: `python Tools/Voice/make_line_list.py` (DIALOGUE.md → `Docs/VOICE-LINES.md` + `Unity/Assets/Audio/Voice/voice_lines.json`),
+  then `python Tools/Voice/generate_voices.py [--force] [--only <id> …]` (ElevenLabs, key only from `ELEVENLABS_API_KEY`,
+  voices "Seven" / "Cat" by name) → `Unity/Assets/Audio/Voice/<scene>/<id>.mp3`; Build everything makes `VoiceBank.asset`.
 - Play: run the exe normally → demo picker; Xbox controller or keyboard/mouse (the legend bottom-left switches
   automatically). Esc / Start = back to the menu; fight reset = Backspace / d-pad down.
 
@@ -121,7 +132,7 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–5 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with a demo picker: fight demo, saucer
-mock-up (cat, sit, reveal, art-gallery TV), Ratwing cave scene. Details in `TODO-ARCHIVE.md`. **Current objective: Round 6** —
-Chapter 1 "The Moon Prison", the real opening (story `Docs/STORY.md`, script `Docs/DIALOGUE.md`, voices `Docs/VOICES.md`;
-ElevenLabs key only from `ELEVENLABS_API_KEY`). See `TODO.md`.
+**Rounds 1–6 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with the picker: **Chapter 1 "The Moon
+Prison"** (first real chapter, scenes 1–11 of `Docs/DIALOGUE.md`, voiced) on top, then the fight demo, saucer mock-up
+(cat, sit, reveal, art-gallery TV) and the Ratwing cave. Details in `TODO.md` (Round 6) and `TODO-ARCHIVE.md`.
+**Current objective: none** — waiting for Dan's review of Chapter 1 (see `TODO.md` "For Dan to check").

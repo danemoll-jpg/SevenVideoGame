@@ -18,11 +18,15 @@ namespace Seven
         public GalleryTV Gallery;          // Round 5 art TV (optional)
 
         bool _standPending;
+        /// <summary>Chapter 1 aboard (scenes 9-11): no reveal, the chapter sets the prompt.</summary>
+        [System.NonSerialized] public bool ChapterMode;
+        [System.NonSerialized] public string PromptOverride;
         [System.NonSerialized] public bool LiveInputInCapture;   // gallery check run: real input path with virtual devices
 
         void Start()
         {
-            if (DemoBoot.CaptureDir != null)
+            if (Chapter1State.Aboard) ChapterMode = true;
+            if (DemoBoot.CaptureDir != null && !ChapterMode)
             {
                 if (DemoBoot.Gallery && Gallery != null) gameObject.AddComponent<GalleryCaptureRun>().Init(this);
                 else gameObject.AddComponent<SaucerCaptureRun>().Init(this);
@@ -49,8 +53,8 @@ namespace Seven
                 // Esc leaves the gallery view first; Start still opens the demo menu from anywhere.
                 var kb = UnityEngine.InputSystem.Keyboard.current;
                 bool escForGallery = Gallery != null && Gallery.OwnsEscape && kb != null && kb.escapeKey.wasPressedThisFrame;
-                if (Input.Menu.WasPressedThisFrame() && !escForGallery) { SceneManager.LoadScene(DemoMenu.SceneName); return; }
-                if (Input.Reveal.WasPressedThisFrame()) PressReveal();
+                if (Input.Menu.WasPressedThisFrame() && !escForGallery) { Chapter1State.Reset(); SceneManager.LoadScene(DemoMenu.SceneName); return; }
+                if (Input.Reveal.WasPressedThisFrame() && !ChapterMode) PressReveal();
                 if (Input.Stand.WasPressedThisFrame()) PressStand();
             }
             if (_standPending && Reveal.Progress <= 0f) { _standPending = false; Seven.RequestStand(); }
@@ -67,7 +71,7 @@ namespace Seven
                 var layout = Gallery != null && Gallery.InView ? ControlsLegend.Layout.GalleryView
                     : m == SaucerSeven.Mode.Seated ? ControlsLegend.Layout.SaucerSeated : ControlsLegend.Layout.SaucerWalk;
                 if (Legend.Set != layout) Legend.SetLayout(layout);
-                string prompt = Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
+ string prompt = ChapterMode && PromptOverride != null ? PromptOverride : Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
                 if (prompt != _prompt) { _prompt = prompt; Legend.Prompt(prompt); }
             }
         }

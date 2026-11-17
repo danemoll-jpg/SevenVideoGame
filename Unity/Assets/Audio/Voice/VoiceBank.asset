@@ -1,0 +1,483 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 146b50612bf8bbb469328c44ec7b52af, type: 3}
+  m_Name: VoiceBank
+  m_EditorClassIdentifier: Assembly-CSharp::Seven.VoiceBank
+  Lines:
+  - Id: s01_01_7
+    Speaker: seven
+    Text: Hey. You shouldn't be here.
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: fc446d73e9b77c947adeb06510001c79, type: 3}
+  - Id: s01_02_7
+    Speaker: seven
+    Text: Go on. Before somebody sees you.
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: c37632f43b0cb29499bfff0da8bf46b2, type: 3}
+  - Id: s01_03_cat
+    Speaker: cat
+    Text: That would make rescuing you considerably harder.
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 7bc927aa97e179b468e28dac92ed49f8, type: 3}
+  - Id: s01_04_7
+    Speaker: seven
+    Text: Who said that?
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 83a27a4bf8ef1f0498df9530fe321483, type: 3}
+  - Id: s01_05_cat
+    Speaker: cat
+    Text: The cat.
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 6099a055c262c1d4697b155b133777b9, type: 3}
+  - Id: s01_06_7
+    Speaker: seven
+    Text: You're in my head.
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 9219b55bb172b7145940d85f2de910bd, type: 3}
+  - Id: s01_07_cat
+    Speaker: cat
+    Text: Only conversationally.
+    Scene: 1
+    PauseAfter: 2
+    Clip: {fileID: 8300000, guid: 8ad39d813ab0a884c8f2b979d501d616, type: 3}
+  - Id: s01_08_7
+    Speaker: seven
+    Text: You came to rescue me?
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: f0024d600f46e864eb74f04d9ab3efe2, type: 3}
+  - Id: s01_09_cat
+    Speaker: cat
+    Text: Yes. We should probably do that first.
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 0b72c71d30172ac4281bcfa46a595e94, type: 3}
+  - Id: s02_01_cat
+    Speaker: cat
+    Text: Stand back from the door.
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 438126c257501d84e8aa98541890c01b, type: 3}
+  - Id: s02_02_7
+    Speaker: seven
+    Text: You know how to open it?
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 5897aba737c7e03418387384b9f15657, type: 3}
+  - Id: s02_03_cat
+    Speaker: cat
+    Text: I wouldn't have asked you to stand back otherwise.
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 50fdf4166b2b48f488d7521d58e1516d, type: 3}
+  - Id: s02_04_7
+    Speaker: seven
+    Text: Thank you.
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 50a28085116eb7b4eb25516a41511b8f, type: 3}
+  - Id: s02_05_cat
+    Speaker: cat
+    Text: You're welcome.
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 6c4e5f16d9864764a9267d1286f5c568, type: 3}
+  - Id: s02_06_7
+    Speaker: seven
+    Text: Which way?
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 36294c47fc36c404abefcdce49156075, type: 3}
+  - Id: s02_07_cat
+    Speaker: cat
+    Text: My way in may be unsuitable for you.
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: c17b1b02984fd9f458315706c94fdcc1, type: 3}
+  - Id: s02_08_7
+    Speaker: seven
+    Text: Then we'll find another way.
+    Scene: 2
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 8c17e3d2ae3a9ff4da70e6871a910db4, type: 3}
+  - Id: s03_01_7
+    Speaker: seven
+    Text: Who sent you?
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: e11930f216efc34438e6d41ac318d649, type: 3}
+  - Id: s03_02_cat
+    Speaker: cat
+    Text: My people.
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 26486574ddb702e42b145f13c8c0590c, type: 3}
+  - Id: s03_03_7
+    Speaker: seven
+    Text: To rescue me specifically?
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: b6b82fc5e4e3b484581fadfe61a6d182, type: 3}
+  - Id: s03_04_cat
+    Speaker: cat
+    Text: Yes.
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 0a5f9069ce98ab948a62baeda19198aa, type: 3}
+  - Id: s03_05_7
+    Speaker: seven
+    Text: Why?
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 2029520788718a54180a8ee7d077d4a4, type: 3}
+  - Id: s03_06_cat
+    Speaker: cat
+    Text: They didn't tell me.
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 8e5fd98f5db6d3a45bac61a137f433c1, type: 3}
+  - Id: s03_07_7
+    Speaker: seven
+    Text: And you came anyway?
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 08a66680a0504824285564ae567e7cc6, type: 3}
+  - Id: s03_08_cat
+    Speaker: cat
+    Text: You were in a prison. That seemed reason enough.
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: f4e44b87b45a02247a3e0f032ec11d85, type: 3}
+  - Id: s03_09_7
+    Speaker: seven
+    Text: Do you know why they're holding me?
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 03d5589d478de1749ab323d3460c18b4, type: 3}
+  - Id: s03_10_cat
+    Speaker: cat
+    Text: No. I was hoping you could explain that part.
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: bef5686940add284baf8aa9d9c526e03, type: 3}
+  - Id: s04_01_7
+    Speaker: seven
+    Text: This wall is different.
+    Scene: 4
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 40f9661f7be6e4f4ca7af2fea73fa6b3, type: 3}
+  - Id: s04_02_cat
+    Speaker: cat
+    Text: Older.
+    Scene: 4
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 6b1069ea5174a6440bf58c7a1f3b1c7d, type: 3}
+  - Id: s04_03_7
+    Speaker: seven
+    Text: The prison was built around it.
+    Scene: 4
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 01cbfadc9d27aa741bba2e1ad4272e3a, type: 3}
+  - Id: s04_04_cat
+    Speaker: cat
+    Text: Convenient. I'd prefer a way out that wasn't designed by the people keeping you in.
+    Scene: 4
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: a7265ed934ebcf843991a1c164b3fed4, type: 3}
+  - Id: s04_05_7
+    Speaker: seven
+    Text: Let's see where it goes.
+    Scene: 4
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 50815b742a9fb9246b5b49e9be3facf6, type: 3}
+  - Id: s05_01_cat
+    Speaker: cat
+    Text: Can we get past?
+    Scene: 5
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 58b10530ca4db5641a5cd7be35e2a9c6, type: 3}
+  - Id: s05_02_7
+    Speaker: seven
+    Text: Yes. Without hurting them.
+    Scene: 5
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: ea13dc4e04472b344a1800bd0bcb0ad1, type: 3}
+  - Id: s05_03_cat
+    Speaker: cat
+    Text: I was rather hoping you'd say that.
+    Scene: 5
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 4058d768759e5c946bdde11a09834280, type: 3}
+  - Id: s05_04_7
+    Speaker: seven
+    Text: Come on. Before they find another way around.
+    Scene: 5
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: c52e549b65fdf5d4b9bd96f70c164db3, type: 3}
+  - Id: s06_01_cat
+    Speaker: cat
+    Text: What is it?
+    Scene: 6
+    PauseAfter: 2
+    Clip: {fileID: 8300000, guid: 33b704a1c784dd84d9092aca03a986bf, type: 3}
+  - Id: s06_02_cat
+    Speaker: cat
+    Text: Can you hear me?
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 3c6675927e2749643a6809002751a3fc, type: 3}
+  - Id: s06_03_7
+    Speaker: seven
+    Text: Yes.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 6607cbe411c2e944fbeedc12bd5fe42c, type: 3}
+  - Id: s06_04_cat
+    Speaker: cat
+    Text: You weren't answering.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 5386e11b1552c2240a88801289e820fd, type: 3}
+  - Id: s06_05_7
+    Speaker: seven
+    Text: This place was different.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: bc6fa14008efe61458afb2cfe2ab50cc, type: 3}
+  - Id: s06_06_cat
+    Speaker: cat
+    Text: Different how?
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 266818726ebde004ea96628d5aac99d4, type: 3}
+  - Id: s06_07_7
+    Speaker: seven
+    Text: Whole. There were people here.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: ea99c78209c0b3741a4a1d46b7732abb, type: 3}
+  - Id: s06_08_cat
+    Speaker: cat
+    Text: I didn't see them.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 2d23ba8f9d7e1bf4399e361c0c8d8a3a, type: 3}
+  - Id: s06_09_7
+    Speaker: seven
+    Text: I know.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: b836c62ad7e6e154ca1dea250a8831e1, type: 3}
+  - Id: s06_10_7
+    Speaker: seven
+    Text: I think I know how to get through.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 7048185e459d2ae42b5ef4d4becd2d3e, type: 3}
+  - Id: s06_11_cat
+    Speaker: cat
+    Text: From what you saw?
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 44a52d6f768ecd247a979ca2811c18a4, type: 3}
+  - Id: s06_12_7
+    Speaker: seven
+    Text: Let me try.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: f1b41e69146ffbf4aa7ac09bf4515fbc, type: 3}
+  - Id: s06_13_cat
+    Speaker: cat
+    Text: We should talk about that.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 10f26d6c564c23c45b3d38d5bd41747c, type: 3}
+  - Id: s06_14_7
+    Speaker: seven
+    Text: When we're out.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 298ca82c96a46334e88d339738f594c1, type: 3}
+  - Id: s06_15_cat
+    Speaker: cat
+    Text: Agreed.
+    Scene: 6
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: a33908063bdd2fc4286670bf20a994e6, type: 3}
+  - Id: s07_01_7
+    Speaker: seven
+    Text: There. That's my ship.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 358b52ed055f6fc4cb1c91b7f03b8fe1, type: 3}
+  - Id: s07_02_cat
+    Speaker: cat
+    Text: The saucer?
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: c47a66b9ba51b234a9b30cd515c9e938, type: 3}
+  - Id: s07_03_7
+    Speaker: seven
+    Text: Yes.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 0a4d1a4f7e0791141958835b701c5f1a, type: 3}
+  - Id: s07_04_cat
+    Speaker: cat
+    Text: Good. I was beginning to worry you meant one of the mining carts.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: bed64d384a61ffa4aa4ed1b2c3846bc8, type: 3}
+  - Id: s07_05_7
+    Speaker: seven
+    Text: We need to get down there and release it.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: fe1e74fea4a1e1b45b2f0bc996647d8c, type: 3}
+  - Id: s07_06_cat
+    Speaker: cat
+    Text: Then we have a destination.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 427b100864792b746aa8401993638ac0, type: 3}
+  - Id: s08_01_7
+    Speaker: seven
+    Text: Get aboard.
+    Scene: 8
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 55b61a70d0e91b347bd093bffe49dc6c, type: 3}
+  - Id: s08_02_cat
+    Speaker: cat
+    Text: After you.
+    Scene: 8
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 228fb2dd3f8e028479d041949894179c, type: 3}
+  - Id: s08_03_7
+    Speaker: seven
+    Text: You don't know how to fly it.
+    Scene: 8
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: db946237bdbda964593df218a8ae6658, type: 3}
+  - Id: s08_04_cat
+    Speaker: cat
+    Text: An excellent reason for you to go first.
+    Scene: 8
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: fd13a67e9a04d154ea9dfca6d56aa999, type: 3}
+  - Id: s09_01_cat
+    Speaker: cat
+    Text: This is considerably more ship than I was expecting.
+    Scene: 9
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 429dff8d74a550a42971c5a4d57f18dc, type: 3}
+  - Id: s09_02_7
+    Speaker: seven
+    Text: Is that a complaint?
+    Scene: 9
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: aeeaf7d18e1bcbe41a423ca31757d45c, type: 3}
+  - Id: s09_03_cat
+    Speaker: cat
+    Text: I'm reserving judgment until I find the kitchen.
+    Scene: 9
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: f8ecb46dd8664274ab4ad4917e94eedd, type: 3}
+  - Id: s10_01_7
+    Speaker: seven
+    Text: So, what do you eat? Canned food?
+    Scene: 10
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: d262f88fd85e0104cb9fa11537ce6adc, type: 3}
+  - Id: s10_02_cat
+    Speaker: cat
+    Text: Chicken. But only free-range.
+    Scene: 10
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 39609e092a4b8df4192ea4c48d69a29b, type: 3}
+  - Id: s10_03_7
+    Speaker: seven
+    Text: You're particular for someone I just met in a prison.
+    Scene: 10
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 0be35146b38f91644a2a8d5ca031a218, type: 3}
+  - Id: s10_04_cat
+    Speaker: cat
+    Text: Having experienced confinement, I feel strongly about it.
+    Scene: 10
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: b476862e95217264e835f536dbc5eb0d, type: 3}
+  - Id: s11_01_7
+    Speaker: seven
+    Text: What happens now? Do you go back?
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 0f9ebfa3fb2241f4fb39c3dbe916bddb, type: 3}
+  - Id: s11_02_cat
+    Speaker: cat
+    Text: I was sent to get you out. You're out.
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: fe796baae18eb034f9f695eadd7ab9a5, type: 3}
+  - Id: s11_03_7
+    Speaker: seven
+    Text: I thought you were supposed to help me.
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 579db9d248dfcbf4a9e4bd31e1ad0ab1, type: 3}
+  - Id: s11_04_cat
+    Speaker: cat
+    Text: I did.
+    Scene: 11
+    PauseAfter: 1.6
+    Clip: {fileID: 8300000, guid: 76f5e4702105b684698c2422dd3aebc9, type: 3}
+  - Id: s11_05_7
+    Speaker: seven
+    Text: With what happened down there, I mean.
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: cce86f5a3211ec04b8fb10d704b8aeea, type: 3}
+  - Id: s11_06_cat
+    Speaker: cat
+    Text: I don't know what happened down there.
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 05a71f3a4bd2ff04c8658ccbc12f1063, type: 3}
+  - Id: s11_07_7
+    Speaker: seven
+    Text: Neither do I.
+    Scene: 11
+    PauseAfter: 2.5
+    Clip: {fileID: 8300000, guid: 8bd636f2877c8084a8eae6b6eab5e69d, type: 3}
+  - Id: s11_08_cat
+    Speaker: cat
+    Text: Then perhaps I should stay.
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: ac24543877b0e5f4d9010644d182805e, type: 3}
+  - Id: s11_09_7
+    Speaker: seven
+    Text: You don't have to.
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: c3c4f4a1fa6090645b8e663c861949dd, type: 3}
+  - Id: s11_10_cat
+    Speaker: cat
+    Text: I know.
+    Scene: 11
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: b0d2d07cfb6f7fa4ab595e4b3169a540, type: 3}

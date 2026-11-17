@@ -34,7 +34,7 @@ namespace Seven.EditorTools
         static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         public static string ExePath => Path.Combine(ProjectRoot, "Builds", "Seven", "SevenDemo.exe");   // QF2
         /// <summary>Build order: the demo picker first.</summary>
-        static string[] AllScenes => new[] { MenuScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath };
+        static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath };
 
         static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle" };
         static readonly string[] RootMotion = { "finisher", "dodge", "knocked_down", "get_up" };
@@ -72,10 +72,12 @@ namespace Seven.EditorTools
             var sevenCtl = BuildController(SevenDir, "7_", AnimDir + "/Seven.controller", "fight_idle");
             var botCtl = BuildController(BotDir, "ybot_", AnimDir + "/TrainingBot.controller", "fight_idle");
             var atmo = BuildAtmosphere();
+            var bank = BuildVoiceBank();               // Round 6 (before the menu + saucer scenes, which reference it)
             BuildRoomScene(sevenCtl, botCtl, mats);
             BuildOutdoorScene(sevenCtl, botCtl, mats, atmo);
             BuildRound3(sevenCtl, atmo);
             BuildRound4(atmo);
+            BuildRound6(sevenCtl, atmo, bank);
             EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
             ConfigurePlayer();
             AssetDatabase.SaveAssets();
