@@ -81,8 +81,6 @@ apply to every asset and scene:
 - Play: run the exe normally; Xbox controller or keyboard/mouse (the legend bottom-left switches automatically).
 
 ## Where things stand
-**Round 1 complete (2026-11-16)** — playable fight demo (details in `TODO-ARCHIVE.md`).
-**Round 2 built (2026-11-16), waiting for Dan to play and check** — the same exe (`Unity\Builds\FightDemo\SevenFightDemo.exe`)
-now opens on a foggy outdoor hill in Kyle's mood, with a right-stick orbit camera, camera-relative movement, hold-to-lift
-telekinesis, an Xbox/keyboard legend in uGUI and the reusable `Atmosphere` setup. Per-item status and screenshots are in
-`TODO.md` (previews in `Docs/Previews/round2/`).
+**Rounds 1–2 + QF1 complete (2026-11-16)** — playable fight demo on the fog/glow hill (details in
+`TODO-ARCHIVE.md`). **Current objective: Round 3** — saucer mock-up: walk the ship, the black cat hops onto 7's lap
+when she sits, and the ship fades away to show her above the city. See `TODO.md`.
