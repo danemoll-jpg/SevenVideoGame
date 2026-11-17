@@ -7,6 +7,8 @@ namespace Seven
     public class SaucerInput : MonoBehaviour
     {
         public InputAction Move, Look, Recenter, Sit, Stand, Reveal, Menu;
+        // Round 5 gallery TV (viewing mode). "View art" reuses Sit (A / E).
+        public InputAction GalleryPrev, GalleryNext, GalleryFull, GalleryLeave;
 
         static InputAction Button(string name, params string[] paths)
         {
@@ -29,10 +31,14 @@ namespace Seven
             Stand = Button("stand", "<Gamepad>/buttonEast", "<Keyboard>/q");
             Reveal = Button("reveal", "<Gamepad>/buttonNorth", "<Keyboard>/r");
             Menu = Button("menu", "<Gamepad>/start", "<Keyboard>/escape");
+            GalleryPrev = Button("galleryPrev", "<Gamepad>/dpad/left", "<Gamepad>/leftShoulder", "<Keyboard>/leftArrow");
+            GalleryNext = Button("galleryNext", "<Gamepad>/dpad/right", "<Gamepad>/rightShoulder", "<Keyboard>/rightArrow");
+            GalleryFull = Button("galleryFull", "<Gamepad>/buttonNorth", "<Keyboard>/f");
+            GalleryLeave = Button("galleryLeave", "<Gamepad>/buttonEast", "<Keyboard>/escape");
             foreach (var a in All()) a.Enable();
         }
 
-        InputAction[] All() => new[] { Move, Look, Recenter, Sit, Stand, Reveal, Menu };
+        InputAction[] All() => new[] { Move, Look, Recenter, Sit, Stand, Reveal, Menu, GalleryPrev, GalleryNext, GalleryFull, GalleryLeave };
 
         void OnDestroy()
         {

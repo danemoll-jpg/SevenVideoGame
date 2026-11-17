@@ -15,12 +15,18 @@ namespace Seven
         public ShipReveal Reveal;
         public ControlsLegend Legend;
         public SaucerInput Input;
+        public GalleryTV Gallery;          // Round 5 art TV (optional)
 
         bool _standPending;
+        [System.NonSerialized] public bool LiveInputInCapture;   // gallery check run: real input path with virtual devices
 
         void Start()
         {
-            if (DemoBoot.CaptureDir != null) gameObject.AddComponent<SaucerCaptureRun>().Init(this);
+            if (DemoBoot.CaptureDir != null)
+            {
+                if (DemoBoot.Gallery && Gallery != null) gameObject.AddComponent<GalleryCaptureRun>().Init(this);
+                else gameObject.AddComponent<SaucerCaptureRun>().Init(this);
+            }
         }
 
         public void PressReveal()
@@ -37,10 +43,13 @@ namespace Seven
 
         void Update()
         {
-            bool live = DemoBoot.CaptureDir == null && Input != null;
+            bool live = (DemoBoot.CaptureDir == null || LiveInputInCapture) && Input != null;
             if (live)
             {
-                if (Input.Menu.WasPressedThisFrame()) { SceneManager.LoadScene(DemoMenu.SceneName); return; }
+                // Esc leaves the gallery view first; Start still opens the demo menu from anywhere.
+                var kb = UnityEngine.InputSystem.Keyboard.current;
+                bool escForGallery = Gallery != null && Gallery.OwnsEscape && kb != null && kb.escapeKey.wasPressedThisFrame;
+                if (Input.Menu.WasPressedThisFrame() && !escForGallery) { SceneManager.LoadScene(DemoMenu.SceneName); return; }
                 if (Input.Reveal.WasPressedThisFrame()) PressReveal();
                 if (Input.Stand.WasPressedThisFrame()) PressStand();
             }
@@ -55,12 +64,13 @@ namespace Seven
 
             if (Legend != null)
             {
-                var layout = m == SaucerSeven.Mode.Seated ? ControlsLegend.Layout.SaucerSeated : ControlsLegend.Layout.SaucerWalk;
+                var layout = Gallery != null && Gallery.InView ? ControlsLegend.Layout.GalleryView
+                    : m == SaucerSeven.Mode.Seated ? ControlsLegend.Layout.SaucerSeated : ControlsLegend.Layout.SaucerWalk;
                 if (Legend.Set != layout) Legend.SetLayout(layout);
-                bool prompt = Seven.NearChair;
-                if (prompt != _prompt) { _prompt = prompt; Legend.Prompt(prompt ? "Sit" : null); }
+                string prompt = Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
+                if (prompt != _prompt) { _prompt = prompt; Legend.Prompt(prompt); }
             }
         }
-        bool _prompt;
+        string _prompt;
     }
 }

@@ -27,6 +27,8 @@ namespace Seven
 
         [NonSerialized] public bool ScriptDriven;
         [NonSerialized] public Vector2 ScriptMove;
+        /// <summary>Round 5: stands still (idle) while the gallery TV is in use.</summary>
+        [NonSerialized] public bool Frozen;
 
         Transform _hips;
         bool _anchor;                       // pin hips to a point (in anchor space) every LateUpdate
@@ -106,6 +108,7 @@ namespace Seven
 
         void UpdateFree()
         {
+            if (Frozen) { if (State != "idle") Play("idle", 0.2f, 1f, false); return; }
             var m = MoveInput;
             if (m.sqrMagnitude > 0.04f)
             {

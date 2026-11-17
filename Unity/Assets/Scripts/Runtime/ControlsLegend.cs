@@ -16,7 +16,7 @@ namespace Seven
     {
         public Camera Cam;
         public bool ShowXbox = true;
-        public enum Layout { Fight, SaucerWalk, SaucerSeated }
+        public enum Layout { Fight, SaucerWalk, SaucerSeated, GalleryView }
         public Layout Set = Layout.Fight;
         bool _saucer;
         [System.NonSerialized] public bool AutoSwitch = true;   // check runs force a mode
@@ -69,6 +69,7 @@ namespace Seven
             new Row("orbit camera", (G.Stick, "R")),
             new Row("re-center camera", (G.StickClick, "R3")),
             new Row("sit (near the chair)", (G.Face, "A")),
+            new Row("view art (near the TV)", (G.Face, "A")),
             new Row("demo menu", (G.Menu, "")),
             new Row("fullscreen on/off", (G.View, "")),
         };
@@ -78,6 +79,7 @@ namespace Seven
             new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
             new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
             new Row("sit (near the chair)", (G.Key, "E")),
+            new Row("view art (near the TV)", (G.Key, "E")),
             new Row("demo menu", (G.WideKey, "Esc")),
             new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
@@ -98,6 +100,23 @@ namespace Seven
             new Row("orbit camera (hold + drag)", (G.Mouse, "R")),
             new Row("re-center camera", (G.Key, "C"), (G.Mouse, "M")),
             new Row("demo menu", (G.WideKey, "Esc")),
+            new Row("fullscreen on/off", (G.WideKey, "F11")),
+        };
+
+        // Round 5: viewing Kyle's art on the TV.
+        static readonly Row[] GalleryXbox =
+        {
+            new Row("previous / next (or d-pad, left stick)", (G.Bumper, "LB"), (G.Bumper, "RB")),
+            new Row("full view on/off", (G.Face, "Y")),
+            new Row("leave the TV", (G.Face, "B")),
+            new Row("demo menu", (G.Menu, "")),
+            new Row("fullscreen on/off", (G.View, "")),
+        };
+        static readonly Row[] GalleryKeys =
+        {
+            new Row("previous / next", (G.Key, "\u2190"), (G.Key, "\u2192")),
+            new Row("full view on/off", (G.Key, "F")),
+            new Row("leave the TV", (G.WideKey, "Esc")),
             new Row("fullscreen on/off", (G.WideKey, "F11")),
         };
 
@@ -138,6 +157,8 @@ namespace Seven
                 _panels[(Layout.SaucerWalk, false)] = BuildPanel(canvasGo.transform, "WalkKeys", SaucerWalkKeys);
                 _panels[(Layout.SaucerSeated, true)] = BuildPanel(canvasGo.transform, "SeatedXbox", SaucerSeatedXbox);
                 _panels[(Layout.SaucerSeated, false)] = BuildPanel(canvasGo.transform, "SeatedKeys", SaucerSeatedKeys);
+                _panels[(Layout.GalleryView, true)] = BuildPanel(canvasGo.transform, "GalleryXbox", GalleryXbox);
+                _panels[(Layout.GalleryView, false)] = BuildPanel(canvasGo.transform, "GalleryKeys", GalleryKeys);
                 _promptX = BuildPrompt(canvasGo.transform, "PromptXbox", G.Face, "A", out _promptTextX);
                 _promptK = BuildPrompt(canvasGo.transform, "PromptKeys", G.Key, "E", out _promptTextK);
             }
@@ -169,10 +190,10 @@ namespace Seven
             var rt = (RectTransform)panel.transform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0f);
             rt.anchoredPosition = new Vector2(0f, 90f);
-            rt.sizeDelta = new Vector2(150f, 40f);
+            rt.sizeDelta = new Vector2(170f, 40f);
             panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.75f);
             AddGlyph(panel.transform, g, glyph, new Vector2(14f, 6f), new Vector2(28f, 28f));
-            label = AddText(panel.transform, "", new Vector2(52f, 4f), new Vector2(90f, 32f), 20, TextAnchor.MiddleLeft);
+            label = AddText(panel.transform, "", new Vector2(52f, 4f), new Vector2(110f, 32f), 20, TextAnchor.MiddleLeft);
             return panel;
         }
 

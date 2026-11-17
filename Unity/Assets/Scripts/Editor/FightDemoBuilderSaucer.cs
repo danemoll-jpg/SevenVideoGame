@@ -35,6 +35,7 @@ namespace Seven.EditorTools
 
         static void BuildRound3(AnimatorController sevenCtl, GameObject atmoPrefab)
         {
+            CopyGallery();                      // Round 5: Art/Gallery -> StreamingAssets/Gallery
             var catCtl = SetupCat(out var catMats);
             var sm = BuildSaucerMaterials();
             BuildMenuScene();
@@ -360,7 +361,7 @@ namespace Seven.EditorTools
             return WallProfile[WallProfile.Length - 1].x;
         }
 
-        struct ShipRefs { public Transform chairPivot, seat; public List<Light> lights; public List<Renderer> glass; public List<Vector3> obstacles; }
+        struct ShipRefs { public Transform chairPivot, seat; public List<Light> lights; public List<Renderer> glass; public List<Vector3> obstacles; public TvRefs tv; }
 
         static ShipRefs BuildShip(ShipMats m)
         {
@@ -420,23 +421,27 @@ namespace Seven.EditorTools
                     Quad(side, sideT, p0, p0 + Vector3.up * NookH, p1 + Vector3.up * NookH, p1);
                 }
                 Obj($"Nook{k}_Sides", Finish(side, sideT), m.wall, nook);
-                var bv = new List<Vector3>(); var btri = new List<int>();
-                AddRing(bv, btri, Vector3.zero, 9.0f, 9.65f, 0.4f, a0 + 3f, a1 - 3f, 20);
-                Obj($"Nook{k}_Bench", Finish(bv, btri), m.sofaBase, nook);
-                var cv = new List<Vector3>(); var ct = new List<int>();
-                AddRing(cv, ct, Vector3.up * 0.4f, 9.05f, 9.6f, 0.12f, a0 + 4f, a1 - 4f, 20);
-                AddRing(cv, ct, Vector3.up * 0.4f, 9.45f, 9.65f, 0.55f, a0 + 4f, a1 - 4f, 20);
-                Obj($"Nook{k}_Cushions", Finish(cv, ct), m.fabric, nook);
+                if (k != TvNook)     // Round 5: the TV nook has a console + screen instead of the bench
+                {
+                    var bv = new List<Vector3>(); var btri = new List<int>();
+                    AddRing(bv, btri, Vector3.zero, 9.0f, 9.65f, 0.4f, a0 + 3f, a1 - 3f, 20);
+                    Obj($"Nook{k}_Bench", Finish(bv, btri), m.sofaBase, nook);
+                    var cv = new List<Vector3>(); var ct = new List<int>();
+                    AddRing(cv, ct, Vector3.up * 0.4f, 9.05f, 9.6f, 0.12f, a0 + 4f, a1 - 4f, 20);
+                    AddRing(cv, ct, Vector3.up * 0.4f, 9.45f, 9.65f, 0.55f, a0 + 4f, a1 - 4f, 20);
+                    Obj($"Nook{k}_Cushions", Finish(cv, ct), m.fabric, nook);
+                }
                 var lamp = new GameObject($"Nook{k}_Light").AddComponent<Light>();
                 lamp.transform.SetParent(nook, false);
                 lamp.transform.position = Polar(8.9f, c, 2.0f);
-                lamp.type = LightType.Point; lamp.range = 3.6f; lamp.intensity = 1.6f; lamp.color = Color.white; lamp.shadows = LightShadows.None;
+                lamp.type = LightType.Point; lamp.range = 3.6f; lamp.intensity = k == TvNook ? 0.9f : 1.6f; lamp.color = Color.white; lamp.shadows = LightShadows.None;
                 refs.lights.Add(lamp);
                 var lv = new List<Vector3>(); var lt = new List<int>();
                 Sweep(lv, lt, Enumerable.Range(0, 21).Select(i => Polar(NookR - 0.25f, Mathf.Lerp(a0 + 2f, a1 - 2f, i / 20f), NookH - 0.06f)).ToList(), 0.02f, false, 6);
                 Obj($"Nook{k}_Glow", SmoothFinish(lv, lt), m.cove, nook, false);
-                Plant(nook, $"Nook{k}_Plant", Polar(8.6f, k == 0 ? a0 + 5f : a1 - 5f, 0f), 1.0f, 300 + k, m, refs.obstacles);
+                Plant(nook, $"Nook{k}_Plant", Polar(8.6f, k == 0 ? a0 + 5f : a1 - 3.5f, 0f), 1.0f, 300 + k, m, refs.obstacles);
             }
+            refs.tv = BuildGalleryNook(walls, m, refs.obstacles);
 
             // Dome ceiling, cove light, concentric ribs, central light.
             var ceil = new GameObject("Ceiling").transform; ceil.SetParent(ship, false);
@@ -735,6 +740,8 @@ namespace Seven.EditorTools
             s7.Input = input; s7.CameraTransform = camGo.transform; s7.ChairPivot = refs.chairPivot; s7.SeatPoint = refs.seat;
             var scam = camGo.AddComponent<Seven.SaucerCamera>();
             scam.Seven = s7; scam.Input = input; scam.Chair = refs.chairPivot;
+            scam.Nooks = NookAngles.Select(a => new Vector3(a, NookHalf, NookR - 0.45f)).ToArray();
+            scam.NookCeiling = NookH - 0.15f;
 
             // The cat: root (scale, AI) + model child turned so its head points +Z.
             var catRoot = new GameObject("Cat");
@@ -783,6 +790,12 @@ namespace Seven.EditorTools
 
             var dir = dirGo.AddComponent<Seven.SaucerDirector>();
             dir.Seven = s7; dir.Cam = scam; dir.Cat = cat; dir.Reveal = rev; dir.Legend = legend; dir.Input = input;
+
+            // Round 5: Kyle's art TV.
+            var gtv = refs.tv.tv.gameObject.AddComponent<Seven.GalleryTV>();
+            gtv.Screen = refs.tv.screen; gtv.UiMaterial = GalleryUiMaterial(); gtv.ScreenLight = refs.tv.light;
+            gtv.Seven = s7; gtv.Cam = scam; gtv.Input = input; gtv.Reveal = rev; gtv.ScreenSize = TvSize;
+            dir.Gallery = gtv;
 
             EditorSceneManager.SaveScene(scene, SaucerScenePath);
             Log("scene saved " + SaucerScenePath);

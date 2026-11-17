@@ -28,6 +28,9 @@ namespace Seven
         public float SeatedMinPitch = 12f;
         [Header("Ship shell (camera stays inside while the ship is there)")]
         public float ShellRadius = 7.3f, CeilingCenter = 3.75f, CeilingEdge = 2.75f, CeilingRadius = 7.2f;
+        [Tooltip("Wall nooks the camera may enter: x = centre angle (deg, atan2(z, x)), y = half width (deg), z = max radius.")]
+        public Vector3[] Nooks;
+        public float NookCeiling = 2.2f;
         [System.NonSerialized] public bool InsideShip = true;
         [System.NonSerialized] public bool Hold;
 
@@ -44,6 +47,15 @@ namespace Seven
         {
             Current = m;
             _userYaw = 0f; _userPitch = 0f;
+        }
+
+        float _blendT = 1f, _blendDur = 1f;
+        Vector3 _blendPos; Quaternion _blendRot;
+        /// <summary>Ease from a given pose into the normal camera over the next seconds (gallery TV hand-back).</summary>
+        public void BlendFrom(Vector3 pos, Quaternion rot, float seconds)
+        {
+            _blendPos = pos; _blendRot = rot; _blendDur = Mathf.Max(0.01f, seconds); _blendT = 0f;
+            _recentering = false; _yawVel = _pitchVel = 0f;
         }
 
         public void StartRecenter() { _recentering = true; _userYaw = 0f; _userPitch = 0f; }
@@ -119,6 +131,13 @@ namespace Seven
             var want = Clamp(_focus - Quaternion.Euler(Pitch, Yaw, 0f) * Vector3.forward * _dist, _focus);
             transform.position = Current == Mode.Walk ? want : Vector3.SmoothDamp(transform.position, want, ref _posVel, 0.12f);
             transform.rotation = Quaternion.LookRotation(_focus - transform.position);
+            if (_blendT < 1f)
+            {
+                _blendT = Mathf.Min(1f, _blendT + dt / _blendDur);
+                float w = 1f - Mathf.SmoothStep(0f, 1f, _blendT);
+                transform.position = Vector3.Lerp(transform.position, _blendPos, w);
+                transform.rotation = Quaternion.Slerp(transform.rotation, _blendRot, w);
+            }
         }
 
         /// <summary>Highest the camera may go at this radius (under the dome).</summary>
@@ -131,7 +150,14 @@ namespace Seven
         bool Inside(Vector3 p)
         {
             float r = new Vector2(p.x, p.z).magnitude;
-            return r < ShellRadius && p.y > 0.25f && p.y < CeilingAt(r) - 0.25f;
+            if (r < ShellRadius) return p.y > 0.25f && p.y < CeilingAt(r) - 0.25f;
+            if (Nooks != null && p.y > 0.25f && p.y < NookCeiling)
+            {
+                float a = Mathf.Atan2(p.z, p.x) * Mathf.Rad2Deg;
+                foreach (var n in Nooks)
+                    if (Mathf.Abs(Mathf.DeltaAngle(n.x, a)) < n.y - 2f && r < n.z) return true;
+            }
+            return false;
         }
 
         /// <summary>Shorten the boom so the camera stays inside the ship (while the ship is there).</summary>

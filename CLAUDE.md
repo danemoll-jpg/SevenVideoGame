@@ -75,7 +75,9 @@ apply to every asset and scene:
   Atmosphere prefab/profile/fog renderer feature, generated world meshes (`Assets/Art/World/Generated`, git-ignored),
   scenes `Menu` (demo picker, first) + `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room) +
   `Saucer` (Round 3; built by `FightDemoBuilderSaucer.cs`, cat from `Art/Export/cat/`, `Atmosphere_Above` prefab) +
-  `Ratwing` (Round 4 cave; `FightDemoBuilderRatwing.cs`, model from `Art/Export/ratwing/`, `Atmosphere_Cave` prefab), Windows exe at
+  `Ratwing` (Round 4 cave; `FightDemoBuilderRatwing.cs`, model from `Art/Export/ratwing/`, `Atmosphere_Cave` prefab) +
+  the art gallery TV on the saucer (Round 5; `FightDemoBuilderGallery.cs` copies `Art/Gallery` to `Assets/StreamingAssets/Gallery`,
+  git-ignored), Windows exe at
   `Unity\Builds\Seven\SevenDemo.exe`, product name "7: The Observer — Demo" (QF2; the old `Builds\FightDemo` is obsolete)):
   `Unity.exe -batchmode -nographics -quit -projectPath C:\Users\danmo\SevenVideoGame\Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine -logFile <file>`
   (start with `Start-Process -WindowStyle Hidden`, then `.PriorityClass = 'BelowNormal'`; ~5 min; exit code 0 = ok).
@@ -92,12 +94,33 @@ apply to every asset and scene:
   **Saucer check run:** same with `-saucer` → `01_ship_wide.png … 16_after_stand.png` + `capture_log.txt` (audio, feet /
   paws vs. the floor, lap gap, reveal timings), ~70 s. **Ratwing check run:** same with `-ratwing` →
   `01_cave_wide.png … 11_after_skip.png` + `capture_log.txt` (audio, eye-glint timing, feet vs. ledge while hanging and
-  vs. floor after landing incl. raycasts, wingspan, replay/skip), ~25 s. **Menu shot:** `-capture <dir> -menu` → `00_menu.png`.
+  vs. floor after landing incl. raycasts, wingspan, replay/skip), ~25 s. **Gallery check run:** same with `-gallery`
+  (implies `-saucer`) → `G01_tv_across_deck.png … G21_left.png` + `capture_log.txt` (image count vs. JSON vs. files,
+  idle timing, next/prev/wrap, aspect ratio of every image measured on the screen and in full view, a real-input test of
+  every key/pad binding through virtual devices, audio), ~85 s. **Menu shot:** `-capture <dir> -menu` → `00_menu.png`.
   Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
 - Play: run the exe normally → demo picker; Xbox controller or keyboard/mouse (the legend bottom-left switches
   automatically). Esc / Start = back to the menu; fight reset = Backspace / d-pad down.
 
+## Kyle's art gallery (TV on the saucer) — how to add or change art
+- The art lives in `Art/Gallery/` (Git LFS) with `Art/Gallery/gallery.json`: one line per image, in display order:
+  `{ "file": "kyle_new_piece.jpg", "title": "Short plain title", "include": true }`. `include` is required
+  (`false` hides a piece without deleting it). The credit line ("Art by Kyle G. Anderson") is the `credit` field at the top.
+- **Add a piece:** copy the .jpg/.png into `Art/Gallery/`, add its line to `gallery.json` where it should appear
+  (watch the commas), then **Build everything** (above). The builder copies `gallery.json` + every included image into
+  `Unity/Assets/StreamingAssets/Gallery/` and so into the exe's `SevenDemo_Data/StreamingAssets/Gallery/`.
+  Reorder = move lines; hide = `"include": false`; rename = change `title`. Any size/aspect works (shown grayscale,
+  never stretched, downscaled to 2048 px on the long side when loading).
+- **Without a rebuild:** the game reads `Unity\Builds\Seven\SevenDemo_Data\StreamingAssets\Gallery\gallery.json`
+  and the images next to it every time the saucer scene starts, so dropping a file into that built folder and adding
+  its line to that built `gallery.json` shows it on the next launch. That copy is overwritten by the next build, so
+  make the same change in `Art/Gallery/` too. (Only included images are copied: to switch a hidden piece on in the
+  built copy, also copy its file there.)
+- Controls on the saucer: walk to the TV in the back nook → A / E "View art"; ← → / LB RB / d-pad / left stick
+  = previous / next; Y / F = full view; B / Esc = leave. Code: `GalleryTV.cs` (runtime), `FightDemoBuilderGallery.cs`
+  (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
+
 ## Where things stand
-**Rounds 1–4 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with a demo picker: fight demo (fog/glow
-hill), saucer mock-up (cat, sit, reveal), Ratwing cave scene. Details in `TODO-ARCHIVE.md`. **Current objective: Round 5** —
-Kyle's art gallery TV on the saucer (`Art/Gallery/` + `gallery.json`, loaded at runtime). See `TODO.md`.
+**Rounds 1–5 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` with a demo picker: fight demo (fog/glow
+hill), saucer mock-up (cat, sit, reveal, **and Kyle's art gallery TV** in the back nook), Ratwing cave scene.
+Rounds 1–4 in `TODO-ARCHIVE.md`, Round 5 record in `TODO.md`. **Next:** waiting for Dan's review of Round 5.

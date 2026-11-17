@@ -8,6 +8,7 @@ namespace Seven
     ///   -mute            AudioListener.volume = 0 before any sound can play (every automated run uses it).
     ///   -room            start in the Round 1 training room (FightDemo_Room) instead of the outdoor world.
     ///   -fight / -saucer / -ratwing   skip the demo picker and start that demo (check runs use these).
+    ///   -gallery         with -capture: the Round 5 gallery TV check run on the saucer (implies -saucer).
     ///   -menu            with -capture: screenshot the demo picker and quit.
     ///   -capture <dir>   scripted check run: plays a fixed sequence, writes screenshots + capture_log.txt, quits.
     ///                    Never forces fullscreen.
@@ -24,6 +25,7 @@ namespace Seven
         public static bool Ratwing { get; private set; }
         public static bool MenuShot { get; private set; }
         public static bool Quick { get; private set; }
+        public static bool Gallery { get; private set; }
         public static bool WindowFromCommandLine { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -39,6 +41,7 @@ namespace Seven
                 if (args[i] == "-ratwing") Ratwing = true;
                 if (args[i] == "-menu") MenuShot = true;
                 if (args[i] == "-quick") Quick = true;
+                if (args[i] == "-gallery") { Gallery = true; Saucer = true; }
                 if (args[i] == "-capture" && i + 1 < args.Length) CaptureDir = args[i + 1];
                 if (args[i].StartsWith("-screen-") || args[i] == "-window-mode" || args[i] == "-popupwindow") WindowFromCommandLine = true;
             }
