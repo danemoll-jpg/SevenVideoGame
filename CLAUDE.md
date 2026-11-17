@@ -88,6 +88,6 @@ apply to every asset and scene:
   automatically). Esc / Start = back to the menu; fight reset = Backspace / d-pad down.
 
 ## Where things stand
-**Rounds 1–3 + QF1 complete (2026-11-16)** — demo picker; fight demo on the fog/glow hill; saucer mock-up (walk the
-ship, the black cat hops onto 7's lap, the ship dissolves to show her above the city). Round 3 status and Dan's
-checklist in `TODO.md`; earlier rounds in `TODO-ARCHIVE.md`. **Next:** Dan plays Round 3 and picks the next round.
+**Rounds 1–3 complete (2026-11-16)** — demo picker with the fight demo (fog/glow hill) and the saucer mock-up
+(details in `TODO-ARCHIVE.md`). **Current objective: QF2** (build to `Unity\Builds\Seven\SevenDemo.exe`), then **Round 4** —
+Ratwing hangs asleep in a cave, wakes, drops and lands (custom Blender rig + keyframed animation). See `TODO.md`.

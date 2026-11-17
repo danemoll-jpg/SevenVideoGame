@@ -20,3 +20,7 @@ Character model reference, a single sleek black domestic cat, full body from nos
 Optional second view: same prompt with "side profile view" instead of "3/4 front view".
 Negative: `color, cartoon, chibi, cropped tail, cropped paws, collar, props, shadows, multiple cats`.
 Tripo tips: keep the tail and legs clear of each other so they don't fuse; texture on.
+
+## Ratwing — Round 4
+Model in: `Art/Source/ratwing/ratwing_v1.glb` (Tripo, unrigged, from Dan). Wings are separate limbs from the back →
+rigged in Blender (Rigify + wing chains), not Mixamo. Reference: `Art/Reference/kyle_ratwing.jpg`.
