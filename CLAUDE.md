@@ -166,8 +166,8 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–7 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe`: Chapter 1 "The Moon Prison" (voiced,
-laser cell, city reveal, tractor beam, free saucer exploration after the chapter, SFX + music, pause menu, Continue)
-plus the demos (fight, saucer + gallery TV, Ratwing). Details in `TODO.md` / `TODO-ARCHIVE.md`. **Current objective:
-Round 8** — saucer look pass + cat rig, gallery extras, Ratwing flip, fluid fighting, auto-update launcher + first
-release. See `TODO.md`.
+**Rounds 1–8 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` 0.8.0, published through the launcher
+(`danemoll-jpg/seven-releases`, `game-800` + `starter-800`): Chapter 1 "The Moon Prison" (laser cell, city reveal,
+tractor beam, free saucer exploration, SFX + music, pause menu, Continue) plus the demos (fluid fight, saucer + gallery
+TV, Ratwing). Check-run switch added in Round 8: `-fightcombo` (combo timing log). Details in `TODO.md` /
+`TODO-ARCHIVE.md`. **Current objective: none** — waiting for Dan's review; every round ends with a published release.

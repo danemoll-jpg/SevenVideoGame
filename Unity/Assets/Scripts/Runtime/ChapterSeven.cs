@@ -185,8 +185,11 @@ namespace Seven
             {
                 float spd = Sneak ? SneakSpeed : run ? RunSpeed : WalkSpeed;
                 Speed = spd * v.magnitude;
-                transform.position += v * spd * Time.deltaTime;
-                ClampToArena();                      // clamp after moving, so no frame ever shows her past a wall / the beams
+                // Sub-stepped (<= 15 cm per step, clamped each step): a frame hitch can never carry her through a wall
+                // or the laser beams into the next walkable zone.
+                var step = v * spd * Time.deltaTime;
+                int n = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / 0.15f));
+                for (int i = 0; i < n; i++) { transform.position += step / n; ClampToArena(); }
                 string clip = run && !Sneak ? "run" : WalkClip;
                 float animSpeed = Sneak && clip == "walk" ? 0.62f : 1f;
                 _idleFor = 0f;

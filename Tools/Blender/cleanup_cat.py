@@ -12,8 +12,14 @@ Steps: weld seam duplicates -> straighten the head (the source head is turned to
 out of the decimation (procedural whisker strips if the source has no separate whisker parts) -> decimate the body to
 ~target -> scale so the back/shoulder is SHOULDER_HEIGHT -> origin between the feet on the floor, facing -Y ->
 a simple quadruped deform rig fitted to the mesh by script (not Rigify: Rigify's cat metarig would still need every
-bone placed by hand; this rig is generated from the mesh slices instead) -> distance-based skin weights with
-per-leg / tail / head guards -> keyframed clips: idle, walk, sit, wash, jump, sleep.
+bone placed by hand; this rig is generated from the mesh instead) -> skin weights -> keyframed clips:
+idle, walk, sit, wash, jump, sleep.
+
+Round 8 rig: joints sit at the centre of the mesh cross-sections (legs traced up from the paws slab by slab; elbow /
+stifle / hock at the leg's own bends; spine / neck / head from torso and skull sections; tail recentred on its
+cross-section each step). Weights = Blender bone heat (solved at 10x scale), side / front-back / tail guards,
+4 Laplacian smoothing passes over the mesh edges, max 4 influences, normalized. Same 24 bone names as Round 3.
+Env: CAT_FBX_OUT=<path> writes the FBX elsewhere (experiments), CAT_DEBUG=1 logs posed joint positions.
 """
 import bpy, bmesh, os, sys, math
 from mathutils import Vector, Quaternion, Matrix
@@ -266,19 +272,22 @@ def mid_extent(pts, axis):
 ymin = min(c.y for c in co); ymax = max(c.y for c in co)
 
 
-def trace_leg(sx, front):
-    """Walk up one leg from the paw: slab every 4 mm, centre = centroid of the slab verts within r of the previous
-    centre (mean-shift in xy). Stops where the section opens into the body (belly)."""
+def trace_leg(sx, front, z_end=0.125):
+    """Walk up one leg from the paw: a slab every 4 mm, centre = middle of the extents of the slab verts within r of
+    the previous centre (mean-shift in xy). The centre may drift at most 3 mm per step, so where the leg opens into
+    the chest / belly it keeps the leg's own line instead of sliding onto the body."""
     def col(c):
         return c.x * sx > 0.0 and ((c.y < 0) == front)
     base = [c for c in co if c.z < 0.025 * H / 0.25 and col(c)]
     p = sum(base, Vector()) / len(base)
     p = Vector((p.x, p.y, 0.0))
     line = []
-    r = 0.022 * H / 0.25
+    r = 0.024 * H / 0.25
     z = 0.006
-    while z < 0.75 * H:
-        q = Vector((p.x, p.y))
+    while z < z_end * H / 0.25:
+        q0 = Vector((p.x, p.y))
+        q = q0.copy()
+        near = []
         for _ in range(4):
             near = [c for c in co if abs(c.z - z) < 0.004 and col(c) and (c.xy - q).length < r]
             if len(near) < 4:
@@ -286,11 +295,11 @@ def trace_leg(sx, front):
             q = Vector((mid_extent(near, "x"), mid_extent(near, "y")))
         if len(near) < 4:
             break
-        wid = max((c.xy - q).length for c in near)
-        if wid > 0.85 * r and z > 0.2 * H:
-            break               # the section fills the search circle: the leg has opened into the body
+        dq = q - q0
+        if dq.length > 0.003:
+            q = q0 + dq.normalized() * 0.003
         p = Vector((q.x, q.y, z))
-        line.append((p.copy(), wid))
+        line.append((p.copy(), 0))
         z += 0.004
     return line
 
@@ -313,14 +322,14 @@ for name, sx, front in (("FL", 1, True), ("FR", -1, True), ("HL", 1, False), ("H
                   if front else toe_band.y - 0.012 * H / 0.25, 0.005))
     if front:
         ankle = at_z(0.12 * H)                                   # wrist
-        knee = extreme(0.36, 0.52, key=lambda p: -p.y)           # elbow: the leg's rearmost point under the chest
+        knee = extreme(0.32, 0.50, key=lambda p: -p.y)           # elbow: the leg's rearmost point under the chest
+        top = Vector((knee.x * 0.8, knee.y - 0.008 * H / 0.25, 0.70 * H))   # shoulder: a little ahead of the elbow
     else:
-        ankle = extreme(0.18, 0.34, key=lambda p: -p.y)          # hock: rearmost point of the lower hind leg
-        knee = extreme(0.38, 0.55, key=lambda p: p.y)            # stifle: foremost point of the thigh
-    top_z = (0.70 if front else 0.66) * H
-    # Shoulder / hip joint: continue the upper leg line into the body, pulled toward the midline (inside the body).
-    top_xy = pts_[-1] if pts_ else knee
-    top = Vector((top_xy.x * 0.8, top_xy.y, top_z))
+        ankle = extreme(0.16, 0.34, key=lambda p: -p.y)          # hock: rearmost point of the lower hind leg
+        knee = extreme(0.38, 0.50, key=lambda p: p.y)            # stifle: foremost point of the thigh
+        top = Vector((knee.x * 0.8, ankle.y - 0.004 * H / 0.25, 0.66 * H))  # hip: about above the hock
+        if knee.y > top.y - 0.015 * H / 0.25:
+            knee.y = top.y - 0.015 * H / 0.25                    # the stifle always points forward
     legs[name] = {"toe": toe, "ankle": ankle, "knee": knee, "top": top, "line_top": pts_[-1].z if pts_ else 0}
     log(name, "trace", len(line), "pts up to z", round(legs[name]["line_top"], 3),
         {k: tuple(round(x, 3) for x in v) for k, v in legs[name].items() if k != "line_top"})
@@ -346,7 +355,9 @@ yF, yH = body_y(True), body_y(False)
 
 def body_centre(y0, half=0.012):
     """Centre of the torso cross-section at y0 (above the legs): mid of the top/bottom extents of |x| < 3 cm."""
-    sl = [c for c in co if abs(c.y - y0) < half and abs(c.x) < 0.03 * H / 0.25 and c.z > 0.42 * H]
+    # |x| < 1.5 cm keeps the legs out; behind the hips the tail rises above the back, so cap z there.
+    zcap = 0.98 * H if y0 > 0 else 1.2 * H
+    sl = [c for c in co if abs(c.y - y0) < half and abs(c.x) < 0.015 * H / 0.25 and 0.36 * H < c.z < zcap]
     if len(sl) < 6:
         return None
     top = max(c.z for c in sl)
@@ -359,6 +370,7 @@ def spine_point(y0):
     if tb is None:
         return Vector((0, y0, 0.74 * H))
     top, bot = tb
+    log(f"torso section y {y0:.3f}: top {top:.3f} bottom {bot:.3f}")
     return Vector((0, y0, bot + 0.58 * (top - bot)))       # spine sits a little above the section's middle
 
 
@@ -428,10 +440,8 @@ def yz_centre(y0, zmin, half=0.006):
 
 head_c = shift(Vector((0, skull.y + 0.01, skull.z)), 0.032, pred=lambda c: c.z > 0.8 * H)
 head_c.x = 0.0
-hz = yz_centre(head_c.y + 0.022, 0.8 * H)
-head_base = Vector((0, head_c.y + 0.022, (hz if hz else head_c.z) - 0.004))       # atlas: behind the skull centre
-nz = yz_centre(yF - 0.012, sp_f.z - 0.02)
-neck_base = Vector((0, yF - 0.012, nz if nz else sp_f.z + 0.02))
+head_base = Vector((0, head_c.y + 0.022 * H / 0.25, head_c.z - 0.016 * H / 0.25))   # atlas: behind/below the skull centre
+neck_base = Vector((0, yF - 0.035 * H / 0.25, sp_f.z + 0.015 * H / 0.25))           # front of the chest, base of the neck
 log("head centre", tuple(round(x, 3) for x in head_c), "atlas", tuple(round(x, 3) for x in head_base),
     "neck base", tuple(round(x, 3) for x in neck_base))
 
@@ -542,6 +552,45 @@ def influence_stats(obj):
     return max(n), sum(1 for x in n if x == 0)
 
 
+def smooth_limit_normalize(obj, iters=4, factor=0.5, limit=4, clean=0.01):
+    """Laplacian smoothing of all weights over the mesh edges, then drop < clean, keep the 4 largest, normalize."""
+    me_ = obj.data
+    gname_ = {g.index: g.name for g in obj.vertex_groups}
+    W = [{gname_[g.group]: g.weight for g in v.groups if g.weight > 0} for v in me_.vertices]
+    nb = [[] for _ in me_.vertices]
+    for e in me_.edges:
+        a, b = e.vertices
+        nb[a].append(b)
+        nb[b].append(a)
+    for _ in range(iters):
+        W2 = []
+        for i, w in enumerate(W):
+            if not nb[i]:
+                W2.append(w)
+                continue
+            acc = {}
+            for j in nb[i]:
+                for k, x in W[j].items():
+                    acc[k] = acc.get(k, 0.0) + x
+            inv = 1.0 / len(nb[i])
+            keys = set(w) | set(acc)
+            W2.append({k: (1 - factor) * w.get(k, 0.0) + factor * acc.get(k, 0.0) * inv for k in keys})
+        W = W2
+    groups = {g.name: g for g in obj.vertex_groups}
+    for v in me_.vertices:
+        for g in list(v.groups):
+            groups[gname_[g.group]].remove([v.index])
+    for i, w in enumerate(W):
+        tot0 = sum(w.values())
+        if tot0 <= 0:
+            continue
+        items = sorted(((x / tot0, k) for k, x in w.items()), reverse=True)
+        items = [(x, k) for x, k in items if x >= clean][:limit] or items[:1]
+        tot = sum(x for x, _ in items)
+        for x, k in items:
+            groups[k].add([i], x / tot, "REPLACE")
+
+
 def heat_weights(obj):
     """Blender bone heat (automatic weights), then guards, smoothing over the mesh, max 4 influences, normalized.
     Verts the heat solver leaves empty fall back to the distance weights."""
@@ -603,14 +652,7 @@ def heat_weights(obj):
                 g.weight = w
     if "root" in heat:
         obj.vertex_groups.remove(heat["root"])
-    bpy.ops.object.select_all(action="DESELECT")
-    obj.select_set(True)
-    bpy.context.view_layer.objects.active = obj
-    bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
-    bpy.ops.object.vertex_group_smooth(group_select_mode="ALL", factor=0.5, repeat=4, expand=0.0)
-    bpy.ops.object.vertex_group_clean(group_select_mode="ALL", limit=0.01)
-    bpy.ops.object.vertex_group_limit_total(group_select_mode="ALL", limit=4)
-    bpy.ops.object.vertex_group_normalize_all(group_select_mode="ALL", lock_active=False)
+    smooth_limit_normalize(obj, iters=4, factor=0.5, limit=4)
     for n in bones:
         if n not in obj.vertex_groups:
             obj.vertex_groups.new(name=n)

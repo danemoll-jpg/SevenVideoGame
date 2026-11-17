@@ -6,6 +6,8 @@
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Round 8 — saucer look + cat rig, gallery sofa/preload, Ratwing drop, fluid fighting, launcher + first release 0.8.0 —
+  done (2026-11-17), exe-verified off-screen; Dan to play / install via the launcher.** Status in "Round 8" below.
 - **Round 7 — Chapter 1 fixes, city reveal, SFX, re-voiced 7, music, pause menu / Continue — done (2026-11-17),
   exe-verified off-screen; Dan to play.** Per-item status in "Round 7" below; plan in `TODO-ARCHIVE.md` → "Round 7".
 - **Round 6 — Chapter 1 "The Moon Prison" — done (2026-11-17), played by Dan.** Voiced (ElevenLabs "Seven"/"Cat",
@@ -101,38 +103,51 @@ Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Round 7". Checks: muted 
 - Music levels / ducking, the SFX (several came back at 0 dBFS raw — listen for clipping), pause-menu sliders.
 - After the chapter: explore the saucer; quit the game from the menu; start again and use Continue.
 
-## Current Objective — Round 8 (started 2026-11-17, right after Round 7)
-Dan's decisions 2026-11-17: schedule all of these now.
+## Round 8 — saucer look, gallery extras, Ratwing flip, fluid fighting, launcher + first release — done (2026-11-17)
+Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Round 8". Previews: `Docs/Previews/round8/`. All runs muted
+(output 0.000000), off-screen, Below Normal, one heavy job at a time.
+1. **Saucer look pass — done, cat rig improved (not perfect).** Near city cluster near-black, fewer/larger towers
+   (77 vs 178), few glowing lips, stronger in-fog glows (0.32 → 0.5); a dark overhead hull-edge ring frames the revealed
+   view; seated camera moved to the side (yaw 74°, clear of the chair shell); cat lap lift 0.125 → 0.165 m (check: gap
+   +0.044 m above her thighs, 0 cat vertices inside her). Cat rig (`cleanup_cat.py`): joints fitted to the mesh, bone-heat
+   weights + smoothing, ≤ 4 influences, same 24 bones / clips; worst stretch roughly halved (sit 5.97× → 2.51×, sleep
+   9.45× → 3.26×) — `cat_rig_before_after.png`, `cat_rig_notes.txt`. Still rough: deep sit/sleep folds (needs extra
+   bones or corrective shapes). Not a third-party (AccuRig/Tripo) rig.
+2. **Gallery extras — done.** 7 walks to the sofa and sits (stand_to_sit → sitting_idle) while browsing, camera over her
+   shoulder; stands up when leaving. Legend: d-pad left/right glyph. Images decoded once while the main menu is idle
+   (check: "24 of 24 from the preload cache … 0 s here"); 17/17 gallery input tests pass.
+3. **Ratwing flip — done.** Re-keyed in `cleanup_ratwing.py`: release → head-first beat → wings snap half-open to brake →
+   swing upright around the hips over 0.85 s (eased both ends) while the legs come down and reach → crouch landing at
+   7.9 s (was 7.55); feet 0 mm off ceiling/floor. Contact sheet `ratwing_flip_before_after.png`; in game `05_mid_drop`.
+4. **Fluid fighting — done.** 0.2 s input buffer; combo cancels (a different move may cut the recovery 0.07 s after a
+   blow lands); forward step-in (≤ 0.45 m); smooth turn to the target (no snap); dodge / block interrupt recovery;
+   40–80 ms hit-pause + camera nudge; bot reaction fade 0.06 → 0.03 s; blends 0.08–0.15 s. Check (`-fightcombo`):
+   input → move 0.000–0.015 s; move → next move jab→cross 0.78 s, →hook 0.79, →mma_kick 0.56, →roundhouse 0.94 vs.
+   old rules 1.12 / 1.28 / 0.86 / 1.15 s **and every one of those early presses was dropped before** (needed a 2nd
+   press); combo of 5 in 2.8 s with 6 connects; dodge out of a recovery starts in 0.018 s. Not exercised: a press during
+   the late dodge (test still reports it not starting — check by hand).
+5. **Launcher — done; first release published (see CLAUDE.md "Auto-update launcher").** Copied from chastain_rush
+   (untouched): `Launcher/` (C++), `LauncherBridge.cs`, `Tools/*Launcher*.py`, `Docs/LAUNCHER.md` (Windows + Steam Deck),
+   monochrome icon/cover art. `SevenLauncher.exe`, new signing key (`Builds/PublisherPrivate/`, git-ignored), releases repo
+   `danemoll-jpg/seven-releases` (created, public). Release 0.8.0 (build 800) + starter zip — published 2026-11-17: `game-800` (Latest, 88 MB game.zip, signed catalog) and `starter-800`
+   (`Seven-Starter-0.8.0.zip`, launcher status check PASS) at https://github.com/danemoll-jpg/seven-releases/releases.
+   Not tested: the windowed launcher starting the game and the ready handshake on Dan's PC / the Deck (Dan to try).
+6. **Checks — done.** Chapter 1 start to finish: 45 shots, 0 soft-locks, laser door holds (z 1.050), line of sight 0/1,452, monochrome max 0. Fight / saucer / Ratwing / gallery / menu / Continue all
+   load and pass. Sound check (only unmuted step): 5 SFX, 5.34 s of sound, then 0.000000. Fixed during the checks: 7 and
+   the cat could be snapped across a wall into another walkable zone on a frame hitch (movement now sub-stepped / jump
+   steps rejected); the city's glowing carts were built at the origin (inside the cell) until placed on their tracks.
 
-1. **Saucer look pass** (Code's own list from Round 3): darker city near the ship and a dark overhead hull edge for
-   Kyle's silhouette contrast; stronger in-fog glows; less boxy towers (fewer, larger, softer forms — same rule as
-   the city reveal: fog does the work); better seated camera (not blocked by the chair back); the cat's on-lap pose
-   clear of her forearms; **a better cat rig** (properly fitted bones / cleaner weights, or a Tripo/AccuRig quadruped
-   rig) — he is a main character. Cat roaming size stays ~2× (Dan: OK).
-2. **Gallery extras (Dan: OK):** 7 sits on the TV sofa while browsing (Sitting Idle; camera over her shoulder to the
-   screen); a d-pad left/right glyph in the legend instead of LB/RB; preload the gallery images so entering the
-   saucer has no hitch.
-3. **Ratwing: smooth the flip from hanging to standing (Dan: the only thing wrong with the scene).** The half-roll
-   upright reads as a snap. Re-key it as a readable, weighty motion: feet release → he drops head-first for a beat →
-   wings snap half-open to brake → his body swings round from the hips (legs arcing down under him) over ~0.6–0.9 s
-   → legs reach for the floor → crouch landing. Ease in/out, no frame where the pose jumps; keep feet planted at the
-   end. Compare before/after in a Blender contact sheet and in-game shots.
-4. **Fighting must feel fluid (Dan: the demo felt very clunky).** Make the fight demo responsive and flowing:
-   input buffering (~0.2 s) so presses during a move queue the next one; **combo chains** (jab → cross → hook; kicks
-   can follow punches) with cancel windows after each hit lands; shorter, cleaner blends between moves (crossfades
-   ~0.08–0.15 s) and idle ↔ move ↔ attack; small forward steps on attacks so she closes distance; smooth turning
-   toward the target instead of snapping; dodge and block can interrupt recovery; a brief hit-pause (~40–60 ms) and
-   camera nudge on connect; the bot's reactions start on the exact hit frame. Nonlethal rules unchanged. Report
-   before/after timings (input → move start, move → next move) and capture a short combo sequence.
-5. **Auto-update launcher — build it now (Dan: yes), publish a release every round (Dan: yes).** Copy the standard
-   launcher from `C:\Users\danmo\chastain_rush` (read-only — copy, never edit) per the collaboration notes:
-   `Launcher/` (C++), `LauncherBridge.cs`, the `Tools/` release scripts, starter README rewritten for 7. Rename to
-   `SevenLauncher.exe`; make a new signing key once with `python Tools/New-LauncherKey.py` (kept in
-   `Builds/PublisherPrivate/`, git-ignored — never delete, print or replace it); releases repo
-   `danemoll-jpg/seven-releases` (create it if missing). Windows + Steam Deck (Proton). From now on every round ends
-   with a published release. Record the commands in `CLAUDE.md`.
-6. Checks as usual (muted except brief sound checks, off-screen, never steal focus), update `TODO.md` / `CLAUDE.md`,
-   publish the first release, commit and push, report in ~20 lines.
+### For Dan to check (Round 8)
+- Saucer: does the city below read like Kyle (dark near, pale far)? The seated camera; the cat on your lap.
+- The cat walking / sitting / washing / sleeping with the new rig (sleep and deep sit still fold a little).
+- Gallery: sit on the sofa, browse with the d-pad; entering the saucer should not hitch.
+- Ratwing: the drop and swing upright — weighty enough, any pop?
+- Fight demo: mash jab → cross → hook → kicks; does it flow now? Dodge / block out of a combo.
+- Launcher: download the starter zip from the seven-releases page, run SevenLauncher.exe, install, play; on the Steam
+  Deck add it as a non-Steam game with Proton (Docs/LAUNCHER.md).
+
+## Current Objective — none: waiting for Dan's review of Rounds 7 + 8 (next round TBD)
+Every round now ends with a published launcher release (next: 0.9.0 / build 900 via `Prepare-ComponentUpdate.py`).
 
 ## Next Steps (Do Not Start Yet)
 - **First vision contents** — still undecided (Dan, 2026-11-17). Keep it generic until he decides.
@@ -142,8 +157,6 @@ Dan's decisions 2026-11-17: schedule all of these now.
   (2026-11-17): its brightness shows how much energy she has left for the shield and telekinesis** — bright when
   full, dimming as she uses powers (no separate on-screen bar). Not yet scheduled; don't build it until a round asks.
 - **"7" emblem on her back** (Kyle's art) — DECIDED for now (Dan, 2026-11-17): **no emblem.** May revisit.
-- **Saucer look pass** — moved to Round 8 (scheduled).
-- **Launcher / auto-update** — moved to Round 8 (Dan: build now; publish every round).
 - **Bubble helmet, hover bike, saucer, cat companion models** — deferred; need concept images and prompts first.
 - **Big-head proportion variant** — DECIDED: not pursued for now (Dan prefers normal proportions).
 

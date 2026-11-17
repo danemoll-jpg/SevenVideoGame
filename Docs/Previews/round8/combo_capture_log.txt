@@ -1,0 +1,40 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   3.11s] clip jab: 1.800s (old End 0.62 -> 1.116s)
+[   3.11s] clip cross: 2.133s (old End 0.60 -> 1.280s)
+[   3.11s] clip hook: 1.300s (old End 0.66 -> 0.858s)
+[   3.11s] clip roundhouse: 2.500s (old End 0.75 -> 1.875s)
+[   3.11s] clip mma_kick: 1.600s (old End 0.72 -> 1.152s)
+[   3.11s] clip finisher: 1.500s (old End 0.93 -> 1.395s)
+[   3.12s] move start jab at 2.142
+[   3.64s] connect jab at 2.673
+[   3.77s] shot 01_connect_jab_1.png  audioPeak=0.000000
+[   3.89s] move start cross at 2.796
+[   4.32s] connect cross at 3.227
+[   4.41s] shot 02_connect_cross_2.png  audioPeak=0.000000
+[   4.81s] connect cross at 3.629
+[   4.81s] move start hook at 3.629
+[   4.89s] shot 03_connect_cross_3.png  audioPeak=0.000000
+[   5.31s] connect hook at 4.060
+[   5.41s] shot 04_connect_hook_4.png  audioPeak=0.000000
+[   5.52s] move start mma_kick at 4.180
+[   6.17s] connect mma_kick at 4.823
+[   6.26s] shot 05_connect_mma_kick_5.png  audioPeak=0.000000
+[   6.38s] move start roundhouse at 4.944
+[   7.46s] connect roundhouse at 6.027
+[   7.54s] shot 06_connect_roundhouse_6.png  audioPeak=0.000000
+[   8.87s] combo of 5 took 2.802s from first to last move start; connects 6
+[   8.87s] timings (s):
+  jab        input->move new 0.000  |  move->move new 0.000  old 0.000
+  cross      input->move new 0.000  |  move->move new 0.655  old 1.116 (old: this press was DROPPED; needs a 2nd press after End)
+  hook       input->move new 0.000  |  move->move new 0.832  old 1.280 (old: this press was DROPPED; needs a 2nd press after End)
+  mma_kick   input->move new 0.000  |  move->move new 0.552  old 0.858 (old: this press was DROPPED; needs a 2nd press after End)
+  roundhouse input->move new 0.000  |  move->move new 0.764  old 1.152 (old: this press was DROPPED; needs a 2nd press after End)
+
+[   8.89s] move start jab at 7.373
+[   9.45s] connect jab at 7.940
+[   9.53s] shot 07_connect_jab_7.png  audioPeak=0.000000
+[  10.11s] move start dodge at 8.284
+[  10.13s] dodge pressed during the jab's recovery: started yes after 0.018s
+[  12.95s] cross pressed during the dodge (buffered): started no 1.590s after the press
+[  14.78s] fight combo check finished: 7 move starts, 7 connects
+[  14.78s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

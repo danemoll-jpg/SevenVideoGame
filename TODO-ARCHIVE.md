@@ -815,3 +815,40 @@ Commit the repo as it is before changing anything (safety checkpoint).
   system picks them up on the next build).
 - Music: **done** — Dan's three tracks are in `Unity/Assets/Audio/Music/` (`main_theme`, `moon_prison`, `aboard_saucer`).
 
+
+---
+# Archived 2026-11-17: Round 8
+
+## (was Current Objective) — Round 8 (started 2026-11-17, right after Round 7)
+Dan's decisions 2026-11-17: schedule all of these now.
+
+1. **Saucer look pass** (Code's own list from Round 3): darker city near the ship and a dark overhead hull edge for
+   Kyle's silhouette contrast; stronger in-fog glows; less boxy towers (fewer, larger, softer forms — same rule as
+   the city reveal: fog does the work); better seated camera (not blocked by the chair back); the cat's on-lap pose
+   clear of her forearms; **a better cat rig** (properly fitted bones / cleaner weights, or a Tripo/AccuRig quadruped
+   rig) — he is a main character. Cat roaming size stays ~2× (Dan: OK).
+2. **Gallery extras (Dan: OK):** 7 sits on the TV sofa while browsing (Sitting Idle; camera over her shoulder to the
+   screen); a d-pad left/right glyph in the legend instead of LB/RB; preload the gallery images so entering the
+   saucer has no hitch.
+3. **Ratwing: smooth the flip from hanging to standing (Dan: the only thing wrong with the scene).** The half-roll
+   upright reads as a snap. Re-key it as a readable, weighty motion: feet release → he drops head-first for a beat →
+   wings snap half-open to brake → his body swings round from the hips (legs arcing down under him) over ~0.6–0.9 s
+   → legs reach for the floor → crouch landing. Ease in/out, no frame where the pose jumps; keep feet planted at the
+   end. Compare before/after in a Blender contact sheet and in-game shots.
+4. **Fighting must feel fluid (Dan: the demo felt very clunky).** Make the fight demo responsive and flowing:
+   input buffering (~0.2 s) so presses during a move queue the next one; **combo chains** (jab → cross → hook; kicks
+   can follow punches) with cancel windows after each hit lands; shorter, cleaner blends between moves (crossfades
+   ~0.08–0.15 s) and idle ↔ move ↔ attack; small forward steps on attacks so she closes distance; smooth turning
+   toward the target instead of snapping; dodge and block can interrupt recovery; a brief hit-pause (~40–60 ms) and
+   camera nudge on connect; the bot's reactions start on the exact hit frame. Nonlethal rules unchanged. Report
+   before/after timings (input → move start, move → next move) and capture a short combo sequence.
+5. **Auto-update launcher — build it now (Dan: yes), publish a release every round (Dan: yes).** Copy the standard
+   launcher from `C:\Users\danmo\chastain_rush` (read-only — copy, never edit) per the collaboration notes:
+   `Launcher/` (C++), `LauncherBridge.cs`, the `Tools/` release scripts, starter README rewritten for 7. Rename to
+   `SevenLauncher.exe`; make a new signing key once with `python Tools/New-LauncherKey.py` (kept in
+   `Builds/PublisherPrivate/`, git-ignored — never delete, print or replace it); releases repo
+   `danemoll-jpg/seven-releases` (create it if missing). Windows + Steam Deck (Proton). From now on every round ends
+   with a published release. Record the commands in `CLAUDE.md`.
+6. Checks as usual (muted except brief sound checks, off-screen, never steal focus), update `TODO.md` / `CLAUDE.md`,
+   publish the first release, commit and push, report in ~20 lines.
+

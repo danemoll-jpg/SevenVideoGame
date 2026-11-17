@@ -81,8 +81,10 @@ namespace Seven
 
             // Dodge out of a recovery and a buffered press during a dodge.
             int n = _starts.Count;
+            yield return new WaitUntil(() => s7.Current == SevenFighter.Mode.Free);
+            int hb = _hits.Count;
             s7.DoAttack("jab");
-            yield return new WaitUntil(() => _hits.Count > 0 && s7.Current == SevenFighter.Mode.Attack);
+            yield return new WaitUntil(() => _hits.Count > hb && s7.Current == SevenFighter.Mode.Attack);
             yield return new WaitForSeconds(0.1f);
             float dp = Time.time; s7.DoDodge();
             yield return null;

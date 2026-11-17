@@ -95,6 +95,8 @@ namespace Seven
             {
                 var dir = Quaternion.Euler(0f, turn + _detour, 0f) * to.normalized;
                 var q = Ground.ClampToArena(transform.position + dir * len, BodyRadius);
+                // never accept a step the clamp turned into a jump (snapping across a wall into another walkable zone)
+                if (Flat(q - transform.position).magnitude > len + 0.05f) continue;
                 if (Vector3.Dot(Flat(q - transform.position), dir) > len * 0.6f)
                 {
                     p = q;

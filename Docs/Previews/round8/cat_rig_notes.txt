@@ -1,0 +1,56 @@
+Cat rig, Round 8 item 1 (cat part) - Tools/Blender/cleanup_cat.py -> Art/Export/cat/cat_v1_rigged.fbx
+Contact sheet: cat_rig_before_after.png (same poses and frames, before = Round 3 FBX, after = new FBX; both re-imported
+into Blender and rendered with Workbench in grayscale; row 1 = rest joints over an x-ray mesh).
+
+WHAT WAS WRONG (Round 3 rig)
+- Joints were fixed fractions of the shoulder height, not fitted: the upper legs were vertical sticks from 0.66 H down to
+  a "knee" at 0.40 H and an ankle at 0.13 H for all four legs. The hind leg had no real stifle / hock (hock sat 3 cm off the
+  floor), the elbow sat 2 cm too low, so the legs bent in the wrong places.
+- The neck bone ran almost straight up into the back of the skull and the head bone started above the ears.
+- Weights were inverse-distance^4 to the 3 nearest bones with hard cut-offs (leg bones ignored anything above 0.72 H, across
+  x = +-4 mm, or past the body middle; head/neck stopped at a fixed y; tail stopped at a fixed y). The cut-offs made seams:
+  dark tears at the chest / shoulder in every walk frame, the belly and chest dragged by the front legs, a crumpled thigh
+  in sit/wash, and collapsed triangles in sleep. No smoothing over the mesh.
+
+WHAT CHANGED
+- Joint fitting from the mesh: each leg is traced up from the paw in 4 mm slabs (centre of the slab section, mean-shift
+  with a 3 mm/step drift limit so it keeps the leg's line where it opens into the body). Elbow = rearmost point of the
+  front leg under the chest, wrist at 0.12 H; stifle = foremost point of the thigh, hock = rearmost point of the lower hind
+  leg (now 6 cm high), hip about above the hock, shoulder just ahead of the elbow; shoulders/hips mirrored left-right.
+  Spine points = 58% up the torso cross-section (legs and the tail excluded); neck from the front of the chest to an atlas
+  joint just behind/below the skull centre (mean-shift on the head); tail re-centred on its cross-section every step.
+- Weights: Blender bone heat (automatic weights, solved at 10x scale because heat is unreliable at 0.25 m), then soft
+  guards (a leg never moves the other side or the other end of the body; upper legs fade out over the back; tail fades out
+  in front of the hips), 4 Laplacian smoothing passes over the mesh edges, weights < 1% dropped, max 4 influences,
+  normalized. 0 unweighted vertices. Whiskers stay 100% on "head".
+- Clips: no pose angles changed; idle/walk/sit/wash/jump/sleep keep their names, frame counts and grounding. The wash paw
+  now reaches the face instead of sinking into the chest (it follows from the corrected elbow / shoulder).
+
+UNCHANGED (Unity contract)
+- 24 bones, same names (root, pelvis, spine, chest, neck, head, tail1-6, FL/FR/HL/HR _upper/_lower/_foot); root does not
+  deform. Head still forward (-Y in Blender -> +Z after the builder's head/pelvis facing fix). 0.25 m shoulder, origin
+  between the feet on the floor, 18000 tris + 10 whisker tris, same file and texture paths, same 6 takes.
+  Final size x0.156 y0.411 z0.398 m. Clip grounding (lowest body point): idle +-2 mm, walk/sit/wash/sleep 0, jump 0 on the
+  ground (0.119 m at the top of the jump).
+
+NUMBERS (edge length ratio posed/rest over all 26k body edges; ">1.5x" = edges stretched over 1.5x, "<0.5x" = squashed
+under half, "tris<25%" = triangles collapsed below a quarter of their area)
+pose          p99.9 stretch   max stretch   edges >1.5x   edges <0.5x   tris <25%
+idle          1.12 -> 1.13    2.0 -> 1.5       1 -> 0        3 -> 0        0 -> 0
+walk a        2.76 -> 1.89    7.9 -> 3.6     168 -> 82      26 -> 16      16 -> 14
+walk b        2.15 -> 1.54    6.6 -> 3.1     136 -> 30      19 -> 16      10 -> 9
+walk c        2.98 -> 1.91    7.3 -> 3.6     232 -> 89      20 -> 11      11 -> 11
+sit           5.97 -> 2.51   17.6 -> 4.5     433 -> 353    292 -> 111    184 -> 71
+wash          7.28 -> 2.97   17.6 -> 5.6     682 -> 610    339 -> 185    213 -> 123
+jump crouch   4.52 -> 2.24   13.1 -> 3.8     437 -> 322     23 -> 28       8 -> 35
+jump extend   2.35 -> 1.40    7.9 -> 2.0     108 -> 7      100 -> 59      35 -> 24
+jump tuck     3.90 -> 1.97   10.8 -> 4.1     347 -> 193     10 -> 25       4 -> 21
+sleep         9.45 -> 3.26   26.1 -> 5.7     996 -> 1015   587 -> 533    421 -> 333
+Influences per vertex: before 1/2/3 = 971/3701/4330 (max 3); after 1/2/3/4 = 1380/3466/2822/1334 (max 4).
+Worst-case stretch is 2-4x lower in every clip; the visible chest/shoulder tears are gone.
+
+STILL ROUGH
+- sleep and the deep sit/wash folds still squash the hind thigh/belly (expected for a 24-bone rig with no corrective
+  shapes); the sleep curl leaves the hind paws out to the side. The jump crouch/tuck fold a few more small triangles at
+  the elbow than before (softer weights fold instead of tearing). Next step if wanted: extra bones (scapula, ears, jaw)
+  or corrective shape keys, not more weight work.
