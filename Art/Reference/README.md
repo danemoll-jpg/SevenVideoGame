@@ -69,3 +69,10 @@ Open design notes from these pieces (decide with Dan/Kyle, don't change the mode
   the current model has no emblem.
 - **Saucer exterior:** Kyle's saucer is a wide, flat disc with a glowing rim and a dark glossy hull
   (`kyle_7_backpack_saucer`, `kyle_7_on_hull`); Round 3 built only the interior.
+
+## Scree
+| File | What it shows | Use it for |
+| --- | --- | --- |
+| `scree_concept.jpg` | **Not Kyle's drawing** — a reference image Kyle sent Dan: insectoid, four clawed arms, digitigrade legs, long abdomen with wing covers, compound eyes, breathing hose to a twin-tank backpack | Starting point only; the Scree are to be redesigned **in Kyle's style** |
+| `scree_ref_front.png` | First generated front view from that reference (generic realistic style, abdomen hanging down) | Superseded by a Kyle-style version — do not model from it |
+| `scree_ref_front_v2.png` | Kyle-style front view (2026-11-17): smooth pale shell plates, dark joints, elongated limbs, four arms apart, mask + hose, twin tanks | Current Scree reference for Tripo (pending Kyle's OK; a side view would fix the abdomen depth) |

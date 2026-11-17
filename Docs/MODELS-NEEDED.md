@@ -39,3 +39,18 @@ Built procedurally in the scene builder: ~12 m wide flat disc, light belly, rim 
 glossy upper hull rising to a low dome, a belly glow ring, a hinged ramp on the +X side. Clamped on a cradle in the
 impound bay; lifts off at the end of scene 8. Replace with a modelled ship later (Kyle: `kyle_7_backpack_saucer`,
 `kyle_7_on_hull`); the interior stays "larger inside".
+
+## Scree — concept in (2026-11-17)
+Reference: `Art/Reference/scree_concept.jpg` — **not Kyle's drawing**; a reference he sent. Dan and Kyle agreed the Scree get redesigned **in Kyle's style** (smooth, elegant, monochrome, glowing accents). Insectoid worker: upright on two digitigrade insect legs
+with clawed feet, long segmented abdomen behind with folded wing covers, slim humanoid torso, **four arms** with
+three-clawed hands, compound-eyed insect head with small mandibles and a short antenna, breathing hose from the mouth to
+a twin-tank backpack. An oppressed people, not villains — neutral / weary, not menacing.
+Next: Dan generates a clean Kyle-style reference (front view, limbs apart) from it → Tripo → `Art/Source/scree/scree_v1.glb`.
+**Rig in Blender, not Mixamo** (four arms + insect legs + abdomen; same approach as Ratwing). Replaces `Scree_placeholder`.
+**Status 2026-11-17: model in — `Art/Source/scree/scree_v1.glb`** (Tripo, from `Art/Reference/scree_ref_34.png`; unrigged,
+~2M tris, one 4K texture, 0.98 units tall). Checked in chat (`Docs/Previews/dan/scree_v1_check.png`): clean limbs, four arms
+apart, mask/hose/tanks, smooth Kyle-style shell. Cleanup notes: **the abdomen + wing covers point back-and-sideways at
+~45° (top view) — rotate them about the waist so they extend straight behind**; the head is turned slightly — straighten
+it in the rest pose; keep the hose and antenna out of decimation; wing covers are solid (fine). Rig in Blender (four
+arms, digitigrade legs, abdomen chain, head/antenna), not Mixamo.
+**Height: 1.9 m** (Dan, 2026-11-17: a little taller than humans). Built in QF4.

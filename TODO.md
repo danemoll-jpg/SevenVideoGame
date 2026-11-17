@@ -148,7 +148,50 @@ Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Round 8". Previews: `Doc
 - Launcher: download the starter zip from the seven-releases page, run SevenLauncher.exe, install, play; on the Steam
   Deck add it as a non-Steam game with Proton (Docs/LAUNCHER.md).
 
-## Current Objective — none (QF3 done 2026-11-17; waiting for Dan's review)
+## Current Objective — QF4: two Chapter 1 bugs + the real Scree model (2026-11-17)
+Commit the repo as it is first (safety checkpoint).
+
+1. **Opening soft-lock: the cat walks into the cell and scene 1 never starts.** In one of Dan's runs the cat kept
+   entering 7's cell, and the first-contact dialogue didn't trigger, so the game couldn't progress.
+   - The cat must **never enter the cell**: the laser beams (and the cell opening) block him too — collision / navmesh
+     exclusion for the cat, not only for 7. His approach to his spot outside the door is a fixed, scripted walk.
+   - Make the scene-1 trigger **robust**: it fires when 7 comes near the door no matter where the cat is (if he isn't on
+     his mark, he is walked/placed there first, out of view if needed). Add a watchdog: if the opening hasn't started
+     within ~20 s of the cat arriving, start it anyway. Same safety for every story trigger in the chapter — no scene may
+     depend on the cat being in an exact spot without a fallback.
+   - **Check:** run the opening many times (e.g. 25 automated runs with varied timing, 7 standing in different parts of
+     the cell, moving or idle when the cat arrives) — 25/25 must reach scene 1 and the cat must stay outside every time.
+2. **Camera stuck behind a wall during the Scree discussion (scene 5).** When they spot the guard and talk about how to
+   get past him, the camera ends up behind a wall.
+   - Give dialogue moments a **clear view**: before and during any conversation, check line of sight from the camera to
+     both 7 and the cat (and the guard in scene 5); if blocked, move to a clear framing (pull in, swing around, or a
+     preset conversation camera for that spot) — smoothly, no snapping through geometry.
+   - Fix scene 5 specifically with a good framing that shows 7, the cat and the guard beyond them.
+   - **Check:** for every dialogue scene in Chapter 1, sample the camera through the whole conversation: speakers
+     visible (raycasts) 100% of the time; capture a shot of each, including scene 5.
+3. **The Scree — replace `Scree_placeholder` with the real model (Dan, 2026-11-17).** Model: `Art/Source/scree/scree_v1.glb`
+   (Tripo, unrigged, ~2M tris, 4K texture); notes and check renders in `Docs/MODELS-NEEDED.md` and
+   `Docs/Previews/dan/scree_v1_check.png`; design refs `Art/Reference/scree_ref_34.png`, `scree_ref_side.png`.
+   - **Cleanup** (`Tools/Blender/cleanup_scree.py`, like the others): **height 1.9 m** standing (a little taller than
+     humans; 7 is 1.70 — one constant), origin at the feet, ~40–50k tris; **rotate the abdomen + wing covers about the
+     waist so they extend straight behind** (they point back-and-sideways ~45° now); **straighten the head** in the rest
+     pose; keep the breathing hose, antenna and claws intact when decimating; wing covers solid.
+   - **Rig as a Unity Humanoid-compatible skeleton**: the upper arm pair = humanoid arms, extra bones for the lower arm
+     pair, an abdomen chain and the antenna. **Reuse existing Mixamo clips by retargeting** — `7_idle`, `7_walk`,
+     `7_look_around` (and others if they read well). Lower arms loosely follow the upper ones, abdomen and antenna sway
+     gently (procedural). Check the backward-bending (digitigrade) legs don't distort on retargeted walks — foot IK or a
+     keyed walk if they do. **Keyframe only what doesn't exist:** a work / carrying loop and a short alert reaction.
+   - Materials: pale matte shell, dark joints; eyes get a small soft white glint and the tanks a small light (emissive,
+     monochrome) — Kyle's small-glow touch.
+   - **Swap it into Chapter 1**: the guard in scene 5 (alert reaction when 7's distraction lands, then walks to check —
+     same nonlethal stealth as now) and a few tiny workers in the city reveal (work loop). Keep the placeholder as a
+     fallback.
+   - **Check:** previews like the other models (front / side / back / face, abdomen straight behind from the top),
+     in-game shots of the guard idle / alert / walking and the workers, feet on the ground, no limb tearing.
+4. Usual checks (muted, off-screen, never steal focus), rebuild, **publish a release**, update `TODO.md` / `CLAUDE.md`,
+   commit and push, report in a few lines per item.
+
+## (QF3 done 2026-11-17)
 
 ## Quick fix QF3 — Dan's playthrough of Rounds 7 + 8 — done (2026-11-17), exe-verified off-screen; release 0.8.1
 Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Quick fix QF3". Previews + logs: `Docs/Previews/qf3/`. Every run
@@ -206,6 +249,7 @@ max |R−G|,|G−B| = 0 over all 117 release-build shots. No audio changed, so n
 - The launcher should offer the 0.8.1 update.
 
 ## Next Steps (Do Not Start Yet)
+- **Scree model** — moved into QF4 (Dan, 2026-11-17).
 - **First vision contents** — still undecided (Dan, 2026-11-17). Keep it generic until he decides.
 - **Fight reset on Backspace / d-pad down** — DECIDED: OK (Dan, 2026-11-17).
 - **Hair ties:** DECIDED (Dan, 2026-11-17): **leave the metal cuffs as they are.** (Glowing clips from Kyle's art not planned.)
