@@ -1,0 +1,219 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.04s] line of sight cell -> hidden release panel: 1452 rays from a grid inside the cell, 0 unobstructed (must be 0)
+[   2.91s] release panel in shot 's01_cell_start' (camera inside the cell): in frame=False, visible=False (must be false)
+[   2.97s] shot 01_s01_cell_start.png  audioPeak=0.000000  cursorVisible=False
+[   9.92s] laser door collision: 5 runs into the beams (straight, diagonal, running) - 7's furthest z 1.050 (root; beams at z 1.315, body radius 0.25) -> stays inside
+[  11.42s] objective: Look around
+[  15.17s] ok: cat at the cell door (3.8s)
+[  15.17s] objective: Go to the cell door
+[  15.93s] auto walk done at (0.06, 0.00, 0.56)
+[  15.93s] opening trigger: 7 at the door (0.0s after the cat was sent; cat arrived 0.0s)
+[  15.93s] ok: cat on his mark outside the door (0.0s)
+[  15.94s] objective: 
+[  17.67s] shot 02_s01_laser_door_on.png  audioPeak=0.000000  cursorVisible=False
+[  20.43s] shot 03_s01_first_contact.png  audioPeak=0.000000  cursorVisible=False
+[  28.46s] checkpoint 0
+[  29.67s] objective: Stand back from the door
+[  30.04s] auto walk done at (0.09, 0.00, -0.06)
+[  30.04s] ok: 7 stands back (0.0s)
+[  31.28s] shot 04_s02_cat_at_release.png  audioPeak=0.000000  cursorVisible=False
+[  32.56s] ok: cat in the guard alcove (out of sight) (2.5s)
+[  32.56s] ok: lines finished (0.0s)
+[  32.57s] objective: 
+[  33.37s] ok: cat on the crate in the alcove (0.8s)
+[  33.47s] shot 05_s02_checkonly_cat_at_hidden_release.png  audioPeak=0.000000  cursorVisible=False
+[  34.53s] audio: sfx release_click @(-3.0, 1.0, 0.5)
+[  34.88s] release panel in shot 's02_heard_click_beams_on' (camera inside the cell): in frame=False, visible=False (must be false)
+[  34.92s] shot 06_s02_heard_click_beams_on.png  audioPeak=0.000000  cursorVisible=False
+[  34.93s] audio: sfx laser_power_down @(0.0, 1.2, 1.3)
+[  36.47s] laser door: all beams off, doorway open
+[  36.47s] release panel in shot 's02_beams_off' (camera inside the cell): in frame=False, visible=False (must be false)
+[  36.51s] shot 07_s02_beams_off.png  audioPeak=0.000000  cursorVisible=False
+[  37.07s] ok: cat down from the crate (0.6s)
+[  37.07s] objective: Step out
+[  37.07s] release panel in shot 's02_energy_point_dark_closeup' (camera inside the cell): in frame=False, visible=False (must be false)
+[  37.12s] shot 08_s02_energy_point_dark_closeup.png  audioPeak=0.000000  cursorVisible=False
+[  38.36s] audio: sfx energy_point
+[  38.36s] energy point relights at z 2.11 (beams at 1.32)
+[  38.59s] auto walk done at (0.08, 0.00, 2.50)
+[  38.59s] ok: 7 steps out (0.0s)
+[  39.30s] ok: cat back from the alcove (0.7s)
+[  40.31s] shot 09_s02_energy_point_relit_closeup.png  audioPeak=0.000000  cursorVisible=False
+[  43.06s] shot 10_s02_door_open_which_way.png  audioPeak=0.000000  cursorVisible=False
+[  46.28s] checkpoint 1
+[  46.29s] objective: Follow the cat
+[  48.92s] ok: corridor: scene 3 trigger (2.6s)
+[  54.10s] shot 11_s03_walk_and_talk.png  audioPeak=0.000000  cursorVisible=False
+[  54.45s] auto walk done at (13.91, 0.00, 3.20)
+[  61.04s] ok: corridor: near the guard post (0.0s)
+[  61.09s] shot 12_s04_guarded_route.png  audioPeak=0.000000  cursorVisible=False
+[  61.09s] objective: Find another way out
+[  62.44s] auto walk done at (16.21, 0.00, 2.62)
+[  62.44s] ok: look closer at the older wall (in range) (0.0s)
+[  62.44s] ok: look closer at the older wall (0.0s)
+[  62.46s] objective: 
+[  65.59s] shot 13_s04_older_wall.png  audioPeak=0.000000  cursorVisible=False
+[  68.61s] audio: sfx stone_door @(16.5, 1.2, 2.0)
+[  72.02s] checkpoint 2
+[  72.02s] objective: Follow the old passage
+[  78.99s] ok: ancient hall entrance (7.0s)
+[  81.34s] shot 14_s05_scree_guard.png  audioPeak=0.000000  cursorVisible=False
+[  84.58s] objective: Get past the Scree guard without hurting anyone
+[  84.64s] shot 15_s05_checkonly_scree_guard_idle.png  audioPeak=0.000000  cursorVisible=False
+[  84.64s] scree feet (guard idle at the post): lowest foot/toe bone 0.033 m above its root, root 0.000 m above the ground (state idle, model Scree)
+[  87.09s] scree tucked abdomen vs legs (guard idle, 2.5s of 'idle'): smallest centre-line distance 0.315 m (abdomen + covers ~0.15 m thick, leg ~0.05 m: needs > 0.20) -> clears
+[  89.77s] spotted by the guard at (16.54, -2.40, -13.80) -> reset to the hall entrance
+[  89.77s] ok: spotted -> reset (0.0s)
+[  89.83s] shot 16_s05_spotted.png  audioPeak=0.000000  cursorVisible=False
+[  92.30s] audio: sfx tk_gather @(16.5, -1.2, -9.7)
+[  92.30s] audio: sfx tk_push @(23.3, -0.5, -13.2)
+[  92.31s] audio: sfx stone_fall @(23.3, -0.5, -13.2)
+[  92.31s] ok: stone knocked down (1.3s)
+[  93.05s] stone falls: noise at (22.20, -2.08, -12.20)
+[  93.05s] ok: guard hears the stone (0.8s)
+[  93.46s] shot 17_s05_checkonly_scree_guard_alert.png  audioPeak=0.000000  cursorVisible=False
+[  93.46s] scree feet (guard alert): lowest foot/toe bone 0.081 m above its root, root 0.000 m above the ground (state alert, model Scree)
+[  93.46s] guard alert reactions played: 1 (state Alert)
+[  94.32s] ok: guard walks to the noise (0.9s)
+[  95.16s] shot 18_s05_checkonly_scree_guard_walking.png  audioPeak=0.000000  cursorVisible=False
+[  95.16s] scree feet (guard walking): lowest foot/toe bone 0.042 m above its root, root 0.000 m above the ground (state walk, model Scree)
+[  97.62s] scree tucked abdomen vs legs (guard walking, 2.5s of 'walk'): smallest centre-line distance 0.278 m (abdomen + covers ~0.15 m thick, leg ~0.05 m: needs > 0.20) -> clears
+[ 102.85s] ok: guard studies the noise (5.2s)
+[ 102.90s] shot 19_s05_guard_distracted.png  audioPeak=0.000000  cursorVisible=False
+[ 122.87s] auto walk done at (16.48, -2.40, -26.70)
+[ 122.87s] ok: slipped past the guard (0.0s)
+[ 124.56s] shot 20_s05_slipped_past.png  audioPeak=0.000000  cursorVisible=False
+[ 125.37s] checkpoint 3
+[ 125.37s] Scree room: spotted 1x (each reset to the entrance), guard never attacks
+[ 125.37s] objective: Keep going
+[ 131.35s] auto walk done at (16.50, -2.40, -36.86)
+[ 131.35s] ok: vision chamber (0.0s)
+[ 131.35s] objective: Look at the glowing inscription
+[ 131.35s] ok: touch the inscription (in range) (0.0s)
+[ 131.36s] ok: touch the inscription (0.0s)
+[ 131.37s] objective: 
+[ 132.72s] shot 21_s06_vision_before.png  audioPeak=0.000000  cursorVisible=False
+[ 132.72s] audio: music -> (none)
+[ 132.72s] audio: sfx vision_whoosh
+[ 132.72s] audio: loop vision_shimmer (Sfx)
+[ 136.28s] shot 22_s06_vision_during_far_voice.png  audioPeak=0.000000  cursorVisible=False
+[ 137.94s] shot 23_s06_vision_during.png  audioPeak=0.000000  cursorVisible=False
+[ 142.28s] ok: vision length (4.4s)
+[ 143.09s] audio: sfx vision_whoosh
+[ 143.09s] vision lasted 8.4s (white wash in/out included)
+[ 144.33s] shot 24_s06_vision_after.png  audioPeak=0.000000  cursorVisible=False
+[ 149.36s] shot 25_s06_after_vision.png  audioPeak=0.000000  cursorVisible=False
+[ 157.52s] audio: sfx tk_gather @(16.5, -1.2, -36.9)
+[ 157.52s] audio: sfx tk_push @(16.5, -1.1, -38.0)
+[ 157.52s] audio: sfx stone_door @(16.5, -1.4, -38.1)
+[ 160.17s] shot 26_s06_passage_opens.png  audioPeak=0.000000  cursorVisible=False
+[ 163.74s] audio: music -> moon_prison
+[ 163.75s] checkpoint 4
+[ 163.76s] objective: Find the way out
+[ 167.60s] ok: out onto the terrace (3.9s)
+[ 167.61s] objective: 
+[ 167.61s] audio: music -> main_theme
+[ 167.61s] audio: loop amb_city (Ambience)
+[ 167.69s] auto walk done at (16.49, -2.40, -43.50)
+[ 168.28s] atmosphere: city look applied
+[ 174.00s] shot 27_c01_terrace_wide_before_dialogue.png  audioPeak=0.000000  cursorVisible=False
+[ 179.22s] shot 28_c02_looking_up_one_of_many.png  audioPeak=0.000000  cursorVisible=False
+[ 188.12s] shot 29_c03_up_the_curve.png  audioPeak=0.000000  cursorVisible=False
+[ 192.47s] shot 30_c04_pyramids_and_depression.png  audioPeak=0.000000  cursorVisible=False
+[ 192.47s] audio: city: quiet district machinery starts
+[ 194.02s] audio: sfx city_stone_fall
+[ 196.66s] shot 31_c05_stone_falls.png  audioPeak=0.000000  cursorVisible=False
+[ 202.02s] shot 32_c06_saucer_spotted.png  audioPeak=0.000000  cursorVisible=False
+[ 209.11s] checkpoint 4
+[ 209.12s] audio: music -> moon_prison
+[ 209.12s] objective: Get down to the bay and release the saucer
+[ 227.59s] auto walk done at (22.51, -10.00, -73.12)
+[ 227.59s] ok: down in the bay (0.0s)
+[ 227.60s] scree feet (worker Scree_Worker0): lowest foot/toe bone 0.068 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 227.60s] scree feet (worker Scree_Worker1): lowest foot/toe bone 0.068 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 227.60s] scree feet (worker Scree_Worker2): lowest foot/toe bone 0.068 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 227.60s] scree feet (worker Scree_Worker3): lowest foot/toe bone 0.068 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 227.60s] scree feet (worker Scree_Worker4): lowest foot/toe bone 0.068 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 227.60s] scree feet (worker Scree_Worker5): lowest foot/toe bone 0.068 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 230.00s] scree tucked abdomen vs legs (worker, 2.4s of 'work'): smallest centre-line distance 0.304 m (abdomen + covers ~0.15 m thick, leg ~0.05 m: needs > 0.20) -> clears
+[ 230.05s] shot 33_s07_checkonly_scree_worker_bay.png  audioPeak=0.000000  cursorVisible=False
+[ 230.10s] shot 34_s07_checkonly_scree_worker_terrace.png  audioPeak=0.000000  cursorVisible=False
+[ 230.10s] ok: pull the release lever (in range) (0.0s)
+[ 230.10s] ok: pull the release lever (0.0s)
+[ 231.43s] audio: sfx tk_gather @(22.5, -8.8, -73.1)
+[ 231.43s] audio: sfx tk_push @(25.2, -8.9, -74.2)
+[ 232.24s] audio: sfx clamps_release @(11.5, -9.0, -80.0)
+[ 234.44s] audio: loop saucer_hum (Sfx)
+[ 236.84s] audio: sfx hatch_iris @(11.5, -6.8, -80.0)
+[ 237.94s] audio: sfx tractor_beam @(11.5, -8.0, -80.0)
+[ 239.30s] shot 35_s07_saucer_released_beam_on.png  audioPeak=0.000000  cursorVisible=False
+[ 239.30s] saucer released: clamps open, rim glow up, hovering, iris open, tractor beam on (no ramp)
+[ 239.30s] objective: Board the saucer
+[ 246.20s] auto walk done at (14.39, -10.00, -79.57)
+[ 246.20s] ok: at the edge of the light (0.0s)
+[ 246.20s] objective: 
+[ 246.20s] audio: music -> main_theme
+[ 249.18s] shot 36_s08_at_the_edge_of_the_light.png  audioPeak=0.000000  cursorVisible=False
+[ 252.55s] checkpoint 4
+[ 256.23s] shot 37_s08_7_rising.png  audioPeak=0.000000  cursorVisible=False
+[ 257.91s] shot 38_s08_7_drawn_into_hatch.png  audioPeak=0.000000  cursorVisible=False
+[ 263.48s] shot 39_s08_cat_rising.png  audioPeak=0.000000  cursorVisible=False
+[ 266.20s] audio: sfx hatch_iris @(11.5, -6.7, -80.0)
+[ 266.75s] shot 40_s08_hatch_closing.png  audioPeak=0.000000  cursorVisible=False
+[ 267.51s] audio: sfx liftoff
+[ 269.81s] shot 41_s08_liftoff_rising.png  audioPeak=0.000000  cursorVisible=False
+[ 272.96s] shot 42_s08_liftoff_leaving.png  audioPeak=0.000000  cursorVisible=False
+[ 276.21s] moon level done in 275.9s game time; lines so far 66; cat max distance while following/leading 5.38 m; cat catch-ups 0; 7 footsteps 183
+[ 276.21s] audio: music -> aboard_saucer
+[ 276.25s] speaker view scene  1 7: 79 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  1 cat: 79 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  2 7: 70 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  2 cat: 53 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  3 7: 88 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  3 cat: 88 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  4 7: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  4 cat: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  5 7: 36 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  5 cat: 36 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  5 guard: 27 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  6 7: 128 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  6 cat: 111 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  7 7: 52 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  7 cat: 52 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  8 7: 34 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene  8 cat: 34 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene 65 7: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.25s] speaker view scene 65 cat: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 276.57s] audio: loop amb_saucer (Ambience)
+[ 276.57s] audio: music -> aboard_saucer
+[ 280.40s] shot 43_s09_larger_interior.png  audioPeak=0.000000  cursorVisible=False
+[ 283.92s] objective: Find the kitchen
+[ 287.40s] objective: 
+[ 287.40s] ok: fridge reached
+[ 287.91s] audio: sfx fridge_open @(-7.7, 0.0, -4.8)
+[ 291.00s] shot 44_s10_free_range.png  audioPeak=0.000000  cursorVisible=False
+[ 295.42s] audio: sfx fridge_close @(-7.7, 0.0, -4.8)
+[ 304.91s] shot 45_s11_perhaps_i_should_stay.png  audioPeak=0.000000  cursorVisible=False
+[ 309.57s] free exploration of the saucer begins (after scene 11); music aboard_saucer
+[ 309.57s] objective: Explore the ship
+[ 314.57s] objective: 
+[ 314.63s] shot 46_s11_free_exploration.png  audioPeak=0.000000  cursorVisible=False
+[ 345.50s] sit in her chair after the chapter: seated=True
+[ 347.72s] cat on her lap after the chapter: True (cat scale 1.00)
+[ 347.79s] shot 47_s11_explore_seated_cat_on_lap.png  audioPeak=0.000000  cursorVisible=False
+[ 347.79s] audio: pause menu opened
+[ 347.84s] shot 48_s12_pause_menu.png  audioPeak=0.000000  cursorVisible=False
+[ 347.84s] audio: sfx menu_move
+[ 347.85s] audio: sfx menu_confirm
+[ 347.85s] pause menu settings: music 0.9 sfx 1.0 voice 1.0 (check runs never save these)
+[ 347.90s] shot 49_s12_pause_settings.png  audioPeak=0.000000  cursorVisible=False
+[ 347.90s] audio: sfx menu_move
+[ 347.90s] audio: sfx menu_move
+[ 347.90s] audio: sfx menu_confirm
+[ 347.95s] shot 50_s12_pause_quit_confirm.png  audioPeak=0.000000  cursorVisible=False
+[ 347.95s] pause menu closed; timeScale 1
+[ 347.95s] voice lines: bank 87, with audio 87, played+subtitled 83; not played: [s06b_a01_7, s06b_a02_cat, s06b_a03_7, s06b_a04_cat]; no audio: []; total voice length 166.8s
+[ 347.95s] cat max distance from 7 while following/leading on the Moon level: 5.38 m
+[ 347.95s] save written for Continue: True (test key; removed now)
+[ 347.95s] chapter 1 check run finished: soft-lock suspicions 0, shots 50, game time 345.9s since boot
+[ 347.95s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

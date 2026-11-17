@@ -54,3 +54,8 @@ apart, mask/hose/tanks, smooth Kyle-style shell. Cleanup notes: **the abdomen + 
 it in the rest pose; keep the hose and antenna out of decimation; wing covers are solid (fine). Rig in Blender (four
 arms, digitigrade legs, abdomen chain, head/antenna), not Mixamo.
 **Height: 1.9 m** (Dan, 2026-11-17: a little taller than humans). Built in QF4.
+**Built in QF4 (2026-11-17): `Tools/Blender/cleanup_scree.py` → `Art/Export/scree/scree_v1_rigged.fbx`** (1.90 m crown,
+45k tris, Humanoid-compatible rig + lower arm pair / abdomen / antenna bones, clips `work` + `alert`; 7's idle / walk /
+look_around retargeted in Unity). **Scree design approved 2026-11-17 — tail tucked down** (Dan): the abdomen + wing
+covers are straightened behind and tucked 42° below horizontal about the waist (`ABD_TUCK`, range 35–50°), the covers
+lying along it; clears the legs in idle / walk / work (centre-line distance ≥ 0.278 m). Previews `Docs/Previews/qf4/scree/`.

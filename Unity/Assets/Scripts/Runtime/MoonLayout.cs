@@ -113,6 +113,11 @@ namespace Seven
         public static readonly System.Collections.Generic.List<string> Played = new System.Collections.Generic.List<string>();
         public static readonly System.Text.StringBuilder CaptureLog = new System.Text.StringBuilder();
         public static int ShotCount;
+        /// <summary>QF4: watchdog fallbacks taken (story triggers that did not happen on their own in time).</summary>
+        public static int Watchdogs;
+        /// <summary>QF4 opening test (-openingtest n): run index and per-run results across scene reloads.</summary>
+        public static int OpeningRun;
+        public static readonly System.Collections.Generic.List<string> OpeningResults = new System.Collections.Generic.List<string>();
 
         public static void Reset() { Checkpoint = 0; Aboard = false; Explore = false; StartedAt = -1f; Played.Clear(); }
 

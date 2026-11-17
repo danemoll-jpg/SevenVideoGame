@@ -94,6 +94,7 @@ namespace Seven.EditorTools
             m.inscription.SetColor("_EmissionColor", Color.white * 1.4f);
             m.hull.SetFloat("_Rim", 0.25f);
             foreach (var x in new[] { m.glow, m.rim, m.inscription }) { x.EnableKeyword("_EMISSION"); EditorUtility.SetDirty(x); }
+            _screeCtl = SetupScree(sevenCtl, out _, out _);          // QF4: the real Scree (null = placeholder fallback)
             m.field = AdditiveMat("Moon_field", 0.8f);
             m.ghost = AdditiveMat("Moon_ghost", 0.3f);
             var atmo = BuildAtmosphereMoon(atmoPrefab);
@@ -352,6 +353,7 @@ namespace Seven.EditorTools
             obstacles.Add(new Vector3(L.StonePillar.x, L.StonePillar.z, 0.6f));
             obstacles.Add(new Vector3(L.Lever.x, L.Lever.z, 0.7f));
             obstacles.AddRange(props.extraObstacles);
+            foreach (var (wp, _) in ScreeWorkSpots) obstacles.Add(new Vector3(wp.x, wp.z, 0.45f));   // QF4: Scree workers
             wg.ZoneObstacles = obstacles.ToArray();
             PhantomCheck(wg);       // QF3: nothing phantom in the walkable spaces, no city surface inside the host
 
@@ -379,22 +381,26 @@ namespace Seven.EditorTools
             var cat = catRoot.AddComponent<Seven.ChapterCat>();
             cat.Seven = seven.transform; cat.Anim = catAnim; cat.Cam = cam;
 
-            // Scree guard (the hall) + two gate guards (visible on the guarded route, not fightable).
-            var guard = SpawnScree("Scree_placeholder", L.GuardPost, Vector3.forward, sevenCtl, m, true);
+            // Scree guard (the hall) + two gate guards (visible on the guarded route, not fightable). QF4: the real Scree.
+            var guard = SpawnAnyScree("Scree_Guard", L.GuardPost, Vector3.forward, sevenCtl, m, true);
             var g = guard.AddComponent<Seven.ScreeGuard>();
             g.Post = L.GuardPost; g.PostFacing = Vector3.forward;
             g.Eye = guard.GetComponentsInChildren<Transform>().FirstOrDefault(x => x.name.EndsWith("Head"));
             var gates = new List<Seven.ScreeGuard>();
             for (int i = 0; i < L.GatePosts.Length; i++)
             {
-                var gg = SpawnScree("Scree_placeholder_Gate" + i, L.GatePosts[i], Vector3.left + Vector3.forward * (i == 0 ? -0.2f : 0.3f), sevenCtl, m, true);
+                var gg = SpawnAnyScree("Scree_Gate" + i, L.GatePosts[i], Vector3.left + Vector3.forward * (i == 0 ? -0.2f : 0.3f), sevenCtl, m, true);
                 var sg = gg.AddComponent<Seven.ScreeGuard>(); sg.Post = L.GatePosts[i]; sg.PostFacing = Vector3.left; sg.UseGround = false; gates.Add(sg);
             }
-            // Scree workers in the bay (evidence of their work for Tunneler; not guards).
-            foreach (var (p, f) in new[] { (new Vector3(2.8f, L.Bay, -73.5f), new Vector3(0.6f, 0f, -1f)), (new Vector3(4.6f, L.Bay, -76.4f), new Vector3(-1f, 0f, 0.2f)) })
+            // Scree workers (work loop): in the bay (evidence of their work for Tunneler; not guards) and, QF4, on the
+            // terrace / bay edge seen in the city reveal (6b). Each stands on its own obstacle circle.
+            var workers = new List<Seven.ScreeGuard>();
+            int wi = 0;
+            foreach (var (p, f) in ScreeWorkSpots)
             {
-                var w = SpawnScree("Scree_placeholder_Worker", p, f, sevenCtl, m, false);
-                var sg = w.AddComponent<Seven.ScreeGuard>(); sg.Post = p; sg.PostFacing = f; gates.Add(sg);
+                var w = SpawnAnyScree("Scree_Worker" + wi++, p, f, sevenCtl, m, false);
+                var sg = w.AddComponent<Seven.ScreeGuard>(); sg.Post = p; sg.PostFacing = f; sg.PostState = "work"; sg.ScanAngle = 0f; sg.UseGround = false;
+                workers.Add(sg);
             }
 
             var ui = new GameObject("ChapterUI").AddComponent<Seven.ChapterUI>();
@@ -408,7 +414,7 @@ namespace Seven.EditorTools
             d.Seven = s7; d.Cat = cat; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend;
             d.Additive = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Fx_additive.mat");
             d.LaserDoor = props.laserDoor; d.LaserBeams = props.laserBeams.ToArray(); d.LaserLight = props.laserLight; d.ReleaseLight = props.releaseLight;
-            d.OldWallSlab = props.oldWall; d.Guard = g; d.GateGuards = gates.ToArray(); d.Stone = props.stone;
+            d.OldWallSlab = props.oldWall; d.Guard = g; d.GateGuards = gates.ToArray(); d.Workers = workers.ToArray(); d.Stone = props.stone;
             d.InscriptionGlow = props.inscription; d.VisionWhole = props.visionWhole; d.VisionRuins = props.visionRuins;
             d.SealedDoorSlab = props.sealedDoor; d.Saucer = props.saucer; d.Hatch = props.hatch; d.Beam = props.beam; d.BeamLight = props.beamLight; d.BeamFloor = props.beamFloor; d.HatchGlow = props.hatchGlow; d.Lever = props.lever;
             d.City = props.city; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
@@ -459,6 +465,18 @@ namespace Seven.EditorTools
             }
             return root;
         }
+
+        static AnimatorController _screeCtl;
+        static readonly (Vector3, Vector3)[] ScreeWorkSpots = new[]
+        {
+                (new Vector3(2.8f, L.Bay, -73.5f), new Vector3(0.6f, 0f, -1f)), (new Vector3(4.6f, L.Bay, -76.4f), new Vector3(-1f, 0f, 0.2f)),
+                (new Vector3(17.4f, L.Bay, -88.6f), new Vector3(-0.8f, 0f, 0.5f)), (new Vector3(5.2f, L.Bay, -86.2f), new Vector3(1f, 0f, 0.3f)),
+                (new Vector3(11.8f, L.Lower, -47.4f), new Vector3(-0.3f, 0f, -1f)), (new Vector3(12.6f, L.Lower, -42.9f), new Vector3(-1f, 0f, 0.1f)),
+        };
+
+        /// <summary>QF4: the real Scree when its export imported cleanly, else the placeholder below.</summary>
+        static GameObject SpawnAnyScree(string name, Vector3 pos, Vector3 facing, AnimatorController sevenCtl, MoonMats m, bool lamp)
+            => _screeCtl != null ? SpawnScreeModel(name, pos, facing, _screeCtl, m, lamp) : SpawnScree(name.Replace("Scree_", "Scree_placeholder_"), pos, facing, sevenCtl, m, lamp);
 
         /// <summary>Scree_placeholder: gray Y Bot + hood + robe, Humanoid idle / walk from 7's clips, optional lamp.</summary>
         static GameObject SpawnScree(string name, Vector3 pos, Vector3 facing, AnimatorController ctl, MoonMats m, bool lamp)

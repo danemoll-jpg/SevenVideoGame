@@ -66,6 +66,14 @@ apply to every asset and scene:
   Tuning knobs at the top: `HEIGHT`, `CEIL` (ledge height, = `RatwingCeil` in `FightDemoBuilderRatwing.cs`), `LAND_Z`;
   poses `P_SLEEP … P_STANCE` and the timeline in `seq_pose`. `RW_STAGE=fit` / `RW_STAGE=poses` env = debug renders only.
   Must run before the Unity build.
+- Scree (QF4): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_scree.py -- C:/Users/danmo/SevenVideoGame 45000 [preview_dir]`
+  (~4 min) → `Art/Export/scree/scree_v1_rigged.fbx` (+ grayscale texture, `scree_metrics.txt`): squares the figure, crown
+  `HEIGHT` 1.90 m, abdomen + wing covers straight behind and **tucked `ABD_TUCK` 42° down** (design approved 2026-11-17),
+  head straightened, 45k tris, Humanoid-named rig (+ `ScreeB_*` lower arms, `ScreeAbd1-4`, `ScreeAnt1-2`), T-pose rest,
+  clips `work` + `alert`; `SC_STAGE=fit` = rest previews only. Unity: `FightDemoBuilderScree.cs` (explicit human map,
+  `Scree.controller` = 7's idle / walk / look_around + work / alert), `ScreeRig.cs` (procedural extras), `ScreeGuard.cs`
+  (alert → walk → look around; `PostState = "work"` for workers). Missing export → the Y Bot placeholder. Must run before
+  the Unity build.
 - Previews: `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/preview_7.py -- C:/Users/danmo/SevenVideoGame`
   (args: repo root, optional FBX, optional output dir).
 - Launch Blender/Unity jobs with `Start-Process ... -WindowStyle Hidden -PassThru`, then `$p.PriorityClass = 'BelowNormal'`;
@@ -110,6 +118,11 @@ apply to every asset and scene:
   **Chapter 1 check run:** `SevenDemo.exe -mute -chapter1 -capture <dir> …` (autopilot, ~4.5 min) → `01_s01_cell_start.png …
   28_s11_to_be_continued.png` + `capture_log.txt` (objectives, checkpoints, any "SOFT-LOCK?" timeouts with positions, voice
   lines played vs. bank, cat distance, audio peak, `cursorVisible` per shot).
+  **Opening test (QF4):** `SevenDemo.exe -mute -openingtest 25 -capture <dir> …` (~6.5 min) → runs Chapter 1's opening
+  25× (idle / door at once / wanders / waits for the cat / runs along the beams, random start spots, frame hitches on
+  odd runs); `capture_log.txt` must end `OPENING TEST: 25/25` (cat inside the cell 0 frames each run). The normal Chapter 1
+  check run also logs `speaker view scene N …` (occluded / outside the frame during every line: must be 0 %), `WATCHDOG`
+  fallbacks, Scree feet and `scree tucked abdomen vs legs` (must say "clears").
   **Phantom-wall proof (QF3):** every build runs `FightDemoBuilderPhantomCheck.cs` on the Chapter 1 scene →
   `Docs/Previews/qf3/phantom_check.txt` + build log: city (layer 20) triangles in a walkable volume and inside the host
   structure must both be **0**; it also lists every non-city renderer without a collider in a walkable volume (props).
@@ -175,10 +188,14 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–8 + QF3 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` 0.8.1 (build 801), published through
-the launcher (`danemoll-jpg/seven-releases`, `game-801` Latest; `game-800` + `starter-800` before): Chapter 1 "The Moon
-Prison" (laser cell, city reveal, tractor beam, free saucer exploration, SFX + music, pause menu, Continue) plus the
-demos (fluid fight, saucer + gallery TV, Ratwing). Check-run switch added in Round 8: `-fightcombo` (combo timing log).
-QF3: no phantom walls, subtitles without "(thought)", static curled lap cat, nothing of the ship left after the reveal,
-no excavators, mouse cursor hidden in play (`CursorPolicy.cs`: shown on menus only after the mouse moves). Details in `TODO.md` /
-`TODO-ARCHIVE.md`. **Current objective: none** — waiting for Dan's review; every round ends with a published release.
+**Rounds 1–8 + QF3 + QF4 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe` 0.8.2 (build 802), published
+through the launcher (`danemoll-jpg/seven-releases`, `game-802` Latest; `game-801`, `game-800` + `starter-800` before):
+Chapter 1 "The Moon Prison" (laser cell, city reveal, tractor beam, free saucer exploration, SFX + music, pause menu,
+Continue) plus the demos (fluid fight, saucer + gallery TV, Ratwing). Check-run switch added in Round 8: `-fightcombo`
+(combo timing log). QF3: no phantom walls, subtitles without "(thought)", static curled lap cat, nothing of the ship
+left after the reveal, no excavators, mouse cursor hidden in play (`CursorPolicy.cs`: shown on menus only after the mouse
+moves). QF4: the cat can never enter the cell (`ChapterCat.NoCat`, sub-stepped moves) and every story wait on the cat has
+a watchdog (scene 1 starts by itself 20 s after the cat sits down); conversation cameras keep the speakers in clear view
+(`ChapterCamera.Subjects`, `Talk()`); the real Scree (tail tucked down — design approved 2026-11-17) is the hall guard,
+gate guards and the bay / terrace workers. Details in `TODO.md` / `TODO-ARCHIVE.md`. **Current objective: none** —
+waiting for Dan's review; every round ends with a published release.

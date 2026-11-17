@@ -24,6 +24,14 @@ namespace Seven
         public string Clip => _clip;
         public float DistanceTo7 => Flat(Seven.position - transform.position).magnitude;
         public int CatchUps { get; private set; }
+        /// <summary>QF4: areas the cat may never be in (7's cell), as x0, z0, x1, z1 rectangles. Every move, hop end,
+        /// placement and catch-up is pushed out of them.</summary>
+        public static readonly List<Rect> NoCat = new List<Rect>();
+        /// <summary>QF4: frames in which a step would have ended inside a no-cat area (pushed out; for the checks).</summary>
+        public int NoCatPushes { get; private set; }
+        /// <summary>Where the current command ends (GoTo target, last lead point, hop target).</summary>
+        public Vector3 Destination => Current == Mode.Lead && _lead != null && _lead.Count > 0 ? _lead[_lead.Count - 1]
+            : Current == Mode.Hop || Current == Mode.Perched ? _hopTo : _target;
 
         Vector3 _target, _look;
         float _speed;
@@ -50,6 +58,21 @@ namespace Seven
         }
 
         // ------------------------------------------------------------------------------------------ commands
+        /// <summary>QF4 watchdog fallback: finish the current walk / lead / hop at once (placed on the mark).</summary>
+        public void ForceArrive()
+        {
+            var d = Destination;
+            if (Current == Mode.Hop) { transform.position = _hopTo; _perchY = _hopTo.y; Current = Mode.Perched; PlayClip("idle", 0.2f); }
+            else
+            {
+                Place(d, Flat(_look - d).sqrMagnitude > 1e-4f ? Flat(_look - d) : transform.forward);
+                if (Current == Mode.Lead) _leadIdx = _lead.Count;
+                else if (Current == Mode.GoTo) Current = Mode.Hold;
+            }
+            Arrived = true;
+            Debug.Log($"[Seven] cat watchdog: placed on his mark {transform.position}");
+        }
+
         public void Follow() { Current = Mode.Follow; _perchY = float.NaN; Arrived = false; }
         public void GoTo(Vector3 p, float speed = -1f, Vector3? lookAt = null, string holdClip = "sit")
         {
@@ -70,6 +93,7 @@ namespace Seven
         public void Paw() { PlayClip("wash", 0.2f, 1.6f); }
         public void Place(Vector3 p, Vector3 facing)
         {
+            p = OutOfNoCat(p);
             transform.position = new Vector3(p.x, Ground.Height(p.x, p.z), p.z);
             facing.y = 0f; if (facing.sqrMagnitude > 1e-4f) transform.rotation = Quaternion.LookRotation(facing);
             _perchY = float.NaN;
@@ -85,26 +109,61 @@ namespace Seven
         }
 
         // ------------------------------------------------------------------------------------------ motion
+        /// <summary>Push a point out of the no-cat areas (to the nearest edge plus the body radius).</summary>
+        public Vector3 OutOfNoCat(Vector3 p)
+        {
+            foreach (var r in NoCat)
+            {
+                float x0 = r.xMin - BodyRadius, x1 = r.xMax + BodyRadius, z0 = r.yMin - BodyRadius, z1 = r.yMax + BodyRadius;
+                if (p.x <= x0 || p.x >= x1 || p.z <= z0 || p.z >= z1) continue;
+                NoCatPushes++;
+                float dx0 = p.x - x0, dx1 = x1 - p.x, dz0 = p.z - z0, dz1 = z1 - p.z;
+                float m = Mathf.Min(Mathf.Min(dx0, dx1), Mathf.Min(dz0, dz1));
+                if (m == dz1) p.z = z1 + 0.01f; else if (m == dz0) p.z = z0 - 0.01f; else if (m == dx0) p.x = x0 - 0.01f; else p.x = x1 + 0.01f;
+            }
+            return p;
+        }
+
+        public static bool InNoCat(Vector3 p, float pad = 0f)
+        {
+            foreach (var r in NoCat) if (p.x > r.xMin - pad && p.x < r.xMax + pad && p.z > r.yMin - pad && p.z < r.yMax + pad) return true;
+            return false;
+        }
+
+        /// <summary>QF4: the move is split into short sub-steps (&lt;= 6 cm), so a long frame (a load hitch) can never
+        /// carry him across a wall into another walkable zone (the bug that let him into 7's cell).</summary>
         bool MoveTo(Vector3 target, float speed, float arrive = 0.12f)
         {
-            var to = Flat(target - transform.position);
-            if (to.magnitude < arrive) return true;
-            float len = Mathf.Min(to.magnitude, speed * Time.deltaTime);
+            var to0 = Flat(target - transform.position);
+            if (to0.magnitude < arrive) return true;
+            float total = Mathf.Min(to0.magnitude, speed * Time.deltaTime);
+            int steps = Mathf.Max(1, Mathf.CeilToInt(total / 0.06f));
+            float len = total / steps;
+            var start = transform.position;
             Vector3 p = transform.position;
-            foreach (var turn in new[] { 0f, 40f, -40f, 80f, -80f, 120f, -120f })
+            for (int s = 0; s < steps; s++)
             {
-                var dir = Quaternion.Euler(0f, turn + _detour, 0f) * to.normalized;
-                var q = Ground.ClampToArena(transform.position + dir * len, BodyRadius);
-                // never accept a step the clamp turned into a jump (snapping across a wall into another walkable zone)
-                if (Flat(q - transform.position).magnitude > len + 0.05f) continue;
-                if (Vector3.Dot(Flat(q - transform.position), dir) > len * 0.6f)
+                var to = Flat(target - p);
+                if (to.magnitude < 1e-4f) break;
+                bool moved1 = false;
+                foreach (var turn in new[] { 0f, 40f, -40f, 80f, -80f, 120f, -120f })
                 {
-                    p = q;
-                    if (turn != 0f) _detour = Mathf.Clamp(_detour + turn * 0.02f, -90f, 90f); else _detour *= 0.9f;
-                    break;
+                    var dir = Quaternion.Euler(0f, turn + _detour, 0f) * to.normalized;
+                    var q = Ground.ClampToArena(p + dir * Mathf.Min(len, to.magnitude), BodyRadius);
+                    // never accept a step the clamp turned into a jump (snapping across a wall into another walkable zone)
+                    if (Flat(q - p).magnitude > len + 0.05f) continue;
+                    if (InNoCat(q, BodyRadius)) continue;
+                    if (Vector3.Dot(Flat(q - p), dir) > Mathf.Min(len, to.magnitude) * 0.6f)
+                    {
+                        p = q; moved1 = true;
+                        if (turn != 0f) _detour = Mathf.Clamp(_detour + turn * 0.02f, -90f, 90f); else _detour *= 0.9f;
+                        break;
+                    }
                 }
+                if (!moved1) break;
             }
-            var moved = Flat(p - transform.position);
+            p = OutOfNoCat(p);
+            var moved = Flat(p - start);
             p.y = Ground.Height(p.x, p.z);
             transform.position = p;
             if (moved.sqrMagnitude > 1e-7f)
@@ -169,7 +228,7 @@ namespace Seven
             }
             if (Current != Mode.Hop && Current != Mode.Perched && Current != Mode.Scripted)
             {
-                var p = transform.position; p.y = Ground.Height(p.x, p.z); transform.position = p;
+                var p = OutOfNoCat(transform.position); p.y = Ground.Height(p.x, p.z); transform.position = p;
             }
         }
 
@@ -183,6 +242,7 @@ namespace Seven
                 var dir = Quaternion.Euler(0f, i * 30f, 0f) * back;
                 var c = Ground.ClampToArena(Seven.position + dir * 2.2f, BodyRadius);
                 if ((Flat(c - Seven.position)).magnitude < 1.2f) continue;
+                if (InNoCat(c, BodyRadius)) continue;
                 c.y = Ground.Height(c.x, c.z);
                 if (Cam != null && Visible(c)) continue;
                 transform.position = c;
