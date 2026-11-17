@@ -56,6 +56,13 @@ apply to every asset and scene:
 - Cat (Round 3): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_cat.py -- C:/Users/danmo/SevenVideoGame 18000 [preview_dir]`
   → `Art/Export/cat/cat_v1_rigged.fbx` (+ grayscale texture): squares the body, straightens the head, decimates,
   0.25 m shoulder, scripted 24-bone rig + clips idle/walk/sit/wash/jump/sleep. Must run before the Unity build.
+- Ratwing (Round 4): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_ratwing.py -- C:/Users/danmo/SevenVideoGame 55000 [preview_dir]`
+  (~2 min) → `Art/Export/ratwing/ratwing_v1_rigged.fbx` (+ grayscale texture, `ratwing_metrics.txt`): 2.1 m (`HEIGHT`),
+  decimate with the membranes/claws protected, scripted 38-bone rig (body + wing root/upper + 3 two-segment finger
+  spars per wing, fan weights on the membranes, jaw, eye-glint bone) and the clips `sequence` (10 s) + `idle`.
+  Tuning knobs at the top: `HEIGHT`, `CEIL` (ledge height, = `RatwingCeil` in `FightDemoBuilderRatwing.cs`), `LAND_Z`;
+  poses `P_SLEEP … P_STANCE` and the timeline in `seq_pose`. `RW_STAGE=fit` / `RW_STAGE=poses` env = debug renders only.
+  Must run before the Unity build.
 - Previews: `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/preview_7.py -- C:/Users/danmo/SevenVideoGame`
   (args: repo root, optional FBX, optional output dir).
 - Launch Blender/Unity jobs with `Start-Process ... -WindowStyle Hidden -PassThru`, then `$p.PriorityClass = 'BelowNormal'`;
@@ -67,7 +74,8 @@ apply to every asset and scene:
 - **Build everything** (copy Mixamo FBX into Assets, Humanoid import, grayscale texture, materials, animators,
   Atmosphere prefab/profile/fog renderer feature, generated world meshes (`Assets/Art/World/Generated`, git-ignored),
   scenes `Menu` (demo picker, first) + `FightDemo` (outdoor hill world) + `FightDemo_Room` (Round 1 room) +
-  `Saucer` (Round 3; built by `FightDemoBuilderSaucer.cs`, cat from `Art/Export/cat/`, `Atmosphere_Above` prefab), Windows exe at
+  `Saucer` (Round 3; built by `FightDemoBuilderSaucer.cs`, cat from `Art/Export/cat/`, `Atmosphere_Above` prefab) +
+  `Ratwing` (Round 4 cave; `FightDemoBuilderRatwing.cs`, model from `Art/Export/ratwing/`, `Atmosphere_Cave` prefab), Windows exe at
   `Unity\Builds\Seven\SevenDemo.exe`, product name "7: The Observer — Demo" (QF2; the old `Builds\FightDemo` is obsolete)):
   `Unity.exe -batchmode -nographics -quit -projectPath C:\Users\danmo\SevenVideoGame\Unity -executeMethod Seven.EditorTools.FightDemoBuilder.BuildAllFromCommandLine -logFile <file>`
   (start with `Start-Process -WindowStyle Hidden`, then `.PriorityClass = 'BelowNormal'`; ~5 min; exit code 0 = ok).
@@ -82,12 +90,15 @@ apply to every asset and scene:
   timing), quits by itself (~50 s). Extra switches: `-quick` (look shots only, ~5 s), `-atmofile <json>` (override
   Atmosphere knobs without rebuilding), `-room` (start in the Round 1 room), `-fight` (skip the menu).
   **Saucer check run:** same with `-saucer` → `01_ship_wide.png … 16_after_stand.png` + `capture_log.txt` (audio, feet /
-  paws vs. the floor, lap gap, reveal timings), ~70 s. **Menu shot:** `-capture <dir> -menu` → `00_menu.png`.
+  paws vs. the floor, lap gap, reveal timings), ~70 s. **Ratwing check run:** same with `-ratwing` →
+  `01_cave_wide.png … 11_after_skip.png` + `capture_log.txt` (audio, eye-glint timing, feet vs. ledge while hanging and
+  vs. floor after landing incl. raycasts, wingspan, replay/skip), ~25 s. **Menu shot:** `-capture <dir> -menu` → `00_menu.png`.
   Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
 - Play: run the exe normally → demo picker; Xbox controller or keyboard/mouse (the legend bottom-left switches
   automatically). Esc / Start = back to the menu; fight reset = Backspace / d-pad down.
 
 ## Where things stand
-**Rounds 1–3 complete (2026-11-16)** — demo picker with the fight demo (fog/glow hill) and the saucer mock-up
-(details in `TODO-ARCHIVE.md`). **Current objective: QF2** (build to `Unity\Builds\Seven\SevenDemo.exe`), then **Round 4** —
-Ratwing hangs asleep in a cave, wakes, drops and lands (custom Blender rig + keyframed animation). See `TODO.md`.
+**Rounds 1–4 + QF2 complete (2026-11-17)** — `Unity\Builds\Seven\SevenDemo.exe`: demo picker with the fight demo
+(fog/glow hill), the saucer mock-up and **Ratwing** (10 s cave scene: hangs asleep, wakes, unfurls, drops, lands;
+scripted Blender rig + keyframes, `cleanup_ratwing.py` → `FightDemoBuilderRatwing.cs`). Rounds 1–3 in
+`TODO-ARCHIVE.md`, Round 4 record in `TODO.md`. **Next:** waiting for Dan's review of Round 4 and the next round.

@@ -6,6 +6,8 @@
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Round 4 + QF2 — done (2026-11-17), exe-verified off-screen; Dan to watch.** Build moved to
+  `Unity\Builds\Seven\SevenDemo.exe`; Ratwing cave scene (rigged + keyframed in Blender) on the demo picker. Record below.
 - **Round 3 — saucer mock-up — done (2026-11-16), exe-verified off-screen; Dan to play.** Demo picker (Fight / Saucer),
   16 m round saucer deck, rigged black cat (Rigify, from `cat_v1.glb`) that roams large and shrinks onto 7's lap when she
   sits, ship reveal over a foggy city. Full record in `TODO-ARCHIVE.md` → "Round 3".
@@ -25,57 +27,68 @@
   Script kept as `Tools/Model/fix_v1_to_v2.py`. Source facts: 0.98 m tall, ~1.95M triangles, one 4K base-color texture.
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
-## Current Objective — Round 4: Ratwing wakes (short animated scene)
-Commit the repo as it is before changing anything (safety checkpoint). **Do Quick fix QF2 first** (below), then Round 4.
+## Current Objective — Round 4 done (2026-11-17), exe-verified off-screen; waiting for Dan to watch it
+Next round not set yet. Round 4 record below (move it to `TODO-ARCHIVE.md` when the next round starts).
 
-### Quick fix QF2 (Dan, 2026-11-16) — build folder name — **done (2026-11-17)**
-Builder writes `Unity\Builds\Seven\SevenDemo.exe` (product "7: The Observer — Demo"); paths updated in `CLAUDE.md`
-(no README/legend named the exe). Rebuilt; muted off-screen `-fight` and `-saucer` runs passed (audio RMS 0, monochrome
-max 0). Old `Unity\Builds\FightDemo` left in place — **Dan can delete it.**
-The build now holds both demos, so `Builds\FightDemo\SevenFightDemo.exe` no longer makes sense.
-1. Build to **`Unity\Builds\Seven\SevenDemo.exe`** (product name "7: The Observer — Demo"). Change the builder
-   script's output path (not just the folder), so every future build goes there.
-2. Leave the old `Builds\FightDemo` folder alone (deleting is off) — tell Dan he can delete it.
-3. Update every path in `CLAUDE.md` (Commands, check-run command, Where things stand) and the README/legend text if it
-   names the exe. Rebuild, run the usual muted off-screen check (`-fight` and `-saucer`), mark status here, commit, push.
+### Quick fix QF2 (Dan, 2026-11-16) — build folder name — **done**
+Builder writes `Unity\Builds\Seven\SevenDemo.exe` (product "7: The Observer — Demo", set in `ConfigurePlayer`); paths
+updated in `CLAUDE.md` (no README/legend named the exe). Rebuilt; muted off-screen `-fight` and `-saucer` runs passed
+(audio RMS 0, monochrome max 0). Old `Unity\Builds\FightDemo` left in place — **Dan can delete it.**
 
-### Round 4 — Ratwing hangs asleep in a cave, wakes, drops and lands
-A few-second animated scene, a third choice on the demo picker (**Ratwing**, also `-ratwing`). No gameplay: it plays,
-then shows "A: replay  /  Menu: back". All standing rules apply (monochrome, Kyle's fog/glow look, nobody dies).
-Ratwing: an intelligent humanoid vampire bat — an established antagonist (`Art/Reference/kyle_ratwing.jpg`).
+### Round 4 — Ratwing hangs asleep in a cave, wakes, drops and lands — **done**
+Third demo-picker entry **Ratwing** (also `-ratwing`): a 10 s scene, then "A: replay  /  Menu: back" (keys: "Enter:
+replay  /  Esc: back"); A skips to the end once it has been seen in full; Esc / Start back to the menu.
+1. **Cleanup — done.** `Tools/Blender/cleanup_ratwing.py` (~2 min): 2.1 m standing height (`HEIGHT`, head top; wing hooks
+   reach ~2.2 m), origin between the feet, facing −Y → 55,000 tris, X-symmetric, membranes and claws protected
+   (vertex-group weighted collapse): **0 hole (boundary) edges**; the membranes keep 73 % of the budget (body ~15k).
+   One material, double-sided in Unity; texture grayscale 2048. Metrics in `Art/Export/ratwing/ratwing_metrics.txt`.
+2. **Rig — done, with one deviation:** a scripted 38-bone deform rig fitted from mesh slices (hips/spine/chest/neck/
+   head, **jaw**, **eyes** (glint), arms, digitigrade legs with toes; per wing: root, upper, 3 two-segment finger spars
+   found from the membrane's trailing-edge cusps) instead of a Rigify metarig — a Rigify control rig would have to be
+   baked back to deform bones for the FBX anyway (same approach as the Round 3 cat). Membranes get angular "fan"
+   weights (folding compresses them like a fan). Wing edge stretch (× rest length, 99th pct / max): wrapped 1.19 / 2.5,
+   full spread 1.77 / 2.7 (worst edges are where the wing joins the back), stance 1.12 / 2.3. No tearing visible.
+3. **Sequence — done.** Clips `sequence` (10 s @ 30 fps) + `idle` (2 s loop), all keyed by script (`seq_pose`,
+   poses `P_SLEEP … P_STANCE`): asleep hanging by the feet with wings wrapped as a cloak, breathing + sway → eyes snap
+   on at 3.55 s, head lifts and turns → wings unfurl past full spread, hiss (jaw) → drop with a half-roll upright,
+   wings half open → crouch landing at 7.55 s, wings spread → rises to a hunched stance, breathing. Feet pinned to the
+   ledge while hanging and to the floor after landing on every frame.
+4. **Cave scene — done.** `Assets/Scenes/Ratwing.unity` from `FightDemoBuilderRatwing.cs`: noisy rock shell, 70
+   stalactites + stalagmites, boulders, a rock ledge with a flat underside at 4.2 m (`RatwingCeil` = Blender `CEIL`),
+   a ragged mouth (rim boulders) onto bright fog with huge spires fading out, `Atmosphere_Cave` prefab variant
+   (dark interior, bright mouth), a cave-only post volume (tighter bloom, +contrast, saturation −100), 4 faint light
+   shafts, drifting haze particles, dust puff at touchdown. Ratwing reads as a dark silhouette against the mouth.
+5. **Camera — done.** Push-in while asleep, hold on the eyes, pull back for the 3.2 m wingspan, follows his hips down
+   during the drop, wide on the landing. A-skip after the first full viewing (per session).
+6. **Checks — done** (rebuild + muted, minimized/not-activated, Below Normal run, ~17 s): eye glints on at 3.59 s;
+   **hanging: feet top 0.0–0.2 mm under the ledge over 249 samples, raycast to the ledge surface 0.0–0.2 mm**; lowest
+   point while hanging 1.92 m above the floor; **landed: lowest foot 0.1 mm below to 0.2 mm above the floor** (66
+   samples, raycast agrees); wingspan 3.24 m; replay restarts (T=0.99 s after 1 s), skip jumps to the stance;
+   **audio output RMS 0.000000 (listener 0)** at start and end; **monochrome max |R−G|,|G−B| = 0** on every shot (also
+   menu + `-fight -quick` regression). Wing holes/tearing: none seen in the full-fold and full-spread shots.
+   Not perfect: from the close-up angle only one eye glint shows (the other sits behind the cheek); hands stay outside
+   the wing cloak while hanging.
+7. **End of round — done:** this file, `CLAUDE.md`, commit + push.
 
-**Model:** `Art/Source/ratwing/ratwing_v1.glb` (Tripo, unrigged; checked in chat 2026-11-17). Facts: ~1.95M tris, one 4K
-texture, 0.75 units tall with wings spread ~0.98 wide. Gaunt humanoid body with visible ribs, clawed hands and bird-like
-clawed feet, large pointed ears, open fanged mouth, furry mane at the neck and waist. **The wings are separate limbs
-growing from the back/shoulders, not membranes on the arms** — so Mixamo would rig the body but not the wings.
-
-1. **Cleanup** (`Tools/Blender/cleanup_ratwing.py`): scale to **2.1 m standing height** (taller than 7's 1.70 — one
-   constant, Dan may change it), origin at the feet, ~50–60k tris. Protect the thin wing membranes and claws when
-   decimating (no holes, keep the membrane outline and finger bones), membrane material double-sided. Previews like 7's.
-2. **Rig in Blender** (skip Mixamo — every motion here is custom): Rigify human metarig fitted to the body plus a bone
-   chain per wing (shoulder root, arm, 3–4 finger/spar bones) so the wings can fold tight around the body and spread
-   wide. Clean weights on the membranes so folding doesn't tear or crumple them badly.
-3. **Keyframe the sequence** (~10 s, 30 fps, by script so it can be re-tuned), exported as one clip or a few clips:
-   - 0–3.5 s **asleep**: hanging upside down by his feet claws from the cave ceiling, wings wrapped around his body
-     like a cloak, slow breathing, a slight sway.
-   - 3.5–4.5 s **wakes**: eyes snap open (pale glint), head lifts and turns toward the camera.
-   - 4.5–6.5 s **unfurls**: wings open wide in a big stretch, mouth opens in a hiss.
-   - 6.5–8 s **drops**: feet release, he falls, flips upright mid-air with wings half open to slow himself.
-   - 8–10 s **lands** in a crouch with wings spread (haze/dust puff), rises to a menacing stance, idle breathing.
-4. **Cave scene** `Assets/Scenes/Ratwing.unity` (generated by a builder script): dark rocky cave with stalactites and a
-   ceiling ledge he hangs from; the cave mouth behind/aside him opens onto Kyle's bright glowing fog (use the
-   `Atmosphere` prefab), light shafts and drifting haze inside the cave, his silhouette dark against the glow.
-5. **Camera**: slow push-in toward him while he sleeps, a slight hold when the eyes open, then tilt/follow down with
-   the drop and frame the landing wide enough to show the wingspan. Skippable with A after the first viewing.
-6. **Checks** (muted, off-screen, never take focus): rebuild; capture asleep, eyes open, wings spread, mid-drop,
-   landing, final stance. Feet touching the ceiling while hanging (measure the gap), feet on the floor after landing,
-   no holes or tearing in the wings at full fold and full spread, monochrome max |R−G|,|G−B| = 0, audio level 0.
-7. End of round: update `TODO.md` (per-item status, "For Dan to check") and `CLAUDE.md`, commit and push.
-
-### For Dan to check (after Round 4)
-- Does the wake-up read as menacing and the drop/landing feel weighty? Is 2.1 m the right size for him?
+### For Dan to check (Round 4)
+- Run `Unity\Builds\Seven\SevenDemo.exe` → **Ratwing**. Does the wake-up read as menacing and the drop/landing feel
+  weighty? Is 2.1 m the right size (one constant: `HEIGHT` in `cleanup_ratwing.py`)?
+- Shots in `Docs/Previews/round4/`: `01_cave_wide`, `02_asleep`, `02b_asleep_close` (wing cloak), `03_eyes_open`,
+  `03b_eyes_close`, `04_wings_spread`, `04b_wings_spread_close` (membranes), `05_mid_drop`, `06_landing` (dust),
+  `07_crouch`, `08_final_stance`, `09_prompt_pad` / `09b_prompt_keys`, `10_stance_side`, `10b_stance_back`,
+  `11_after_skip`, `00_menu`; Blender contact sheets `blender_sequence_front.png` / `_side.png`,
+  `blender_head_wake_hiss.png`; logs `capture_log.txt`, `ratwing_metrics.txt`.
+- Taste calls: cave brightness (`Atmosphere_Cave` knobs, try with `-atmofile`), dust amount, how long he hangs asleep.
+- Old `Unity\Builds\FightDemo` can be deleted.
 
 ## Next Steps (Do Not Start Yet)
+- **Hair ties → glowing round clips** (Kyle's art: `kyle_7_face_hairclips`, `kyle_7_riding_fog`, `kyle_world_mood`)
+  instead of the metal cuffs. Dan 2026-11-17: "probably can be changed" — waiting for his go; small change in
+  `cleanup_7.py` (cuff constants / old orb fallback) + emissive material, no re-rig needed if the mesh topology of the body is unchanged.
+- **Forehead dot = 7's "energy point"** (Kyle, 2026-11-17). Keep the plain glowing dot. Gameplay: **Kyle's proposal
+  (2026-11-17): its brightness shows how much energy she has left for the shield and telekinesis** — bright when
+  full, dimming as she uses powers (no separate on-screen bar). Not yet scheduled; don't build it until a round asks.
+- **"7" emblem on her back** (Kyle's art) — OPEN, not decided.
 - **Saucer look pass:** darker city near the ship / dark overhead hull edge for Kyle's silhouette contrast, stronger
   in-fog glows, less boxy towers; seated camera vs. chair back; cat on-lap pose clear of her forearms; better cat rig
   (proper fitting or a Tripo/AccuRig quadruped rig) if the cat stays a main character.

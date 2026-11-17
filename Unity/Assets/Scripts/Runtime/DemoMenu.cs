@@ -8,16 +8,16 @@ using UnityEngine.UI;
 namespace Seven
 {
     /// <summary>
-    /// Demo picker (first scene): "Fight demo" / "Saucer demo". Pad: stick or d-pad + A. Keys: W/S or arrows + Enter
+    /// Demo picker (first scene): "Fight demo" / "Saucer demo" / "Ratwing". Pad: stick or d-pad + A. Keys: W/S or arrows + Enter
     /// or Space. Strictly monochrome uGUI drawn by the menu camera (so it can be captured off-screen).
-    /// -fight / -room / -capture skip to the fight demo, -saucer to the saucer; -capture -menu screenshots the menu.
+    /// -fight / -room / -capture skip to the fight demo, -saucer to the saucer, -ratwing to the Ratwing cave; -capture -menu screenshots the menu.
     /// </summary>
     public class DemoMenu : MonoBehaviour
     {
         public const string SceneName = "Menu";
         public Camera Cam;
 
-        static readonly (string label, string scene)[] Items = { ("Fight demo", "FightDemo"), ("Saucer demo", "Saucer") };
+        static readonly (string label, string scene)[] Items = { ("Fight demo", "FightDemo"), ("Saucer demo", "Saucer"), ("Ratwing", "Ratwing") };
         int _sel;
         Text[] _labels;
         Image[] _marks;
@@ -28,6 +28,7 @@ namespace Seven
         {
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
             if (DemoBoot.Saucer) { SceneManager.LoadScene("Saucer"); return; }
+            if (DemoBoot.Ratwing) { SceneManager.LoadScene("Ratwing"); return; }
             if (DemoBoot.Fight || DemoBoot.Room || DemoBoot.CaptureDir != null) { SceneManager.LoadScene("FightDemo"); return; }
             Build();
         }

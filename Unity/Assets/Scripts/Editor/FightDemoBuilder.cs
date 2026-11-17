@@ -34,7 +34,7 @@ namespace Seven.EditorTools
         static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         public static string ExePath => Path.Combine(ProjectRoot, "Builds", "Seven", "SevenDemo.exe");   // QF2
         /// <summary>Build order: the demo picker first.</summary>
-        static string[] AllScenes => new[] { MenuScenePath, ScenePath, RoomScenePath, SaucerScenePath };
+        static string[] AllScenes => new[] { MenuScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath };
 
         static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle" };
         static readonly string[] RootMotion = { "finisher", "dodge", "knocked_down", "get_up" };
@@ -75,6 +75,7 @@ namespace Seven.EditorTools
             BuildRoomScene(sevenCtl, botCtl, mats);
             BuildOutdoorScene(sevenCtl, botCtl, mats, atmo);
             BuildRound3(sevenCtl, atmo);
+            BuildRound4(atmo);
             EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
             ConfigurePlayer();
             AssetDatabase.SaveAssets();
