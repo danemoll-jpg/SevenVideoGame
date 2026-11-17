@@ -146,8 +146,38 @@ Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Round 8". Previews: `Doc
 - Launcher: download the starter zip from the seven-releases page, run SevenLauncher.exe, install, play; on the Steam
   Deck add it as a non-Steam game with Proton (Docs/LAUNCHER.md).
 
-## Current Objective — none: waiting for Dan's review of Rounds 7 + 8 (next round TBD)
-Every round now ends with a published launcher release (next: 0.9.0 / build 900 via `Prepare-ComponentUpdate.py`).
+## Current Objective — Quick fix QF3: Dan's playthrough of Rounds 7 + 8 (2026-11-17)
+Commit the repo as it is first (safety checkpoint). Screenshots from Dan: `Docs/Previews/dan/qf3_cat_lap.png`,
+`Docs/Previews/dan/qf3_phantom_wall.png`.
+
+1. **Phantom walls in the prison (regression — not in the Round 6 build).** Throughout the prison there are now big
+   flat walls/blocks that you can walk straight through but that block the view (Dan's shot: a huge dark slab over the
+   catwalk rails). Most likely the city-reveal / "host building" geometry from `FightDemoBuilderCity.cs` (or atmosphere
+   cards) overlapping the prison spaces — renderers with no colliders. Find every one and remove or move it so nothing
+   from the city intrudes into the prison, corridors, catwalks, ruins or impound. Keep the city reveal view itself
+   intact. **Check:** walk the whole chapter path; list every renderer whose bounds intersect a walkable area and has no
+   collider (should be 0 apart from intentional props like fog/particles); compare each scene shot against the Round 6
+   shots (`Docs/Previews/round6/`) — no new slabs.
+2. **Subtitles: drop "(thought)".** 7 and the cat both talk in thoughts (telepathy), so the label adds nothing. Show just
+   the speaker name for both (`ChapterUI.cs`).
+3. **Cat on her lap — fix properly (Dan: worse than the first version).** In Dan's shot he floats stretched out across
+   her stomach/forearm, legs dangling. He should **lie curled on her thighs** like a real cat: body resting on top of
+   both thighs, paws tucked, tail wrapped around, head resting on a paw or up, settled into the lap (no floating gap,
+   not sinking in, clear of her forearms and hands). If the rig can't make a good curled pose, use a dedicated static
+   curled-cat pose/mesh for the lap (sculpted or posed once in Blender) with only a gentle breathing motion. Her hands:
+   one resting near/on him is fine. **Check:** close-ups from the front, both sides and over her shoulder (seated
+   camera); measure gap to her thighs (~0–1 cm) and penetration (0); compare with Round 3's `08_lap_closeup.png` — it
+   must look clearly better.
+4. **Saucer reveal: a black band stays when the ship fades.** Something isn't dissolving — most likely the Round 8 dark
+   overhead hull-edge ring. Everything of the ship must fade (or the ring must fade with it) so only 7, the chair and
+   the cat remain. **Check:** revealed shots from the seated camera and 3 other angles — no leftover ship geometry.
+5. **City reveal: remove the "wrecker" (excavator).** It reads as poorly drawn. Remove the excavators from the view;
+   keep conveyors, lifts and the falling terrace stone (that shows the mining). If the view needs more mining activity,
+   use a few tiny moving lights or freight lifts instead.
+6. **Hide the mouse cursor** during gameplay (it shows in Dan's shot); show it only in menus when the mouse is used.
+7. Checks as usual (muted except a brief reported sound check if any audio changes; off-screen; never steal focus),
+   rebuild, **publish a release** through the launcher pipeline, update `TODO.md` / `CLAUDE.md`, commit and push,
+   report in a few lines per item.
 
 ## Next Steps (Do Not Start Yet)
 - **First vision contents** — still undecided (Dan, 2026-11-17). Keep it generic until he decides.
