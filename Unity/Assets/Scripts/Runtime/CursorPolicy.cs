@@ -12,6 +12,9 @@ namespace Seven
     public class CursorPolicy : MonoBehaviour
     {
         static CursorPolicy _i;
+        /// <summary>Round 9: Chapter 1's camera orbits with the mouse - lock the cursor while playing (never on a menu,
+        /// never in a check run, released when the window loses focus).</summary>
+        public static bool WantLock;
         bool _mouseActive;
 
         /// <summary>True when a menu is on screen (main menu scene or the pause menu).</summary>
@@ -35,6 +38,8 @@ namespace Seven
             if ((kb != null && kb.anyKey.wasPressedThisFrame) || (gp != null && gp.wasUpdatedThisFrame && AnyPad(gp))) _mouseActive = false;
             bool show = MenuOpen && _mouseActive && DemoBoot.CaptureDir == null;
             if (Cursor.visible != show) Cursor.visible = show;
+            var lockMode = WantLock && !MenuOpen && DemoBoot.CaptureDir == null && Application.isFocused ? CursorLockMode.Locked : CursorLockMode.None;
+            if (Cursor.lockState != lockMode) Cursor.lockState = lockMode;
         }
 
         static bool AnyPad(Gamepad gp) =>

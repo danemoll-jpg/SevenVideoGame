@@ -27,7 +27,7 @@ namespace Seven
             Look = new InputAction("look", InputActionType.Value, expectedControlType: "Vector2");
             Look.AddBinding("<Gamepad>/rightStick");
             Recenter = Button("recenter", "<Gamepad>/rightStickPress", "<Mouse>/middleButton", "<Keyboard>/c");
-            Sit = Button("sit", "<Gamepad>/buttonSouth", "<Keyboard>/e");
+            Sit = Button("sit", "<Gamepad>/buttonWest", "<Gamepad>/buttonSouth", "<Keyboard>/e");   // Round 9: interact = X (A still works)
             Stand = Button("stand", "<Gamepad>/buttonEast", "<Keyboard>/q");
             Reveal = Button("reveal", "<Gamepad>/buttonNorth", "<Keyboard>/r");
             Menu = Button("menu", "<Gamepad>/start", "<Keyboard>/escape");

@@ -76,3 +76,9 @@ Open design notes from these pieces (decide with Dan/Kyle, don't change the mode
 | `scree_concept.jpg` | **Not Kyle's drawing** — a reference image Kyle sent Dan: insectoid, four clawed arms, digitigrade legs, long abdomen with wing covers, compound eyes, breathing hose to a twin-tank backpack | Starting point only; the Scree are to be redesigned **in Kyle's style** |
 | `scree_ref_front.png` | First generated front view from that reference (generic realistic style, abdomen hanging down) | Superseded by a Kyle-style version — do not model from it |
 | `scree_ref_front_v2.png` | Kyle-style front view (2026-11-17): smooth pale shell plates, dark joints, elongated limbs, four arms apart, mask + hose, twin tanks | Current Scree reference for Tripo (pending Kyle's OK; a side view would fix the abdomen depth) |
+
+## Ancient architecture (Round 9, Dan 2026-11-17)
+| File | What it shows | Use it for |
+| --- | --- | --- |
+| `ref_lunar_door.png` | Generated concept (via Dan): pale smooth flowing architecture — sweeping curved ribs and arches growing into each other, skylight slits; a tall pointed-arch door split into two leaves by an S-shaped seam with engraved orbit lines and small "planet" circles; a round three-spoke emblem beside it; concentric circles and a line of small circles engraved in the floor | The sealed door after the vision (Chapter 1, scene 6) and the chamber around it — built **in ruins** (cracked / broken ribs, fallen chunks, fog), door intact; the same curvy rib style for the ancient approach (hall exit, hall). Built by `FightDemoBuilderLunarDoor.cs` |
+| `../Video/vision_01_door.mp4` (video, not an image) | The first vision (decided by Dan, 2026-11-17): the lunar door whole, two pale figures, one touches the round mechanism, the leaves part, they walk through | Played full-screen in scene 6 (copy in `Unity/Assets/Video/`); the door and its mechanism in the game match it |

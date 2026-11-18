@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-33 sounds.
+38 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -43,3 +43,8 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `fridge_close` | Refrigerator door closing softly. | 1 |  | saucer galley (scene 10) |
 | `menu_move` | Very soft subtle user interface tick. | 0.5 |  | menu |
 | `menu_confirm` | Soft gentle user interface confirm chime, glassy. | 0.7 |  | menu |
+| `ledge_grab` | Hands catching hold of a rough stone ledge, a quick soft slap of palms and a faint cloth rustle. | 0.8 |  | 7 grabs a ledge (Chapter 1 traversal) |
+| `land_soft` | A person landing lightly on their feet on a stone floor after a short jump, soft thud, boots. | 0.8 |  | 7 lands after a jump / short drop |
+| `land_hard` | A person landing heavily on stone after a long drop, firm thud, boots and a short cloth rustle. | 1.0 |  | 7 lands after a big drop |
+| `climb_scuff` | Boots scuffing and scraping on a rough stone wall while someone climbs, two or three soft scrapes. | 1.2 |  | wall climb / climbing up a ledge |
+| `slab_lift` | A heavy stone slab grinding as it lifts off a stone floor, low scrape fading into a soft hum. | 1.2 |  | telekinesis lifts the fallen slab (ruins) |

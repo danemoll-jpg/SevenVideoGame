@@ -8,7 +8,8 @@ namespace Seven
 {
     /// <summary>
     /// Round 7 (3d): Start / Esc opens a small pause menu in every playable scene (never on the main menu):
-    /// Resume · Settings (music / sound effects / voice volume) · Main menu · Quit game, with a confirm step on
+    /// Resume · Settings (music / sound effects / voice volume, Round 9: Button hints On / Off) · Controls (Round 9: the
+    /// full Chapter 1 map, Xbox + keyboard) · Main menu · Quit game, with a confirm step on
     /// Main menu and Quit. Time stops and audio pauses while it is open. Esc no longer leaves a scene directly.
     /// Pad: stick / d-pad, A = choose, B = back, Start = close. Keys: W/S or arrows, ←/→ to adjust, Enter / Space,
     /// Esc = back. Strictly monochrome uGUI drawn on the active camera (so check runs can capture it).
@@ -20,7 +21,9 @@ namespace Seven
         /// <summary>Another screen owns Esc right now (the gallery full view): Esc does not open the menu.</summary>
         public static System.Func<bool> EscapeOwned;
 
-        enum Page { Main, Settings, ConfirmMenu, ConfirmQuit }
+        enum Page { Main, Settings, ConfirmMenu, ConfirmQuit, Controls }
+        const int MainSettings = 1, MainControls = 2, MainMenu = 3, MainQuit = 4;
+        readonly List<GameObject> _extra = new List<GameObject>();
         Page _page;
         int _sel;
         bool _open;
@@ -90,6 +93,7 @@ namespace Seven
         {
             var items = Items();
             if (d != 0) { _sel = (_sel + d + items.Count) % items.Count; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
+            if (_page == Page.Settings && lr != 0 && _sel == 3) { ControlsLegend.HintsOn = !ControlsLegend.HintsOn; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
             if (_page == Page.Settings && lr != 0 && _sel < 3)
             {
                 float step = 0.1f * lr;
@@ -100,7 +104,7 @@ namespace Seven
             }
             if (back)
             {
-                if (_page == Page.Main) Close(); else Show(Page.Main, _page == Page.Settings ? 1 : _page == Page.ConfirmMenu ? 2 : 3);
+                if (_page == Page.Main) Close(); else Show(Page.Main, _page == Page.Settings ? MainSettings : _page == Page.Controls ? MainControls : _page == Page.ConfirmMenu ? MainMenu : MainQuit);
                 return;
             }
             if (!ok) return;
@@ -109,20 +113,25 @@ namespace Seven
             {
                 case Page.Main:
                     if (_sel == 0) Close();
-                    else if (_sel == 1) Show(Page.Settings, 0);
-                    else if (_sel == 2) Show(Page.ConfirmMenu, 1);
+                    else if (_sel == MainSettings) Show(Page.Settings, 0);
+                    else if (_sel == MainControls) Show(Page.Controls, 0);
+                    else if (_sel == MainMenu) Show(Page.ConfirmMenu, 1);
                     else Show(Page.ConfirmQuit, 1);
                     break;
                 case Page.Settings:
-                    if (_sel == 3) Show(Page.Main, 1);
+                    if (_sel == 3) { ControlsLegend.HintsOn = !ControlsLegend.HintsOn; Refresh(); }
+                    if (_sel == 4) Show(Page.Main, MainSettings);
+                    break;
+                case Page.Controls:
+                    Show(Page.Main, MainControls);
                     break;
                 case Page.ConfirmMenu:
                     if (_sel == 0) { Close(); Chapter1State.Reset(); SceneManager.LoadScene(DemoMenu.SceneName); }
-                    else Show(Page.Main, 2);
+                    else Show(Page.Main, MainMenu);
                     break;
                 case Page.ConfirmQuit:
                     if (_sel == 0) { Close(); QuitGame(); }
-                    else Show(Page.Main, 3);
+                    else Show(Page.Main, MainQuit);
                     break;
             }
         }
@@ -142,14 +151,16 @@ namespace Seven
             switch (_page)
             {
                 case Page.Settings:
-                    return new List<string> { "Music   " + Bar(AudioKit.MusicVolume), "Sound effects   " + Bar(AudioKit.SfxVolume), "Voice   " + Bar(AudioKit.VoiceVolume), "Back" };
+                    return new List<string> { "Music   " + Bar(AudioKit.MusicVolume), "Sound effects   " + Bar(AudioKit.SfxVolume), "Voice   " + Bar(AudioKit.VoiceVolume),
+                                              "Button hints   " + (ControlsLegend.HintsOn ? "On" : "Off"), "Back" };
+                case Page.Controls: return new List<string> { "Back" };
                 case Page.ConfirmMenu: return new List<string> { "Yes, main menu", "No" };
                 case Page.ConfirmQuit: return new List<string> { "Yes, quit", "No" };
-                default: return new List<string> { "Resume", "Settings", "Main menu", "Quit game" };
+                default: return new List<string> { "Resume", "Settings", "Controls", "Main menu", "Quit game" };
             }
         }
         static string Bar(float v) { int n = Mathf.RoundToInt(v * 10f); return new string('■', n) + new string('□', 10 - n); }
-        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
+        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
 
         public void Open()
         {
@@ -170,7 +181,7 @@ namespace Seven
             Time.timeScale = _prevTimeScale <= 0f ? 1f : _prevTimeScale;
             AudioListener.pause = DemoBoot.Muted;
             if (_canvasGo != null) Destroy(_canvasGo);
-            _labels.Clear(); _bars.Clear();
+            _labels.Clear(); _bars.Clear(); _extra.Clear();
         }
 
         void Show(Page p, int sel) { _page = p; _sel = sel; Refresh(); }
@@ -191,8 +202,8 @@ namespace Seven
             var dim = new GameObject("Dim", typeof(RectTransform)); dim.transform.SetParent(_canvasGo.transform, false);
             var drt = (RectTransform)dim.transform; drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one; drt.offsetMin = drt.offsetMax = Vector2.zero;
             dim.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.62f);
-            _title = MakeText(_canvasGo.transform, "", new Vector2(0, 150), 34, new Color(0.95f, 0.95f, 0.95f));
-            MakeText(_canvasGo.transform, "stick / d-pad + A · B back    ·    W S / arrows, ← → adjust, Enter · Esc back", new Vector2(0, -250), 15, new Color(0.55f, 0.55f, 0.55f));
+            _title = MakeText(_canvasGo.transform, "", new Vector2(0, 175), 34, new Color(0.95f, 0.95f, 0.95f));
+            MakeText(_canvasGo.transform, "stick / d-pad + A · B back    ·    W S / arrows, ← → adjust, Enter · Esc back", new Vector2(0, -290), 15, new Color(0.55f, 0.55f, 0.55f));
         }
 
         Text MakeText(Transform parent, string s, Vector2 pos, int size, Color c)
@@ -204,9 +215,50 @@ namespace Seven
             return t;
         }
 
+        /// <summary>Round 9: the Chapter 1 control map (the chapter teaches these one by one; this is the full list).</summary>
+        public static readonly (string what, string pad, string keys)[] ControlMap =
+        {
+            ("Move", "Left stick", "W A S D / arrows"),
+            ("Camera", "Right stick", "Mouse"),
+            ("Re-center camera", "R3", "Middle mouse / R"),
+            ("Run (hold)", "LB", "Shift"),
+            ("Jump · grab a ledge", "A", "Space"),
+            ("Interact (doors, touch, sit)", "X", "E"),
+            ("Crouch-sneak (toggle) · climb down at an edge", "B", "C"),
+            ("Hanging: climb up · shimmy · let go", "Up · left/right · B", "W · A/D · Space"),
+            ("Telekinesis (highlighted object)", "RT", "Right mouse"),
+            ("Skip a line", "Y", "Enter"),
+            ("Restart from the checkpoint", "D-pad down", "Backspace"),
+            ("Pause menu", "Start", "Esc"),
+        };
+
+        void BuildControlsTable()
+        {
+            foreach (var g in _extra) if (g != null) Destroy(g);
+            _extra.Clear();
+            if (_page != Page.Controls) return;
+            var head = new Color(0.62f, 0.62f, 0.62f); var ink = new Color(0.92f, 0.92f, 0.92f);
+            Cell("", -150, 132, 16, head, 420, TextAnchor.MiddleLeft); Cell("XBOX", 170, 132, 16, head, 230, TextAnchor.MiddleLeft); Cell("KEYBOARD / MOUSE", 400, 132, 16, head, 260, TextAnchor.MiddleLeft);
+            for (int i = 0; i < ControlMap.Length; i++)
+            {
+                float y = 104 - i * 25;
+                Cell(ControlMap[i].what, -150, y, 17, ink, 420, TextAnchor.MiddleLeft);
+                Cell(ControlMap[i].pad, 170, y, 17, ink, 230, TextAnchor.MiddleLeft);
+                Cell(ControlMap[i].keys, 400, y, 17, ink, 260, TextAnchor.MiddleLeft);
+            }
+            void Cell(string s, float x, float y, int size, Color c, float w, TextAnchor a)
+            {
+                var t = MakeText(_canvasGo.transform, s, new Vector2(x - 120f, y), size, c);
+                t.alignment = a; ((RectTransform)t.transform).sizeDelta = new Vector2(w, size * 1.6f);
+                ((RectTransform)t.transform).pivot = new Vector2(0f, 0.5f);
+                _extra.Add(t.gameObject);
+            }
+        }
+
         void Refresh()
         {
             if (_canvasGo == null) return;
+            BuildControlsTable();
             var items = Items();
             while (_labels.Count < items.Count)
             {
@@ -220,7 +272,7 @@ namespace Seven
                 bool vis = i < items.Count;
                 _bars[i].gameObject.SetActive(vis);
                 if (!vis) continue;
-                var rt = (RectTransform)_bars[i].transform; rt.anchoredPosition = new Vector2(0, 60 - i * 58); rt.sizeDelta = new Vector2(440, 48);
+                var rt = (RectTransform)_bars[i].transform; rt.anchoredPosition = _page == Page.Controls ? new Vector2(0, -230) : new Vector2(0, 80 - i * 54); rt.sizeDelta = new Vector2(440, 46);
                 bool on = i == _sel;
                 _bars[i].color = on ? new Color(0.92f, 0.92f, 0.92f, 1f) : new Color(1f, 1f, 1f, 0.07f);
                 _labels[i].text = items[i];

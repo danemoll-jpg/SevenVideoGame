@@ -8,7 +8,7 @@ alternative, ids `s06b_aNN_*`); both live in `s06b_city_reveal/` and sit between
 Delivery = performance note for 7's lines from `Tools/Voice/seven_delivery.json` (sent to Eleven v3 as audio tags,
 never shown in subtitles); cat lines have none.
 
-87 lines.
+83 lines.
 
 | id | scene | speaker | text | delivery | pause |
 |---|---|---|---|---|---|
@@ -52,17 +52,13 @@ never shown in subtitles); cat lines have none.
 | `s06_02_cat` | 6 | CAT | Can you hear me? |  | 0.45 |
 | `s06_03_7` | 6 | 7 | Yes. | dazed | 0.45 |
 | `s06_04_cat` | 6 | CAT | You weren't answering. |  | 0.45 |
-| `s06_05_7` | 6 | 7 | This place was different. | awed, quiet | 0.45 |
-| `s06_06_cat` | 6 | CAT | Different how? |  | 0.45 |
-| `s06_07_7` | 6 | 7 | Whole. There were people here. | wistful | 0.45 |
-| `s06_08_cat` | 6 | CAT | I didn't see them. |  | 0.45 |
-| `s06_09_7` | 6 | 7 | I know. | softly | 0.45 |
-| `s06_10_7` | 6 | 7 | I think I know how to get through. | thoughtful | 0.45 |
-| `s06_11_cat` | 6 | CAT | From what you saw? |  | 0.45 |
-| `s06_12_7` | 6 | 7 | Let me try. | determined | 0.45 |
-| `s06_13_cat` | 6 | CAT | We should talk about that. |  | 0.45 |
-| `s06_14_7` | 6 | 7 | When we're out. | focused | 0.45 |
-| `s06_15_cat` | 6 | CAT | Agreed. |  | 0.45 |
+| `s06_05_7` | 6 | 7 | There were people here. | awed, quiet | 0.45 |
+| `s06_06_cat` | 6 | CAT | When? |  | 0.45 |
+| `s06_07_7` | 6 | 7 | I don't know. | softly, uncertain | 0.45 |
+| `s06_08_7` | 6 | 7 | But I think I know how this opens. | thoughtful, determined | 0.45 |
+| `s06_09_cat` | 6 | CAT | We should talk about that. |  | 0.45 |
+| `s06_10_7` | 6 | 7 | When we're out. | focused | 0.45 |
+| `s06_11_cat` | 6 | CAT | Agreed. |  | 0.45 |
 | `s06b_01_7` | 65 | 7 | All this was above us? | awed, quiet | 0.45 |
 | `s06b_02_cat` | 65 | CAT | Most of it. |  | 2.5 |
 | `s06b_03_7` | 65 | 7 | Someone built this. | wonder | 0.45 |

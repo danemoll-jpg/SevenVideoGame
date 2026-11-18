@@ -147,6 +147,27 @@ apply to every asset and scene:
   then `python Tools/Voice/generate_voices.py [--speaker seven|cat] [--model v3|v2] [--force] [--only <id> …]` (ElevenLabs, key
   only from `ELEVENLABS_API_KEY`, voices "Seven" / "Cat" by name; 7 = Eleven v3 + audio tags, the cat = multilingual v2)
   → `Unity/Assets/Audio/Voice/<scene>/<id>.mp3` (7's Round 6 takes kept in `_v1/`); Build everything makes `VoiceBank.asset`.
+- **Chapter 1 traversal + controls (Round 9)** — **Chapter control scheme** (Xbox / keyboard): left stick / WASD move ·
+  right stick / mouse camera (no button; cursor locked while playing) · A / Space jump (grabs a ledge when jumping at it) ·
+  X / E interact (doors, touch, sit) · B / C crouch-sneak toggle (at an edge: climb down into a hang) · hanging: up / W (or A)
+  climb up, left-right shimmy, B / Space / C let go · RT / right mouse telekinesis · LB / Shift run · R3 / middle mouse / R
+  re-centre · Y / Enter skip a line · Start / Esc pause · d-pad down / Backspace restart from the checkpoint. The fight demo
+  keeps its own controls + legend; the saucer interacts with X / E (A still works). **No permanent legend in the chapter**:
+  teaching prompts appear once each when first needed (`Chapter1Director.TeachWatch`, state in `Chapter1State.Taught`),
+  then quiet context prompts (`ControlsLegend.Teach` / `.Context`); pause menu → Controls page, Settings → Button hints On/Off
+  (`ControlsLegend.HintsOn`, PlayerPrefs). Traversal data (ledges, assisted jumps, grabs, wall climbs, mantles, climb-down
+  spots, the fallen slab, cat stubs) in `Runtime/MoonTraversal.cs`; 7's moves in `ChapterSevenTraversal.cs` (hand IK on the
+  lip; `MoonTraversal.HangLift` self-calibrates); level geometry `Editor/FightDemoBuilderTraversal.cs`; zones that are not
+  walk-connected are joined only by those moves; `Ground.Zone.Low` = crouch only (the pipe run). Falls into a chasm → white
+  fade → `ChapterSeven.LastSafe`. Cat routes = `ChapterCat.Route` (stops with "go" conditions). The vision object is
+  `MoonLayout.VisionShape` (dodecahedron; swap the constant for tetrahedron / cube / octahedron). The lunar door chamber
+  (`Editor/FightDemoBuilderLunarDoor.cs`, after `Art/Reference/ref_lunar_door.png`, in ruins) opens when 7 touches the
+  round mechanism (`MoonLayout.MechanismSpot`). **The first vision = `Art/Video/vision_01_door.mp4`** (copied by Build
+  everything to `Unity/Assets/Video/`, played by a VideoPlayer into `ChapterUI.SetVideo`: height filled, sides cropped).
+  Mixamo clip measurements: `Docs/Previews/r9/clip_measurements.txt`. Chapter 1 check-run extras: `teach:` shown/cleared +
+  `t_<lesson>_xbox|keys` shots, `traversal ok:` steps, `deliberate fall` resets (all must be ok), `hands on the ledge` gaps,
+  `cat waits at <route> stop`, `traversal summary`, `LEGEND VISIBLE` (must never appear). The SFX sound check
+  (`-soundcheck sfx`) now plays the 5 Round 9 traversal sounds.
 - Play: run the exe normally → main menu (Continue when a Chapter 1 save exists · Chapter 1 · demos · Quit); Xbox
   controller or keyboard/mouse (the legend bottom-left switches automatically). Esc / Start = pause menu (Resume ·
   Settings · Main menu · Quit, with confirms); fight reset / checkpoint restart = Backspace / d-pad down.
@@ -188,7 +209,7 @@ apply to every asset and scene:
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
 ## Where things stand
-**Rounds 1–8 + QF1–QF4 complete (2026-11-17), release 0.8.2** — Chapter 1 "The Moon Prison" (voiced, music, SFX,
-city reveal, real Scree) plus the demos. History in `TODO-ARCHIVE.md`. **Current objective: Round 9** — Chapter 1 as the
-tutorial: traversal (jump, ledges, shimmy, climb, drop, crouch, telekinesis stone) and controls taught as they're needed
-(no permanent legend). See `TODO.md`.
+**Rounds 1–9 + QF1–QF4 complete (2026-11-17), release 0.9.0** — Chapter 1 "The Moon Prison" (voiced, music, SFX,
+city reveal, real Scree; Round 9: tutorial traversal, controls taught as needed with no legend, Kyle's dodecahedron, the
+lunar door, the video vision) plus the demos. History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.9.0 and sets Round 10**
+(open point: first-play length estimated 15–18 min vs. the 20–25 min target). See `TODO.md`.

@@ -18,7 +18,13 @@ namespace Seven
         public float StrollSpeed = 0.9f, TrotSpeed = 2.4f, SprintSpeed = 4.4f;
         public float FollowDistance = 1.7f, CatchUpDistance = 8f, BodyRadius = 0.16f;
 
-        public enum Mode { Follow, GoTo, Hold, Lead, Hop, Perched, Scripted }
+        public enum Mode { Follow, GoTo, Hold, Lead, Hop, Perched, Scripted, Route }
+
+        /// <summary>Round 9: one stop of a traversal route - walk or hop there once <see cref="Go"/> says so (7 has caught up),
+        /// then wait (sitting, watching her). Hops ignore the ground (gaps, ledges, stone stubs).</summary>
+        public struct Stop { public Vector3 P; public bool Hop; public float H; public System.Func<bool> Go; }
+        public event System.Action<int, Vector3> StopReached;
+        List<Stop> _route; int _ri; bool _rMoving, _rHop;
         public Mode Current { get; private set; } = Mode.Follow;
         public bool Arrived { get; private set; }
         public string Clip => _clip;
@@ -84,6 +90,8 @@ namespace Seven
             _lead = path; _leadIdx = 0; _waitFor7 = waitFor7; Current = Mode.Lead; Arrived = false; _perchY = float.NaN;
         }
         public void Hold(Vector3 lookAt, string clip = "sit") { _look = lookAt; _holdClip = clip; Current = Mode.Hold; }
+        /// <summary>Round 9: lead a traversal route: go ahead to each stop, wait there until 7 catches up (never blocks her).</summary>
+        public void Route(List<Stop> stops) { _route = stops; _ri = 0; _rMoving = false; _rHop = false; Current = Mode.Route; Arrived = false; _perchY = float.NaN; }
         public void Hop(Vector3 to, float duration = 0.8f, float height = 0.45f)
         {
             _hopFrom = transform.position; _hopTo = to; _hopT = 0f; _hopDur = duration; _hopH = height;
@@ -225,11 +233,59 @@ namespace Seven
                 case Mode.Perched:
                     if (_clip != "wash") PlayClip("idle", 0.3f);
                     break;
+                case Mode.Route:
+                    UpdateRoute();
+                    break;
             }
-            if (Current != Mode.Hop && Current != Mode.Perched && Current != Mode.Scripted)
+            if (Current != Mode.Hop && Current != Mode.Perched && Current != Mode.Scripted && Current != Mode.Route)
             {
                 var p = OutOfNoCat(transform.position); p.y = Ground.Height(p.x, p.z); transform.position = p;
             }
+        }
+
+        void UpdateRoute()
+        {
+            if (_route == null || _ri >= _route.Count)
+            {
+                Arrived = true;
+                PlayClip(Time.time % 9f > 5f ? "sit" : "idle", 0.3f); Face(Seven.position);
+                return;
+            }
+            var s = _route[_ri];
+            if (!_rMoving)
+            {
+                if (s.Go != null && !s.Go()) { PlayClip(_clip == "walk" || _clip == "jump" ? "idle" : Time.time % 9f > 5f ? "sit" : _clip ?? "idle", 0.3f); Face(Seven.position); return; }
+                _rMoving = true; _rHop = s.Hop;
+                if (s.Hop)
+                {
+                    _hopFrom = transform.position; _hopTo = s.P; _hopT = 0f;
+                    float d = Flat(s.P - transform.position).magnitude + Mathf.Abs(s.P.y - transform.position.y) * 0.5f;
+                    _hopDur = Mathf.Clamp(0.45f + d * 0.16f, 0.6f, 1.25f);
+                    _hopH = Mathf.Max(s.H, s.P.y - transform.position.y + 0.35f);
+                    PlayClip("jump", 0.1f, 0.8f / _hopDur);
+                }
+            }
+            if (_rHop)
+            {
+                _hopT += Time.deltaTime / _hopDur;
+                float u = Mathf.InverseLerp(0.3f, 0.85f, _hopT);
+                var p = Vector3.Lerp(_hopFrom, _hopTo, Mathf.SmoothStep(0f, 1f, u));
+                // arc over the higher end so he never clips a lip
+                float baseY = Mathf.Lerp(_hopFrom.y, _hopTo.y, u);
+                p.y = baseY + Mathf.Sin(u * Mathf.PI) * _hopH;
+                transform.position = p;
+                var face = Flat(_hopTo - _hopFrom);
+                if (face.sqrMagnitude > 1e-4f) transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(face), 400f * Time.deltaTime);
+                if (_hopT >= 1f) { transform.position = _hopTo; PlayClip("idle", 0.2f); ReachStop(); }
+            }
+            else if (MoveTo(s.P, DistanceTo7 < 2.5f ? TrotSpeed : StrollSpeed, 0.2f)) ReachStop();
+        }
+
+        void ReachStop()
+        {
+            var at = _route[_ri].P;
+            _ri++; _rMoving = false; _rHop = false;
+            StopReached?.Invoke(_ri - 1, at);
         }
 
         /// <summary>Reappear next to 7 at a spot the camera does not see (never in view, never pops on screen).</summary>

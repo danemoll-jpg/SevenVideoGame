@@ -328,22 +328,44 @@ namespace Seven.EditorTools
             wg.Shape = Seven.Ground.Shape.Zones;
             Seven.WorldGround.ZoneDef Z(string n, float x0, float z0, float x1, float z1, float y0, float y1 = float.NaN, int axis = 1, bool on = true)
                 => new Seven.WorldGround.ZoneDef { Name = n, Min = new Vector2(x0, z0), Max = new Vector2(x1, z1), Y0 = y0, Y1 = float.IsNaN(y1) ? y0 : y1, Axis = axis, Enabled = on };
+            Seven.WorldGround.ZoneDef Low(Seven.WorldGround.ZoneDef z) { z.Low = true; return z; }
             float sx = L.SaucerCentre.x, sz = L.SaucerCentre.z;
+            // Round 9: the traversal routes (MoonTraversal) split the level into zones that are not walk-connected;
+            // ledges, jumps, climbs and mantles connect them. Flat zones come before the slopes that overlap them.
+            float lo = L.Lower;
             wg.Zones = new[]
             {
                 Z("Cell", -1.6f, -1.6f, 1.6f, L.CellWallZ0, 0f),
                 Z("CellDoor", -L.DoorHalf, 0.6f, L.DoorHalf, 2.6f, 0f, float.NaN, 1, false),
-                Z("Corridor", -8f, 2.0f, L.BarricadeX - 0.4f, 4.6f, 0f),
+                Z("Corridor", -8f, 2.0f, Seven.MoonTraversal.GapX.x, 4.6f, 0f),
+                Z("CatwalkB", Seven.MoonTraversal.GapX.y, 2.0f, 11.4f, 4.6f, 0f),
+                Low(Z("PipeRun", 10.8f, 2.0f, 13.6f, 4.6f, 0f)),
+                Z("CatwalkC", 13.0f, 2.0f, 14.0f, 4.6f, 0f),
+                Z("Bulkhead", 14.0f, 2.0f, 15.3f, 4.6f, Seven.MoonTraversal.BulkheadTop),
+                Z("Corridor2", 15.3f, 2.0f, L.BarricadeX - 0.4f, 4.6f, 0f),
                 Z("Alcove", L.AlcoveX.x, L.AlcoveBackZ, L.AlcoveX.y, 2.7f, 0f, float.NaN, 1, false),   // on from scene 2
-                Z("Passage0", L.PassageX.x, 0.0f, L.PassageX.y, 2.6f, 0f, float.NaN, 1, false),
-                Z("Hall", L.HallMin.x, L.HallMin.y, L.HallMax.x, L.HallMax.y, L.Lower),
-                Z("Passage1", L.PassageX.x, -9.5f, L.PassageX.y, 0.6f, L.Lower * 9.5f / 9f, -L.Lower * 0.6f / 9f, 1, false),
-                Z("HallExit", L.PassageX.x, -30.3f, L.PassageX.y, L.HallMin.y + 0.8f, L.Lower),
-                Z("Vision", L.VisionMin.x, L.VisionMin.y, L.VisionMax.x, L.VisionMax.y, L.Lower),
-                Z("VisionExit", L.PassageX.x, L.LedgeMax.y - 0.6f, L.PassageX.y, L.VisionMin.y + 0.8f, L.Lower, float.NaN, 1, false),
-                Z("RampTop", L.RampX.x, L.RampTopZ - 0.8f, L.RampX.y, -47.5f, L.Lower),
-                Z("Ledge", L.LedgeMin.x, L.LedgeMin.y, L.LedgeMax.x, L.LedgeMax.y, L.Lower),
-                Z("Ramp", L.RampX.x, L.RampBottomZ - 0.2f, L.RampX.y, L.RampTopZ, L.Bay, L.Lower, 1),
+                Z("Passage0", L.PassageX.x, -0.2f, L.PassageX.y, 2.6f, 0f, float.NaN, 1, false),
+                Z("CrackTop", L.PassageX.x, -2.4f, L.PassageX.y, -0.2f, 2.8f),
+                Z("RuinsLedge", 10.4f, -4.6f, 13.0f, -2.6f, -1.6f),
+                Z("TerraceA", 7.0f, -4.8f, 9.2f, -2.6f, -1.6f),
+                Z("TerraceB", 6.6f, -6.8f, 9.6f, -4.8f, -0.7f),
+                Z("TerraceC", 10.8f, -7.0f, 13.8f, -5.0f, 0.8f),
+                Z("StairFoot", 17.8f, -7.0f, 19.6f, -4.7f, lo),
+                Z("RuinsFloor", 15.0f, -8.5f, 20.0f, -6.4f, lo),
+                Z("RuinsDoor", L.PassageX.x, -9.4f, L.PassageX.y, -7.8f, lo),
+                Z("Stair", 13.2f, -5.8f, 18.4f, -4.6f, 1.28f, -2.88f, 0, false),          // on once the slab is moved
+                Z("Hall", L.HallMin.x, L.HallMin.y, L.HallMax.x, L.HallMax.y, lo),
+                Z("HallExit", L.PassageX.x, -30.3f, L.PassageX.y, L.HallMin.y + 0.8f, lo),
+                Z("Vision", L.VisionMin.x, L.VisionMin.y, L.VisionMax.x, L.VisionMax.y, lo),
+                Z("VisionExit", L.PassageX.x, -39.4f, L.PassageX.y, L.VisionMin.y + 0.8f, lo, float.NaN, 1, false),
+                Z("MinePit", L.PassageX.x, -41.2f, L.PassageX.y, -39.4f, -6.4f),
+                Z("MineTop", L.PassageX.x, -42.6f, L.PassageX.y, -41.2f, lo),
+                Z("RampTop", L.RampX.x, -50.3f, L.RampX.y, -47.5f, lo),
+                Z("Ledge", L.LedgeMin.x, L.LedgeMin.y, L.LedgeMax.x, L.LedgeMax.y, lo),
+                Z("RampA", L.RampX.x, -55.0f, L.RampX.y, -49.5f, -4.4f, -2.4f + 0.8f * (2.0f / 4.7f), 1),
+                Z("Scaffold1", 19.8f, -58.2f, 23.2f, -55.1f, -7.6f),
+                Z("Scaffold2", 19.8f, -62.4f, 23.2f, -59.4f, -7.6f),
+                Z("BayNorth", 18.8f, -70.2f, 24.4f, -62.5f, L.Bay),
                 Z("Bay", L.BayMin.x, L.BayMin.y, L.BayMax.x, L.BayMax.y, L.Bay),
             };
             var obstacles = new List<Vector3> { new Vector3(sx, sz, L.SaucerRadius + 0.3f) };   // 0 = the saucer
@@ -408,7 +430,7 @@ namespace Seven.EditorTools
             var dlg = dirGo.AddComponent<Seven.DialoguePlayer>();
             dlg.Bank = bank; dlg.UI = ui;
             var legend = new GameObject("ControlsLegend").AddComponent<Seven.ControlsLegend>();
-            legend.Cam = cam; legend.Set = Seven.ControlsLegend.Layout.Chapter;
+            legend.Cam = cam; legend.Set = Seven.ControlsLegend.Layout.Chapter; legend.HidePanels = true;   // Round 9: no permanent legend
 
             var d = dirGo.AddComponent<Seven.Chapter1Director>();
             d.Seven = s7; d.Cat = cat; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend;
@@ -419,6 +441,9 @@ namespace Seven.EditorTools
             d.SealedDoorSlab = props.sealedDoor; d.Saucer = props.saucer; d.Hatch = props.hatch; d.Beam = props.beam; d.BeamLight = props.beamLight; d.BeamFloor = props.beamFloor; d.HatchGlow = props.hatchGlow; d.Lever = props.lever;
             d.City = props.city; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
             d.Clamps = props.clamps.ToArray(); d.RimGlow = props.rimGlow.ToArray(); d.SaucerUnderLight = props.underLight;
+            d.Slab = props.slab; d.Shape = props.shape; d.ShapeLight = props.shapeLight; d.DoorSymbol = props.doorSymbol; d.DoorRight = props.doorRight; d.DoorEngrave = props.doorEngrave;   // Round 9
+            d.VisionVideo = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_01_door.mp4");   // the first vision (Dan, 2026-11-17)
+            if (d.VisionVideo == null) Log("WARNING: vision video missing (Assets/Video/vision_01_door.mp4) - the in-engine vision is the fallback");
 
             EditorSceneManager.SaveScene(scene, Chapter1ScenePath);
             Log("scene saved " + Chapter1ScenePath);
@@ -437,6 +462,12 @@ namespace Seven.EditorTools
             public List<Renderer> rimGlow = new List<Renderer>();
             public Light underLight;
             public List<Vector3> extraObstacles = new List<Vector3>();
+            // Round 9
+            public Transform slab, shape;
+            public Light shapeLight;
+            public Renderer doorSymbol;
+            public Transform doorRight;
+            public Renderer[] doorEngrave;
         }
 
         static GameObject SpawnCat(string name, Vector3 pos, Vector3 facing, AnimatorController ctl, Material fur, Material whisker, out Animator anim)
@@ -605,14 +636,9 @@ namespace Seven.EditorTools
             MeshObject("OldWallLines", SaveMesh(SmoothFinish(lv, lt), "Moon_OldWallLines"), m.inscription, old, false);
             props.oldWall = old;
 
-            // Catwalk over the cavern: grating floor, rails, rail track, lamps, supports reaching down into the haze.
-            Block("Catwalk", new Vector3(-9f, -0.25f, zf1), new Vector3(34f, 0f, 4.95f), m.grate, root);
-            Railing("CatwalkRail", new Vector3(-9f, 0f, 4.8f), new Vector3(34f, 0f, 4.8f), m.metal, root);
-            Railing("CatwalkEndW", new Vector3(-8.6f, 0f, 2f), new Vector3(-8.6f, 0f, 4.8f), m.metal, root);
-            var tv = new List<Vector3>(); var tt = new List<int>();
-            foreach (var z in new[] { 4.15f, 4.55f }) AddBox(tv, tt, new Vector3(12.5f, 0.04f, z), new Vector3(43f, 0.07f, 0.07f));
-            for (float x = -8.5f; x < 34f; x += 0.8f) AddBox(tv, tt, new Vector3(x, 0.02f, 4.35f), new Vector3(0.12f, 0.04f, 0.7f));
-            MeshObject("RailTrack", SaveMesh(Finish(tv, tt), "Moon_RailTrack"), m.metalDark, root);
+
+            // Catwalk over the cavern (Round 9: broken section, pipe run, bulkhead - FightDemoBuilderTraversal).
+            BuildPrisonTraversal(root, m);
             Cart("Cart_W", new Vector3(-7f, 0f, 4.35f), 90f, m, root);
             Cart("Cart_Gate", new Vector3(23f, 0f, 4.35f), 90f, m, root);
             var sv = new List<Vector3>(); var st = new List<int>();
@@ -642,9 +668,8 @@ namespace Seven.EditorTools
             var root = new GameObject("Ancient").transform; root.SetParent(world, false);
             float x0 = L.PassageX.x, x1 = L.PassageX.y;
             // Older passage down (scene 4 -> 5).
-            Passage("Passage0", x0, x1, L.CellWallZ0, 0.0f, 0f, 0f, 3.0f, m.ancientDark, root);
-            Passage("Passage1", x0, x1, 0.0f, L.PassageBottomZ, 0f, L.Lower, 3.0f, m.ancientDark, root);
-            PointLight("PassageGlow", new Vector3(16.5f, -0.6f, -4f), 6f, 0.7f, root);
+            // Round 9: the older passage climbs a cracked wall, then the shaft lip and the ruin terraces down to the hall.
+            BuildPassageRuins(root, m, props);
             // The hall (Scree guard).
             Room("Hall", L.HallMin, L.HallMax, L.Lower, 6.4f, m.ancient, m.ancientDark, root,
                 ('N', 16.5f, 0.9f, 3.0f), ('S', 16.5f, 0.9f, 3.0f));
@@ -683,24 +708,18 @@ namespace Seven.EditorTools
 
             // Exit corridor -> vision chamber -> sealed door -> passage to the impound ledge.
             Passage("HallExit", x0, x1, L.HallMin.y - 0.5f, L.VisionMax.y, L.Lower, L.Lower, 3.0f, m.ancientDark, root);
-            Room("Vision", L.VisionMin, L.VisionMax, L.Lower, 7f, m.ancient, m.ancientDark, root, ('N', 16.5f, 0.9f, 3.0f), ('S', 16.5f, 1.1f, 3.25f));
+            Room("Vision", L.VisionMin, L.VisionMax, L.Lower, 7f, m.ancient, m.ancientDark, root, ('N', 16.5f, 0.9f, 3.0f), ('S', 16.5f, 1.3f, 3.75f),
+                ('E', (L.AlcoveZ.x + L.AlcoveZ.y) * 0.5f, (L.AlcoveZ.y - L.AlcoveZ.x) * 0.5f, 2.6f));   // Round 9: the shape's alcove
             var door = new GameObject("SealedDoor").transform; door.SetParent(root, false); door.position = Vector3.zero;
-            Block("SealedSlab", new Vector3(15.4f, L.Lower, L.VisionMin.y - 0.45f), new Vector3(17.6f, L.Lower + 3.25f, L.VisionMin.y + 0.03f), m.ancient, door);
-            var iv = new List<Vector3>(); var it = new List<int>();
-            var ic = L.Inscription + Vector3.forward * 0.06f;
-            Sweep(iv, it, Enumerable.Range(0, 41).Select(i => ic + new Vector3(Mathf.Cos(i / 40f * Mathf.PI * 2f) * 0.42f, Mathf.Sin(i / 40f * Mathf.PI * 2f) * 0.42f, 0f)).ToList(), 0.016f, true, 5);
-            Sweep(iv, it, Enumerable.Range(0, 41).Select(i => ic + new Vector3(Mathf.Cos(i / 40f * Mathf.PI * 2f) * 0.22f, Mathf.Sin(i / 40f * Mathf.PI * 2f) * 0.22f, 0f)).ToList(), 0.012f, true, 5);
-            for (int k = 0; k < 7; k++)
-            {
-                float a = k / 7f * Mathf.PI * 2f + 0.3f;
-                Sweep(iv, it, new[] { ic + new Vector3(Mathf.Cos(a) * 0.24f, Mathf.Sin(a) * 0.24f, 0f), ic + new Vector3(Mathf.Cos(a) * 0.6f, Mathf.Sin(a) * 0.6f, 0f) }, 0.01f, false, 5);
-            }
-            for (int r = 0; r < 3; r++) Sweep(iv, it, new[] { ic + new Vector3(-0.85f, -0.8f - r * 0.18f, 0f), ic + new Vector3(0.85f - r * 0.25f, -0.8f - r * 0.18f, 0f) }, 0.008f, false, 4);
-            props.inscription = MeshObject("Inscription", SaveMesh(SmoothFinish(iv, it), "Moon_Inscription"), m.inscription, door, false).GetComponent<Renderer>();
+            // Round 9 (8b addition): the lunar door - pointed arch, two leaves parting along an S-seam (ref_lunar_door.png)
+            var doorR = new GameObject("SealedDoorR").transform; doorR.SetParent(root, false); doorR.position = Vector3.zero;
+            BuildLunarDoor(root, m, props, door, doorR);
+
             props.sealedDoor = door;
-            Passage("VisionExit", x0, x1, L.VisionMin.y - 0.45f, L.LedgeMax.y, L.Lower, L.Lower, 3.0f, m.ancientDark, root);
+            BuildVisionShape(root, m, props, door);       // Round 9 (8b): Kyle's floating shape replaces the wall inscription
+            BuildVisionExitPit(root, m);
+            BuildCurvyApproach(root, m);                  // Round 9: the same flowing ribs through the hall exit and the hall                  // Round 9: the mining cut (drop down, climb out) before the terrace
             PointLight("VisionDim", new Vector3(16.5f, L.Lower + 3f, -33f), 9f, 0.6f, root);
-            PointLight("InscriptionLight", L.Inscription + Vector3.forward * 1.2f, 4f, 0.9f, root);
 
             // Vision chamber: ruins now / whole in the vision.
             var ruins = new GameObject("VisionRuins"); ruins.transform.SetParent(root, false);
@@ -732,8 +751,8 @@ namespace Seven.EditorTools
                 Sweep(gv, gt, new[] { new Vector3(L.VisionMax.x - 0.05f, L.Lower + y, L.VisionMin.y), new Vector3(L.VisionMax.x - 0.05f, L.Lower + y, L.VisionMax.y) }, 0.03f, false, 5);
             }
             var sym = L.Inscription + new Vector3(0f, 3.2f, 0.1f);
-            Sweep(gv, gt, Enumerable.Range(0, 49).Select(i => sym + new Vector3(Mathf.Cos(i / 48f * Mathf.PI * 2f) * 1.1f, Mathf.Sin(i / 48f * Mathf.PI * 2f) * 1.1f, 0f)).ToList(), 0.05f, true, 6);
-            for (int k = 0; k < 7; k++) { float a = k / 7f * Mathf.PI * 2f + 0.3f; Sweep(gv, gt, new[] { sym + new Vector3(Mathf.Cos(a) * 0.6f, Mathf.Sin(a) * 0.6f, 0f), sym + new Vector3(Mathf.Cos(a) * 1.5f, Mathf.Sin(a) * 1.5f, 0f) }, 0.035f, false, 5); }
+            // Round 9: in the vision the shape's outline glows large above the door (the symbol that later opens it)
+            MeshObject("WholeSymbol", ShapeOutline(L.VisionShape, sym, Vector3.right, Vector3.up, Vector3.forward, 1.25f, 0.035f, "Moon_VisionWholeSymbol"), m.glow, whole.transform, false);
             foreach (var z in colZ) foreach (var x in new[] { 15.2f, 17.8f }) Ellipsoid(gv, gt, new Vector3(x, L.Lower + 4.4f, z), Vector3.one * 0.16f, 6, 10);
             MeshObject("WholeGlow", SaveMesh(SmoothFinish(gv, gt), "Moon_VisionGlow"), m.glow, whole.transform, false);
             var fill = PointLight("VisionFill", new Vector3(16.5f, L.Lower + 4.5f, -33.5f), 14f, 2.2f, whole.transform);
@@ -767,22 +786,8 @@ namespace Seven.EditorTools
             Block("Ledge_SideW", new Vector3(L.LedgeMin.x - 0.5f, L.Lower, L.LedgeMin.y - 0.3f), new Vector3(L.LedgeMin.x, L.Lower + 4f, L.LedgeMax.y), m.rock, root);
             Railing("LedgeRail", new Vector3(L.LedgeMin.x, L.Lower, L.LedgeMin.y - 0.1f), new Vector3(L.RampX.x - 0.05f, L.Lower, L.LedgeMin.y - 0.1f), m.metal, root);
             Railing("LedgeRailE", new Vector3(L.LedgeMax.x + 0.05f, L.Lower, L.LedgeMax.y), new Vector3(L.LedgeMax.x + 0.05f, L.Lower, L.RampTopZ), m.metal, root);
-            Block("RampTop_Floor", new Vector3(L.RampX.x, L.Lower - 0.25f, L.RampTopZ - 0.5f), new Vector3(L.RampX.y, L.Lower, L.LedgeMin.y), m.grate, root);
-            SlopeBlock("Ramp", L.RampX.x, L.RampX.y, L.RampTopZ, L.RampBottomZ, L.Lower, L.Bay, 0.25f, m.grate, root);
-            foreach (var x in new[] { L.RampX.x - 0.05f, L.RampX.y + 0.05f })
-            {
-                var v = new List<Vector3>(); var t = new List<int>();
-                for (int i = 0; i <= 12; i++)
-                {
-                    float u = i / 12f; var p = new Vector3(x, Mathf.Lerp(L.Lower, L.Bay, u), Mathf.Lerp(L.RampTopZ, L.RampBottomZ, u));
-                    Sweep(v, t, new[] { p, p + Vector3.up * 1.05f }, 0.035f, false, 6);
-                }
-                Sweep(v, t, new[] { new Vector3(x, L.Lower + 1.05f, L.RampTopZ), new Vector3(x, L.Bay + 1.05f, L.RampBottomZ) }, 0.04f, false, 6);
-                MeshObject("RampRail" + x, SaveMesh(SmoothFinish(v, t), "Moon_RampRail" + x), m.metal, root);
-            }
-            var sup = new List<Vector3>(); var supt = new List<int>();
-            for (int i = 1; i < 5; i++) { float z = Mathf.Lerp(L.RampTopZ, L.RampBottomZ, i / 5f); float y = Mathf.Lerp(L.Lower, L.Bay, i / 5f); AddBox(sup, supt, new Vector3(21.5f, (y + L.Bay) * 0.5f - 0.2f, z), new Vector3(0.3f, y - L.Bay, 0.3f)); }
-            MeshObject("RampSupports", SaveMesh(Finish(sup, supt), "Moon_RampSupports"), m.metalDark, root);
+
+            BuildBayDescent(root, m);                     // Round 9: broken ramp, two scaffolds, drops down to the bay
             Lamp("LedgeLamp", new Vector3(16.5f, L.Lower + 2.7f, L.LedgeMax.y - 0.15f), 7f, 1.0f, m.glow, root);
             // Cliff below the ledge down to the bay floor.
             var cv = new List<Vector3>(); var ct = new List<int>();

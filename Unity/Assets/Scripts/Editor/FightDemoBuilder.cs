@@ -36,8 +36,10 @@ namespace Seven.EditorTools
         /// <summary>Build order: the demo picker first.</summary>
         static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath };
 
-        static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle", "sneak_walk", "float" };
-        static readonly string[] RootMotion = { "finisher", "dodge", "knocked_down", "get_up" };
+        static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle", "sneak_walk", "float",
+                                           "hang_idle", "shimmy", "shimmy_mirror", "crouch_idle", "fall_idle" };   // Round 9 traversal loops
+        // Round 9: running_jump carries the root 4.3 m forward - extracted (and ignored: the arc is scripted), not baked.
+        static readonly string[] RootMotion = { "finisher", "dodge", "knocked_down", "get_up", "running_jump" };
 
         static void Log(string s) => Debug.Log("[FightDemoBuilder] " + s);
 
@@ -109,6 +111,15 @@ namespace Seven.EditorTools
                     File.Copy(f, dst, true);
             }
             CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "YBot"), BotDir, "*.fbx");
+            CopyDir(Path.Combine(RepoRoot, "Art", "Video"), "Assets/Video", "*.mp4");     // Round 9: the first vision
+            // Round 9: Dan's alternates used as their own states, and the one-direction shimmy mirrored for the other side.
+            foreach (var (from, to) in new[] { (Path.Combine("alt", "7_jumping_up.fbx"), "7_jumping_up.fbx"), ("7_shimmy.fbx", "7_shimmy_mirror.fbx") })
+            {
+                var f = Path.Combine(RepoRoot, "Art", "Mixamo", "7", from);
+                var dst = Path.Combine(ProjectRoot, SevenDir, to);
+                if (File.Exists(f) && (!File.Exists(dst) || File.GetLastWriteTimeUtc(f) > File.GetLastWriteTimeUtc(dst) || new FileInfo(f).Length != new FileInfo(dst).Length))
+                    File.Copy(f, dst, true);
+            }
 
             // Pre-Mixamo model kept as a fallback asset (not used by the scene).
             Directory.CreateDirectory(Path.Combine(ProjectRoot, SevenDir, "Fallback"));
@@ -177,6 +188,7 @@ namespace Seven.EditorTools
                     c.lockRootRotation = true; c.keepOriginalOrientation = true;
                     c.lockRootHeightY = true; c.keepOriginalPositionY = true;
                     c.lockRootPositionXZ = !root; c.keepOriginalPositionXZ = true;
+                    c.mirror = state.EndsWith("_mirror");      // Round 9: shimmy_mirror = shimmy to the other side
                 }
                 imp.clipAnimations = clips;
                 imp.SaveAndReimport();
@@ -290,6 +302,8 @@ namespace Seven.EditorTools
                 st.writeDefaultValues = true;
                 if (clip.name == defaultState) sm.defaultState = st;
             }
+            // Round 9: hand IK (7's hands on the ledge lip while hanging) needs the IK pass on the base layer.
+            var layers = ac.layers; layers[0].iKPass = true; ac.layers = layers;
             EditorUtility.SetDirty(ac);
             Log($"{path}: {sm.states.Length} states");
             return ac;

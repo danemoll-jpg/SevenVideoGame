@@ -64,7 +64,7 @@ namespace Seven
         /// Round 7: the short unmuted SFX check (-soundcheck sfx): plays a few of the new sound effects one after
         /// another (each cut at <see cref="SfxSeconds"/>), measures each one's output peak, mutes again, measures 0.
         /// </summary>
-        public static readonly string[] SfxIds = { "laser_power_down", "release_click", "energy_point", "tractor_beam", "menu_confirm" };
+        public static readonly string[] SfxIds = { "ledge_grab", "land_soft", "land_hard", "climb_scuff", "slab_lift" };   // Round 9: the new traversal SFX (Round 7 set: laser_power_down, release_click, energy_point, tractor_beam, menu_confirm)
         const float SfxSeconds = 1.2f;
         IEnumerator SfxCheck()
         {

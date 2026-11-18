@@ -120,7 +120,9 @@ Avoid explaining the Scree’s entire situation here. Let the player see evidenc
 
 ## 6  The first vision
 
-**Situation:** 7 touches an ancient surface and becomes unresponsive. The cat cannot see what she sees.
+**Situation:** 7 touches the ancient shape (Kyle's glowing dodecahedron) and becomes unresponsive. The cat cannot see what she sees.
+
+**The vision (decided, Dan 2026-11-17):** she sees the same doorway whole, long ago — two tall, pale figures stand before the door; one touches the round mechanism beside it, the two leaves part along their curved seam, and the figures walk through into a bright passage beyond. (Video: `Art/Video/vision_01_door.mp4`, 12 s.)
 
 **CAT:** What is it?
 
@@ -134,33 +136,25 @@ The vision ends.
 
 **CAT:** You weren’t answering.
 
-**7:** This place was different.
+**7:** There were people here.
 
-**CAT:** Different how?
+**CAT:** When?
 
-**7:** Whole. There were people here.
+**7:** I don’t know.
 
-The cat looks around the empty ruins.
+She notices the control.
 
-**CAT:** I didn’t see them.
+**7:** But I think I know how this opens.
 
-**7:** I know.
-
-If the vision reveals how to open the passage:
-
-**7:** I think I know how to get through.
-
-**CAT:** From what you saw?
-
-**7:** Let me try.
-
-The passage opens.
+She touches the mechanism the way she saw them do it. The doors part.
 
 **CAT:** We should talk about that.
 
 **7:** When we’re out.
 
 **CAT:** Agreed.
+
+*(Earlier version of the middle, replaced 2026-11-17: “This place was different.” / “Different how?” / “Whole. There were people here.” / “I didn’t see them.” / “I know.” / “I think I know how to get through.” / “From what you saw?” / “Let me try.”)*
 
 ## 6b  The city reveal
 
@@ -245,7 +239,153 @@ The cat stops and looks around.
 
 **CAT:** I’m reserving judgment until I find the kitchen.
 
-## 10  The first meal
+## 10  The galley (first meal, choosing to stay, the next world) — Dan, 2026-11-17
+
+*Replaces the earlier scenes 10 (The first meal), 11 (Choosing to stay) and 12 (Discussing the vision) — kept at the end of this file for reference.*
+
+**INT. SAUCER — GALLEY — AFTER THE ESCAPE**
+
+The ship hums quietly. Beyond the window, the Moon hangs against the dark.
+
+7 stands before an open refrigerator, studying its contents. Cat sits on the nearby table, tail curled around his feet.
+
+Their dialogue is telepathic. Cat’s mouth moves only when he eats.
+
+**7:** So what do you eat? Canned food?
+
+**CAT:** Chicken. But only free-range.
+
+She looks back at him.
+
+**CAT:** Having experienced confinement, I feel strongly about it.
+
+She almost smiles, then returns to the refrigerator.
+
+**7:** I’ll see what we have.
+
+7 sits at the table with a plate and utensils. Opposite her, Cat stands over a bowl, eating with considerable attention.
+
+For a while, neither speaks.
+
+7 takes a few bites. Her eyes wander toward the dodecahedron she has placed beside her plate.
+
+Cat notices her fork has stopped.
+
+**CAT:** You’re letting it get cold.
+
+**7:** Those people…
+
+One of his ears turns toward her.
+
+**CAT:** At the door?
+
+She nods.
+
+**7:** They were just going somewhere. Like it was an ordinary day.
+
+**CAT:** Perhaps it was.
+
+**7:** The walls were whole. Everything was… looked after.
+
+She glances down at the object.
+
+**7:** One of them opened the door. I watched where they put their hand.
+
+**CAT:** Useful.
+
+**7:** Yes.
+
+A pause.
+
+**7:** But it didn’t feel like seeing somewhere new.
+
+Cat lifts his head from the bowl.
+
+**CAT:** What did it feel like?
+
+She searches for the answer.
+
+**7:** Remembering.
+
+The ship’s hum fills the silence.
+
+**CAT:** Have you been there before?
+
+**7:** I don’t know.
+
+She sets down her fork and moves the dodecahedron into the space between them.
+
+**7:** It happened when I touched this.
+
+Cat steps around his bowl and leans closer. He studies one face, then shifts his head to see another.
+
+**CAT:** Turn it over.
+
+She rotates it.
+
+**CAT:** There.
+
+**7:** What?
+
+**CAT:** That marking. I’ve seen it before.
+
+Her attention sharpens.
+
+**7:** Where?
+
+**CAT:** On something from Venus. Elarim.
+
+**7:** They made this?
+
+**CAT:** I recognize the marking. That’s all.
+
+She studies the marked face. Her thumb rests along its edge.
+
+**7:** Why would something of theirs be down there?
+
+**CAT:** Something else to ask them.
+
+**7:** You think they’ll talk to us?
+
+**CAT:** We can ask. You have something interesting to show them.
+
+She looks from the dodecahedron to him.
+
+**7:** Us?
+
+Cat glances toward his bowl.
+
+**CAT:** Unless this was a farewell dinner.
+
+**7:** You were sent to get me out. You did that.
+
+**CAT:** I did.
+
+**7:** You could go home.
+
+He settles beside the bowl.
+
+**CAT:** I’d like to know what happens next.
+
+She watches him for a moment.
+
+**7:** So would I.
+
+She places the dodecahedron beside her plate again, with the marking facing up.
+
+**7:** Venus, then. We’ll find the Elarim.
+
+Cat returns to his food.
+
+7 picks up her fork. This time, she eats.
+
+END SCENE
+
+---
+
+## Replaced versions (kept for reference — not used)
+
+### (old) 10  The first meal
 
 **Situation:** They are safe, hungry and beginning to relax. This expands the intended free-range chicken joke; the final two lines are proposed.
 
@@ -261,7 +401,7 @@ She turns to look at him.
 
 **CAT:** Having experienced confinement, I feel strongly about it.
 
-## 11  Choosing to stay
+### (old) 11  Choosing to stay
 
 **Situation:** After their immediate needs are met, 7 asks about his plans.
 
@@ -291,7 +431,7 @@ A quiet beat.
 
 Let his choice stand without explaining his affection aloud.
 
-## 12  Discussing the vision
+### (old) 12  Discussing the vision
 
 **Situation:** The cat helps 7 examine what happened. This conversation leads to the next objective.
 

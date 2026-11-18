@@ -4,7 +4,8 @@ using UnityEngine.InputSystem;
 namespace Seven
 {
     /// <summary>
-    /// Chapter 1 camera: orbit around 7 (right stick / right mouse drag, R3 / C / middle mouse re-centres behind her)
+    /// Chapter 1 camera: orbit around 7 (right stick / mouse - Round 9: the mouse orbits without a button, the cursor is
+    /// locked during play; R3 / R / middle mouse re-centres behind her; it rises while she hangs or climbs)
     /// with a sphere-cast against the level's colliders so it never ends up inside rock. Cutscenes take over with
     /// <see cref="Shot"/> (a fixed position looking at a point, eased in) and hand back with <see cref="Follow"/>.
     /// </summary>
@@ -104,8 +105,16 @@ namespace Seven
             cam.fieldOfView = fov0;
         }
 
+        ChapterSeven _seven;
+        float _swingVel;
+        float Lift => _seven != null ? _seven.CameraLift : 0f;
+
+        void OnEnable() { CursorPolicy.WantLock = true; }
+        void OnDisable() { CursorPolicy.WantLock = false; }
+
         void Start()
         {
+            if (Target != null) _seven = Target.GetComponent<ChapterSeven>();
             Pitch = DefaultPitch;
             if (Target != null) { Yaw = Target.eulerAngles.y; _focus = Target.position + Vector3.up * LookHeight; }
             _dist = Distance;
@@ -164,7 +173,7 @@ namespace Seven
             _pitchVel = Mathf.MoveTowards(_pitchVel, -stick.y * StickPitchSpeed, 500f * dt);
             float dYaw = _yawVel * dt, dPitch = _pitchVel * dt;
             var mouse = Mouse.current;
-            if (mouse != null && mouse.rightButton.isPressed && DemoBoot.CaptureDir == null)
+            if (mouse != null && DemoBoot.CaptureDir == null && !PauseMenu.IsOpen && Cursor.lockState == CursorLockMode.Locked)
             {
                 var d = mouse.delta.ReadValue();
                 dYaw += d.x * MouseDegPerPixel; dPitch -= d.y * MouseDegPerPixel;
@@ -176,10 +185,13 @@ namespace Seven
             {
                 float target = Target.eulerAngles.y;
                 Yaw = Mathf.SmoothDampAngle(Yaw, target, ref _recYawVel, AutoBehind ? 0.6f : 0.25f);
-                Pitch = Mathf.SmoothDamp(Pitch, DefaultPitch, ref _recPitchVel, 0.4f);
+                Pitch = Mathf.SmoothDamp(Pitch, Lift > 0.05f ? 28f : DefaultPitch, ref _recPitchVel, 0.4f);
                 if (_recentering && Mathf.Abs(Mathf.DeltaAngle(Yaw, target)) < 0.5f) _recentering = false;
             }
-            _focus = Vector3.SmoothDamp(_focus, Target.position + Vector3.up * LookHeight, ref _focusVel, 0.15f);
+            _focus = Vector3.SmoothDamp(_focus, Target.position + Vector3.up * (LookHeight + Lift), ref _focusVel, 0.15f);
+            // Round 9: while she hangs / climbs the camera looks down at her a little more (over whatever is behind her)
+            if (Lift > 0.05f && Pitch < 28f) Pitch = Mathf.SmoothDamp(Pitch, 28f, ref _swingVel, 0.3f);
+
             Place(dt);
         }
 
@@ -187,7 +199,7 @@ namespace Seven
         {
             var dir = Quaternion.Euler(Pitch, Yaw, 0f) * Vector3.back;
             float want = Distance;
-            if (Physics.SphereCast(_focus, 0.22f, dir, out var hit, Distance, ~0, QueryTriggerInteraction.Ignore))
+            if (Physics.SphereCast(_focus, 0.22f, dir, out var hit, Distance, Lift > 0.05f ? ~(1 << 21) : ~0, QueryTriggerInteraction.Ignore))
                 want = Mathf.Max(0.45f, hit.distance - 0.05f);
             // Pull in fast, ease back out slowly.
             _dist = want < _dist ? want : Mathf.SmoothDamp(_dist, want, ref _distVel, 0.35f, Mathf.Infinity, Mathf.Max(dt, 1e-4f));

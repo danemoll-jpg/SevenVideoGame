@@ -76,8 +76,12 @@ namespace Seven
         /// <summary>False while the character is carried by something else (7 seated in her chair).</summary>
         protected virtual bool Grounded => true;
 
+        /// <summary>Round 9: false while a script drives the position (7's jumps, hangs and climbs).</summary>
+        protected virtual bool UseRootMotion => true;
+
         void OnAnimatorMove()
         {
+            if (!UseRootMotion) return;
             // Horizontal root motion only (most clips bake it into the pose, so this is ~0 for them).
             var d = Anim.deltaPosition;
             d.y = 0f;

@@ -80,6 +80,11 @@ namespace Seven
             _fade = fadeGo.AddComponent<Image>();
             _fade.color = new Color(0f, 0f, 0f, 0f);
             _fade.raycastTarget = false;
+            // Round 9: full-screen video layer (the first vision) above the white wash; sides cropped to the screen aspect
+            var vgo = new GameObject("Video", typeof(RectTransform));
+            vgo.transform.SetParent(root, false);
+            var vrt = (RectTransform)vgo.transform; vrt.anchorMin = Vector2.zero; vrt.anchorMax = Vector2.one; vrt.offsetMin = vrt.offsetMax = Vector2.zero;
+            _video = vgo.AddComponent<RawImage>(); _video.raycastTarget = false; _video.color = new Color(1f, 1f, 1f, 0f); _video.enabled = false;
             _title = MakeText(root, "", 40, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(1100f, 120f));
             var trt = (RectTransform)_title.transform; trt.anchorMin = trt.anchorMax = trt.pivot = new Vector2(0.5f, 0.5f);
             _title.color = new Color(1f, 1f, 1f, 0f);
@@ -155,6 +160,19 @@ namespace Seven
         }
 
         public void SetFade(float alpha, float shade = 0f) { Build(); _fade.color = new Color(shade, shade, shade, alpha); }
+
+        RawImage _video;
+        public float VideoAlpha => _video != null && _video.enabled ? _video.color.a : 0f;
+        /// <summary>Show a video texture full-screen: fills the height, crops the sides (no stretching).</summary>
+        public void SetVideo(Texture tex, float srcAspect, float alpha)
+        {
+            Build();
+            _video.texture = tex; _video.enabled = tex != null && alpha > 0.001f;
+            float screen = Cam != null ? Cam.aspect : 16f / 9f;
+            float w = Mathf.Min(1f, screen / Mathf.Max(0.1f, srcAspect)), h = Mathf.Min(1f, srcAspect / Mathf.Max(0.1f, screen));
+            _video.uvRect = new Rect((1f - w) * 0.5f, (1f - h) * 0.5f, w, h);
+            _video.color = new Color(1f, 1f, 1f, alpha);
+        }
 
         public IEnumerator Title(string text, float fadeIn, float hold, float fadeOut)
         {

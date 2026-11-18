@@ -68,8 +68,8 @@ namespace Seven
             new Row("move", (G.Stick, "L")),
             new Row("orbit camera", (G.Stick, "R")),
             new Row("re-center camera", (G.StickClick, "R3")),
-            new Row("sit (near the chair)", (G.Face, "A")),
-            new Row("view art (near the TV)", (G.Face, "A")),
+            new Row("sit (near the chair)", (G.Face, "X")),
+            new Row("view art (near the TV)", (G.Face, "X")),
             new Row("pause menu", (G.Menu, "")),
             new Row("fullscreen on/off", (G.View, "")),
         };
@@ -185,15 +185,16 @@ namespace Seven
                 _panels[(Layout.GalleryView, false)] = BuildPanel(canvasGo.transform, "GalleryKeys", GalleryKeys);
                 _panels[(Layout.Chapter, true)] = BuildPanel(canvasGo.transform, "ChapterXbox", ChapterXbox);
                 _panels[(Layout.Chapter, false)] = BuildPanel(canvasGo.transform, "ChapterKeys", ChapterKeys);
-                _promptX = BuildPrompt(canvasGo.transform, "PromptXbox", G.Face, "A", out _promptTextX);
+                _promptX = BuildPrompt(canvasGo.transform, "PromptXbox", G.Face, "X", out _promptTextX);   // Round 9: interact = X
                 _promptK = BuildPrompt(canvasGo.transform, "PromptKeys", G.Key, "E", out _promptTextK);
                 _tkX = BuildPrompt(canvasGo.transform, "PromptTkXbox", G.Face, "X", out _tkTextX);
                 _tkK = BuildPrompt(canvasGo.transform, "PromptTkKeys", G.Key, "T", out _tkTextK);
             }
+            _root = canvasGo.transform;
             Apply();
         }
 
-        public void SetMode(bool xbox) { ShowXbox = xbox; Apply(); }
+        public void SetMode(bool xbox) { ShowXbox = xbox; Apply(); _teachKey = _ctxKey = null; if (_teachGo != null) Destroy(_teachGo); _teachA = 0f; }
         public void SetLayout(Layout l) { Set = l; Apply(); }
 
         /// <summary>Centre-bottom context prompt (saucer: "Sit" near the chair). Glyph: A / E.</summary>
@@ -224,7 +225,7 @@ namespace Seven
         void Apply()
         {
             if (_panels.Count == 0) return;
-            foreach (var kv in _panels) kv.Value.SetActive(kv.Key.Item1 == Set && kv.Key.Item2 == ShowXbox);
+            foreach (var kv in _panels) kv.Value.SetActive(!HidePanels && kv.Key.Item1 == Set && kv.Key.Item2 == ShowXbox);
             if (_promptX != null) { _promptX.SetActive(_promptOn && ShowXbox); _promptK.SetActive(_promptOn && !ShowXbox); }
             if (_tkX != null) { _tkX.SetActive(_tkOn && ShowXbox); _tkK.SetActive(_tkOn && !ShowXbox); }
         }
@@ -245,6 +246,7 @@ namespace Seven
 
         void Update()
         {
+            UpdateHints();
             if (!AutoSwitch) return;
             bool pad = false, keys = false;
             var gp = Gamepad.current;
@@ -261,6 +263,123 @@ namespace Seven
                                || ms.delta.ReadValue().sqrMagnitude > 9f)) keys = true;
             if (pad && !ShowXbox) SetMode(true);
             else if (keys && !pad && ShowXbox) SetMode(false);
+        }
+
+        // ------------------------------------------------------------------------------------ Round 9 hints
+        /// <summary>Round 9: buttons named by what they do in Chapter 1 (glyphs per device).</summary>
+        public enum Btn { Move, Camera, Jump, Interact, Crouch, Tk, LetGo, ClimbUp, Shimmy, Run, Skip, Sit }
+        static (G, string)[] PadGlyphs(Btn b) => b switch
+        {
+            Btn.Move => new[] { (G.Stick, "L") }, Btn.Camera => new[] { (G.Stick, "R") }, Btn.Jump => new[] { (G.Face, "A") },
+            Btn.Interact => new[] { (G.Face, "X") }, Btn.Sit => new[] { (G.Face, "X") }, Btn.Crouch => new[] { (G.Face, "B") },
+            Btn.Tk => new[] { (G.Trigger, "RT") }, Btn.LetGo => new[] { (G.Face, "B") }, Btn.ClimbUp => new[] { (G.Stick, "L") },
+            Btn.Shimmy => new[] { (G.Stick, "L") }, Btn.Run => new[] { (G.Bumper, "LB") }, Btn.Skip => new[] { (G.Face, "Y") },
+            _ => new[] { (G.Face, "?") },
+        };
+        static (G, string)[] KeyGlyphs(Btn b) => b switch
+        {
+            Btn.Move => new[] { (G.Key, "W"), (G.Key, "A"), (G.Key, "S"), (G.Key, "D") }, Btn.Camera => new[] { (G.Mouse, "-") },
+            Btn.Jump => new[] { (G.WideKey, "Space") }, Btn.Interact => new[] { (G.Key, "E") }, Btn.Sit => new[] { (G.Key, "E") },
+            Btn.Crouch => new[] { (G.Key, "C") }, Btn.Tk => new[] { (G.Mouse, "R") }, Btn.LetGo => new[] { (G.WideKey, "Space") },
+            Btn.ClimbUp => new[] { (G.Key, "W") }, Btn.Shimmy => new[] { (G.Key, "A"), (G.Key, "D") }, Btn.Run => new[] { (G.WideKey, "Shift") },
+            Btn.Skip => new[] { (G.WideKey, "Enter") }, _ => new[] { (G.Key, "?") },
+        };
+
+        /// <summary>Settings → Button hints: On / Off (teaching + context prompts). Saved on this PC.</summary>
+        public static bool HintsOn
+        {
+            get => PlayerPrefs.GetInt("seven_button_hints", 1) == 1;
+            set { PlayerPrefs.SetInt("seven_button_hints", value ? 1 : 0); PlayerPrefs.Save(); }
+        }
+        /// <summary>Round 9: no permanent legend (Chapter 1, aboard in the chapter).</summary>
+        public bool HidePanels { get => _hidePanels; set { if (_hidePanels == value) return; _hidePanels = value; Apply(); } }
+        bool _hidePanels;
+        Transform _root;
+        (Btn, string)[] _teachItems, _ctxItems;
+        string _teachKey, _ctxKey, _teachWant, _ctxWant;
+        GameObject _teachGo, _ctxGo;
+        CanvasGroup _teachCg, _ctxCg;
+        float _teachA, _ctxA;
+        /// <summary>The teaching prompt is on screen (fully or fading).</summary>
+        public bool TeachShown => _teachA > 0.05f;
+        public bool TeachFull => _teachA > 0.97f && _teachWant != null && _teachWant == _teachKey;
+        public string TeachText { get; private set; }
+        public string ContextText { get; private set; }
+        public int VisiblePanels { get { int n = 0; foreach (var kv in _panels) if (kv.Value.activeInHierarchy) n++; return n; } }
+
+        static string KeyOf((Btn, string)[] items) { var sb = new System.Text.StringBuilder(); foreach (var (b, l) in items) sb.Append(b).Append(':').Append(l).Append('|'); return sb.ToString(); }
+
+        /// <summary>Lower-middle teaching prompt (glyph + one or two words per item). No items = fade out.</summary>
+        public void Teach(params (Btn, string)[] items)
+        {
+            if (items == null || items.Length == 0) { _teachWant = null; return; }
+            _teachItems = items; _teachWant = KeyOf(items);
+        }
+        /// <summary>Small context prompt (standing at something usable). Null label = off.</summary>
+        public void Context(Btn b, string label)
+        {
+            if (string.IsNullOrEmpty(label)) { _ctxWant = null; return; }
+            _ctxItems = new[] { (b, label) }; _ctxWant = KeyOf(_ctxItems);
+        }
+
+        void UpdateHints()
+        {
+            if (_root == null) return;
+            bool on = HintsOn;
+            if (_teachWant != null && _teachWant != _teachKey && _teachA < 0.05f)
+            {
+                if (_teachGo != null) Destroy(_teachGo);
+                _teachGo = BuildHint("Teach", _teachItems, 21, 30f, new Vector2(0f, 40f), 0.72f);
+                _teachCg = _teachGo.AddComponent<CanvasGroup>(); _teachKey = _teachWant;
+                TeachText = _teachWant;
+            }
+            float tt = on && _teachWant != null && _teachWant == _teachKey ? 1f : 0f;
+            _teachA = Mathf.MoveTowards(_teachA, tt, Time.unscaledDeltaTime * (tt > 0f ? 3f : 2f));
+            if (_teachCg != null && _teachGo != null) { _teachCg.alpha = _teachA; _teachGo.SetActive(_teachA > 0.001f); }
+            if (_teachA < 0.001f && _teachWant == null) TeachText = null;
+
+            if (_ctxWant != _ctxKey)
+            {
+                if (_ctxGo != null) Destroy(_ctxGo);
+                _ctxGo = _ctxWant != null ? BuildHint("Context", _ctxItems, 17, 24f, new Vector2(0f, 92f), 0.6f) : null;
+                if (_ctxGo != null) _ctxCg = _ctxGo.AddComponent<CanvasGroup>();
+                _ctxKey = _ctxWant; _ctxA = 0f;
+                ContextText = _ctxWant;
+            }
+            if (_ctxGo != null)
+            {
+                // quiet: never over a teaching prompt
+                float ct = on && !TeachShown ? 0.9f : 0f;
+                _ctxA = Mathf.MoveTowards(_ctxA, ct, Time.unscaledDeltaTime * 4f);
+                _ctxCg.alpha = _ctxA;
+            }
+        }
+
+        GameObject BuildHint(string name, (Btn, string)[] items, int fontSize, float glyphH, Vector2 pos, float bgAlpha)
+        {
+            var panel = new GameObject(name + (ShowXbox ? "Xbox" : "Keys"), typeof(RectTransform));
+            panel.transform.SetParent(_root, false);
+            var rt = (RectTransform)panel.transform;
+            rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = pos;
+            panel.AddComponent<Image>().color = new Color(0f, 0f, 0f, bgAlpha);
+            float pad = 12f, x = pad, gap = 22f;
+            foreach (var (b, label) in items)
+            {
+                var gl = ShowXbox ? PadGlyphs(b) : KeyGlyphs(b);
+                foreach (var (g, t) in gl)
+                {
+                    float gw = GlyphWidth(g) * glyphH / GlyphH;
+                    AddGlyph(panel.transform, g, t, new Vector2(x, 7f), new Vector2(gw, glyphH));
+                    x += gw + 4f;
+                }
+                x += 6f;
+                float lw = label.Length * fontSize * 0.52f + 6f;
+                AddText(panel.transform, label, new Vector2(x, 5f), new Vector2(lw, glyphH + 4f), fontSize, TextAnchor.MiddleLeft);
+                x += lw + gap;
+            }
+            rt.sizeDelta = new Vector2(x - gap + pad, glyphH + 14f);
+            return panel;
         }
 
         // ------------------------------------------------------------------------------------ layout
@@ -334,14 +453,15 @@ namespace Seven
             if (!string.IsNullOrEmpty(label))
             {
                 int fs = label.Length >= 3 ? 10 : label.Length == 2 ? 11 : 13;
-                if (g == G.Mouse) return;   // mouse glyph draws the pressed button itself
+                if (g == G.Mouse) goto mouse;   // mouse glyph draws the pressed button itself
                 var t = AddText(go.transform, label, Vector2.zero, size, fs, TextAnchor.MiddleCenter);
                 t.fontStyle = FontStyle.Bold;
                 if (g == G.Trigger) ((RectTransform)t.transform).anchoredPosition = new Vector2(0f, -1.5f);
             }
-            if (g == G.Mouse)
+            mouse:
+            if (g == G.Mouse && label != "-")
             {
-                // Mark which button: R (right), M (middle).
+                // Mark which button: R (right), M (middle); "-" = no button (mouse movement).
                 var mark = new GameObject("Btn", typeof(RectTransform));
                 mark.transform.SetParent(go.transform, false);
                 var mrt = (RectTransform)mark.transform;

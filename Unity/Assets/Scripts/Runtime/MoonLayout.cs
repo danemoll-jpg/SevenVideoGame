@@ -67,6 +67,18 @@ namespace Seven
         public static readonly Vector3 Inscription = new Vector3(16.5f, Lower + 1.35f, -37.95f);
         public static readonly Vector3 InscriptionSpot = new Vector3(16.5f, Lower, -37.15f);
         public static readonly Vector3 SealedDoor = new Vector3(16.5f, Lower, -38.1f);
+        // Round 9 (8b): the vision object - one of Kyle's floating wireframe shapes over a pale pedestal in an alcove in
+        // the chamber's east wall. Change VisionShape to swap the shape (tetrahedron / cube / octahedron) everywhere.
+        public const PlatonicShape.Kind VisionShape = PlatonicShape.Kind.Dodecahedron;
+        public const float ShapeRadius = 0.3f;                                               // ~0.6 m across
+        public static readonly Vector3 ShapeAt = new Vector3(21.05f, Lower + 1.5f, -34.8f);
+        public static readonly Vector3 Pedestal = new Vector3(21.05f, Lower, -34.8f);
+        public static readonly Vector3 ShapeSpot = new Vector3(19.95f, Lower, -34.8f);      // where 7 stands to touch it
+        public static readonly Vector2 AlcoveZ = new Vector2(-35.6f, -34.0f);
+        public const float AlcoveBackX = 21.9f;
+        // Round 9 (8b addition): the round three-spoke emblem beside the door - the shape's outline glows in it
+        public static readonly Vector3 DoorSymbol = new Vector3(19.35f, Lower + 1.55f, -37.97f);
+        public static readonly Vector3 MechanismSpot = new Vector3(19.35f, Lower, -37.42f);   // where 7 stands to touch it
 
         // ---- Impound (scene 7-8)
         public static readonly Vector2 LedgeMin = new Vector2(11f, -48.2f), LedgeMax = new Vector2(22.5f, -42f);
@@ -119,7 +131,10 @@ namespace Seven
         public static int OpeningRun;
         public static readonly System.Collections.Generic.List<string> OpeningResults = new System.Collections.Generic.List<string>();
 
-        public static void Reset() { Checkpoint = 0; Aboard = false; Explore = false; StartedAt = -1f; Played.Clear(); }
+        /// <summary>Round 9: teaching prompts already shown this playthrough (each appears once; kept across checkpoint restarts).</summary>
+        public static readonly System.Collections.Generic.HashSet<string> Taught = new System.Collections.Generic.HashSet<string>();
+
+        public static void Reset() { Checkpoint = 0; Aboard = false; Explore = false; StartedAt = -1f; Played.Clear(); Taught.Clear(); }
 
         public static void StartAboard()
         {

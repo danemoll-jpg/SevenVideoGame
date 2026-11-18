@@ -14,6 +14,8 @@ The opening order is: first meeting → cell rescue → escape through the ruins
 
 Together, they recover her ship and escape immediate captivity.
 
+**Chapter 1 ends aboard the saucer (Dan, 2026-11-17):** over their first meal 7 tells the cat the vision felt like *remembering*. She took the dodecahedron from the ruins; the cat recognizes a marking on one face from something he has seen from Venus — the Elarim. He chooses to stay ("I'd like to know what happens next"), and they set course for **Venus to find the Elarim** — the next world.
+
 ## An unexpected partnership
 
 Aboard the saucer, 7 tells the cat what she experienced. He helps her consider its meaning and offers possible places to investigate. He does not already know the answers.

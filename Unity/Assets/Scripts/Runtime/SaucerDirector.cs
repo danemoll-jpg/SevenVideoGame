@@ -71,10 +71,22 @@ namespace Seven
                 var layout = Gallery != null && Gallery.InView ? ControlsLegend.Layout.GalleryView
                     : m == SaucerSeven.Mode.Seated ? ControlsLegend.Layout.SaucerSeated : ControlsLegend.Layout.SaucerWalk;
                 if (Legend.Set != layout) Legend.SetLayout(layout);
- string prompt = ChapterMode && PromptOverride != null ? PromptOverride : Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
-                if (prompt != _prompt) { _prompt = prompt; Legend.Prompt(prompt); }
+                string prompt = ChapterMode && PromptOverride != null ? PromptOverride : Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
+                // Round 9: in Chapter 1 there is no permanent legend; "X Sit" is taught once, then a quiet context prompt.
+                Legend.HidePanels = Chapter1State.Aboard;
+                if (Chapter1State.Aboard)
+                {
+                    if (Seven.IsSeated && !Chapter1State.Taught.Contains("sit")) { Chapter1State.Taught.Add("sit"); ChapterCapture.I?.Log("teach: sit done (seated)"); }
+                    bool teachSit = prompt == "Sit" && !Chapter1State.Taught.Contains("sit");
+                    if (teachSit != _teachSit) { _teachSit = teachSit; ChapterCapture.I?.Log("teach: sit " + (teachSit ? "shown" : "cleared")); }
+                    if (teachSit) { Legend.Teach((ControlsLegend.Btn.Sit, "Sit")); Legend.Context(ControlsLegend.Btn.Sit, null); }
+                    else { Legend.Teach(); Legend.Context(ControlsLegend.Btn.Interact, prompt); }
+                    if (_prompt != null) { _prompt = null; Legend.Prompt(null); }
+                }
+                else if (prompt != _prompt) { _prompt = prompt; Legend.Prompt(prompt); }
             }
         }
         string _prompt;
+        bool _teachSit;
     }
 }

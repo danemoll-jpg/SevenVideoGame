@@ -1,11 +1,19 @@
 # Active Development Plan — 7: The Observer
 
+## Current Objective
+Round 9 is done (release 0.9.0). **Round 10 is queued in `Docs/ROUND10.md`** (Dan, 2026-11-17: the galley scene ends Chapter 1) — move it here when it starts. Note: `Docs/DIALOGUE.md` already holds Dan's Round 10 galley text; `voice_lines.json` was deliberately left at the Round 9 set (83 lines) until Round 10 regenerates it.
+
 ## Standing rules
 - 7 never kills · strictly monochrome · non-sexual presentation · 7 is clearly an adult (details in `CLAUDE.md`).
 - Per-item status at the end of every round: **done / not done / deferred (why)**. No silent partial completion.
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Round 9 — Chapter 1 as the tutorial — done (2026-11-17), exe-verified off-screen; release 0.9.0 (`game-900`).**
+  Traversal (jump, grab, hang, shimmy, climb, climb down, let go, wall climb, mantle, crouch), forgiving falls, the
+  telekinesis slab, the cat leading the routes, no permanent legend (teaching + context prompts, Controls page, Button
+  hints), Kyle's dodecahedron, the lunar door chamber (Dan's addition) and the video vision with the new scene 6 lines
+  (Dan's addition). Status in "Round 9" below.
 - **Round 7, Round 8, QF3, QF4 — done (2026-11-17), releases 0.8.0–0.8.2.** Laser cell door + hidden release + dark
   energy point in the cell, city reveal (6b), tractor-beam boarding, SFX, re-voiced 7, music, pause menu / Continue /
   Quit, free saucer exploration; saucer look pass, gallery sofa, Ratwing flip re-key, fluid fighting, launcher; phantom
@@ -53,87 +61,82 @@
   Script kept as `Tools/Model/fix_v1_to_v2.py`. Source facts: 0.98 m tall, ~1.95M triangles, one 4K base-color texture.
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
-## Current Objective — Round 9: Chapter 1 as the tutorial — traversal + controls taught as you need them (Dan, 2026-11-17)
-Commit the repo as it is first (safety checkpoint). Goal: give the beginning more meat. The design calls for ~30%
-Tomb-Raider-style traversal and Chapter 1 has none yet; Chapter 1 is also partly the tutorial, so **no permanent button
-legend** — each control is introduced the first time the player needs it. Target length after this: ~20–25 min.
-All standing rules apply (monochrome, Kyle's fog/glow, non-sexual presentation, **7 never kills**).
+## Round 9 — Chapter 1 as the tutorial: traversal + controls taught as you need them — done (2026-11-17), exe-verified off-screen; release 0.9.0
+Plan text (and Dan's two additions to 8b) moved word-for-word to `TODO-ARCHIVE.md` → "Round 9". Previews + logs:
+`Docs/Previews/r9/` (`chapter1/` full autopilot run, `opening/` 25× opening test, `soundcheck/`, `gallery/`,
+`clip_measurements.txt`). Every run muted (output peak 0.000000 / listener 0), minimized-not-activated, Below Normal,
+one heavy job at a time; monochrome max |R−G|,|G−B| = 0 over all 97 chapter shots.
+0. **Safety checkpoint** — committed + pushed first (`66e77e2`: Dan's doc updates + the 11 new clips and `alt/` in LFS).
+1. **Control scheme — done** (map in `CLAUDE.md` and the pause menu's Controls page). Changes to the proposal: keyboard
+   re-centre moved C → **R** (C is crouch; middle mouse still works); **let go = B / Space / C**; **skip a line = Y / Enter**
+   (A is jump now); the mouse orbits **without a button** and the cursor is locked while playing (right mouse is
+   telekinesis); T stays as a hidden telekinesis alias. Saucer: X / E interact (A still works there). Fight demo unchanged.
+2. **No permanent legend — done.** Legend hidden in the chapter and aboard (0 panels in every shot). Teaching prompts
+   (glyph + words, lower middle, monochrome, once per playthrough, kept across checkpoint restarts): move + camera →
+   interact ("X Look" at the cell door now starts scene 1; the 20 s watchdog still covers idling) → **jump (first gap)**
+   → **crouch (pipe run)** → grab the ledge → hang (climb up · shimmy · let go) → telekinesis (fallen slab) → sit (saucer).
+   Jump comes before crouch because the level puts the gap first. Each stays until done (min 2.2 s), fades 1 s after.
+   Quiet context prompts afterwards ("A Climb", "B Climb down", "X Touch", "RT Telekinesis"…). Pause menu: **Controls**
+   page (Xbox + keyboard) and Settings → **Button hints On / Off** (saved).
+3. **Moves — done** (`ChapterSevenTraversal.cs`, data in `MoonTraversal.cs`): standing + running jump (assisted across
+   known gaps: lands on the far side from anywhere within ~1 m of the take-off), ledge grab when jumping at a lip, jump-
+   to-grab, hang, shimmy L/R, climb up, let go, climb down to a hang at an edge, wall climb, waist-high mantle, crouch-
+   sneak toggle (the pipe run only takes her crouched). Hand IK keeps both wrists on the lip: **gap 0.022–0.040 m** on
+   all 7 ledges (a runtime lift calibrates the hang height). Lips are pale worn stone / scuffed metal strips.
+4. **Falls never kill — done.** A fall with no ground below → white fade → last safe ledge. Deliberate falls in the run:
+   short hop into the catwalk gap, let go over the shaft, let go over the terrace gap → **3/3 reset**.
+5. **Telekinesis before the Scree — done.** A fallen slab blocks the ruins stair; RT lifts it aside into the shaft; her
+   energy point brightens to 1.9× during the lift (also during the Scree stone). Visual only.
+6. **Routes — done (story beats and order unchanged):** prison after scene 3: broken catwalk gap → crouch under a low
+   pipe run → bulkhead (jump-grab, climb, jump down); scene 4 passage: cracked wall climb → climb down onto the shaft lip
+   → shimmy over the dark drop → let go into the ruins → jump → mantle → jump-grab + shimmy + climb → slab (RT) → stair
+   → hall (scene 5 as before); after the vision: drop into a mining cut, climb its wall (2 climbs) out onto the terrace
+   → reveal; to the impound: broken ramp → climb down + drop → scaffold → jump → scaffold → climb down + drop → bay.
+7. **The cat leads — done.** Route mode: he walks / hops to the next ledge or stub and waits (sits, watches her) until
+   she catches up; 27 stops logged, 0.5–3.5 m from her; never on a landing spot; 8 m catch-up rule kept in follow mode.
+8. **Mixamo clips — done, all of Dan's used:** `hang_idle` (hang), `shimmy` + **mirrored copy** `shimmy_mirror` (shimmy
+   R/L), `climb_up` (climb up; also the end of every wall climb, started at 17 %), `jump_to_hang` (jump-to-grab),
+   `hang_drop` (let go when the floor is 2.0–2.9 m below the lip), `running_jump` (all jumps; root motion extracted, the
+   arc is scripted), `fall_idle`, `landing` (soft landings + the standing jump's end), `landing_hard` (drops > 2.6 m),
+   `wall_climb` (cracked wall ×1, mining cut ×2), `crouch_idle`, `sneak_walk` (crouch walk), `alt/7_jumping_up` (standing
+   jump). **Stand-ins:** the **mantle = `climb_up` trimmed from 36 %** (`alt/7_climbing_a` is a 4 m walk-up + 2 m climb,
+   `_b` a mid-wall climb cycle — neither fits waist height); **climbing down into a hang is procedural** (no clip).
+   Not used: `alt/7_hang_idle_b`, `alt/7_running_jump_b` (the main clips fit better). Measurements:
+   `Docs/Previews/r9/clip_measurements.txt`.
+8b. **Vision object + lunar door + the video vision — done.** Glowing white wireframe **dodecahedron** (0.6 m, slow
+   spin, faint pulse, lights the alcove) on a pale pedestal in an alcove; X "Touch" → edges flare → white wash. One
+   constant (`MoonLayout.VisionShape`) swaps it for a tetrahedron / cube / octahedron. **Dan's door addition:** chamber and
+   door after `ref_lunar_door.png`, in ruins — flowing pale ribs and vaults (two broken off), fallen chunks, skylight slits,
+   low fog sheets; pointed-arch door in two leaves split by an S-seam with worn orbit / planet engravings; the round
+   three-spoke mechanism beside it; floor circles with a line of small circles to the door; the same ribs through the
+   hall exit and across the hall. **Dan's vision addition:** white wash → `vision_01_door.mp4` full-screen (12.1 s,
+   1920×1044, height filled, sides cropped 1.7 % each, no stretch; copy in `Unity/Assets/Video/`, LFS) under the vision
+   shimmer with the cat's two lines faint → white wash back. New scene 6 middle from `DIALOGUE.md` (4 new ElevenLabs takes:
+   7 v3 with delivery tags, the cat v2; old takes kept in `Unity/Assets/Audio/Voice/_r8_s06/`). The door now opens by 7
+   touching the mechanism (X "Touch", no dodecahedron outline): its ring lights, the S-seam then the engravings light, the
+   leaves part. Scene 6 cameras: 7 and the cat 0 % occluded / outside the frame.
+9. **Checks — done.** Autopilot start → finish (`-chapter1`): **0 soft-locks**, 27/27 scripted traversal steps, 3/3 fall
+   resets, all 8 lessons shown once and cleared (Xbox + keys shots each), 0 legend panels, every dialogue camera 0 %,
+   83/83 lines with audio (the 4 unplayed are the alternate 6b set), laser/release checks as before. Opening test
+   **`-openingtest 25` → **25/25 PASS** (cat inside the cell 0 frames; the opening now waits for X Look or the watchdog)**. New SFX (ledge grab, soft / hard landing, climbing scuff, slab lift; `Docs/SFX-LIST.md`):
+   brief unmuted check `-soundcheck sfx` → 5 sounds, **5.0 s of sound**, then muted again (output 0.000000): land_soft 0.39, land_hard 0.39, climb_scuff 0.38, slab_lift 0.38 output peak; ledge_grab measured 0.0009 — its file peaks at −3 dBFS in the first 0.1 s and, as the first sound of the check, that transient was missed by the measurement (re-check with it later in the list next time). Gallery check (X/A sit + every binding): `-gallery` real-input test **17 passed, 0 failed**.
+   **Length:** the autopilot plays the whole chapter in **7.2 min** (Moon level 5.8 min) — it walks perfect lines and
+   cuts every voice line after 0.9 s (160.7 s of voice). **Estimate for a first play: ~15–18 min — the 20–25 min target is
+   not reached yet**; more meat would need another traversal / puzzle beat or two (e.g. in the hall or the bay).
+10. **Release + docs — done.** 0.9.0 (build 900) published (`game-900`, Latest); `TODO.md`, `CLAUDE.md` updated; pushed.
 
-### Controls (one scheme for the chapter; document it in `CLAUDE.md`)
-1. **Chapter control scheme** (Xbox / keyboard), proposed — adjust if something clashes, and say what you changed:
-   left stick / WASD move · right stick / mouse camera · **A / Space jump** (also grabs ledges when jumping at them) ·
-   **X / E interact** (doors, release, touch the wall, sit) · **B / C crouch-sneak** (toggle) · **B / Space while hanging
-   = let go** (drop) · **RT / right mouse telekinesis** on a highlighted object · R3 camera re-center · Start / Esc pause.
-   Move today's "A / E interact" prompts to X / E. The fight demo keeps its own controls and legend.
-2. **No permanent legend in Chapter 1.** Remove the bottom-left legend in the chapter. Instead:
-   - **Teaching prompts:** the first time a control is needed, a small, clean prompt appears (glyph + one or two words,
-     monochrome, lower middle), stays until the player does it (or ~6 s after they clearly have), then fades. Order:
-     move + camera (start of the cell, after a short beat) → interact (cell door / scene 1) → crouch-sneak (first
-     time it helps — before the Scree, or a low pipe earlier) → jump (first gap) → grab ledge / climb / shimmy / let go
-     (first ledge) → telekinesis (first heavy stone, see 5) → sit (saucer chair).
-   - **Context prompts** after that: only when standing at something usable (e.g. "X Touch", "X Sit"), small and quiet.
-   - Pause menu gets a **Controls** page with the full map (Xbox / keyboard), and Settings gets **Button hints: On / Off**.
-   - Xbox glyphs by default, keys after keyboard use (existing system). No colored glyphs.
-
-### Traversal (Tomb Raider style, short and readable)
-3. **Moves for 7:** jump (standing + running), **ledge grab** when jumping at a ledge, **hang**, **shimmy** left / right,
-   **climb up** (pull up / mantle), **let go** to drop, **drop down** from a ledge edge onto a ledge below, low
-   **mantle** over waist-high obstacles, **crouch-sneak** (Dan's `7_sneak_walk`). Climbable edges read clearly but stay
-   in style — pale worn stone lips / scuffed metal edges catching the light, never painted markers or colors.
-   Assisted, forgiving controls (snap to ledges within a small radius, no pixel-perfect jumps).
-4. **Falls never kill.** A fall into a drop or chasm fades to white and returns 7 to the last safe ledge (no death, no
-   injury animation) — in keeping with the game's tone.
-5. **Telekinesis taught before the Scree:** in the ruins, a heavy stone block or fallen slab blocks the way or is
-   needed as a step — **RT** moves it into place. This teaches the power that she then uses for the Scree distraction.
-   Her energy point brightens while she uses it (visual only for now; energy limits come later).
-6. **Where the traversal goes** (keep every story beat and its order from `Docs/DIALOGUE.md` exactly as is):
-   - **Prison, after scene 3:** a broken catwalk section → the first **jump** across a gap; a low pipe run → **crouch**
-     under; a short wall with a ledge → first **ledge grab + climb up**.
-   - **Scene 4 → the older passage:** the gap into the ancient structures is up a cracked wall → **climb**, then a
-     **shimmy** along a ledge over a dark drop, then **drop down** into the ruins.
-   - **Ruins before the vision:** a short multi-step route — jumps between broken terraces, a hang-and-shimmy, the
-     **telekinesis** stone (item 5) — then the Scree encounter as now.
-   - **After the vision, before the city reveal:** a climb up out of the ruins to the mining passage that leads onto
-     the terrace — so the reveal arrives after an effortful climb.
-   - **Down to the impound** after the reveal: a couple of drops and ledges to reach the bay.
-7. **The cat leads the routes.** He hops ahead to the next ledge or gap and waits there (cats jump well — he shows the
-   way without UI), then rejoins her. He never blocks a jump or a ledge. Keep the 8 m catch-up rule (out of sight).
-8. **Mixamo clips** (Dan downloads — see below; use them if present, keyframe or pose stand-ins if not, and report
-   which). Retarget to 7 as Humanoid; strip root motion where the controller drives movement.
-   **Status 2026-11-17: Dan's clips are in** `Art/Mixamo/7/` — `7_hang_idle`, `7_shimmy` (**one direction only — mirror it
-   for the other side**), `7_climb_up` (Braced Hang To Crouch), `7_jump_to_hang`, `7_hang_drop` (Freehang Drop),
-   `7_running_jump`, `7_fall_idle`, `7_landing` (Falling To Landing), `7_landing_hard` (Hard Landing — for big drops),
-   `7_wall_climb` (Climbing Up Wall — use for the cracked-wall climbs), `7_crouch_idle`. Alternates in
-   `Art/Mixamo/7/alt/` (`7_climbing_a` / `_b` = "Climbing" variants, `7_hang_idle_b`, `7_jumping_up`, `7_running_jump_b`):
-   look at them and pick the best one for each role — **use one of the "Climbing" alternates for the waist-high mantle**
-   if it fits, otherwise a trimmed `7_climb_up`. Report which file you used for each move.
-8b. **The vision object — one of Kyle's floating shapes (Dan, 2026-11-17).** Replace the glowing wall inscription she
-   touches for the first vision (scene 6) with a shape from Kyle's telekinesis painting (`Art/Reference/kyle_7_telekinesis.jpg`):
-   a **glowing white wireframe dodecahedron** (12 pentagon faces — the shape ancient astronomers tied to the heavens,
-   fitting the Moon's Astronomical Age), about 0.6 m across, hovering above a worn pale-stone pedestal in an alcove,
-   rotating very slowly with a faint pulse, lighting the stone around it — styled like Kyle's: thin bright edges with a
-   soft glow, monochrome. Prompt: X "Touch". When she reaches out (`7_touch_wall`), the edges flare, the light swells to
-   white → the vision as now (contents still generic). Afterwards the shape dims to a faint glow. The "symbol she saw in
-   the vision" that opens the passage becomes the same dodecahedron outline glowing on the sealed door. One shape
-   constant so Dan can swap to another of Kyle's shapes (tetrahedron, cube, octahedron) without other changes.
-   Capture: the shape in its alcove, the touch flare, the outline on the door.
-
-9. **Checks** (muted, off-screen, never steal focus): rebuild; automated playthrough start to finish with traversal
-   (scripted inputs) — no soft-locks, every jump / ledge / shimmy completes; deliberate falls reset to the last safe ledge;
-   each teaching prompt appears once at the right moment and clears; no legend visible in the chapter; captures of every
-   traversal spot + every teaching prompt (Xbox + keys); cat waiting at each next ledge; 7's hands on the ledge while
-   hanging (measure the gap); monochrome 0; audio 0 except a brief reported sound check if new SFX (footstep on ledge,
-   grab, land). Measure the chapter's new length.
-10. Publish a release, update `TODO.md` / `CLAUDE.md`, commit and push, report in ~20 lines.
-
-### For Dan (before Code starts, optional but better): Mixamo clips for 7
-FBX for Unity, 30 fps, keyframe reduction none, **without skin**, character = 7 → `Art/Mixamo/7/`. Closest match is fine.
-`7_hang_idle.fbx` (Hanging Idle / Braced Hang) · `7_shimmy_left.fbx`, `7_shimmy_right.fbx` (Braced Hang Shimmy, In Place
-off) · `7_climb_up.fbx` (Braced Hang To Crouch / Climbing) · `7_jump_to_hang.fbx` (Jumping Up / Jump To Hang) ·
-`7_hang_drop.fbx` (Hang Drop / Drop Down) · `7_running_jump.fbx` (Running Jump) · `7_fall_idle.fbx` (Falling Idle) ·
-`7_landing.fbx` (Falling To Landing / Hard Landing) · `7_mantle.fbx` (Climbing / Vault, waist-high) ·
-`7_crouch_idle.fbx` (Crouching Idle).
-
+### For Dan to check (Round 9) — `Docs/Previews/r9/chapter1/`
+- Teaching prompts (Xbox / keys): `02/03_t_move`, `04/05_t_interact`, `16/17_t_jump`, `20/21_t_crouch`, `23/24_t_ledge`,
+  `25/26_t_hang`, `41/42_t_tk`, `91/92_t_sit`; pause menu Controls page `96_s12_pause_controls.png`.
+- Traversal: `19_tr01_across_the_gap`, `22_tr02_crouched_under_pipes`, `27_tr03_hanging_bulkhead` (cat waiting on top),
+  `28_tr04_shimmy_bulkhead`, `32_tr06_wall_climb`, `33_tr07_hanging_shaft_lip`, `35_tr08_shimmy_over_the_drop`,
+  `36_tr09_dropped_into_the_ruins`, `37/38` terraces, `39_tr12_hanging_terrace_c`, `43/44` slab + bright energy point,
+  `65–67` mining cut, `74–76` broken ramp / scaffolds / bay. Fall reset: `18_tr_fall_white.png`.
+- Vision + door: `53_s06_shape_in_alcove`, `54_s06_shape_touch_flare`, `52_s06_chamber_before`, `55_s06_whitewash_in`,
+  `57_s06_vision_video_frame`, `58_s06_whitewash_out`, `61_s06_touching_mechanism`, `62_s06_emblem_and_engravings_lit`,
+  `63_s06_door_parting`, `64_s06_passage_opens`.
+- Play: the chapter has no legend now — try it with Button hints On, then Off (Settings). Hang on the bulkhead and
+  shimmy; let go over the shaft on purpose (white fade, back on the shelf).
 
 ## Quick fix QF4 — cat/opening, dialogue cameras, the real Scree — done (2026-11-17), exe-verified off-screen; release 0.8.2
 Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Quick fix QF4". Previews + logs: `Docs/Previews/qf4/`. Every run
@@ -193,7 +196,7 @@ monochrome max |R−G|,|G−B| = 0 over all 92 final-build shots. No audio chang
 
 ## Next Steps (Do Not Start Yet)
 - **Scree model** — done in QF4; Scree design approved 2026-11-17 — tail tucked down.
-- **First vision contents** — still undecided (Dan, 2026-11-17). Keep it generic until he decides.
+- **First vision contents** — DECIDED (Dan, 2026-11-17): the video `Art/Video/vision_01_door.mp4` (in since Round 9).
 - **Fight reset on Backspace / d-pad down** — DECIDED: OK (Dan, 2026-11-17).
 - **Hair ties:** DECIDED (Dan, 2026-11-17): **leave the metal cuffs as they are.** (Glowing clips from Kyle's art not planned.)
 - **Forehead dot = 7's "energy point"** (Kyle, 2026-11-17). Keep the plain glowing dot. Gameplay: **Kyle's proposal

@@ -3,10 +3,16 @@ using UnityEngine.InputSystem;
 
 namespace Seven
 {
-    /// <summary>Input System actions for Chapter 1 (keyboard + gamepad), built in code.</summary>
+    /// <summary>
+    /// Input System actions for Chapter 1 (keyboard + gamepad), built in code. Round 9 chapter scheme:
+    /// left stick / WASD move · right stick / mouse camera · A / Space jump (grabs ledges when jumping at them) ·
+    /// X / E interact · B / C crouch-sneak (toggle; at an edge: climb down) · B / Space while hanging = let go ·
+    /// RT / right mouse telekinesis · R3 / middle mouse re-centre · LB / Shift run · Y / Enter skip a line ·
+    /// Start / Esc pause · d-pad down / Backspace restart from the checkpoint.
+    /// </summary>
     public class ChapterInput : MonoBehaviour
     {
-        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart;
+        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo;
 
         static InputAction Button(string name, params string[] paths)
         {
@@ -27,16 +33,20 @@ namespace Seven
             Move.AddBinding("<Gamepad>/leftStick");
             Look = new InputAction("look", InputActionType.Value, expectedControlType: "Vector2");
             Look.AddBinding("<Gamepad>/rightStick");
-            Recenter = Button("recenter", "<Gamepad>/rightStickPress", "<Mouse>/middleButton", "<Keyboard>/c");
+            // Round 9: C is crouch now; keyboard re-centre moved to R (middle mouse still works).
+            Recenter = Button("recenter", "<Gamepad>/rightStickPress", "<Mouse>/middleButton", "<Keyboard>/r");
             Run = Button("run", "<Gamepad>/leftShoulder", "<Gamepad>/leftStickPress", "<Keyboard>/leftShift");
-            Interact = Button("interact", "<Gamepad>/buttonSouth", "<Keyboard>/e");
-            Telekinesis = Button("telekinesis", "<Gamepad>/buttonWest", "<Gamepad>/dpad/up", "<Keyboard>/t");
+            Interact = Button("interact", "<Gamepad>/buttonWest", "<Keyboard>/e");
+            Telekinesis = Button("telekinesis", "<Gamepad>/rightTrigger", "<Mouse>/rightButton", "<Keyboard>/t");
+            Jump = Button("jump", "<Gamepad>/buttonSouth", "<Keyboard>/space");
+            Crouch = Button("crouch", "<Gamepad>/buttonEast", "<Keyboard>/c");
+            LetGo = Button("letgo", "<Gamepad>/buttonEast", "<Keyboard>/space", "<Keyboard>/c");
             Menu = Button("menu", "<Gamepad>/start", "<Keyboard>/escape");
             Restart = Button("restart", "<Gamepad>/dpad/down", "<Keyboard>/backspace");
             foreach (var a in All()) a.Enable();
         }
 
-        InputAction[] All() => new[] { Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart };
+        InputAction[] All() => new[] { Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo };
 
         void OnDestroy()
         {

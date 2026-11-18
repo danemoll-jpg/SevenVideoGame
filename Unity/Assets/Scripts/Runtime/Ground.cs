@@ -29,6 +29,9 @@ namespace Seven
         public class Zone
         {
             public string Name; public Vector2 Min, Max; public float Y0, Y1; public int SlopeAxis; public bool Enabled = true;
+            /// <summary>Round 9: low clearance (the pipe run) - 7 may only be here crouched (see <see cref="BlockLow"/>).</summary>
+            public bool Low;
+            public bool Usable => Enabled && !(Low && BlockLow);
             public float HeightAt(float x, float z)
             {
                 if (Mathf.Approximately(Y0, Y1)) return Y0;
@@ -39,6 +42,8 @@ namespace Seven
         }
         public static readonly List<Zone> Zones = new List<Zone>();
         public static Zone FindZone(string name) => Zones.Find(z => z.Name == name);
+        /// <summary>Round 9: set by 7 around her own moves while standing: low zones do not take her then.</summary>
+        public static bool BlockLow;
 
         static Zone ZoneAt(float x, float z)
         {
@@ -100,13 +105,13 @@ namespace Seven
                     if (d.sqrMagnitude < min * min) q = o.C + (d.sqrMagnitude > 1e-8f ? d.normalized : Vector2.right) * min;
                 }
                 bool inside = false;
-                foreach (var zn in Zones) if (zn.Enabled && zn.Contains(q.x, q.y, bodyRadius)) { inside = true; break; }
+                foreach (var zn in Zones) if (zn.Usable && zn.Contains(q.x, q.y, bodyRadius)) { inside = true; break; }
                 if (!inside)
                 {
                     float best = float.MaxValue; Vector2 bq = q;
                     foreach (var zn in Zones)
                     {
-                        if (!zn.Enabled) continue;
+                        if (!zn.Usable) continue;
                         float pad = Mathf.Min(bodyRadius, (zn.Max.x - zn.Min.x) * 0.45f, (zn.Max.y - zn.Min.y) * 0.45f);
                         var c = new Vector2(Mathf.Clamp(q.x, zn.Min.x + pad, zn.Max.x - pad), Mathf.Clamp(q.y, zn.Min.y + pad, zn.Max.y - pad));
                         float d = (c - q).sqrMagnitude;

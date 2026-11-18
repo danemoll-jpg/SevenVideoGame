@@ -203,6 +203,16 @@ namespace Seven
             Seven.ScriptDriven = true;
             yield return Cap.Shot(fromContinue ? "x01_continue_exploring" : "s11_free_exploration");
             yield return AutoWalk(new Vector3(1.5f, 0f, -2.5f), Seven.StandSpot);
+            if (!fromContinue)
+            {
+                // Round 9: the "X Sit" teaching prompt (once per playthrough), Xbox then keys
+                yield return Wait(0.9f);
+                Cap.Log($"teach prompt at the chair: '{Director.Legend.TeachText}' shown={Director.Legend.TeachShown}; permanent legend panels visible: {Director.Legend.VisiblePanels}");
+                yield return Cap.Shot("t_sit_xbox");
+                Director.Legend.SetMode(false); yield return Wait(0.6f);
+                yield return Cap.Shot("t_sit_keys");
+                Director.Legend.SetMode(true); yield return Wait(0.4f);
+            }
             Seven.RequestSit();
             float t0 = Time.time;
             while (!Seven.IsSeated && Time.time - t0 < 8f) yield return null;
@@ -222,7 +232,11 @@ namespace Seven
             Cap.Log($"pause menu settings: music {AudioKit.MusicVolume:0.0} sfx {AudioKit.SfxVolume:0.0} voice {AudioKit.VoiceVolume:0.0} (check runs never save these)");
             yield return Cap.Shot("s12_pause_settings");
             PauseMenu.I.Handle(0, 1, false, false);                                           // back to 100 %
-            PauseMenu.I.Handle(0, 0, false, true);                                            // back
+            PauseMenu.I.Handle(0, 0, false, true);                                            // back (Settings selected)
+            PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);    // Round 9: Controls page
+            yield return null;
+            yield return Cap.Shot("s12_pause_controls");
+            PauseMenu.I.Handle(0, 0, false, true);                                            // back (Controls selected)
             PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);   // Quit game -> confirm
             yield return Cap.Shot("s12_pause_quit_confirm");
             PauseMenu.I.Handle(0, 0, false, true);                                            // No / back

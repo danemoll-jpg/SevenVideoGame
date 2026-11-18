@@ -59,3 +59,14 @@ arms, digitigrade legs, abdomen chain, head/antenna), not Mixamo.
 look_around retargeted in Unity). **Scree design approved 2026-11-17 — tail tucked down** (Dan): the abdomen + wing
 covers are straightened behind and tucked 42° below horizontal about the waist (`ABD_TUCK`, range 35–50°), the covers
 lying along it; clears the legs in idle / walk / work (centre-line distance ≥ 0.278 m). Previews `Docs/Previews/qf4/scree/`.
+
+## Round 9 — Chapter 1 traversal, the lunar door, the first vision (2026-11-17)
+- **No new character models needed.** Ledges, broken catwalk, pipe run, bulkhead, ruin terraces, the fallen slab, Kyle's
+  floating dodecahedron and the lunar door chamber are all built procedurally (`FightDemoBuilderTraversal.cs`,
+  `FightDemoBuilderLunarDoor.cs`); the door chamber follows `Art/Reference/ref_lunar_door.png`, in ruins.
+- **The first vision is a video, not a model:** `Art/Video/vision_01_door.mp4` (12 s, 1920x1044, grayscale, no audio;
+  copied to `Unity/Assets/Video/`) — two tall pale figures before the door whole; one touches the round three-spoke
+  mechanism; the leaves part along the S-seam; they walk into a bright passage. The in-game door matches it (7 touches
+  the same mechanism). The pale figures exist only in the video (no game model planned).
+- Optional later (Mixamo, Dan): a dedicated "climb down to hang" clip (the lowering into a hang is procedural) and a
+  waist-high "Climbing"/vault clip (the mantle uses a trimmed 7_climb_up — `alt/7_climbing_a/_b` did not fit).

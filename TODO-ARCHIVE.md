@@ -1091,4 +1091,107 @@ max |R−G|,|G−B| = 0 over all 117 release-build shots. No audio changed, so n
 - Subtitles: "CAT" / "7" without "(thought)".
 - The launcher should offer the 0.8.1 update.
 
+# Archived 2026-11-17: Round 9
 
+## (was Current Objective) — Round 9: Chapter 1 as the tutorial — traversal + controls taught as you need them (Dan, 2026-11-17)
+Commit the repo as it is first (safety checkpoint). Goal: give the beginning more meat. The design calls for ~30%
+Tomb-Raider-style traversal and Chapter 1 has none yet; Chapter 1 is also partly the tutorial, so **no permanent button
+legend** — each control is introduced the first time the player needs it. Target length after this: ~20–25 min.
+All standing rules apply (monochrome, Kyle's fog/glow, non-sexual presentation, **7 never kills**).
+
+### Controls (one scheme for the chapter; document it in `CLAUDE.md`)
+1. **Chapter control scheme** (Xbox / keyboard), proposed — adjust if something clashes, and say what you changed:
+   left stick / WASD move · right stick / mouse camera · **A / Space jump** (also grabs ledges when jumping at them) ·
+   **X / E interact** (doors, release, touch the wall, sit) · **B / C crouch-sneak** (toggle) · **B / Space while hanging
+   = let go** (drop) · **RT / right mouse telekinesis** on a highlighted object · R3 camera re-center · Start / Esc pause.
+   Move today's "A / E interact" prompts to X / E. The fight demo keeps its own controls and legend.
+2. **No permanent legend in Chapter 1.** Remove the bottom-left legend in the chapter. Instead:
+   - **Teaching prompts:** the first time a control is needed, a small, clean prompt appears (glyph + one or two words,
+     monochrome, lower middle), stays until the player does it (or ~6 s after they clearly have), then fades. Order:
+     move + camera (start of the cell, after a short beat) → interact (cell door / scene 1) → crouch-sneak (first
+     time it helps — before the Scree, or a low pipe earlier) → jump (first gap) → grab ledge / climb / shimmy / let go
+     (first ledge) → telekinesis (first heavy stone, see 5) → sit (saucer chair).
+   - **Context prompts** after that: only when standing at something usable (e.g. "X Touch", "X Sit"), small and quiet.
+   - Pause menu gets a **Controls** page with the full map (Xbox / keyboard), and Settings gets **Button hints: On / Off**.
+   - Xbox glyphs by default, keys after keyboard use (existing system). No colored glyphs.
+
+### Traversal (Tomb Raider style, short and readable)
+3. **Moves for 7:** jump (standing + running), **ledge grab** when jumping at a ledge, **hang**, **shimmy** left / right,
+   **climb up** (pull up / mantle), **let go** to drop, **drop down** from a ledge edge onto a ledge below, low
+   **mantle** over waist-high obstacles, **crouch-sneak** (Dan's `7_sneak_walk`). Climbable edges read clearly but stay
+   in style — pale worn stone lips / scuffed metal edges catching the light, never painted markers or colors.
+   Assisted, forgiving controls (snap to ledges within a small radius, no pixel-perfect jumps).
+4. **Falls never kill.** A fall into a drop or chasm fades to white and returns 7 to the last safe ledge (no death, no
+   injury animation) — in keeping with the game's tone.
+5. **Telekinesis taught before the Scree:** in the ruins, a heavy stone block or fallen slab blocks the way or is
+   needed as a step — **RT** moves it into place. This teaches the power that she then uses for the Scree distraction.
+   Her energy point brightens while she uses it (visual only for now; energy limits come later).
+6. **Where the traversal goes** (keep every story beat and its order from `Docs/DIALOGUE.md` exactly as is):
+   - **Prison, after scene 3:** a broken catwalk section → the first **jump** across a gap; a low pipe run → **crouch**
+     under; a short wall with a ledge → first **ledge grab + climb up**.
+   - **Scene 4 → the older passage:** the gap into the ancient structures is up a cracked wall → **climb**, then a
+     **shimmy** along a ledge over a dark drop, then **drop down** into the ruins.
+   - **Ruins before the vision:** a short multi-step route — jumps between broken terraces, a hang-and-shimmy, the
+     **telekinesis** stone (item 5) — then the Scree encounter as now.
+   - **After the vision, before the city reveal:** a climb up out of the ruins to the mining passage that leads onto
+     the terrace — so the reveal arrives after an effortful climb.
+   - **Down to the impound** after the reveal: a couple of drops and ledges to reach the bay.
+7. **The cat leads the routes.** He hops ahead to the next ledge or gap and waits there (cats jump well — he shows the
+   way without UI), then rejoins her. He never blocks a jump or a ledge. Keep the 8 m catch-up rule (out of sight).
+8. **Mixamo clips** (Dan downloads — see below; use them if present, keyframe or pose stand-ins if not, and report
+   which). Retarget to 7 as Humanoid; strip root motion where the controller drives movement.
+   **Status 2026-11-17: Dan's clips are in** `Art/Mixamo/7/` — `7_hang_idle`, `7_shimmy` (**one direction only — mirror it
+   for the other side**), `7_climb_up` (Braced Hang To Crouch), `7_jump_to_hang`, `7_hang_drop` (Freehang Drop),
+   `7_running_jump`, `7_fall_idle`, `7_landing` (Falling To Landing), `7_landing_hard` (Hard Landing — for big drops),
+   `7_wall_climb` (Climbing Up Wall — use for the cracked-wall climbs), `7_crouch_idle`. Alternates in
+   `Art/Mixamo/7/alt/` (`7_climbing_a` / `_b` = "Climbing" variants, `7_hang_idle_b`, `7_jumping_up`, `7_running_jump_b`):
+   look at them and pick the best one for each role — **use one of the "Climbing" alternates for the waist-high mantle**
+   if it fits, otherwise a trimmed `7_climb_up`. Report which file you used for each move.
+8b. **The vision object — one of Kyle's floating shapes (Dan, 2026-11-17).** Replace the glowing wall inscription she
+   touches for the first vision (scene 6) with a shape from Kyle's telekinesis painting (`Art/Reference/kyle_7_telekinesis.jpg`):
+   a **glowing white wireframe dodecahedron** (12 pentagon faces — the shape ancient astronomers tied to the heavens,
+   fitting the Moon's Astronomical Age), about 0.6 m across, hovering above a worn pale-stone pedestal in an alcove,
+   rotating very slowly with a faint pulse, lighting the stone around it — styled like Kyle's: thin bright edges with a
+   soft glow, monochrome. Prompt: X "Touch". When she reaches out (`7_touch_wall`), the edges flare, the light swells to
+   white → the vision as now (contents still generic). Afterwards the shape dims to a faint glow. The "symbol she saw in
+   the vision" that opens the passage becomes the same dodecahedron outline glowing on the sealed door. One shape
+   constant so Dan can swap to another of Kyle's shapes (tetrahedron, cube, octahedron) without other changes.
+   Capture: the shape in its alcove, the touch flare, the outline on the door.
+
+9. **Checks** (muted, off-screen, never steal focus): rebuild; automated playthrough start to finish with traversal
+   (scripted inputs) — no soft-locks, every jump / ledge / shimmy completes; deliberate falls reset to the last safe ledge;
+   each teaching prompt appears once at the right moment and clears; no legend visible in the chapter; captures of every
+   traversal spot + every teaching prompt (Xbox + keys); cat waiting at each next ledge; 7's hands on the ledge while
+   hanging (measure the gap); monochrome 0; audio 0 except a brief reported sound check if new SFX (footstep on ledge,
+   grab, land). Measure the chapter's new length.
+10. Publish a release, update `TODO.md` / `CLAUDE.md`, commit and push, report in ~20 lines.
+
+### For Dan (before Code starts, optional but better): Mixamo clips for 7
+FBX for Unity, 30 fps, keyframe reduction none, **without skin**, character = 7 → `Art/Mixamo/7/`. Closest match is fine.
+`7_hang_idle.fbx` (Hanging Idle / Braced Hang) · `7_shimmy_left.fbx`, `7_shimmy_right.fbx` (Braced Hang Shimmy, In Place
+off) · `7_climb_up.fbx` (Braced Hang To Crouch / Climbing) · `7_jump_to_hang.fbx` (Jumping Up / Jump To Hang) ·
+`7_hang_drop.fbx` (Hang Drop / Drop Down) · `7_running_jump.fbx` (Running Jump) · `7_fall_idle.fbx` (Falling Idle) ·
+`7_landing.fbx` (Falling To Landing / Hard Landing) · `7_mantle.fbx` (Climbing / Vault, waist-high) ·
+`7_crouch_idle.fbx` (Crouching Idle).
+
+
+
+### Dan's additions during Round 9 (2026-11-17, word for word in substance)
+- **8b addition — the lunar door:** build the sealed door that opens after the vision, and the chamber around it, in the
+  style of `Art/Reference/ref_lunar_door.png` — but in ruins. Smooth, pale, flowing organic forms (sweeping ribs and
+  arches growing into each other, openings and skylight slits; no hard boxes). The door: a tall pointed arch split into
+  two leaves by a sweeping S-shaped seam, fine engraved astronomical diagrams (orbit lines, small circles strung along
+  them like planets); beside it the round three-spoke emblem. The floor: engraved concentric circles with a line of small
+  circles leading to the door. In ruins: cracks through the ribs, broken arch ends, fallen chunks, missing panels, dust
+  and drifting fog, engravings worn but readable; the door itself stays intact. Opening: the dodecahedron outline glows
+  in the emblem, the engraved lines light up along the S-seam, the leaves part (superseded by the vision addition below:
+  7 touches the mechanism, no outline). Use the curvy style for the ancient parts leading up to the door. Captures:
+  chamber before, glowing emblem + lit engravings, door parting. Record under 8b; add the reference to the README.
+- **Vision addition — the first vision is decided:** touching the dodecahedron washes to white and plays
+  `Art/Video/vision_01_door.mp4` (12 s, 1920x1044, grayscale, no audio) full-screen with Unity's VideoPlayer, filling 16:9
+  by cropping the sides (no stretching), vision shimmer under it, the cat's two lines faint, then white wash back; copy the
+  video into Unity/Assets. Scene 6 dialogue changed — use `Docs/DIALOGUE.md` exactly (new lines: 7 "There were people
+  here.", CAT "When?", 7 "I don't know.", 7 "But I think I know how this opens."; old middle lines removed). The door
+  opens by 7 touching the round three-spoke mechanism beside it (X "Touch"), then the engraved lines light along the
+  S-seam and the leaves part, matching the video. Captures: white wash in, a video frame, white wash out, 7 touching
+  the mechanism.

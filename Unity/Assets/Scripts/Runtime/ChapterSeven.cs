@@ -8,7 +8,7 @@ namespace Seven
     /// arm-forward frame, substitute for a touch / button-pushing clip) and the telekinesis gesture. No combat.
     /// Check runs drive her with a world-space direction (<see cref="ScriptMove"/>).
     /// </summary>
-    public class ChapterSeven : FighterBase
+    public partial class ChapterSeven : FighterBase
     {
         public ChapterInput Input;
         public Transform CameraTransform;
@@ -16,7 +16,7 @@ namespace Seven
         [Tooltip("Telekinesis clip frame held for the 'touch' pose (arm forward, open hand).")]
         public float TouchFrame = 0.45f;
 
-        public enum Mode { Free, Locked, Touch, Gesture, Look, Float }
+        public enum Mode { Free, Locked, Touch, Gesture, Look, Float, Air, Hang, Climb, Land }
         public Mode Current { get; private set; } = Mode.Free;
         [System.NonSerialized] public bool Sneak;
         [System.NonSerialized] public bool ScriptDriven;
@@ -74,11 +74,14 @@ namespace Seven
         /// <summary>Tractor beam: carried upward by a script; upright, arms slightly out (procedural layer).</summary>
         public void BeginFloat() { Current = Mode.Float; if (State != "idle") Play("idle", 0.4f); _floatT = 0f; }
         public void EndFloat() { Current = Mode.Locked; }
-        protected override bool Grounded => Current != Mode.Float;     // the beam carries her
+        // the beam carries her; Round 9: jumps, hangs, climbs and landings place her themselves
+        protected override bool Grounded => Current != Mode.Float && Current != Mode.Air && Current != Mode.Hang && Current != Mode.Climb && Current != Mode.Land;
+        protected override bool UseRootMotion => Current == Mode.Free || Current == Mode.Locked || Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Look;
         float _floatT;
 
         void LateUpdate()
         {
+            TraversalLateUpdate();
             if (_dotLevel != _dotTarget) { _dotLevel = Mathf.MoveTowards(_dotLevel, _dotTarget, _dotRate * Time.deltaTime); }
             ApplyDot();
             if (Current != Mode.Float) return;
@@ -98,7 +101,7 @@ namespace Seven
 
         public void Lock(bool on)
         {
-            if (on && Current == Mode.Free) { Current = Mode.Locked; if (State != "idle") Play("idle", 0.25f, 1f, false); }
+            if (on && Current == Mode.Free) { Current = Mode.Locked; Crouched = false; if (State != "idle") Play("idle", 0.25f, 1f, false); }
             if (!on && Current == Mode.Locked) Current = Mode.Free;
         }
 
@@ -131,6 +134,7 @@ namespace Seven
         /// <summary>Teleport (checkpoint reset).</summary>
         public void Place(Vector3 pos, Vector3 facing)
         {
+            StopTraversal();
             Release();
             transform.position = new Vector3(pos.x, Ground.Height(pos.x, pos.z), pos.z);
             facing.y = 0f;
@@ -140,10 +144,15 @@ namespace Seven
 
         protected override void Update()
         {
+            Ground.BlockLow = !Crouched;
             base.Update();
             switch (Current)
             {
                 case Mode.Free: UpdateFree(); break;
+                case Mode.Air: UpdateAir(); break;
+                case Mode.Hang: UpdateHang(); break;
+                case Mode.Land: UpdateLand(); break;
+                case Mode.Climb: Speed = 0f; Context = null; break;
                 case Mode.Locked: Speed = 0f; if (State != "idle") Play("idle", 0.25f, 1f, false); break;
                 case Mode.Touch:
                     Speed = 0f;
@@ -164,12 +173,14 @@ namespace Seven
                     Speed = 0f;
                     break;
             }
+            if (Current != Mode.Free && Current != Mode.Hang) Context = null;
+            Ground.BlockLow = false;
         }
 
-        void UpdateFree()
+        /// <summary>Camera-relative move direction (world, magnitude 0..1) from the stick / keys, or the script's.</summary>
+        Vector3 MoveInput(out bool run)
         {
             Vector3 v;
-            bool run;
             if (ScriptDriven) { v = ScriptMove; v.y = 0f; run = ScriptRun; }
             else
             {
@@ -181,28 +192,53 @@ namespace Seven
                 run = Input != null && Input.Run.IsPressed();
             }
             if (v.sqrMagnitude > 1f) v.Normalize();
+            return v;
+        }
+
+        void UpdateFree()
+        {
+            var v = MoveInput(out bool run);
+            bool jump = PressedJump(), crouch = PressedCrouch();
+            if (crouch)
+            {
+                var hd = FindHangDown();
+                if (hd != null) { BeginTraversal(HangDownRoutine(hd)); return; }
+                if (Crouched) { if (!LowOnly()) { Crouched = false; Did?.Invoke("stand"); } }
+                else { Crouched = true; Did?.Invoke("crouch"); }
+                Ground.BlockLow = !Crouched;
+            }
+            if (jump && !(Crouched && LowOnly()))
+            {
+                Crouched = false; Ground.BlockLow = true;
+                if (TryJump(v, run)) return;
+            }
+            bool sneak = Sneak || Crouched;
             if (v.sqrMagnitude > 0.04f)
             {
-                float spd = Sneak ? SneakSpeed : run ? RunSpeed : WalkSpeed;
+                float spd = sneak ? SneakSpeed : run ? RunSpeed : WalkSpeed;
                 Speed = spd * v.magnitude;
                 // Sub-stepped (<= 15 cm per step, clamped each step): a frame hitch can never carry her through a wall
                 // or the laser beams into the next walkable zone.
                 var step = v * spd * Time.deltaTime;
                 int n = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / 0.15f));
                 for (int i = 0; i < n; i++) { transform.position += step / n; ClampToArena(); }
-                string clip = run && !Sneak ? "run" : WalkClip;
-                float animSpeed = Sneak && clip == "walk" ? 0.62f : 1f;
+                string clip = run && !sneak ? "run" : sneak && HasState("sneak_walk") ? "sneak_walk" : "walk";
+                float animSpeed = sneak && clip == "walk" ? 0.62f : 1f;
                 _idleFor = 0f;
                 if (State != clip) Play(clip, 0.15f, animSpeed, false);
                 FaceTowards(transform.position + v, 540f);
             }
             else
             {
-                Speed = 0f; if (State != "idle") Play("idle", 0.2f, 1f, false);
+                Speed = 0f;
+                string idle = Crouched && HasState("crouch_idle") ? "crouch_idle" : "idle";
+                if (State != idle) Play(idle, 0.2f, 1f, false);
                 // Idle variety: after a while standing still she looks around once (7_look_around).
                 _idleFor += Time.deltaTime;
-                if (_idleFor > 11f && !ScriptDriven) { _idleFor = -6f; LookAround(); }
+                if (_idleFor > 11f && !ScriptDriven && !Crouched) { _idleFor = -6f; LookAround(); }
             }
+            UpdateSafe();
+            Context = FreeContext();
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Seven
         [Tooltip("Walkable rectangles: name, min (x,z), max (x,z), height at min / max, slope axis 0 = X, 1 = Z.")]
         public ZoneDef[] Zones = new ZoneDef[0];
         public Vector3[] ZoneObstacles = new Vector3[0];
-        [System.Serializable] public struct ZoneDef { public string Name; public Vector2 Min, Max; public float Y0, Y1; public int Axis; public bool Enabled; }
+        [System.Serializable] public struct ZoneDef { public string Name; public Vector2 Min, Max; public float Y0, Y1; public int Axis; public bool Enabled; public bool Low; }
 
         void Awake()
         {
@@ -57,7 +57,7 @@ namespace Seven
             Ground.IgnoreObstacle = -1;
             if (Shape == Ground.Shape.Zones)
             {
-                foreach (var z in Zones) Ground.Zones.Add(new Ground.Zone { Name = z.Name, Min = z.Min, Max = z.Max, Y0 = z.Y0, Y1 = z.Y1, SlopeAxis = z.Axis, Enabled = z.Enabled });
+                foreach (var z in Zones) Ground.Zones.Add(new Ground.Zone { Name = z.Name, Min = z.Min, Max = z.Max, Y0 = z.Y0, Y1 = z.Y1, SlopeAxis = z.Axis, Enabled = z.Enabled, Low = z.Low });
                 foreach (var o in ZoneObstacles) Ground.Obstacles.Add(new Ground.Circle(new Vector2(o.x, o.y), o.z));
             }
             if (Shape == Ground.Shape.Deck)
