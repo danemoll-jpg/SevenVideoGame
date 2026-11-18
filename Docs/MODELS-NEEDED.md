@@ -88,7 +88,7 @@ lying along it; clears the legs in idle / walk / work (centre-line distance ≥ 
 ## Villains with concept art (2026-11-17) — not scheduled yet
 | Model | Concept | Notes |
 | --- | --- | --- |
-| Tunneler | `Art/Reference/kyle_tunneler.jpg` | The Moon's villain. Ring-segmented body, spiral drill tip on the head. Needs a clean A-pose reference (Kyle-style) → Tripo → Blender rig (Humanoid-compatible). **Drill head moves as he talks (Dan, 2026-11-17):** the cone head gets its own bone (separated from the shoulders by a visible groove); in dialogue it twists/spins driven by the voice clip's loudness, with a slight forward nod on stressed words — no face, no lip-sync. |
+| Tunneler | `Art/Reference/kyle_tunneler.jpg` | The Moon's villain. Ring-segmented body, spiral drill tip on the head. Needs a clean A-pose reference (Kyle-style) → Tripo → Blender rig (Humanoid-compatible). **Drill head moves as he talks (Dan, 2026-11-17):** the cone head gets its own bone (separated from the shoulders by a visible groove); in dialogue it twists/spins driven by the voice clip's loudness, with a slight forward nod on stressed words — no face, no lip-sync. Reference in: `Art/Reference/tunneler_ref_front.png` (drill sits in a collar socket) → Tripo → `Art/Source/tunneler/tunneler_v1.glb`. |
 | Wormmaster | `Art/Reference/kyle_wormmaster.jpg` | Segmented worm-humanoid + small worms. Placement unapproved. |
 | The Mole | `Art/Reference/kyle_the_mole.jpg` | Early version of the Tunneler (Dan) — not a separate model. |
 | Ratwing (update) | `Art/Reference/kyle_ratwing_sketch.jpg` | Already modeled; Kyle's sketch matches the hanging pose. |
@@ -100,3 +100,28 @@ sword. Very intimidating, but good guardians. Pipeline: Dan generates a Kyle-sty
 straight, no sword in hand) → Tripo → `Art/Source/elarim/elarim_v1.glb`; sword generated separately as a prop →
 `Art/Source/elarim/elarim_sword_v1.glb`. References in (2026-11-17): `Art/Reference/elarim_ref_apose.png` (A-pose, cape hanging, glowing eyes and armor seams) and `Art/Reference/elarim_sword_ref.png` (prop). Glow, eyes and cape motion are added in Unity (emissive + cloth). One model
 serves guardian, attendant and workers (variations by cape / headpiece / scale).
+
+## Models in — 2026-11-18 (Dan, Tripo)
+- `Art/Source/elarim/elarim_v1.glb` — Elarim (guardian / attendant / workers), textured, 1.86 M tris (decimate), single
+  mesh with the cape fused to the body. Plan: Blender — split the cape off as its own mesh (cloth in Unity), scale to
+  ~3.5 m, custom Humanoid-compatible rig like the Scree (not a Mixamo upload, so the cape isn't weighted to the legs);
+  animate with Mixamo clips downloaded on Y Bot → `Art/Mixamo/elarim/`.
+- `Art/Source/elarim/elarim_sword_v1.glb` — sword prop, textured, 1.35 M tris (decimate); glowing edge = emissive in Unity.
+- `Art/Source/tunneler/tunneler_v1.glb` — Tunneler, 2.0 M tris, **geometry only (no UVs, no texture)** — fine for now:
+  a grey stone triplanar material in Unity (monochrome). Drill head in its collar socket → own bone for the talk motion.
+  Custom Humanoid-compatible rig; clips on Y Bot → `Art/Mixamo/tunneler/`. Height still undecided (Dan).
+
+## Wormmaster — reference prompt given to Dan (2026-11-18)
+From `Art/Reference/kyle_wormmaster.jpg`: tall, slender, smooth worm-humanoid; no face (the head is a rounded worm tip
+with ring segments); long tapering boneless arms with no hands; legs tapering to points; pale glossy segmented skin.
+The small burrowing worms are a **separate** model (prompt given too). Expected files:
+`Art/Reference/wormmaster_ref_front.png`, `worm_ref.png` → Tripo → `Art/Source/wormmaster/wormmaster_v1.glb`,
+`Art/Source/wormmaster/worm_v1.glb`. Rig: custom Humanoid-compatible (Blender) + extra bones along the arms so they
+can curl; head tip bone pulses with his voice. Worms: simple bone chain (wriggle / rise / burrow), no Mixamo.
+
+## In — 2026-11-18 (Dan)
+- `Art/Source/wormmaster/wormmaster_v1.glb` (textured, 1.93 M tris) and `Art/Source/wormmaster/worm_v1.glb` (textured,
+  1.92 M tris) — decimate; rigs as described above. (The Tunneler re-upload was identical: still untextured → stone material.)
+- Mixamo clips (Y Bot / Mutant, FBX for Unity, no skin): `Art/Mixamo/elarim/` — `elarim_idle`, `_talk`, `_point`,
+  `_walk`, `_kneel`, `_sword_idle`, `_carry`, `_lift`; `Art/Mixamo/tunneler/` — `tunneler_idle`, `_walk`, `_roar`,
+  `_swipe` (Mixamo's Mutant set — a slightly larger skeleton; retarget through Humanoid as usual).

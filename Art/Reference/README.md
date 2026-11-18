@@ -103,3 +103,6 @@ Notes: the "7 Lives" logo (a circled 7 with rays and "LIVES") appears on two of 
 - `kyle_7_portrait_dark.jpg` / `kyle_7_portrait_light.jpg` — 7's face in swirling fog: glowing forehead dot, choker, star pendant (the light one has the "7 art by Kyle G. Anderson" title card)
 - `kyle_7_blades_sketch.jpg` — pencil: 7 with arms raised, crossed long curved blades behind her, symbol on the forehead dot, pointed ears
 - `kyle_7_thank_you.jpg` — 7 with bangs and side tails beside a handwritten thank-you note signed "7" (gallery only; shown last)
+
+## Tunneler — 2026-11-17
+- `tunneler_ref_front.png` — generated front view from `kyle_tunneler.jpg` (Dan): stacked stone-grey rings, spiral drill-cone head sitting in a separate collar socket (gap all round, so it can spin on its own bone), two-pronged pincer claws, ridge of triangular spikes down the chest, short ring legs with pointed feet. Current Tunneler reference for Tripo → `Art/Source/tunneler/tunneler_v1.glb`.

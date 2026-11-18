@@ -13,3 +13,19 @@ Mood for the whole game: Kyle's art — misty, glowing, gentle, mysterious, a li
 The first vision has **no music** — it fades out and the vision's own shimmer sound carries the moment.
 
 **Status:** all three made by Dan in Suno and saved in `Unity/Assets/Audio/Music/` (2026-11-17).
+
+# Chapter 2 — Venus
+
+Style (Dan, 2026-11-17): deep-space ambient electronica — ethereal evolving synths, reverb-heavy layers, sparse
+whispered phrases, meditative; **not** new-age (no harps / flutes). Made by Dan in Suno (with whispers).
+
+| File | Title | Where it plays | Style prompt |
+| --- | --- | --- | --- |
+| `venus_gardens.mp3` | The First Garden | Venus surface and gardens (VEN_01–04), the temple approach | deep space ambient electronica, ethereal evolving synth textures, layered reverb-heavy pads, slow shimmering drones, sparse whispered vocals, soft sub bass pulse, transcendental, meditative, immersive, vast and luminous, slow build, loopable |
+| `venus_underground.mp3` | Venus Underground | Below ground: the burrows / tunnels and the Wormmaster's areas (Round 12) | dark deep space ambient, low evolving drones, cavernous reverb, granular synth textures, distant metallic resonance, slow heavy sub bass, sparse whispered vocals, tense and mysterious, subterranean, immersive, no drums, loopable |
+
+Both ~3:00, 48 kHz stereo. They contain whispered phrases, so **duck the music well under dialogue** (and drop it
+further during spoken scenes if a whisper collides with a line). Dan may supply `_instrumental` versions later; if
+present, prefer them during dialogue scenes.
+
+**Status:** both made by Dan and saved in `Unity/Assets/Audio/Music/` (2026-11-17).

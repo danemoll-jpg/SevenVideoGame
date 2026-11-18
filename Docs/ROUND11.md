@@ -41,7 +41,12 @@ All standing rules apply (monochrome, Kyle's fog/glow, non-sexual presentation, 
      Dan's Tripo model arrives (`Art/Source/elarim/`), use a placeholder with those proportions (scale a humanoid to
      3.5 m, armor-like shell material, cape as a simple cloth or rigid sheet, emissive eyes + soft glow), named
      `Elarim_placeholder`. Retargeted idle / walk / look-around; workers do repair loops (steadying a vessel, tending
-     channels). Scale the temple and garden doorways, steps and walkways for 3.5 m figures — 7 should look small
+     channels). **UPDATE 2026-11-18: the real models are in — use them instead of placeholders:**
+     `Art/Source/elarim/elarim_v1.glb` + `elarim_sword_v1.glb` (Blender: decimate, split the cape off as cloth, scale to
+     3.5 m, Humanoid-compatible rig like the Scree; clips in `Art/Mixamo/elarim/` — idle, talk, point, walk, kneel,
+     sword idle, carry, lift; guardian kneels to 7's level in C03/C10), and the burrowing creatures =
+     `Art/Source/wormmaster/worm_v1.glb` (simple bone chain: rise / wriggle / dive). Wormmaster (`wormmaster_v1.glb`)
+     waits for Round 12. Placeholders only if a model fails, and say so. Scale the temple and garden doorways, steps and walkways for 3.5 m figures — 7 should look small
      beside them; frame C03/C04 so the guardian towers over her (low angles on him, level on her).
    - **Burrowing creatures:** large segmented worm-like creatures that surface and dive, with ground ripples and
      dust; not menacing in themselves. Only seen at a distance this round (C02 ground, C05 observation area).

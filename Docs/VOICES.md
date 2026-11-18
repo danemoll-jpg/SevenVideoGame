@@ -34,3 +34,35 @@ That would make rescuing you considerably harder. The cat. Only conversationally
   ("breathier", "lower", "more playful") are the quickest way to steer.
 - Use the same voices for every line so 7 and the cat stay consistent. Name files by scene and line,
   e.g. `Audio/Voice/01_first_contact/01_7_hey.wav`, `01_first_contact/03_cat_harder.wav`.
+
+## Tunneler — voice name `Tunneler`
+The Moon's villain: runs the mining operation and exploits the Scree. Speaks aloud (no mouth — his drill head twists and
+nods with his voice, driven by loudness in Unity). Optional in Unity: a very faint low drill-grind layer under his lines.
+Description (main pick):
+```
+A huge, heavy, inhuman male creature with a very deep, gravelly bass voice that sounds like grinding stone, slow and deliberate, with a rough rumbling texture and a cold, contemptuous calm. A ruthless industrial overseer who never needs to shout because everyone obeys him; menacing, patient, faintly amused by others' weakness. Resonant chest voice, clipped hard consonants, no accent, close to the microphone, studio-quality recording, no background noise.
+```
+Alternative (if the first sounds too human):
+```
+A monstrous, low, rumbling voice of a massive creature made of stone rings, deep and grinding like heavy machinery, with a slow, measured, guttural delivery and a slight metallic rasp. Cold, arrogant and menacing, speaking quietly but with enormous weight. Studio-quality recording, no background noise.
+```
+Preview text:
+```
+You dig because I say dig. The rock does not care who is tired, and neither do I. Bring me what lies beneath, and perhaps you will see the surface again. Perhaps.
+```
+
+## Wormmaster — voice name `Wormmaster`
+Venus antagonist (Chapter 2). Smooth and arrogant rather than monstrous — clearly different from Tunneler's grinding
+bass. No mouth: his head-tip swells/pulses with his voice in Unity. Lines in `Docs/CHAPTER2_VENUS.md` (VEN_C06/C07).
+Description (main pick):
+```
+A tall, slender, inhuman male creature with a smooth, low-to-mid voice that is soft, wet and slithering, with a faint sibilant hiss on the S sounds. Calm, cool and condescending, speaking slowly as if he has all the time in the world, quietly amused and utterly certain he is in control. Sly and unsettling rather than loud or monstrous. Close to the microphone, studio-quality recording, no background noise.
+```
+Alternative (if the first sounds too human):
+```
+An eerie, smooth, serpentine male voice of a giant worm-like creature: low, silky and moist, with a slow drawl, soft hissing sibilants and a slight gurgling undertone. Cold, arrogant and patient, never shouting. Studio-quality recording, no background noise.
+```
+Preview text:
+```
+They sent someone down at last. Look around you. Everything beneath this garden answers to me. The ground moves when I ask it to. Do you really think you can stop it?
+```

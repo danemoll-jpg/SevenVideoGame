@@ -1,7 +1,41 @@
 # Active Development Plan — 7: The Observer
 
+## Current Objective — Quick fix QF6: story triggers that never fire + stop the replay grind (Dan, 2026-11-18)
+Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply; muted, off-screen runs.
+
+**What happened (Dan, playing 0.10.1 by hand):** the cat now leaves the cell block, but later **the city reveal (scene
+6b) never starts, and neither does the prompt to rescue the saucer** — soft-lock. Dan had to replay the whole chapter
+to find it, and it's the same class of bug as before: the autopilot run passes, a real player gets stuck. He does not
+want to find another one this way. So this fix is about the cause *and* the method.
+
+1. **Find this bug from Dan's own session first.** Read his logs from the installed game (the launcher install, not
+   the build folder): `%USERPROFILE%\AppData\LocalLow\<company>\<product>\Player.log` and `Player-prev.log`, plus his
+   save / Continue file — find the last objective, checkpoint and story state he reached and why 6b's trigger and the
+   saucer objective never fired. Check whether QF5 caused it (the take-the-shape beat / carrying in her hand / pouch,
+   the mirrored mechanism spot, the cat leash, the fade-and-reappear). Report the exact cause.
+2. **Audit every story trigger in Chapter 1 (and the saucer/galley)** — every objective, scene start, prompt and
+   checkpoint. For each: what must be true for it to fire, and can a player make that false for good (skipping past
+   a trigger volume, arriving early or late, from another direction, during another scene, while carrying the shape,
+   after a fall reset, after Continue)? Rule from now on: **no trigger may depend on one exact moment or spot.** Every
+   trigger fires if the story state says it should and the player is at *or past* it (progress along the route, or
+   entering any later area); every objective has a watchdog that re-arms it. Write the audit as a table in
+   `Docs/TRIGGER-AUDIT.md` (trigger · condition · how a player could miss it · fallback).
+3. **Player-style test for the whole chapter, not just one section.** Extend `-catfollowtest` into a full
+   `-playtest` run: virtual gamepad on the real input actions, no autopilot, no teleports, from the cell to the galley
+   and "Set course", with varied paths (hurry, wait, backtrack, wander off the route, skip optional bits, fall and
+   reset, quit-and-Continue at each checkpoint). At least 25 runs, every one must reach the galley:
+   `PLAYTEST: 25/25`. **From now on an autopilot pass does not count as a check for a release — the playtest must pass.**
+   Add it to the standing check list in `CLAUDE.md`.
+4. **Let Dan jump to any part of the chapter** so he never has to replay everything to test one scene: a **Scene
+   Select** page in the pause menu and main menu (cell · escape / cat route · Scree · ruins + vision · lunar door + take
+   the shape · city reveal · saucer rescue + beam · aboard · galley · Venus later), each starting with the story state,
+   the shape and the cat exactly as they would be there in a real playthrough. (Fine for it to be visible in the
+   demo; label it "Scene select".)
+5. **Checks + release.** `PLAYTEST: 25/25`, cat-follow 25/25, the full `-chapter1` run, galley run; every Scene Select
+   entry starts and plays through to the next one. Publish **0.10.2**; docs; commit + push; per-item status in
+   "QF6 — status"; captures in `Docs/Previews/qf6/`; "For Dan to check (QF6)".
+
 ## Quick fix QF5: Dan's playtest of 0.10.0 (Dan, 2026-11-17) — done, status below
-**Current objective: Dan plays 0.10.1, then Round 11 (`Docs/ROUND11.md`, queued).**
 
 Do this **before Round 11** (`Docs/ROUND11.md` stays queued; start it after QF5 is released). Commit the repo as it is
 first (it holds new gallery art + reference images added by the chat). All standing rules apply; muted, off-screen runs.
