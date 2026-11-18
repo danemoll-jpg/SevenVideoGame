@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-38 sounds.
+41 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -48,3 +48,6 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `land_hard` | A person landing heavily on stone after a long drop, firm thud, boots and a short cloth rustle. | 1.0 |  | 7 lands after a big drop |
 | `climb_scuff` | Boots scuffing and scraping on a rough stone wall while someone climbs, two or three soft scrapes. | 1.2 |  | wall climb / climbing up a ledge |
 | `slab_lift` | A heavy stone slab grinding as it lifts off a stone floor, low scrape fading into a soft hum. | 1.2 |  | telekinesis lifts the fallen slab (ruins) |
+| `fork_clink` | A fork lightly touching a ceramic dinner plate, one soft clink, quiet table sound. | 0.8 |  | Chapter 1 galley: 7 eats |
+| `cat_eating` | A small cat eating wet food from a ceramic bowl, quiet soft chewing and licking, close. | 6 | yes | Chapter 1 galley: the cat eats |
+| `course_set` | Spaceship engines rising smoothly into a soft deep whoosh as the ship accelerates away, gentle. | 4 |  | saucer: Set course for Venus placeholder |

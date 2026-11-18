@@ -383,7 +383,7 @@ namespace Seven.EditorTools
         // ---- Round 6: galley nook (Chapter 1 scene 10: 7 opens the refrigerator).
         const int GalleyNook = 0;                  // index into NookAngles (205 deg)
         const float FridgeAngle = 214.5f, FridgeR = 9.3f;
-        struct GalleyRefs { public Transform fridgeDoor; public Light fridgeLight; }
+        struct GalleyRefs { public Transform fridgeDoor; public Light fridgeLight; public TableRefs table; }
 
         static GameObject Cube(string name, Transform parent, Vector3 localPos, Vector3 localScale, Material mat)
         {
@@ -475,7 +475,9 @@ namespace Seven.EditorTools
                 float c = NookAngles[k], a0 = c - NookHalf, a1 = c + NookHalf;
                 var nook = new GameObject("Nook" + k).transform; nook.SetParent(walls, false);
                 Obj($"Nook{k}_Floor", Lathe(new[] { new Vector2(7.9f, 0f), new Vector2(NookR, 0f) }, a0, a1, 24), m.carpet, nook);
-                Obj($"Nook{k}_Back", Lathe(Resample(new[] { new Vector2(NookR, -0.01f), new Vector2(NookR + 0.08f, 1.2f), new Vector2(NookR - 0.1f, NookH + 0.01f) }, 0.15f), a0, a1, 24), m.wall, nook);
+                // Round 10: the galley's back wall has the porthole (finer mesh so the opening is clean)
+                bool gal = k == GalleyNook;
+                Obj($"Nook{k}_Back", Lathe(Resample(new[] { new Vector2(NookR, -0.01f), new Vector2(NookR + 0.08f, 1.2f), new Vector2(NookR - 0.1f, NookH + 0.01f) }, gal ? 0.04f : 0.15f), a0, a1, gal ? 140 : 24, gal ? PortholeSkip : (Func<float, float, bool>)null), m.wall, nook);
                 Obj($"Nook{k}_Ceiling", Lathe(new[] { new Vector2(7.7f, NookH), new Vector2(NookR, NookH) }, a0, a1, 24), m.dome, nook);
                 var side = new List<Vector3>(); var sideT = new List<int>();
                 foreach (var a in new[] { a0, a1 })
@@ -484,7 +486,7 @@ namespace Seven.EditorTools
                     Quad(side, sideT, p0, p0 + Vector3.up * NookH, p1 + Vector3.up * NookH, p1);
                 }
                 Obj($"Nook{k}_Sides", Finish(side, sideT), m.wall, nook);
-                if (k == GalleyNook) refs.galley = BuildGalley(nook, m, a0, a1);   // Round 6: galley (counter + fridge)
+                if (k == GalleyNook) { refs.galley = BuildGalley(nook, m, a0, a1); refs.galley.table = BuildGalleyTable(nook, m, refs.obstacles); }   // Round 6: galley (counter + fridge); Round 10: table, seats, porthole
                 else if (k != TvNook)     // Round 5: the TV nook has a console + screen instead of the bench
                 {
                     var bv = new List<Vector3>(); var btri = new List<int>();
@@ -901,6 +903,13 @@ namespace Seven.EditorTools
             ch.CatMealSpot = Polar(7.6f, 204f, 0f);
             ch.SofaFront = Polar(6.2f, 160f, 0f); ch.SofaSeat = Polar(6.95f, 160f, 0.5f); ch.SofaVia = Polar(5.4f, 182f, 0f);
             ch.GalleyCamPos = Polar(4.6f, 196f, 1.75f); ch.GalleyCamLook = Polar(8.1f, 210f, 1.15f);
+            // Round 10: the galley scene set
+            var tb = refs.galley.table;
+            ch.Seat7 = tb.seat7; ch.SeatOther = tb.seatOther; ch.Plate = tb.plate; ch.Fork = tb.fork; ch.Knife = tb.knife; ch.Bowl = tb.bowl;
+            ch.Moon = tb.moon; ch.GalleyOutside = tb.outside.gameObject; ch.Porthole = tb.porthole; ch.Shape = tb.shape;
+            ch.Focus = BuildGalleyFocus();
+            ch.UiRendererIndex = EnsureUiRenderer();
+            ch.TableCentre = tb.centre; ch.TableAlong = tb.along; ch.TableOut = tb.outward; ch.TableTopY = TableTopY;
             ch.SofaCamPos = Polar(4.4f, 176f, 1.35f); ch.SofaCamLook = Polar(6.95f, 160f, 0.55f);
 
             EditorSceneManager.SaveScene(scene, SaucerScenePath);

@@ -113,11 +113,14 @@ apply to every asset and scene:
   Monochrome check: max |R−G|,|G−B| over every pixel must be 0 (PIL).
 - **Chapter 1 (Round 6)**: scene `Chapter1` (Moon level, built by `FightDemoBuilderChapter1.cs`; layout numbers in
   `Runtime/MoonLayout.cs`; `Atmosphere_Moon` prefab; walkable areas = `Ground.Shape.Zones`, rectangles that must
-  overlap ≥ 0.6 m) → scenes 9–11 run in the `Saucer` scene (`Chapter1Aboard`, galley nook in `FightDemoBuilderSaucer.cs`).
+  overlap ≥ 0.6 m) → scenes 9–10 run in the `Saucer` scene (`Chapter1Aboard`, galley nook in `FightDemoBuilderSaucer.cs`).
   Flow + checkpoints: `Chapter1Director.cs`. Switches: `-chapter1`, `-ch1aboard` (start at scene 9).
-  **Chapter 1 check run:** `SevenDemo.exe -mute -chapter1 -capture <dir> …` (autopilot, ~4.5 min) → `01_s01_cell_start.png …
-  28_s11_to_be_continued.png` + `capture_log.txt` (objectives, checkpoints, any "SOFT-LOCK?" timeouts with positions, voice
-  lines played vs. bank, cat distance, audio peak, `cursorVisible` per shot).
+  **Chapter 1 check run:** `SevenDemo.exe -mute -chapter1 -capture <dir> …` (autopilot, ~8 min; scene 10 plays every line
+  in full) → `01_s01_cell_start.png … s12_pause_*.png` + `capture_log.txt` (objectives, checkpoints, any "SOFT-LOCK?"
+  timeouts with positions, voice lines played vs. bank, cat distance, audio peak, `cursorVisible` per shot).
+  **Galley check run (Round 10):** `-ch1aboard` (~3.5 min) → scene 9 + scene 10 + exploration + set-course placeholder:
+  per-line timing / subtitle / "cat mouth moving", every scripted silence measured, marking close-up facing, marking-up,
+  cat muzzle vs. bowl rim, eye close-ups + over-the-shoulder captures.
   **Opening test (QF4):** `SevenDemo.exe -mute -openingtest 25 -capture <dir> …` (~6.5 min) → runs Chapter 1's opening
   25× (idle / door at once / wanders / waits for the cat / runs along the beams, random start spots, frame hitches on
   odd runs); `capture_log.txt` must end `OPENING TEST: 25/25` (cat inside the cell 0 frames each run). The normal Chapter 1
@@ -208,8 +211,27 @@ apply to every asset and scene:
   = previous / next; Y / F = full view; B / Esc = leave. Code: `GalleryTV.cs` (runtime), `FightDemoBuilderGallery.cs`
   (nook, screen, sofa), shaders `Assets/Gallery/SevenGallery*.shader`.
 
+- **Round 10 — the galley scene (scene 10, Docs/DIALOGUE.md; replaces the old scenes 10–12)**: cutscene in
+  `Chapter1Aboard.cs` (`Galley()`; camera: over-the-shoulder both ways on speaker changes, eye close-ups on the key
+  lines (`_eyeLines`), two-shot for silences; `CloseUpFocus` = Bokeh DOF from the `Assets/Atmosphere/Galley_Focus.asset`
+  profile, which also keeps URP's DOF shaders in the build); 7's arm moves = `SevenTableIK` (IK pass), the cat's eating /
+  lean / tilt / ear = `CatPoseOverlay` (ear bones `earL`/`earR` from `cleanup_cat.py`); set = `FightDemoBuilderGalley.cs`
+  (tulip table + seats, plate, raised cat feeder, porthole with the Moon). After the scene: objective "Set course for
+  Venus", free exploration (Continue starts here); X "Set course" at her galley seat = placeholder (Moon falls away,
+  "Chapter 2 — Venus (coming soon)").
+- **Dodecahedron** (hand-held, 15 cm, pale stone + glowing edges): `ElarimShape.cs`; X "Take" after the door scene.
+  **Elarim marking = placeholder** `Art/Marks/elarim_mark_placeholder.png` (`Tools/Model/make_elarim_mark.py`; swap the
+  PNG or `MoonLayout.ElarimMarkFile`) — OPEN until Kyle designs it.
+- **Saucer exterior = silver** (Round 10, replaces the dark hull): materials `Saucer_hull` / `Saucer_under` in
+  `FightDemoBuilderChapter1.cs`; `SaucerProbe.cs` = realtime reflection probe riding with the ship (layer 22, never sees itself).
+- **Logo: "7" + THE OBSERVER in Arial Bold (image); UI font Liberation Sans if needed.** `python Tools/make_logo.py` →
+  `Art/Logo/logo_7_observer{,_white,_dark}.png`, `logo_7.png` (+ `Unity/Assets/Resources/Logo/`); Arial's .ttf is never
+  copied into the repo or a build. Used by `Logo.cs` (main menu title, pause header) and `Tools/make_launcher_art.py`
+  (cover, icon, poster). UI text stays on Unity's built-in LegacyRuntime font (Arial-metric); bundle Liberation Sans
+  Bold (SIL OFL) only if a font must ship.
+
 ## Where things stand
-**Rounds 1–9 + QF1–QF4 complete (2026-11-17), release 0.9.0** — Chapter 1 "The Moon Prison" (voiced, music, SFX,
-city reveal, real Scree; Round 9: tutorial traversal, controls taught as needed with no legend, Kyle's dodecahedron, the
-lunar door, the video vision) plus the demos. History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.9.0 and sets Round 10**
-(open point: first-play length estimated 15–18 min vs. the 20–25 min target). See `TODO.md`.
+**Rounds 1–10 + QF1–QF4 complete (2026-11-17), release 0.10.0** — Chapter 1 "The Moon Prison" now ends with the galley
+scene (Round 10: hand-held dodecahedron + placeholder Elarim marking, voiced scene 10 with cutscene cameras, "Set course
+for Venus" placeholder, silver saucer, the logo) plus the demos. History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.0
+and sets Round 11** (Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

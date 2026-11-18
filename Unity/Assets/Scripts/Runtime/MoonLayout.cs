@@ -70,8 +70,12 @@ namespace Seven
         // Round 9 (8b): the vision object - one of Kyle's floating wireframe shapes over a pale pedestal in an alcove in
         // the chamber's east wall. Change VisionShape to swap the shape (tetrahedron / cube / octahedron) everywhere.
         public const PlatonicShape.Kind VisionShape = PlatonicShape.Kind.Dodecahedron;
-        public const float ShapeRadius = 0.3f;                                               // ~0.6 m across
-        public static readonly Vector3 ShapeAt = new Vector3(21.05f, Lower + 1.5f, -34.8f);
+        // Round 10: a hand-held piece now - ~15 cm across, solid pale stone with thin glowing edges, hovering over the
+        // pedestal; 7 takes it after the door scene. One face carries the (placeholder) Elarim marking: swap the image
+        // Art/Marks/<ElarimMarkFile> (white on transparent) - OPEN, Kyle hasn't designed it yet.
+        public const float ShapeRadius = 0.075f;                                             // circumradius: ~15 cm across
+        public const string ElarimMarkFile = "elarim_mark_placeholder.png";
+        public static readonly Vector3 ShapeAt = new Vector3(21.05f, Lower + 1.2f, -34.8f);
         public static readonly Vector3 Pedestal = new Vector3(21.05f, Lower, -34.8f);
         public static readonly Vector3 ShapeSpot = new Vector3(19.95f, Lower, -34.8f);      // where 7 stands to touch it
         public static readonly Vector2 AlcoveZ = new Vector2(-35.6f, -34.0f);

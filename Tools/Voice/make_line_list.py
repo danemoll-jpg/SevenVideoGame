@@ -1,4 +1,4 @@
-"""Turn Docs/DIALOGUE.md scenes 1-11 (+ 6b) into Docs/VOICE-LINES.md + Unity/Assets/Audio/Voice/voice_lines.json.
+"""Turn Docs/DIALOGUE.md scenes 1-10 (+ 6b) into Docs/VOICE-LINES.md + Unity/Assets/Audio/Voice/voice_lines.json.
 
 Usage (repo root): python Tools/Voice/make_line_list.py
 Ids: s<scene>_<line>_<speaker>  (e.g. s01_03_cat). Stage directions that ask for a pause
@@ -13,12 +13,15 @@ ROOT = sys.argv[1] if len(sys.argv) > 1 else os.getcwd()
 SRC = os.path.join(ROOT, "Docs", "DIALOGUE.md")
 SCENE_DIRS = {1: "s01_first_contact", 2: "s02_opening_cell", 3: "s03_what_he_knows", 4: "s04_escape_route",
               5: "s05_scree", 6: "s06_vision", 7: "s07_saucer", 8: "s08_boarding", 9: "s09_interior",
-              10: "s10_meal", 11: "s11_stay", 65: "s06b_city_reveal", 66: "s06b_city_reveal"}
+              10: "s10_galley", 65: "s06b_city_reveal", 66: "s06b_city_reveal"}
 SCENE_TAGS = {65: "06b", 66: "06b"}         # id tag for scenes whose heading is not a plain number
 SCENE_NUMBERS = {"6b": 65}                  # heading -> scene number (the alternative 6b exchange = 66)
 PAUSE_WORDS = [("short pause", 2.0), ("quiet beat", 2.5), ("she pauses", 1.6), ("no answer", 2.0),
                ("she continues looking", 2.0), ("a quiet pause", 2.5),
-               ("follows the rising curve", 2.5), ("machinery starts moving", 3.0)]
+               ("follows the rising curve", 2.5), ("machinery starts moving", 3.0),
+               # Round 10 galley (scene 10): real silences, only the ship's hum and eating sounds
+               ("she almost smiles", 1.4), ("neither speaks", 6.0), ("a pause.", 3.0), ("searches for the answer", 1.8),
+               ("hum fills the silence", 4.0), ("watches him for a moment", 2.2)]
 LINE_RE = r"\*\*(7|CAT):\*\*\s*(.+)"
 DELIVERY = os.path.join(ROOT, "Tools", "Voice", "seven_delivery.json")
 delivery = json.load(open(DELIVERY, encoding="utf-8")) if os.path.exists(DELIVERY) else {}
@@ -49,6 +52,9 @@ def apply_pause(s, sc):
 
 for raw in open(SRC, encoding="utf-8"):
     s = raw.strip()
+    if s.startswith("## ") and not re.match(r"^##\s+(\d+[a-z]?)\s", s):
+        scene = -1          # Round 10: "## Replaced versions" etc. end the last scene (old scenes 10-12 are not used)
+        continue
     m = re.match(r"^##\s+(\d+[a-z]?)\s", s)
     if m:
         h = m.group(1)
@@ -85,7 +91,7 @@ with open(out_json, "w", encoding="utf-8", newline="\n") as f:
     json.dump({"lines": lines}, f, indent=1, ensure_ascii=False)
 
 md = ["# Voice lines — Chapter 1 \"The Moon Prison\"", "",
-      "Generated from `Docs/DIALOGUE.md` scenes 1–11 and 6b by `Tools/Voice/make_line_list.py` (re-run after script edits,",
+      "Generated from `Docs/DIALOGUE.md` scenes 1–10 and 6b by `Tools/Voice/make_line_list.py` (re-run after script edits,",
       "then `Tools/Voice/generate_voices.py`). Audio: `Unity/Assets/Audio/Voice/<dir>/<id>.mp3`. Speaker `7` = voice",
       "`Seven` (spoken aloud), `CAT` = voice `Cat` (telepathic treatment in Unity). Pause = seconds of silence after the line.",
       "Scene 6b \"The city reveal\" is numbered **65** (primary exchange, ids `s06b_NN_*`) and **66** (the earlier proposed",

@@ -82,3 +82,17 @@ Open design notes from these pieces (decide with Dan/Kyle, don't change the mode
 | --- | --- | --- |
 | `ref_lunar_door.png` | Generated concept (via Dan): pale smooth flowing architecture — sweeping curved ribs and arches growing into each other, skylight slits; a tall pointed-arch door split into two leaves by an S-shaped seam with engraved orbit lines and small "planet" circles; a round three-spoke emblem beside it; concentric circles and a line of small circles engraved in the floor | The sealed door after the vision (Chapter 1, scene 6) and the chamber around it — built **in ruins** (cracked / broken ribs, fallen chunks, fog), door intact; the same curvy rib style for the ancient approach (hall exit, hall). Built by `FightDemoBuilderLunarDoor.cs` |
 | `../Video/vision_01_door.mp4` (video, not an image) | The first vision (decided by Dan, 2026-11-17): the lunar door whole, two pale figures, one touches the round mechanism, the leaves part, they walk through | Played full-screen in scene 6 (copy in `Unity/Assets/Video/`); the door and its mechanism in the game match it |
+
+## Villains and creatures (added 2026-11-17)
+| File | What it shows | Use it for |
+| --- | --- | --- |
+| `kyle_tunneler.jpg` | **The Tunneler** (pencil): a heavy, rounded figure built of stacked ring segments, a spiral drill-like tip on the head, short clawed arms, thick segmented legs | Tunneler model — the Moon's villain (Chapter 1 world; he appears later in the story) |
+| `kyle_ratwing_sketch.jpg` | **Ratwing** (pencil, 2010): front view standing, tall wings rising from the back with hooked tips framing the head, bat-like head; small second sketch hanging upside down from a bar, wings folded | Matches the Round 4 cave scene (hanging, wings from the back) |
+| `kyle_wormmaster.jpg` | **Wormmaster** (2013): a segmented, worm-bodied humanoid rising from the ground with arms spread, smaller worms emerging around him; "7 Lives" logo at the top | Wormmaster model (world placement still unapproved) |
+| `kyle_the_mole.jpg` | **The Mole**: a hulking, muscular humanoid with a smooth dark head and a single slit visor, big digging claws, standing on a rise in fog; "7 Lives" logo at the top | **An early version of the Tunneler** (Dan, 2026-11-17) — not a separate character; use only as a mood/shape reference alongside `kyle_tunneler.jpg` |
+
+Notes: the "7 Lives" logo (a circled 7 with rays and "LIVES") appears on two of these — an earlier working title? It ties in with the cat's "Don't worry, I have 8 more."
+
+## Elarim (Venus) — 2026-11-17
+- `elarim_ref_apose.png` — Elarim A-pose model reference (Dan, generated) → Tripo → `Art/Source/elarim/elarim_v1.glb`
+- `elarim_sword_ref.png` — Elarim sword prop reference → `Art/Source/elarim/elarim_sword_v1.glb`

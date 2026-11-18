@@ -34,6 +34,8 @@ namespace Seven
         public static bool SoundCheck { get; private set; }
         /// <summary>-soundcheck sfx: Round 7's short unmuted check of a few sound effects instead of the telepathy line.</summary>
         public static bool SoundCheckSfx { get; private set; }
+        /// <summary>Round 10: -soundcheck galley = a few new scene 10 lines + the eating sounds.</summary>
+        public static bool SoundCheckGalley { get; private set; }
         /// <summary>-continue: start like the main menu's Continue (exploring the saucer after Chapter 1).</summary>
         public static bool Continue { get; private set; }
         /// <summary>-cityreveal primary|alternate|off: which 6b dialogue set the city reveal plays (default primary).</summary>
@@ -58,7 +60,7 @@ namespace Seven
                 if (args[i] == "-menu") MenuShot = true;
                 if (args[i] == "-chapter1") Chapter1 = true;
                 if (args[i] == "-ch1aboard") { Chapter1 = true; Chapter1Aboard = true; }
-                if (args[i] == "-soundcheck") { SoundCheck = true; if (i + 1 < args.Length && args[i + 1] == "sfx") SoundCheckSfx = true; }
+                if (args[i] == "-soundcheck") { SoundCheck = true; if (i + 1 < args.Length && args[i + 1] == "sfx") SoundCheckSfx = true; if (i + 1 < args.Length && args[i + 1] == "galley") SoundCheckGalley = true; }
                 if (args[i] == "-continue") Continue = true;
                 if (args[i] == "-ch1cp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var cp)) { Chapter1 = true; Chapter1State.Checkpoint = cp; }
                 if (args[i] == "-fightcombo") { FightCombo = true; Fight = true; }

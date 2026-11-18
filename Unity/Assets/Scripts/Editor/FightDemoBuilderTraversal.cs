@@ -214,14 +214,13 @@ namespace Seven.EditorTools
                                     new Vector2(0.3f, 0.94f), new Vector2(0.31f, 1.0f), new Vector2(0f, 1.0f) }, 0f, 360f, 20, null, L.Pedestal);
             MeshObject("ShapePedestal", SaveMesh(ped, "Moon_ShapePedestal"), m.ancient, root);
             // the shape: thin bright edges + knots, a soft light inside the alcove
-            var shape = new GameObject("VisionShape").transform; shape.SetParent(root, false); shape.position = L.ShapeAt;
-            var edges = MeshObject("ShapeEdges", ShapeMesh(L.VisionShape, L.ShapeRadius, 0.0105f, "Moon_VisionShape"), m.inscription, shape, false);
-            edges.transform.localPosition = Vector3.zero; edges.transform.localRotation = Quaternion.identity;
-            edges.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
-            var halo = MeshObject("ShapeHalo", ShapeMesh(L.VisionShape, L.ShapeRadius, 0.03f, "Moon_VisionShapeHalo"), m.ghost, shape, false);
-            halo.transform.localPosition = Vector3.zero; halo.transform.localRotation = Quaternion.identity;
+            // Round 10: the hand-held dodecahedron (15 cm, pale stone, thin glowing edges, the Elarim marking on one
+            // face); the director drives its hover / turn and the edge glow, and 7 takes it after the door scene.
+            var es = BuildElarimShape("VisionShape", root, ElarimMaterials(false), "Moon_Dodecahedron");
+            var shape = es.transform; shape.position = L.ShapeAt;
+            var edges = es.Edges; es.Edges = null;                       // glow driven by Chapter1Director
             var sl = PointLight("ShapeLight", L.ShapeAt + Vector3.left * 0.15f, 3.6f, 1.1f, shape);
-            props.shape = shape; props.inscription = edges.GetComponent<Renderer>(); props.shapeLight = sl;
+            props.shape = shape; props.inscription = edges; props.shapeLight = sl;
             // (vision addition: the door opens by touching the round mechanism - its glow ring is built with the door)
             PointLight("InscriptionLight", new Vector3(16.5f, L.Lower + 2.2f, -36.6f), 4.5f, 0.55f, root);
         }

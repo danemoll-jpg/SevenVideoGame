@@ -18,7 +18,7 @@ idle, walk, sit, wash, jump, sleep.
 Round 8 rig: joints sit at the centre of the mesh cross-sections (legs traced up from the paws slab by slab; elbow /
 stifle / hock at the leg's own bends; spine / neck / head from torso and skull sections; tail recentred on its
 cross-section each step). Weights = Blender bone heat (solved at 10x scale), side / front-back / tail guards,
-4 Laplacian smoothing passes over the mesh edges, max 4 influences, normalized. Same 24 bone names as Round 3.
+4 Laplacian smoothing passes over the mesh edges, max 4 influences, normalized. Same 24 bone names as Round 3, plus earL / earR (Round 10).
 Env: CAT_FBX_OUT=<path> writes the FBX elsewhere (experiments), CAT_DEBUG=1 logs posed joint positions.
 """
 import bpy, bmesh, os, sys, math
@@ -445,6 +445,23 @@ neck_base = Vector((0, yF - 0.035 * H / 0.25, sp_f.z + 0.015 * H / 0.25))       
 log("head centre", tuple(round(x, 3) for x in head_c), "atlas", tuple(round(x, 3) for x in head_base),
     "neck base", tuple(round(x, 3) for x in neck_base))
 
+# Round 10: one bone per ear (the galley scene turns an ear toward 7). The head sits slightly turned, so the ears are
+# found as the two highest separate peaks above the skull (not by the x side): tip = peak, base = 2.2 cm lower (scaled
+# with H), pulled a quarter of the way toward the skull centre. earL = the peak with the larger x.
+EARS = {}
+_hc = [c for c in co if c.y < head_c.y + 0.06 * H / 0.25 and c.z > head_c.z]
+if _hc:
+    t1 = max(_hc, key=lambda c: c.z)
+    _far = [c for c in _hc if (c.xy - t1.xy).length > 0.03 * H / 0.25]
+    t2 = max(_far, key=lambda c: c.z) if _far else None
+    if t2 is not None and t2.z > head_c.z + 0.01:
+        for nm, tip in zip(("earL", "earR"), sorted((t1, t2), key=lambda c: -c.x)):
+            base = tip.lerp(Vector((head_c.x, head_c.y, tip.z)), 0.25) - Vector((0, 0, 0.022 * H / 0.25))
+            EARS[nm] = (base, tip.copy(), 0)
+            log(f"ear {nm}: base {tuple(round(x, 3) for x in base)} tip {tuple(round(x, 3) for x in tip)}")
+if not EARS:
+    log("ears not found: no ear bones")
+
 arm_data = bpy.data.armatures.new("CatRig")
 arm = bpy.data.objects.new("CatRig", arm_data)
 bpy.context.scene.collection.objects.link(arm)
@@ -472,6 +489,8 @@ bone("spine", mid, sp_f, "pelvis", connect=True)
 bone("chest", sp_f, neck_base, "spine", connect=True)
 bone("neck", neck_base, head_base, "chest", connect=True)
 bone("head", head_base, Vector((0, muzzle.y + 0.004, muzzle.z + 0.004)), "neck", connect=True)
+for nm, (eb_, et_, sx_) in EARS.items():
+    bone(nm, eb_, et_, "head", roll_to=Vector((0, -1, 0)))
 prev = "pelvis"
 # Resample the tail polyline (rump -> tip) to 6 equal bones.
 poly = [hips_h + Vector((0, 0.02, 0.0))] + tail_pts
@@ -664,6 +683,41 @@ def heat_weights(obj):
 
 
 heat_weights(cat)
+
+
+def ear_weights(obj):
+    """Round 10: the ears are weighted by a height mask, not by bone heat: everything above the ear base on that side
+    (near the ear's line) follows the ear bone, fading in over a few mm; the rest stays on the head."""
+    g = {x.name: x for x in obj.vertex_groups}
+    gi = {x.index: x.name for x in obj.vertex_groups}
+    for nm in ("earL", "earR"):
+        if nm not in g:
+            g[nm] = obj.vertex_groups.new(name=nm)
+    n_ear = {k: 0 for k in EARS}
+    for v in obj.data.vertices:
+        p = v.co
+        w = {gi[x.group]: x.weight for x in v.groups if x.weight > 0}
+        moved = w.pop("earL", 0.0) + w.pop("earR", 0.0)
+        if moved:
+            w["head"] = w.get("head", 0.0) + moved
+        for nm, (eb_, et_, sx_) in EARS.items():
+            m = smooth(eb_.z - 0.002, eb_.z + 0.006, p.z) * (1.0 - smooth(0.014, 0.022, (p.xy - et_.xy).length))
+            if m > 0.01:
+                w = {k: x * (1 - m) for k, x in w.items()}
+                w[nm] = m
+                n_ear[nm] += 1
+        for nm in g:
+            if nm != "root":
+                g[nm].remove([v.index])
+        tot = sum(w.values())
+        for k, x in w.items():
+            if k in g and x / max(tot, 1e-6) > 0.005:
+                g[k].add([v.index], x / tot, "REPLACE")
+    log("ear weights: " + ", ".join(f"{k} {n} verts" for k, n in n_ear.items()))
+
+
+if EARS:
+    ear_weights(cat)
 weights_for(whisk_obj, head_only=True)
 log("weights done")
 

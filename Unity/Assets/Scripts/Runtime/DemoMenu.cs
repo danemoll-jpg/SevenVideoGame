@@ -67,8 +67,12 @@ namespace Seven
             scaler.referenceResolution = new Vector2(1280, 720);
             scaler.matchWidthOrHeight = 1f;
 
-            Text(canvasGo.transform, "7", new Vector2(0, 240), 110, new Color(0.95f, 0.95f, 0.95f));
-            Text(canvasGo.transform, "THE OBSERVER", new Vector2(0, 160), 26, new Color(0.7f, 0.7f, 0.7f));
+            // Round 10 (Dan): the logo image ("7" + THE OBSERVER, Arial Bold typeset by Tools/make_logo.py; no font shipped)
+            if (Logo.Add(canvasGo.transform, new Vector2(0, 215), 360f, new Color(0.95f, 0.95f, 0.95f)) == null)
+            {
+                Text(canvasGo.transform, "7", new Vector2(0, 240), 110, new Color(0.95f, 0.95f, 0.95f));
+                Text(canvasGo.transform, "THE OBSERVER", new Vector2(0, 160), 26, new Color(0.7f, 0.7f, 0.7f));
+            }
             _labels = new Text[Items.Length];
             _marks = new Image[Items.Length];
             for (int i = 0; i < Items.Length; i++)

@@ -313,6 +313,72 @@ The ship’s hum fills the silence.
 
 **7:** I don’t know.
 
+7 places the dodecahedron beside her plate.
+
+**7:** It happened when I touched this.
+
+Cat leans closer.
+
+**CAT:** Turn it over.
+
+She rotates it.
+
+**CAT:** That marking. I’ve seen it before.
+
+**7:** Where?
+
+**CAT:** On something from Venus. Elarim.
+
+**7:** So this is theirs?
+
+**CAT:** I don’t know. But their marking is on it.
+
+She studies the object.
+
+**7:** What was it doing on the Moon?
+
+**CAT:** We could ask them.
+
+**7:** Maybe they can explain what I saw.
+
+She looks from the dodecahedron to him.
+
+**7:** Us?
+
+Cat glances toward his bowl.
+
+**CAT:** Unless this was a farewell dinner.
+
+**7:** You were sent to get me out. You did that.
+
+**CAT:** I did.
+
+**7:** You could go home.
+
+He settles beside the bowl.
+
+**CAT:** I’d like to know what happens next.
+
+She watches him for a moment.
+
+**7:** So would I.
+
+She sets the dodecahedron down, marking upward.
+
+**7:** Venus, then.
+
+Cat returns to his food.
+
+7 picks up her fork. This time, she eats.
+
+END SCENE
+
+---
+
+## Replaced versions (kept for reference — not used)
+
+### (old) 10  The galley — middle section before Dan's edit of 2026-11-17 21:47
+
 She sets down her fork and moves the dodecahedron into the space between them.
 
 **7:** It happened when I touched this.
@@ -374,16 +440,6 @@ She watches him for a moment.
 She places the dodecahedron beside her plate again, with the marking facing up.
 
 **7:** Venus, then. We’ll find the Elarim.
-
-Cat returns to his food.
-
-7 picks up her fork. This time, she eats.
-
-END SCENE
-
----
-
-## Replaced versions (kept for reference — not used)
 
 ### (old) 10  The first meal
 

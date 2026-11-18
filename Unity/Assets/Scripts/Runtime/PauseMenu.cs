@@ -202,6 +202,7 @@ namespace Seven
             var dim = new GameObject("Dim", typeof(RectTransform)); dim.transform.SetParent(_canvasGo.transform, false);
             var drt = (RectTransform)dim.transform; drt.anchorMin = Vector2.zero; drt.anchorMax = Vector2.one; drt.offsetMin = drt.offsetMax = Vector2.zero;
             dim.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.62f);
+            Logo.Add(_canvasGo.transform, new Vector2(0, 262), 210f, new Color(0.9f, 0.9f, 0.9f));     // Round 10: logo header
             _title = MakeText(_canvasGo.transform, "", new Vector2(0, 175), 34, new Color(0.95f, 0.95f, 0.95f));
             MakeText(_canvasGo.transform, "stick / d-pad + A · B back    ·    W S / arrows, ← → adjust, Enter · Esc back", new Vector2(0, -290), 15, new Color(0.55f, 0.55f, 0.55f));
         }

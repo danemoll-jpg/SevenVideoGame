@@ -67,6 +67,10 @@ SFX = [
     ("land_hard", "A person landing heavily on stone after a long drop, firm thud, boots and a short cloth rustle.", 1.0, False, "7 lands after a big drop"),
     ("climb_scuff", "Boots scuffing and scraping on a rough stone wall while someone climbs, two or three soft scrapes.", 1.2, False, "wall climb / climbing up a ledge"),
     ("slab_lift", "A heavy stone slab grinding as it lifts off a stone floor, low scrape fading into a soft hum.", 1.2, False, "telekinesis lifts the fallen slab (ruins)"),
+    # Round 10: the galley scene (ship's hum + eating sounds only during the silences)
+    ("fork_clink", "A fork lightly touching a ceramic dinner plate, one soft clink, quiet table sound.", 0.8, False, "Chapter 1 galley: 7 eats"),
+    ("cat_eating", "A small cat eating wet food from a ceramic bowl, quiet soft chewing and licking, close.", 6, True, "Chapter 1 galley: the cat eats"),
+    ("course_set", "Spaceship engines rising smoothly into a soft deep whoosh as the ship accelerates away, gentle.", 4, False, "saucer: Set course for Venus placeholder"),
 ]
 
 

@@ -7,7 +7,7 @@ Full reference prompts and design rules: claude.ai Project "7 - The Game", doc `
 | 7 (normal proportions) | v2 cleaned in Blender (`Art/Export/7_v2_mixamo.fbx`, 50k tris, 1.70 m); needs Mixamo | `Art/Reference/7_ref_regular_{front,back,side}.png` → `Art/Source/7_normal_v2.glb` | Polished metal cuff hair ties on both pigtails (`7_ref_hairties_back.jpg`; replaced the glowing orbs 2026-11-16); flat glowing dot on the forehead (never raised); monochrome; full-coverage outfit |
 | Y Bot sparring opponent | Use Mixamo's built-in Y Bot | `Art/Mixamo/YBot/` | Neutral gray; demo only |
 | Scree (Tunneler's workers / guards) | **Placeholder only** (`Scree_placeholder`: gray Y Bot + hood + robe, built in `FightDemoBuilderChapter1.cs`) — **needs Kyle's design** | — | Round 6; see section below |
-| 7's saucer — exterior | **Procedural for now** (Round 6, `FightDemoBuilderChapter1.cs` → `BuildBay`) | — | Wide flat disc, glowing rim, dark glossy upper hull, ramp that lowers (per `kyle_7_backpack_saucer`, `kyle_7_on_hull`) |
+| 7's saucer — exterior | **Procedural for now** (Round 6, `FightDemoBuilderChapter1.cs` → `BuildBay`) | — | Wide flat disc, glowing rim, **polished silver hull (Round 10, Dan: exterior = silver — replaces the dark hull from Kyle's art)**, belly iris + tractor beam (per `kyle_7_backpack_saucer`, `kyle_7_on_hull`) |
 | Cat (companion) | Model in: `Art/Source/cat/cat_v1.glb` (unrigged) — rig in Round 3 | `Art/Source/cat/` | Black; see section below |
 
 ## Cat (7's companion) — Round 3
@@ -37,7 +37,7 @@ two work in the impound bay. **Ask Kyle for a concept** (front + side, grayscale
 ## 7's saucer exterior — Round 6 (procedural for now)
 Built procedurally in the scene builder: ~12 m wide flat disc, light belly, rim band with a white glow ring, dark
 glossy upper hull rising to a low dome, a belly glow ring, a hinged ramp on the +X side. Clamped on a cradle in the
-impound bay; lifts off at the end of scene 8. Replace with a modelled ship later (Kyle: `kyle_7_backpack_saucer`,
+impound bay (silver since Round 10); lifts off at the end of scene 8. Replace with a modelled ship later (Kyle: `kyle_7_backpack_saucer`,
 `kyle_7_on_hull`); the interior stays "larger inside".
 
 ## Scree — concept in (2026-11-17)
@@ -70,3 +70,33 @@ lying along it; clears the legs in idle / walk / work (centre-line distance ≥ 
   the same mechanism). The pale figures exist only in the video (no game model planned).
 - Optional later (Mixamo, Dan): a dedicated "climb down to hang" clip (the lowering into a hang is procedural) and a
   waist-high "Climbing"/vault clip (the mantle uses a trimmed 7_climb_up — `alt/7_climbing_a/_b` did not fit).
+
+## Round 10 — the galley scene, the hand-held dodecahedron, the silver saucer (2026-11-17)
+- **7's saucer exterior = silver** (Dan, 2026-11-17): polished silver metal (light-grey base, metallic 0.96, smoothness
+  0.94), slightly darker brushed-silver underside with a dark band under the rim and seam lines; glowing rim, belly glow
+  and tractor-beam iris kept. **Replaces the dark hull from Kyle's art.** A realtime reflection probe rides with the ship
+  (`SaucerProbe.cs`). Still procedural (`FightDemoBuilderChapter1.cs`).
+- **Dodecahedron (hand-held)**: ~15 cm, solid pale stone / crystal with thin glowing edges, procedural
+  (`ElarimShape.cs`, used on the Moon pedestal and on the galley table).
+- **OPEN — the Elarim marking** (Kyle hasn't designed it yet): placeholder glyph = a small circle with three short
+  curved strokes rising from it, like a sprout ("First Garden Age"), `Art/Marks/elarim_mark_placeholder.png` (made by
+  `Tools/Model/make_elarim_mark.py`). To swap: replace that PNG (white on transparent, square) or point
+  `MoonLayout.ElarimMarkFile` at a new file in `Art/Marks/`, then Build everything.
+- Galley set (table, two tulip seats, plate, fork, knife, cat bowl, porthole with the Moon outside): procedural
+  (`FightDemoBuilderGalley.cs`).
+
+## Villains with concept art (2026-11-17) — not scheduled yet
+| Model | Concept | Notes |
+| --- | --- | --- |
+| Tunneler | `Art/Reference/kyle_tunneler.jpg` | The Moon's villain. Ring-segmented body, spiral drill tip on the head. Needs a clean A-pose reference (Kyle-style) → Tripo → Blender rig (Humanoid-compatible). **Drill head moves as he talks (Dan, 2026-11-17):** the cone head gets its own bone (separated from the shoulders by a visible groove); in dialogue it twists/spins driven by the voice clip's loudness, with a slight forward nod on stressed words — no face, no lip-sync. |
+| Wormmaster | `Art/Reference/kyle_wormmaster.jpg` | Segmented worm-humanoid + small worms. Placement unapproved. |
+| The Mole | `Art/Reference/kyle_the_mole.jpg` | Early version of the Tunneler (Dan) — not a separate model. |
+| Ratwing (update) | `Art/Reference/kyle_ratwing_sketch.jpg` | Already modeled; Kyle's sketch matches the hanging pose. |
+
+## Elarim — Venus (2026-11-17)
+Design (Dan / Kyle): twice human height (~3.5 m), all male, superhero proportions (Atlas / Superman), handsome and
+flawless, shining polished armor, a soft glow all over with even brighter glowing eyes, long flowing capes, some carry a
+sword. Very intimidating, but good guardians. Pipeline: Dan generates a Kyle-style A-pose reference (cape hanging
+straight, no sword in hand) → Tripo → `Art/Source/elarim/elarim_v1.glb`; sword generated separately as a prop →
+`Art/Source/elarim/elarim_sword_v1.glb`. References in (2026-11-17): `Art/Reference/elarim_ref_apose.png` (A-pose, cape hanging, glowing eyes and armor seams) and `Art/Reference/elarim_sword_ref.png` (prop). Glow, eyes and cape motion are added in Unity (emissive + cloth). One model
+serves guardian, attendant and workers (variations by cape / headpiece / scale).

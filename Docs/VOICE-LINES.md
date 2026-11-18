@@ -1,6 +1,6 @@
 # Voice lines — Chapter 1 "The Moon Prison"
 
-Generated from `Docs/DIALOGUE.md` scenes 1–11 and 6b by `Tools/Voice/make_line_list.py` (re-run after script edits,
+Generated from `Docs/DIALOGUE.md` scenes 1–10 and 6b by `Tools/Voice/make_line_list.py` (re-run after script edits,
 then `Tools/Voice/generate_voices.py`). Audio: `Unity/Assets/Audio/Voice/<dir>/<id>.mp3`. Speaker `7` = voice
 `Seven` (spoken aloud), `CAT` = voice `Cat` (telepathic treatment in Unity). Pause = seconds of silence after the line.
 Scene 6b "The city reveal" is numbered **65** (primary exchange, ids `s06b_NN_*`) and **66** (the earlier proposed
@@ -8,7 +8,7 @@ alternative, ids `s06b_aNN_*`); both live in `s06b_city_reveal/` and sit between
 Delivery = performance note for 7's lines from `Tools/Voice/seven_delivery.json` (sent to Eleven v3 as audio tags,
 never shown in subtitles); cat lines have none.
 
-83 lines.
+105 lines.
 
 | id | scene | speaker | text | delivery | pause |
 |---|---|---|---|---|---|
@@ -81,17 +81,39 @@ never shown in subtitles); cat lines have none.
 | `s09_01_cat` | 9 | CAT | This is considerably more ship than I was expecting. |  | 0.45 |
 | `s09_02_7` | 9 | 7 | Is that a complaint? | amused | 0.45 |
 | `s09_03_cat` | 9 | CAT | I'm reserving judgment until I find the kitchen. |  | 0.45 |
-| `s10_01_7` | 10 | 7 | So, what do you eat? Canned food? | playful | 0.45 |
+| `s10_01_7` | 10 | 7 | So what do you eat? Canned food? | playful | 0.45 |
 | `s10_02_cat` | 10 | CAT | Chicken. But only free-range. |  | 0.45 |
-| `s10_03_7` | 10 | 7 | You're particular for someone I just met in a prison. | wry, amused | 0.45 |
-| `s10_04_cat` | 10 | CAT | Having experienced confinement, I feel strongly about it. |  | 0.45 |
-| `s11_01_7` | 11 | 7 | What happens now? Do you go back? | curious | 0.45 |
-| `s11_02_cat` | 11 | CAT | I was sent to get you out. You're out. |  | 0.45 |
-| `s11_03_7` | 11 | 7 | I thought you were supposed to help me. | hesitant | 0.45 |
-| `s11_04_cat` | 11 | CAT | I did. |  | 1.6 |
-| `s11_05_7` | 11 | 7 | With what happened down there, I mean. | thoughtful | 0.45 |
-| `s11_06_cat` | 11 | CAT | I don't know what happened down there. |  | 0.45 |
-| `s11_07_7` | 11 | 7 | Neither do I. | quiet | 2.5 |
-| `s11_08_cat` | 11 | CAT | Then perhaps I should stay. |  | 0.45 |
-| `s11_09_7` | 11 | 7 | You don't have to. | sincere | 0.45 |
-| `s11_10_cat` | 11 | CAT | I know. |  | 0.45 |
+| `s10_03_cat` | 10 | CAT | Having experienced confinement, I feel strongly about it. |  | 1.4 |
+| `s10_04_7` | 10 | 7 | I'll see what we have. | warm, amused | 6.0 |
+| `s10_05_cat` | 10 | CAT | You're letting it get cold. |  | 0.45 |
+| `s10_06_7` | 10 | 7 | Those people… | quiet, distant | 0.45 |
+| `s10_07_cat` | 10 | CAT | At the door? |  | 0.45 |
+| `s10_08_7` | 10 | 7 | They were just going somewhere. Like it was an ordinary day. | thoughtful, soft | 0.45 |
+| `s10_09_cat` | 10 | CAT | Perhaps it was. |  | 0.45 |
+| `s10_10_7` | 10 | 7 | The walls were whole. Everything was… looked after. | softly, remembering | 0.45 |
+| `s10_11_7` | 10 | 7 | One of them opened the door. I watched where they put their hand. | quiet, careful | 0.45 |
+| `s10_12_cat` | 10 | CAT | Useful. |  | 0.45 |
+| `s10_13_7` | 10 | 7 | Yes. | softly | 3.0 |
+| `s10_14_7` | 10 | 7 | But it didn't feel like seeing somewhere new. | hesitant, quiet | 0.45 |
+| `s10_15_cat` | 10 | CAT | What did it feel like? |  | 1.8 |
+| `s10_16_7` | 10 | 7 | Remembering. | quiet, wondering | 4.0 |
+| `s10_17_cat` | 10 | CAT | Have you been there before? |  | 0.45 |
+| `s10_18_7` | 10 | 7 | I don't know. | honest, quiet | 0.45 |
+| `s10_19_7` | 10 | 7 | It happened when I touched this. | soft, curious | 0.45 |
+| `s10_20_cat` | 10 | CAT | Turn it over. |  | 0.45 |
+| `s10_21_cat` | 10 | CAT | That marking. I've seen it before. |  | 0.45 |
+| `s10_22_7` | 10 | 7 | Where? | alert | 0.45 |
+| `s10_23_cat` | 10 | CAT | On something from Venus. Elarim. |  | 0.45 |
+| `s10_24_7` | 10 | 7 | So this is theirs? | quiet, wondering | 0.45 |
+| `s10_25_cat` | 10 | CAT | I don't know. But their marking is on it. |  | 0.45 |
+| `s10_26_7` | 10 | 7 | What was it doing on the Moon? | puzzled | 0.45 |
+| `s10_27_cat` | 10 | CAT | We could ask them. |  | 0.45 |
+| `s10_28_7` | 10 | 7 | Maybe they can explain what I saw. | hopeful, quiet | 0.45 |
+| `s10_29_7` | 10 | 7 | Us? | surprised, soft | 0.45 |
+| `s10_30_cat` | 10 | CAT | Unless this was a farewell dinner. |  | 0.45 |
+| `s10_31_7` | 10 | 7 | You were sent to get me out. You did that. | gentle, sincere | 0.45 |
+| `s10_32_cat` | 10 | CAT | I did. |  | 0.45 |
+| `s10_33_7` | 10 | 7 | You could go home. | gentle | 0.45 |
+| `s10_34_cat` | 10 | CAT | I'd like to know what happens next. |  | 2.2 |
+| `s10_35_7` | 10 | 7 | So would I. | warm, quiet | 0.45 |
+| `s10_36_7` | 10 | 7 | Venus, then. | resolved, warm | 0.45 |

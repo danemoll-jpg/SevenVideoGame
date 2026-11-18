@@ -2,7 +2,9 @@
   python Tools/make_launcher_art.py
 -> Art/Launcher/Seven.ico (16..256 px; also copied to Launcher/Seven.ico for launcher.rc), Seven-Icon.png (256 px),
    Seven-Cover.png (840 px square, shown in the launcher window), Seven-Poster.png (600 x 900, Steam library grid).
-A white "7" on black with a soft glow in fog (the world look: bright haze behind dark ground)."""
+A white "7" on black with a soft glow in fog (the world look: bright haze behind dark ground).
+Round 10: the "7" and "THE OBSERVER" come from the logo images (Art/Logo, Arial Bold typeset by Tools/make_logo.py -
+run that first); no font is used here any more."""
 from pathlib import Path
 from PIL import Image, ImageDraw, ImageFilter, ImageFont
 ROOT = Path(__file__).resolve().parents[1]
@@ -24,9 +26,25 @@ def centered(d, text, f, cx, cy, fill):
     l, t, r, b = d.textbbox((0, 0), text, font=f)
     d.text((cx - (l + r) / 2, cy - (t + b) / 2), text, font=f, fill=fill)
 
+LOGO = ROOT / 'Art/Logo'
+
+def paste_logo(img, name, cx, cy, width):
+    """Paste a logo image (white on transparent) centred at (cx, cy), scaled to the given width (L mode, light = logo)."""
+    lg = Image.open(LOGO / name).convert('LA')
+    h = int(lg.height * width / lg.width)
+    lg = lg.resize((width, h), Image.LANCZOS)
+    lum, a = lg.split()
+    img.paste(lum, (int(cx - width / 2), int(cy - h / 2)), a)
+
 def seven(size, haze=True):
     img = glow(size, size, size // 2, int(size * 0.55), int(size * 0.42), 70) if haze else Image.new('L', (size, size), 0)
-    d = ImageDraw.Draw(img); centered(d, '7', font(int(size * 0.86)), size / 2, size * 0.5, 255)
+    paste_logo(img, 'logo_7.png', size / 2, size / 2, int(size * 0.92))
+    return img
+
+def cover(size):
+    """The launcher cover: the full logo ("7" + THE OBSERVER) glowing in fog."""
+    img = glow(size, size, size // 2, int(size * 0.5), int(size * 0.46), 70)
+    paste_logo(img, 'logo_7_observer_white.png', size / 2, size * 0.5, int(size * 0.86))
     return img
 
 def poster(w, h):
@@ -35,8 +53,7 @@ def poster(w, h):
     img = Image.composite(Image.new('L', (w, h), 255), img, fog)
     d = ImageDraw.Draw(img)
     d.rectangle([0, int(h * 0.80), w, h], fill=8)                                    # dark foreground silhouette
-    centered(d, '7', font(int(h * 0.48)), w / 2, h * 0.40, 255)
-    centered(d, 'THE OBSERVER', font(int(w * 0.085)), w / 2, h * 0.70, 235)
+    paste_logo(img, 'logo_7_observer_white.png', w / 2, h * 0.46, int(w * 0.84))
     return img
 
 def main():
@@ -45,7 +62,7 @@ def main():
     icon.convert('RGBA').save(OUT / 'Seven.ico', sizes=[(16, 16), (24, 24), (32, 32), (48, 48), (64, 64), (128, 128), (256, 256)])
     (ROOT / 'Launcher/Seven.ico').write_bytes((OUT / 'Seven.ico').read_bytes())
     icon.convert('RGB').save(OUT / 'Seven-Icon.png')
-    seven(840).convert('RGB').save(OUT / 'Seven-Cover.png')
+    cover(840).convert('RGB').save(OUT / 'Seven-Cover.png')
     poster(600, 900).convert('RGB').save(OUT / 'Seven-Poster.png')
     for p in sorted(OUT.glob('Seven*.png')):
         im = Image.open(p).convert('RGB'); r, g, b = (c.tobytes() for c in im.split())

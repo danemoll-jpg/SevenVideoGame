@@ -21,6 +21,8 @@ namespace Seven
         /// <summary>Chapter 1 aboard (scenes 9-11): no reveal, the chapter sets the prompt.</summary>
         [System.NonSerialized] public bool ChapterMode;
         [System.NonSerialized] public string PromptOverride;
+        /// <summary>Round 10: a context prompt during free exploration (e.g. "Set course" at 7's seat in the galley).</summary>
+        [System.NonSerialized] public string ExtraPrompt;
         [System.NonSerialized] public bool LiveInputInCapture;   // gallery check run: real input path with virtual devices
 
         void Start()
@@ -71,7 +73,7 @@ namespace Seven
                 var layout = Gallery != null && Gallery.InView ? ControlsLegend.Layout.GalleryView
                     : m == SaucerSeven.Mode.Seated ? ControlsLegend.Layout.SaucerSeated : ControlsLegend.Layout.SaucerWalk;
                 if (Legend.Set != layout) Legend.SetLayout(layout);
-                string prompt = ChapterMode && PromptOverride != null ? PromptOverride : Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
+                string prompt = ChapterMode && PromptOverride != null ? PromptOverride : ExtraPrompt != null ? ExtraPrompt : Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
                 // Round 9: in Chapter 1 there is no permanent legend; "X Sit" is taught once, then a quiet context prompt.
                 Legend.HidePanels = Chapter1State.Aboard;
                 if (Chapter1State.Aboard)

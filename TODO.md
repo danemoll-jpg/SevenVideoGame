@@ -1,7 +1,151 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective
-Round 9 is done (release 0.9.0). **Round 10 is queued in `Docs/ROUND10.md`** (Dan, 2026-11-17: the galley scene ends Chapter 1) — move it here when it starts. Note: `Docs/DIALOGUE.md` already holds Dan's Round 10 galley text; `voice_lines.json` was deliberately left at the Round 9 set (83 lines) until Round 10 regenerates it.
+## Current Objective — Round 10: the galley scene ends Chapter 1 (Dan, 2026-11-17; moved from `Docs/ROUND10.md`)
+Plan text below as given; status in "Round 10 — status" (added when the round ends).
+
+### The galley scene — the end of Chapter 1 (Dan, 2026-11-17)
+Script: `Docs/DIALOGUE.md` **scene 10 "The galley"** — use it exactly. It **replaces** the old scenes 10, 11 and 12 (first
+meal, choosing to stay, discussing the vision); remove those from the chapter. Commit the repo as it is first.
+All standing rules apply (monochrome, Kyle's fog/glow look, non-sexual presentation).
+
+1. **The dodecahedron becomes a hand-held object she takes with her.** Change Round 9's item 8b: it is now ~15 cm across,
+   a **solid pale stone / crystal dodecahedron with thin glowing edges** (Kyle's wireframe look carried by the edges),
+   hovering above the pedestal and slowly turning. After the vision and the door scene, a context prompt X "Take":
+   she picks it up and keeps it (it stays with her; no inventory UI needed). **One face carries a small engraved
+   marking** — the Elarim mark. Kyle hasn't designed it yet: use a simple, clearly placeholder glyph (a small circle
+   with three short curved strokes rising from it, like a sprout — "First Garden Age"), on one constant / texture so
+   it's easy to swap. Record it as OPEN in `Docs/MODELS-NEEDED.md`.
+2. **Voice lines:** generate every new line of scene 10 with ElevenLabs (7 with the expressive Round 7 settings; the cat as
+   before). Reuse the existing files for "So what do you eat? Canned food?", "Chicken. But only free-range." and
+   "Having experienced confinement, I feel strongly about it." Add them all to `Docs/VOICE-LINES.md`. Respect the
+   script's pauses ("For a while, neither speaks", "A pause", "The ship's hum fills the silence") — real silence, a few
+   seconds each, with only the ship's hum and eating sounds.
+3. **The galley set:** add a small table with two seats in the galley nook (curved, retro-futurist, fits the ship), a
+   plate and utensils for 7, a bowl for the cat on the table. **The window shows the Moon from outside, hanging against
+   the dark** (the saucer has left — a pale, softly lit Moon in monochrome, Kyle's glow).
+4. **Staging (an in-engine cutscene, player not in control):**
+   - Open: 7 at the open refrigerator (the existing fridge), the cat **sitting on the table, tail curled around his
+     feet**.
+   - "I'll see what we have." → cut / ease to 7 seated at the table with her plate; the cat standing over his bowl,
+     eating. 7 eats (fork to mouth, small bites), stops, looks at the dodecahedron beside her plate.
+   - She moves the dodecahedron between them; the cat steps around his bowl, leans in, tilts his head to study one face,
+     then another. "Turn it over" → she rotates it; the camera finds the marked face (close-up).
+   - End: she sets it down marking-up, the cat returns to his food, she picks up her fork and eats. Fade softly.
+   - **The cat's mouth moves only when he eats:** his head dips into the bowl (the bowl rim hides the mouth) with small
+     chewing motions of the head/jaw; no mouth movement while he "talks". Ears: "one of his ears turns toward her" —
+     an ear twitch/turn (add an ear bone to each ear if the rig has none).
+   - Camera: calm, intimate framing (two-shot across the table, over-the-shoulder, a close-up of the dodecahedron and
+     the marking). Frame 7 from the chest up or side-on at the table — no body-focused angles.
+   - Animations: 7 uses the existing sit clips (`Seated Idle`, `Stand To Sit`) plus small keyed arm motions for eating,
+     moving and rotating the object (layered on the seated pose). If Dan adds Mixamo clips (see below), use them.
+     Cat: sit-on-table pose (from his sit clip, tail curled), eating loop, lean/step, head tilt — keyed in Blender if
+     the rig lacks them.
+5. **After the scene:** a quiet objective appears once — **"Set course for Venus"** — then the player has free
+   exploration of the saucer as now (the cat roams, the lap moment, the gallery TV). The chapter is complete; **Continue**
+   loads here. At 7's chair, a new context prompt X "Set course" shows a short, honest placeholder: the Moon falls away
+   behind the window and a card "Chapter 2 — Venus (coming soon)", then returns to free exploration. Venus itself is
+   not built this round.
+6. **Story docs:** `Docs/STORY.md` already notes the new chapter end and the next world (Venus, the Elarim). Remove the
+   old "discussing the vision / scene 12 placeholder" references from `TODO.md` / `CLAUDE.md`.
+7. **Checks** (muted except a brief reported sound check of a few new lines; off-screen; never steal focus): rebuild;
+   automated run of scene 10 start to finish — every line plays with its subtitle, the pauses hold, the cat's mouth
+   hidden/still except while eating, the dodecahedron is in her hand / on the table where the script says, the marked
+   face is visible in the close-up; captures of each beat (fridge, eating, the object between them, the marking
+   close-up, "Venus, then", the set-course placeholder); monochrome 0. Publish a release, update `TODO.md` / `CLAUDE.md`,
+   commit and push, report in ~20 lines.
+
+### Optional Mixamo clips for Dan (7, FBX for Unity, 30 fps, without skin) → `Art/Mixamo/7/`
+**Status 2026-11-17:** `7_open_fridge.fbx` is in (Mixamo "Opening") — use it at the refrigerator. **No eating clip exists
+on Mixamo (Dan checked)** — key the eating yourself on top of `Seated Idle`: right hand brings the fork to the mouth in small,
+unhurried bites (~4–6 s apart), left hand resting by the plate, slight head dip to meet the fork, a pause with the fork
+held when she stops to look at the dodecahedron. Subtle and natural; no chewing face needed.
+
+### Dan's additions during the round (2026-11-17)
+8. **Silver saucer exterior** — polished silver upper hull (light-grey base, high metallic + smoothness, soft reflections,
+   a bright highlight along the curve), glowing rim + belly glow / tractor-beam iris kept, a slightly darker underside band
+   or seam lines, reflection probes where the ship is seen (bay, terrace sighting, liftoff); interior unchanged. Captures:
+   bay, terrace, tractor beam, liftoff. Note in `Docs/MODELS-NEEDED.md`: exterior = silver (replaces the dark hull from Kyle's art).
+9. **Galley camera direction** — gentle cuts on line changes (not every line); over-the-shoulder both ways (over 7's
+   shoulder at the cat; from behind the cat, low at table height, up at 7) as the main shots; close-ups of 7's eyes on
+   "Those people…", "But it didn't feel like seeing somewhere new.", "Remembering.", "Maybe they can explain what I saw."
+   (eyes and brow, shallow depth of field, slow push-in, energy point visible) and the cat's eyes on "That marking. I've
+   seen it before."; two-shot for the quiet beats; faces / shoulders up only. If the Tripo face is soft up close, back off
+   and say so. Captures: each over-the-shoulder and each eye close-up.
+10. **The logo** — a large "7" with "THE OBSERVER" (small, all caps, wide spacing) under it, Arial Bold, monochrome, as
+   images (2048 px wide transparent PNG + white + dark versions; Arial's .ttf never in the repo or the build); on the main
+   menu (replacing the title text), the pause menu header and the launcher cover / icon ("7" alone). UI font: Liberation
+   Sans Bold (OFL) if text must match. Record: "Logo: '7' + THE OBSERVER in Arial Bold (image); UI font Liberation Sans if
+   needed." Capture the main menu with the logo.
+- Also (Dan, 21:47): **Docs/DIALOGUE.md scene 10's middle section was rewritten** (after "I don't know."): 5 new lines,
+  "There." / "What?" / "They made this?" … removed, the end is now "Venus, then." — built from the new text.
+
+## Round 10 — status (2026-11-17): done, exe-verified off-screen; release 0.10.0
+Every run muted (output peak 0.000000 / listener 0), minimized-not-activated, Below Normal, one heavy job at a time;
+monochrome max |R−G|,|G−B| = 0 over every shot (154 + 92 + menu). Previews + logs: `Docs/Previews/r10/`.
+0. **Safety checkpoint — nothing to commit:** the repo was clean and in sync with origin (ROUND10.md, DIALOGUE.md,
+   STORY.md and the open-fridge clip were already in the Round 9 commit `bd8822d`).
+1. **Hand-held dodecahedron — done.** 15 cm solid pale stone with thin glowing edges (`ElarimShape.cs`, used on the Moon and
+   in the galley), hovers and turns over the pedestal; after the door scene, objective "Take the shape" + context X "Take":
+   she reaches, it moves into her hand, then she stows it (hidden; kept from checkpoint 4 on). The Elarim marking on face 0
+   = placeholder glyph (circle + three curved strokes, a sprout) `Art/Marks/elarim_mark_placeholder.png`
+   (`Tools/Model/make_elarim_mark.py`); swap = replace the PNG or `MoonLayout.ElarimMarkFile`. **OPEN in MODELS-NEEDED.**
+2. **Voice lines — done.** Scene 10 = 36 lines (Dan's edited text): the three asked-for takes reused, **33 new
+   ElevenLabs takes** in the final scene (7 = Eleven v3 with delivery tags, the cat = v2 as before; 42 generated this
+   round, 9 of them dropped by Dan's mid-round edit); `Docs/VOICE-LINES.md` + `voice_lines.json` regenerated (105 lines; old scenes 10–11 takes kept in
+   `Unity/Assets/Audio/Voice/_r9_galley_old/`). Real silences measured in the run: neither speaks 6.0 s, "Yes." pause 3.0 s,
+   searching 1.8 s, the hum after "Remembering." 4.0 s, watching him 2.2 s (all = script). New SFX `fork_clink`,
+   `cat_eating` (eating during the silences), `course_set`. **Sound check** (`-soundcheck galley`): 3 new lines + 2 eating
+   sounds, **8.1 s of sound**, peaks 0.55 / 0.71 / 0.69 / 0.38 / 0.20, then muted again → **0.000000**.
+3. **Galley set — done** (`FightDemoBuilderGalley.cs`): tulip table + two tulip seats with curved backs, plate with food,
+   fork + knife, the cat's bowl on a small raised retro feeder (needed so his muzzle goes below the rim), a round porthole
+   in the nook wall: the Moon (pale, softly glowing, cratered grey map) hanging against the dark with faint stars.
+4. **Staging — done** (`Chapter1Aboard.Galley()`, in-engine, player not in control): fridge (Dan's `open_fridge` clip),
+   the cat sitting on the table, tail curled → fade → 7 seated with her plate, the cat over his bowl eating (head down,
+   chewing nods only while eating: 50.9 s; muzzle 0.199 m vs rim 0.212 m; **no mouth movement on his lines**: every cat
+   line logs "cat mouth moving: no" except while he is still eating), she takes bites (IK fork-to-mouth on `Seated Idle`),
+   stops and looks at the object; ear turn on "One of his ears turns toward her" (**new ear bones `earL`/`earR`** in
+   `cleanup_cat.py`); she sets the fork down and places the dodecahedron; he leans closer, tilts one way then the other;
+   she rotates it; the camera finds the marked face (facing the camera 0.97); she studies it, thumb on the edge; he
+   settles beside the bowl; she sets it down marking up (1.00), "Venus, then.", he eats, she eats, soft fade.
+   **Camera (Dan's direction, item 9):** cuts on speaker changes when the shot has held ≥ 3.5 s; over her shoulder at the
+   cat and from behind the cat (low, table height) up at her, shallow Bokeh depth of field (her hair / his ears soft);
+   two-shot for the silences; eye close-ups with a slow push-in on the four lines (now including "Maybe they can explain
+   what I saw.", which Dan's edit added) and the cat's eyes on "That marking. I've seen it before." **Tripo face check:**
+   at eyes-and-brow distance (0.30 m) the face texture is soft and the cheek polygons show, so the close-ups are **backed
+   off to eyes-and-nose (0.36 m, 26°)**, energy point visible above. Subtitles render on a stacked overlay camera with a
+   plain renderer (no fog pass, no depth of field), so they stay sharp.
+5. **"Set course for Venus" — done.** Objective once after the scene; free exploration (cat roams, lap, gallery TV);
+   Continue loads here. At her galley seat: context X "Set course" → the Moon falls away behind the porthole → card
+   "Chapter 2 — Venus (coming soon)" → back to exploring (run: prompt shown, placeholder 1×, then chair + cat on lap).
+6. **Story docs — done.** STORY.md already had it; old scene 10–12 references removed from `CLAUDE.md`; DIALOGUE.md is Dan's.
+7. **Checks — done.** Full `-chapter1` run: **0 soft-locks**, 27/27 traversal steps, 3/3 fall resets, speakers 0 % occluded
+   in scenes 1–8 + 6b, 101/105 lines played + subtitled (the 4 not played = the alternate 6b set), 121 shots. Galley run
+   (`-ch1aboard`, final build): 0 soft-locks, scene 10 lasted 154 s. Checkpoint-4 run (city → saucer → galley): 0 soft-locks.
+   Opening test not re-run (nothing before scene 6 changed).
+8. **Silver saucer — done.** `Saucer_hull` light grey 0.95, metallic 0.6, smoothness 0.9, rim highlight 0.4; underside
+   0.74 / 0.45 with a dark band under the rim and seam lines (4 rings + 16 radial panels) + a fine seam on top; glowing
+   rim, belly glow, iris + beam unchanged; a realtime reflection probe rides with the ship (`SaucerProbe.cs`, re-rendered as
+   it moves: 76 renders in the full run; far geometry replaced by a fog-grey background, so the silver reflects the haze),
+   a soft fill light under the disc. A first try at metallic 0.96 read dark grey (it mirrored the dark cavern) — the
+   lower metallic + bright probe background fixed it. Captures: bay, low angle, terrace sighting, beam, 7 rising, liftoff.
+9. **Camera direction — done** (see 4).
+10. **Logo — done.** `python Tools/make_logo.py` typesets "7" + THE OBSERVER from Windows' Arial Bold into
+   `Art/Logo/logo_7_observer.png` (2048 px, light grey), `_white`, `_dark`, `logo_7.png`; no font file in the repo or the
+   build. Main menu title + pause header use it (`Logo.cs`); launcher cover / icon / poster regenerated from it
+   (`Tools/make_launcher_art.py`, launcher rebuilt with the new icon). UI text stays on Unity's built-in LegacyRuntime font
+   (Arial-metric, licensed with Unity), so Liberation Sans was not needed. **Logo: '7' + THE OBSERVER in Arial Bold
+   (image); UI font Liberation Sans if needed.** Existing installs keep their old launcher icon / cover (the release
+   tools only update the game); new players get them in the 0.10.0 starter zip.
+
+### For Dan to check (Round 10) — `Docs/Previews/r10/`
+- Galley (`galley/`): `02` fridge, `04` eating two-shot, `05` the cat at his raised bowl, `07` over her shoulder,
+  `16` behind the cat, `08/10/11/18` her eye close-ups (backed off to eyes-and-nose — tell me if you want them tighter),
+  `15` the cat's eyes, `09` ear turn, `12` the object beside her plate, `13` he leans closer, `14` the marking close-up,
+  `19` "Venus, then.", `20` she eats; set course `22`–`25`; pause menu with the logo `29`.
+- Dodecahedron on the Moon (`chapter1/`): `53` in the alcove, `65` in her hand.
+- Silver saucer (`saucer/`): `19` bay, `20` low angle, `11` terrace sighting, `21` beam on, `23` 7 rising, `27/28` liftoff.
+- Logo: `menu/00_menu.png`, `menu/launcher_cover.png`.
+- Play: sit through the galley with sound — the silences, the eating sounds, the ear turn; then X "Set course" at her seat.
 
 ## Standing rules
 - 7 never kills · strictly monochrome · non-sexual presentation · 7 is clearly an adult (details in `CLAUDE.md`).
@@ -9,6 +153,10 @@ Round 9 is done (release 0.9.0). **Round 10 is queued in `Docs/ROUND10.md`** (Da
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Round 10 — the galley scene ends Chapter 1 — done (2026-11-17), exe-verified off-screen; release 0.10.0 (`game-1000`).**
+  Hand-held dodecahedron + placeholder Elarim marking, voiced scene 10 (Dan's edited text) as a cutscene with his camera
+  direction, the galley set with the Moon in the porthole, "Set course for Venus" placeholder, silver saucer, the logo.
+  Status in "Round 10 — status" above.
 - **Round 9 — Chapter 1 as the tutorial — done (2026-11-17), exe-verified off-screen; release 0.9.0 (`game-900`).**
   Traversal (jump, grab, hang, shimmy, climb, climb down, let go, wall climb, mantle, crouch), forgiving falls, the
   telekinesis slab, the cat leading the routes, no permanent legend (teaching + context prompts, Controls page, Button
@@ -61,138 +209,7 @@ Round 9 is done (release 0.9.0). **Round 10 is queued in `Docs/ROUND10.md`** (Da
   Script kept as `Tools/Model/fix_v1_to_v2.py`. Source facts: 0.98 m tall, ~1.95M triangles, one 4K base-color texture.
   Verified only with rough point-cloud previews, not in Blender or Unity yet.
 
-## Round 9 — Chapter 1 as the tutorial: traversal + controls taught as you need them — done (2026-11-17), exe-verified off-screen; release 0.9.0
-Plan text (and Dan's two additions to 8b) moved word-for-word to `TODO-ARCHIVE.md` → "Round 9". Previews + logs:
-`Docs/Previews/r9/` (`chapter1/` full autopilot run, `opening/` 25× opening test, `soundcheck/`, `gallery/`,
-`clip_measurements.txt`). Every run muted (output peak 0.000000 / listener 0), minimized-not-activated, Below Normal,
-one heavy job at a time; monochrome max |R−G|,|G−B| = 0 over all 97 chapter shots.
-0. **Safety checkpoint** — committed + pushed first (`66e77e2`: Dan's doc updates + the 11 new clips and `alt/` in LFS).
-1. **Control scheme — done** (map in `CLAUDE.md` and the pause menu's Controls page). Changes to the proposal: keyboard
-   re-centre moved C → **R** (C is crouch; middle mouse still works); **let go = B / Space / C**; **skip a line = Y / Enter**
-   (A is jump now); the mouse orbits **without a button** and the cursor is locked while playing (right mouse is
-   telekinesis); T stays as a hidden telekinesis alias. Saucer: X / E interact (A still works there). Fight demo unchanged.
-2. **No permanent legend — done.** Legend hidden in the chapter and aboard (0 panels in every shot). Teaching prompts
-   (glyph + words, lower middle, monochrome, once per playthrough, kept across checkpoint restarts): move + camera →
-   interact ("X Look" at the cell door now starts scene 1; the 20 s watchdog still covers idling) → **jump (first gap)**
-   → **crouch (pipe run)** → grab the ledge → hang (climb up · shimmy · let go) → telekinesis (fallen slab) → sit (saucer).
-   Jump comes before crouch because the level puts the gap first. Each stays until done (min 2.2 s), fades 1 s after.
-   Quiet context prompts afterwards ("A Climb", "B Climb down", "X Touch", "RT Telekinesis"…). Pause menu: **Controls**
-   page (Xbox + keyboard) and Settings → **Button hints On / Off** (saved).
-3. **Moves — done** (`ChapterSevenTraversal.cs`, data in `MoonTraversal.cs`): standing + running jump (assisted across
-   known gaps: lands on the far side from anywhere within ~1 m of the take-off), ledge grab when jumping at a lip, jump-
-   to-grab, hang, shimmy L/R, climb up, let go, climb down to a hang at an edge, wall climb, waist-high mantle, crouch-
-   sneak toggle (the pipe run only takes her crouched). Hand IK keeps both wrists on the lip: **gap 0.022–0.040 m** on
-   all 7 ledges (a runtime lift calibrates the hang height). Lips are pale worn stone / scuffed metal strips.
-4. **Falls never kill — done.** A fall with no ground below → white fade → last safe ledge. Deliberate falls in the run:
-   short hop into the catwalk gap, let go over the shaft, let go over the terrace gap → **3/3 reset**.
-5. **Telekinesis before the Scree — done.** A fallen slab blocks the ruins stair; RT lifts it aside into the shaft; her
-   energy point brightens to 1.9× during the lift (also during the Scree stone). Visual only.
-6. **Routes — done (story beats and order unchanged):** prison after scene 3: broken catwalk gap → crouch under a low
-   pipe run → bulkhead (jump-grab, climb, jump down); scene 4 passage: cracked wall climb → climb down onto the shaft lip
-   → shimmy over the dark drop → let go into the ruins → jump → mantle → jump-grab + shimmy + climb → slab (RT) → stair
-   → hall (scene 5 as before); after the vision: drop into a mining cut, climb its wall (2 climbs) out onto the terrace
-   → reveal; to the impound: broken ramp → climb down + drop → scaffold → jump → scaffold → climb down + drop → bay.
-7. **The cat leads — done.** Route mode: he walks / hops to the next ledge or stub and waits (sits, watches her) until
-   she catches up; 27 stops logged, 0.5–3.5 m from her; never on a landing spot; 8 m catch-up rule kept in follow mode.
-8. **Mixamo clips — done, all of Dan's used:** `hang_idle` (hang), `shimmy` + **mirrored copy** `shimmy_mirror` (shimmy
-   R/L), `climb_up` (climb up; also the end of every wall climb, started at 17 %), `jump_to_hang` (jump-to-grab),
-   `hang_drop` (let go when the floor is 2.0–2.9 m below the lip), `running_jump` (all jumps; root motion extracted, the
-   arc is scripted), `fall_idle`, `landing` (soft landings + the standing jump's end), `landing_hard` (drops > 2.6 m),
-   `wall_climb` (cracked wall ×1, mining cut ×2), `crouch_idle`, `sneak_walk` (crouch walk), `alt/7_jumping_up` (standing
-   jump). **Stand-ins:** the **mantle = `climb_up` trimmed from 36 %** (`alt/7_climbing_a` is a 4 m walk-up + 2 m climb,
-   `_b` a mid-wall climb cycle — neither fits waist height); **climbing down into a hang is procedural** (no clip).
-   Not used: `alt/7_hang_idle_b`, `alt/7_running_jump_b` (the main clips fit better). Measurements:
-   `Docs/Previews/r9/clip_measurements.txt`.
-8b. **Vision object + lunar door + the video vision — done.** Glowing white wireframe **dodecahedron** (0.6 m, slow
-   spin, faint pulse, lights the alcove) on a pale pedestal in an alcove; X "Touch" → edges flare → white wash. One
-   constant (`MoonLayout.VisionShape`) swaps it for a tetrahedron / cube / octahedron. **Dan's door addition:** chamber and
-   door after `ref_lunar_door.png`, in ruins — flowing pale ribs and vaults (two broken off), fallen chunks, skylight slits,
-   low fog sheets; pointed-arch door in two leaves split by an S-seam with worn orbit / planet engravings; the round
-   three-spoke mechanism beside it; floor circles with a line of small circles to the door; the same ribs through the
-   hall exit and across the hall. **Dan's vision addition:** white wash → `vision_01_door.mp4` full-screen (12.1 s,
-   1920×1044, height filled, sides cropped 1.7 % each, no stretch; copy in `Unity/Assets/Video/`, LFS) under the vision
-   shimmer with the cat's two lines faint → white wash back. New scene 6 middle from `DIALOGUE.md` (4 new ElevenLabs takes:
-   7 v3 with delivery tags, the cat v2; old takes kept in `Unity/Assets/Audio/Voice/_r8_s06/`). The door now opens by 7
-   touching the mechanism (X "Touch", no dodecahedron outline): its ring lights, the S-seam then the engravings light, the
-   leaves part. Scene 6 cameras: 7 and the cat 0 % occluded / outside the frame.
-9. **Checks — done.** Autopilot start → finish (`-chapter1`): **0 soft-locks**, 27/27 scripted traversal steps, 3/3 fall
-   resets, all 8 lessons shown once and cleared (Xbox + keys shots each), 0 legend panels, every dialogue camera 0 %,
-   83/83 lines with audio (the 4 unplayed are the alternate 6b set), laser/release checks as before. Opening test
-   **`-openingtest 25` → **25/25 PASS** (cat inside the cell 0 frames; the opening now waits for X Look or the watchdog)**. New SFX (ledge grab, soft / hard landing, climbing scuff, slab lift; `Docs/SFX-LIST.md`):
-   brief unmuted check `-soundcheck sfx` → 5 sounds, **5.0 s of sound**, then muted again (output 0.000000): land_soft 0.39, land_hard 0.39, climb_scuff 0.38, slab_lift 0.38 output peak; ledge_grab measured 0.0009 — its file peaks at −3 dBFS in the first 0.1 s and, as the first sound of the check, that transient was missed by the measurement (re-check with it later in the list next time). Gallery check (X/A sit + every binding): `-gallery` real-input test **17 passed, 0 failed**.
-   **Length:** the autopilot plays the whole chapter in **7.2 min** (Moon level 5.8 min) — it walks perfect lines and
-   cuts every voice line after 0.9 s (160.7 s of voice). **Estimate for a first play: ~15–18 min — the 20–25 min target is
-   not reached yet**; more meat would need another traversal / puzzle beat or two (e.g. in the hall or the bay).
-10. **Release + docs — done.** 0.9.0 (build 900) published (`game-900`, Latest); `TODO.md`, `CLAUDE.md` updated; pushed.
-
-### For Dan to check (Round 9) — `Docs/Previews/r9/chapter1/`
-- Teaching prompts (Xbox / keys): `02/03_t_move`, `04/05_t_interact`, `16/17_t_jump`, `20/21_t_crouch`, `23/24_t_ledge`,
-  `25/26_t_hang`, `41/42_t_tk`, `91/92_t_sit`; pause menu Controls page `96_s12_pause_controls.png`.
-- Traversal: `19_tr01_across_the_gap`, `22_tr02_crouched_under_pipes`, `27_tr03_hanging_bulkhead` (cat waiting on top),
-  `28_tr04_shimmy_bulkhead`, `32_tr06_wall_climb`, `33_tr07_hanging_shaft_lip`, `35_tr08_shimmy_over_the_drop`,
-  `36_tr09_dropped_into_the_ruins`, `37/38` terraces, `39_tr12_hanging_terrace_c`, `43/44` slab + bright energy point,
-  `65–67` mining cut, `74–76` broken ramp / scaffolds / bay. Fall reset: `18_tr_fall_white.png`.
-- Vision + door: `53_s06_shape_in_alcove`, `54_s06_shape_touch_flare`, `52_s06_chamber_before`, `55_s06_whitewash_in`,
-  `57_s06_vision_video_frame`, `58_s06_whitewash_out`, `61_s06_touching_mechanism`, `62_s06_emblem_and_engravings_lit`,
-  `63_s06_door_parting`, `64_s06_passage_opens`.
-- Play: the chapter has no legend now — try it with Button hints On, then Off (Settings). Hang on the bulkhead and
-  shimmy; let go over the shaft on purpose (white fade, back on the shelf).
-
-## Quick fix QF4 — cat/opening, dialogue cameras, the real Scree — done (2026-11-17), exe-verified off-screen; release 0.8.2
-Plan text moved word-for-word to `TODO-ARCHIVE.md` → "Quick fix QF4". Previews + logs: `Docs/Previews/qf4/`. Every run
-muted (output peak 0.000000 / listener 0 in every log), minimized-not-activated, Below Normal, one heavy job at a time;
-monochrome max |R−G|,|G−B| = 0 over all 92 final-build shots. No audio changed, so no sound check.
-0. **Safety checkpoint** — committed + pushed first (`ecf9ae8`, Scree GLB + references in LFS).
-1. **Cat never in the cell, opening always starts — done.** Cause: the cat started in Follow mode and moved one step per
-   frame; a long frame (load hitch, up to 333 ms) let one sprint step jump the 0.7 m wall between the corridor and the
-   cell zones, and once inside he could never reach his mark, so scene 1 (which waited for "cat arrived") never began.
-   Fixes (`ChapterCat.cs`, `Chapter1Director.cs`): his moves are split into ≤ 6 cm sub-steps; a **no-cat box** over the
-   cell (`ChapterCat.NoCat`) rejects/pushes out every step, hop end, placement and catch-up; he sits by his opening at
-   checkpoint 0 until sent on his fixed route. Scene 1 starts when 7 reaches the door, or by **watchdog 20 s after the
-   cat arrives** (45 s after he is sent at most) — 7 is then walked to the door; if he is not on his mark 4 s later he
-   is placed there. **Every wait on the cat** (door mark, alcove, crate up/down, back from the alcove) is a watchdog
-   (`UntilOr`, in play too) — no story step can hang on the cat's position. **Check:** `-openingtest 25` →
-   **25/25 PASS**, cat inside the cell 0 frames in every run (5 variants × 5: idle → watchdog, door at once, wanders,
-   waits for the cat, runs along the beams; random start spots; 150–450 ms hitches injected in 12 runs) —
-   `Docs/Previews/qf4/opening/capture_log.txt`.
-2. **Dialogue cameras keep a clear view — done.** Scene 5's camera sat at x 17.6, outside the passage wall (the passage
-   is x 15.6–17.4). Now they step into the hall first; `ChapterCamera` gets the speakers for every conversation
-   (`Talk()`), checks line of sight + frame every 0.2 s while lines play and moves to the nearest clear framing (eased
-   when the way is open, a cut when a wall is in between — never through geometry); every conversation waits for the
-   cat to reach his spot and the camera to settle; scene 7 is now over her shoulder with the cat beside her; "Come on."
-   (5-4) is a short two-shot. **Check** (full chapter, 0.1 s samples during every line): 7 and the cat — and the guard
-   in 5-1…3 — **occluded 0 %, outside the frame 0 %** in scenes 1, 2, 3, 4, 5, 6, 7, 8 and 6b (`speaker view` lines in
-   `Docs/Previews/qf4/chapter1/capture_log.txt`). Not counted (story): the cat while he walks off to the hidden release
-   (2-2/2-3) and while hidden in the vision; 6b counts occlusion only (its lines play over the city shots on purpose).
-3. **The real Scree — done, tail tucked (Dan's change).** `Tools/Blender/cleanup_scree.py` (~4 min): squares the figure
-   (turned 17.7°), crown 1.90 m (antenna tip 2.00), origin at the feet; abdomen + wing covers swung 37.9° to straight
-   behind, **then tucked 42° below horizontal** about the waist (the covers move with it); head straightened 12.4°;
-   decimated to 45k tris with hose, antenna and claws protected; grayscale 2048 texture. Rig with Unity Humanoid names
-   (explicit bone map in `FightDemoBuilderScree.cs`) + extras: lower arm pair, 4-bone abdomen, 2-bone antenna; the upper
-   arms straightened into a T-pose rest. 7's `idle` / `walk` / `look_around` retargeted; keyed `work` (2.4 s loop) and
-   `alert` (1.4 s); `ScreeRig.cs` moves the lower arms (follow the upper pair, brace forward while working), abdomen and
-   antenna (sway; twitch on alert). Eyes = small white glints, tank lights = small white glow (emissive). In Chapter 1:
-   the hall guard (alert reaction when the stone lands, then walks over and looks around; still nonlethal), the two gate
-   guards, 4 workers in the bay and 2 on the terrace seen in the city reveal (work loop). Placeholder kept as the
-   fallback (used automatically if the export is missing). **Checks:** feet — lowest foot/toe bone 0.03–0.08 m above
-   the root, root 0.000 m above the ground (idle, alert, walk, work); tucked abdomen vs legs (centre line, needs
-   > 0.20 m): **idle 0.315, walk 0.278, work 0.304 m → clears**; no limb tearing seen in the shots.
-4. **Rebuild + release — done.** Build everything (exit 0; phantom check city triangles 0); **0.8.2 (build 802)**
-   published: `game-802` is **Latest** on `danemoll-jpg/seven-releases`.
-
-**Scree design approved 2026-11-17 — tail tucked down** (Dan).
-
-### For Dan to check (QF4)
-- Scree previews (Blender, rest pose): `Docs/Previews/qf4/scree/scree_sheet_rest.png` (front / side / back / ¾ / top /
-  other side) — tail tucked, covers along it; side `scree_rest_side.png`, face `scree_rest_face.png`.
-- Scree clips: `Docs/Previews/qf4/scree/scree_sheet_clips.png` (work loop frames; alert start / mid / end).
-- In game (`Docs/Previews/qf4/chapter1/`): `15_s05_checkonly_scree_guard_idle.png`, `17_s05_checkonly_scree_guard_alert.png`,
-  `18_s05_checkonly_scree_guard_walking.png`, `33_s07_checkonly_scree_worker_bay.png`, `34_s07_checkonly_scree_worker_terrace.png`.
-- Conversation framing: scene 5 `14_s05_scree_guard.png` (7, the cat and the guard beyond); scene 7
-  `32_c06_saucer_spotted.png`; scene 8 `36_s08_at_the_edge_of_the_light.png`.
-- Opening runs: `Docs/Previews/qf4/opening/01_op01_scene1_0.png … 05_op05_scene1_4.png` + the 25-line PASS log.
-- Play: stand idle in the cell — scene 1 should start by itself ~20 s after the cat sits down outside; the cat never
-  comes in. The launcher should offer the 0.8.2 update.
+Round 9 + QF4 status records: `TODO-ARCHIVE.md` → "Archived 2026-11-17: Round 9 + QF4 status records".
 
 ## Next Steps (Do Not Start Yet)
 - **Scree model** — done in QF4; Scree design approved 2026-11-17 — tail tucked down.

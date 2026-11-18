@@ -19,6 +19,7 @@ namespace Seven
         IEnumerator Start()
         {
             if (DemoBoot.SoundCheckSfx) { yield return SfxCheck(); yield break; }
+            if (DemoBoot.SoundCheckGalley) { yield return GalleyCheck(); yield break; }
             var log = new StringBuilder();
             float t0 = Time.realtimeSinceStartup;
             void L(string s) { log.AppendLine($"[{Time.realtimeSinceStartup - t0,6:0.00}s] {s}"); Debug.Log("[Seven] soundcheck " + s); }
@@ -61,6 +62,50 @@ namespace Seven
         }
 
         /// <summary>
+        /// Round 10: the short unmuted galley check (-soundcheck galley): three new scene 10 lines (7 aloud, the cat
+        /// telepathic, the new short "Venus, then.") and the two eating sounds, each cut at 3 s / 1.2 s; a 0.2 s silent
+        /// warm-up first so the first transient is measured; mutes again and measures 0.
+        IEnumerator GalleyCheck()
+        {
+            var log = new StringBuilder();
+            float t0 = Time.realtimeSinceStartup;
+            void L(string s) { log.AppendLine($"[{Time.realtimeSinceStartup - t0,6:0.00}s] {s}"); Debug.Log("[Seven] soundcheck " + s); }
+            var dir = DemoBoot.CaptureDir ?? Path.Combine(Application.temporaryCachePath, "soundcheck");
+            Directory.CreateDirectory(dir);
+            var menu = GetComponent<DemoMenu>();
+            var bank = menu != null ? menu.Bank : null;
+            float[] buf = new float[1024], buf2 = new float[1024];
+            AudioListener.pause = false; AudioListener.volume = 1f;
+            L("UNMUTED (volume 1) - galley check: lines s10_24_7, s10_25_cat, s10_36_7 (cut at 3 s) + fork_clink, cat_eating (cut at 1.2 s)");
+            for (float w = Time.realtimeSinceStartup; Time.realtimeSinceStartup - w < 0.2f;) yield return null;
+            float total = 0f;
+            foreach (var id in new[] { "s10_24_7", "s10_25_cat", "s10_36_7", "fork_clink", "cat_eating" })
+            {
+                AudioSource src; string what;
+                var line = id.StartsWith("s10_") && bank != null ? bank.Get(id) : null;
+                if (line != null && line.Clip != null) { src = DialoguePlayer.MakeSource("Check_" + id, line.IsCat, false, transform); src.clip = line.Clip; src.Play(); what = $"'{line.Text}'"; }
+                else { src = AudioKit.Play(id); what = id; }
+                if (src == null || src.clip == null) { L($"{id}: no clip"); continue; }
+                float cut = id.StartsWith("s10_") ? 3f : 1.2f, peak = 0f, s0 = Time.realtimeSinceStartup;
+                while (Time.realtimeSinceStartup - s0 < Mathf.Min(cut, src.clip.length + 0.1f))
+                {
+                    AudioListener.GetOutputData(buf, 0); AudioListener.GetOutputData(buf2, 1);
+                    for (int i = 0; i < buf.Length; i++) peak = Mathf.Max(peak, Mathf.Abs(buf[i]), Mathf.Abs(buf2[i]));
+                    yield return null;
+                }
+                src.Stop();
+                float dur = Time.realtimeSinceStartup - s0; total += dur;
+                L($"{id} {what}: {dur:0.00}s, output peak {peak:0.000}");
+            }
+            AudioListener.volume = 0f; AudioListener.pause = true;
+            L($"MUTED AGAIN - {total:0.0}s of sound in total");
+            for (float w = Time.realtimeSinceStartup; Time.realtimeSinceStartup - w < 0.3f;) yield return null;   // let the mixer buffer flush
+            AudioListener.GetOutputData(buf, 0);
+            float after = 0f; foreach (var v in buf) after = Mathf.Max(after, Mathf.Abs(v));
+            L($"after mute: output peak {after:0.000000}, listenerVolume={AudioListener.volume}");
+            Write(dir, log);
+        }
+
         /// Round 7: the short unmuted SFX check (-soundcheck sfx): plays a few of the new sound effects one after
         /// another (each cut at <see cref="SfxSeconds"/>), measures each one's output peak, mutes again, measures 0.
         /// </summary>

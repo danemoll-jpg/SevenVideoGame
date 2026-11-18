@@ -196,6 +196,9 @@ namespace Seven
             SetZone("Stair", _slabMoved);
             if (Slab != null) { Slab.gameObject.SetActive(!_slabMoved); Slab.position = MoonTraversal.SlabRest; Slab.rotation = Quaternion.Euler(4f, 12f, -6f); }
             _shapeGlow = sealedOpen ? 0.45f : 1.4f;
+            _shapeTaken = sealedOpen;                        // Round 10: from checkpoint 4 on she carries it (stowed)
+            if (Shape != null) Show(Shape.gameObject, !sealedOpen);
+            if (ShapeLight != null) ShapeLight.enabled = !sealedOpen;
             Glow(DoorSymbol, sealedOpen ? 0.7f : 0f);
             Ground.IgnoreObstacle = -1;
             Show(Seven.gameObject, true); Show(Cat.gameObject, true);
@@ -833,7 +836,7 @@ namespace Seven
             {
                 // Round 9 (8b) capture: the shape in its alcove
                 bool w = Cam.InShot;
-                Cam.Shot(MoonLayout.ShapeAt + new Vector3(-2.3f, 0.35f, 1.2f), MoonLayout.ShapeAt + Vector3.down * 0.25f, 0.01f, true, 46f);
+                Cam.Shot(MoonLayout.ShapeAt + new Vector3(-1.0f, 0.25f, 0.55f), MoonLayout.ShapeAt + Vector3.down * 0.12f, 0.01f, true, 40f);
                 yield return null;
                 yield return Shot("s06_shape_in_alcove");
                 if (!w) Cam.Follow();
@@ -974,8 +977,51 @@ namespace Seven
             yield return Dlg.PlayScene(6, 9, 11);            // closing lines 9-11
             MusicSystem.Play("moon_prison", 4f);
             yield return Cutscene(false);
+            yield return TakeShape();
             Checkpoint(4);
         }
+
+        /// <summary>Round 10: after the door scene, X "Take": 7 picks up the dodecahedron and keeps it (stowed at her
+        /// side - it stays with her; no inventory UI). It returns beside her plate in the galley (scene 10).</summary>
+        IEnumerator TakeShape()
+        {
+            if (Shape == null) yield break;
+            Objective("Take the shape");
+            Prompt("Take", MoonLayout.ShapeSpot, 1.4f);
+            if (Auto) yield return AutoWalk(MoonLayout.ShapeSpot);
+            yield return WaitPrompt("take the dodecahedron");
+            Objective(null);
+            yield return Cutscene(true);
+            Cam.Subjects.Clear();
+            Cam.Shot(MoonLayout.ShapeSpot + new Vector3(-0.2f, 1.55f, 1.35f), MoonLayout.ShapeAt + Vector3.down * 0.1f, 0.6f, false, 46f);
+            if (Dist7(MoonLayout.ShapeSpot) > 0.15f) yield return WalkSeven(MoonLayout.ShapeSpot, 2.5f);
+            Seven.Lock(true);
+            for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(MoonLayout.ShapeAt - Seven.transform.position)), 400f * Time.deltaTime); yield return null; }
+            Seven.Touch(MoonLayout.ShapeAt);
+            yield return Wait(0.85f);
+            _shapeTaken = true;
+            var hand = Seven.Bone(HumanBodyBones.RightHand);
+            var p0 = Shape.position; var r0 = Shape.rotation;
+            AudioKit.Play("energy_point", MoonLayout.ShapeAt, 0.5f, 0f, AudioKit.Bus.Sfx, 15f);
+            for (float t = 0f; t < 0.5f; t += Time.deltaTime)
+            {
+                var hp = hand != null ? hand.position + hand.up * -0.02f : p0;
+                Shape.position = Vector3.Lerp(p0, hp, Mathf.SmoothStep(0f, 1f, t / 0.5f));
+                yield return null;
+            }
+            if (hand != null) { Shape.SetParent(hand, true); Shape.localPosition = new Vector3(0f, -0.06f, 0.04f); }
+            yield return Wait(0.35f);
+            yield return Shot("s06_take_shape_in_hand");
+            Seven.Release(); Seven.Lock(true);
+            yield return Wait(0.6f);
+            // stowed at her side: it stays with her (hidden; the galley shows it again)
+            Show(Shape.gameObject, false);
+            if (ShapeLight != null) ShapeLight.enabled = false;
+            if (Auto) Cap.Log($"dodecahedron taken: in her hand, then stowed (radius {MoonLayout.ShapeRadius:0.000} m, ~{MoonLayout.ShapeRadius * 2f * 100f:0} cm across; marking file {MoonLayout.ElarimMarkFile})");
+            Objective("Keep going");
+            yield return Cutscene(false);
+        }
+        bool _shapeTaken;
 
         IEnumerator Ghosts()
         {
@@ -1168,6 +1214,20 @@ namespace Seven
                 if (Workers.Length > 0) yield return AbdomenClearance(Workers[0], "worker", 2.4f);
                 if (Workers.Length > 0) yield return GuardView("s07_checkonly_scree_worker_bay", Workers[0], 3.0f);
                 if (Workers.Length > 4) yield return GuardView("s07_checkonly_scree_worker_terrace", Workers[4], 3.0f);
+            }
+            if (Auto)
+            {
+                // Round 10 capture: the silver saucer in the impound bay (reflections from its own probe)
+                bool w = Cam.InShot;
+                Cam.Shot(MoonLayout.SaucerCentre + new Vector3(8.5f, 2.6f, 9.5f), MoonLayout.SaucerCentre + Vector3.up * 1.0f, 0.01f, true, 48f);
+                yield return null; yield return null;
+                yield return Shot("s07_silver_saucer_in_bay");
+                Cam.Shot(MoonLayout.SaucerCentre + new Vector3(-8.5f, 0.9f, 8.0f), MoonLayout.SaucerCentre + Vector3.up * 0.9f, 0.01f, true, 46f);
+                yield return null; yield return null;
+                yield return Shot("s07_silver_saucer_low_angle");
+                var sp = Saucer != null ? Saucer.GetComponentInChildren<SaucerProbe>() : null;
+                Cap.Log($"silver saucer: reflection probe riding with it {(sp != null ? $"renders so far {sp.Renders}" : "MISSING")}");
+                if (!w) Cam.Follow();
             }
             yield return WaitPrompt("pull the release lever");
             Seven.Gesture(MoonLayout.Lever + Vector3.up * 1f);
@@ -1926,8 +1986,9 @@ namespace Seven
             while (true)
             {
                 t += Time.deltaTime;
+                if (_shapeTaken) { yield return null; continue; }
                 Shape.rotation = Quaternion.Euler(12f * Mathf.Sin(t * 0.21f), t * 9f, 8f * Mathf.Sin(t * 0.17f + 1f));
-                Shape.position = MoonLayout.ShapeAt + Vector3.up * Mathf.Sin(t * 0.8f) * 0.025f;
+                Shape.position = MoonLayout.ShapeAt + Vector3.up * Mathf.Sin(t * 0.8f) * 0.012f;
                 Glow(InscriptionGlow, _shapeGlow * (1f + 0.14f * Mathf.Sin(t * 1.6f)));
                 if (ShapeLight != null) ShapeLight.intensity = 0.8f * _shapeGlow * (1f + 0.1f * Mathf.Sin(t * 1.6f));
                 yield return null;
