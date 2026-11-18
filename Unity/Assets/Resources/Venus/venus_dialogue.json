@@ -1,0 +1,1233 @@
+{
+ "note": "Round 11 Venus dialogue - generated from Docs/CHAPTER2_VENUS.md by Tools/Voice/make_venus_lines.py; editable: text, label, delivery, cue, order. Cues are presentation only.",
+ "scenes": [
+  {
+   "id": "VEN_B01",
+   "title": "LANDING: UNPACKING THE BIKE",
+   "trigger": "After VEN_C01, before 7 enters the outer gardens.",
+   "result": "Bike available; objective \"Ride to the Elarim temple.\" (VEN_S01_LANDED's objective, reworded).",
+   "delivery": "cutscene",
+   "cues": [
+    "Wide — saucer and landscape: 7 walks down the ramp and looks toward the distant temple.",
+    "Low three-quarter on the bike: its broad front forks frame the rounded nose; the pointed tail extends behind the"
+   ],
+   "round": 11
+  },
+  {
+   "id": "VEN_B02",
+   "title": "FIRST RIDE: LET VENUS BE BEAUTIFUL",
+   "trigger": "",
+   "result": "",
+   "delivery": "in-gameplay",
+   "cues": [],
+   "round": 11
+  },
+  {
+   "id": "VEN_B03",
+   "title": "THE DAMAGED ROUTE: DISCOVERING THE TROUBLE",
+   "trigger": "",
+   "result": "",
+   "delivery": "in-gameplay",
+   "cues": [],
+   "round": 11
+  },
+  {
+   "id": "VEN_B04",
+   "title": "TEMPLE ARRIVAL: A NATURAL TRANSITION TO WALKING",
+   "trigger": "",
+   "result": "",
+   "delivery": "cutscene",
+   "cues": [
+    "Wide — arrival. She dismounts; the bike settles into a low idle hover as the guardian approaches."
+   ],
+   "round": 11
+  },
+  {
+   "id": "VEN_B05",
+   "title": "THE LOWER GARDENS: RIDING TOWARD THE SOURCE",
+   "trigger": "After 7 agrees to help (end of VEN_C04).",
+   "result": "",
+   "delivery": "cutscene",
+   "cues": [],
+   "round": 11
+  },
+  {
+   "id": "VEN_B06",
+   "title": "RETURN RIDE: SHOW WHAT CHANGED",
+   "trigger": "After VEN_C07 (Wormmaster subdued), when 7 returns to her bike.",
+   "result": "",
+   "delivery": "cutscene",
+   "cues": [],
+   "round": 12
+  },
+  {
+   "id": "VEN_B07",
+   "title": "BACK TO THE SAUCER: LET THE MEMORY SETTLE",
+   "trigger": "After VEN_C10 (record received). Keep it quiet: a direct route or a shortcut opened during the chapter, so it",
+   "result": "",
+   "delivery": "cutscene",
+   "cues": [],
+   "round": 12
+  },
+  {
+   "id": "VEN_C01",
+   "title": "ARRIVAL",
+   "trigger": "First landing on Venus.",
+   "result": "Set VEN_S01_LANDED.",
+   "delivery": "cutscene",
+   "cues": [
+    "Extreme wide of saucer emerging beneath clouds.",
+    "Over 7’s shoulder toward the gardens.",
+    "Medium two-shot of 7 and Cat.",
+    "Landscape insert.",
+    "Cat head tracking flying creatures."
+   ],
+   "round": 11
+  },
+  {
+   "id": "VEN_C02",
+   "title": "GARDEN TREMOR",
+   "trigger": "First approach to the damaged outer walkway — **now during the ride, see VEN_B03**.",
+   "result": "",
+   "delivery": "in-gameplay",
+   "cues": [],
+   "round": 11
+  },
+  {
+   "id": "VEN_C03",
+   "title": "MEET THE GUARDIAN",
+   "trigger": "Interact with guardian before help is accepted.",
+   "result": "Set VEN_S02_GUARDIAN_MET and guide the player toward the cube chamber.",
+   "delivery": "cutscene",
+   "cues": [
+    "Wide two-shot at temple entrance.",
+    "Insert of dodecahedron.",
+    "Over 7’s shoulder toward guardian.",
+    "Close view of object between them."
+   ],
+   "round": 11
+  },
+  {
+   "id": "VEN_C04",
+   "title": "CUBE AND INTERRUPTION",
+   "trigger": "Reach the cube chamber after VEN_C03.",
+   "result": "Set VEN_S03_HELP_ACCEPTED.",
+   "delivery": "cutscene",
+   "cues": [
+    "Wide chamber.",
+    "Over 7’s shoulder toward cube.",
+    "Matching inserts of related markings.",
+    "Brief eye close-up.",
+    "Falling dust insert when tremor begins."
+   ],
+   "round": 11
+  },
+  {
+   "id": "VEN_C05",
+   "title": "DISCOVER THE SIGNAL",
+   "trigger": "Reach the creature observation area.",
+   "result": "Set VEN_S04_CONTROL_DISCOVERED.",
+   "delivery": "in-gameplay",
+   "cues": [],
+   "round": 11
+  },
+  {
+   "id": "VEN_C06",
+   "title": "WORMMASTER INTRODUCTION",
+   "trigger": "Enter control chamber.",
+   "result": "Set VEN_S05_ENCOUNTER_ACTIVE.",
+   "delivery": "cutscene",
+   "cues": [
+    "Low-angle view of Wormmaster above machinery.",
+    "Underlighting in grayscale.",
+    "Over his shoulder toward 7.",
+    "Level medium shot for 7’s replies."
+   ],
+   "round": 12
+  },
+  {
+   "id": "VEN_C07",
+   "title": "THREAT STOPPED",
+   "trigger": "All control devices disabled and Wormmaster contained.",
+   "result": "Set VEN_S06_THREAT_STOPPED.",
+   "delivery": "cutscene",
+   "cues": [],
+   "round": 12
+  },
+  {
+   "id": "VEN_C08",
+   "title": "RETURN TO GUARDIAN",
+   "trigger": "Interact with guardian after VEN_S06.",
+   "result": "",
+   "delivery": "cutscene",
+   "cues": [],
+   "round": 12
+  },
+  {
+   "id": "VEN_C09",
+   "title": "RECORD AND PERSONAL MEMORY",
+   "trigger": "Interact with cube after VEN_C08.",
+   "result": "",
+   "delivery": "cutscene",
+   "cues": [
+    "Over shoulder toward cube.",
+    "Hand approaches and touches.",
+    "Full-screen vision.",
+    "Match cut from the vision’s open palm to 7’s empty palm.",
+    "Eye close-up, gaze lowered.",
+    "Medium two-shot for the unanswered question."
+   ],
+   "round": 12
+  },
+  {
+   "id": "VEN_C10",
+   "title": "RECEIVE THE RECORD",
+   "trigger": "Immediately after VEN_C09.",
+   "result": "Award Venus record once; set VEN_S07_RECORD_RECEIVED.",
+   "delivery": "cutscene",
+   "cues": [],
+   "round": 12
+  },
+  {
+   "id": "VEN_C11",
+   "title": "SAUCER DEBRIEF",
+   "trigger": "Enter saucer after receiving record (after VEN_B07, the ride back).",
+   "result": "Set VEN_S08_COMPLETE; enable normal destination selection.",
+   "delivery": "cutscene",
+   "cues": [],
+   "round": 12
+  }
+ ],
+ "lines": [
+  {
+   "id": "VEN_B01_01",
+   "scene": "VEN_B01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "That’s a walk.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": "wide - saucer and landscape"
+  },
+  {
+   "id": "VEN_B01_02",
+   "scene": "VEN_B01",
+   "speaker": "cat",
+   "label": "Cat",
+   "text": "You have a vehicle.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B01_03",
+   "scene": "VEN_B01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "I know.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B01_04",
+   "scene": "VEN_B01",
+   "speaker": "cat",
+   "label": "Cat",
+   "text": "I’m establishing that my advice is useful.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B01_05",
+   "scene": "VEN_B01",
+   "speaker": "cat",
+   "label": "Cat",
+   "text": "I’ll watch the ship.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": "low three-quarter on the bike"
+  },
+  {
+   "id": "VEN_B01_06",
+   "scene": "VEN_B01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "What should I call you?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B01_07",
+   "scene": "VEN_B01",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Panther.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B01_08",
+   "scene": "VEN_B01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Panther.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B01_09",
+   "scene": "VEN_B01",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "You can say it without looking me up and down.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B01_10",
+   "scene": "VEN_B01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Look after the ship, Panther.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": "side medium - 7 mounting"
+  },
+  {
+   "id": "VEN_B01_11",
+   "scene": "VEN_B01",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Try not to rearrange the bike.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B02_01",
+   "scene": "VEN_B02",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Are you seeing this?",
+   "delivery": "in-gameplay",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B02_02",
+   "scene": "VEN_B02",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "I’m seeing the inside of your ship.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B02_03",
+   "scene": "VEN_B02",
+   "speaker": "seven",
+   "label": "7",
+   "text": "The gardens go all the way down.",
+   "delivery": "in-gameplay",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B02_04",
+   "scene": "VEN_B02",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Tell me when you get back.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B05_01",
+   "scene": "VEN_B05",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "The lower gardens have a maintenance path. Your vehicle can take you as far as the root chambers.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B05_02",
+   "scene": "VEN_B05",
+   "speaker": "seven",
+   "label": "7",
+   "text": "And after that?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B05_03",
+   "scene": "VEN_B05",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "You’ll have to continue on foot.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B06_01",
+   "scene": "VEN_B06",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "How’s the garden?",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B06_02",
+   "scene": "VEN_B06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Still standing.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B06_03",
+   "scene": "VEN_B06",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "And its unwelcome guest?",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B06_04",
+   "scene": "VEN_B06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Staying put.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B06_05",
+   "scene": "VEN_B06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "The others are going home.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B07_01",
+   "scene": "VEN_B07",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Did they have answers?",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B07_02",
+   "scene": "VEN_B07",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Some.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_B07_03",
+   "scene": "VEN_B07",
+   "speaker": "seven",
+   "label": "7",
+   "text": "I’ll tell you inside.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C01_01",
+   "scene": "VEN_C01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Someone still lives here.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": "over 7's shoulder toward the gardens"
+  },
+  {
+   "id": "VEN_C01_02",
+   "scene": "VEN_C01",
+   "speaker": "cat",
+   "label": "Cat",
+   "text": "You sound surprised.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": "medium two-shot of 7 and Cat"
+  },
+  {
+   "id": "VEN_C01_03",
+   "scene": "VEN_C01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "After the Moon…",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C01_04",
+   "scene": "VEN_C01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "It’s beautiful.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": "landscape insert"
+  },
+  {
+   "id": "VEN_C01_05",
+   "scene": "VEN_C01",
+   "speaker": "cat",
+   "label": "Cat",
+   "text": "Land somewhere with a roof.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": "cat head tracking flying creatures"
+  },
+  {
+   "id": "VEN_C01_06",
+   "scene": "VEN_C01",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Why?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C01_07",
+   "scene": "VEN_C01",
+   "speaker": "cat",
+   "label": "Cat",
+   "text": "Experience.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C02_01",
+   "scene": "VEN_C02",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Something’s wrong here.",
+   "delivery": "in-gameplay",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C02_02",
+   "scene": "VEN_C02",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "I felt that through the landing supports.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C03_01",
+   "scene": "VEN_C03",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "What brings you here?",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": "wide two-shot at temple entrance"
+  },
+  {
+   "id": "VEN_C03_02",
+   "scene": "VEN_C03",
+   "speaker": "seven",
+   "label": "7",
+   "text": "I found this on the Moon. Someone recognized your marking.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C03_03",
+   "scene": "VEN_C03",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "May I see it?",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": "insert of dodecahedron"
+  },
+  {
+   "id": "VEN_C03_04",
+   "scene": "VEN_C03",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Where on the Moon?",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": "over 7's shoulder toward guardian"
+  },
+  {
+   "id": "VEN_C03_05",
+   "scene": "VEN_C03",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Beneath the city. In the old passages.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C03_06",
+   "scene": "VEN_C03",
+   "speaker": "seven",
+   "label": "7",
+   "text": "When I touched it, I saw people. A place as it used to be.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C03_07",
+   "scene": "VEN_C03",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "What did they show you?",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C03_08",
+   "scene": "VEN_C03",
+   "speaker": "seven",
+   "label": "7",
+   "text": "A door opening.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C03_09",
+   "scene": "VEN_C03",
+   "speaker": "seven",
+   "label": "7",
+   "text": "It sounds small when I say it.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C03_10",
+   "scene": "VEN_C03",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Most of a life is small things.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": "close view of object between them"
+  },
+  {
+   "id": "VEN_C04_01",
+   "scene": "VEN_C04",
+   "speaker": "seven",
+   "label": "7",
+   "text": "The same marking.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": "over 7's shoulder toward cube"
+  },
+  {
+   "id": "VEN_C04_02",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Our histories were not always kept apart.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": "matching inserts of related markings"
+  },
+  {
+   "id": "VEN_C04_03",
+   "scene": "VEN_C04",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Is this one like mine?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_04",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "This holds our record. Yours belongs to the Moon.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_05",
+   "scene": "VEN_C04",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Then why did it show me something that felt like a memory?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": "brief eye close-up"
+  },
+  {
+   "id": "VEN_C04_06",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Let us see what ours shows you.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_07",
+   "scene": "VEN_C04",
+   "speaker": "attendant",
+   "label": "Attendant",
+   "text": "The lower channel has collapsed.",
+   "delivery": "spoken",
+   "voice": "Attendant",
+   "cue": "falling dust insert"
+  },
+  {
+   "id": "VEN_C04_08",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Move everyone off that terrace.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_09",
+   "scene": "VEN_C04",
+   "speaker": "seven",
+   "label": "7",
+   "text": "What’s causing it?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_10",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Someone beneath the gardens. He is forcing the burrowing creatures through our foundations.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_11",
+   "scene": "VEN_C04",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Why?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_12",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "He wants us to surrender the temple.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_13",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "We cannot keep repairing the ground while he tears it away.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_14",
+   "scene": "VEN_C04",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Then I’ll find him.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_15",
+   "scene": "VEN_C04",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "The creatures are being driven. Please remember that.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C04_16",
+   "scene": "VEN_C04",
+   "speaker": "seven",
+   "label": "7",
+   "text": "I will.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C05_01",
+   "scene": "VEN_C05",
+   "speaker": "seven",
+   "label": "7",
+   "text": "They aren’t attacking the people.",
+   "delivery": "in-gameplay",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C05_02",
+   "scene": "VEN_C05",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "What are they doing?",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C05_03",
+   "scene": "VEN_C05",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Following something. Every time that sound starts, they move.",
+   "delivery": "in-gameplay",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C05_04",
+   "scene": "VEN_C05",
+   "speaker": "seven",
+   "label": "7",
+   "text": "There.",
+   "delivery": "in-gameplay",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C05_05",
+   "scene": "VEN_C05",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Then find what’s calling them.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C06_01",
+   "scene": "VEN_C06",
+   "speaker": "wormmaster",
+   "label": "Wormmaster",
+   "text": "They sent someone down at last.",
+   "delivery": "spoken",
+   "voice": "Wormmaster",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C06_02",
+   "scene": "VEN_C06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "You’re bringing their gardens down.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C06_03",
+   "scene": "VEN_C06",
+   "speaker": "wormmaster",
+   "label": "Wormmaster",
+   "text": "They can leave.",
+   "delivery": "spoken",
+   "voice": "Wormmaster",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C06_04",
+   "scene": "VEN_C06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "It’s their home.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C06_05",
+   "scene": "VEN_C06",
+   "speaker": "wormmaster",
+   "label": "Wormmaster",
+   "text": "Then they should have been more willing to negotiate.",
+   "delivery": "spoken",
+   "voice": "Wormmaster",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C06_06",
+   "scene": "VEN_C06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Turn it off.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C06_07",
+   "scene": "VEN_C06",
+   "speaker": "wormmaster",
+   "label": "Wormmaster",
+   "text": "Come and do it yourself.",
+   "delivery": "spoken",
+   "voice": "Wormmaster",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C07_01",
+   "scene": "VEN_C07",
+   "speaker": "wormmaster",
+   "label": "Wormmaster",
+   "text": "You don’t know what you’re interfering with.",
+   "delivery": "spoken",
+   "voice": "Wormmaster",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C07_02",
+   "scene": "VEN_C07",
+   "speaker": "seven",
+   "label": "7",
+   "text": "I know what was standing above it.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C08_01",
+   "scene": "VEN_C08",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "The ground is quiet.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C08_02",
+   "scene": "VEN_C08",
+   "speaker": "seven",
+   "label": "7",
+   "text": "It will need repairs.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C08_03",
+   "scene": "VEN_C08",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Repairs we can make.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C08_04",
+   "scene": "VEN_C08",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "You came with a question.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_01",
+   "scene": "VEN_C09",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "What did you see?",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_02",
+   "scene": "VEN_C09",
+   "speaker": "seven",
+   "label": "7",
+   "text": "The gardens. Before the towers were finished.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_03",
+   "scene": "VEN_C09",
+   "speaker": "seven",
+   "label": "7",
+   "text": "And someone gave me something.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_04",
+   "scene": "VEN_C09",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "What?",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_05",
+   "scene": "VEN_C09",
+   "speaker": "seven",
+   "label": "7",
+   "text": "A seed.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_06",
+   "scene": "VEN_C09",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "That is not part of the record I opened.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_07",
+   "scene": "VEN_C09",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Then where did it come from?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C09_08",
+   "scene": "VEN_C09",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "I don’t know.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C10_01",
+   "scene": "VEN_C10",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Take this record with you.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C10_02",
+   "scene": "VEN_C10",
+   "speaker": "seven",
+   "label": "7",
+   "text": "You still have it here?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C10_03",
+   "scene": "VEN_C10",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "Yes.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C10_04",
+   "scene": "VEN_C10",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Then why give me another?",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C10_05",
+   "scene": "VEN_C10",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "You saw how close he came.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C10_06",
+   "scene": "VEN_C10",
+   "speaker": "guardian",
+   "label": "Guardian",
+   "text": "If this place were lost, I would want someone to know we had been here.",
+   "delivery": "spoken",
+   "voice": "Guardian",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_01",
+   "scene": "VEN_C11",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Did they know what it was?",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_02",
+   "scene": "VEN_C11",
+   "speaker": "seven",
+   "label": "7",
+   "text": "The Moon’s record. Venus has its own.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_03",
+   "scene": "VEN_C11",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "And the people you saw?",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_04",
+   "scene": "VEN_C11",
+   "speaker": "seven",
+   "label": "7",
+   "text": "They’re less certain about that.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_05",
+   "scene": "VEN_C11",
+   "speaker": "seven",
+   "label": "7",
+   "text": "There was something else. Something the guardian said wasn’t in their record.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_06",
+   "scene": "VEN_C11",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "What did you see?",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_07",
+   "scene": "VEN_C11",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Someone giving me a seed.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_08",
+   "scene": "VEN_C11",
+   "speaker": "seven",
+   "label": "7",
+   "text": "I wish I could remember their face.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_09",
+   "scene": "VEN_C11",
+   "speaker": "seven",
+   "label": "7",
+   "text": "There are other temples.",
+   "delivery": "spoken",
+   "voice": "Seven",
+   "cue": ""
+  },
+  {
+   "id": "VEN_C11_10",
+   "scene": "VEN_C11",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Then we have somewhere else to ask.",
+   "delivery": "telepathic",
+   "voice": "Cat",
+   "cue": ""
+  }
+ ]
+}

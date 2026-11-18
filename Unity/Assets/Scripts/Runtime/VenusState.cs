@@ -1,0 +1,170 @@
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Seven
+{
+    /// <summary>
+    /// Round 11 — Chapter 2 "Venus" progression and persistence (spec Docs/CHAPTER2_VENUS.md section 5).
+    /// Ordered stages VEN_S00_AVAILABLE … VEN_S08_COMPLETE, each with its objective; persisted separately: disabled control
+    /// device IDs, Wormmaster contained, record awarded, completed one-time conversation IDs, optional garden assistance,
+    /// the hover bike's parked spot and whether 7 is riding. Stages only ever move forward (a replayed or skipped scene can
+    /// never take the save back); the record is awarded exactly once (<see cref="AwardRecord"/>); a scene counts as done
+    /// only when it completes (<see cref="CompleteScene"/>) - an interrupted scene restarts from its beginning.
+    /// Stored as one JSON string in PlayerPrefs (check runs use their own key and remove it again).
+    /// The whole system is built now; Round 11 reaches VEN_S04, Round 12 the rest.
+    /// </summary>
+    public static class VenusState
+    {
+        public enum Stage { Available = 0, Landed = 1, GuardianMet = 2, HelpAccepted = 3, ControlDiscovered = 4, EncounterActive = 5, ThreatStopped = 6, RecordReceived = 7, Complete = 8 }
+
+        public static readonly string[] StageIds =
+        {
+            "VEN_S00_AVAILABLE", "VEN_S01_LANDED", "VEN_S02_GUARDIAN_MET", "VEN_S03_HELP_ACCEPTED", "VEN_S04_CONTROL_DISCOVERED",
+            "VEN_S05_ENCOUNTER_ACTIVE", "VEN_S06_THREAT_STOPPED", "VEN_S07_RECORD_RECEIVED", "VEN_S08_COMPLETE",
+        };
+        /// <summary>The objective shown at each stage (S01 reworded by the hover bike, spec VEN_B01).</summary>
+        public static readonly string[] Objectives =
+        {
+            "Land on Venus", "Ride to the Elarim temple", "Follow the guardian to the cube chamber", "Investigate beneath the gardens",
+            "Find the source of the signal", "Disable the control devices", "Return to the guardian", "Return to the saucer", null,
+        };
+
+        [System.Serializable]
+        class Data
+        {
+            public int stage = -1;                                   // -1 = Venus not reached yet
+            public List<string> devicesDisabled = new List<string>();
+            public bool wormmasterContained;
+            public bool recordAwarded;
+            public List<string> conversationsDone = new List<string>();
+            public List<string> gardenAssistance = new List<string>();
+            public Vector3 bikeAt; public float bikeYaw; public bool bikeKnown; public bool riding;
+            public int recordAwards;                                  // check: must never exceed 1
+        }
+
+        static Data _d;
+        static bool Test => DemoBoot.CaptureDir != null;
+        static string Key => Test ? "seven_test_venus" : "seven_venus";
+        static Data D { get { if (_d == null) Load(); return _d; } }
+
+        public static void Load()
+        {
+            var json = PlayerPrefs.GetString(Key, "");
+            _d = string.IsNullOrEmpty(json) ? new Data() : JsonUtility.FromJson<Data>(json) ?? new Data();
+        }
+        static void Save()
+        {
+            PlayerPrefs.SetString(Key, JsonUtility.ToJson(_d)); PlayerPrefs.Save();
+        }
+        /// <summary>Check runs: start from nothing, and leave nothing behind.</summary>
+        public static void ResetForTest() { if (!Test) return; PlayerPrefs.DeleteKey(Key); _d = new Data(); }
+        public static void ClearTestSave() { if (Test) PlayerPrefs.DeleteKey(Key); }
+
+        public static bool Reached => D.stage >= 0;
+        public static Stage Current => (Stage)Mathf.Max(0, D.stage);
+        public static string CurrentId => StageIds[(int)Current];
+        public static string Objective => Reached ? Objectives[(int)Current] : null;
+        public static bool AtLeast(Stage s) => D.stage >= (int)s;
+
+        /// <summary>Move to a stage - forward only. Returns true if it moved (a repeated call is a no-op).</summary>
+        public static bool Advance(Stage s)
+        {
+            if (D.stage >= (int)s) return false;
+            D.stage = (int)s; Save();
+            Debug.Log($"[Seven] Venus stage -> {StageIds[(int)s]} (objective: {Objectives[(int)s] ?? "-"})");
+            return true;
+        }
+
+        // ---- one-time conversations: a scene's result is applied when it completes (watched or skipped), exactly once
+        public static bool SceneDone(string sceneId) => D.conversationsDone.Contains(sceneId);
+        /// <summary>Mark a one-time scene complete and apply its stage result once. Returns false if it was already done.</summary>
+        public static bool CompleteScene(string sceneId, Stage? result = null)
+        {
+            if (D.conversationsDone.Contains(sceneId)) return false;
+            D.conversationsDone.Add(sceneId);
+            if (result.HasValue && D.stage < (int)result.Value) D.stage = (int)result.Value;
+            Save();
+            Debug.Log($"[Seven] Venus scene {sceneId} complete{(result.HasValue ? " -> " + StageIds[(int)result.Value] : "")}");
+            return true;
+        }
+
+        // ---- encounter (Round 12) + record
+        public static IReadOnlyList<string> DevicesDisabled => D.devicesDisabled;
+        public static bool DisableDevice(string id) { if (D.devicesDisabled.Contains(id)) return false; D.devicesDisabled.Add(id); Save(); return true; }
+        public static bool WormmasterContained { get => D.wormmasterContained; set { D.wormmasterContained = value; Save(); } }
+        public static bool RecordAwarded => D.recordAwarded;
+        public static int RecordAwards => D.recordAwards;
+        /// <summary>Award Venus's record - exactly once, whatever happens (replays, reloads, revisits).</summary>
+        public static bool AwardRecord()
+        {
+            if (D.recordAwarded) return false;
+            D.recordAwarded = true; D.recordAwards++; Save();
+            return true;
+        }
+        public static bool AssistGarden(string id) { if (D.gardenAssistance.Contains(id)) return false; D.gardenAssistance.Add(id); Save(); return true; }
+
+        // ---- the hover bike
+        public static bool BikeKnown => D.bikeKnown;
+        public static Vector3 BikeAt => D.bikeAt;
+        public static float BikeYaw => D.bikeYaw;
+        public static bool Riding => D.riding;
+        public static void SaveBike(Vector3 at, float yaw, bool riding)
+        {
+            D.bikeAt = at; D.bikeYaw = yaw; D.bikeKnown = true; D.riding = riding; Save();
+        }
+
+        public static string Summary() =>
+            $"Venus state: {(Reached ? CurrentId : "not reached")}, scenes done [{string.Join(", ", D.conversationsDone)}], devices [{string.Join(", ", D.devicesDisabled)}], " +
+            $"Wormmaster contained {D.wormmasterContained}, record awarded {D.recordAwarded} (awards {D.recordAwards}), garden help [{string.Join(", ", D.gardenAssistance)}], " +
+            $"bike {(D.bikeKnown ? D.bikeAt.ToString() : "-")} riding {D.riding}";
+
+        /// <summary>Self-check of the rules above (forward-only stages, exactly-once scenes and record, reload keeps
+        /// everything). Runs with -venusstatetest in a check run; returns the failures (empty = all good).</summary>
+        public static List<string> SelfTest()
+        {
+            var fail = new List<string>();
+            ResetForTest();
+            if (Reached) fail.Add("fresh state already reached Venus");
+            Advance(Stage.Available); Advance(Stage.Landed);
+            if (Advance(Stage.Available)) fail.Add("a stage went backwards");
+            if (!CompleteScene("VEN_C03", Stage.GuardianMet)) fail.Add("first completion refused");
+            if (CompleteScene("VEN_C03", Stage.GuardianMet)) fail.Add("a scene completed twice (skip + watch)");
+            if (Current != Stage.GuardianMet) fail.Add("scene result not applied");
+            AwardRecord(); AwardRecord();
+            DisableDevice("dev_a"); DisableDevice("dev_a");
+            SaveBike(new Vector3(1, 2, 3), 45f, true);
+            _d = null; Load();                                          // reload
+            if (Current != Stage.GuardianMet) fail.Add("stage lost on reload");
+            if (!SceneDone("VEN_C03")) fail.Add("completed scene lost on reload");
+            if (RecordAwards != 1 || !RecordAwarded) fail.Add($"record awarded {RecordAwards} times (must be 1)");
+            if (DevicesDisabled.Count != 1) fail.Add("device disabled twice");
+            if (!BikeKnown || (BikeAt - new Vector3(1, 2, 3)).sqrMagnitude > 1e-6f || !Riding) fail.Add("bike state lost on reload");
+            ResetForTest();
+            return fail;
+        }
+    }
+
+    /// <summary>Round 11: the Venus dialogue data (Resources/Venus/venus_dialogue.json, from Tools/Voice/make_venus_lines.py).
+    /// Lines, labels ("Panther" from VEN_B01_07), delivery and camera cues live there, not in code.</summary>
+    public static class VenusDialogue
+    {
+        [System.Serializable] public class Line { public string id, scene, speaker, label, text, delivery, voice, cue; }
+        [System.Serializable] public class Scene { public string id, title, trigger, result, delivery; public List<string> cues; public int round; }
+        [System.Serializable] class File { public List<Scene> scenes; public List<Line> lines; }
+        static File _f;
+        static File F
+        {
+            get
+            {
+                if (_f != null) return _f;
+                var ta = Resources.Load<TextAsset>("Venus/venus_dialogue");
+                _f = ta != null ? JsonUtility.FromJson<File>(ta.text) : new File { scenes = new List<Scene>(), lines = new List<Line>() };
+                return _f;
+            }
+        }
+        public static IReadOnlyList<Line> All => F.lines;
+        public static List<Line> SceneLines(string sceneId) => F.lines.FindAll(l => l.scene == sceneId);
+        public static Scene SceneInfo(string sceneId) => F.scenes.Find(s => s.id == sceneId);
+        public static Line Get(string id) => F.lines.Find(l => l.id == id);
+    }
+}
