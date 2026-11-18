@@ -296,7 +296,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–10 + QF1–QF9 complete (2026-11-18), release 0.10.6.** Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–11 + QF1–QF9 complete (2026-11-18), release 0.11.0.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -330,5 +330,22 @@ scene (Round 10).
   block, dodge, takedown; Attack X/LMB/F, Block LT/Q, Dodge B/Ctrl, Takedown Y/E), `ScreeGuardFight.cs` (slow telegraphed
   punch, dazed after 3 blows, takedown → down → sits up, alive), `Chapter1Director.ExitFight` (arena, first-use prompts,
   restart on knockdown, 90 s watchdog). `-fightonly` = check run from checkpoint 6 that stops at the reveal (~1 min).
+- **Round 11 — Venus, part 1** (spec `Docs/CHAPTER2_VENUS.md`):
+  - Scene `Venus`: `FightDemoBuilderVenus.cs`, numbers in `Runtime/VenusLayout.cs`, `Atmosphere_Venus`.
+  - Flow: `VenusDirector.cs`, C01–C05 + B01–B05. Progression + persistence: `VenusState.cs` (PlayerPrefs `seven_venus`).
+  - Dialogue as data: `Tools/Voice/make_venus_lines.py` → `Resources/Venus/venus_dialogue.json`; voices with
+    `Tools/Voice/generate_venus_voices.py` → `Resources/VenusVoice/<id>.mp3`.
+  - Bike: `HoverBike.cs` + `ChapterSevenRide.cs`. Characters: `ElarimNpc.cs`, `WormCreature.cs`, `VenusFlyer.cs`.
+  - Models: `F:lenderlender.exe --background --factory-startup --python Tools/Blender/cleanup_r11.py -- <repo> bike|elarim|worm`
+    (Elarim skinned to Dan's Mixamo skeleton from `Art/Mixamo/elarim/elarim_idle.fbx`; Unity uses an explicit Mixamo human
+    map). Panther's `stretch` / `lie_down` clips: `cleanup_cat.py`.
+  - Switches:
+    - `-chapter2`: start Venus (a fresh start in check runs).
+    - `-venusskip`: skip every line.
+    - `-venusreload`: reload after every committed scene.
+    - `-venuschain`: aboard → Set course → Venus.
+    - `-venusstatetest`: check the progression / persistence rules.
+    - `-chapter2 -quick`: stop after B01.
+  - Check-run lines: `scene VEN_… complete`, `RELOAD after …`, `VENUS PART 1 DONE: …`.
 History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.2, then Round 11**
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

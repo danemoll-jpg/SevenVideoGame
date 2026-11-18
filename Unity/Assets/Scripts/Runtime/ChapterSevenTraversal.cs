@@ -525,6 +525,7 @@ namespace Seven
         void OnAnimatorIK(int layer)
         {
             if (Anim == null) return;
+            RideLeanIK();                                  // Round 11: the bike lean, before the hand IK
             if (_ikW <= 0.001f || _ikLedge == null)
             {
                 // QF8: leave the hands to SevenTableIK when it is on her (the touch / hold / pocket beats) - this pass used

@@ -46,7 +46,7 @@ namespace Seven
         public static readonly Vector3 ObsSpot = new Vector3(78f, -6f, 143f);        // C05: the creature observation area
         public static readonly Vector3 ObsPark = new Vector3(74f, -6f, 148f);
         public static readonly Vector3 RootGate = new Vector3(69f, -6f, 137f);       // toward VEN_05 (Round 12) - shut
-        public static readonly Vector3 BasinCentre = new Vector3(112f, -14f, 132f);  // the creatures move down here
+        public static readonly Vector3 BasinCentre = new Vector3(106f, -12f, 142f);  // the creatures move down here
         public static readonly Vector3 Foundations = new Vector3(40f, -14f, 228f);   // under the temple: where the signal drives them
 
         public static readonly Z[] Zones =

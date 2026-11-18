@@ -10,7 +10,7 @@ namespace Seven
     public partial class ChapterSeven
     {
         public bool Riding => Current == Mode.Ride;
-        const float RideLean = 24f, RideHeadUp = 18f;
+        const float RideLean = 40f, RideHeadUp = 30f;
 
         public void BeginRide(Transform seat)
         {
@@ -35,12 +35,22 @@ namespace Seven
             transform.SetPositionAndRotation(seat.position, Quaternion.Euler(0f, seat.eulerAngles.y, 0f));
         }
 
+        /// <summary>In the IK pass (before the hand IK solves): lean the spine and chest toward the forked front.</summary>
+        void RideLeanIK()
+        {
+            if (Current != Mode.Ride || Anim == null) return;
+            foreach (var bb in new[] { HumanBodyBones.Spine, HumanBodyBones.Chest })
+            {
+                var b = Bone(bb); if (b == null) continue;
+                var axis = Quaternion.Inverse(b.rotation) * transform.right;
+                Anim.SetBoneLocalRotation(bb, b.localRotation * Quaternion.AngleAxis(RideLean * 0.5f, axis));
+            }
+        }
+
         void RideLateUpdate()
         {
             if (Current != Mode.Ride) return;
-            var spine = Bone(HumanBodyBones.Spine); var chest = Bone(HumanBodyBones.Chest); var head = Bone(HumanBodyBones.Head);
-            if (spine != null) spine.rotation = Quaternion.AngleAxis(RideLean * 0.5f, transform.right) * spine.rotation;
-            if (chest != null) chest.rotation = Quaternion.AngleAxis(RideLean * 0.5f, transform.right) * chest.rotation;
+            var head = Bone(HumanBodyBones.Head);
             if (head != null) head.rotation = Quaternion.AngleAxis(-RideHeadUp, transform.right) * head.rotation;
         }
     }

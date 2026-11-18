@@ -1,0 +1,72 @@
+Mono path[0] = 'C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/SevenDemo_Data/Managed'
+Mono config path = 'C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/MonoBleedingEdge/etc'
+CodeReloadManager initialized
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.6.1f1 (7efac9f6c10e)
+[EntityIdStore] init: VM path (explicit commit), pageSize=4096, blockCount=1048576, entitiesPerBlock=256, slots reserved=4294967296 bytes
+[Subsystems] Discovering subsystems at path C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/SevenDemo_Data/UnitySubsystems
+GfxDevice: creating device client; kGfxThreadingModeClientWorkerJobs
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 1660 Ti (ID=0x2182)
+    Vendor:   NVIDIA
+    VRAM:     5966 MB
+    Driver:   32.0.16.1088
+Begin MonoManager ReloadAssembly
+- Finished resetting the current domain, in  0.017 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+<RI> Initializing input.
+Using Windows.Gaming.Input
+UnloadTime: 0.852200 ms
+[Seven] boot: muted=True listenerVolume=0 capture=C:\Users\danmo\SevenVideoGame\Docs\Previews\r11\venus_b01_quick fight=False saucer=False ratwing=False chapter1=False forceFullscreen=False mode=Windowed
+[Launcher] 7: The Observer 0.11.0 (build 1100)
+Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
+Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
+Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
+GPUResidentDrawer Disabled due to some configured Universal Renderers not using the Forward+ or Deferred+ rendering paths.
+UnloadTime: 0.738800 ms
+Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 5155.
+Total: 1.764700 ms (FindLiveObjects: 0.283700 ms CreateObjectMapping: 0.070900 ms MarkObjects: 1.335100 ms  DeleteObjects: 0.031100 ms)
+
+[Seven] [   0.01s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[Seven] [   0.01s] Venus check run (every line skipped): Venus state: not reached, scenes done [], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike - riding False
+[Seven] camera occluders (QF8): 163 solid + 0 fade-only visual meshes (91 skipped) in 68 ms
+[Seven] dodecahedron -> Pocket
+[Seven] Venus stage -> VEN_S00_AVAILABLE (objective: Land on Venus)
+[Seven] restore: Venus state: VEN_S00_AVAILABLE, scenes done [], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike - riding False -> 7 at (0.00, 0.00, 1.60)
+[Seven] [   0.11s] restore: Venus state: VEN_S00_AVAILABLE, scenes done [], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike - riding False -> 7 at (0.00, 0.00, 1.60)
+[Seven] [   3.10s] shot 01_v01_descent_under_the_clouds.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   6.11s] shot 02_v02_down_the_ramp.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   6.50s] shot 03_v03_c01_two_shot.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   7.21s] shot 04_v04_c01_landscape_insert.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   7.75s] shot 05_v05_c01_cat_tracks_flyers.png  audioPeak=0.000000  cursorVisible=False
+[Seven] Venus scene VEN_C01 complete -> VEN_S01_LANDED
+[Seven] scene VEN_C01 complete; VEN_S01_LANDED
+[Seven] [   7.75s] scene VEN_C01 complete; VEN_S01_LANDED
+[Seven] [   9.84s] shot 06_v06_b01_bike_out_of_the_hatch.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  11.45s] shot 07_v07_b01_low_three_quarter_bike.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  12.73s] shot 08_v08_b01_panther_stretch.png  audioPeak=0.000000  cursorVisible=False
+[Seven] Panther: stretched and grew to x2.7 (uniform), lies beside the ramp; label 'Panther' from VEN_B01_07
+[Seven] [  13.58s] Panther: stretched and grew to x2.7 (uniform), lies beside the ramp; label 'Panther' from VEN_B01_07
+[Seven] [  13.73s] shot 09_v09_b01_panther_lies_beside_the_ramp.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  14.61s] shot 10_v10_b01_mounted_hands_in_the_grips.png  audioPeak=0.000000  cursorVisible=False
+[Seven] bike grips: left hand 0.18 m, right hand 0.19 m from the grips
+[Seven] [  14.61s] bike grips: left hand 0.18 m, right hand 0.19 m from the grips
+[Seven] Venus scene VEN_B01 complete -> VEN_S01_LANDED
+[Seven] scene VEN_B01 complete; VEN_S01_LANDED
+[Seven] [  14.61s] scene VEN_B01 complete; VEN_S01_LANDED
+[Seven] [  14.61s] Venus quick check: up to B01 (mounted)
+[Seven] [  14.61s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input Polling Thread exited.
+Input System module state changed to: Shutdown.
+CodeReloadManager destroyed

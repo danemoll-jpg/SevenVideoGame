@@ -199,9 +199,9 @@ namespace Seven.EditorTools
             // Kyle's fog / glow: dark near silhouettes against a bright glowing misty distance, soft light inside the fog,
             // strong ground fog in the gardens, a thick bright cloud ceiling (soft diffuse light from above).
             a.FogStart = 8f;
-            a.GroundDensity = 0.02f; a.GroundBase = -2f; a.GroundFalloff = 3.2f; a.GroundRange = 70f;
-            a.ValleyDensity = 0.014f; a.ValleyBase = -16f; a.ValleyFalloff = 10f;
-            a.DistanceDensity = 0.0062f; a.HazeHeight = 60f; a.MaxFog = 1f;
+            a.GroundDensity = 0.011f; a.GroundBase = -3f; a.GroundFalloff = 2.6f; a.GroundRange = 70f;
+            a.ValleyDensity = 0.006f; a.ValleyBase = -18f; a.ValleyFalloff = 8f;
+            a.DistanceDensity = 0.0034f; a.HazeHeight = 60f; a.MaxFog = 1f;
             a.NearBrightness = 0.22f; a.FarBrightness = 1.35f; a.BrightnessDistance = 70f; a.ZenithBrightness = 0.85f;
             a.NoiseStrength = 0.45f; a.NoiseScale = 0.04f; a.NoiseSpeed = 0.02f; a.NoiseFadeDistance = 70f;
             a.GlowIntensity = 0.38f; a.GlowRadius = 40f;
@@ -376,10 +376,10 @@ namespace Seven.EditorTools
             var maintGate = Block("Maint_Gate", new Vector3(44.2f, 0f, 195f), new Vector3(44.8f, 2.4f, 203f), m.stoneDark, world);
             Block("Obs_Rail", new Vector3(87.6f, -6f, 134f), new Vector3(88f, -5f, 152f), m.stone, world);
             Block("Obs_RailS", new Vector3(64f, -6f, 133.6f), new Vector3(88f, -5f, 134f), m.stone, world);
-            Block("Basin_Floor", new Vector3(88f, -15f, 80f), new Vector3(170f, -14f, 190f), m.dust, world, false);
+            Block("Basin_Floor", new Vector3(88f, V.BasinCentre.y - 1f, 100f), new Vector3(150f, V.BasinCentre.y, 185f), m.dust, world, false);
             Block("RootGate_Door", new Vector3(V.RootGate.x - 2f, -6f, V.RootGate.z - 0.4f), new Vector3(V.RootGate.x + 2f, -1f, V.RootGate.z), m.stoneDark, world);
             var bv = new List<Vector3>(); var bt = new List<int>();
-            for (int i = 0; i < 30; i++) Lump(bv, bt, new Vector3(90f + (float)rnd.NextDouble() * 70f, -14f, 85f + (float)rnd.NextDouble() * 100f), new Vector3(1.5f, 0.6f, 1.5f) * (0.6f + (float)rnd.NextDouble()), 0.5f, rnd.Next(1000));
+            for (int i = 0; i < 30; i++) Lump(bv, bt, new Vector3(92f + (float)rnd.NextDouble() * 50f, V.BasinCentre.y, 105f + (float)rnd.NextDouble() * 70f), new Vector3(1.5f, 0.6f, 1.5f) * (0.6f + (float)rnd.NextDouble()), 0.5f, rnd.Next(1000));
             MeshObject("Basin_Mounds", SaveMesh(SmoothFinish(bv, bt), "Venus_BasinMounds"), m.stoneDark, world);
             // distant towers (tall, pale, some unfinished) and the cloud ceiling
             var wv = new List<Vector3>(); var wt = new List<int>();
@@ -435,9 +435,9 @@ namespace Seven.EditorTools
                 foreach (var r in bm.GetComponentsInChildren<Renderer>()) r.sharedMaterial = bmat;
             }
             else Block("BikePlaceholder", new Vector3(-0.45f, 0f, -1.15f), new Vector3(0.45f, 0.7f, 1.15f), m.hull, visual, false);
-            var seat = new GameObject("Seat").transform; seat.SetParent(visual, false); seat.localPosition = new Vector3(0f, -0.12f, -0.05f);
-            var gl = new GameObject("GripL").transform; gl.SetParent(visual, false); gl.localPosition = new Vector3(-0.29f, 0.31f, 0.5f);
-            var gr = new GameObject("GripR").transform; gr.SetParent(visual, false); gr.localPosition = new Vector3(0.29f, 0.31f, 0.5f);
+            var seat = new GameObject("Seat").transform; seat.SetParent(visual, false); seat.localPosition = new Vector3(0f, -0.08f, -0.1f);     // hips on the low saddle (between the two tested heights)
+            var gl = new GameObject("GripL").transform; gl.SetParent(visual, false); gl.localPosition = new Vector3(-0.24f, 0.5f, 0.42f);
+            var gr = new GameObject("GripR").transform; gr.SetParent(visual, false); gr.localPosition = new Vector3(0.24f, 0.5f, 0.42f);
             var vent = MeshObject("VentGlow", SaveMesh(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(0.28f, 0.01f), new Vector2(0f, 0.012f) }, 0f, 360f, 20), "Venus_BikeVent"), m.bikeVent, visual, false);
             var vl = new GameObject("VentLight").AddComponent<Light>(); vl.transform.SetParent(visual, false); vl.transform.localPosition = new Vector3(0f, -0.15f, 0f);
             vl.type = LightType.Point; vl.range = 2.2f; vl.intensity = 0.4f; vl.color = Color.white; vl.shadows = LightShadows.None;
@@ -472,7 +472,7 @@ namespace Seven.EditorTools
                     Block("Body", at + new Vector3(-0.5f, 0f, -0.3f), at + new Vector3(0.5f, 3.5f, 0.3f), m.tower, go.transform, false);
                     Log("WARNING: Elarim model missing - Elarim_placeholder used");
                 }
-                var npc = go.AddComponent<Seven.ElarimNpc>(); npc.PostClip = post;
+                var npc = go.AddComponent<Seven.ElarimNpc>(); npc.PostClip = post; npc.EyeMaterial = m.glow;
                 return npc;
             }
             var guardian = MakeElarim("Elarim_Guardian", V.GuardianSpot, Vector3.back, "idle");
@@ -493,7 +493,7 @@ namespace Seven.EditorTools
             for (int i = 0; i < 4; i++)
             {
                 var root = new GameObject($"Creature{i}");
-                var c0 = V.BasinCentre + new Vector3(Mathf.Cos(i * 1.7f) * 25f, 0f, Mathf.Sin(i * 1.7f) * 30f);
+                var c0 = V.BasinCentre + new Vector3(Mathf.Cos(i * 1.7f) * 14f, 0f, Mathf.Sin(i * 1.7f) * 16f);
                 root.transform.position = c0;
                 if (worm != null)
                 {
@@ -503,7 +503,7 @@ namespace Seven.EditorTools
                     foreach (var r in wm.GetComponentsInChildren<Renderer>()) r.sharedMaterial = wmat;
                 }
                 var w = root.AddComponent<Seven.WormCreature>();
-                w.Route = Enumerable.Range(0, 5).Select(k => V.BasinCentre + new Vector3(Mathf.Cos(i + k * 1.3f) * 32f, 0f, Mathf.Sin(i + k * 1.3f) * 40f)).ToArray();
+                w.Route = Enumerable.Range(0, 5).Select(k => V.BasinCentre + new Vector3(Mathf.Cos(i + k * 1.3f) * 18f, 0f, Mathf.Sin(i + k * 1.3f) * 22f)).ToArray();
                 var dust = new GameObject("Dust").AddComponent<ParticleSystem>(); dust.transform.SetParent(root.transform, false);
                 var main = dust.main; main.startColor = new Color(0.55f, 0.55f, 0.55f, 0.5f); main.startSize = 2.5f; main.startLifetime = 2.5f; main.startSpeed = 1.2f;
                 var emi = dust.emission; emi.rateOverTime = 14f;

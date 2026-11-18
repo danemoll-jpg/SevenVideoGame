@@ -14,6 +14,8 @@ namespace Seven
     {
         public string PostClip = "idle";
         public float WalkSpeed = 1.5f;
+        /// <summary>White emission (the eyes glow brighter than the soft glow of the armour); set by the builder.</summary>
+        public Material EyeMaterial;
         Animator _anim; string _state; Vector3? _walkTo; Vector3? _faceTo; float _stopAt;
         int _obstacle = -1;
         public bool Walking => _walkTo.HasValue;
@@ -36,7 +38,7 @@ namespace Seven
         {
             if (_anim == null || !_anim.isHuman) return;
             var head = _anim.GetBoneTransform(HumanBodyBones.Head); if (head == null) return;
-            var mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")); mat.color = Color.white;
+            var mat = EyeMaterial; if (mat == null) return;
             float s = transform.lossyScale.y;
             foreach (var side in new[] { -1f, 1f })
             {

@@ -148,9 +148,9 @@ namespace Seven
                 case "landscape insert": Shoot(P7 + f * 2f + Vector3.up * 3.5f, VenusLayout.GuardianSpot + Vector3.up * 30f, 55f, 2f); break;
                 case "cat head tracking flying creatures": if (Cat != null) Shoot(Cat.transform.position + r * 1.4f + f * 1.2f + Vector3.up * 0.5f, Cat.transform.position + Vector3.up * 0.35f, 40f); break;
                 case "wide two-shot at temple entrance": Shoot(VenusLayout.MeetSpot + new Vector3(7f, 2.4f, -5f), VenusLayout.MeetSpot + new Vector3(0f, 1.8f, 2f), 50f); break;
-                case "insert of dodecahedron": if (Shape != null) Shoot(Shape.transform.position + r * 0.6f + Vector3.up * 0.15f - f * 0.2f, Shape.transform.position, 34f); break;
+                case "insert of dodecahedron": { var at = _carry != null ? _carry.Palm : P7 + Vector3.up * 1.1f + f * 0.4f; Shoot(at + r * 0.7f + Vector3.up * 0.2f - f * 0.1f, at, 34f); break; }
                 case "over 7's shoulder toward guardian": if (Guardian != null) Shoot(h - f * 1.4f + r * 0.9f - Vector3.up * 0.3f, Guardian.transform.position + Vector3.up * 2.4f, 52f); break;   // low: he towers over her
-                case "close view of object between them": if (Shape != null) Shoot(Shape.transform.position + r * 1.0f + Vector3.up * 0.25f, Shape.transform.position, 36f); break;
+                case "close view of object between them": { var at = _carry != null ? _carry.Palm : P7 + Vector3.up * 1.1f + f * 0.4f; Shoot(at + r * 1.1f + Vector3.up * 0.3f, at + f * 0.4f, 38f); break; }
                 case "over 7's shoulder toward cube": Shoot(h - f * 1.5f + r * 0.8f, VenusLayout.CubeAt, 44f); break;
                 case "matching inserts of related markings": Shoot(VenusLayout.CubeAt + new Vector3(0.9f, 0.3f, -1.2f), VenusLayout.CubeAt, 30f); break;
                 case "brief eye close-up": Shoot(h + f * 0.9f + r * 0.25f + Vector3.up * 0.05f, h + Vector3.up * 0.1f, 30f, 0.6f); break;
@@ -342,6 +342,7 @@ namespace Seven
             yield return Shot("v10_b01_mounted_hands_in_the_grips");
             Log($"bike grips: left hand {(Seven.Bone(HumanBodyBones.LeftHand) != null ? Vector3.Distance(Seven.Bone(HumanBodyBones.LeftHand).position, Bike.GripL.position) : -1f):0.00} m, right hand {(Seven.Bone(HumanBodyBones.RightHand) != null ? Vector3.Distance(Seven.Bone(HumanBodyBones.RightHand).position, Bike.GripR.position) : -1f):0.00} m from the grips");
             Complete("VEN_B01", VenusState.Stage.Landed);
+            if (Auto && DemoBoot.Quick) { Cap.Finish("Venus quick check: up to B01 (mounted)"); yield break; }
             Objective(VenusState.Objectives[(int)VenusState.Stage.Landed]);  // "Ride to the Elarim temple"
             yield return Cutscene(false);
             StartCoroutine(TeachRiding());
@@ -441,8 +442,9 @@ namespace Seven
             if (P7.z < VenusLayout.CollapseZ1)
             {
                 Objective("Find a way round the collapse");
+                if (Auto) { yield return Until(() => Bike.Speed < 0.5f || !Bike.Riding, "braked in the stopping area", 20f); yield return AutoGetOff(); }
                 yield return Until(() => !Bike.Riding || P7.z > VenusLayout.CollapseZ1, "off the bike at the collapse", 90f);
-                if (Auto) { yield return AutoGetOff(); StartCoroutine(AutoDetour()); }
+                if (Auto) StartCoroutine(AutoDetour());
                 yield return Shot("v13_b03_collapsed_walkway");
                 yield return Until(() => P7.z > VenusLayout.CollapseZ1 + 1.5f && P7.x > 25.5f && P7.y < 0.4f, "round the collapse on foot (mantle, jump, down the ramp)", 120f);
                 // the bike was brought round on the service path (summoned) - waiting a step ahead
@@ -565,7 +567,7 @@ namespace Seven
         {
             // back to the parked bike (summoned if she is far from it)
             if (Flat(Bike.transform.position - P7).magnitude > 45f && !Bike.Riding) { Bike.Place(Ground.ClampToArena(P7 + Vector3.right * 2f, 0.8f), 90f); Log("bike summoned to her (she was far from it)"); }
-            if (Auto) { yield return AutoWalkPath(new[] { new Vector3(30f, 0f, 244f), new Vector3(30f, 0f, 216f), VenusLayout.ParkSpot - Vector3.right * 1.4f }); yield return AutoMount();
+            if (Auto) { if (P7.z > 236f) yield return AutoWalkPath(new[] { new Vector3(30f, 0f, 244f), new Vector3(30f, 0f, 216f) }); yield return AutoWalkPath(new[] { VenusLayout.ParkSpot - Vector3.right * 1.4f }); yield return AutoMount();
                 StartCoroutine(AutoRide(new[] { new Vector3(46f, 0f, 199f), new Vector3(76f, 0f, 199f), new Vector3(76.5f, -3f, 175f), new Vector3(76.5f, -6f, 152f), VenusLayout.ObsPark }, () => P7.z < 151f && P7.y < -5f)); }
             yield return Until(() => P7.x > 64f && P7.z < 152f && P7.y < -5f, "the creature observation area (B05 -> C05)", 200f);
             // she parks and watches; C05 plays in gameplay (movement not locked)
@@ -580,7 +582,10 @@ namespace Seven
             AudioKit.Play("signal_pulse", VenusLayout.BasinCentre, 1f, 0f, AudioKit.Bus.Sfx, 200f);
             var before = new List<Vector3>();
             if (Worms != null) { foreach (var w in Worms) { before.Add(w.Heading); w.Drive(VenusLayout.Foundations, 14f); } }
-            Shoot(VenusLayout.ObsSpot + new Vector3(4f, 7f, 2f), VenusLayout.BasinCentre, 60f, 1.5f);
+            // aim at the nearest creature (the turn must be seen), from just above her at the rail
+            var nearW = Worms != null && Worms.Length > 0 ? Worms[0].transform.position : VenusLayout.BasinCentre;
+            if (Worms != null) foreach (var w in Worms) if (Flat(w.transform.position - P7).magnitude < Flat(nearW - P7).magnitude) nearW = w.transform.position;
+            Shoot(P7 + Vector3.up * 3.2f + Flat(nearW - P7).normalized * -2f, nearW, 52f, 1.0f);
             yield return Wait(3.0f);
             float turn = 0f; if (Worms != null) for (int i = 0; i < Worms.Length; i++) turn = Mathf.Max(turn, Vector3.Angle(before[i], Worms[i].Heading));
             Log($"C05 signal pulse: {Worms?.Length ?? 0} creatures turned toward the temple foundations (largest turn {turn:0} deg in 3 s)");

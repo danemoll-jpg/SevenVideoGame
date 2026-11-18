@@ -91,7 +91,7 @@ over 112 images.
 - The terrace fight: the four prompts, blocking and dodging the slow punch, the takedown, losing once (the restart).
 - Whether the Scree's "sit up groggily" pose reads right (it's the first part of the bot's get-up clip, held).
 
-## Current Objective — Round 11: Chapter 2 "Venus", part 1 — resumed at stage 2 after QF9 (moved here from Docs/ROUND11.md, 2026-11-18)
+## Round 11: Chapter 2 "Venus", part 1 — done (first playable pass), status below (moved here from Docs/ROUND11.md, 2026-11-18)
 Landing → gardens → temple → the signal (Dan, 2026-11-17).
 **The spec is `Docs/CHAPTER2_VENUS.md` — read all of it first; it wins over this summary.** It is split into two rounds:
 - **Round 11 (this):** spec sections 1–6 for VEN_01–VEN_04, the progression / persistence system, the dialogue data
@@ -184,7 +184,86 @@ All standing rules apply (monochrome, Kyle's fog/glow, non-sexual presentation, 
     captures of each scene's main shots + each area; monochrome 0. Publish a release, update `TODO.md` / `CLAUDE.md`,
     commit and push, report in ~20 lines, including what's still placeholder.
 
-## Round 11 — progress (2026-11-18): stage 1 of 6 done (data + progression); not released yet
+## Round 11 — status (2026-11-18): done as a first playable pass, exe-verified off-screen; release 0.11.0 (`game-1100`, Latest)
+Testing: about 18 min of game time.
+- Run 1: the whole of part 1, watched, with a reload after every committed scene.
+- Run 2: every line skipped, with the same reloads.
+- One short B01 check of the riding pose.
+
+Captures: `Docs/Previews/r11/` (model previews, `cat/`, `venus_run1/`, `venus_run2_skip/`, `venus_b01_quick/`). Monochrome:
+0 over 62 Venus images. Audio peak 0. No exceptions in run 2.
+
+1. **Reuse first: done.** 7's controller, traversal, prompts, the dialogue player (subtitles, telepathy, labels), the
+   follow camera with the QF8 occluders, capture, the pause menu, the cat and the Atmosphere are all reused, not forked.
+   The traversal data is now swappable per world (`MoonTraversal.Use`).
+2. **Dialogue as data: done.** `Resources/Venus/venus_dialogue.json`: 103 lines with spec IDs, speaker, label, delivery
+   and cue, plus each scene's camera cues. Cues are presentation only (an unknown cue is skipped and logged). Lines never
+   overlap.
+3. **Progression + persistence: done.** `VenusState`: S00–S08, the separate saves, skip = watch. Check:
+   - run 1 (watched) and run 2 (skipped) end in the same state: VEN_S04, the same scenes, 0 record awards;
+   - 5 reloads, one after each committed scene, each restoring the right place;
+   - `-venusstatetest` passes.
+4. **Getting there: done.** "Set course" on the saucer now travels: the Moon falls away, a short transit, then Venus
+   (VEN_S00) and the descent under the clouds. The main menu has "Chapter 2 — Venus" (also `-chapter2`, and an entry in
+   Scene select). Continue resumes the Venus save. **Not run:** the chain from the galley into Venus (`-venuschain`
+   exists).
+5. **The world: done (graybox + a first look pass).**
+   - VEN_01: the platform with the saucer, ramp and storage hatch.
+   - VEN_02: the broad garden road with terraces, water channels, hanging-garden arches, the long bend, the damaged
+     channel, the collapsed walkway and the detour (mantle → assisted jump → ramp, all existing moves).
+   - VEN_03: the court, the pedestrian garden, a 6.2 m doorway, the hall with grown ribs, and the cube chamber with its
+     protected cage.
+   - VEN_04: the maintenance path (gated until C04), the observation area, the basin, and the shut root gate.
+   - Around it: distant pale towers (some unfinished), the cloud ceiling, Atmosphere_Venus. The fog was thinned after
+     run 1 so the gardens read.
+6. **Characters: done (real models, no placeholders).**
+   - The Elarim are 3.5 m, skinned to Dan's Mixamo skeleton with the cape on the spine, a soft glow and white eyes. All
+     8 clips import as Humanoid: the guardian kneels in C03, the attendant walks in during C04, and four workers loop
+     their repairs (one with a sword).
+   - Worms: 9 m, with rise / wriggle / dive clips, dust where they break the surface.
+   - Flyers over the platform.
+   - The cat comes out for C01 and B01, then stays at the ship.
+7. **The Venus cube: done.** Pale stone, glowing edges, the same placeholder Elarim marking, inside its protected
+   structure. It stays in the temple.
+8. **Scenes C01–C05: done, as the spec**, with their camera cues:
+   - descent (extreme wide), over-the-shoulder to the gardens, two-shot, landscape insert, the cat's head following the
+     flyers;
+   - C02's tremor in gameplay: the vessel's water shakes and a worker steadies it;
+   - C03: the guardian kneels and examines the dodecahedron; it never leaves her (log: still hers);
+   - C04: dust falls, the attendant arrives, she pockets the dodecahedron, the maintenance path opens;
+   - C05 in gameplay: the signal pulse, and the creatures visibly turn (up to 179° in 3 s, logged).
+9. **Voices: done.** 58 lines, by voice name: Seven (v3), Cat (v2; "Panther" from B01_07), and Dan's Guardian and
+   Attendant voices. None are waiting.
+10. **Music / SFX: done.** `venus_gardens.mp3`, plus 8 new ElevenLabs SFX: garden ambience, bike hum, saucer descent,
+    tremor, vessel slosh, dust fall, signal pulse, creature surfacing.
+10b. **The hover bike: done.** Dan's model with the forked front detected.
+   - Controls: steer on the left stick / A-D, RT / W accelerate, LT / S brake, X / E mount and dismount (dismount only on
+     standing space), d-pad down recovery, plus a stuck watchdog and summon.
+   - It has its own riding camera, gives way near workers, stays out of the temple and underground, and its spot and
+     riding state are saved.
+   - Riding is taught on first mount.
+   - B02 / B03 / B04 / B05 run as the spec.
+   - **Approximate:** her riding pose. She sits on the saddle leaning forward, but the seated clip is a chair pose (knees
+     up, no straddle), and her hands reach to 0.18 m of the grips, not into them.
+10c. **Panther: done.** He stretches (new Blender clip) and grows smoothly to ×2.7 with his paws on the floor, then lies
+   down beside the ramp (new clip). The label reads "Panther" from VEN_B01_07.
+11. **Checks + release: done.** 0.11.0 published.
+
+**Still placeholder / open:**
+- The riding pose (a straddle clip from Mixamo would fix it).
+- The Elarim marking (Kyle).
+- The cape is rigid with the back (no cloth).
+- The architecture is first-pass graybox-plus.
+- Wormmaster and the encounter are Round 12.
+
+## For Dan to check (Round 11)
+- Set course on the saucer → Venus: the descent, then C01 on the ramp.
+- B01: the bike out of the hatch, "Panther" — the stretch and the growth (×2.7: right size?), him lying by the ramp.
+- Riding: steering, accelerate / brake, getting off, the bend lines, the tremor, the collapse detour on foot.
+- The guardian and attendant (models, glow, voices, the kneel), the cube chamber, the signal at the basin.
+- The riding pose (approximate — say if you want a Mixamo riding / straddle clip).
+
+## Round 11 — stage 1 notes (2026-11-18)
 Done (build-checked, `-venusstatetest` passes):
 - **Dialogue as data:** `Tools/Voice/make_venus_lines.py` → `Unity/Assets/Resources/Venus/venus_dialogue.json` (18 scenes,
   103 lines, 58 in Round 11; stable spec IDs, speaker, subtitle label with **"Panther" from VEN_B01_07 on**, delivery
@@ -755,6 +834,7 @@ monochrome max |R−G|,|G−B| = 0 over every shot (154 + 92 + menu). Previews +
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Round 11 — Chapter 2 "Venus", part 1 (to VEN_S04): Set course travels to Venus, C01–C05 + B01–B05, the hover bike, Panther, the Elarim, the cube, the signal — done as a first playable pass (2026-11-18), exe-verified off-screen; release 0.11.0 (`game-1100`).** Status in "Round 11 — status" above. Next: Dan plays 0.11.0, then Round 12.
 - **Quick fix QF9 — door-frame flicker (z-fighting, measured in motion) + the Scree fighting tutorial before the city reveal — done (2026-11-18), exe-verified off-screen; release 0.10.6 (`game-1006`).** Status in "QF9 — status" above.
 - **Quick fix QF8 — camera never behind mesh-only walls (occluder physics scene, camera sweep), cat stays near 7 in the vision chamber, door-frame flicker, over-the-shoulder shots that show the cat, generous opening prompt, two re-voiced lines, 7 kept out of walls, the shape in her palm — done (2026-11-18), exe-verified off-screen; release 0.10.5 (`game-1005`).** Status in "QF8 — status" above.
 - **Quick fix QF6 — Dan's 0.10.1 soft-lock found (blocking "Take"), automatic take, no points of no return, trigger

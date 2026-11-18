@@ -90,11 +90,11 @@ namespace Seven
         /// <summary>Nearest point the bike may be at (inside a riding zone, outside every obstacle circle).</summary>
         Vector3 ClampBike(Vector3 p, Vector3 from)
         {
-            if (!VenusLayout.BikeZone(p, 0.7f))
+            if (!VenusLayout.BikeZone(p, 0.25f))
             {
                 // slide along the edge: try the two axis moves, else stay
                 var a = new Vector3(p.x, p.y, from.z); var b = new Vector3(from.x, p.y, p.z);
-                if (VenusLayout.BikeZone(a, 0.7f)) p = a; else if (VenusLayout.BikeZone(b, 0.7f)) p = b; else p = from;
+                if (VenusLayout.BikeZone(a, 0.25f)) p = a; else if (VenusLayout.BikeZone(b, 0.25f)) p = b; else p = from;
             }
             foreach (var c in Ground.Obstacles)
             {
