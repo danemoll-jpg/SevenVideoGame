@@ -926,6 +926,42 @@ clip("wash", 48, wash)
 clip("jump", 24, jump, loop=False, ground=lambda t: t < 0.45 or t > 0.8)
 clip("sleep", 120, sleep)
 
+
+def stretch(t):
+    """Round 11 (VEN_B01, Panther): the big stretch - front legs reach forward, chest dips, rear stays up, back curves,
+    tail lifts high; held, then back to standing. Unity scales him from cat to panther size during the hold
+    (uniform, paws kept on the floor: every frame is grounded)."""
+    k = smooth(0.0, 0.35, t) * (1 - smooth(0.78, 1.0, t))
+    pose = {
+        "FL_upper": (-62 * k, 0, 0), "FR_upper": (-62 * k, 0, 0),
+        "FL_lower": (14 * k, 0, 0), "FR_lower": (14 * k, 0, 0),
+        "FL_foot": (24 * k, 0, 0), "FR_foot": (24 * k, 0, 0),
+        "chest": (16 * k, 0, 0), "spine": (8 * k, 0, 0), "pelvis": (6 * k, 0, 0),
+        "neck": (-14 * k, 0, 0), "head": (-12 * k, 0, 0),
+        "HL_upper": (8 * k, 0, 0), "HR_upper": (8 * k, 0, 0), "HL_lower": (-10 * k, 0, 0), "HR_lower": (-10 * k, 0, 0),
+    }
+    pose.update({f"tail{i + 1}": ((55 if i == 0 else 10) * k, 0, 6 * k * math.sin(2 * math.pi * t * 2 - i * 0.5)) for i in range(6)})
+    return pose, (0, 0, 0)
+
+
+def lie_down(t):
+    """Round 11 (VEN_B01, Panther large beside the ramp): lying down, legs folded under, head up and watching, the tail
+    along the floor (a slow breath, a tail-tip twitch)."""
+    b = math.sin(2 * math.pi * t)
+    pose = {"pelvis": (0, 6, 0), "spine": (0, 4, 0), "chest": (1.0 * b, 2, 0), "neck": (-6, 0, 0), "head": (6, 4 * math.sin(2 * math.pi * t * 0.5), 0)}
+    for leg in LEGS:
+        f = leg[0] == "F"
+        pose[f"{leg}_upper"] = ((62 if f else -75), 0, 0)          # the sleep clip's folded legs (proven), head up
+        pose[f"{leg}_lower"] = ((-128 if f else 140), 0, 0)
+        pose[f"{leg}_foot"] = ((42 if f else -60), 0, 0)
+    for i in range(6):
+        pose[f"tail{i + 1}"] = (-80 if i == 0 else -3, 0, (10 + 3 * i) + (6 * math.sin(2 * math.pi * t * 2) if i > 3 else 0))
+    return pose, (0, 0.01 * H, 0)
+
+
+clip("stretch", 90, stretch, loop=False, ground=lambda t: True)
+clip("lie_down", 120, lie_down, ground=lambda t: True)
+
 if os.environ.get("CAT_DEBUG"):
     for nm, fn in (("rest", lambda t: ({}, (0, 0, 0))), ("sit", sit), ("sleep", sleep)):
         pose, rl = fn(0.0)
