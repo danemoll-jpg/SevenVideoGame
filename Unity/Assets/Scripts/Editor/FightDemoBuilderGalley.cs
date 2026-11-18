@@ -45,11 +45,11 @@ namespace Seven.EditorTools
             var em = new ElarimMats
             {
                 stone = Dissolve("Elarim_stone" + sfx, Gray(0.8f), 0.82f, ship, 0f),       // pale stone / crystal
-                edges = Dissolve("Elarim_edges" + sfx, Color.white, 0.5f, ship),
+                edges = Dissolve("Elarim_edges" + sfx, Gray(0.58f), 0.5f, ship),      // QF7: thin faint lines, not white-hot
             };
             em.stone.SetFloat("_Rim", 0.22f);
             em.pouch = Dissolve("Elarim_pouch", Gray(0.16f), 0.2f, false);      // QF5: the small belt pouch she carries it in
-            em.edges.EnableKeyword("_EMISSION"); em.edges.SetColor("_EmissionColor", Color.white * 1.4f);
+            em.edges.EnableKeyword("_EMISSION"); em.edges.SetColor("_EmissionColor", Color.white * 0.35f);
             // The engraving: URP Lit, alpha-clipped mark texture, dark grey lines with a faint white inner glow.
             var mk = Lit("Elarim_mark" + sfx, Gray(0.16f), 0.4f);
             var tex = ElarimMarkTexture();
@@ -143,14 +143,13 @@ namespace Seven.EditorTools
             g.knife.rotation = Quaternion.LookRotation(-along, Vector3.up);
             var bowlAt = C - along * 0.06f;
             var bowl = new GameObject("CatBowl").transform; bowl.SetParent(root, false); bowl.position = bowlAt;
-            // a small raised feeder (retro tulip stand, 10 cm) so his head goes into the bowl and the rim hides his mouth
-            const float lift = 0.16f; float by = TableTopY + lift;
-            Obj("BowlStand", Lathe(new[] { new Vector2(0f, TableTopY), new Vector2(0.06f, TableTopY), new Vector2(0.055f, TableTopY + 0.012f), new Vector2(0.022f, TableTopY + 0.03f),
-                new Vector2(0.02f, by - 0.012f), new Vector2(0.05f, by), new Vector2(0f, by) }, 0f, 360f, 32), m.pedestal, bowl);
-            Obj("BowlMesh", Lathe(new[] { new Vector2(0f, by), new Vector2(0.058f, by), new Vector2(0.082f, by + 0.048f), new Vector2(0.088f, by + 0.052f),
-                new Vector2(0.078f, by + 0.05f), new Vector2(0.055f, by + 0.012f), new Vector2(0f, by + 0.012f) }, 0f, 360f, 36), m.frame, bowl);
+            // QF7 (Dan): a plain ordinary cat bowl sitting on the table (was a raised chalice-like feeder): 19 cm across,
+            // 4.2 cm high, a little wider at the rim; a low mound of food inside. (Chapter1Aboard.BowlRim = its height.)
+            float by = TableTopY + 0.001f;
+            Obj("BowlMesh", Lathe(new[] { new Vector2(0f, by), new Vector2(0.072f, by), new Vector2(0.078f, by + 0.004f), new Vector2(0.092f, by + 0.04f),
+                new Vector2(0.095f, by + 0.042f), new Vector2(0.088f, by + 0.042f), new Vector2(0.074f, by + 0.012f), new Vector2(0f, by + 0.012f) }, 0f, 360f, 40), m.frame, bowl);
             var bf = new List<Vector3>(); var bft = new List<int>();
-            Ellipsoid(bf, bft, Vector3.up * (by + 0.02f), new Vector3(0.055f, 0.012f, 0.055f), 5, 12);
+            Ellipsoid(bf, bft, Vector3.up * (by + 0.016f), new Vector3(0.06f, 0.01f, 0.06f), 5, 12);
             Obj("BowlFood", SmoothFinish(bf, bft), m.bench, bowl);
             g.bowl = bowl;
             // the dodecahedron (placed by Chapter1Aboard: beside her plate / between them)

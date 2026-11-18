@@ -445,6 +445,7 @@ namespace Seven.EditorTools
             d.City = props.city; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
             d.Clamps = props.clamps.ToArray(); d.RimGlow = props.rimGlow.ToArray(); d.SaucerUnderLight = props.underLight;
             d.Slab = props.slab; d.Shape = props.shape; d.ShapeLight = props.shapeLight; d.DoorSymbol = props.doorSymbol; d.DoorRight = props.doorRight; d.DoorEngrave = props.doorEngrave;   // Round 9
+            d.LockRubble = props.lockRubble;                                                                                                    // QF7
             d.VisionVideo = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_01_door.mp4");   // the first vision (Dan, 2026-11-17)
             if (d.VisionVideo == null) Log("WARNING: vision video missing (Assets/Video/vision_01_door.mp4) - the in-engine vision is the fallback");
 
@@ -471,6 +472,7 @@ namespace Seven.EditorTools
             public Renderer doorSymbol;
             public Transform doorRight;
             public Renderer[] doorEngrave;
+            public Transform lockRubble;      // QF7
         }
 
         static GameObject SpawnCat(string name, Vector3 pos, Vector3 facing, AnimatorController ctl, Material fur, Material whisker, out Animator anim)

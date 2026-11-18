@@ -86,10 +86,9 @@ namespace Seven
                 if (Chapter1State.Explore) PlaceShape(BesidePlate, MarkingDown());
                 else
                 {
-                    // QF5: she still carries it in the pouch at her belt (as on the Moon); she takes it out at the table
+                    // QF7: she still carries it in her pocket (out of sight, no glow, as on the Moon); she takes it out at the table
                     _carry = CarriedShape.Attach(Seven.gameObject, Shape.transform);
-                    _carry.Carrying = true;
-                    _carry.Set(CarriedShape.Where.Hip, 0f);
+                    _carry.Set(CarriedShape.Where.Pocket, 0f);
                 }
             }
             Dlg.LineStarted += l => { if (!Chapter1State.Played.Contains(l.Id)) Chapter1State.Played.Add(l.Id); };
@@ -106,6 +105,7 @@ namespace Seven
                 AudioKit.Log = s => Cap.Log("audio: " + s);
                 Cap.Log($"galley: cat ear bones {(_catPose != null ? "pending" : "none")}; table at {TableCentre}, porthole at {(Porthole != null ? Porthole.position : Vector3.zero)}");
             }
+            FindEnergyPoint();
             StartCoroutine(Chapter1State.Explore ? Explore(true) : Flow());
         }
 
@@ -210,12 +210,34 @@ namespace Seven
             var l = Dlg.Bank.Get(id);
             if (l == null) { if (Auto) { Cap.Soft++; Cap.Log("MISSING voice line " + id); } yield break; }
             if (Auto && _lineEnd > 0f) Cap.Log($"line {id}: starts {Time.time - _lineEnd:0.00}s after the previous line ended");
-            if (_eyeLines.TryGetValue(id, out var eyeShot)) StartCoroutine(EyeCloseUp(l, eyeShot));
-            else if (id == "s10_21_cat") StartCoroutine(CatEyeCloseUp(l));
+            // QF7: when the cat speaks he lifts his head out of the bowl and looks at her, then goes back to eating
+            bool catWasEating = false;
+            if (l.IsCat && _catPose != null && _seated)
+            {
+                if (_catPose.Eat > 0.5f) { catWasEating = true; CatEats(false); }
+                if (_catPose.Lean < 0.5f) _catPose.LookAt = SevenEyes;
+                if (catWasEating) yield return Wait(0.5f);
+            }
+            if (_mood.TryGetValue(id, out var mood)) Mood(mood, 1.2f);
+            // QF7 framing (no tight face close-ups): medium shots with a slow push-in on the key lines, the listener's
+            // reaction held on some of his lines, over-the-shoulder on speaker changes otherwise
+            if (_keyLines.TryGetValue(id, out var keyShot)) StartCoroutine(MediumPushIn(l, keyShot));
+            else if (id == "s10_21_cat") StartCoroutine(CatMedium(l));
+            else if (_reactionLines.TryGetValue(id, out var reactShot)) HoldOnHer(reactShot);
             else if (AutoCut && Time.time - _lastCut > 3.5f && l.IsCat != _lastSpeakerCat) { if (l.IsCat) OverSevensShoulder(); else BehindTheCat(); }
             _lastSpeakerCat = l.IsCat;
             float t0 = Time.time;
+            bool talkClip = false;
+            if (!l.IsCat)
+            {
+                _ik.Talk = 1f;
+                if (_seated && !_eating && _ik.RightW < 0.05f && _ik.LeftW < 0.05f && Seven.HasState("sit_talking")) { talkClip = true; Seven.PlayClip("sit_talking", 0.5f); Use("sit_talking"); }
+                else if (!_seated && InGalleyScene && Seven.HasState("talking")) { talkClip = true; Seven.PlayClip("talking", 0.4f); Use("talking"); }
+            }
             yield return Dlg.PlayOne(l, false);
+            _ik.Talk = 0f;
+            if (talkClip) Seven.PlayClip(_seated ? _seatClip : "idle", 0.6f);
+            if (l.IsCat && _catPose != null) { _catPose.LookAt = null; if (catWasEating) CatEats(true); }
             _lineEnd = Time.time;
             if (Auto) Cap.Log($"line {id} played {Time.time - t0:0.00}s of {(l.Clip != null ? l.Clip.length : 0f):0.00}s, subtitle '{l.Text}' (cat mouth moving: {(l.IsCat ? (_catPose.Chewing && _catPose.Eat > 0.5f ? "chewing (eating)" : "no") : "-")})");
             if (holdPause) yield return Silence(Mathf.Max(Dlg.DefaultGap, l.PauseAfter), id);
@@ -225,13 +247,29 @@ namespace Seven
         bool AutoCut;
         float _lastCut = -99f;
         bool _lastSpeakerCat;
-        readonly System.Collections.Generic.Dictionary<string, string> _eyeLines = new System.Collections.Generic.Dictionary<string, string>
+        // QF7: the key lines get a medium shot of her with a slow push-in (body language, not a face close-up)
+        readonly Dictionary<string, string> _keyLines = new Dictionary<string, string>
         {
-            { "s10_06_7", "s10_eyes_1_those_people" },
-            { "s10_14_7", "s10_eyes_2_not_somewhere_new" },
-            { "s10_16_7", "s10_eyes_3_remembering" },
-            { "s10_28_7", "s10_eyes_4_explain_what_i_saw" },
+            { "s10_06_7", "qf7_s10_medium_1_those_people" },
+            { "s10_14_7", "qf7_s10_medium_2_not_somewhere_new" },
+            { "s10_16_7", "qf7_s10_medium_3_remembering" },
+            { "s10_28_7", "qf7_s10_medium_4_explain_what_i_saw" },
         };
+        // QF7: on these lines of his the camera stays on her - the listener's reaction
+        readonly Dictionary<string, string> _reactionLines = new Dictionary<string, string>
+        {
+            { "s10_15_cat", "qf7_s10_reaction_what_did_it_feel_like" },
+            { "s10_30_cat", "qf7_s10_reaction_farewell_dinner" },
+            { "s10_34_cat", "qf7_s10_reaction_what_happens_next" },
+        };
+        // QF7: the energy point's brightness follows her mood (1 = normal)
+        readonly Dictionary<string, float> _mood = new Dictionary<string, float>
+        {
+            { "s10_06_7", 0.8f }, { "s10_14_7", 0.75f }, { "s10_16_7", 0.55f }, { "s10_18_7", 0.5f }, { "s10_19_7", 0.7f },
+            { "s10_21_cat", 1.25f }, { "s10_22_7", 1.3f }, { "s10_28_7", 1.1f }, { "s10_33_7", 0.8f }, { "s10_35_7", 1.15f }, { "s10_36_7", 1.45f },
+        };
+        readonly Dictionary<string, int> _clipUses = new Dictionary<string, int>();
+        void Use(string clip) { _clipUses[clip] = _clipUses.TryGetValue(clip, out var n) ? n + 1 : 1; }
         readonly System.Collections.Generic.HashSet<string> _shotOnce = new System.Collections.Generic.HashSet<string>();
         void Cut(Vector3 pos, Vector3 look, float fov, string capture = null, float focus = -1f, float focal = 70f, float aperture = 2.2f)
         {
@@ -257,34 +295,69 @@ namespace Seven
             pos.y = Mathf.Max(pos.y, TableTopY + 0.16f);
             Cut(pos, SevenEyes - Up * 0.04f, 30f, "s10_ots_behind_the_cat", Vector3.Distance(pos, SevenEyes), 60f, 2.8f);
         }
-        /// <summary>7's eyes and brow (energy point visible above), shallow focus, a slow subtle push-in over the line.</summary>
-        IEnumerator EyeCloseUp(VoiceBank.Line l, string capture)
+        Vector3 SevenChest => SevenHead - Up * 0.2f;
+        /// <summary>QF7: a medium shot of her (head to waist, three-quarter from the deck side - never over the table into
+        /// the cat), easing slowly closer over the line: weight without a face close-up.</summary>
+        IEnumerator MediumPushIn(VoiceBank.Line l, string capture)
         {
-            var f = Seven.transform.forward; var r = Seven.transform.right;
-            Vector3 P(float d) => SevenEyes + f * d + r * 0.03f + Up * 0.01f;
-            Cut(P(EyeDistance + 0.05f), SevenEyes - Up * 0.005f, EyeFov, null, EyeDistance + 0.05f, 50f, 8f);
+            var f = Flat(Seven.transform.forward).normalized;
+            var dir = (f * 0.6f - TableOut * 0.8f).normalized;
+            Vector3 P(float d) => SevenChest + dir * d + Up * 0.12f;
+            Cut(P(1.45f), SevenChest + Up * 0.08f, 34f, null, 1.45f, 50f, 4f);
             float len = l.Clip != null ? l.Clip.length : 2f;
             bool shot = false;
             int serial = _shotSerial;
             for (float t = 0f; t < len + 0.6f && serial == _shotSerial; t += Time.deltaTime)
             {
-                float d = Mathf.Lerp(EyeDistance + 0.05f, EyeDistance, Mathf.SmoothStep(0f, 1f, t / (len + 0.6f)));
-                var cam = Director.Cam.transform; cam.position = P(d); cam.rotation = Quaternion.LookRotation(SevenEyes - Up * 0.005f - cam.position);
+                float d = Mathf.Lerp(1.45f, 1.15f, Mathf.SmoothStep(0f, 1f, t / (len + 0.6f)));
+                var cam = Director.Cam.transform; cam.position = P(d); cam.rotation = Quaternion.LookRotation(SevenChest + Up * 0.08f - cam.position);
                 _focus.Focus(d);
-                if (!shot && t > len * 0.6f) { shot = true; if (Auto) yield return Cap.Shot(capture); }
+                if (!shot && t > len * 0.6f) { shot = true; if (Auto || DemoBoot.PlayerSim && Cap != null) yield return Cap.Shot(capture); }
                 yield return null;
             }
         }
-        /// <summary>Backed off if the Tripo face texture is too soft at extreme close range (see the report).</summary>
-        const float EyeDistance = 0.36f, EyeFov = 26f;   // backed off from 0.30 m / 24 deg: the Tripo face is soft / faceted closer
-        IEnumerator CatEyeCloseUp(VoiceBank.Line l)
+        /// <summary>QF7: the listener - hold a medium shot on her while he speaks (her reaction carries the beat).</summary>
+        void HoldOnHer(string capture)
+        {
+            var f = Flat(Seven.transform.forward).normalized;
+            var dir = (f * 0.45f - TableOut * 0.9f).normalized;
+            Cut(SevenChest + dir * 1.6f + Up * 0.15f, SevenChest + Up * 0.05f, 36f, capture, 1.6f, 50f, 4f);
+        }
+        /// <summary>QF7: the cat at a medium distance (his whole front, head up from the table), for "That marking".</summary>
+        IEnumerator CatMedium(VoiceBank.Line l)
         {
             var cf = Flat(Cat.transform.forward).normalized; var cr = Vector3.Cross(Vector3.up, cf);
             var e = _catPose.Eyes;
-            var pos = e + cf * 0.26f - cr * 0.05f + Up * 0.015f;
-            Cut(pos, e, 22f, null, 0.26f, 50f, 8f);
+            var pos = e + cf * 0.62f - cr * 0.25f + Up * 0.06f;
+            Cut(pos, e - Up * 0.06f, 32f, null, 0.65f, 50f, 4f);
             yield return Wait(Mathf.Min(1.4f, l.Clip != null ? l.Clip.length * 0.5f : 1f));
-            if (Auto) yield return Cap.Shot("s10_cat_eyes_that_marking");
+            if (Auto) yield return Cap.Shot("qf7_s10_cat_medium_that_marking");
+        }
+
+        // ---- QF7: the energy point on her forehead brightens and dims with her mood
+        Material _dot; Coroutine _moodRoutine; float _dotLevel = 1f;
+        readonly List<string> _moodLog = new List<string>();
+        void FindEnergyPoint()
+        {
+            foreach (var r in Seven.GetComponentsInChildren<Renderer>(true))
+                foreach (var m in r.materials) if (m != null && m.name.StartsWith("7_forehead_glow")) { _dot = m; return; }
+        }
+        void Mood(float level, float seconds)
+        {
+            if (_dot == null) return;
+            if (_moodRoutine != null) StopCoroutine(_moodRoutine);
+            _moodRoutine = StartCoroutine(MoodTo(level, seconds));
+            _moodLog.Add(level.ToString("0.00"));
+        }
+        IEnumerator MoodTo(float level, float seconds)
+        {
+            float a = _dotLevel;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / seconds)
+            {
+                _dotLevel = Mathf.Lerp(a, level, Mathf.SmoothStep(0f, 1f, t));
+                _dot.EnableKeyword("_EMISSION"); _dot.SetColor("_EmissionColor", Color.white * 4f * _dotLevel);
+                yield return null;
+            }
         }
 
         IEnumerator Silence(float seconds, string after)
@@ -306,7 +379,7 @@ namespace Seven
             Shape.Hover = false;
             Shape.transform.SetParent(null, true);
             Shape.transform.SetPositionAndRotation(at, rot);
-            Shape.Glow = 0.9f;
+            Shape.Glow = 0.3f;                  // QF7: faint edge lines on the table, nothing that outshines the scene
         }
 
         Transform Hand(bool right) => Seven.Bone(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
@@ -381,16 +454,55 @@ namespace Seven
             yield return Turn(Cat.transform, Cat.transform.position + face, 0.5f, 220f);
         }
         Vector3 _catEatPos;
-        const float BowlRim = 0.212f;            // raised feeder: bowl on a 16 cm stand, rim 21 cm above the table
-        /// <summary>Head down in the bowl: shift him so his muzzle is over the bowl's middle (the rim hides his mouth).</summary>
-        void AlignCatToBowl()
+        const float BowlRim = 0.042f, BowlInner = 0.088f, FoodTop = 0.027f;   // QF7: a plain low bowl on the table
+        /// <summary>QF7: head down into the low bowl - find the dip (EatGain) that brings the muzzle just over the food,
+        /// then shift him so the muzzle is over the bowl's middle (inside the rim, never through it).</summary>
+        IEnumerator AlignCatToBowl()
         {
+            bool chew = _catPose.Chewing; _catPose.Chewing = false;
+            for (int i = 0; i < 40; i++) yield return null;      // the dip eases in
+            // front crouch first (a cat at a low bowl lowers his front, paws planted), then a little more neck if needed
+            float best = 0f, gain = 1f, hBest = float.MaxValue;
+            for (float c = 0f; c <= 45f; c += 2.5f)
+            {
+                _catPose.Crouch = c; yield return null; yield return null;
+                float h = _catPose.Muzzle.y - TableTopY;
+                if (h < hBest) { hBest = h; best = c; }
+                if (h <= FoodTop + 0.012f) break;
+            }
+            _catPose.Crouch = best;
+            for (float g = 1f; hBest > FoodTop + 0.012f && g <= 1.3f; g += 0.05f)
+            {
+                _catPose.EatGain = g; yield return null; yield return null;
+                float h = _catPose.Muzzle.y - TableTopY;
+                if (h < hBest) { hBest = h; gain = g; } else break;
+            }
+            _catPose.EatGain = gain;
             var want = Bowl.position; var m = _catPose.Muzzle;
             var d = Flat(want - m);
-            if (d.magnitude > 0.25f) d = d.normalized * 0.25f;
+            if (d.magnitude > 0.3f) d = d.normalized * 0.3f;
             Cat.transform.position += d;
             _catEatPos = Cat.transform.position;
-            if (Auto) Cap.Log($"cat at his bowl: muzzle {Flat(want - _catPose.Muzzle).magnitude:0.000} m from the bowl centre after aligning (moved {d.magnitude:0.000} m), muzzle {_catPose.Muzzle.y - TableTopY:0.000} m above the table (bowl rim {BowlRim:0.000})");
+            yield return null;
+            // the front paws stay outside the bowl: plant them further back until both clear the rim by 2 cm
+            for (float pb = 0f; pb <= 0.16f; pb += 0.01f)
+            {
+                _catPose.PawBack = pb; yield return null; yield return null;
+                if (PawClear() > 0.02f) break;
+            }
+            _catPose.Chewing = chew;
+            if (Auto || DemoBoot.PlayerSim) LogCatInBowl($"cat at his bowl (front crouch {best:0.0} deg, neck gain {gain:0.00})");
+        }
+        const float BowlOuter = 0.095f;
+        /// <summary>Smallest horizontal clearance of his front paws outside the bowl's rim (negative = a paw in the bowl).</summary>
+        float PawClear() => Mathf.Min(Flat(_catPose.PawL - Bowl.position).magnitude, Flat(_catPose.PawR - Bowl.position).magnitude) - BowlOuter;
+        void LogCatInBowl(string what)
+        {
+            var mz = _catPose.Muzzle; float off = Flat(Bowl.position - mz).magnitude, h = mz.y - TableTopY;
+            // clean = the muzzle over the opening (head clear of the rim sideways), above the food, both paws outside the rim
+            bool inside = off < BowlInner - 0.03f && h > FoodTop - 0.005f && PawClear() > 0f;
+            Cap?.Log($"{what}: front paws {PawClear():0.000} m outside the rim (paws moved back {_catPose.PawBack:0.00} m)");
+            Cap?.Log($"{what}: muzzle {off:0.000} m from the bowl centre (inside radius {BowlInner:0.000}, head half-width ~0.03), {h:0.000} m above the table (rim {BowlRim:0.000}, food top {FoodTop:0.000}) -> {(inside ? "in the bowl, clear of the rim" : "NOT CLEAN - check the capture")}");
         }
         AudioSource _catEatLoop;
         void CatEats(bool on)
@@ -506,15 +618,24 @@ namespace Seven
             CatEats(true);
             TwoShot(0f);
             yield return Wait(0.8f);
-            AlignCatToBowl();
+            yield return AlignCatToBowl();
             yield return UI.Fade(0f, 1.0f);
             yield return TakeFromBelt();                            // QF5: from the pouch at her belt to beside her plate
             StartEating(2);                                         // "7 takes a few bites."
             yield return Wait(1.6f);
             yield return Shot("s10_03_eating_two_shot");
-            CamTo(CatCloseCam(), Bowl.position + Up * (TableTopY + 0.08f), 1.2f, 40f);
+            CamTo(CatCloseCam(), Bowl.position + Up * (TableTopY + 0.04f), 1.2f, 40f);
             yield return Wait(1.6f);
             yield return Shot("s10_04_cat_eating_mouth_hidden");
+            if (Auto || DemoBoot.PlayerSim && Cap != null)
+            {
+                // QF7: a low side view at table height - muzzle in the bowl, not through its rim or walls
+                var side = Vector3.Cross(Up, Flat(Cat.transform.forward)).normalized;
+                CamTo(Bowl.position + side * 0.55f + Up * (TableTopY + 0.07f), Bowl.position + Up * (TableTopY + 0.04f), 0f, 34f);
+                yield return Wait(0.3f);
+                yield return Cap.Shot("qf7_11_cat_in_the_bowl_side");
+                CamTo(CatCloseCam(), Bowl.position + Up * (TableTopY + 0.04f), 0f, 40f);
+            }
             TwoShot(1.2f);
             while (Time.time - silence0 < silenceLen) yield return null;
             var s0 = $"silence after s10_04_7 ('For a while, neither speaks'): {Time.time - silence0:0.00}s (script {silenceLen:0.0}s), incl. the cut to the table";
@@ -522,7 +643,8 @@ namespace Seven
             // more bites until she has taken a few, then her eyes wander to the dodecahedron; the fork stops
             for (float t = 0f; _bites < 2 && t < 12f; t += Time.deltaTime) yield return null;
             StopEating();
-            _ik.RightPos = PlateFood + Up * 0.1f + Seven.transform.right * 0.05f; _ik.RightW = 0.7f;   // fork held, stopped
+            // QF7: the fork stops - her hand comes to rest on the table at the plate's edge (not hovering in the air)
+            _ik.RightPos = Plate.position + TableAlong * 0.16f + Seven.transform.right * 0.12f + Up * (TableTopY + 0.035f); _ik.RightW = 0.75f;
             _ik.LookPos = Shape.transform.position; _ik.LookW = 1f;
             yield return Wait(1.4f);
             yield return Shot("s10_05_eyes_on_the_object");
@@ -620,9 +742,13 @@ namespace Seven
             yield return Say("s10_30_cat");                       // Unless this was a farewell dinner.
             yield return Say("s10_31_7");
             yield return Say("s10_32_cat");                       // I did.
+            _focus.Set(false); _lastCut = Time.time;
+            CamTo(TableCentre - TableOut * 2.6f + Up * 1.45f + TableAlong * 0.1f, TableCentre + Up * 0.9f + TableAlong * 0.1f, 3.5f, 46f);   // QF7: pulling back for distance
+            AutoCut = false;
             yield return Say("s10_33_7");                         // You could go home.
-            // "He settles beside the bowl."
-            yield return CatWalkTo(_catEatPos, TableAlong, 1.2f);
+            AutoCut = true;
+            // "He settles beside the bowl." (QF7: beside it - a step back from where he eats, paws clear of the bowl)
+            yield return CatWalkTo(_catEatPos - Flat(Cat.transform.forward).normalized * 0.16f - TableOut * 0.05f, TableAlong, 1.2f);
             CatClip("sit", 0.4f);
             yield return Say("s10_34_cat", false);                // I'd like to know what happens next.
             TwoShot(0f);                                          // (She watches him for a moment.)
@@ -637,10 +763,11 @@ namespace Seven
             yield return Shot("s10_11_venus_then");
             yield return Silence(1.2f, "s10_36_7");
             // "Cat returns to his food. 7 picks up her fork. This time, she eats."
+            yield return CatWalkTo(_catEatPos, TableAlong, 0.8f);
             CatClip("idle", 0.4f);
             CatEats(true);
             yield return PickUpFork();
-            if (Auto) Cap.Log($"cat back at his food: muzzle {Flat(Bowl.position - _catPose.Muzzle).magnitude:0.000} m from the bowl centre, {_catPose.Muzzle.y - TableTopY:0.000} m above the table");
+            if (Auto || DemoBoot.PlayerSim) { yield return Wait(1.0f); LogCatInBowl("cat back at his food"); }
             StartEating();
             yield return Wait(3.0f);
             yield return Shot("s10_12_this_time_she_eats");
@@ -648,6 +775,7 @@ namespace Seven
             yield return Wait(2.5f);
             yield return UI.Fade(1f, 2.0f);                       // fade softly
             _focus.Set(false);
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"galley life (QF7): gaze shifts {_ik.GazeShifts}, cat ear flicks {_catPose.EarFlicks}, energy point moods [{string.Join(" ", _moodLog)}], no face close-ups (medium shots + push-ins, reaction holds)");
             if (Auto) Cap.Log($"scene 10 'The galley' lasted {Time.time - sceneStart:0.0}s; bites {_bites}; cat chewing {_catPose.ChewSeconds:0.0}s (only while eating); silences: {string.Join(" | ", _silenceLog)}");
             // back to exploring: 7 beside her seat, the cat down from the table
             StopEating();
@@ -673,21 +801,53 @@ namespace Seven
             _ik.LookPos = basePos; _ik.LookW = w;
         }
 
+        // QF7 (Dan: "she is not sitting in the chair"): the arena clamp pushed her root out of the seat's footprint every
+        // frame, so she sat in the air behind the chair. Now her hips are pinned to the seat point (SaucerSeven.SeatHips)
+        // every frame she is seated: on the cushion, toward the backrest, feet on the floor - and checked numerically.
+        const float CushionTop = 0.505f, HipsOverCushion = 0.11f;
+        Vector3 SeatPoint => Flat(Seat7.position) + TableAlong * 0.035f + Up * (CushionTop + HipsOverCushion);
+        bool _seated; string _seatClip = "sitting_idle";
+        float _seatWorst; int _seatFrames, _seatBad;
         IEnumerator SitAtTable()
         {
             var face = Flat(-TableAlong);
-            Seven.transform.SetPositionAndRotation(Flat(Seat7.position), Quaternion.LookRotation(face));
-            Seven.PlayClip("sitting_idle", 0f);
+            Seven.transform.SetPositionAndRotation(Flat(Seat7.position) + TableAlong * 0.25f, Quaternion.LookRotation(face));
+            _seatClip = Seven.HasState("sit_idle") ? "sit_idle" : "sitting_idle";
+            Seven.PlayClip(_seatClip, 0f);
+            Seven.SeatErrMax = 0f; Seven.SeatErrSum = 0f; Seven.SeatFrames = 0;
+            Seven.SeatHips = SeatPoint;
+            _seated = true;
+            StartCoroutine(SeatWatch());
             yield return null; yield return null;
-            // hips over the cushion (a little toward the table), height from the clip
-            var hips = Seven.Hips.position; var want = Seat7.position - TableAlong * 0.04f;
-            Seven.transform.position += Flat(want - hips);
-            _forkInHand = _carry == null || Chapter1State.Explore;      // QF5: first the dodecahedron from her belt, then the fork
-            if (Auto) Cap.Log($"seated at the table: hips {Seven.HipsAboveRoot:0.00} m above the floor (cushion top 0.50), facing the cat");
+            _forkInHand = _carry == null || Chapter1State.Explore;      // first the dodecahedron from her pocket, then the fork
+            if (Auto) Cap.Log($"seated at the table ({_seatClip}): hips {Seven.Hips.position.y:0.000} m above the floor (cushion top {CushionTop:0.000}), {Flat(Seven.Hips.position - Seat7.position).magnitude:0.000} m from the seat's centre, {Vector3.Distance(Seven.Hips.position, SeatPoint):0.000} m from the seat point, lowest foot {FeetY():0.000} m (floor 0), facing the cat");
+        }
+        float FeetY()
+        {
+            var l = Seven.Bone(HumanBodyBones.LeftFoot); var r = Seven.Bone(HumanBodyBones.RightFoot);
+            return l != null && r != null ? Mathf.Min(l.position.y, r.position.y) : 0f;
+        }
+        /// <summary>QF7 seat check, every frame she is seated: hips within 5 cm of the seat point, over the cushion disc
+        /// (radius 0.21 m) and 6 - 18 cm above its top.</summary>
+        IEnumerator SeatWatch()
+        {
+            while (_seated)
+            {
+                yield return new WaitForEndOfFrame();
+                if (!_seated) break;
+                var h = Seven.Hips.position;
+                float r = Flat(h - Seat7.position).magnitude, above = h.y - CushionTop, d = Vector3.Distance(h, SeatPoint);
+                _seatWorst = Mathf.Max(_seatWorst, d);
+                _seatFrames++;
+                if (d > 0.05f || r > 0.21f || above < 0.06f || above > 0.18f) _seatBad++;
+            }
         }
 
         IEnumerator StandFromTable()
         {
+            _seated = false;
+            Seven.SeatHips = null;
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"SEAT CHECK (QF7): hips vs the seat point over {_seatFrames} seated frames: worst {_seatWorst * 100f:0.0} cm, mean {(Seven.SeatFrames > 0 ? Seven.SeatErrSum / Seven.SeatFrames * 100f : 0f):0.0} cm; frames off the cushion or > 5 cm: {_seatBad} (must be 0); clips: {_seatClip} + {string.Join(", ", _clipUses.Select(kv => kv.Key + " x" + kv.Value))}");
             Seven.transform.SetPositionAndRotation(Flat(SeatStand), Quaternion.LookRotation(Flat(-TableOut)));
             Seven.PlayClip("idle", 0f);
             Seven.Cutscene = false; Seven.Frozen = false;
@@ -714,19 +874,17 @@ namespace Seven
             _ik.LookPos = _carry.HipPoint; _ik.LookW = 0.55f;
             yield return Wait(0.8f);
             _carry.Set(CarriedShape.Where.Hand, 0.25f);
-            AudioKit.Play("fork_clink", _carry.HipPoint, 0.08f, 0.3f, AudioKit.Bus.Sfx, 4f);
             yield return Wait(0.3f);
-            if (Auto) { Cap.Log($"galley: she takes the dodecahedron from the pouch at her belt (hand {Vector3.Distance(_carry.Palm, _carry.HipPoint):0.00} m from the belt point)"); yield return Shot("qf5_07_galley_takes_it_from_her_belt"); }
+            if (Auto) { Cap.Log($"galley: she takes the dodecahedron out of her pocket (hand {Vector3.Distance(_carry.Palm, _carry.HipPoint):0.00} m from the pocket)"); yield return Shot("qf7_09_galley_out_of_her_pocket"); }
             var front = Flat(Seven.transform.position) + Flat(Seven.transform.forward).normalized * 0.32f + Up * (TableTopY + 0.16f);
             _ik.RightPos = front; _ik.LookPos = front; _ik.LookW = 0.9f;
             yield return Wait(0.8f);
-            if (Auto) yield return Shot("qf5_08_galley_over_the_table");
+            if (Auto) yield return Shot("qf7_10_galley_over_the_table");
             var held = Shape.transform.position;
             _carry.Set(CarriedShape.Where.Away, 0f);
             Shape.transform.position = held;
             _ik.RightW = 0f;
             yield return MoveShape(BesidePlate, MarkingDown(), 1.1f);
-            _carry.Carrying = true;                                 // the empty pouch stays on her belt
             if (Auto) Cap.Log($"galley: dodecahedron set beside her plate at {Shape.transform.position}");
             _ik.LookW = 0f;
             yield return PickUpFork();

@@ -11,12 +11,13 @@ namespace Seven
     /// </summary>
     public class CarriedShape : MonoBehaviour
     {
-        public enum Where { Hand, Hip, Away }
+        /// <summary>QF7: Pocket = out of sight in a pocket of her suit (no shape, no pouch, no light, no glow at all).</summary>
+        public enum Where { Hand, Hip, Away, Pocket }
         public Transform Shape;
         public Where At { get; private set; } = Where.Away;
         [Tooltip("Pouch on the belt, in 7's root space from the hips bone: right, up, forward (m).")]
         public Vector3 HipOffset = new Vector3(0.215f, 0.06f, -0.03f);
-        public float GlowAtHip = 1.1f, GlowInHand = 1.6f;
+        public float GlowAtHip = 0.35f, GlowInHand = 0.4f;     // QF7: faint edge lines only (no bloom halo)
 
         Animator _anim;
         Transform _hand, _mid, _hips;
@@ -92,15 +93,17 @@ namespace Seven
 
         void LateUpdate()
         {
-            bool show = Shape != null && At != Where.Away && Shape.gameObject.activeInHierarchy;
+            bool pocket = At == Where.Pocket && _blend >= 1f;
+            ShowShape(!pocket);
+            bool show = Shape != null && At != Where.Away && !pocket && Shape.gameObject.activeInHierarchy;
             if (_pouch != null)
             {
                 // the pouch always hangs at the belt once she carries it (empty while it is in her hand)
                 var hp = HipPoint;
                 _pouch.SetPositionAndRotation(hp + transform.up * -0.025f, transform.rotation * Quaternion.Euler(6f, 0f, 4f));
-                _pouch.gameObject.SetActive(_carrying && Shape != null && Shape.gameObject.activeInHierarchy);
+                _pouch.gameObject.SetActive(_carrying && At == Where.Hip && Shape != null && Shape.gameObject.activeInHierarchy);
             }
-            if (_glow != null) { _glow.enabled = show; if (show) _glow.transform.position = Shape.position; }
+            if (_glow != null) _glow.enabled = false;                   // QF7: no light on her at all (Dan's white blob)
             if (!show) return;
             TargetPose(out var p, out var r);
             if (_blend < 1f)
@@ -112,6 +115,19 @@ namespace Seven
             }
             Shape.SetPositionAndRotation(p, r);
         }
+
+        Renderer[] _rends;
+        bool _shown = true;
+        /// <summary>Shape renderers on / off (never SetActive: the galley toggles the object itself during the reveal).</summary>
+        void ShowShape(bool on)
+        {
+            if (Shape == null || on == _shown) return;
+            if (_rends == null) _rends = Shape.GetComponentsInChildren<Renderer>(true);
+            foreach (var r in _rends) if (r != null) r.enabled = on;
+            _shown = on;
+        }
+        /// <summary>True while it is out of sight in her pocket.</summary>
+        public bool InPocket => At == Where.Pocket;
 
         bool _carrying;
         /// <summary>The pouch shows from the moment she first stows the shape (it is part of her outfit from then on).</summary>

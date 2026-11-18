@@ -58,6 +58,10 @@ namespace Seven
         [Tooltip("Kyle's floating shape in the vision alcove (InscriptionGlow = its edges) and its light; its outline on the sealed door.")]
         public Transform Shape;
         public Light ShapeLight;
+        [Tooltip("QF7: the collapse that buries the lock in the present (cleared by telekinesis after the vision).")]
+        public Transform LockRubble;
+        /// <summary>QF7: the pedestal glow - thin faint edge lines, a dim light (was 1.4, a white bloom halo).</summary>
+        const float ShapeGlowIdle = 0.45f;
         public Renderer DoorSymbol;
         [Tooltip("8b addition: the door's right leaf (SealedDoorSlab = left leaf) and its engravings (0 = the S-seam line).")]
         public Transform DoorRight;
@@ -136,6 +140,7 @@ namespace Seven
             ChapterCat.NoCat.Add(Rect.MinMaxRect(-1.75f, -1.75f, 1.75f, MoonLayout.CellWallZ1));
             SetupCheckpoint(Chapter1State.Checkpoint);
             SetupAudio();
+            ChapterCamera.AreaName = p => AreaNames[Mathf.Clamp(AreaOf(p), 0, AreaNames.Length - 1)];
             if (Auto && DemoBoot.OpeningTest <= 0) { AudioKit.Log = s => Cap.Log("audio: " + s); LineOfSightCheck(); }
             if (Auto && DemoBoot.OpeningTest <= 0) StartCoroutine(SpeakerViewSampler());
             StartCoroutine(DemoBoot.OpeningTest > 0 ? OpeningTestRun() : DemoBoot.CatFollowTest > 0 ? CatFollowTestRun() : Flow());
@@ -232,17 +237,17 @@ namespace Seven
             _slabMoved = cp >= Chapter1State.CpHall;
             SetZone("Stair", _slabMoved);
             if (Slab != null) { Slab.gameObject.SetActive(!_slabMoved); Slab.position = MoonTraversal.SlabRest; Slab.rotation = Quaternion.Euler(4f, 12f, -6f); }
-            _shapeGlow = cp >= Chapter1State.CpDoor ? 0.45f : 1.4f;        // after the vision it dims to a faint glow
-            _shapeTaken = sealedOpen;                        // Round 10: from checkpoint 4 on she carries it
+            _shapeGlow = ShapeGlowIdle;
+            _shapeTaken = cp >= Chapter1State.CpDoor;       // QF7: she has it from the end of the vision on (checkpoint 5)
             if (Shape != null) Show(Shape.gameObject, true);
-            if (Shape != null && sealedOpen)
+            if (Shape != null && _shapeTaken)
             {
-                // QF5: it rides visibly at her hip (small pouch on her belt) from the door scene on
+                // QF7: in a pocket of her suit - out of sight, no light, no glow on her
                 _carry = CarriedShape.Attach(Seven.gameObject, Shape);
-                _carry.Carrying = true;
-                _carry.Set(CarriedShape.Where.Hip, 0f);
+                _carry.Set(CarriedShape.Where.Pocket, 0f);
             }
-            if (ShapeLight != null) ShapeLight.enabled = !sealedOpen;
+            if (ShapeLight != null) ShapeLight.enabled = !_shapeTaken;
+            ResetRubble(!sealedOpen);                        // QF7: the lock stays buried until she clears it
             Glow(DoorSymbol, sealedOpen ? 0.7f : cp == Chapter1State.CpDoor ? 0.9f : 0f);
             Ground.IgnoreObstacle = -1;
             Show(Seven.gameObject, true); Show(Cat.gameObject, true);
@@ -383,7 +388,7 @@ namespace Seven
 
         IEnumerator Shot(string name)
         {
-            if (!Auto) yield break;
+            if (!Auto && !(DemoBoot.PlayerSim && name.StartsWith("qf7_") && Cap != null)) yield break;
             ShotFrameCheck(name);
             if (Legend.VisiblePanels > 0) Cap.Log($"LEGEND VISIBLE in shot '{name}': {Legend.VisiblePanels} panel(s) (must be 0 in the chapter)");
             if (Legend.TeachText != null || Legend.ContextText != null) Cap.Log($"prompts in shot '{name}': teach [{Legend.TeachText}] context [{Legend.ContextText}]");
@@ -949,50 +954,61 @@ namespace Seven
 
         IEnumerator Scene6Vision()
         {
-            Step("touch the glowing shape", 4, MoonLayout.ShapeSpot);
-            Objective("Keep going");
+            // QF7 (Dan: touching the shape, walking to the lock and walking back to take it was silly): one step from the
+            // start. The objective is "Take the shape" as soon as she is in the chamber; she walks up to it and reaches
+            // for it (no prompt, no button: walking up is enough, at or past the spot), the vision plays as she touches
+            // it, and when it ends she is holding it. Then the pocket, then the hidden lock (Scene6Door).
+            Step("take the glowing shape (the vision plays as she touches it)", 4, MoonLayout.ShapeSpot);
+            Objective("Take the shape");
             Cat.Follow();
-            Prompt("Touch", MoonLayout.ShapeSpot, 1.3f);
-            if (Auto) yield return AutoWalk(new Vector3(16.5f, MoonLayout.Lower, -30f), new Vector3(18.6f, MoonLayout.Lower, -33.6f), MoonLayout.ShapeSpot);
+            if (Auto) yield return AutoWalk(new Vector3(16.5f, MoonLayout.Lower, -30.6f));
             yield return Until(() => Seven.transform.position.z < -30f, "vision chamber", 40f);
-            Objective("Look at the glowing shape");
             if (Auto)
             {
-                // 8b addition capture: the chamber and the sealed lunar door before the vision
-                Cam.Shot(new Vector3(16.9f, MoonLayout.Lower + 1.7f, -30.2f), new Vector3(16.6f, MoonLayout.Lower + 2.2f, -38.0f), 0.01f, true, 58f);
+                // the chamber before the vision: the lock is NOT visible (the collapse covers it)
+                Cam.Shot(new Vector3(16.0f, MoonLayout.Lower + 1.7f, -33.4f), new Vector3(13.8f, MoonLayout.Lower + 1.2f, -37.7f), 0.01f, true, 50f);
                 yield return null;
-                yield return Shot("s06_chamber_before");
-                Cam.Follow();
-            }
-            if (Auto)
-            {
-                // Round 9 (8b) capture: the shape in its alcove
-                bool w = Cam.InShot;
-                Cam.Shot(MoonLayout.ShapeAt + new Vector3(-1.0f, 0.25f, 0.55f), MoonLayout.ShapeAt + Vector3.down * 0.12f, 0.01f, true, 40f);
+                yield return Shot("s06_chamber_before_lock_buried");
+                Cam.Shot(new Vector3(19.55f, MoonLayout.Lower + 1.5f, -34.75f), MoonLayout.ShapeAt + Vector3.down * 0.15f, 0.01f, true, 40f);
                 yield return null;
                 yield return Shot("s06_shape_in_alcove");
-                if (!w) Cam.Follow();
+                Cam.Follow();
+                yield return AutoWalk(new Vector3(18.6f, MoonLayout.Lower, -33.6f), MoonLayout.ShapeSpot);
             }
-            yield return WaitPrompt("touch the shape");
+            float t0 = Time.time;
+            while (true)
+            {
+                var p = Seven.transform.position;
+                bool free = Seven.Current == ChapterSeven.Mode.Free && !PauseMenu.IsOpen && !_resettingFall && !Dlg.Busy;
+                // at or past the spot: within reach of the pedestal, or anywhere in the alcove mouth
+                if (free && (Flat(p - MoonLayout.ShapeSpot).magnitude < 1.5f || p.x > MoonLayout.ShapeSpot.x - 0.2f && p.z < MoonLayout.AlcoveZ.y + 0.6f && p.z > MoonLayout.AlcoveZ.x - 0.6f)) break;
+                yield return null;
+            }
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"ok: walked up to the shape ({Time.time - t0:0.0}s) - no prompt, no button");
             Objective(null);
 
             yield return Cutscene(true);
+            Cam.Subjects.Clear();
             Cat.GoTo(MoonLayout.ShapeSpot + new Vector3(-0.9f, 0f, 1.0f), Cat.StrollSpeed, Seven.transform.position);
-            Talk();
-            Cam.Shot(new Vector3(17.6f, MoonLayout.Lower + 2.1f, -32.7f), new Vector3(20.6f, MoonLayout.Lower + 1.35f, -34.9f), 1.0f);
+            if (Dist7(MoonLayout.ShapeSpot) > 0.15f) yield return WalkSeven(MoonLayout.ShapeSpot, 2.5f);
+            Seven.Lock(true);
+            for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(MoonLayout.ShapeAt - Seven.transform.position)), 400f * Time.deltaTime); yield return null; }
+            // a medium side shot: her upper body reaching into the alcove, the shape in view (no face close-up)
+            FrameHer("reach for the shape", MoonLayout.ShapeAt, 1.9f, 50f, 0.8f);
             Seven.Touch(MoonLayout.ShapeAt);
-            yield return Wait(1.3f);
-            // the edges flare, the light swells to white -> the vision
-            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { _shapeGlow = Mathf.Lerp(1.4f, 7f, t / 0.5f); yield return null; }
+            yield return Wait(1.1f);
+            yield return Shot("qf7_01_reaches_for_the_shape");
+            // her fingers on it: the edges flare, the light swells to white -> the vision
+            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { _shapeGlow = Mathf.Lerp(ShapeGlowIdle, 4f, t / 0.5f); yield return null; }
             yield return Shot("s06_shape_touch_flare");
-            // Wash to white; the vision (Dan, 2026-11-17): the video of this doorway long ago, full-screen; the cat is
-            // heard faintly, far away. The music fades out: the vision plays no track, only its own shimmer.
+            // Wash to white; the vision (Dan, 2026-11-17): the video of this doorway long ago - the lock beside it intact,
+            // being used - full-screen; the cat is heard faintly, far away. The music fades out.
             MusicSystem.Stop(1.2f);
             AudioKit.Play("vision_whoosh", null, 0.9f);
             var shimmer = AudioKit.Loop("vision_shimmer", null, null, 0f, AudioKit.Bus.Sfx);
             if (shimmer != null) StartCoroutine(AudioKit.Fade(shimmer, 0.7f, 1.5f));
             if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, 0.25f, 1.0f));
-            _shapeGlow = 9f;
+            _shapeGlow = 5f;
             StartCoroutine(UI.Fade(1f, 0.9f, 1f));
             yield return Wait(0.5f);
             yield return Shot("s06_whitewash_in");
@@ -1011,9 +1027,9 @@ namespace Seven
                 UI.SetVideo(_vpRT, aspect, 1f);
                 bool frameShot = false;
                 float len = (float)VisionVideo.length;
-                for (float t0 = Time.time; Time.time - t0 < len - 0.75f && (_vp.isPlaying || Time.time - t0 < 1f);)
+                for (float vt0 = Time.time; Time.time - vt0 < len - 0.75f && (_vp.isPlaying || Time.time - vt0 < 1f);)
                 {
-                    if (!frameShot && Time.time - t0 > 5.5f) { frameShot = true; yield return Shot("s06_vision_video_frame"); }
+                    if (!frameShot && Time.time - vt0 > 5.5f) { frameShot = true; yield return Shot("s06_vision_video_frame"); }
                     yield return null;
                 }
                 for (float t = 0f; t < 0.7f; t += Time.deltaTime) { UI.SetVideo(_vpRT, aspect, 1f - t / 0.7f); yield return null; }
@@ -1022,7 +1038,7 @@ namespace Seven
             }
             else
             {
-                VisionRuins.SetActive(false); VisionWhole.SetActive(true);
+                VisionRuins.SetActive(false); VisionWhole.SetActive(true); ShowRubble(false);
                 Cam.Shot(new Vector3(16.5f, MoonLayout.Lower + 2.3f, -30.2f), new Vector3(16.5f, MoonLayout.Lower + 1.6f, -37.5f), 4f, true);
                 ghostRoutine = StartCoroutine(Ghosts());
                 yield return UI.Fade(0.12f, 1.1f, 1f);
@@ -1036,42 +1052,174 @@ namespace Seven
             if (shimmer != null) StartCoroutine(AudioKit.Fade(shimmer, 0f, 1.6f, true));
             if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, 1f, 2.5f));
             if (ghostRoutine != null) StopCoroutine(ghostRoutine);
-            VisionWhole.SetActive(false); VisionRuins.SetActive(true);
+            VisionWhole.SetActive(false); VisionRuins.SetActive(true); ShowRubble(true);
             Show(Cat.gameObject, true);
-            _shapeGlow = 0.45f;                              // the shape dims to a faint glow afterwards
+            // ... and when it ends she is holding it: she took it in that moment (still under the white)
+            _shapeTaken = true;
+            if (ShapeLight != null) ShapeLight.enabled = false;
             Seven.Release(); Seven.Lock(true);
-            Cam.Shot(new Vector3(17.0f, MoonLayout.Lower + 1.85f, -32.3f), new Vector3(19.3f, MoonLayout.Lower + 1.2f, -34.9f), 0.6f, true);   // 7 at the alcove, the cat beside her
-            if (Auto) Cap.Log($"vision lasted {Time.time - visionStart:0.0}s (white wash in/out included)");
+            _carry = CarriedShape.Attach(Seven.gameObject, Shape);
+            var ik = Seven.gameObject.AddComponent<SevenTableIK>();
+            var head = Seven.Bone(HumanBodyBones.Head);
+            var fwd = Flat(Seven.transform.forward).normalized; var side = Vector3.Cross(Vector3.up, fwd);
+            var hold = (head != null ? head.position : Seven.transform.position + Vector3.up * 1.6f) + Vector3.down * 0.42f + fwd * 0.3f + side * 0.05f;
+            ik.RightPos = hold; ik.RightW = 1f; ik.LookPos = hold; ik.LookW = 0.85f; ik.Ease = 6f;
+            yield return null; yield return null;
+            _carry.Set(CarriedShape.Where.Hand, 0f);
+            Talk();
+            // medium two-shot: 7 at the alcove with it in her hand, the cat beside her
+            FrameHer("after the vision, holding it", Shape.position, 1.6f, 50f, 0f);
+            if (Auto) Cap.Log($"vision lasted {Time.time - visionStart:0.0}s (white wash in/out included); after it she holds the dodecahedron: {_carry.At}, {Vector3.Distance(Shape.position, _carry.Palm):0.000} m from her palm");
             StartCoroutine(UI.Fade(0f, 1.2f, 1f));
             yield return Wait(0.75f);
             yield return Shot("s06_whitewash_out");
             yield return Wait(0.5f);
-            yield return Shot("s06_vision_after");
+            yield return Shot("qf7_02_after_the_vision_holding_it");
             yield return ReadyToTalk(2f);
             yield return Dlg.PlayScene(6, 3, 7);             // lines 3-7 (DIALOGUE.md scene 6)
+            // she looks at it once more, then puts it away in a pocket of her suit: out of sight, no glow on her at all
+            ik.LookPos = Shape.position; ik.LookW = 1f;
+            FrameHer("into her pocket", null, 2.2f, 46f, 0.9f);
+            yield return Wait(1.0f);
+            var pocket = _carry.HipPoint + Seven.transform.forward * 0.04f;
+            ik.RightPos = pocket; ik.LookPos = pocket; ik.LookW = 0.5f; ik.Ease = 3f;
+            yield return Wait(0.55f);
+            _carry.Set(CarriedShape.Where.Pocket, 0.35f);
+            yield return Wait(0.5f);
+            yield return Shot("qf7_03_into_her_pocket");
+            ik.RightW = 0f; ik.LookW = 0f;
+            yield return Wait(0.5f);
+            Destroy(ik);
+            if (Auto) Cap.Log($"dodecahedron into her pocket: in pocket {_carry.InPocket}, renderers shown {Shape.GetComponentInChildren<Renderer>().enabled}, lights on her {CountLightsOn(Seven.transform)}");
             Checkpoint(Chapter1State.CpDoor);
         }
 
-        /// <summary>QF6: the lunar door (checkpoint 5): she notices the mechanism, opens the door, takes the shape.</summary>
+        /// <summary>QF7: a cutscene framing found around her instead of a fixed spot (the ruin columns blocked the fixed ones,
+        /// and some framed her from behind): her head + chest and <paramref name="also"/> in clear view, the camera at
+        /// about head height (never looking down her body), from her side or three-quarter front - never from behind - and
+        /// never inside geometry. Medium distance, no face close-up.</summary>
+        void FrameHer(string what, Vector3? also, float dist, float fov, float ease)
+        {
+            var head = Seven.Bone(HumanBodyBones.Head); var chest = Seven.Bone(HumanBodyBones.Chest);
+            var hp = head != null ? head.position : Seven.transform.position + Vector3.up * 1.6f;
+            var cp = chest != null ? chest.position : Seven.transform.position + Vector3.up * 1.25f;
+            var fwd = Flat(Seven.transform.forward).normalized;
+            var look = also.HasValue ? Vector3.Lerp(Vector3.Lerp(hp, cp, 0.3f), also.Value, 0.4f) : Vector3.Lerp(hp, cp, 0.3f);
+            float best = float.MaxValue; Vector3 bestPos = Vector3.zero; float bestAng = 0f;
+            foreach (var d in new[] { dist, dist * 1.25f, dist * 1.6f, dist * 0.85f })
+                for (int a = -150; a <= 150; a += 15)
+                    foreach (var h in new[] { 0.05f, 0.2f, -0.05f })
+                    {
+                        var dir = Quaternion.AngleAxis(a, Vector3.up) * fwd;
+                        var pos = Seven.transform.position + dir * d + Vector3.up * (hp.y - Seven.transform.position.y + h);
+                        if (Physics.CheckSphere(pos, 0.25f, ~((1 << 20) | (1 << 5)), QueryTriggerInteraction.Ignore)) continue;
+                        if (!ChapterCamera.ClearLine(pos, hp) || !ChapterCamera.ClearLine(pos, cp)) continue;
+                        if (also.HasValue && !ChapterCamera.ClearLine(pos, also.Value)) continue;
+                        if (Cam.PropBetween(pos, hp) || Cam.PropBetween(pos, cp) || also.HasValue && Cam.PropBetween(pos, also.Value)) continue;
+                        float ang = Mathf.Abs(a);
+                        if (ang > 100f) continue;                                 // never from behind her
+                        float score = Mathf.Abs(ang - 60f) * 0.02f + Mathf.Abs(d - dist) * 0.8f + Mathf.Abs(h - 0.05f) * 2f;
+                        if (score < best) { best = score; bestPos = pos; bestAng = a; }
+                    }
+            if (best == float.MaxValue)
+            {
+                Cap?.Log($"framing '{what}': NO clear framing found around her - kept the follow view");
+                return;
+            }
+            Cam.Shot(bestPos, look, ease, ease <= 0.05f, fov);
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"framing '{what}': camera {bestPos} at {bestAng:0} deg from her facing (0 = straight in front, > 100 never used), {Vector3.Distance(bestPos, hp):0.00} m from her head");
+        }
+
+        static int CountLightsOn(Transform t) { int n = 0; foreach (var l in t.GetComponentsInChildren<Light>()) if (l.enabled) n++; return n; }
+
+        // ------------------------------------------------------------------------------------------ QF7: the buried lock
+        readonly List<(Transform t, Vector3 p, Quaternion r)> _rubbleHome = new List<(Transform, Vector3, Quaternion)>();
+        static readonly Vector2 RubbleObstacle = new Vector2(13.7f, -37.45f);
+        Vector3 RubbleCentre => new Vector3(MoonLayout.DoorSymbol.x, MoonLayout.Lower + 1.0f, -37.6f);
+        bool _lockUncovered;
+        public bool LockUncovered => _lockUncovered;
+
+        /// <summary>The collapse in front of the lock: back in place (present day, before she clears it) or gone.</summary>
+        void ResetRubble(bool present)
+        {
+            if (LockRubble == null) return;
+            if (_rubbleHome.Count == 0) foreach (Transform c in LockRubble) _rubbleHome.Add((c, c.position, c.rotation));
+            foreach (var (t, p, r) in _rubbleHome) { t.position = p; t.rotation = r; }
+            LockRubble.gameObject.SetActive(present);
+            _lockUncovered = !present;
+            Ground.Obstacles.RemoveAll(c => (c.C - RubbleObstacle).sqrMagnitude < 0.01f);
+            if (present) Ground.Obstacles.Add(new Ground.Circle(RubbleObstacle, 0.75f));
+        }
+        void ShowRubble(bool on) { if (LockRubble != null && !_lockUncovered) LockRubble.gameObject.SetActive(on); }
+
+        /// <summary>QF7: checkpoint 5. She knows from the vision where the lock is: behind the collapse. She clears it with
+        /// telekinesis (RT), the lock is exposed, she touches it, the door opens; only then is the way on open.</summary>
         IEnumerator Scene6Door()
         {
-            Step("touch the mechanism, then take the shape", 4, MoonLayout.MechanismSpot);
+            Step("uncover the lock (telekinesis), then open the door", 4, MoonLayout.MechanismSpot);
             yield return Cutscene(true);
             Seven.Release(); Seven.Lock(true);
-            // She notices the control: the round three-spoke mechanism beside the door.
-            Glow(DoorSymbol, 0.9f);
-            var toMech = Flat(MoonLayout.DoorSymbol - Seven.transform.position);
-            for (float t = 0f; t < 0.7f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(toMech), 260f * Time.deltaTime); yield return null; }
+            var toPile = Flat(RubbleCentre - Seven.transform.position);
+            for (float t = 0f; t < 0.7f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(toPile), 260f * Time.deltaTime); yield return null; }
             Talk();
-            // QF5: the mechanism is on the right of the door now (as in the vision): frame her at the alcove and it
-            Cam.Shot(new Vector3(17.6f, MoonLayout.Lower + 2.1f, -30.2f), new Vector3(16.8f, MoonLayout.Lower + 1.2f, -36.4f), 1.0f, false, 54f);
+            // she looks across at the collapse where the lock was in the vision (a medium shot over her shoulder)
+            FrameHer("she looks at the collapse", RubbleCentre, 2.2f, 54f, 1.0f);
             yield return ReadyToTalk(1.5f);
+            yield return Shot("qf7_04_she_looks_at_the_collapse");
             yield return Dlg.PlayScene(6, 8, 8);             // "But I think I know how this opens."
             yield return Cutscene(false);
-            Objective("Touch the mechanism beside the door");
+            Objective("Uncover the lock");
+            Prompt("Telekinesis: the collapse", RubbleCentre, MoonLayout.TkRange, true);
+            var rends = LockRubble != null ? LockRubble.GetComponentsInChildren<Renderer>() : new Renderer[0];
+            bool pulsing = true;
+            IEnumerator Pulse() { for (float t = 0f; pulsing; t += Time.deltaTime) { foreach (var r in rends) Glow(r, 0.06f + 0.06f * Mathf.Sin(t * 3f)); yield return null; } foreach (var r in rends) Glow(r, 0f); }
+            StartCoroutine(Pulse());
+            if (Auto) { yield return AutoWalk(new Vector3(15.6f, MoonLayout.Lower, -35.2f)); yield return Until(() => PromptNear, "the collapse in telekinesis range", 20f); }
+            yield return WaitPrompt("clear the collapse from the lock (telekinesis)");
+            pulsing = false;
+            yield return Cutscene(true);
+            Seven.Gesture(RubbleCentre);
+            Seven.SetEnergyPoint(1.9f, 0.25f);
+            for (float t = 0f; t < 2f && Seven.Current == ChapterSeven.Mode.Gesture && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
+            TkStream(RubbleCentre);
+            AudioKit.Play("slab_lift", RubbleCentre, 0.9f, 0.05f, AudioKit.Bus.Sfx, 25f);
+            Cam.Shot(new Vector3(16.6f, MoonLayout.Lower + 1.9f, -33.0f), RubbleCentre + Vector3.up * 0.3f, 0.7f, false, 52f);
+            // each piece lifts off the wall and drifts to the west wall of the chamber, settling on the floor there
+            var froms = new List<(Transform t, Vector3 p, Quaternion r, Vector3 to, float delay)>();
+            int k = 0;
+            foreach (var (t, p, r) in _rubbleHome)
+            {
+                var to = new Vector3(12.95f + 0.25f * (k % 3), MoonLayout.Lower + 0.15f + 0.1f * (k % 2), -33.2f - 0.55f * (k / 3));
+                froms.Add((t, t.position, t.rotation, to, 0.12f * k)); k++;
+            }
+            bool shotMid = false;
+            for (float t = 0f; t < 2.6f; t += Time.deltaTime)
+            {
+                foreach (var f in froms)
+                {
+                    float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - f.delay) / 1.4f));
+                    f.t.position = Vector3.Lerp(f.p, f.to, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 1.1f;
+                    f.t.rotation = f.r * Quaternion.Euler(u * 70f, u * 40f, u * -30f);
+                }
+                if (!shotMid && t > 0.9f) { shotMid = true; StartCoroutine(Shot("qf7_05_telekinesis_clears_the_collapse")); }
+                yield return null;
+            }
+            AudioKit.Play("stone_fall", new Vector3(13.2f, MoonLayout.Lower, -34f), 0.7f, 0.05f, AudioKit.Bus.Sfx, 25f);
+            Seven.SetEnergyPoint(1f, 1.2f);
+            Seven.Release(); Seven.Lock(true);
+            _lockUncovered = true;
+            Ground.Obstacles.RemoveAll(c => (c.C - RubbleObstacle).sqrMagnitude < 0.01f);
+            ClearPrompt();
+            Glow(DoorSymbol, 0.9f);                          // the lock, intact - as in the vision
+            Cam.Shot(new Vector3(15.4f, MoonLayout.Lower + 1.75f, -34.6f), MoonLayout.DoorSymbol + Vector3.down * 0.15f, 0.8f, false, 48f);
+            yield return Wait(1.0f);
+            yield return Shot("qf7_06_the_lock_uncovered");
+            if (Auto) Cap.Log("the collapse is cleared by telekinesis: the lock is exposed (on the right of the door, as in the vision)");
+            yield return Cutscene(false);
+            Objective("Open the door");
             Prompt("Touch", MoonLayout.MechanismSpot, 1.0f);
             if (Auto) yield return AutoWalk(MoonLayout.MechanismSpot);
-            yield return WaitPrompt("touch the round mechanism");
+            yield return WaitPrompt("touch the lock");
             Objective(null);
             yield return Cutscene(true);
             Cat.GoTo(MoonLayout.MechanismSpot + new Vector3(1.3f, 0f, 1.2f), Cat.StrollSpeed, MoonLayout.SealedDoor);
@@ -1083,21 +1231,21 @@ namespace Seven
             Seven.Touch(MoonLayout.DoorSymbol);
             yield return Wait(1.0f);
             // she touches it the way she saw them do it: it lights, the engraved lines light along the S-seam, the leaves part
-            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Glow(DoorSymbol, Mathf.Lerp(0.9f, 4.5f, t / 0.5f)); yield return null; }
+            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Glow(DoorSymbol, Mathf.Lerp(0.9f, 3.0f, t / 0.5f)); yield return null; }
             AudioKit.Play("energy_point", MoonLayout.DoorSymbol, 0.9f, 0f, AudioKit.Bus.Sfx, 20f);
             yield return Shot("s06_touching_mechanism");
             Cam.Shot(new Vector3(15.6f, MoonLayout.Lower + 1.9f, -33.4f), new Vector3(15.9f, MoonLayout.Lower + 1.8f, -38.1f), 0.8f, false, 54f);   // QF5: mirrored
             for (float t = 0f; t < 1.6f; t += Time.deltaTime)
             {
                 float u = t / 1.6f;
-                if (DoorEngrave != null && DoorEngrave.Length > 0) Glow(DoorEngrave[0], Mathf.Lerp(0f, 5f, Mathf.Clamp01(u * 1.6f)));             // the S-seam first
-                if (DoorEngrave != null) for (int i = 1; i < DoorEngrave.Length; i++) Glow(DoorEngrave[i], Mathf.Lerp(0f, 2.4f, Mathf.Clamp01(u * 1.4f - 0.4f)));
+                if (DoorEngrave != null && DoorEngrave.Length > 0) Glow(DoorEngrave[0], Mathf.Lerp(0f, 3.5f, Mathf.Clamp01(u * 1.6f)));             // the S-seam first
+                if (DoorEngrave != null) for (int i = 1; i < DoorEngrave.Length; i++) Glow(DoorEngrave[i], Mathf.Lerp(0f, 1.8f, Mathf.Clamp01(u * 1.4f - 0.4f)));
                 yield return null;
             }
             yield return Shot("s06_emblem_and_engravings_lit");
             if (Auto)
             {
-                // QF5 capture: the present day from where the vision looks at the door (mechanism on the right, her hand on it)
+                // the present day from where the vision looks at the door (the lock on the right, her hand on it)
                 Cam.Shot(new Vector3(16.6f, MoonLayout.Lower + 1.6f, -31.0f), new Vector3(16.2f, MoonLayout.Lower + 2.0f, -38.0f), 0.01f, true, 62f);
                 yield return null; yield return null;
                 yield return Shot("s06_like_the_vision");
@@ -1116,8 +1264,6 @@ namespace Seven
                 yield return null;
             }
             if (DoorEngrave != null) foreach (var r in DoorEngrave) Glow(r, 0.6f);
-            // QF6 (no points of no return): the doorway beyond stays closed for walking - the drop into the mining cut
-            // behind it is one-way - until she has the shape (TakeShape opens it).
             Glow(DoorSymbol, 0.7f);
             yield return Shot("s06_passage_opens");
             var faceCat = Flat(Cat.transform.position - Seven.transform.position);
@@ -1127,194 +1273,31 @@ namespace Seven
             yield return ReadyToTalk(1.5f);
             yield return Dlg.PlayScene(6, 9, 11);            // closing lines 9-11
             MusicSystem.Play("moon_prison", 4f);
+            Objective("Keep going");
             yield return Cutscene(false);
-            yield return TakeShape();
-            SetZone("VisionExit", true);                     // only now: the way on (and its one-way drop) opens
+            // QF6 (no points of no return): the way on (and its one-way drop) opens only now - she has the shape in her
+            // pocket since the vision, and the lock is open.
+            SetZone("VisionExit", true);
             Checkpoint(Chapter1State.CpCity);
-        }
-
-        /// <summary>Round 10: after the door scene, X "Take": 7 picks up the dodecahedron and keeps it (stowed at her
-        /// side - it stays with her; no inventory UI). It returns beside her plate in the galley (scene 10).</summary>
-        IEnumerator TakeShape()
-        {
-            if (Shape == null) yield break;
-            Objective("Take the shape");
-            if (Auto) yield return AutoWalk(MoonLayout.ShapeSpot);
-            // QF6 (Dan's 0.10.1 soft-lock + his notes): no "Take" prompt and no button any more. She takes it the moment she
-            // walks up to the pedestal. The doorway stays closed until then (no point of no return); if she goes to the
-            // doorway instead, she turns and draws the shape to her hand with telekinesis, then it goes into her pouch.
-            // -noqf6fix = the 0.10.1 behaviour (X "Take" only, the doorway open) for the repro.
-            float t0 = Time.time;
-            if (!QF6Fix) { SetZone("VisionExit", true); Prompt("Take", MoonLayout.ShapeSpot, 1.4f); }
-            while (true)
-            {
-                if (!QF6Fix) { if (_promptHit || Auto && PromptNear) break; yield return null; continue; }
-                var p = Seven.transform.position;
-                bool free = Seven.Current == ChapterSeven.Mode.Free && !PauseMenu.IsOpen && !_resettingFall;
-                if (free && Flat(p - MoonLayout.ShapeSpot).magnitude < 1.5f) break;
-                bool doorway = p.z < MoonLayout.VisionMin.y + 0.35f && p.x > MoonLayout.PassageX.x - 0.3f && p.x < MoonLayout.PassageX.y + 0.3f;
-                if (free && (doorway || AreaOf(p) > 4)) { yield return TakeShapeFallback(); yield break; }
-                yield return null;
-            }
-            ClearPrompt();
-            if (Auto) Cap.Log($"ok: take the dodecahedron ({Time.time - t0:0.0}s)");
-            Objective(null);
-            yield return Cutscene(true);
-            Cam.Subjects.Clear();
-            Cam.Shot(MoonLayout.ShapeSpot + new Vector3(-0.2f, 1.55f, 1.35f), MoonLayout.ShapeAt + Vector3.down * 0.1f, 0.6f, false, 46f);
-            if (Dist7(MoonLayout.ShapeSpot) > 0.15f) yield return WalkSeven(MoonLayout.ShapeSpot, 2.5f);
-            Seven.Lock(true);
-            for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(MoonLayout.ShapeAt - Seven.transform.position)), 400f * Time.deltaTime); yield return null; }
-            Seven.Touch(MoonLayout.ShapeAt);
-            yield return Wait(0.85f);
-            _shapeTaken = true;
-            var hand = Seven.Bone(HumanBodyBones.RightHand);
-            var p0 = Shape.position; var r0 = Shape.rotation;
-            AudioKit.Play("energy_point", MoonLayout.ShapeAt, 0.5f, 0f, AudioKit.Bus.Sfx, 15f);
-            for (float t = 0f; t < 0.5f; t += Time.deltaTime)
-            {
-                var hp = hand != null ? hand.position + hand.up * -0.02f : p0;
-                Shape.position = Vector3.Lerp(p0, hp, Mathf.SmoothStep(0f, 1f, t / 0.5f));
-                yield return null;
-            }
-            // QF5: it stays in her hand - a short beat on her hand and the glow, then she walks out holding it; past the
-            // door (or as soon as she needs both hands) it goes into the small pouch at her belt and rides there.
-            _carry = CarriedShape.Attach(Seven.gameObject, Shape);
-            _carry.Set(CarriedShape.Where.Hand, 0.2f);
-            yield return Wait(0.35f);
-            yield return Shot("s06_take_shape_in_hand");
-            Seven.Release(); Seven.Lock(true);
-            if (ShapeLight != null) ShapeLight.enabled = false;
-            yield return Wait(0.5f);
-            // the beat: she raises it to chest height and looks at it; the camera holds her face and the glow (portrait
-            // framing - faces / shoulders up, never on her body), the edges brighten softly
-            var es = Shape.GetComponent<ElarimShape>();
-            var ik = Seven.gameObject.AddComponent<SevenTableIK>();
-            var head = Seven.Bone(HumanBodyBones.Head);
-            var fwd = Flat(Seven.transform.forward).normalized; var side = Vector3.Cross(Vector3.up, fwd);
-            var hold = (head != null ? head.position : Seven.transform.position + Vector3.up * 1.6f) + Vector3.down * 0.34f + fwd * 0.3f + side * 0.04f;
-            ik.RightPos = hold; ik.RightW = 1f; ik.LookPos = hold; ik.LookW = 1f; ik.Ease = 2.2f;
-            var face = head != null ? head.position : hold + Vector3.up * 0.34f;
-            Cam.Shot(hold + fwd * 0.85f + side * 0.45f + Vector3.up * 0.12f, Vector3.Lerp(hold, face, 0.45f), 0.9f, false, 34f);
-            for (float t = 0f; t < 2.0f; t += Time.deltaTime) { if (es != null) es.Glow = Mathf.Lerp(1.6f, 2.4f, Mathf.Sin(Mathf.Clamp01(t / 2.0f) * Mathf.PI)); yield return null; }
-            yield return Shot("qf5_01_shape_in_hand_closeup");
-            if (es != null) es.Glow = _carry.GlowInHand;
-            ik.RightW = 0f; ik.LookW = 0f;
-            yield return Wait(0.5f);
-            Destroy(ik);                                     // 7's own ledge IK takes the hands again
-            if (Auto) Cap.Log($"dodecahedron taken: held in her right hand (beat {1.7f:0.0}s on her hand), radius {MoonLayout.ShapeRadius:0.000} m (~{MoonLayout.ShapeRadius * 2f * 100f:0} cm across), marking file {MoonLayout.ElarimMarkFile}");
-            Objective("Keep going");
-            StartCoroutine(StowWhenOut());
-            yield return Cutscene(false);
-        }
-
-        /// <summary>QF6 fallback for "Take": she walked to the open door without it. She stops, turns back and lifts a hand;
-        /// the shape drifts across the chamber to her (telekinesis, as with the stone and the slab) and goes into the pouch
-        /// at her belt. If she is somehow already past the doorway or not standing (a hang, a jump), it simply joins her.</summary>
-        IEnumerator TakeShapeFallback()
-        {
-            TakeFallbacks++;
-            var at = Seven.transform.position;
-            Debug.Log($"[Seven] take fallback: 7 left for the door without the dodecahedron (at {at}) - she draws it to her with telekinesis");
-            Cap?.Log($"take fallback: 7 went to the (still closed) doorway at ({at.x:0.00}, {at.y:0.00}, {at.z:0.00}) before the pedestal - telekinesis brings it to her, then the pouch");
-            Objective(null);
-            _shapeTaken = true;
-            if (ShapeLight != null) ShapeLight.enabled = false;
-            bool standing = Seven.Current == ChapterSeven.Mode.Free || Seven.Current == ChapterSeven.Mode.Land;
-            _carry = CarriedShape.Attach(Seven.gameObject, Shape);
-            if (!standing || AreaOf(at) > 4)
-            {
-                _carry.Carrying = true;
-                _carry.Set(CarriedShape.Where.Hip, 0.6f);
-                Objective("Keep going");
-                yield break;
-            }
-            yield return Cutscene(true);
-            Cam.Subjects.Clear();
-            var toShape = Flat(MoonLayout.ShapeAt - Seven.transform.position);
-            Cam.Shot(Seven.transform.position - toShape.normalized * 2.2f + Vector3.up * 1.7f + Vector3.Cross(Vector3.up, toShape.normalized) * 0.8f,
-                     Vector3.Lerp(Seven.transform.position + Vector3.up * 1.3f, MoonLayout.ShapeAt, 0.5f), 0.6f, false, 56f);
-            Seven.Gesture(MoonLayout.ShapeAt);
-            Seven.SetEnergyPoint(1.9f, 0.25f);
-            for (float t = 0f; t < 2f && Seven.Current == ChapterSeven.Mode.Gesture && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
-            TkStream(MoonLayout.ShapeAt);
-            AudioKit.Play("energy_point", MoonLayout.ShapeAt, 0.5f, 0f, AudioKit.Bus.Sfx, 15f);
-            var hand = Seven.Bone(HumanBodyBones.RightHand);
-            var p0 = Shape.position;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.9f)
-            {
-                var hp = hand != null ? hand.position : Seven.transform.position + Vector3.up * 1.2f;
-                float u = Mathf.SmoothStep(0f, 1f, t);
-                Shape.position = Vector3.Lerp(p0, hp, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 0.35f;
-                Shape.Rotate(Vector3.up, 220f * Time.deltaTime, Space.World);
-                yield return null;
-            }
-            _carry.Set(CarriedShape.Where.Hand, 0.15f);
-            yield return Shot("qf6_take_fallback_telekinesis");
-            yield return Wait(0.5f);
-            Seven.SetEnergyPoint(1f, 1.0f);
-            Seven.Release();
-            _carry.Carrying = true;
-            _carry.Set(CarriedShape.Where.Hip, 0.45f);
-            Debug.Log("[Seven] dodecahedron into the pouch at her belt (take fallback)");
-            yield return Wait(0.5f);
-            Objective("Keep going");
-            yield return Cutscene(false);
-        }
-
-        /// <summary>QF5: she walks out of the chamber with it in her hand; past the door - or the moment she needs both
-        /// hands (a hang, a climb, a jump) - it goes into the pouch at her belt (a quick, visible move).</summary>
-        IEnumerator StowWhenOut()
-        {
-            bool shotWalk = false;
-            while (_carry != null && _carry.At == CarriedShape.Where.Hand)
-            {
-                var m = Seven.Current;
-                bool hands = m == ChapterSeven.Mode.Hang || m == ChapterSeven.Mode.Climb || m == ChapterSeven.Mode.Air;
-                if (Auto && !shotWalk && m == ChapterSeven.Mode.Free && Seven.Speed > 0.3f && Seven.transform.position.z < -36.2f)
-                {
-                    shotWalk = true;
-                    bool w = Cam.InShot;
-                    var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f);
-                    Cam.Shot(Seven.transform.position + f * 2.1f + r * 1.0f + Vector3.up * 1.35f, Seven.transform.position + Vector3.up * 0.95f, 0.01f, true, 50f);
-                    yield return null;
-                    yield return Shot("qf5_02_walking_out_holding_it");
-                    if (!w) Cam.Follow();
-                }
-                if (hands || Seven.transform.position.z < -38.45f)
-                {
-                    _carry.Carrying = true;
-                    _carry.Set(CarriedShape.Where.Hip, hands ? 0.2f : 0.45f);
-                    Debug.Log($"[Seven] dodecahedron into the pouch at her belt ({(hands ? "she needs both hands: " + m : "past the door")})");
-                    if (Auto) Cap.Log($"dodecahedron: walked out holding it, into the pouch at her belt at z {Seven.transform.position.z:0.00} ({(hands ? "needs both hands: " + m : "past the door")})");
-                    break;
-                }
-                yield return null;
-            }
         }
         CarriedShape _carry;
 
-        /// <summary>QF5 check-run captures: the dodecahedron at her hip from the normal follow camera in play (the mining
-        /// cut, the terrace, the bay floor) plus one close side view at the bay; logs where it is each time.</summary>
+        /// <summary>QF7 check-run captures: the dodecahedron is out of sight in her pocket in play (terrace, bay) - no
+        /// shape, no pouch, no light on her; logs it each time.</summary>
         IEnumerator HipShots()
         {
             bool Free() => Seven.Current == ChapterSeven.Mode.Free && !Cam.InShot && !Dlg.Busy;
-            void Where(string what) { if (_carry != null && Shape != null) Cap.Log($"dodecahedron {what}: {_carry.At}, {Vector3.Distance(Shape.position, _carry.HipPoint):0.000} m from the belt point, shown {Shape.GetComponentInChildren<Renderer>().enabled}"); }
-            // on the terrace after the city reveal (the follow camera has room there)
+            void Where(string what) { if (_carry != null && Shape != null) Cap.Log($"dodecahedron {what}: {_carry.At}, shape renderers shown {Shape.GetComponentInChildren<Renderer>().enabled}, lights on her {CountLightsOn(Seven.transform)} (pocket: must be False / 0)"); }
             while (!(Free() && Seven.transform.position.z < -45.0f && Seven.Speed > 0.3f)) yield return null;
             yield return Wait(0.6f);
-            Where("on the terrace"); yield return Shot("qf5_03_at_her_hip_terrace");
-            while (!(Free() && Seven.transform.position.z < -48.6f)) yield return null;
-            yield return Wait(0.3f);
-            Where("on the way down to the bay"); yield return Shot("qf5_04_at_her_hip_ramp");
+            Where("on the terrace"); yield return Shot("qf7_07_pocket_terrace_no_glow");
             while (!(Free() && Seven.transform.position.y < MoonLayout.Bay + 0.5f)) yield return null;
             yield return Wait(0.6f);
-            Where("on the bay floor"); yield return Shot("qf5_05_at_her_hip_bay");
-            // a full-figure view from a few metres (as the follow camera sees her when it swings round) - not a body close-up
+            Where("on the bay floor");
             var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f);
             Cam.Shot(Seven.transform.position + r * 2.6f + f * 1.6f + Vector3.up * 1.5f, Seven.transform.position + Vector3.up * 0.95f, 0.01f, true, 52f);
             yield return null; yield return null;
-            yield return Shot("qf5_06_full_figure_pouch_visible");
+            yield return Shot("qf7_08_full_figure_no_glow");
             Cam.Follow();
         }
         bool _shapeTaken;
@@ -1730,6 +1713,7 @@ namespace Seven
                 var mv = new System.Text.StringBuilder(); foreach (var kv in _moves) mv.Append(kv.Key).Append(' ').Append(kv.Value).Append(", ");
                 Cap.Log($"traversal summary: {_traversalOk} scripted traversal steps ok, deliberate falls reset {_falls}, falls total {Seven.Falls}, worst hand-to-lip gap {_handGapMax:0.000} m, moves: {mv}taught: [{string.Join(", ", Chapter1State.Taught)}], permanent legend panels visible now: {Legend.VisiblePanels}");
             }
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log(ChapterCamera.Summary());
             if (Auto) Cap.Log($"moon level done in {Time.time - Chapter1State.StartedAt:0.0}s game time; lines so far {Chapter1State.Played.Count}; cat max distance while following/leading {Cap.CatMaxBehind:0.00} m; cat catch-ups {Cat.CatchUps}; 7 footsteps {Seven.GetComponent<Footsteps>()?.Count}");
             Chapter1State.Aboard = true;
             SaveGame.SaveProgress(Chapter1State.CpAboard);   // QF6: Continue resumes aboard (scene 9)
@@ -2492,7 +2476,7 @@ namespace Seven
         }
 
         // ------------------------------------------------------------------------------------------ the vision shape
-        float _shapeGlow = 1.4f;
+        float _shapeGlow = ShapeGlowIdle;
         /// <summary>8b addition: how far each door leaf slides into the wall along the S-seam's sides.</summary>
         const float LeafOpen = 2.0f;
         IEnumerator ShapeIdle()
@@ -2506,7 +2490,7 @@ namespace Seven
                 Shape.rotation = Quaternion.Euler(12f * Mathf.Sin(t * 0.21f), t * 9f, 8f * Mathf.Sin(t * 0.17f + 1f));
                 Shape.position = MoonLayout.ShapeAt + Vector3.up * Mathf.Sin(t * 0.8f) * 0.012f;
                 Glow(InscriptionGlow, _shapeGlow * (1f + 0.14f * Mathf.Sin(t * 1.6f)));
-                if (ShapeLight != null) ShapeLight.intensity = 0.8f * _shapeGlow * (1f + 0.1f * Mathf.Sin(t * 1.6f));
+                if (ShapeLight != null) ShapeLight.intensity = 0.5f * _shapeGlow * (1f + 0.1f * Mathf.Sin(t * 1.6f));
                 yield return null;
             }
         }

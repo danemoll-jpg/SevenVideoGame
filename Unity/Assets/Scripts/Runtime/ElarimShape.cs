@@ -19,7 +19,7 @@ namespace Seven
         [Tooltip("QF5: material of the small belt pouch 7 carries it in (CarriedShape).")]
         public Material PouchMaterial;
         [Tooltip("Edge emission (white).")]
-        public float Glow = 1.4f;
+        public float Glow = 0.35f;      // QF7: thin faint edge lines (no bloom halo)
         float _t, _lastGlow = -1f;
         Material _edgeMat;
 

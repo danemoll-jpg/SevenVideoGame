@@ -11,7 +11,7 @@ Areas (`Chapter1Director.AreaOf`, in route order): 0 cell · 1 cell block · 2 o
 4 vision chamber · 5 mining cut · 6 terrace + ramp · 7 bay floor. Only traversal links join them, in this order.
 
 Checkpoints (restart with d-pad down / Backspace, **Continue save**, **Scene Select entry**): 0 cell · 1 escape (cat
-leads) · 2 old passage + ruins · 3 Scree guard · 4 vision · 5 lunar door + take the shape · 6 city reveal · 7 saucer
+leads) · 2 old passage + ruins · 3 Scree guard · 4 vision + take the shape · 5 the buried lock + the lunar door · 6 city reveal · 7 saucer
 rescue + beam · 8 aboard · 9 galley · 10 free exploration. QF6 added 3, 5 and 7 and makes them persistent (quit and
 Continue resumes there; before QF6 only "aboard" was saved).
 
@@ -56,10 +56,10 @@ The autopilot always pressed "Take", so every check run passed. **Reproduced** w
 | 11 | Hall entrance → **checkpoint 3** | z < −9.2 (at or past) | — | — |
 | 12 | Scene 5 guard + stone | being seen → reset to the entrance (never harm); RT on the loose stone (12 m) | throws the stone and dawdles until the guard is back | being seen resets the stone too; prompt re-armed after every reset |
 | 13 | Slipped past → "Come on." → **checkpoint 4** | z < −24.4 (at or past) | — | — |
-| 14 | Into the chamber → "Look at the glowing shape" | z < −30 (at or past) | — | — |
-| 15 | Touch the shape → the vision | X "Touch" (1.3 m) | walks about the chamber | sealed door: the only way on; objective stays |
-| 16 | After the vision → **checkpoint 5** → the mechanism | X "Touch" at the mechanism (1.0 m, on the right as in the vision) | — | sealed door; objective stays |
-| 17 | **"Take the shape"** | **automatic:** walks up to the pedestal (1.5 m), no prompt or button; **or** she reaches the closed doorway first | **0.10.1: walked out through the open door without pressing Take (Dan's soft-lock)** | **QF6:** the doorway stays closed until she has the shape. At the doorway she draws it to her by telekinesis → pouch. Then the doorway opens → checkpoint 6 |
+| 14 | Into the chamber → **"Take the shape"** (QF7: the objective from the start) | z < −30 (at or past) | — | — |
+| 15 | **Take the shape → the vision** (QF7: one step) | **automatic:** walks up to the pedestal (1.5 m) or anywhere into the alcove mouth (at or past), no prompt or button; the vision plays as she touches it, and she holds it when it ends → into her pocket → **checkpoint 5** | walks about the chamber | sealed door + buried lock: the only way on; objective stays |
+| 16 | **"Uncover the lock"** (QF7: buried under a collapse in the present, shown intact in the vision) | RT telekinesis on the collapse (`MoonLayout.TkRange`, the pile pulses faintly) | — | sealed door; the pile's ground obstacle is removed only when cleared; objective stays |
+| 17 | **"Open the door"** | X "Touch" at the exposed lock (1.0 m, right of the door as in the vision) → door opens, lines 9–11 → zone `VisionExit` opens → checkpoint 6 | — | QF6/QF7: the doorway stays closed until the lock is used (she has the shape since the vision) |
 | 18 | City look blend | z < −38.6 (at or past) | — | — |
 | 19 | 6b city reveal | z < −43.4 (at or past) | arrives from the cut fast; (before QF6: never, because 17 blocked) | QF6: if she is already well past (down the ramp / bay) the reveal plays from the terrace, then she is put back where she was |
 | 20 | Scene 7 lines → **checkpoint 7** → "Get down to the bay…" | end of 6b | — | — |
@@ -105,7 +105,7 @@ mantles go up, which is forward on this route.
 | 6 | Ruins gap (x 10.7 → 8.45), terrace B mantle, terrace C grab | jump west, then climbs up | Nothing. The slab is ahead, on terrace C | (a) |
 | 7 | Stair terrace C → ruins floor → hall | walk, both ways (opens when the slab is moved) | Slab (counted as done at the hall entrance; the stair is the only way down) | (b) |
 | 8 | Hall ↔ vision chamber | walk, both ways | — | (b) |
-| 9 | **Lunar door → doorway → hang down into the mining cut** (Dan's "stairs past the open door") | **one-way down** | **Vision, mechanism, the shape.** 0.10.1: the doorway was walkable as soon as the door opened, with the shape still on the pedestal → Dan's soft-lock | **(a) since QF6:** zone `VisionExit` (the doorway and its hang-down spot) opens only after the take (`TakeShape`) |
+| 9 | **Lunar door → doorway → hang down into the mining cut** (Dan's "stairs past the open door") | **one-way down** | **Vision, mechanism, the shape.** 0.10.1: the doorway was walkable as soon as the door opened, with the shape still on the pedestal → Dan's soft-lock | **(a) since QF6:** zone `VisionExit` (the doorway and its hang-down spot) opens only after the door scene (QF7: she has the shape from the vision on; the door opens only after the buried lock is uncovered and touched) |
 | 10 | Mining cut wall climb → terrace | up | Nothing (the pit) | (a) |
 | 11 | Terrace → ramp → broken ramp end hang-down → scaffold gap → scaffold edge hang-down → bay | one-way down | The 6b city reveal. It fires at z < −43.4, before the ramp end at z −55, and also plays if she is somehow past it. The lever, scene 8 and the beam are all ahead, in the bay | (a) |
 | 12 | Bay → saucer (the beam) | story | Nothing left on the Moon (lever and scene 8 come first) | (a) |

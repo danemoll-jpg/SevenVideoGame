@@ -206,6 +206,46 @@ namespace Seven.EditorTools
                 MeshObject("EmblemRecess", SaveMesh(SmoothFinish(dv, dt), "Moon_EmblemRecess"), m.ancientDark, root, false);
             }
 
+            // ---- QF7: in the present the lock is buried behind a collapse - a broken rib leaning across the wall and stone
+            // chunks piled against it, the emblem hidden behind them. The vision shows it intact; afterwards 7 clears the
+            // pile with telekinesis (Chapter1Director.UncoverLock: each piece flies off into the chamber's east corner).
+            {
+                var pile = new GameObject("LockRubble").transform; pile.SetParent(root, false);
+                pile.position = new Vector3(L.DoorSymbol.x, y0, L.VisionMin.y);
+                var c = L.DoorSymbol;
+                int seed = 1700;
+                // the broken rib end: from the floor out in the chamber up across the emblem to the wall above it
+                {
+                    var v = new List<Vector3>(); var t = new List<int>();
+                    var a = new Vector3(15.05f, y0 + 0.12f, -37.05f); var b = new Vector3(12.7f, y0 + 2.55f, -37.86f);
+                    var mid = (a + b) * 0.5f;
+                    Tube(v, t, new[] { a - mid, Vector3.Lerp(a, b, 0.35f) - mid + new Vector3(0f, 0.08f, 0.05f), Vector3.Lerp(a, b, 0.7f) - mid + new Vector3(0f, 0.04f, 0f), b - mid }, 0.27f, 0.2f);
+                    var go = MeshObject("RubbleRib", SaveMesh(SmoothFinish(v, t), "Moon_RubbleRib"), rib, pile);
+                    go.transform.position = mid;
+                }
+                // two leaning slabs straight over the emblem, chunks heaped in front and around
+                foreach (var (nm, pos, size, rot) in new[] {
+                    ("RubbleSlabA", new Vector3(c.x + 0.15f, y0 + 0.95f, -37.74f), new Vector3(1.25f, 1.9f, 0.22f), new Vector3(-9f, 6f, 7f)),
+                    ("RubbleSlabB", new Vector3(c.x - 0.35f, y0 + 1.05f, -37.58f), new Vector3(0.9f, 1.55f, 0.2f), new Vector3(-14f, -10f, -11f)) })
+                {
+                    var sl = GameObject.CreatePrimitive(PrimitiveType.Cube); sl.name = nm; sl.transform.SetParent(pile, false);
+                    Object.DestroyImmediate(sl.GetComponent<Collider>());
+                    sl.transform.position = pos; sl.transform.localScale = size; sl.transform.rotation = Quaternion.Euler(rot);
+                    sl.GetComponent<MeshRenderer>().sharedMaterial = m.ancient;
+                }
+                foreach (var (x, y, z, s) in new[] { (13.2f, 0.28f, -37.35f, 0.42f), (14.15f, 0.25f, -37.25f, 0.38f), (13.65f, 0.6f, -37.45f, 0.36f),
+                                                      (12.75f, 0.22f, -37.6f, 0.3f), (14.6f, 0.18f, -37.55f, 0.28f), (13.9f, 1.75f, -37.62f, 0.27f),
+                                                      (13.3f, 1.95f, -37.7f, 0.24f), (13.75f, 0.2f, -36.9f, 0.22f) })
+                {
+                    var v = new List<Vector3>(); var t = new List<int>();
+                    Lump(v, t, Vector3.zero, new Vector3(s * 1.25f, s * 0.8f, s), 0.4f, seed++);
+                    var go = MeshObject($"RubbleChunk{seed}", SaveMesh(SmoothFinish(v, t), $"Moon_RubbleChunk{seed}"), seed % 2 == 0 ? m.ancientDark : rib, pile);
+                    go.transform.position = new Vector3(x, y0 + y, z);
+                }
+                props.lockRubble = pile;
+                props.extraObstacles.Add(new Vector3(13.7f, -37.45f, 0.75f));       // removed at runtime once the pile is cleared
+            }
+
             // ---- floor engravings: concentric circles, a line of small circles leading to the door
             {
                 var v = new List<Vector3>(); var t = new List<int>();

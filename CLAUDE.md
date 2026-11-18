@@ -265,13 +265,27 @@ apply to every asset and scene:
   (tulip table + seats, plate, raised cat feeder, porthole with the Moon). After the scene: objective "Set course for
   Venus", free exploration (Continue starts here); X "Set course" at her galley seat = placeholder (Moon falls away,
   "Chapter 2 — Venus (coming soon)").
-- **Dodecahedron** (hand-held, 15 cm, pale stone + glowing edges): `ElarimShape.cs`; taken automatically when she walks up to the pedestal after the door scene (QF6: no prompt or button;
-  the doorway stays closed until she has it; at the doorway she draws it to her by telekinesis instead).
-  QF5: she keeps it visibly (`CarriedShape.cs` on 7: right hand, or the small belt pouch at her right hip — `HipOffset`,
-  material `Elarim_pouch`); walks out of the chamber holding it, pouch from past the door on; in the galley she takes it
-  out and sets it beside her plate. The lunar door's mechanism is on the RIGHT (seen from the chamber) as in the vision.
+- **Dodecahedron** (hand-held, 15 cm, pale stone + faint edge lines, no bloom halo; QF7 glow 0.35 / table 0.3): `ElarimShape.cs`.
+  QF7 flow: objective "Take the shape" from entering the chamber; walking up to it (no prompt or button) plays the
+  vision as she touches it; she holds it when the vision ends, then puts it in a pocket (`CarriedShape.Where.Pocket`:
+  shape, pouch and light all hidden). In the galley she takes it out of the pocket and sets it beside her plate.
+  **The lock** (round mechanism, right of the door as in the vision) is buried under a collapse in the present
+  (`LockRubble`, `FightDemoBuilderLunarDoor.cs`; ground obstacle). After the vision: "Uncover the lock" (RT telekinesis)
+  → "Open the door" (X). The doorway opens only after that (`Docs/TRIGGER-AUDIT.md` rows 14–17).
   **Elarim marking = placeholder** `Art/Marks/elarim_mark_placeholder.png` (`Tools/Model/make_elarim_mark.py`; swap the
   PNG or `MoonLayout.ElarimMarkFile`) — OPEN until Kyle designs it.
+- **QF7 cameras / life** (check-run lines):
+  - Follow camera (`ChapterCamera.Place`): pulls in or swings round when her body is hidden, and fades collider-less
+    props in the way → `follow camera (QF7): … hidden in N of M follow frames`.
+  - Cutscene framings in the chamber: `Chapter1Director.FrameHer` (clear lines incl. props and rib meshes, never from
+    behind; nothing found = follow view) → `framing '<beat>'`.
+  - Galley seat: `SaucerSeven.SeatHips` pins her hips to the seat → `SEAT CHECK (QF7)` (frames off the cushion or
+    > 5 cm must be 0).
+  - Galley cat: plain low bowl, front crouch + paw IK (`CatPoseOverlay.Crouch/PawBack`), and he looks at her when he
+    speaks → `cat at his bowl` (paws outside the rim).
+  - Head and gaze life: `SevenTableIK.Alive/Talk`, plus the emotion clips `sit_idle`, `sit_talking`, `talking` (from
+    `Art/Mixamo/7/emotion/`, copied by Build everything).
+  - Galley camera: medium shots, push-ins and reaction holds; no face close-ups.
 - **Saucer exterior = silver** (Round 10, replaces the dark hull): materials `Saucer_hull` / `Saucer_under` in
   `FightDemoBuilderChapter1.cs`; `SaucerProbe.cs` = realtime reflection probe riding with the ship (layer 22, never sees itself).
 - **Logo: "7" + THE OBSERVER in Arial Bold (image); UI font Liberation Sans if needed.** `python Tools/make_logo.py` →
@@ -281,7 +295,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–10 + QF1–QF6 complete (2026-11-18), release 0.10.2.** Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–10 + QF1–QF7 complete (2026-11-18), release 0.10.3.** Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -291,6 +305,13 @@ scene (Round 10).
   - Every story step is declared and watched.
   - Checkpoints save for Continue, and Scene select is in both menus.
   - New testing rule: under 20 minutes per round.
+- QF7 (Dan's 0.10.2 playtest):
+  - The follow camera keeps 7's body in view (pull in, swing round, fade collider-less props). Check runs log
+    `follow camera (QF7): 7's body hidden in N of M follow frames`.
+  - The shape is taken in one step (the vision plays as she touches it), then goes into her pocket (no glow on her).
+  - The lock is buried under a collapse until the vision; RT clears it, X opens the door.
+  - Galley: hips pinned to the seat (`SEAT CHECK` line), plain bowl + cat front crouch, emotion clips, medium shots
+    instead of face close-ups. Facial shape keys were trialled and dropped.
 
 History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.2, then Round 11**
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

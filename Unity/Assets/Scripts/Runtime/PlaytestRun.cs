@@ -177,7 +177,7 @@ namespace Seven
                 {
                     inGalleySeen = true;
                     var cs = Ab.Director.Seven.GetComponent<CarriedShape>();
-                    shapeAtGalley = cs != null && cs.At == CarriedShape.Where.Hip || Chapter1State.Explore;
+                    shapeAtGalley = cs != null && (cs.At == CarriedShape.Where.Pocket || cs.At == CarriedShape.Where.Hip) || Chapter1State.Explore;
                     Log($"run {i + 1}: in the galley - dodecahedron with her: {(cs != null ? cs.At.ToString() : "none")}");
                     if (_shots) yield return ShotNow($"pt{i + 1:00}_galley");
                 }
@@ -503,20 +503,27 @@ namespace Seven
             if (area == 4)
             {
                 if (p.z > -29.6f) { _phaseName = "into the chamber"; yield return Go(new Vector3(16.5f, L, -30.6f), 0.4f); yield break; }
-                if (obj.StartsWith("Look at the glowing shape")) { _phaseName = "touch the shape"; yield return Path(0.25f, new Vector3(18.6f, L, -33.6f), MoonLayout.ShapeSpot); if (D.PromptInRange) { Press(X); yield return Wait(1f); } yield break; }
-                if (obj.StartsWith("Touch the mechanism")) { _phaseName = "the mechanism"; yield return Go(MoonLayout.MechanismSpot, 0.25f); if (D.PromptInRange) { Press(X); yield return Wait(1f); } yield break; }
-                if (obj.StartsWith("Take the shape") && !(_skipper || Chance(0.0)))
+                // QF7: "Take the shape" from the start - walking up to it is enough (the vision plays as she touches it)
+                if (obj.StartsWith("Take the shape"))
                 {
-                    _phaseName = "take the shape";
+                    _phaseName = "take the shape (walk up to it)";
                     if (_wanderer && Once("chamberwander")) { yield return Wander(5f, 2.5f); yield break; }
-                    yield return Go(MoonLayout.ShapeSpot, 0.25f);   // QF6: walking up to it is enough (no prompt, no button)
+                    yield return Path(0.25f, new Vector3(18.6f, L, -33.6f), MoonLayout.ShapeSpot);
                     yield return Wait(1.5f);
                     yield break;
                 }
-                if (D.ShapeTaken || obj.StartsWith("Find the way out") || obj.StartsWith("Keep going") || obj.StartsWith("Take the shape"))
+                // QF7: the lock is buried under the collapse: telekinesis (RT) once in range
+                if (obj.StartsWith("Uncover the lock"))
                 {
-                    _phaseName = obj.StartsWith("Take the shape") ? "walks out WITHOUT taking the shape" : "out of the chamber";
-                    if (obj.StartsWith("Take the shape") && Once("skiptake")) Log($"run {_run_i + 1}: ignores the pedestal and heads for the open door");
+                    _phaseName = "uncover the lock (RT)";
+                    if (D.PromptInRange && D.PromptIsTk) { Press(RT); yield return Wait(3.5f); yield break; }
+                    yield return Go(new Vector3(15.6f, L, -35.2f), 0.4f);
+                    yield break;
+                }
+                if (obj.StartsWith("Open the door")) { _phaseName = "touch the lock"; yield return Go(MoonLayout.MechanismSpot, 0.25f); if (D.PromptInRange) { Press(X); yield return Wait(1f); } yield break; }
+                if (obj.StartsWith("Find the way out") || obj.StartsWith("Keep going"))
+                {
+                    _phaseName = "out of the chamber";
                     yield return Path(0.2f, new Vector3(16.5f, L, -36.9f), new Vector3(16.5f, L, -38.85f), new Vector3(16.5f, L, -39.12f));
                     if (Free7 && P.z < -38.9f) { Press(B); yield return Wait(1.4f); }
                     yield break;

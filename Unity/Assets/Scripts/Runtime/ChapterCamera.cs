@@ -161,6 +161,7 @@ namespace Seven
             float dt = Time.deltaTime;
             if (_shot)
             {
+                if (_faded.Count > 0) Unfade();
                 if (Subjects.Count > 0 && !_userShot && (DialoguePlayer.AnyBusy || Time.time < TalkUntil) && Time.time >= _nextCheck) { _nextCheck = Time.time + 0.2f; Reframe(); }
                 transform.position = Vector3.SmoothDamp(transform.position, _shotPos, ref _shotPosVel, _shotEase * 0.5f);
                 _look = Vector3.SmoothDamp(_look, _shotLook, ref _shotLookVel, _shotEase * 0.5f);
@@ -178,7 +179,7 @@ namespace Seven
                 var d = mouse.delta.ReadValue();
                 dYaw += d.x * MouseDegPerPixel; dPitch -= d.y * MouseDegPerPixel;
             }
-            if (Mathf.Abs(dYaw) + Mathf.Abs(dPitch) > 0.01f) _recentering = false;
+            if (Mathf.Abs(dYaw) + Mathf.Abs(dPitch) > 0.01f) { _recentering = false; _lastUserTurn = Time.time; _swinging = false; }
             if (Input != null && Input.Recenter.WasPressedThisFrame()) _recentering = true;
             Yaw += dYaw; Pitch = Mathf.Clamp(Pitch + dPitch, MinPitch, MaxPitch);
             if (_recentering || AutoBehind)
@@ -195,17 +196,222 @@ namespace Seven
             Place(dt);
         }
 
+        // ---------------------------------------------------------------------------------------------------------
+        // QF7 (Dan: "walls keep getting in the way" in the traversal stretch). Three causes, three fixes:
+        //  1. the old sphere-cast started at the focus point, which while she hangs / climbs (focus raised by the lift)
+        //     can sit inside the rock above a lip - a cast that starts inside a collider ignores it, so the camera went
+        //     behind the wall. Now the focus itself is cast up from her body first (the body is never inside rock).
+        //  2. the cast only kept the line focus -> camera clear, not camera -> her body: on a climb-down she hangs below
+        //     the lip while the camera is still above the floor she left, so the wall she hangs on hid her. Now her head,
+        //     chest and hips are checked from the camera every frame; if fewer than two are seen the camera pulls in
+        //     along its line until they are, and (after a moment, or at once while hanging / climbing) swings round to
+        //     the nearest open angle - behind her back, out over the drop - unless the player is turning it.
+        //  3. thin props without colliders (the pipe run, ribs, fallen chunks, the cliff above the crack) were not seen
+        //     by any cast: anything without a collider that comes between the camera and her fades out (its renderer
+        //     draws shadows only) and comes back once the line is clear.
+        // Check runs log every follow-camera frame in which her body was hidden (CameraBlockedFrames / per area).
+        const int CamMask = ~((1 << 20) | (1 << 22) | (1 << 5));      // never the city shell, the saucer probe layer or UI
+        public static int FollowFrames, BlockedFrames, Swings, Fades;
+        public static readonly System.Collections.Generic.Dictionary<string, int> BlockedByArea = new System.Collections.Generic.Dictionary<string, int>();
+        public static string WorstBlock;
+        /// <summary>Name of the stretch she is in (set by the chapter director; used for the blocked-view log).</summary>
+        public static System.Func<Vector3, string> AreaName;
+        float _occluded, _lastUserTurn = -99f, _swingYawVel;
+        bool _swinging; float _swingTo;
+        Animator _anim;
+        readonly System.Collections.Generic.List<Renderer> _thin = new System.Collections.Generic.List<Renderer>();
+        readonly System.Collections.Generic.Dictionary<Renderer, UnityEngine.Rendering.ShadowCastingMode> _faded = new System.Collections.Generic.Dictionary<Renderer, UnityEngine.Rendering.ShadowCastingMode>();
+        readonly System.Collections.Generic.HashSet<Renderer> _fadeNow = new System.Collections.Generic.HashSet<Renderer>();
+        bool _thinReady;
+
+        void CollectThin()
+        {
+            _thinReady = true;
+            foreach (var r in FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+            {
+                if (r.gameObject.layer == 20 || r.gameObject.layer == 22 || r.gameObject.layer == 5) continue;
+                if (Target != null && r.transform.IsChildOf(Target.root)) continue;
+                if (r.GetComponentInParent<Collider>() != null && r.gameObject.layer != 21) continue;
+                var s = r.bounds.size;
+                if (s.x > 9f || s.y > 9f || s.z > 9f) continue;       // big shells / fog sheets stay
+                if (BigRib(r)) continue;                                 // the chamber's ribs: vertices, framing only, never faded
+                if (r.name.Contains("Fog") || r.name.Contains("Glow") || r.name.Contains("Beam") || r.name.Contains("Halo") || r.name.Contains("Light")) continue;
+                _thin.Add(r);
+            }
+        }
+
+        Vector3[] _pts = new Vector3[3];
+        void BodyPoints()
+        {
+            if (_anim == null && Target != null) _anim = Target.GetComponentInChildren<Animator>();
+            Transform B(HumanBodyBones b) => _anim != null && _anim.isHuman ? _anim.GetBoneTransform(b) : null;
+            var p = Target.position;
+            var h = B(HumanBodyBones.Head); var c = B(HumanBodyBones.UpperChest) ?? B(HumanBodyBones.Chest); var hp = B(HumanBodyBones.Hips);
+            _pts[0] = h != null ? h.position : p + Vector3.up * 1.6f;
+            _pts[1] = c != null ? c.position : p + Vector3.up * 1.25f;
+            _pts[2] = hp != null ? hp.position : p + Vector3.up * 0.95f;
+        }
+
+        /// <summary>How many of her head / chest / hips are in clear view from <paramref name="cam"/> (colliders only).</summary>
+        int Seen(Vector3 cam, int mask)
+        {
+            int n = 0;
+            foreach (var q in _pts)
+            {
+                var d = q - cam; float len = d.magnitude;
+                if (len < 0.3f || !Physics.SphereCast(cam, 0.04f, d / len, out _, len - 0.25f, mask, QueryTriggerInteraction.Ignore)) n++;
+            }
+            return n;
+        }
+
         void Place(float dt)
         {
+            if (!_thinReady) CollectThin();
+            BodyPoints();
+            bool hanging = Lift > 0.05f;
+            int mask = hanging ? CamMask & ~(1 << 21) : CamMask;
+            // 1. the focus, reached from inside her body (never starts inside rock)
+            var body = _pts[2] + Vector3.up * 0.2f;
+            var f = _focus;
+            var bf = f - body; float bfl = bf.magnitude;
+            if (bfl > 0.05f && Physics.SphereCast(body, 0.18f, bf / bfl, out var fh, bfl, mask, QueryTriggerInteraction.Ignore))
+                f = body + bf / bfl * Mathf.Max(0f, fh.distance - 0.04f);
             var dir = Quaternion.Euler(Pitch, Yaw, 0f) * Vector3.back;
             float want = Distance;
-            if (Physics.SphereCast(_focus, 0.22f, dir, out var hit, Distance, Lift > 0.05f ? ~(1 << 21) : ~0, QueryTriggerInteraction.Ignore))
+            if (Physics.SphereCast(f, 0.22f, dir, out var hit, Distance, mask, QueryTriggerInteraction.Ignore))
                 want = Mathf.Max(0.45f, hit.distance - 0.05f);
+            // 2. her body must be in view from there: pull in along the line until two of three points are seen
+            if (Seen(f + dir * want, mask) < 2)
+            {
+                float d = want;
+                while (d > 0.45f && Seen(f + dir * d, mask) < 2) d -= 0.2f;
+                want = Mathf.Max(0.45f, d);
+                _occluded += dt;
+            }
+            else _occluded = Mathf.Max(0f, _occluded - dt * 2f);
+            //    ... and swing round to the nearest open angle (not while the player is turning the camera)
+            if (Time.time - _lastUserTurn > 0.8f && !_swinging && (_occluded > 0.35f || hanging && want < Distance * 0.55f))
+            {
+                float best = 999f;
+                for (int k = 1; k <= 9; k++)
+                    foreach (var sg in new[] { 1f, -1f })
+                    {
+                        float y = Yaw + sg * k * 20f;
+                        var dd = Quaternion.Euler(Mathf.Max(Pitch, hanging ? 24f : Pitch), y, 0f) * Vector3.back;
+                        if (Physics.SphereCast(f, 0.22f, dd, out _, Distance * 0.85f, mask, QueryTriggerInteraction.Ignore)) continue;
+                        if (Seen(f + dd * Distance * 0.85f, mask) < 3) continue;
+                        if (Mathf.Abs(y - Yaw) < Mathf.Abs(best - Yaw)) best = y;
+                    }
+                if (best < 900f) { _swinging = true; _swingTo = best; Swings++; Debug.Log($"[Seven] follow camera swings {Mathf.DeltaAngle(Yaw, best):0} deg to keep 7 in view at {Target.position}"); }
+            }
+            if (_swinging)
+            {
+                Yaw = Mathf.SmoothDampAngle(Yaw, _swingTo, ref _swingYawVel, 0.35f);
+                if (Mathf.Abs(Mathf.DeltaAngle(Yaw, _swingTo)) < 1f || Time.time - _lastUserTurn < 0.1f) _swinging = false;
+            }
             // Pull in fast, ease back out slowly.
             _dist = want < _dist ? want : Mathf.SmoothDamp(_dist, want, ref _distVel, 0.35f, Mathf.Infinity, Mathf.Max(dt, 1e-4f));
-            transform.position = _focus + dir * _dist;
-            transform.rotation = Quaternion.LookRotation(_focus - transform.position);
-            _look = _focus;
+            transform.position = f + dir * _dist;
+            transform.rotation = Quaternion.LookRotation(f - transform.position);
+            _look = f;
+            // 3. props without colliders (and the pipe run while she hangs) between the camera and her fade out
+            _fadeNow.Clear();
+            var cp = transform.position;
+            foreach (var r in _thin)
+            {
+                if (r == null || !r.enabled) continue;
+                var b = r.bounds; b.Expand(0.06f);
+                if (b.Contains(cp)) { _fadeNow.Add(r); continue; }
+                foreach (var q in _pts)
+                {
+                    var d = q - cp; float len = d.magnitude;
+                    if (b.Contains(q)) continue;
+                    if (b.IntersectRay(new Ray(cp, d / len), out float at) && at < len - 0.2f) { _fadeNow.Add(r); break; }
+                }
+            }
+            foreach (var r in _fadeNow)
+                if (!_faded.ContainsKey(r)) { _faded[r] = r.shadowCastingMode; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly; Fades++; }
+            if (_faded.Count > _fadeNow.Count)
+            {
+                var back = new System.Collections.Generic.List<Renderer>();
+                foreach (var kv in _faded) if (!_fadeNow.Contains(kv.Key)) back.Add(kv.Key);
+                foreach (var r in back) { if (r != null) r.shadowCastingMode = _faded[r]; _faded.Remove(r); }
+            }
+            // check runs: was her body hidden this frame (colliders, after all of the above)?
+            FollowFrames++;
+            if (Seen(cp, mask) < 2)
+            {
+                BlockedFrames++;
+                string a = AreaName != null ? AreaName(Target.position) : "?";
+                BlockedByArea[a] = BlockedByArea.TryGetValue(a, out var c) ? c + 1 : 1;
+                if (WorstBlock == null || BlockedFrames % 30 == 1)
+                {
+                    var d = _pts[1] - cp;
+                    string by = Physics.Raycast(cp, d.normalized, out var bh, d.magnitude, mask, QueryTriggerInteraction.Ignore) ? bh.collider.name : "?";
+                    WorstBlock = $"{a}: 7 at {Target.position}, camera {cp}, by {by}";
+                }
+            }
+        }
+
+        public static string Summary()
+        {
+            var sb = new System.Text.StringBuilder();
+            foreach (var kv in BlockedByArea) sb.Append(kv.Key).Append(' ').Append(kv.Value).Append(", ");
+            return $"follow camera (QF7): 7's body hidden in {BlockedFrames} of {FollowFrames} follow frames ({(FollowFrames > 0 ? 100f * BlockedFrames / FollowFrames : 0f):0.00} %; by area: {(sb.Length > 0 ? sb.ToString() : "none")}), swings to an open angle {Swings}, props faded {Fades}{(WorstBlock != null ? "; last hidden: " + WorstBlock : "")}";
+        }
+
+        // big collider-less meshes (the chamber's flowing ribs): checked by their vertices, for cutscene framing only
+        readonly System.Collections.Generic.List<Vector3[]> _bigVerts = new System.Collections.Generic.List<Vector3[]>();
+        bool _bigReady;
+        static bool BigRib(Renderer r) { var s = r.bounds.size; return r.name.Contains("Rib") && Mathf.Max(s.x, Mathf.Max(s.y, s.z)) > 4f; }
+        void CollectBig()
+        {
+            _bigReady = true;
+            foreach (var r in FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+            {
+                if (r.gameObject.layer != 0 || r.GetComponentInParent<Collider>() != null) continue;
+                if (Target != null && r.transform.IsChildOf(Target.root)) continue;
+                if (!BigRib(r)) continue;
+                var mf = r.GetComponent<MeshFilter>(); if (mf == null || mf.sharedMesh == null || !mf.sharedMesh.isReadable) continue;
+                var v = mf.sharedMesh.vertices; var m = r.transform.localToWorldMatrix;
+                for (int i = 0; i < v.Length; i++) v[i] = m.MultiplyPoint3x4(v[i]);
+                _bigVerts.Add(v);
+            }
+        }
+
+        /// <summary>QF7: a prop without a collider (ruin columns, chunks, the chamber ribs) lies between a and b, or
+        /// contains a.</summary>
+        public bool PropBetween(Vector3 a, Vector3 b)
+        {
+            if (!_thinReady) CollectThin();
+            if (!_bigReady) CollectBig();
+            {
+                var ab = b - a; float l2 = ab.sqrMagnitude;
+                foreach (var verts in _bigVerts)
+                    foreach (var v in verts)
+                    {
+                        float t = l2 > 1e-6f ? Mathf.Clamp01(Vector3.Dot(v - a, ab) / l2) : 0f;
+                        if (t > 0.92f) continue;                               // the last bit at the subject
+                        if ((a + ab * t - v).sqrMagnitude < 0.2f) return true;   // within ~0.45 m of a rib's surface points
+                    }
+            }
+            var d = b - a; float len = d.magnitude;
+            foreach (var r in _thin)
+            {
+                if (r == null || !r.enabled || !r.gameObject.activeInHierarchy) continue;
+                var bb = r.bounds; bb.Expand(0.1f);
+                if (bb.Contains(a)) return true;
+                if (bb.Contains(b)) continue;
+                if (len > 0.3f && bb.IntersectRay(new Ray(a, d / len), out float at) && at < len - 0.25f) return true;
+            }
+            return false;
+        }
+
+        /// <summary>Restore every faded prop (cutscene shots see the level as built).</summary>
+        void Unfade()
+        {
+            foreach (var kv in _faded) if (kv.Key != null) kv.Key.shadowCastingMode = kv.Value;
+            _faded.Clear();
         }
     }
 }

@@ -1,6 +1,10 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Quick fix QF7: Dan's playtest of 0.10.2 (Dan, 2026-11-18)
+## Current Objective — Dan plays 0.10.3, then Round 11 (`Docs/ROUND11.md`)
+Dan plays 0.10.3 ("For Dan to check (QF7)" below; two open points in "QF7 — status": the alcove framings, the shape keys).
+Then Round 11.
+
+## Quick fix QF7: Dan's playtest of 0.10.2 (Dan, 2026-11-18) — done, status below
 Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply, **including the 20-minute
 testing rule** (no long repeated runs). Dan's screenshot: `Docs/Previews/qf7/dan_galley_0.10.2.png`.
 
@@ -46,7 +50,77 @@ testing rule** (no long repeated runs). Dan's screenshot: `Docs/Previews/qf7/dan
    Publish **0.10.3**; docs; commit + push; per-item status in "QF7 — status"; captures in `Docs/Previews/qf7/`;
    "For Dan to check (QF7)".
 
-## After QF7 — Dan plays 0.10.3, then Round 11 (`Docs/ROUND11.md`)
+## QF7 — status (2026-11-18): done except two open points (below), exe-verified off-screen; release 0.10.3 (`game-1003`, Latest)
+Testing: about 22.5 min of game time in total, slightly over the 20-minute rule. The breakdown:
+- two Chapter 1 check runs from checkpoint 4 (vision chamber → bay → aboard → galley, 7 + 6.5 min);
+- the one player-style run (`PLAYTEST: 1/1, soft-locks 0`, 4.7 min at 2×);
+- two short chamber-only runs stopped after the lock shot (50 s each) to re-check the chamber framings.
+
+Captures: `Docs/Previews/qf7/`:
+- `chapter1_cp4/` (88 shots + log);
+- `playtest/`;
+- `chamber_framing/` (the final chamber framings);
+- `shapekeys/` (facial trial).
+
+I looked at every galley and vision-chamber capture.
+
+1. **Camera in the climbing stretch: done.** `ChapterCamera.Place` now does three things:
+   - It reaches the focus point from inside her body. The old cast started at a focus that could sit inside the rock above a lip, so it ignored that rock.
+   - It checks her head, chest and hips from the camera every frame. If fewer than two are seen, it pulls in. If that keeps happening (at once while hanging or climbing), it swings round to the nearest open angle, unless the player is turning the camera.
+   - Props without colliders that come between the camera and her fade out (pipe run, chunks, ruin columns).
+
+   The check runs log the frames in which her body is hidden. Player-style run: 50 of 20,883 follow frames (0.24 %), mostly the moment she climbs down into the mining cut. Autopilot run: 7 of 16,479 frames.
+2. **The shape in one step: done.** The objective is "Take the shape" from entering the chamber. She walks up to it, with no prompt or button; walking into the alcove mouth also counts. She reaches for it, and the vision plays as she touches it. When the vision ends she is holding it (log: `after it she holds the dodecahedron: Hand`). There is no second visit. The QF6 take-fallback is gone because it can't happen any more.
+3. **No glow on her: done.** After the vision she puts the shape in a pocket (`CarriedShape.Where.Pocket`): no shape, no pouch, no light. Log on the terrace and bay floor: `shape renderers shown False, lights on her 0`. The old hip light that made Dan's white blob is removed. Edge glow is faint lines only (no bloom halo): 0.35 on the Moon pedestal (light dimmed too) and 0.3 on the galley table (edge material grey 0.58, emission 0.35).
+4. **The buried lock: done.** In the present the lock is behind a collapse: a broken rib leaning across, two slabs over the emblem and stone chunks (`LockRubble` in `FightDemoBuilderLunarDoor.cs`). It also blocks walking (ground obstacle). The vision video shows the lock intact, on the right. After the vision:
+   - she looks at the pile and says "But I think I know how this opens";
+   - objective "Uncover the lock": RT telekinesis, and the pieces fly to the west wall;
+   - objective "Open the door": X on the lock, the door opens, lines 9–11.
+
+   The doorway stays closed until then. `Docs/TRIGGER-AUDIT.md` rows 14–17 are updated. Checkpoint 5 is now "The buried lock + the lunar door".
+5. **Galley seating + bowl: done.**
+   - *Cause of the bad seating:* during the cutscene `SaucerSeven` still counted as grounded, so the arena clamp pushed her root out of the seat's footprint every frame. Now her hips are pinned to the seat point (`SaucerSeven.SeatHips`).
+   - *Numeric seat check:* every seated frame, the hips must be within 5 cm of the seat point, over the cushion and 6–18 cm above it. Result: `SEAT CHECK: worst 0.0 cm, frames off the cushion or > 5 cm: 0` (36,555 frames in the check run, 15,474 in the playtest).
+   - *Her hand:* it now rests at the plate's edge while the fork is stopped, instead of hovering in the air.
+   - *The bowl:* a plain low bowl on the table (19 cm across, 4.2 cm high) replaces the raised feeder. The cat crouches at the front with his front paws planted (two-bone leg IK). Crouch depth and paw position are searched per run. Result: muzzle over the bowl's middle (0.000–0.005 m off-centre), above the food, paws 2 cm outside the rim, no clipping (capture `qf7_11_cat_in_the_bowl_side`).
+   - *The cat talking:* when he speaks he lifts his head out of the bowl, looks at her (head and neck turn), then goes back to eating.
+   - *After "He settles beside the bowl":* he sits a step back (a paw was in the bowl) and steps forward again to eat.
+6. **Emotion without faces: done (shape keys dropped).**
+   - *Eyes and head:* the Tripo head has no eye bones or eyelids, so blinking isn't possible. Gaze shifts move her look target a little every 1.2–3.5 s (76 in the scene). The head and neck drift slowly. While she speaks the head moves with the speech (small nods and turns).
+   - *The cat:* ear flicks every 2.5–6.5 s (39), a slow head drift, and looking at her when he talks.
+   - *Camera:* no face close-ups any more.
+     - Four key lines get a medium shot from the deck side with a slow push-in.
+     - Three of his lines hold on her reaction ("What did it feel like?", "farewell dinner", "what happens next").
+     - "You could go home" pulls back to a wide shot.
+     - "That marking" is a medium shot of the cat.
+   - *Energy point:* it dims and brightens with her mood (0.5 at "I don't know" … 1.45 at "Venus, then").
+   - *Clips:* Dan's emotion clips are imported (`Art/Mixamo/7/emotion`, Humanoid). Used: `sit_idle` (her seat pose; the old one held her head), `sit_talking` (×9 on her seated lines, when her hands are free) and `talking` (×2 at the fridge). The standing ones (thinking, sad_idle, nod_yes, thoughtful_nod, shake_head_no, shrug, look_away) and sit_disapproval / sit_laughing are imported but not used yet: she is seated for the whole talk, and a standing clip would stand her up.
+   - *Facial shape keys, trial in Blender:* five keys on the head (`Docs/Previews/qf7/shapekeys/`, before/after sheets).
+     - **Eyes closed:** looks wrong (the painted eye smears into a jagged line).
+     - **Brows up / brows knit:** barely visible; the inner brow has too few vertices.
+     - **Slight smile / sad mouth:** clean but only 3 mm, invisible at the medium framings the galley now uses.
+     - Shipping any of them also means a round trip of the rigged FBX through Blender. **Dropped; nothing shipped.** Natural eyes or brows would need a re-topologised face or eyelid geometry.
+7. **Checks + release: done.**
+   - 0.10.3 published (`game-1003`, Latest).
+   - Player-style run `PLAYTEST: 1/1, soft-locks 0, story watchdog fallbacks 0`, with quit + Continue at checkpoints 5 and 10.
+   - Check run: soft-lock suspicions 0, audio peak 0 in every shot (muted).
+
+**Open (honest):**
+- **The three alcove beats in the vision chamber** (she reaches for the shape, holds it after the vision, puts it in her pocket) have no clear medium framing. The alcove mouth is boxed in by the alcove walls, two ruin columns and the flowing ribs. The framing search (`Chapter1Director.FrameHer`: clear lines incl. collider-less props and the rib meshes, never from behind) finds nothing there. Those beats therefore stay on the normal follow view: full figure from the chamber, behind her, a few metres away. Not a body-emphasis shot, but the shape in her hand is not visible in it. The collapse / lock / door shots after it are fine. A fix needs a level change (move a ruin column or let her step back from the alcove for the beat). I'd rather do that with your OK than guess.
+- Testing ran about 2.5 min over the 20-minute rule (the two short framing re-checks).
+
+## For Dan to check (QF7)
+- The climbing stretch (catwalk gap, pipes, bulkhead, cracked wall, shaft lip, terraces, mining cut, ramp + scaffolds): turn the camera into walls on purpose. It should pull in or swing round, never sit behind rock.
+- Vision chamber:
+  - "Take the shape" from the start; walking up to it plays the vision; after it she holds it, then it goes into her pocket (no glow on her afterwards).
+  - The lock is not visible before the vision (the collapse covers it); RT clears it; X on the lock opens the door.
+  - The alcove beats are on the follow view (see Open).
+- Galley:
+  - She sits in her chair the whole scene.
+  - The plain bowl; the cat lifts his head and looks at you when he talks.
+  - Medium shots instead of face close-ups; small head and gaze movement; the energy point follows her mood.
+  - The shape on the table is faint lines, no halo.
+- Shape keys: decide whether a re-topologised face (or eyelid geometry) is worth it later. Blinking is not possible on the current head.
 
 ## Quick fix QF6: story triggers that never fire + stop the replay grind (Dan, 2026-11-18) — done, status below
 Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply; muted, off-screen runs.

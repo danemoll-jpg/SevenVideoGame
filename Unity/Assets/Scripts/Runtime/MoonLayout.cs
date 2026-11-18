@@ -131,7 +131,7 @@ namespace Seven
         public static readonly string[] CpNames =
         {
             "Cell (scenes 1-2)", "Escape - the cat leads (scenes 3-4)", "Old passage + ruins", "Scree guard (scene 5)",
-            "Vision (scene 6)", "Lunar door + take the shape", "City reveal (6b-7)", "Saucer rescue + beam (scene 8)",
+            "Vision + take the shape (scene 6)", "The buried lock + the lunar door", "City reveal (6b-7)", "Saucer rescue + beam (scene 8)",
             "Aboard (scene 9)", "Galley (scene 10)", "Free exploration (chapter done)",
         };
         public static string CpName(int cp) => cp >= 0 && cp < CpNames.Length ? CpNames[cp] : "checkpoint " + cp;

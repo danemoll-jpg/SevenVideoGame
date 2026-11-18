@@ -21,10 +21,28 @@ namespace Seven
         [Tooltip("Ear turn target (world); null = no ear turn.")]
         public Vector3? EarToward;
         public bool Chewing;
+        /// <summary>QF7: the bowl is a plain low bowl on the table - how much deeper the eating dip goes (found by
+        /// Chapter1Aboard so the muzzle ends just over the food, inside the rim).</summary>
+        public float EatGain = 1f;
+        /// <summary>QF7: front crouch while eating from the low bowl (deg, spine pitched nose-down); the front paws stay
+        /// planted where the clip put them (two-bone leg IK), so he crouches at the front like a cat at a floor bowl.</summary>
+        public float Crouch;
+        /// <summary>QF7: the planted front paws move this far back (m) while he eats, so they stay outside the bowl.</summary>
+        public float PawBack;
+        public Vector3 PawL => _legF[0] != null ? _legF[0].position : transform.position;
+        public Vector3 PawR => _legF[1] != null ? _legF[1].position : transform.position;
+        /// <summary>QF7: head (and a little neck) turned toward this point - he lifts his head and looks at her when he
+        /// speaks. Null = none.</summary>
+        public Vector3? LookAt;
+        /// <summary>QF7: small life - an ear flick now and then, a slow head drift.</summary>
+        public bool Alive = true;
+        public int EarFlicks { get; private set; }
+        float _look, _flickT = -1f, _nextFlick = 3f; Transform _flickEar;
         /// <summary>Total time the chewing nods ran (checks: mouth movement only while eating).</summary>
         public float ChewSeconds { get; private set; }
 
-        Transform _chest, _neck, _head, _earL, _earR;
+        Transform _chest, _neck, _head, _earL, _earR, _spine;
+        readonly Transform[] _legU = new Transform[2], _legL = new Transform[2], _legF = new Transform[2];
         float _eat, _lean, _tilt, _ear, _t;
         public bool HasEars => _earL != null && _earR != null;
         /// <summary>The muzzle (approx.): the head bone pushed a little forward along the cat.</summary>
@@ -41,6 +59,13 @@ namespace Seven
                 switch (t.name)
                 {
                     case "chest": _chest = t; break;
+                    case "spine": _spine = t; break;
+                    case "FL_upper": _legU[0] = t; break;
+                    case "FL_lower": _legL[0] = t; break;
+                    case "FL_foot": _legF[0] = t; break;
+                    case "FR_upper": _legU[1] = t; break;
+                    case "FR_lower": _legL[1] = t; break;
+                    case "FR_foot": _legF[1] = t; break;
                     case "neck": _neck = t; break;
                     case "head": _head = t; break;
                     case "earL": _earL = t; break;
@@ -63,15 +88,42 @@ namespace Seven
             _lean = Mathf.MoveTowards(_lean, Lean, dt * 1.4f);
             _tilt = Mathf.MoveTowards(_tilt, Tilt, dt * 2.2f);
             _ear = Mathf.MoveTowards(_ear, EarToward.HasValue ? 1f : 0f, dt * 4f);
+            _look = Mathf.MoveTowards(_look, LookAt.HasValue ? 1f : 0f, dt * 2.2f);
             var right = transform.right; var fwd = transform.forward;
             bool chew = Chewing && _eat > 0.6f;
             if (chew) ChewSeconds += dt;
             float nod = chew ? Mathf.Sin(_t * 2f * Mathf.PI * 2.6f) * 3.5f + Mathf.Sin(_t * 2f * Mathf.PI * 0.4f) * 2f : 0f;
             // + angle about the cat's right axis = nose down
-            Rot(_chest, right, 16f * _eat - 6f * _lean);
-            Rot(_neck, right, 52f * _eat - 10f * _lean);
-            Rot(_head, right, 34f * _eat + nod + 8f * _lean);
+            // QF7 front crouch: remember where the clip put the front paws, pitch the spine, then plant the paws again
+            float crouch = Crouch * _eat;
+            Vector3 a0 = Vector3.zero, a1 = Vector3.zero; Quaternion f0 = Quaternion.identity, f1 = Quaternion.identity;
+            bool legs = crouch > 0.01f && _spine != null && _legU[0] != null && _legL[0] != null && _legF[0] != null && _legU[1] != null && _legL[1] != null && _legF[1] != null;
+            if (legs) { a0 = _legF[0].position; a1 = _legF[1].position; f0 = _legF[0].rotation; f1 = _legF[1].rotation; }
+            if (crouch > 0.01f) Rot(_spine, right, crouch);
+            var back = -Vector3.ProjectOnPlane(fwd, Vector3.up).normalized * PawBack * _eat;
+            if (legs) { PlantLeg(0, a0 + back, f0); PlantLeg(1, a1 + back, f1); }
+            float g = Mathf.Lerp(1f, EatGain, _eat);
+            Rot(_chest, right, 16f * _eat * g - 6f * _lean);
+            Rot(_neck, right, 52f * _eat * g - 10f * _lean);
+            Rot(_head, right, 34f * _eat * g + nod + 8f * _lean);
+            if (Alive && _head != null && _eat < 0.5f)
+            {
+                // a slow drift of the head while he sits or listens
+                Rot(_head, Vector3.up, (3f * Mathf.Sin(_t * 0.43f) + 1.5f * Mathf.Sin(_t * 1.1f + 2f)) * (1f - _eat));
+            }
+            if (_look > 0.001f && LookAt.HasValue && _head != null)
+            {
+                // turn the head (most) and the neck (some) toward the point: yaw about up, then pitch about his right axis
+                var to = LookAt.Value - _head.position;
+                var flat = new Vector3(to.x, 0f, to.z);
+                float yaw = Mathf.Clamp(Vector3.SignedAngle(Vector3.ProjectOnPlane(fwd, Vector3.up), flat, Vector3.up), -70f, 70f);
+                float pitch = Mathf.Clamp(Mathf.Atan2(to.y, flat.magnitude) * Mathf.Rad2Deg, -20f, 35f);
+                Rot(_neck, Vector3.up, yaw * 0.35f * _look);
+                Rot(_head, Vector3.up, yaw * 0.6f * _look);
+                Rot(_head, right, -pitch * 0.6f * _look);
+            }
             if (_head != null && _tilt > 0.001f) _head.rotation = Quaternion.AngleAxis(TiltDeg * _tilt, fwd) * _head.rotation;
+            if (Alive && !EarToward.HasValue) FlickEar();
             if (_ear > 0.001f && EarToward.HasValue && _head != null)
             {
                 // the ear nearer to her turns toward her (yaw about up) and gives a small flick
@@ -86,6 +138,47 @@ namespace Seven
                     ear.rotation = Quaternion.AngleAxis(Mathf.Clamp(yaw, -70f, 70f) * 0.55f * _ear, Vector3.up) * Quaternion.AngleAxis(-flick * _ear, right) * ear.rotation;
                 }
             }
+        }
+
+        void Update()
+        {
+            if (!Alive || !HasEars) return;
+            if (_t > _nextFlick)
+            {
+                _flickEar = Random.value < 0.5f ? _earL : _earR; _flickT = 0f; EarFlicks++;
+                _nextFlick = _t + Random.Range(2.5f, 6.5f);
+            }
+        }
+
+        void FlickEar()
+        {
+            if (_flickT < 0f || _flickEar == null) return;
+            _flickT += Time.deltaTime;
+            float u = _flickT / 0.28f;
+            if (u > 1f) { _flickT = -1f; return; }
+            _flickEar.rotation = Quaternion.AngleAxis(-Mathf.Sin(u * Mathf.PI) * 22f, transform.right) * Quaternion.AngleAxis(Mathf.Sin(u * Mathf.PI) * 12f, Vector3.up) * _flickEar.rotation;
+        }
+
+        /// <summary>Two-bone IK: upper + lower leg so the ankle (foot bone head) is back at <paramref name="target"/>,
+        /// the knee bending on the side it already bends to; the paw keeps its world rotation.</summary>
+        void PlantLeg(int i, Vector3 target, Quaternion footRot)
+        {
+            Transform u = _legU[i], l = _legL[i], f = _legF[i];
+            Vector3 a = u.position, b = l.position, c = f.position;
+            float l1 = (b - a).magnitude, l2 = (c - b).magnitude;
+            var at = target - a; float d = Mathf.Clamp(at.magnitude, Mathf.Abs(l1 - l2) + 1e-4f, l1 + l2 - 1e-4f);
+            var dir = at.normalized;
+            var n = Vector3.Cross(c - a, b - a);
+            if (n.sqrMagnitude < 1e-10f) n = transform.right;
+            n.Normalize();
+            float A = Mathf.Acos(Mathf.Clamp((l1 * l1 + d * d - l2 * l2) / (2f * l1 * d), -1f, 1f)) * Mathf.Rad2Deg;
+            var k1 = a + Quaternion.AngleAxis(A, n) * dir * l1;
+            var k2 = a + Quaternion.AngleAxis(-A, n) * dir * l1;
+            var knee = (k1 - b).sqrMagnitude < (k2 - b).sqrMagnitude ? k1 : k2;
+            u.rotation = Quaternion.FromToRotation(b - a, knee - a) * u.rotation;
+            var c2 = f.position; var b2 = l.position;
+            l.rotation = Quaternion.FromToRotation(c2 - b2, target - b2) * l.rotation;
+            f.rotation = footRot;
         }
 
         static void Rot(Transform t, Vector3 axis, float deg) { if (t != null && Mathf.Abs(deg) > 0.01f) t.rotation = Quaternion.AngleAxis(deg, axis) * t.rotation; }

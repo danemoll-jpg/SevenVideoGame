@@ -39,7 +39,14 @@ namespace Seven
         Vector3 _anchorFrom;
         float _seatedHipsHeight = 0.646f;   // Sitting Idle hips above the root (clip), refined at runtime
 
-        protected override bool Grounded => Current != Mode.Seated && Current != Mode.SittingDown && transform.parent == null && !OnSofa;
+        protected override bool Grounded => Current != Mode.Seated && Current != Mode.SittingDown && transform.parent == null && !OnSofa && !SeatHips.HasValue;
+        /// <summary>QF7 (Dan: "she is not sitting in the chair"): while a cutscene seats her, her hips are pinned to this
+        /// point every frame (after the animation; the arena clamp is off - it used to push her root out of the seat's
+        /// footprint, behind the chair). Height: the root moves at most <see cref="SeatLiftMax"/> so the feet stay down.</summary>
+        [NonSerialized] public Vector3? SeatHips;
+        public const float SeatLiftMax = 0.08f;
+        /// <summary>QF7 seat check: worst / mean distance of the hips from <see cref="SeatHips"/> over the seated frames.</summary>
+        public float SeatErrMax, SeatErrSum; public int SeatFrames;
         /// <summary>Round 8: sitting on the gallery sofa while browsing (GalleryTV moves her; no ground clamp, no walking).</summary>
         [NonSerialized] public bool OnSofa;
         public void PlayClip(string state, float fade, float speed = 1f) => Play(state, fade, speed);
@@ -192,6 +199,16 @@ namespace Seven
 
         void LateUpdate()
         {
+            if (SeatHips.HasValue && Cutscene)
+            {
+                var want = SeatHips.Value;
+                var sd = want - _hips.position;
+                float lift = Mathf.Clamp(transform.position.y + sd.y, -SeatLiftMax, SeatLiftMax) - transform.position.y;
+                transform.position += new Vector3(sd.x, lift, sd.z);
+                float err = Vector3.Distance(_hips.position, want);
+                SeatErrMax = Mathf.Max(SeatErrMax, err); SeatErrSum += err; SeatFrames++;
+                return;
+            }
             if (!_anchor) return;
             if (_holdUntil > 0f && Time.time > _holdUntil) { _anchor = false; _holdUntil = -1f; return; }
             _anchorBlend = Mathf.Min(1f, _anchorBlend + Time.deltaTime * _anchorBlendSpeed);
