@@ -15,7 +15,7 @@ Direct3D:
     VRAM:     5966 MB
     Driver:   32.0.16.1088
 Begin MonoManager ReloadAssembly
-- Finished resetting the current domain, in  0.017 seconds
+- Finished resetting the current domain, in  0.012 seconds
 [Physics::Module] Selected backend.
 [Physics::Module] Name: PhysX
 [Physics::Module] Id: 0xf2b8ea05
@@ -24,84 +24,88 @@ Begin MonoManager ReloadAssembly
 [Physics::Module] Threading Mode: Multi-Threaded
 <RI> Initializing input.
 Using Windows.Gaming.Input
-UnloadTime: 1.056800 ms
+UnloadTime: 0.941800 ms
 [Seven] boot: muted=True listenerVolume=0 capture=C:\Users\danmo\SevenVideoGame\Docs\Previews\qf7\chamber_framing fight=False saucer=False ratwing=False chapter1=True forceFullscreen=False mode=Windowed
 [Launcher] 7: The Observer 0.10.3 (build 1003)
 Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
 Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
 Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
 GPUResidentDrawer Disabled due to some configured Universal Renderers not using the Forward+ or Deferred+ rendering paths.
-UnloadTime: 0.573900 ms
+UnloadTime: 0.687700 ms
 Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 5901.
-Total: 2.218100 ms (FindLiveObjects: 0.350100 ms CreateObjectMapping: 0.083400 ms MarkObjects: 1.718300 ms  DeleteObjects: 0.017000 ms)
+Total: 2.120700 ms (FindLiveObjects: 0.316800 ms CreateObjectMapping: 0.075300 ms MarkObjects: 1.597600 ms  DeleteObjects: 0.019000 ms)
 
 [Seven] [   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
-[Seven] [   0.05s] line of sight cell -> hidden release panel: 1452 rays from a grid inside the cell, 0 unobstructed (must be 0)
-[Seven] [   0.05s] flow starts at checkpoint 4 (Vision + take the shape (scene 6))
-[Seven] [   0.05s] story step: take the glowing shape (the vision plays as she touches it) (fires in area 4 'vision chamber' or later)
+[Seven] [   0.06s] line of sight cell -> hidden release panel: 1452 rays from a grid inside the cell, 0 unobstructed (must be 0)
+[Seven] [   0.06s] flow starts at checkpoint 4 (Vision + take the shape (scene 6))
+[Seven] [   0.06s] story step: take the glowing shape (the vision plays as she touches it) (fires in area 4 'vision chamber' or later)
 [Seven] [   0.06s] objective: Take the shape
 Unexpected timestamp values detected. This can occur in H.264 videos not encoded with the baseline profile. Timestamps will be skewed to correct the playback for C:\Users\danmo\SevenVideoGame\Unity\Builds\Seven\SevenDemo_Data\sharedassets1.resource
-[Seven] [   1.72s] teach: 'move' shown (Move Move · Camera Camera)
+[Seven] [   1.73s] teach: 'move' shown (Move Move · Camera Camera)
 [Seven] [   2.05s] prompts in shot 't_move_xbox': teach [Move:Move|Camera:Camera|] context []
-[Seven] [   2.10s] shot 01_t_move_xbox.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [   2.37s] prompts in shot 't_move_keys': teach [Move:Move|Camera:Camera|] context []
+[Seven] [   2.11s] shot 01_t_move_xbox.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   2.38s] prompts in shot 't_move_keys': teach [Move:Move|Camera:Camera|] context []
 [Seven] [   2.42s] shot 02_t_move_keys.png  audioPeak=0.000000  cursorVisible=False
 [Seven] [   2.54s] auto walk done at (16.50, -2.40, -30.30)
 [Seven] [   2.54s] ok: vision chamber (0.0s)
 [Seven] [   2.55s] prompts in shot 's06_chamber_before_lock_buried': teach [Move:Move|Camera:Camera|] context []
-[Seven] [   2.60s] shot 03_s06_chamber_before_lock_buried.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [   2.60s] prompts in shot 's06_shape_in_alcove': teach [Move:Move|Camera:Camera|] context []
+[Seven] [   2.59s] shot 03_s06_chamber_before_lock_buried.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   2.59s] prompts in shot 's06_shape_in_alcove': teach [Move:Move|Camera:Camera|] context []
 [Seven] [   2.63s] shot 04_s06_shape_in_alcove.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [   3.92s] teach: 'move' cleared after 2.2s (done)
+[Seven] [   3.93s] teach: 'move' cleared after 2.2s (done)
 [Seven] [   5.78s] auto walk done at (19.74, -2.40, -34.60)
 [Seven] [   5.78s] ok: walked up to the shape (0.0s) - no prompt, no button
 [Seven] [   5.78s] objective: 
-[Seven] [   6.27s] framing 'reach for the shape': NO clear framing found around her - kept the follow view
-[Seven] [   7.37s] shot 05_qf7_01_reaches_for_the_shape.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [   7.88s] shot 06_s06_shape_touch_flare.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [   7.88s] audio: music -> (none)
-[Seven] [   7.88s] audio: sfx vision_whoosh
-[Seven] [   7.88s] audio: loop vision_shimmer (Sfx)
+[Seven] framing 'reach for the shape': camera (19.52, -0.96, -36.51) at 90 deg
+[Seven] [   6.23s] framing 'reach for the shape': camera (19.52, -0.96, -36.51) at 90 deg from her facing (0 = straight in front, > 100 never used), 1.89 m from her head
+[Seven] [   7.36s] shot 05_qf7_01_reaches_for_the_shape.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   7.86s] shot 06_s06_shape_touch_flare.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [   7.86s] audio: music -> (none)
+[Seven] [   7.86s] audio: sfx vision_whoosh
+[Seven] [   7.86s] audio: loop vision_shimmer (Sfx)
 [Seven] [   8.36s] shot 07_s06_whitewash_in.png  audioPeak=0.000000  cursorVisible=False
 [Seven] [   8.77s] vision: video vision_01_door (12.1s, 1920x1044) full-screen, sides cropped to the screen aspect
 [Seven] [  10.37s] shot 08_s06_vision_during_far_voice.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [  15.04s] shot 09_s06_vision_video_frame.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [  21.50s] ok: vision lines (0.0s)
-[Seven] [  21.50s] audio: sfx vision_whoosh
+[Seven] [  15.02s] shot 09_s06_vision_video_frame.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  21.49s] ok: vision lines (0.0s)
+[Seven] [  21.49s] audio: sfx vision_whoosh
 [Seven] dodecahedron -> Hand
-[Seven] [  21.56s] framing 'after the vision, holding it': NO clear framing found around her - kept the follow view
-[Seven] [  21.56s] vision lasted 12.7s (white wash in/out included); after it she holds the dodecahedron: Hand, 1.018 m from her palm
-[Seven] [  22.31s] shot 10_s06_whitewash_out.png  audioPeak=0.000000  cursorVisible=False
+[Seven] framing 'after the vision, holding it': camera (19.94, -0.86, -35.98) at 75 deg
+[Seven] [  21.53s] framing 'after the vision, holding it': camera (19.94, -0.86, -35.98) at 75 deg from her facing (0 = straight in front, > 100 never used), 1.37 m from her head
+[Seven] [  21.53s] vision lasted 12.7s (white wash in/out included); after it she holds the dodecahedron: Hand, 1.020 m from her palm
+[Seven] [  22.30s] shot 10_s06_whitewash_out.png  audioPeak=0.000000  cursorVisible=False
 [Seven] [  22.81s] shot 11_qf7_02_after_the_vision_holding_it.png  audioPeak=0.000000  cursorVisible=False
 [Seven] [  27.80s] shot 12_s06_after_vision.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [  28.63s] framing 'into her pocket': NO clear framing found around her - kept the follow view
+[Seven] framing 'into her pocket': camera (19.48, -0.99, -36.81) at 90 deg
+[Seven] [  28.61s] framing 'into her pocket': camera (19.48, -0.99, -36.81) at 90 deg from her facing (0 = straight in front, > 100 never used), 2.19 m from her head
 [Seven] dodecahedron -> Pocket
-[Seven] [  30.70s] shot 13_qf7_03_into_her_pocket.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  30.71s] shot 13_qf7_03_into_her_pocket.png  audioPeak=0.000000  cursorVisible=False
 [Seven] [  31.16s] dodecahedron into her pocket: in pocket True, renderers shown False, lights on her 0
 [Seven] saved: chapter 1 checkpoint 5 (The buried lock + the lunar door) (seven_test_ch1_progress)
 [Seven] checkpoint 5 (The buried lock + the lunar door)
 [Seven] [  31.16s] checkpoint 5 (The buried lock + the lunar door)
-[Seven] [  31.16s] story step: uncover the lock (telekinesis), then open the door (fires in area 4 'vision chamber' or later)
-[Seven] [  31.93s] framing 'she looks at the collapse': camera (16.45, -0.96, -33.48) at 45 deg from her facing (0 = straight in front, > 100 never used), 3.47 m from her head
-[Seven] dialogue camera reframed: (16.45, -0.96, -33.48) -> (16.50, -0.75, -33.49) (eased)
-[Seven] [  32.94s] shot 14_qf7_04_she_looks_at_the_collapse.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [  34.10s] objective: Uncover the lock
-[Seven] [  36.40s] auto walk done at (15.90, -2.40, -35.16)
-[Seven] [  36.40s] ok: the collapse in telekinesis range (0.0s)
-[Seven] [  36.40s] ok: clear the collapse from the lock (telekinesis) (in range) (0.0s)
-[Seven] [  36.40s] ok: clear the collapse from the lock (telekinesis) (0.0s)
-[Seven] [  37.74s] audio: sfx tk_gather @(15.9, -1.2, -35.2)
-[Seven] [  37.74s] audio: sfx tk_push @(13.7, -1.4, -37.6)
-[Seven] [  37.75s] audio: sfx slab_lift @(13.7, -1.4, -37.6)
-[Seven] [  38.70s] shot 15_qf7_05_telekinesis_clears_the_collapse.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [  40.34s] audio: sfx stone_fall @(13.2, -2.4, -34.0)
-[Seven] [  41.40s] shot 16_qf7_06_the_lock_uncovered.png  audioPeak=0.000000  cursorVisible=False
-[Seven] [  41.40s] the collapse is cleared by telekinesis: the lock is exposed (on the right of the door, as in the vision)
-[Seven] [  41.40s] objective: Open the door
-[Seven] cat leash #1: more than 6 m behind (6.0 m, mode Hold) at (18.99, -2.40, -33.70), 7 at (14.01, -2.40, -37.05)
-[Seven] cat reappeared a step behind 7 at (15.07, -2.40, -35.99) (out of the camera's view)
+[Seven] [  31.17s] story step: uncover the lock (telekinesis), then open the door (fires in area 4 'vision chamber' or later)
+[Seven] framing 'she looks at the collapse': camera (17.69, -0.96, -33.91) at 45 deg
+[Seven] [  31.94s] framing 'she looks at the collapse': camera (17.69, -0.96, -33.91) at 45 deg from her facing (0 = straight in front, > 100 never used), 2.15 m from her head
+[Seven] dialogue camera reframed: (17.69, -0.96, -33.91) -> (17.07, -0.93, -33.81) (eased)
+[Seven] [  33.05s] shot 14_qf7_04_she_looks_at_the_collapse.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  34.22s] objective: Uncover the lock
+[Seven] [  36.52s] auto walk done at (15.89, -2.40, -35.16)
+[Seven] [  36.53s] ok: the collapse in telekinesis range (0.0s)
+[Seven] [  36.53s] ok: clear the collapse from the lock (telekinesis) (in range) (0.0s)
+[Seven] [  36.53s] ok: clear the collapse from the lock (telekinesis) (0.0s)
+[Seven] [  37.87s] audio: sfx tk_gather @(15.9, -1.2, -35.2)
+[Seven] [  37.87s] audio: sfx tk_push @(13.7, -1.4, -37.6)
+[Seven] [  37.87s] audio: sfx slab_lift @(13.7, -1.4, -37.6)
+[Seven] [  38.83s] shot 15_qf7_05_telekinesis_clears_the_collapse.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  40.47s] audio: sfx stone_fall @(13.2, -2.4, -34.0)
+[Seven] [  41.52s] shot 16_qf7_06_the_lock_uncovered.png  audioPeak=0.000000  cursorVisible=False
+[Seven] [  41.52s] the collapse is cleared by telekinesis: the lock is exposed (on the right of the door, as in the vision)
+[Seven] [  41.52s] objective: Open the door
+[Seven] cat leash #1: more than 6 m behind (6.1 m, mode Hold) at (18.99, -2.40, -33.70), 7 at (13.94, -2.40, -37.12)
+[Seven] cat reappeared a step behind 7 at (15.00, -2.40, -36.06) (out of the camera's view)
 [Seven] cat leash done (reappeared behind her) after 0.0s: now Follow, 1.5 m from 7
-[Seven] [  43.10s] auto walk done at (13.86, -2.40, -37.21)
-[Seven] [  43.10s] ok: touch the lock (in range) (0.0s)
-[Seven] [  43.10s] ok: touch the lock (0.0s)
-[Seven] [  43.11s] objective: 
+[Seven] [  43.22s] auto walk done at (13.85, -2.40, -37.21)
+[Seven] [  43.22s] ok: touch the lock (in range) (0.0s)
+[Seven] [  43.23s] ok: touch the lock (0.0s)
+[Seven] [  43.23s] objective: 

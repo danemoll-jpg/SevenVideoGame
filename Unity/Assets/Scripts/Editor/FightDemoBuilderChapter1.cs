@@ -738,6 +738,10 @@ namespace Seven.EditorTools
                 foreach (var cz in colZ)
                 {
                     var b = new Vector3(cx, L.Lower, cz);
+                    // QF7: the column south of the shape's alcove stood in every side view of the alcove beats (reach,
+                    // holding it, the pocket; the north side is closed by a vault rib's foot) - moved back into the corner
+                    // by the door wall, clear of her paths
+                    if (cx > 16f && Mathf.Approximately(cz, -36f)) b = new Vector3(19.15f, L.Lower, -37.45f);
                     float hBroken = Mathf.Lerp(0.7f, 2.6f, (float)rnd2.NextDouble());
                     var broken = Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.5f, 0f), new Vector2(0.42f, 0.25f), new Vector2(0.42f, hBroken), new Vector2(0.2f, hBroken + 0.12f), new Vector2(0f, hBroken + 0.1f) }, 0f, 360f, 16, null, b);
                     MeshObject("RuinColumn", SaveMesh(broken, $"Moon_RuinCol{cx}_{cz}"), m.ancient, ruins.transform);

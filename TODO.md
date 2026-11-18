@@ -1,7 +1,7 @@
 # Active Development Plan — 7: The Observer
 
 ## Current Objective — Dan plays 0.10.3, then Round 11 (`Docs/ROUND11.md`)
-Dan plays 0.10.3 ("For Dan to check (QF7)" below; two open points in "QF7 — status": the alcove framings, the shape keys).
+Dan plays 0.10.3 ("For Dan to check (QF7)" below; open in "QF7 — status": the shape keys; the alcove-framing fix is committed but not yet released).
 Then Round 11.
 
 ## Quick fix QF7: Dan's playtest of 0.10.2 (Dan, 2026-11-18) — done, status below
@@ -106,15 +106,19 @@ I looked at every galley and vision-chamber capture.
    - Check run: soft-lock suspicions 0, audio peak 0 in every shot (muted).
 
 **Open (honest):**
-- **The three alcove beats in the vision chamber** (she reaches for the shape, holds it after the vision, puts it in her pocket) have no clear medium framing. The alcove mouth is boxed in by the alcove walls, two ruin columns and the flowing ribs. The framing search (`Chapter1Director.FrameHer`: clear lines incl. collider-less props and the rib meshes, never from behind) finds nothing there. Those beats therefore stay on the normal follow view: full figure from the chamber, behind her, a few metres away. Not a body-emphasis shot, but the shape in her hand is not visible in it. The collapse / lock / door shots after it are fine. A fix needs a level change (move a ruin column or let her step back from the alcove for the beat). I'd rather do that with your OK than guess.
-- Testing ran about 2.5 min over the 20-minute rule (the two short framing re-checks).
+- ~~The three alcove beats in the vision chamber~~ **fixed after the release (your OK, 2026-11-18):**
+  - The cause was the chamber geometry. The north side of the alcove mouth is closed by a vault rib's foot, about 0.3 m from her head. The south side was closed by the ruin column at (19.6, −36).
+  - That column moved into the corner by the door wall (19.15, −37.45). The rib test in the framing search now uses 20 cm instead of 45 cm. A "no framing" now logs why every candidate was rejected.
+  - Short check run: reach 90°, holding it 75°, pocket 90°, the collapse 45°, all medium side or three-quarter shots (`Docs/Previews/qf7/chamber_framing/05, 11, 13, 14`).
+  - **Not in 0.10.3 yet:** it needs a new release.
+- Testing ran about 4 min over the 20-minute rule (the short framing re-checks, the last one after the column move).
 
 ## For Dan to check (QF7)
 - The climbing stretch (catwalk gap, pipes, bulkhead, cracked wall, shaft lip, terraces, mining cut, ramp + scaffolds): turn the camera into walls on purpose. It should pull in or swing round, never sit behind rock.
 - Vision chamber:
   - "Take the shape" from the start; walking up to it plays the vision; after it she holds it, then it goes into her pocket (no glow on her afterwards).
   - The lock is not visible before the vision (the collapse covers it); RT clears it; X on the lock opens the door.
-  - The alcove beats are on the follow view (see Open).
+  - The alcove beats (reach, holding it, pocket) are side medium shots now (after the column move; in the next release).
 - Galley:
   - She sits in her chair the whole scene.
   - The plain bowl; the cat lifts his head and looks at you when he talks.

@@ -278,7 +278,8 @@ apply to every asset and scene:
   - Follow camera (`ChapterCamera.Place`): pulls in or swings round when her body is hidden, and fades collider-less
     props in the way → `follow camera (QF7): … hidden in N of M follow frames`.
   - Cutscene framings in the chamber: `Chapter1Director.FrameHer` (clear lines incl. props and rib meshes, never from
-    behind; nothing found = follow view) → `framing '<beat>'`.
+    behind; nothing found = follow view, with the rejection counts) → `framing '<beat>'`. The ruin column south of the
+    alcove was moved to (19.15, −37.45) so the alcove beats have a side view.
   - Galley seat: `SaucerSeven.SeatHips` pins her hips to the seat → `SEAT CHECK (QF7)` (frames off the cushion or
     > 5 cm must be 0).
   - Galley cat: plain low bowl, front crouch + paw IK (`CatPoseOverlay.Crouch/PawBack`), and he looks at her when he

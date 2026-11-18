@@ -1106,27 +1106,30 @@ namespace Seven
             var fwd = Flat(Seven.transform.forward).normalized;
             var look = also.HasValue ? Vector3.Lerp(Vector3.Lerp(hp, cp, 0.3f), also.Value, 0.4f) : Vector3.Lerp(hp, cp, 0.3f);
             float best = float.MaxValue; Vector3 bestPos = Vector3.zero; float bestAng = 0f;
+            int nSolid = 0, nLine = 0, nAlso = 0, nProp = 0, nBehind = 0;
             foreach (var d in new[] { dist, dist * 1.25f, dist * 1.6f, dist * 0.85f })
                 for (int a = -150; a <= 150; a += 15)
                     foreach (var h in new[] { 0.05f, 0.2f, -0.05f })
                     {
                         var dir = Quaternion.AngleAxis(a, Vector3.up) * fwd;
                         var pos = Seven.transform.position + dir * d + Vector3.up * (hp.y - Seven.transform.position.y + h);
-                        if (Physics.CheckSphere(pos, 0.25f, ~((1 << 20) | (1 << 5)), QueryTriggerInteraction.Ignore)) continue;
-                        if (!ChapterCamera.ClearLine(pos, hp) || !ChapterCamera.ClearLine(pos, cp)) continue;
-                        if (also.HasValue && !ChapterCamera.ClearLine(pos, also.Value)) continue;
-                        if (Cam.PropBetween(pos, hp) || Cam.PropBetween(pos, cp) || also.HasValue && Cam.PropBetween(pos, also.Value)) continue;
                         float ang = Mathf.Abs(a);
-                        if (ang > 100f) continue;                                 // never from behind her
+                        if (ang > 100f) { nBehind++; continue; }                  // never from behind her
+                        if (Physics.CheckSphere(pos, 0.25f, ~((1 << 20) | (1 << 5)), QueryTriggerInteraction.Ignore)) { nSolid++; continue; }
+                        if (!ChapterCamera.ClearLine(pos, hp) || !ChapterCamera.ClearLine(pos, cp)) { nLine++; continue; }
+                        if (also.HasValue && !ChapterCamera.ClearLine(pos, also.Value)) { nAlso++; continue; }
+                        if (Cam.PropBetween(pos, hp) || Cam.PropBetween(pos, cp) || also.HasValue && Cam.PropBetween(pos, also.Value)) { nProp++; continue; }
                         float score = Mathf.Abs(ang - 60f) * 0.02f + Mathf.Abs(d - dist) * 0.8f + Mathf.Abs(h - 0.05f) * 2f;
                         if (score < best) { best = score; bestPos = pos; bestAng = a; }
                     }
             if (best == float.MaxValue)
             {
-                Cap?.Log($"framing '{what}': NO clear framing found around her - kept the follow view");
+                var why = $"framing '{what}': NO clear framing found around her - kept the follow view (rejected: inside geometry {nSolid}, line to her blocked {nLine}, line to the subject blocked {nAlso}, props/ribs {nProp}, behind her {nBehind})";
+                Cap?.Log(why); Debug.Log("[Seven] " + why);
                 return;
             }
             Cam.Shot(bestPos, look, ease, ease <= 0.05f, fov);
+            Debug.Log($"[Seven] framing '{what}': camera {bestPos} at {bestAng:0} deg");
             if (Auto || DemoBoot.PlayerSim) Cap?.Log($"framing '{what}': camera {bestPos} at {bestAng:0} deg from her facing (0 = straight in front, > 100 never used), {Vector3.Distance(bestPos, hp):0.00} m from her head");
         }
 

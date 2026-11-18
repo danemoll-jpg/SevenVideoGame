@@ -392,7 +392,7 @@ namespace Seven
                     {
                         float t = l2 > 1e-6f ? Mathf.Clamp01(Vector3.Dot(v - a, ab) / l2) : 0f;
                         if (t > 0.92f) continue;                               // the last bit at the subject
-                        if ((a + ab * t - v).sqrMagnitude < 0.2f) return true;   // within ~0.45 m of a rib's surface points
+                        if ((a + ab * t - v).sqrMagnitude < 0.04f) return true;  // within 0.2 m of a rib's surface points
                     }
             }
             var d = b - a; float len = d.magnitude;
