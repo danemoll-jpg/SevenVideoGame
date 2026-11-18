@@ -15,7 +15,9 @@ Preview text:
 Hey. You shouldn't be here. Go on, before somebody sees you... You came to rescue me? This place was different. Whole. There were people here. Thank you.
 ```
 
-## The cat — voice name `Cat`
+## The cat (Panther) — voice name `Cat`
+Named **Panther** from Venus scene VEN_B01 on (subtitle label "Panther"); same voice.
+
 Description (main pick):
 ```
 An intelligent, particular male cat speaking telepathically: a smooth, low-to-mid adult male voice with a soft velvety purr in the tone and a faint rasp at the edges. Unhurried, precise and quietly amused, with deadpan comic timing and a dry, slightly aristocratic manner, yet capable of sincere warmth. Calm and relaxed, never loud, close to the microphone. Light British accent, studio-quality recording, no background noise.

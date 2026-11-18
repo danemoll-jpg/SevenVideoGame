@@ -1,4 +1,6 @@
-> **Status (2026-11-17):** spec received from Dan. **The file he sent was cut off** at scene VEN_C10 ("Insert:") — the rest (end of VEN_C10, the saucer return conversation, destination selection, and anything after) is still to come. Do not invent those parts.
+> **Update (2026-11-18):** hover bike added — section 6b, scenes VEN_B01–VEN_B07 (Dan). Round 11 builds VEN_B01–B05, Round 12 VEN_B06–B07. VEN_B01 now holds the cat's name reveal: **Panther** (Dan).
+>
+> **Status (2026-11-17):** complete spec from Dan (sent in two parts, joined here). Build it in two rounds (Round 11: VEN_01–04, progression, C01–C05; Round 12: encounter, C06–C11). Wormmaster on Venus is provisional for the prototype.
 
 Build the Venus chapter for **7: The Observer** using the existing project’s player controller, interactions, dialogue, save system, and visual conventions. Inspect what already exists before creating replacement systems.
 
@@ -53,16 +55,16 @@ Do not automatically force the Moon or another specific world as the next destin
 Create these connected areas:
 
 VEN_01 — Landing platform  
-Saucer entrance, arrival vista, route into the gardens.
+Saucer entrance, arrival vista, the saucer's storage hatch with the hover bike, the start of the riding route.
 
 VEN_02 — Outer gardens  
-Inhabited terraces, water channels, signs of damage, a blocked main walkway and traversable alternate route.
+Inhabited terraces, water channels, signs of damage. The broad first riding route (section 6b) runs through them to the temple's outer court; a blocked main walkway with a short on-foot alternate route.
 
 VEN_03 — Temple  
-Guardian interaction area and protected cube chamber.
+Outer court (bike parking — the bike never enters the temple), pedestrian garden, guardian interaction area and protected cube chamber.
 
 VEN_04 — Lower gardens  
-Damaged channels, creature observation area, route to underground infrastructure.
+The narrower maintenance riding path from the temple, damaged channels, the creature observation area (bike parking), the root chambers and the on-foot route to underground infrastructure.
 
 VEN_05 — Control chamber  
 Wormmaster, three control devices, creature routes, and nonlethal containment mechanism.
@@ -110,6 +112,7 @@ Persist separately:
 - Whether Venus’s record has been awarded.
 - IDs of completed one-time conversations.
 - Any optional garden assistance completed.
+- The hover bike's parked location and whether 7 is riding it.
 
 Award the cube record exactly once. Reentering the temple or reloading must not duplicate it.
 
@@ -118,6 +121,211 @@ Award the cube record exactly once. Reentering the temple or reloading must not 
 Each dialogue line needs a stable ID, speaker, text, delivery type, and optional camera cue.
 
 Camera cues are presentation instructions, not gameplay requirements. If a cue cannot run, the scene must still progress.
+
+**6b. THE HOVER BIKE (Dan, 2026-11-18)**
+
+7 has a hover bike (Kyle's design: `Art/Reference/kyle_hover_bike.jpg`, model reference `Art/Reference/hoverbike_ref.png`;
+the **forked end is the front**, long pointed tail behind, low recessed saddle, **two recessed grips molded into the
+fairing** — no handlebars). Riding gets her between places; exploring and helping people means getting off.
+
+Chapter sequence with the bike:
+Arrival (VEN_C01) → retrieve the bike (VEN_B01) → introductory ride (VEN_B02) → damaged garden route (VEN_B03, carries
+VEN_C02) → park at the temple (VEN_B04) → guardian conversation (VEN_C03, VEN_C04) → ride to the lower gardens (VEN_B05,
+ends with VEN_C05) → park at the root chambers → on-foot encounter (VEN_C06, VEN_C07) → return ride (VEN_B06) → temple
+vision and record (VEN_C08–VEN_C10) → ride to the saucer (VEN_B07) → debrief in the saucer.
+
+Rules for the first playable version:
+- Reuse one bike throughout the chapter. Save its parked location and whether 7 is riding.
+- Clear mount and dismount interactions; dismount only where there is safe standing space.
+- Restore the riding controls and camera correctly after dialogue.
+- Keep mission-critical paths reachable if the bike becomes stuck; provide a simple recovery action.
+- The bike stays outside the temple interior and the underground encounter.
+- No fuel, upgrades, bike combat or racing requirements yet.
+- A basic mounting transition is fine if custom animation is unavailable.
+- Her hands rest in the recessed fairing grips, her body leaning forward toward the forked front.
+- Avoid rewarding collisions: workers and creatures are given way to. The creatures remain victims; 7's riding supports
+  her nonlethal character.
+
+SCENE VEN_B01 — LANDING: UNPACKING THE BIKE
+
+Trigger: After VEN_C01, before 7 enters the outer gardens.  
+Result: Bike available; objective "Ride to the Elarim temple." (VEN_S01_LANDED's objective, reworded).
+
+The saucer lands on a broad platform beyond the inhabited terraces. The temple is visible in the distance, connected by
+winding garden paths. (The cat has gone back aboard after C01; from here he is telepathic from the ship.)
+
+Camera:
+- Wide — saucer and landscape: 7 walks down the ramp and looks toward the distant temple.
+- Low three-quarter on the bike: its broad front forks frame the rounded nose; the pointed tail extends behind the
+  recessed saddle.
+- Insert — her hand settling into one of the recessed grips molded into the fairing.
+- Side medium — 7 mounting.
+
+VEN_B01_01 | 7  
+“That’s a walk.”
+
+VEN_B01_02 | Cat, telepathic  
+“You have a vehicle.”
+
+She looks back toward the ship.
+
+VEN_B01_03 | 7  
+“I know.”
+
+VEN_B01_04 | Cat, telepathic  
+“I’m establishing that my advice is useful.”
+
+The ship’s storage area opens, revealing the hover bike.
+
+Low three-quarter on the bike: 7 approaches and slides her hands into the recessed grips. The underside vents hum,
+lifting the bike gently. (The cat is visible at the top of the ramp / the open storage hatch for the rest of the scene.)
+
+VEN_B01_05 | Cat, telepathic  
+“I’ll watch the ship.”
+
+She starts to mount, then pauses and looks back at him.
+
+VEN_B01_06 | 7  
+“What should I call you?”
+
+VEN_B01_07 | Panther, telepathic  
+“Panther.”
+
+A beat. Her gaze travels over the small cat.
+
+VEN_B01_08 | 7  
+“Panther.”
+
+VEN_B01_09 | Panther, telepathic  
+“You can say it without looking me up and down.”
+
+She settles into the low saddle and leans toward the fairing.
+
+VEN_B01_10 | 7  
+“Look after the ship, Panther.”
+
+VEN_B01_11 | Panther, telepathic  
+“Try not to rearrange the bike.”
+
+She glances back once before riding toward the gardens. Return control to the player, riding.
+
+**The cat's name reveal (Dan, 2026-11-18):** the cat is named **Panther**. From VEN_B01_07 on, his subtitle / speaker
+label is **"Panther"** everywhere (all later Venus scenes and every later chapter; same ElevenLabs voice `Cat`). Lines
+before the reveal (Chapter 1, VEN_C01, VEN_B01_02–05) keep the label "Cat". The script's "Cat" speaker in later scenes
+(VEN_B02, B06, B07, C02, C05, C11) is displayed as "Panther".
+
+SCENE VEN_B02 — FIRST RIDE: LET VENUS BE BEAUTIFUL
+
+Delivery: In gameplay; normal riding camera; scenic framing along the route rather than taking control away.
+
+The first stretch is broad, safe and gently curved. Teach steering, acceleration, braking and dismounting through
+movement along the route. Give the player time to enjoy riding before any hazard. The route passes beneath hanging
+gardens, beside flowing channels and through openings in ancient architecture; the temple appears at several points
+ahead to help navigation. Optional pull-offs let the player stop, explore and meet Elarim workers.
+
+At a long open bend:
+
+VEN_B02_01 | 7  
+“Are you seeing this?”
+
+VEN_B02_02 | Cat, telepathic  
+“I’m seeing the inside of your ship.”
+
+VEN_B02_03 | 7  
+“The gardens go all the way down.”
+
+A short pause.
+
+VEN_B02_04 | Cat, telepathic  
+“Tell me when you get back.”
+
+(This establishes that the cat does not see through her eyes; her descriptions become part of their companionship.)
+
+SCENE VEN_B03 — THE DAMAGED ROUTE: DISCOVERING THE TROUBLE
+
+Delivery: In gameplay. **Carries VEN_C02** (its trigger moves here; its lines are unchanged).
+
+Ahead, workers signal for 7 to slow down. Water spills from a damaged channel across the route. A tremor passes through
+the terrace → VEN_C02_01 “Something’s wrong here.” / VEN_C02_02 “I felt that through the landing supports.”
+
+The player reaches a clear stopping area before a collapsed walkway, with enough distance to brake comfortably.
+Gameplay: dismount and inspect the obstruction; follow a short alternate route on foot, then return to the bike or reach
+a nearby connected riding path. Not a surprise death trap and not a forced jump tutorial.
+
+SCENE VEN_B04 — TEMPLE ARRIVAL: A NATURAL TRANSITION TO WALKING
+
+The riding path ends at an outer court; the temple entrance lies beyond a pedestrian garden. 7 parks the bike beside the
+court.
+
+Camera: Wide — arrival. She dismounts; the bike settles into a low idle hover as the guardian approaches.
+
+Continue with VEN_C03 (“What brings you here?” …) and VEN_C04 as written.
+
+SCENE VEN_B05 — THE LOWER GARDENS: RIDING TOWARD THE SOURCE
+
+Trigger: After 7 agrees to help (end of VEN_C04).
+
+VEN_B05_01 | Guardian  
+“The lower gardens have a maintenance path. Your vehicle can take you as far as the root chambers.”
+
+VEN_B05_02 | 7  
+“And after that?”
+
+VEN_B05_03 | Guardian  
+“You’ll have to continue on foot.”
+
+The player returns to the parked bike. The second ride tests the basics: narrower passages with room to brake and turn;
+damaged sections that need an alternate route; slow-moving workers and creatures to give way to; safe observation points
+overlooking the affected gardens. At the observation area she parks and watches the creatures respond to the signal →
+**VEN_C05** as written. She continues on foot into the control chamber; the bike remains outside.
+
+SCENE VEN_B06 — RETURN RIDE: SHOW WHAT CHANGED
+
+Trigger: After VEN_C07 (Wormmaster subdued), when 7 returns to her bike.
+
+Ride back through part of the same landscape. It now shows the outcome: the control pulses have stopped; creatures move
+freely instead of converging on the foundations; workers return to the paths; water flows through a repaired channel;
+damage is still present. More relaxed than the outward trip.
+
+VEN_B06_01 | Cat, telepathic  
+“How’s the garden?”
+
+VEN_B06_02 | 7  
+“Still standing.”
+
+VEN_B06_03 | Cat, telepathic  
+“And its unwelcome guest?”
+
+VEN_B06_04 | 7  
+“Staying put.”
+
+She passes a creature moving calmly beneath the roots.
+
+VEN_B06_05 | 7  
+“The others are going home.”
+
+Allow the rest of the ride to breathe. At the temple, park again → VEN_C08, VEN_C09, VEN_C10 as written.
+
+SCENE VEN_B07 — BACK TO THE SAUCER: LET THE MEMORY SETTLE
+
+Trigger: After VEN_C10 (record received). Keep it quiet: a direct route or a shortcut opened during the chapter, so it
+is not repetitive travel.
+
+Near the ship:
+
+VEN_B07_01 | Cat, telepathic  
+“Did they have answers?”
+
+VEN_B07_02 | 7  
+“Some.”
+
+A pause.
+
+VEN_B07_03 | 7  
+“I’ll tell you inside.”
+
+She parks the bike in the saucer’s storage area; its hum fades. Continue with **VEN_C11** (the saucer debrief), beginning
+with the cat: “Did they know what it was?” — the dodecahedron and the cube are placed together on the table.
 
 SCENE VEN_C01 — ARRIVAL
 
@@ -159,7 +367,7 @@ Return control at the landing platform.
 
 SCENE VEN_C02 — GARDEN TREMOR
 
-Trigger: First approach to the damaged outer walkway.  
+Trigger: First approach to the damaged outer walkway — **now during the ride, see VEN_B03**.  
 Delivery: In gameplay; do not lock player movement.
 
 A tremor passes through the area. Water shakes in a vessel; a worker steadies it.
@@ -428,31 +636,208 @@ Hold briefly. Avoid a frightened reaction.
 
 SCENE VEN_C10 — RECEIVE THE RECORD
 
-Trigger: Immediately after VEN_C09.  
+Trigger: Immediately after VEN_C09.
 Result: Award Venus record once; set VEN_S07_RECORD_RECEIVED.
 
 The guardian offers a small cube. The original remains visible in its protected structure.
 
-VEN_C10_01 | Guardian  
+VEN_C10_01 | Guardian
 “Take this record with you.”
 
-VEN_C10_02 | 7  
+VEN_C10_02 | 7
 “You still have it here?”
 
-VEN_C10_03 | Guardian  
+VEN_C10_03 | Guardian
 “Yes.”
 
-VEN_C10_04 | 7  
+VEN_C10_04 | 7
 “Then why give me another?”
 
 Guardian looks toward the gardens.
 
-VEN_C10_05 | Guardian  
+VEN_C10_05 | Guardian
 “You saw how close he came.”
 
-VEN_C10_06 | Guardian  
+VEN_C10_06 | Guardian
 “If this place were lost, I would want someone to know we had been here.”
 
-Insert: 
+Insert: 7 secures the small cube beside the dodecahedron.
 
-*(— file ends here: truncated —)*
+Return control.
+
+SCENE VEN_C11 — SAUCER DEBRIEF
+
+Trigger: Enter saucer after receiving record (after VEN_B07, the ride back).
+Result: Set VEN_S08_COMPLETE; enable normal destination selection.
+
+Camera:
+
+Cat near entrance.
+
+Follow 7 to table.
+
+Insert of both geometric objects.
+
+Table-height two-shot.
+
+Open hand insert.
+
+Wide two-shot for final pause.
+
+VEN_C11_01 | Cat, telepathic
+“Did they know what it was?”
+
+VEN_C11_02 | 7
+“The Moon’s record. Venus has its own.”
+
+VEN_C11_03 | Cat, telepathic
+“And the people you saw?”
+
+VEN_C11_04 | 7
+“They’re less certain about that.”
+
+VEN_C11_05 | 7
+“There was something else. Something the guardian said wasn’t in their record.”
+
+VEN_C11_06 | Cat, telepathic
+“What did you see?”
+
+VEN_C11_07 | 7
+“Someone giving me a seed.”
+
+Pause.
+
+VEN_C11_08 | 7
+“I wish I could remember their face.”
+
+Cat settles closer. Hold the silence.
+
+VEN_C11_09 | 7
+“There are other temples.”
+
+VEN_C11_10 | Cat, telepathic
+“Then we have somewhere else to ask.”
+
+Open the existing navigation flow. Do not invent new destination lore to fill missing options.
+
+7. ENCOUNTER PROTOTYPE
+
+Build an objective-based nonlethal encounter.
+
+Three control devices emit repeated signals.
+
+Creatures follow clearly visible routes associated with active devices.
+
+Telegraph creature movement using sound, ground disturbance, and animation.
+
+Give the player safe observation and traversal spaces.
+
+Devices can be disabled using the existing interaction system.
+
+Disabling each device removes one source of control.
+
+Once all devices are disabled, creatures withdraw.
+
+A final interaction closes a containment barrier around Wormmaster.
+
+Only containment completes the encounter.
+
+No creature death is required, rewarded, or enabled by the encounter objectives.
+
+Use existing abilities where supported. Do not introduce a new power as canon merely to solve this encounter.
+
+Use the existing game’s failure/retry behavior. Do not invent a new explanation for 7’s immortality.
+
+8. PRESENTATION AND INTERRUPTIONS
+
+Dialogue scenes must restore player control and the gameplay camera on completion, skip, or interruption.
+
+Skipping a scene applies its intended progression result exactly once.
+
+Do not run two conversations simultaneously.
+
+Queue or defer Cat’s ambient dialogue during important scenes.
+
+Provide subtitles for telepathic dialogue with a consistent speaker label.
+
+Avoid requiring precise lip sync for the prototype.
+
+Visions must support skip and unavailable-video fallback.
+
+Treat scene completion as a committed checkpoint; interrupted scenes may restart from their beginning.
+
+Save encounter progress at each disabled device and after containment.
+
+9. RETURN VISITS
+
+Before the threat is stopped, the gardens remain damaged and under pressure.
+
+After the threat is stopped:
+
+Signal pulses cease.
+
+Creatures no longer follow hostile control routes.
+
+Repair activity continues.
+
+Water returns in selected channels.
+
+Damage remains visible.
+
+After record collection:
+
+The original cube stays in the temple.
+
+The guardian does not repeat the reward scene.
+
+The player can leave and revisit without losing progress.
+
+10. BUILD ORDER
+
+Inspect and reuse existing project systems.
+
+Create connected graybox areas.
+
+Implement stages, objectives, and persistence.
+
+Add interaction triggers and dialogue.
+
+Make the creature-control encounter completable.
+
+Add record collection and saucer return.
+
+Add camera cues and vision placeholder.
+
+Add environmental state changes and sound.
+
+Replace placeholders with approved art and video.
+
+Prioritize a complete playable path before cinematic polish.
+
+11. ACCEPTANCE CHECKS
+
+The prototype is ready for review when:
+
+A player can land, meet the guardian, investigate, stop the threat, receive the record, and return to navigation.
+
+No required objective involves killing.
+
+The chapter works without facial animation or voice recordings.
+
+Save/reload preserves disabled devices, containment, and record ownership.
+
+Skipping cinematics produces the same progression as watching them.
+
+Reloading or revisiting cannot duplicate the reward.
+
+The original Venus cube remains in the temple.
+
+The Moon dodecahedron is never described as belonging to the Elarim.
+
+Cat offers observations without revealing knowledge he should not possess.
+
+Missing vision media does not block completion.
+
+Completing Venus does not force the remaining worlds into a fixed sequence.
+
+No unsupported powers, final villain motives, or explanations of 7’s identity have been silently added.

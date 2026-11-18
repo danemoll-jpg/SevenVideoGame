@@ -1,8 +1,42 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Dan plays 0.10.4, then Round 11 (`Docs/ROUND11.md`)
-Dan plays 0.10.4 (QF7 + the alcove-framing fix; "For Dan to check (QF7)" below; open in "QF7 — status": the shape keys).
-Then Round 11.
+## Current Objective — Quick fix QF8: Chapter 1 clean-up from Dan's 0.10.4 play (Dan, 2026-11-18), then Round 11
+Do QF8 first and **release it on its own (0.10.5)**, then go straight on to Round 11 (`Docs/ROUND11.md` — move it into
+this file as the Current Objective) in the same session. Commit first. All standing rules apply, **20-minute testing
+rule** included. Dan's screenshots: `Docs/Previews/qf8/`. Several of these are shared systems (camera, collision, held
+objects, dialogue framing) that Venus will build on, so fix them properly, not just at the one spot.
+
+1. **Blocked views — still — right as you enter the "crofting" (Lara-Croft traversal) area.**
+   `dan_blocked_view_0.10.4.png`: at the first "Climb down" ledge the camera is behind a wall — the screen is wall,
+   only her boots show. QF7's fix missed this spot. Make the camera rule general: the camera may never end up behind or
+   inside geometry relative to 7 (spherecast from her head to the camera; pull in, raise, or swing around the obstacle;
+   walls that still block fade cleanly). Check it with a quick automated sweep: walk the whole traversal route and log
+   how much of 7 is visible at each point (0 points under ~60 % visible).
+2. **The cat wanders off the wrong way** in the vision-chamber stretch (`dan_cat_wanders_0.10.4.png`: "Take the shape",
+   the cat far off in the other direction). He catches up at the door, but it looks wrong. There he should stay near 7 —
+   follow her into the chamber and sit / watch her and the shape, never head off away from her.
+3. **Door frames in the last chamber flicker between black and grey** when 7 / the camera moves. Find the cause
+   (z-fighting, the QF7 wall fade toggling on and off, shadow or LOD popping) and fix it; nothing in any chamber may flicker.
+4. **Over-the-shoulder shots from 7 are always blocked by her hair** — you can't see the cat. Rework every over-her-shoulder
+   framing (all scenes, including the galley): move the camera out and to the side / lower so her shoulder and a sliver of
+   her head frame the left or right edge and the cat is clearly in view. Check each capture: the cat ≥ 80 % unobstructed.
+5. **The opening interaction needs an exact spot.** At the very start, the prompt to look (which starts the first
+   exchange with the cat) only appears if 7 stands in exactly the right place. Make it generous: it triggers from
+   anywhere reasonable in the cell (wide area + generous look angle), and if the player doesn't find it within a few
+   seconds the scene starts anyway (same at-or-past rule as QF6).
+6. **Voice: "Before anyone sees you"** — 7 pauses after "before", which sounds like emphasis. Re-generate the line with
+   no break (no comma / ellipsis / tag that causes it; try a few takes) and pick a take with no internal silence over
+   ~150 ms (measure it).
+7. **Voice: "Without hurting them"** — same problem after "without". Same fix.
+8. **She partly disappears into walls.** Collision must keep her whole body out of walls: check the capsule size against
+   the model, and the traversal / climb / shimmy / hang animations that push her into the wall (add a wall offset).
+9. **The shape floats outside her hands** every time she touches or holds it. Attach it to her hand bone with a proper
+   grip offset (palm contact, fingers around it) for every beat — touching it, holding it, putting it in her pocket,
+   taking it out and setting it down in the galley. Check captures of each.
+10. **Checks + release** (20-minute rule): quick run cell → galley, the camera sweep (item 1), captures of the cell
+    opening, the vision chamber, every over-shoulder shot and every shape beat — **look at them yourself before
+    reporting**. Publish **0.10.5**; docs; commit + push; per-item status in "QF8 — status"; "For Dan to check (QF8)".
+    Then start Round 11.
 
 ## Quick fix QF7: Dan's playtest of 0.10.2 (Dan, 2026-11-18) — done, status below
 Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply, **including the 20-minute

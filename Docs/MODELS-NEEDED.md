@@ -125,3 +125,12 @@ can curl; head tip bone pulses with his voice. Worms: simple bone chain (wriggle
 - Mixamo clips (Y Bot / Mutant, FBX for Unity, no skin): `Art/Mixamo/elarim/` — `elarim_idle`, `_talk`, `_point`,
   `_walk`, `_kneel`, `_sword_idle`, `_carry`, `_lift`; `Art/Mixamo/tunneler/` — `tunneler_idle`, `_walk`, `_roar`,
   `_swipe` (Mixamo's Mutant set — a slightly larger skeleton; retarget through Humanoid as usual).
+
+## Hover bike — concept in (2026-11-18)
+Kyle's design: `Art/Reference/kyle_hover_bike.jpg` (riding shots: `kyle_7_riding_city`, `kyle_7_riding_fog`).
+Grayscale only (ignore the colours in the small renders). Pipeline: Dan generates a clean 3/4 model reference
+(prompt given in chat) → Tripo → `Art/Source/hoverbike/hoverbike_v1.glb`. Not scheduled in a round yet; 7 needs a
+seated riding pose (Mixamo "Motorcycle" / "Driving" style clip) when it is.
+- `Art/Source/hoverbike/hoverbike_v1.glb` — hover bike (Dan, Tripo from `hoverbike_ref.png`, 2026-11-18): textured,
+  1.92 M tris (decimate), single mesh. Forked end = front. Scale so the saddle suits 7 (bike ≈ 2.4 m long); add empties
+  for the seat point and the two fairing grips (hand IK targets); hover glow on the underside vents in Unity.

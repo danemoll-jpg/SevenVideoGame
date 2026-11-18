@@ -3,8 +3,8 @@
 ## Chapter 2 "Venus", part 1: landing → gardens → temple → the signal (Dan, 2026-11-17)
 **The spec is `Docs/CHAPTER2_VENUS.md` — read all of it first; it wins over this summary.** It is split into two rounds:
 - **Round 11 (this):** spec sections 1–6 for VEN_01–VEN_04, the progression / persistence system, the dialogue data
-  format, and scenes **VEN_C01–VEN_C05**; plus the trip from Chapter 1 to Venus.
-- **Round 12 (later):** VEN_05 control-chamber encounter (section 7), scenes VEN_C06–VEN_C11, the vision, the record,
+  format, and scenes **VEN_C01–VEN_C05**; **the hover bike + scenes VEN_B01–VEN_B05 (spec section 6b, added 2026-11-18)**; plus the trip from Chapter 1 to Venus.
+- **Round 12 (later):** VEN_05 control-chamber encounter (section 7), scenes VEN_C06–VEN_C11 + the bike's VEN_B06–VEN_B07, the vision, the record,
   the saucer debrief and destination selection, return-visit states (section 9), acceptance checks (section 11).
 Commit the repo as it is first. Follow spec section 10's build order: **a complete playable path before cinematic polish.**
 All standing rules apply (monochrome, Kyle's fog/glow, non-sexual presentation, 7 never kills).
@@ -68,8 +68,26 @@ All standing rules apply (monochrome, Kyle's fog/glow, non-sexual presentation, 
 10. **Music / SFX:** `venus_gardens.mp3` in `Unity/Assets/Audio/Music/` if Dan has added it (silence otherwise); SFX via
     ElevenLabs: garden ambience (water, birdlike calls, wind in leaves), tremor rumble, falling dust, vessel water
     slosh, creature surfacing/burrowing, the signal pulse (a distinct, slightly unsettling tone), saucer descent.
-11. **Checks** (muted except a brief reported sound check; off-screen; never steal focus): rebuild; automated run from
-    Chapter 1's "Set course" through C05 with no soft-locks; the alternate route completable with existing moves;
+10b. **The hover bike (spec section 6b, scenes VEN_B01–VEN_B05).** Model: `Art/Source/hoverbike/hoverbike_v1.glb` if
+    Dan has added it (Tripo from `Art/Reference/hoverbike_ref.png`), else a placeholder built to that reference — the
+    **forked end is the front**, long pointed tail, low saddle, two recessed grips in the fairing, no handlebars; glossy
+    pale grey; a soft hover glow + hum from the round underside vents. Riding: steer / accelerate / brake on the left
+    stick and triggers, its own riding camera, clear mount / dismount prompts (dismount only on safe standing space),
+    a simple recovery action if it gets stuck, the bike's parked spot + riding state saved. 7's riding pose: seated,
+    leaning forward, hands IK-placed in the fairing grips (a basic mount transition is fine). Teach riding through the
+    broad first route (B02), not with pop-ups beyond the usual first-use prompts. Routes: the broad first ride through
+    VEN_02 to the temple court (B02, B03 carrying C02 — collapsed walkway, short on-foot detour), parking at the temple
+    court (B04 → C03/C04), the narrower maintenance path through VEN_04 to the observation area (B05 → C05). The bike
+    never enters the temple or the underground. Workers and creatures are given way to — no collisions rewarded.
+    Same trigger rules as Chapter 1 (fire at-or-past, watchdogs, no points of no return); if 7 is on foot far from
+    the bike when the story needs it, the bike can be summoned to her.
+10c. **Panther (VEN_B01, Dan 2026-11-18):** the cat's name reveal and his first size change. New cat animations in
+    Blender on his rig: a **stretch** (front legs forward, back arched, tail up) during which he scales smoothly from
+    normal size to a large, powerful cat; a **lie down** (large, beside the ramp). Uniform scale, no pop or flash; keep
+    him grounded (feet on the floor while scaling). His subtitle label becomes **"Panther"** from VEN_B01_07 on
+    (everywhere after; earlier lines stay "Cat"). He must be visible at the ramp for the whole scene.
+11. **Checks** (muted except a brief reported sound check; off-screen; never steal focus): rebuild; **20-minute testing rule** — one quick run from
+    Chapter 1's "Set course" through C05 with no soft-locks (on the bike where the story rides); the alternate route completable with existing moves;
     skip each scene and confirm the same stage results as watching; save/reload at each stage restores correctly;
     captures of each scene's main shots + each area; monochrome 0. Publish a release, update `TODO.md` / `CLAUDE.md`,
     commit and push, report in ~20 lines, including what's still placeholder.

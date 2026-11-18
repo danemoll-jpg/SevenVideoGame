@@ -113,3 +113,7 @@ Her responsibility is fulfilled.
 7 ascends to heaven.
 
 There, she is reunited with the cat. The final scene shows them playing together.
+
+**The cat's name — Panther (Dan, 2026-11-18):** he has no name in Chapter 1. On Venus, as 7 is about to ride off on the hover bike, she asks what to call him: "Panther." (She looks the small cat up and down; he notices.) From then on he is Panther — subtitles and dialogue labels use "Panther" from that line on.
+
+**Panther changes size (Dan, 2026-11-18):** anywhere from a normal house cat up to elephant size. The player first sees it in the same scene: he stretches and grows smoothly into a large, powerful cat ("You were saying?"), then lies down by the ramp to guard the ship.

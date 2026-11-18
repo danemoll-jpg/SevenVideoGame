@@ -106,3 +106,7 @@ Notes: the "7 Lives" logo (a circled 7 with rays and "LIVES") appears on two of 
 
 ## Tunneler — 2026-11-17
 - `tunneler_ref_front.png` — generated front view from `kyle_tunneler.jpg` (Dan): stacked stone-grey rings, spiral drill-cone head sitting in a separate collar socket (gap all round, so it can spin on its own bone), two-pronged pincer claws, ridge of triangular spikes down the chest, short ring legs with pointed feet. Current Tunneler reference for Tripo → `Art/Source/tunneler/tunneler_v1.glb`.
+
+## Hover bike — 2026-11-18
+- `kyle_hover_bike.jpg` — Kyle's hover bike sketch (side + top view; originally for "Mission to Avalon", small 3D renders by Robert Baldwin): long smooth teardrop body, rider low and forward in a sculpted saddle, twin forked prongs at the back, raised tail fin, round underside vents, no wheels. 7 rides it in `kyle_7_riding_city` / `kyle_7_riding_fog`. Model reference → `hoverbike_ref.png` (generated, grayscale) → Tripo → `Art/Source/hoverbike/hoverbike_v1.glb`. In the gallery (Dan, 2026-11-18: late-90s project that never happened; remove if Kyle objects).
+- `hoverbike_ref.png` — generated 3/4 model reference from Kyle's sketch (Dan, 2026-11-18): the forked end is the **front** (two broad prongs, rounded nose with the oval emblem, small angled vents), tall smooth fairing with two recessed handholds (no handlebars), low saddle, long tail tapering to a point, round hover vents underneath. Current reference for Tripo.
