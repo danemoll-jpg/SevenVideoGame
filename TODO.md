@@ -1,6 +1,35 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Round 10: the galley scene ends Chapter 1 (Dan, 2026-11-17; moved from `Docs/ROUND10.md`)
+## Current Objective — Quick fix QF5: Dan's playtest of 0.10.0 (Dan, 2026-11-17)
+Do this **before Round 11** (`Docs/ROUND11.md` stays queued; start it after QF5 is released). Commit the repo as it is
+first (it holds new gallery art + reference images added by the chat). All standing rules apply; muted, off-screen runs.
+
+1. **BUG — the cat never leaves the jail, so Dan gets stuck.** Playing 0.10.0 by hand, after the cell rescue the cat stays
+   back in the jail / cell block and the game can't go on. Reproduce it with real controller-style play (not only the
+   scripted check run — the automated run passed, Dan's play didn't). Fix the cause, then make it impossible to soft-lock
+   on the cat anywhere in Chapter 1: if the cat is more than ~6 m from 7, or hasn't moved toward her for ~3 s while she
+   moves on, he catches up (trots after her; if blocked, fades out and reappears a step behind her out of camera view).
+   No story trigger may wait on the cat's position without that fallback. Keep QF4's rule (the cat never enters the cell).
+   Check: run the cell rescue → leaving the block 25 times with varied player paths (walk away fast, wait, backtrack,
+   circle) → `CAT FOLLOW TEST: 25/25`, 0 soft-locks.
+2. **The lock mechanism must be on the same side in the vision and in the present.** In the vision video
+   (`vision_01_door.mp4`) the lock mechanism is on the **right**; at the real lunar door it is on the **left**. Move the
+   in-game lock mechanism (and anything that interacts with it: prompt, her reach / telekinesis target, camera framing)
+   to the **right** so it matches the vision. Only if that breaks the traversal layout, instead mirror the video
+   horizontally (ffmpeg `hflip`, re-encode the same size/format) and say which you did. Capture the vision frame and the
+   matching present-day shot side by side for Dan.
+3. **Show her taking the dodecahedron with her.** In 0.10.0 it goes into her hand and then simply disappears — Dan:
+   "we don't see her taking the dodecahedron with her, which she should." Make it visible: after "Take", hold a short
+   beat with it in her hand (camera on her hand / the glow), then she **keeps it visibly with her** — it stays held in her
+   hand while she walks out of the chamber, and from then on it rides visibly at her hip (a small glow at her belt / in a
+   small pouch, readable from the normal camera) through the rest of Chapter 1 (city reveal, saucer, boarding).
+   In the galley she takes it from that same spot before she sets it beside her plate. Keep it ~15 cm, glowing edges.
+   Captures: taking it, walking out holding it, at her hip in gameplay, taking it out in the galley.
+4. **Checks + release.** Full `-chapter1` run (0 soft-locks), the cat-follow test above, galley run; publish **0.10.1**
+   via the launcher; update docs; commit + push; per-item status (done / not done / deferred + why) in "QF5 — status";
+   captures in `Docs/Previews/qf5/` and a "For Dan to check (QF5)" list.
+
+## Round 10 plan (done — status below)
 Plan text below as given; status in "Round 10 — status" (added when the round ends).
 
 ### The galley scene — the end of Chapter 1 (Dan, 2026-11-17)

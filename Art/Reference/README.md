@@ -96,3 +96,10 @@ Notes: the "7 Lives" logo (a circled 7 with rays and "LIVES") appears on two of 
 ## Elarim (Venus) — 2026-11-17
 - `elarim_ref_apose.png` — Elarim A-pose model reference (Dan, generated) → Tripo → `Art/Source/elarim/elarim_v1.glb`
 - `elarim_sword_ref.png` — Elarim sword prop reference → `Art/Source/elarim/elarim_sword_v1.glb`
+
+## More of Kyle's art — 2026-11-17 (also in the gallery)
+- `kyle_command_center.jpg` — dark curved command deck, a big wraparound screen showing a ship, glowing consoles and chairs, a figure in the foreground (mood for ship interiors / bridges)
+- `kyle_city_vehicles.jpg` — sleek hovering vehicles with light slits in a foggy city, light beams, reflections (city traffic mood)
+- `kyle_7_portrait_dark.jpg` / `kyle_7_portrait_light.jpg` — 7's face in swirling fog: glowing forehead dot, choker, star pendant (the light one has the "7 art by Kyle G. Anderson" title card)
+- `kyle_7_blades_sketch.jpg` — pencil: 7 with arms raised, crossed long curved blades behind her, symbol on the forehead dot, pointed ears
+- `kyle_7_thank_you.jpg` — 7 with bangs and side tails beside a handwritten thank-you note signed "7" (gallery only; shown last)
