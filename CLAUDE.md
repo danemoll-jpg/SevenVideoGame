@@ -296,7 +296,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–10 + QF1–QF7 complete (2026-11-18), release 0.10.4.** Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–10 + QF1–QF8 complete (2026-11-18), release 0.10.5.** Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -314,5 +314,13 @@ scene (Round 10).
   - Galley: hips pinned to the seat (`SEAT CHECK` line), plain bowl + cat front crouch, emotion clips, medium shots
     instead of face close-ups. Facial shape keys were trialled and dropped.
 
+- QF8 (Dan's 0.10.4 play): shared systems Venus builds on —
+  - `CameraOccluders` (visual-only meshes as colliders in a separate physics scene; camera, framings and wall checks query it),
+    follow camera casts from her body, pulls in / swings / cuts (up to 72°), dithered held fades; `-camsweep` = the camera sweep
+    over the traversal route (`CAMERA SWEEP: … under 60 %: N`); check runs log `follow camera visibility (QF8)`.
+  - `ShotCheck` (her baked body + hair vs the cat: `cat N % unobstructed`), used for over-the-shoulder framings.
+  - `ChapterSevenWalls` (rendered push out of walls, `wall clearance (QF8)` line); `CarriedShape` palm grip + finger curl
+    (`grip '…': palm contact error`), `HandLeft` too.
+  - `Tools/Voice/retake_no_pause.py <id> <word>` re-takes a line and measures the gap after the word.
 History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.2, then Round 11**
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

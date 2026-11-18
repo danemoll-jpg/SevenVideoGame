@@ -283,9 +283,40 @@ namespace Seven
         /// <summary>Over 7's shoulder, across the table at the cat; her shoulder and hair soft in the foreground.</summary>
         void OverSevensShoulder()
         {
-            var her = Seven.transform; var cat = _catPose.Eyes;
-            var pos = SevenHead - her.forward * 0.62f + her.right * 0.3f + Up * 0.16f;
-            Cut(pos, cat + Up * 0.02f, 34f, "s10_ots_over_her_shoulder", Vector3.Distance(pos, cat), 60f, 2.8f);
+            // QF8 (Dan: her hair always blocked the cat): out and to the side, a little lower - her shoulder and a sliver
+            // of her head at the frame edge, the cat clearly in view. Candidates are tested against her baked body + hair;
+            // the first that sees >= 85 % of the cat with her shoulder at the edge wins.
+            var cat = _catPose.Eyes; var head = SevenHead;
+            var toCat = Flat(cat - head).normalized; var side0 = Vector3.Cross(Vector3.up, toCat);
+            var cam = Director.Cam.GetComponent<Camera>();
+            const float fov = 36f;
+            ShotCheck.Prepare(Seven.transform, Cat.transform);
+            Vector3 best = head - toCat * 0.95f + side0 * 0.8f - Up * 0.08f, bestLook = cat; float bestV = -1f, bestScore = float.MaxValue, bestX = 0f; string bestSide = "fallback";
+            foreach (var sg in new[] { 1f, -1f })
+                foreach (var back in new[] { 0.75f, 0.95f, 1.15f })
+                    foreach (var lat in new[] { 0.6f, 0.8f, 1.0f })
+                        foreach (var h in new[] { -0.08f, -0.18f, 0.02f })
+                        {
+                            var side = side0 * sg;
+                            var pos = head - toCat * back + side * lat + Up * h;
+                            var look = cat + Up * 0.02f - side * 0.1f;             // the cat a little off-centre, her shoulder at the edge
+                            var rot = Quaternion.LookRotation(look - pos);
+                            if (Physics.CheckSphere(pos, 0.07f, ~((1 << 20) | (1 << 5) | (1 << 22)), QueryTriggerInteraction.Ignore)) continue;
+                            float x = 0.5f;
+                            var sh = Seven.Bone(sg > 0f ? HumanBodyBones.RightShoulder : HumanBodyBones.LeftShoulder);
+                            if (sh != null)
+                            {
+                                var l = Quaternion.Inverse(rot) * (sh.position - pos);
+                                x = l.z > 0.05f ? 0.5f + 0.5f * (l.x / l.z) / (Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad) * cam.aspect) : -9f;
+                            }
+                            float v = ShotCheck.Visible(pos, rot, fov, cam.aspect);
+                            // her shoulder wanted near an edge (x ~0.12 or ~0.88, a sliver of her in frame); the cat >= 85 %
+                            float edge = Mathf.Min(Mathf.Abs(x - 0.12f), Mathf.Abs(x - 0.88f));
+                            float score = (v >= 0.85f ? 0f : 10f + (1f - v) * 10f) + edge * 3f + Mathf.Abs(back - 0.95f) * 0.5f;
+                            if (score < bestScore) { bestScore = score; bestV = v; best = pos; bestLook = look; bestX = x; bestSide = sg > 0f ? "right" : "left"; }
+                        }
+            Cut(best, bestLook, fov, "s10_ots_over_her_shoulder", Vector3.Distance(best, cat), 60f, 2.8f);
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"over her shoulder (QF8): over her {bestSide} shoulder (shoulder at {bestX:0.00} of the frame width), cat {(bestV < 0f ? ShotCheck.Visible(best, Quaternion.LookRotation(bestLook - best), fov, cam.aspect) : bestV) * 100f:0} % unobstructed (must be >= 80)");
         }
         /// <summary>From behind the cat, low at table height, looking up across the table at 7; his ears soft in front.</summary>
         void BehindTheCat()
@@ -875,16 +906,23 @@ namespace Seven
             yield return Wait(0.8f);
             _carry.Set(CarriedShape.Where.Hand, 0.25f);
             yield return Wait(0.3f);
-            if (Auto) { Cap.Log($"galley: she takes the dodecahedron out of her pocket (hand {Vector3.Distance(_carry.Palm, _carry.HipPoint):0.00} m from the pocket)"); yield return Shot("qf7_09_galley_out_of_her_pocket"); }
+            if (Auto) { Cap.Log($"galley: she takes the dodecahedron out of her pocket (hand {Vector3.Distance(_carry.Palm, _carry.HipPoint):0.00} m from the pocket, palm contact error {_carry.GripError:0.000} m)"); yield return Shot("qf7_09_galley_out_of_her_pocket"); }
             var front = Flat(Seven.transform.position) + Flat(Seven.transform.forward).normalized * 0.32f + Up * (TableTopY + 0.16f);
             _ik.RightPos = front; _ik.LookPos = front; _ik.LookW = 0.9f;
             yield return Wait(0.8f);
-            if (Auto) yield return Shot("qf7_10_galley_over_the_table");
-            var held = Shape.transform.position;
+            if (Auto) { Cap.Log($"galley: over the table, palm contact error {_carry.GripError:0.000} m"); yield return Shot("qf7_10_galley_over_the_table"); }
+            // QF8: she sets it down with her own hand (it used to leave her hand and glide to the table by itself)
+            var down = BesidePlate + Up * 0.03f - Flat(Seven.transform.forward).normalized * 0.09f;
+            _ik.RightPos = down + Up * 0.1f; yield return Wait(0.6f);
+            _ik.RightPos = down; yield return Wait(0.45f);
+            if (Auto) yield return Shot("qf8_galley_setting_it_down");
+            var held = Shape.transform.position; var heldR = Shape.transform.rotation;
             _carry.Set(CarriedShape.Where.Away, 0f);
-            Shape.transform.position = held;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.25f) { Shape.transform.SetPositionAndRotation(Vector3.Lerp(held, BesidePlate, t), Quaternion.Slerp(heldR, MarkingDown(), t)); yield return null; }
+            Shape.transform.SetPositionAndRotation(BesidePlate, MarkingDown());
+            if (Auto) Cap.Log($"galley: set down - shape moved {Vector3.Distance(held, BesidePlate):0.000} m from her palm to the table spot (QF8: small = it was in her hand)");
+            _ik.RightPos = down + Up * 0.12f; yield return Wait(0.3f);
             _ik.RightW = 0f;
-            yield return MoveShape(BesidePlate, MarkingDown(), 1.1f);
             if (Auto) Cap.Log($"galley: dodecahedron set beside her plate at {Shape.transform.position}");
             _ik.LookW = 0f;
             yield return PickUpFork();
@@ -901,7 +939,8 @@ namespace Seven
         /// <summary>Her left hand takes the dodecahedron from where it rests and sets it down at <paramref name="to"/>.</summary>
         IEnumerator MoveShape(Vector3 to, Quaternion endRot, float seconds)
         {
-            _ik.LeftPos = Shape.transform.position + Up * 0.05f; _ik.LeftW = 1f;
+            // QF8: her left palm on top of it (wrist placed above and a little toward her, palm down onto the stone)
+            _ik.LeftPos = Shape.transform.position + Up * (MoonLayout.ShapeRadius + 0.035f) - Flat(Seven.transform.forward).normalized * 0.07f; _ik.LeftW = 1f;
             _ik.LookPos = Shape.transform.position; _ik.LookW = 1f;
             yield return Wait(0.7f);
             var p0 = Shape.transform.position; var r0 = Shape.transform.rotation;
@@ -910,7 +949,7 @@ namespace Seven
                 float u = Mathf.SmoothStep(0f, 1f, t);
                 var p = Vector3.Lerp(p0, to, u) + Up * Mathf.Sin(u * Mathf.PI) * 0.07f;
                 Shape.transform.SetPositionAndRotation(p, Quaternion.Slerp(r0, endRot, u));
-                _ik.LeftPos = p + Up * 0.05f;
+                _ik.LeftPos = p + Up * (MoonLayout.ShapeRadius + 0.035f) - Flat(Seven.transform.forward).normalized * 0.07f;
                 _ik.LookPos = p;
                 yield return null;
             }

@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Quick fix QF8: Chapter 1 clean-up from Dan's 0.10.4 play (Dan, 2026-11-18), then Round 11
+## Quick fix QF8: Chapter 1 clean-up from Dan's 0.10.4 play (Dan, 2026-11-18) — done, status below
 Do QF8 first and **release it on its own (0.10.5)**, then go straight on to Round 11 (`Docs/ROUND11.md` — move it into
 this file as the Current Objective) in the same session. Commit first. All standing rules apply, **20-minute testing
 rule** included. Dan's screenshots: `Docs/Previews/qf8/`. Several of these are shared systems (camera, collision, held
@@ -37,6 +37,54 @@ objects, dialogue framing) that Venus will build on, so fix them properly, not j
     opening, the vision chamber, every over-shoulder shot and every shape beat — **look at them yourself before
     reporting**. Publish **0.10.5**; docs; commit + push; per-item status in "QF8 — status"; "For Dan to check (QF8)".
     Then start Round 11.
+
+## QF8 — status (2026-11-18): done except two small open camera spots (below), exe-verified off-screen; release 0.10.5 (`game-1005`, Latest)
+Testing: about 23 min of game time, slightly over the 20-minute rule (two camera sweeps 3 + 3.8 min, the full cell → galley
+check run 9.5 min, one re-check from checkpoint 4 6.5 min after fixing what the captures showed). No player-style run this time.
+Captures: `Docs/Previews/qf8/` — `camsweep2/` (final sweep), `chapter1/` (cell → galley), `chapter1_cp4/` (re-check), `voice/`
+(every take + its numbers). I looked at the touch, holding, pocket, galley and over-the-shoulder captures and the sweep's worst shots.
+
+1. **Blocked views: done (two small spots open).** Cause of Dan's shot: the rock there is only a mesh (no collider), so the
+   camera's casts never saw it. New shared system `CameraOccluders`: every visual-only mesh becomes a mesh collider in a
+   separate physics scene that only the camera / framings / wall check query. The follow camera casts from her body to the
+   camera, pulls in, swings or **cuts** to an open view (up to 72° above her in tight corners), and fades only small props.
+   New `-camsweep` check: 124 points × 4 camera directions over the whole traversal route. Dan's spot: 100 % of her visible from
+   behind / left / right (`camsweep2/05–07`). Sweep: mean 97 %, **4 of 496 views under 60 %**, all at one spot by the lunar
+   door's right side (the re-shot capture there shows her in full, so it isn't steady). During play: mean 95 %, 6 of 217
+   samples under 60 %, all while she climbs down into the mining cut. **Open:** those two spots.
+2. **Cat in the vision chamber: done.** He follows her in and sits 1.1 m beside her watching her, then the shape; in Follow
+   mode he now also catches up when she stands still. Log: furthest from her in the chamber 2.6 m.
+3. **Door-frame flicker: done (cause fixed; not watched in motion).** The QF7 prop fade tested bounding boxes; the door
+   frame's box covers the doorway, so every view through the door switched it off and on (black / grey). Now: exact mesh hits,
+   the frame counts as a wall (pull in, not fade), and fades are dithered, eased and held 0.5 s.
+4. **Over-the-shoulder: done.** New `ShotCheck` bakes her body + hair and measures how much of the cat a camera really sees.
+   Galley: candidates scored (cat ≥ 85 %, her shoulder near an edge) → all 5 shots **cat 100 % unobstructed**. Moon: a
+   conversation framing may no longer put one subject behind another's head (0.26 m), and every dialogue capture logs the cat's
+   share (`s01` 100 %, `s05` 97–100 %, `s08` 100 %).
+5. **Opening prompt: done.** "Look" shows anywhere in the cell while she faces roughly toward the door / cat (110° either
+   side), and the scene starts by itself 8 s after the cat is on his mark.
+6. **"Before somebody sees you" (`s01_02_7`): done.** (The line reads "somebody"). 6 takes measured with ElevenLabs character
+   timestamps + ffmpeg: gap after "Before" 0.035 s, no silence inside the sentence (`Tools/Voice/retake_no_pause.py`).
+7. **"Without hurting them" (`s05_02_7`): done.** The old take had a 0.26 s gap inside the phrase; new take: 0.040 s, none.
+8. **7 in walls: done.** `ChapterSevenWalls`: after the animation each body point is cast out from her spine column against
+   colliders + visual meshes and her whole body is pushed out (rendered only; hand IK compensated). Her model reaches 0.31 m
+   from her root vs the 0.25 m zone radius. Log: pushed in ~20 % of frames, largest 25 cm; worst still inside 19.5 cm (her toes
+   while hanging at the broken ramp end).
+9. **The shape in her hand: done.** `CarriedShape` now sits the shape against her palm (from the hand and knuckle bones) with
+   the fingers curled round it, either hand. Pocket = stays in the hand until it reaches the pocket; galley = out of the pocket,
+   set down by her hand. Touch beat: she steps to arm's reach and her hand IK works now (the ledge IK used to switch it off).
+   Logs: palm contact error 0.000 m when held, at the pocket, out of the pocket, over the table; fingertips on the shape in
+   `chapter1_cp4/05`.
+10. **Checks + release: done.** 0.10.5 published (`game-1005`, Latest). Soft-locks 0, audio peak 0, seat check 0.
+
+## For Dan to check (QF8)
+- The first "Climb down" and the whole climbing stretch: turn the camera into walls; it should pull in, swing or cut, never sit behind rock.
+- Vision chamber: the cat comes in with you and sits watching; the door frames don't flicker.
+- Opening: press X / E to look from anywhere in the cell (or wait 8 s).
+- The two re-voiced lines (`s01_02_7`, `s05_02_7`).
+- The shape: her fingers on it at the touch, in her palm when held, set down with her hand in the galley.
+- Galley over-the-shoulder shots: the cat in clear view.
+- Open: the climb-down into the mining cut (camera briefly too close) and one spot right of the lunar door.
 
 ## Quick fix QF7: Dan's playtest of 0.10.2 (Dan, 2026-11-18) — done, status below
 Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply, **including the 20-minute
@@ -496,6 +544,7 @@ monochrome max |R−G|,|G−B| = 0 over every shot (154 + 92 + menu). Previews +
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Quick fix QF8 — camera never behind mesh-only walls (occluder physics scene, camera sweep), cat stays near 7 in the vision chamber, door-frame flicker, over-the-shoulder shots that show the cat, generous opening prompt, two re-voiced lines, 7 kept out of walls, the shape in her palm — done (2026-11-18), exe-verified off-screen; release 0.10.5 (`game-1005`).** Status in "QF8 — status" above.
 - **Quick fix QF6 — Dan's 0.10.1 soft-lock found (blocking "Take"), automatic take, no points of no return, trigger
   audit + watchdogs, saved checkpoints + Scene select, the 20-minute testing rule — done (2026-11-18), exe-verified
   off-screen; release 0.10.2 (`game-1002`).** Status in "QF6 — status" above.

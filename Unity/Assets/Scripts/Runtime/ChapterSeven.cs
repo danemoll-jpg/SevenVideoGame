@@ -84,6 +84,7 @@ namespace Seven
             TraversalLateUpdate();
             if (_dotLevel != _dotTarget) { _dotLevel = Mathf.MoveTowards(_dotLevel, _dotTarget, _dotRate * Time.deltaTime); }
             ApplyDot();
+            WallClearance();                              // QF8: keep her whole body out of walls
             if (Current != Mode.Float) return;
             _floatT += Time.deltaTime;
             float w = Mathf.Clamp01(_floatT / 1.2f);
@@ -144,6 +145,7 @@ namespace Seven
 
         protected override void Update()
         {
+            UndoWallPush();                               // QF8: last frame's rendered wall push is not gameplay
             Ground.BlockLow = !Crouched;
             base.Update();
             switch (Current)

@@ -141,11 +141,13 @@ namespace Seven
             SetupCheckpoint(Chapter1State.Checkpoint);
             SetupAudio();
             ChapterCamera.AreaName = p => AreaNames[Mathf.Clamp(AreaOf(p), 0, AreaNames.Length - 1)];
+            ChapterCamera.CatRoot = Cat != null ? Cat.transform : null;
+            CameraOccluders.Build(Seven.transform, Cat != null ? Cat.transform : null, Guard != null ? Guard.transform : null, Shape);
             if (Auto && DemoBoot.OpeningTest <= 0) { AudioKit.Log = s => Cap.Log("audio: " + s); LineOfSightCheck(); }
-            if (Auto && DemoBoot.OpeningTest <= 0) StartCoroutine(SpeakerViewSampler());
-            StartCoroutine(DemoBoot.OpeningTest > 0 ? OpeningTestRun() : DemoBoot.CatFollowTest > 0 ? CatFollowTestRun() : Flow());
-            if (DemoBoot.OpeningTest <= 0) StartCoroutine(TeachWatch());
-            if (DemoBoot.OpeningTest <= 0 && DemoBoot.CatFollowTest <= 0 && QF6Fix) StartCoroutine(StoryWatchdog());
+            if (Auto && DemoBoot.OpeningTest <= 0 && !DemoBoot.CamSweep) StartCoroutine(SpeakerViewSampler());
+            StartCoroutine(DemoBoot.CamSweep ? CamSweepRun() : DemoBoot.OpeningTest > 0 ? OpeningTestRun() : DemoBoot.CatFollowTest > 0 ? CatFollowTestRun() : Flow());
+            if (DemoBoot.OpeningTest <= 0 && !DemoBoot.CamSweep) StartCoroutine(TeachWatch());
+            if (DemoBoot.OpeningTest <= 0 && DemoBoot.CatFollowTest <= 0 && !DemoBoot.CamSweep && QF6Fix) StartCoroutine(StoryWatchdog());
             StartCoroutine(ShapeIdle());
             if (VisionVideo != null)
             {
@@ -360,12 +362,14 @@ namespace Seven
 
         void Objective(string s) { _objective = s; UI.SetObjective(s); if (Auto || DemoBoot.PlayerSim) Cap?.Log("objective: " + s); }
 
-        void Prompt(string label, Vector3 at, float radius, bool tk = false)
+        /// <summary>QF8: <paramref name="where"/> (optional) replaces the radius test - a generous area + look angle.</summary>
+        void Prompt(string label, Vector3 at, float radius, bool tk = false, Func<bool> where = null)
         {
-            _promptLabel = label; _promptAt = at; _promptR = radius; _promptTk = tk; _promptHit = false;
+            _promptLabel = label; _promptAt = at; _promptR = radius; _promptTk = tk; _promptHit = false; _promptWhere = where;
         }
-        void ClearPrompt() { _promptLabel = null; _promptHit = false; Legend.Context(ControlsLegend.Btn.Interact, null); }
-        bool PromptNear => _promptLabel != null && Dist7(_promptAt) < _promptR && Seven.Current == ChapterSeven.Mode.Free && !Dlg.Busy;
+        Func<bool> _promptWhere;
+        void ClearPrompt() { _promptLabel = null; _promptHit = false; _promptWhere = null; Legend.Context(ControlsLegend.Btn.Interact, null); }
+        bool PromptNear => _promptLabel != null && (_promptWhere != null ? _promptWhere() : Dist7(_promptAt) < _promptR) && Seven.Current == ChapterSeven.Mode.Free && !Dlg.Busy;
         IEnumerator WaitPrompt(string what)
         {
             if (Auto)
@@ -390,6 +394,12 @@ namespace Seven
         {
             if (!Auto && !(DemoBoot.PlayerSim && name.StartsWith("qf7_") && Cap != null)) yield break;
             ShotFrameCheck(name);
+            if (Dlg.Busy && Cat != null && Cat.gameObject.activeInHierarchy && Cam.InShot)
+            {
+                ShotCheck.Prepare(Seven.transform, Cat.transform);
+                float cv = ShotCheck.Visible(Cam.GetComponent<Camera>());
+                Cap.Log($"shot '{name}': cat {cv * 100f:0} % unobstructed in a dialogue shot (QF8: must be >= 80 where he is framed)");
+            }
             if (Legend.VisiblePanels > 0) Cap.Log($"LEGEND VISIBLE in shot '{name}': {Legend.VisiblePanels} panel(s) (must be 0 in the chapter)");
             if (Legend.TeachText != null || Legend.ContextText != null) Cap.Log($"prompts in shot '{name}': teach [{Legend.TeachText}] context [{Legend.ContextText}]");
             yield return Cap.Shot(name);
@@ -550,7 +560,17 @@ namespace Seven
             if (Auto && !test) yield return AutoWalk(MoonLayout.DoorApproach);
             float tStart = Time.time, catAt = -1f;
             string trigger = "7 at the door";
-            Prompt("Look", MoonLayout.DoorApproach, 0.8f);     // Round 9: X / E at the door starts the first contact
+            // Round 9: X / E starts the first contact. QF8 (Dan: "only if 7 stands in exactly the right place"): the prompt
+            // shows anywhere in the cell while she is turned roughly toward the door / the cat (110 deg either side of
+            // straight at him), and the scene starts by itself 8 s after the cat is on his mark if the player never presses it.
+            Prompt("Look", MoonLayout.DoorApproach, 0.8f, false, () =>
+            {
+                var p = Seven.transform.position;
+                if (Mathf.Abs(p.x) > 1.9f || p.z > MoonLayout.CellWallZ0 + 0.3f || p.z < -2.0f || Mathf.Abs(p.y) > 0.6f) return false;
+                if (Dist7(MoonLayout.DoorApproach) < 0.9f) return true;
+                var to = Flat((Cat.Arrived ? Cat.transform.position : MoonLayout.CatWaitOutside) - p);
+                return to.sqrMagnitude < 1e-4f || Vector3.Angle(Flat(Seven.transform.forward), to) < 110f;
+            });
             while (true)
             {
                 if (Cat.Arrived && catAt < 0f) catAt = Time.time;
@@ -560,14 +580,14 @@ namespace Seven
                     if (!test) yield return AwaitTeach("interact");
                     _promptHit = true; yield return null; break;
                 }
-                if (!PauseMenu.IsOpen && catAt > 0f && Time.time - catAt > 20f) { trigger = "watchdog: 20 s after the cat arrived"; break; }
+                if (!PauseMenu.IsOpen && catAt > 0f && Time.time - catAt > (test ? 20f : 8f)) { trigger = "auto-start: 8 s after the cat arrived (QF8)"; break; }
                 if (!PauseMenu.IsOpen && Time.time - tStart > 45f) { trigger = "watchdog: 45 s after the cat was sent"; break; }
                 yield return null;
             }
             OpeningTrigger = trigger;
             ClearPrompt();
             if (Auto || DemoBoot.PlayerSim) Cap?.Log($"opening trigger: {trigger} ({Time.time - tStart:0.0}s after the cat was sent; cat arrived {(catAt > 0f ? (catAt - tStart).ToString("0.0") + "s" : "no")})");
-            if (trigger != "7 at the door") Chapter1State.Watchdogs++;
+            if (trigger.StartsWith("watchdog")) Chapter1State.Watchdogs++;
             // the cat must be on his mark (outside the door) before the scene: wait a moment, else place him
             yield return UntilOr(() => Cat.Arrived, "cat on his mark outside the door", 4f, () => Cat.ForceArrive());
 
@@ -961,6 +981,7 @@ namespace Seven
             Step("take the glowing shape (the vision plays as she touches it)", 4, MoonLayout.ShapeSpot);
             Objective("Take the shape");
             Cat.Follow();
+            _catWatch = true; StartCoroutine(CatWatchesInChamber());
             if (Auto) yield return AutoWalk(new Vector3(16.5f, MoonLayout.Lower, -30.6f));
             yield return Until(() => Seven.transform.position.z < -30f, "vision chamber", 40f);
             if (Auto)
@@ -984,7 +1005,8 @@ namespace Seven
                 if (free && (Flat(p - MoonLayout.ShapeSpot).magnitude < 1.5f || p.x > MoonLayout.ShapeSpot.x - 0.2f && p.z < MoonLayout.AlcoveZ.y + 0.6f && p.z > MoonLayout.AlcoveZ.x - 0.6f)) break;
                 yield return null;
             }
-            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"ok: walked up to the shape ({Time.time - t0:0.0}s) - no prompt, no button");
+            _catWatch = false;
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"ok: walked up to the shape ({Time.time - t0:0.0}s) - no prompt, no button; cat {Cat.DistanceTo7:0.0} m from her (furthest in the chamber {_catChamberMax:0.0} m)");
             Objective(null);
 
             yield return Cutscene(true);
@@ -995,8 +1017,22 @@ namespace Seven
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(MoonLayout.ShapeAt - Seven.transform.position)), 400f * Time.deltaTime); yield return null; }
             // a medium side shot: her upper body reaching into the alcove, the shape in view (no face close-up)
             FrameHer("reach for the shape", MoonLayout.ShapeAt, 1.9f, 50f, 0.8f);
+            // QF8: arm's reach (her shoulder ~0.55 m from the shape) - she used to reach from a metre away
+            {
+                var to = Flat(MoonLayout.ShapeAt - Seven.transform.position); float dd = to.magnitude;
+                if (dd > 0.62f) yield return WalkSeven(Seven.transform.position + to.normalized * (dd - 0.55f), 1.5f);
+                Seven.Lock(true);
+                for (float t = 0f; t < 0.3f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(MoonLayout.ShapeAt - Seven.transform.position)), 500f * Time.deltaTime); yield return null; }
+                if (Auto) Cap.Log($"touch: she reaches from {Dist7(MoonLayout.ShapeAt):0.00} m (horizontal) to the shape");
+            }
             Seven.Touch(MoonLayout.ShapeAt);
+            // QF8: her palm on the shape (it floated beside her hand): the wrist placed so the palm meets its near face
+            var tik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
+            var toShape = Flat(MoonLayout.ShapeAt - Seven.transform.position).normalized;
+            tik.RightPos = MoonLayout.ShapeAt - toShape * (MoonLayout.ShapeRadius + 0.075f) + Vector3.up * 0.015f;
+            tik.RightW = 1f; tik.LookPos = MoonLayout.ShapeAt; tik.LookW = 0.8f; tik.Ease = 2.5f;
             yield return Wait(1.1f);
+            if (Auto) { var rh = Seven.Bone(HumanBodyBones.RightMiddleProximal); Cap.Log($"touch: right hand knuckles {(rh != null ? Vector3.Distance(rh.position, MoonLayout.ShapeAt) - MoonLayout.ShapeRadius : -1f):0.000} m from the shape's surface (QF8: must be < 0.04)"); }
             yield return Shot("qf7_01_reaches_for_the_shape");
             // her fingers on it: the edges flare, the light swells to white -> the vision
             for (float t = 0f; t < 0.5f; t += Time.deltaTime) { _shapeGlow = Mathf.Lerp(ShapeGlowIdle, 4f, t / 0.5f); yield return null; }
@@ -1059,7 +1095,7 @@ namespace Seven
             if (ShapeLight != null) ShapeLight.enabled = false;
             Seven.Release(); Seven.Lock(true);
             _carry = CarriedShape.Attach(Seven.gameObject, Shape);
-            var ik = Seven.gameObject.AddComponent<SevenTableIK>();
+            var ik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
             var head = Seven.Bone(HumanBodyBones.Head);
             var fwd = Flat(Seven.transform.forward).normalized; var side = Vector3.Cross(Vector3.up, fwd);
             var hold = (head != null ? head.position : Seven.transform.position + Vector3.up * 1.6f) + Vector3.down * 0.42f + fwd * 0.3f + side * 0.05f;
@@ -1070,6 +1106,7 @@ namespace Seven
             // medium two-shot: 7 at the alcove with it in her hand, the cat beside her
             FrameHer("after the vision, holding it", Shape.position, 1.6f, 50f, 0f);
             if (Auto) Cap.Log($"vision lasted {Time.time - visionStart:0.0}s (white wash in/out included); after it she holds the dodecahedron: {_carry.At}, {Vector3.Distance(Shape.position, _carry.Palm):0.000} m from her palm");
+            if (Auto) StartCoroutine(LogGrip("holding it after the vision", 1.2f));
             StartCoroutine(UI.Fade(0f, 1.2f, 1f));
             yield return Wait(0.75f);
             yield return Shot("s06_whitewash_out");
@@ -1084,6 +1121,7 @@ namespace Seven
             var pocket = _carry.HipPoint + Seven.transform.forward * 0.04f;
             ik.RightPos = pocket; ik.LookPos = pocket; ik.LookW = 0.5f; ik.Ease = 3f;
             yield return Wait(0.55f);
+            yield return LogGrip("hand at the pocket", 0.05f);
             _carry.Set(CarriedShape.Where.Pocket, 0.35f);
             yield return Wait(0.5f);
             yield return Shot("qf7_03_into_her_pocket");
@@ -1092,6 +1130,122 @@ namespace Seven
             Destroy(ik);
             if (Auto) Cap.Log($"dodecahedron into her pocket: in pocket {_carry.InPocket}, renderers shown {Shape.GetComponentInChildren<Renderer>().enabled}, lights on her {CountLightsOn(Seven.transform)}");
             Checkpoint(Chapter1State.CpDoor);
+        }
+
+        /// <summary>QF8 item 1 check: the follow camera over the whole traversal route. 7 is put at points along every
+        /// walkable zone of the climbing stretch (prison catwalk to the scaffolds, 2 m apart), at every climb-down edge and
+        /// into a hang on every ledge (every 0.7 m along it); at each point the camera starts from four directions (behind
+        /// her, both sides, in front), is left alone for 0.9 s (so it can pull in / swing as it would after the player lets
+        /// go of the stick) and her visible share is measured (17 body points, in frame and unobstructed). Worst points
+        /// and Dan's spot (the first "Climb down") are captured.</summary>
+        IEnumerator CamSweepRun()
+        {
+            Cam.AutoBehind = false; Seven.ScriptDriven = true; Seven.Lock(false);
+            Cat.gameObject.SetActive(false);
+            UI.SetFade(0f);
+            var pts = new List<(Vector3 p, Vector3 face, MoonTraversal.Ledge hang, float u, string what)>();
+            foreach (var z in Ground.Zones)
+            {
+                if (!z.Enabled) continue;
+                float cx = (z.Min.x + z.Max.x) * 0.5f, cz = (z.Min.y + z.Max.y) * 0.5f;
+                if (cx < 4f || cx > 24f || cz > 5.5f || cz < -66f) continue;                  // the traversal stretch
+                for (float x = z.Min.x + 0.45f; x <= z.Max.x - 0.45f + 1e-3f; x += 2.5f)
+                    for (float zz = z.Min.y + 0.45f; zz <= z.Max.y - 0.45f + 1e-3f; zz += 2.5f)
+                        pts.Add((new Vector3(x, z.HeightAt(x, zz), zz), Vector3.back, null, 0f, z.Name));
+            }
+            foreach (var h in MoonTraversal.HangDowns) pts.Add((h.Spot, h.Ledge.Fwd * -1f, null, 0f, "edge " + h.Name));
+            foreach (var L in MoonTraversal.Ledges)
+                for (float u = 0.3f; u <= L.Length - 0.2f; u += 0.7f) pts.Add((Vector3.zero, L.Fwd, L, u, "hang " + L.Name));
+            Cap.Log($"camera sweep (QF8): {pts.Count} points x 4 camera directions");
+            var worst = new List<(float v, int i, float yaw)>();
+            int under = 0, n = 0; float sum = 0f, min = 1f;
+            for (int i = 0; i < pts.Count; i++)
+            {
+                var pt = pts[i];
+                if (pt.hang != null) Seven.DebugHang(pt.hang, pt.u); else { Seven.Place(pt.p, pt.face); Seven.transform.position = pt.p; }
+                yield return null;
+                float yaw0 = Seven.transform.eulerAngles.y;
+                foreach (var dy in new[] { 0f, 90f, -90f, 180f })
+                {
+                    Cam.Yaw = yaw0 + dy; Cam.Pitch = Cam.DefaultPitch;
+                    Cam.SnapTo();
+                    for (float t = 0f; t < 0.9f; t += Time.deltaTime) yield return null;
+                    int mask = Seven.Current == ChapterSeven.Mode.Hang ? ChapterCamera.CamMaskPublic & ~(1 << 21) : ChapterCamera.CamMaskPublic;
+                    float v = Cam.VisibleFraction(Cam.transform.position, mask);
+                    n++; sum += v; min = Mathf.Min(min, v);
+                    if (v < 0.6f) { under++; Cap.Log($"camera sweep: UNDER 60 % - {v * 100f:0} % at {pt.what} {(pt.hang != null ? "u " + pt.u.ToString("0.0") : pt.p.ToString())}, camera start {dy:0} deg, camera {Cam.transform.position}"); }
+                    worst.Add((v, i, dy));
+                }
+            }
+            worst.Sort((a, b) => a.v.CompareTo(b.v));
+            for (int k = 0; k < Mathf.Min(4, worst.Count); k++)
+            {
+                var (v, i, dy) = worst[k]; var pt = pts[i];
+                if (pt.hang != null) Seven.DebugHang(pt.hang, pt.u); else { Seven.Place(pt.p, pt.face); Seven.transform.position = pt.p; }
+                yield return null;
+                Cam.Yaw = Seven.transform.eulerAngles.y + dy; Cam.Pitch = Cam.DefaultPitch; Cam.SnapTo();
+                for (float t = 0f; t < 0.9f; t += Time.deltaTime) yield return null;
+                yield return Cap.Shot($"camsweep_worst{k + 1}");
+                Cap.Log($"camsweep_worst{k + 1}: {v * 100f:0} % at {pt.what} {(pt.hang != null ? "u " + pt.u.ToString("0.0") : pt.p.ToString())}, camera start {dy:0} deg");
+            }
+            // Dan's spot: the first "Climb down" (the shelf edge), camera from behind and from each side
+            var se = MoonTraversal.HangDowns[0];
+            foreach (var dy in new[] { 0f, 90f, -90f })
+            {
+                Seven.Place(se.Spot, se.Ledge.Fwd); Seven.transform.position = se.Spot; yield return null;
+                Cam.Yaw = Seven.transform.eulerAngles.y + dy; Cam.Pitch = Cam.DefaultPitch; Cam.SnapTo();
+                for (float t = 0f; t < 0.9f; t += Time.deltaTime) yield return null;
+                yield return Cap.Shot($"camsweep_first_climb_down_{(dy == 0f ? "behind" : dy > 0f ? "right" : "left")}");
+                Cap.Log($"camsweep first climb-down spot, camera start {dy:0} deg: {Cam.VisibleFraction(Cam.transform.position) * 100f:0} % of 7 visible");
+            }
+            Cap.Log($"CAMERA SWEEP: {n} views, mean {sum / Mathf.Max(1, n) * 100f:0} %, worst {min * 100f:0} %, under 60 %: {under} (must be 0)");
+            Cap.Log(ChapterCamera.Summary());
+            Cap.Finish("camera sweep");
+        }
+
+        /// <summary>QF8 (Dan: the cat wandered off the other way while she went for the shape): in the vision chamber he
+        /// stays near her - when she is more than 2.6 m away he trots to a spot 1.1 m beside her (on the chamber side, a
+        /// little behind), then sits there watching her, or the shape when she is close to it. Never away from her.</summary>
+        bool _catWatch; float _catChamberMax;
+        IEnumerator CatWatchesInChamber()
+        {
+            bool going = false; float next = 0f;
+            while (_catWatch)
+            {
+                yield return null;
+                if (_cut || _resettingFall || PauseMenu.IsOpen) { going = false; continue; }
+                var p7 = Seven.transform.position;
+                if (PlayerArea != 4) continue;                        // until she is in the chamber: plain follow
+                float d = Cat.DistanceTo7;
+                if (Seven.transform.position.z < -30.5f) _catChamberMax = Mathf.Max(_catChamberMax, d);
+                bool nearShape = Dist7(MoonLayout.ShapeSpot) < 3.2f;
+                if (d > 2.6f && Time.time >= next)
+                {
+                    next = Time.time + 0.6f;
+                    var fwd = Flat(Seven.transform.forward).sqrMagnitude > 0.01f ? Flat(Seven.transform.forward).normalized : Vector3.back;
+                    var side = Vector3.Cross(Vector3.up, fwd);
+                    if (side.x > 0f) side = -side;                    // the open chamber side (west), away from the alcove wall
+                    var spot = p7 + side * 1.1f - fwd * 0.4f;
+                    if (Flat(Ground.ClampToArena(spot, 0.2f) - spot).magnitude > 0.05f) spot = Ground.ClampToArena(p7 - fwd * 1.1f, 0.2f);
+                    Cat.GoTo(spot, d > 5f ? Cat.SprintSpeed : Cat.TrotSpeed, nearShape ? MoonLayout.ShapeAt : p7);
+                    going = true;
+                }
+                else if (going && Cat.Arrived)
+                {
+                    going = false;
+                    Cat.Hold(nearShape ? MoonLayout.ShapeAt : p7);
+                }
+                else if (!going && Cat.Current == ChapterCat.Mode.Hold && d < 2.6f)
+                    Cat.Hold(nearShape ? MoonLayout.ShapeAt : p7);    // keeps watching (her, or the shape once she is at it)
+            }
+            if (Cat.Current == ChapterCat.Mode.Hold || Cat.Current == ChapterCat.Mode.GoTo) Cat.Follow();
+        }
+
+        /// <summary>QF8: how well the shape sits in her palm (surface-to-palm error, m) - logged for the check run.</summary>
+        IEnumerator LogGrip(string beat, float after)
+        {
+            yield return Wait(after);
+            if (_carry != null && (Auto || DemoBoot.PlayerSim)) Cap?.Log($"grip '{beat}': shape {_carry.At}, palm contact error {_carry.GripError:0.000} m (QF8: must be < 0.02)");
         }
 
         /// <summary>QF7: a cutscene framing found around her instead of a fixed spot (the ruin columns blocked the fixed ones,
@@ -1716,7 +1870,7 @@ namespace Seven
                 var mv = new System.Text.StringBuilder(); foreach (var kv in _moves) mv.Append(kv.Key).Append(' ').Append(kv.Value).Append(", ");
                 Cap.Log($"traversal summary: {_traversalOk} scripted traversal steps ok, deliberate falls reset {_falls}, falls total {Seven.Falls}, worst hand-to-lip gap {_handGapMax:0.000} m, moves: {mv}taught: [{string.Join(", ", Chapter1State.Taught)}], permanent legend panels visible now: {Legend.VisiblePanels}");
             }
-            if (Auto || DemoBoot.PlayerSim) Cap?.Log(ChapterCamera.Summary());
+            if (Auto || DemoBoot.PlayerSim) { Cap?.Log(ChapterCamera.Summary()); Cap?.Log(ChapterCamera.VisSummary()); Cap?.Log(ChapterSeven.WallSummary()); }
             if (Auto) Cap.Log($"moon level done in {Time.time - Chapter1State.StartedAt:0.0}s game time; lines so far {Chapter1State.Played.Count}; cat max distance while following/leading {Cap.CatMaxBehind:0.00} m; cat catch-ups {Cat.CatchUps}; 7 footsteps {Seven.GetComponent<Footsteps>()?.Count}");
             Chapter1State.Aboard = true;
             SaveGame.SaveProgress(Chapter1State.CpAboard);   // QF6: Continue resumes aboard (scene 9)

@@ -308,6 +308,8 @@ namespace Seven
         }
 
         // ------------------------------------------------------------------------------------------ hang
+        /// <summary>QF8 camera sweep only: put her straight into a hang on a ledge.</summary>
+        public void DebugHang(T.Ledge L, float u) { StopTraversal(); Release(); StartHang(L, u, 0f); }
         void StartHang(T.Ledge L, float u, float fade)
         {
             HangLedge = L; HangU = Mathf.Clamp(u, 0.2f, L.Length - 0.2f);
@@ -525,6 +527,10 @@ namespace Seven
             if (Anim == null) return;
             if (_ikW <= 0.001f || _ikLedge == null)
             {
+                // QF8: leave the hands to SevenTableIK when it is on her (the touch / hold / pocket beats) - this pass used
+                // to zero its weights, so her hand never reached the shape
+                if (_tableIK == null) _tableIK = GetComponent<SevenTableIK>();
+                if (_tableIK != null && _tableIK.enabled) return;
                 Anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0f); Anim.SetIKPositionWeight(AvatarIKGoal.RightHand, 0f);
                 return;
             }
@@ -533,12 +539,14 @@ namespace Seven
             {
                 var b = Bone(bone); if (b == null) continue;
                 float uu = Mathf.Clamp(_ikLedge.U(b.position), center - 0.42f, center + 0.42f);
-                var q = _ikLedge.At(uu) + _ikLedge.Fwd * 0.04f + Vector3.up * 0.035f;
+                var q = _ikLedge.At(uu) + _ikLedge.Fwd * 0.04f + Vector3.up * 0.035f - WallPush;   // QF8: the body is pushed later
+
                 Anim.SetIKPositionWeight(goal, _ikW);
                 Anim.SetIKPosition(goal, q);
             }
         }
 
+        SevenTableIK _tableIK;
         /// <summary>Check runs: hand bones (wrists) vs the lip while hanging - (worst height gap, worst distance along the wall normal).</summary>
         public Vector2 HandGap()
         {
@@ -547,9 +555,10 @@ namespace Seven
             foreach (var bb in new[] { HumanBodyBones.LeftHand, HumanBodyBones.RightHand })
             {
                 var b = Bone(bb); if (b == null) continue;
-                var q = L.At(L.U(b.position));
-                up = Mathf.Max(up, Mathf.Abs(b.position.y - q.y));
-                var d = b.position - q; d.y = 0f;
+                var bp = b.position + (_pushApplied.sqrMagnitude > 0f ? Vector3.zero : WallPush);   // QF8: as rendered
+                var q = L.At(L.U(bp));
+                up = Mathf.Max(up, Mathf.Abs(bp.y - q.y));
+                var d = bp - q; d.y = 0f;
                 fw = Mathf.Max(fw, Mathf.Abs(Vector3.Dot(d, L.Fwd)));
             }
             return new Vector2(up, fw);

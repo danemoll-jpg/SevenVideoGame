@@ -1,0 +1,8 @@
+s01_02_7: "Go on. Before somebody sees you." - pause after "Before"; acceptable <= 0.150 s
+take 1 (v3 [calm]): gap after "Before" 0.044 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 2 (v3 no tag): gap after "Before" 0.036 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 3 (v2 context): gap after "Before" 0.035 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 4 (v3 [calm]): gap after "Before" 0.044 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 5 (v3 no tag): gap after "Before" 0.053 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 6 (v2 context): gap after "Before" 0.035 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+chosen: take 3 (v2 context), worst internal gap 0.035 s -> Unity\Assets\Audio\Voice\s01_first_contact\s01_02_7.mp3

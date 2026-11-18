@@ -400,7 +400,9 @@ namespace Seven
                     var old = _samples.Peek();
                     float sevenMoved = Flat(p7 - old.p7).magnitude;
                     // she moved on (> 1.2 m) and he is no closer than 3 s ago, while not already beside her
-                    stall = sevenMoved > 1.2f && d > FollowDistance + 1.2f && d >= old.d - 0.2f
+                    // QF8: in plain Follow mode he must also come when she stands still (he was left standing far off,
+                    // stuck behind a column, while she waited at the shape)
+                    stall = (sevenMoved > 1.2f || Current == Mode.Follow) && d > FollowDistance + 1.2f && d >= old.d - 0.2f
                             && (Current != Mode.Follow || d > FollowDistance + 1.5f);
                 }
                 if (!far && !stall) return false;

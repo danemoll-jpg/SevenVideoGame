@@ -54,6 +54,8 @@ namespace Seven
         /// <summary>QF6 -sceneselecttest (with -capture): every Scene Select entry started from the menu and played (like a
         /// person) until the next entry's checkpoint is reached.</summary>
         public static bool SceneSelectTest { get; private set; }
+        /// <summary>QF8: -camsweep = the follow-camera sweep over the whole traversal route (Chapter 1, ~2 min).</summary>
+        public static bool CamSweep { get; private set; }
         /// <summary>-playtestseed n: offset for the playtest's per-run seeds (repeat a run).</summary>
         public static int PlaytestSeed { get; private set; }
         /// <summary>-playtestfrom k: start at run k+1 (same seeds / habits as in the full test - e.g. repeat one run).</summary>
@@ -91,6 +93,7 @@ namespace Seven
                 if (args[i] == "-playtestfrom" && i + 1 < args.Length && int.TryParse(args[i + 1], out var pf)) PlaytestFrom = pf;
                 if (args[i] == "-playtestseed" && i + 1 < args.Length && int.TryParse(args[i + 1], out var ps)) PlaytestSeed = ps;
                 if (args[i] == "-sceneselecttest") SceneSelectTest = true;
+                if (args[i] == "-camsweep") { CamSweep = true; Chapter1 = true; Chapter1State.Checkpoint = 2; }
                 if (args[i] == "-noqf6fix") Chapter1Director.QF6Fix = false;
                 if (args[i] == "-testspeed" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var ts)) TestSpeed = Mathf.Clamp(ts, 1f, 4f);
                 if (args[i] == "-gallery") { Gallery = true; Saucer = true; }

@@ -1,0 +1,8 @@
+s05_02_7: "Yes. Without hurting them." - pause after "Without"; acceptable <= 0.150 s
+take 1 (v3 [calm]): gap after "Without" 0.060 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 2 (v3 no tag): gap after "Without" 0.040 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 3 (v2 context): gap after "Without" 0.058 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 4 (v3 [calm]): gap after "Without" 0.050 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 5 (v3 no tag): gap after "Without" 0.040 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+take 6 (v2 context): gap after "Without" 0.070 s (alignment), longest silence inside the sentence 0.000 s (ffmpeg -40 dB) -> OK
+chosen: take 2 (v3 no tag), worst internal gap 0.040 s -> Unity\Assets\Audio\Voice\s05_scree\s05_02_7.mp3
