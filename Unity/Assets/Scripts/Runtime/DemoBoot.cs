@@ -60,6 +60,13 @@ namespace Seven
         public static bool FlickerTest { get; private set; }
         /// <summary>QF9: -fightonly = a check run from checkpoint 6 that stops when the city reveal starts.</summary>
         public static bool FightOnly { get; private set; }
+        /// <summary>Round 11: -chapter2 = start Chapter 2 (Venus) at its save (a fresh start in check runs);
+        /// -venusskip = check run skipping every line; -venusreload = reload after every committed scene.</summary>
+        public static bool Chapter2 { get; private set; }
+        public static bool VenusSkip { get; private set; }
+        public static bool VenusReload { get; private set; }
+        /// <summary>Round 11: -venuschain = a check run aboard that sets course and goes on into Chapter 2 (as in play).</summary>
+        public static bool VenusChain { get; private set; }
         /// <summary>Round 11: -venusstatetest = check the Venus progression / persistence rules, write venus_state_test.txt, quit.</summary>
         public static bool VenusStateTest { get; private set; }
         /// <summary>-playtestseed n: offset for the playtest's per-run seeds (repeat a run).</summary>
@@ -101,6 +108,10 @@ namespace Seven
                 if (args[i] == "-sceneselecttest") SceneSelectTest = true;
                 if (args[i] == "-venusstatetest") VenusStateTest = true;
                 if (args[i] == "-noqf9fix") CameraOccluders.QF9Fix = false;
+                if (args[i] == "-chapter2") Chapter2 = true;
+                if (args[i] == "-venuschain") VenusChain = true;
+                if (args[i] == "-venusskip") { VenusSkip = true; Chapter2 = true; }
+                if (args[i] == "-venusreload") { VenusReload = true; Chapter2 = true; }
                 if (args[i] == "-fightonly") { FightOnly = true; Chapter1 = true; Chapter1State.Checkpoint = 6; }
                 if (args[i] == "-flickertest") { FlickerTest = true; Chapter1 = true; Chapter1State.Checkpoint = 6; }
                 if (args[i] == "-camsweep") { CamSweep = true; Chapter1 = true; Chapter1State.Checkpoint = 2; }

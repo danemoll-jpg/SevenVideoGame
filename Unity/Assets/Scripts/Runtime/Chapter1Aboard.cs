@@ -1049,8 +1049,13 @@ namespace Seven
                 yield return null;
             }
             yield return UI.Fade(1f, 1.0f);
-            if (Auto) StartCoroutine(ShotLater("x05_chapter2_card"));
-            yield return UI.Title("Chapter 2 — Venus\n(coming soon)", 0.8f, 2.6f, 0.8f);
+            // Round 11: the course is set for real - a short transit, then Chapter 2 opens with the descent under Venus's clouds
+            VenusState.Advance(VenusState.Stage.Available);
+            if (Auto) { Cap.Log("set course: Venus (VEN_S00_AVAILABLE) - Chapter 2 loads here in play"); StartCoroutine(ShotLater("x05_transit")); }
+            AudioKit.Play("saucer_hum", null, 0.5f);
+            yield return Wait(1.6f);
+            if (!Auto || DemoBoot.VenusChain) { UnityEngine.SceneManagement.SceneManager.LoadScene("Venus"); yield break; }
+            yield return UI.Title("Chapter 2 — Venus", 0.8f, 1.6f, 0.8f);
             Moon.position = _moonHome; Moon.localScale = _moonScale;
             Director.Cam.Hold = false;
             yield return UI.Fade(0f, 1.0f);

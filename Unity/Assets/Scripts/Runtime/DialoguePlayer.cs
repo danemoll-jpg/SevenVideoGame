@@ -104,7 +104,7 @@ namespace Seven
             Current = line;
             Played.Add(line.Id);
             var src = line.IsCat ? (far ? _catFar : _cat) : _seven;
-            UI?.ShowSubtitle(line.IsCat ? "Cat" : "7", line.Text, line.IsCat, far);
+            UI?.ShowSubtitle(line.Label ?? (line.IsCat ? "Cat" : "7"), line.Text, line.IsCat, far);
             LineStarted?.Invoke(line);
             float len = line.Clip != null ? line.Clip.length : 1.2f + line.Text.Length * 0.06f;
             if (line.Clip != null) { src.clip = line.Clip; src.Play(); }

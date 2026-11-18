@@ -62,31 +62,31 @@ namespace Seven
         public static readonly Ledge RampEnd = new Ledge { Name = "broken ramp end", A = new Vector3(20.85f, -4.4f, -55.0f), B = new Vector3(22.15f, -4.4f, -55.0f), Fwd = Vector3.forward };
         public static readonly Ledge ScaffoldLip = new Ledge { Name = "scaffold lip", A = new Vector3(20.1f, -7.6f, -62.4f), B = new Vector3(22.9f, -7.6f, -62.4f), Fwd = Vector3.forward };
 
-        public static readonly Ledge[] Ledges = { Bulkhead, CrackWall, ShaftLip, TerraceCLip, VisionExitLip, MineLip, RampEnd, ScaffoldLip };
+        public static Ledge[] Ledges = { Bulkhead, CrackWall, ShaftLip, TerraceCLip, VisionExitLip, MineLip, RampEnd, ScaffoldLip };
 
         // ------------------------------------------------------------------------------------------ links
-        public static readonly JumpLink[] Jumps =
+        public static JumpLink[] Jumps =
         {
             new JumpLink { Name = "catwalk gap", From = new Vector3(8.1f, 0f, 3.3f), To = new Vector3(10.65f, 0f, 3.3f), Radius = 1.0f, LateralClamp = new Vector2(2.35f, 4.25f) },
             new JumpLink { Name = "bulkhead down", From = new Vector3(15.0f, 2.4f, 3.3f), To = new Vector3(16.2f, 0f, 3.3f), Radius = 0.9f, LateralClamp = new Vector2(2.35f, 4.25f) },
             new JumpLink { Name = "ruins gap", From = new Vector3(10.7f, -1.6f, -3.6f), To = new Vector3(8.45f, -1.6f, -3.7f), Radius = 0.9f, LateralClamp = new Vector2(-4.4f, -2.95f) },
             new JumpLink { Name = "scaffold gap", From = new Vector3(21.5f, -7.6f, -57.9f), To = new Vector3(21.5f, -7.6f, -60.1f), Radius = 0.9f, LateralClamp = new Vector2(20.2f, 22.8f) },
         };
-        public static readonly JumpGrab[] Grabs =
+        public static JumpGrab[] Grabs =
         {
             new JumpGrab { Name = "bulkhead grab", From = new Vector3(13.6f, 0f, 3.3f), Radius = 1.0f, Ledge = Bulkhead },
             new JumpGrab { Name = "terrace C grab", From = new Vector3(9.3f, -0.7f, -6.3f), Radius = 0.85f, Ledge = TerraceCLip },
         };
-        public static readonly WallClimb[] Climbs =
+        public static WallClimb[] Climbs =
         {
             new WallClimb { Name = "cracked wall", Base = new Vector3(16.5f, 0f, 0.05f), Ledge = CrackWall, Cycles = 1 },
             new WallClimb { Name = "mining cut wall", Base = new Vector3(16.5f, -6.4f, -40.95f), Ledge = MineLip, Cycles = 2 },
         };
-        public static readonly Mantle[] Mantles =
+        public static Mantle[] Mantles =
         {
             new Mantle { Name = "terrace B step", From = new Vector3(8.2f, -1.6f, -4.45f), FaceAt = -4.8f, Fwd = Vector3.back, TopY = -0.7f },
         };
-        public static readonly HangDown[] HangDowns =
+        public static HangDown[] HangDowns =
         {
             new HangDown { Name = "shelf edge", Spot = new Vector3(16.5f, 2.8f, -2.05f), Ledge = ShaftLip },
             new HangDown { Name = "vision exit edge", Spot = new Vector3(16.5f, MoonLayout.Lower, -39.1f), Ledge = VisionExitLip, Radius = 0.85f },
@@ -109,6 +109,22 @@ namespace Seven
         public static readonly Vector3 StubCrackWall = new Vector3(17.22f, 1.45f, 0.02f);
         public static readonly Vector3 StubShaft = new Vector3(14.4f, 1.25f, -3.45f);
         public static readonly Vector3 StubMine = new Vector3(17.2f, -4.45f, -40.98f);
+
+        // ------------------------------------------------------------------------------------------ Round 11: per-world sets
+        /// <summary>The traversal moves in use (7 reads these arrays). The Moon's set is the default; Venus installs its
+        /// own with <see cref="Use"/> and the Moon restores its own with <see cref="UseMoon"/>.</summary>
+        static Ledge[] _mL; static JumpLink[] _mJ; static JumpGrab[] _mG; static WallClimb[] _mC; static Mantle[] _mM; static HangDown[] _mH;
+        public static void UseMoon()
+        {
+            if (_mL == null) return;
+            Ledges = _mL; Jumps = _mJ; Grabs = _mG; Climbs = _mC; Mantles = _mM; HangDowns = _mH;
+        }
+        public static void Use(Ledge[] l, JumpLink[] j, JumpGrab[] g, WallClimb[] c, Mantle[] m, HangDown[] h)
+        {
+            if (_mL == null) { _mL = Ledges; _mJ = Jumps; _mG = Grabs; _mC = Climbs; _mM = Mantles; _mH = HangDowns; }
+            Ledges = l ?? new Ledge[0]; Jumps = j ?? new JumpLink[0]; Grabs = g ?? new JumpGrab[0];
+            Climbs = c ?? new WallClimb[0]; Mantles = m ?? new Mantle[0]; HangDowns = h ?? new HangDown[0];
+        }
 
         // ------------------------------------------------------------------------------------------ helpers
         public static bool Facing(Transform t, Vector3 dir, float maxDeg)

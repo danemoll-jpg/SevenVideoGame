@@ -1,0 +1,568 @@
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEditor.SceneManagement;
+using UnityEngine;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
+using V = Seven.VenusLayout;
+
+namespace Seven.EditorTools
+{
+    /// <summary>
+    /// Round 11 — the Venus scene (Chapter 2, part 1): VEN_01 landing platform with the saucer and its storage hatch,
+    /// VEN_02 the outer gardens (broad riding road, long bend, damaged channel + collapsed walkway, the on-foot detour),
+    /// VEN_03 the temple (court, pedestrian garden, the 3.5 m-scale entrance, hall, cube chamber with the original cube
+    /// in its protected structure), VEN_04 the lower gardens (maintenance path, creature observation area over the
+    /// basin, the shut root-chamber gate). The First Garden Age in grayscale: terraces, hanging gardens, water channels,
+    /// tall pale towers (some unfinished) fading into the bright mist under a thick cloud ceiling (Atmosphere_Venus).
+    /// Models: Art/Export/hoverbike, elarim (rigged to Dan's Mixamo skeleton, clips Art/Mixamo/elarim), worm; the cat
+    /// (Panther) and 7 as in Chapter 1. Numbers: Seven.VenusLayout.
+    /// </summary>
+    public static partial class FightDemoBuilder
+    {
+        const string VenusScenePath = "Assets/Scenes/Venus.unity";
+        const string ElarimDir = CharRoot + "/Elarim";
+        const string AtmoVenusPath = AtmoDir + "/Atmosphere_Venus.prefab";
+
+        struct VenusMats { public Material stone, stoneMid, stoneDark, leaf, leafDark, leafPale, water, tower, path, glow, hull, hullUnder, dust, bikeVent, cloud; }
+
+        static void BuildRound11(AnimatorController sevenCtl, GameObject atmoPrefab, Seven.VoiceBank bank)
+        {
+            var catCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/Cat.controller");
+            var catFur = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_fur.mat");
+            var catWhisker = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_whisker.mat");
+            var m = new VenusMats
+            {
+                stone = Dissolve("Venus_stone", Gray(0.66f), 0.25f, false),
+                stoneMid = Dissolve("Venus_stone_mid", Gray(0.48f), 0.2f, false),
+                stoneDark = Dissolve("Venus_stone_dark", Gray(0.26f), 0.15f, false),
+                leaf = Dissolve("Venus_leaf", Gray(0.30f), 0.2f, false),
+                leafDark = Dissolve("Venus_leaf_dark", Gray(0.16f), 0.15f, false),
+                leafPale = Dissolve("Venus_leaf_pale", Gray(0.52f), 0.25f, false),
+                water = Dissolve("Venus_water", Gray(0.82f), 0.97f, false, 0.2f),
+                tower = Dissolve("Venus_tower", Gray(0.86f), 0.4f, false),
+                path = Dissolve("Venus_path", Gray(0.58f), 0.2f, false),
+                glow = Dissolve("Venus_glow", Color.white, 0.5f, false),
+                hull = Dissolve("Saucer_hull", Gray(0.95f), 0.9f, false, 0.6f),
+                hullUnder = Dissolve("Saucer_under", Gray(0.74f), 0.8f, false, 0.45f),
+                dust = Dissolve("Venus_basin", Gray(0.40f), 0.1f, false),
+                bikeVent = Dissolve("Bike_vent", Color.white, 0.5f, false),
+                cloud = Dissolve("Venus_cloud", Gray(0.93f), 0.0f, false),
+            };
+            foreach (var x in new[] { m.glow, m.bikeVent }) { x.EnableKeyword("_EMISSION"); x.SetColor("_EmissionColor", Color.white * 2f); EditorUtility.SetDirty(x); }
+            m.water.EnableKeyword("_EMISSION"); m.water.SetColor("_EmissionColor", Color.white * 0.12f); m.water.SetFloat("_Rim", 0.5f);
+            m.cloud.EnableKeyword("_EMISSION"); m.cloud.SetColor("_EmissionColor", Color.white * 0.55f); m.cloud.SetFloat("_Cull", 0f);
+            var elarim = SetupElarim(sevenCtl, out var elarimCtl, out var elarimMat);
+            var worm = SetupGenericModel("worm", out var wormCtl);
+            var bike = SetupStaticModel("hoverbike", "hoverbike_v1.fbx");
+            var sword = SetupStaticModel("elarim", "elarim_sword_v1.fbx");
+            var atmo = BuildAtmosphereVenus(atmoPrefab);
+            BuildVenusScene(sevenCtl, catCtl, catFur, catWhisker, bank, m, atmo, elarim, elarimCtl, worm, wormCtl, bike, sword);
+        }
+
+        // ---------------------------------------------------------------------------------------------- imports
+        static string CopyExport(string kind, string file)
+        {
+            var src = Path.Combine(RepoRoot, "Art", "Export", kind, file);
+            var dir = CharRoot + "/" + kind;
+            Directory.CreateDirectory(Path.Combine(ProjectRoot, dir, "Textures"));
+            if (!File.Exists(src)) { Log($"WARNING: {src} missing (run Tools/Blender/cleanup_r11.py {kind})"); return null; }
+            File.Copy(src, Path.Combine(ProjectRoot, dir, file), true);
+            var tdir = Path.Combine(RepoRoot, "Art", "Export", kind, "Textures");
+            if (Directory.Exists(tdir)) foreach (var t in Directory.GetFiles(tdir)) File.Copy(t, Path.Combine(ProjectRoot, dir, "Textures", Path.GetFileName(t)), true);
+            AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
+            return dir + "/" + file;
+        }
+
+        static Material TexturedMat(string name, string texPath, float smooth, float metallic = 0f)
+        {
+            var mat = Dissolve(name, Color.white, smooth, false, metallic);
+            var tex = AssetDatabase.LoadAssetAtPath<Texture2D>(texPath);
+            if (tex != null) { var ti = (TextureImporter)AssetImporter.GetAtPath(texPath); ti.maxTextureSize = 2048; ti.SaveAndReimport(); mat.SetTexture("_BaseMap", tex); }
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        static GameObject SetupStaticModel(string kind, string file)
+        {
+            var path = CopyExport(kind, file); if (path == null) return null;
+            var imp = (ModelImporter)AssetImporter.GetAtPath(path);
+            imp.animationType = ModelImporterAnimationType.None; imp.importAnimation = false; imp.isReadable = true;
+            imp.materialImportMode = ModelImporterMaterialImportMode.None; imp.SaveAndReimport();
+            var mat = TexturedMat("Venus_" + Path.GetFileNameWithoutExtension(file), CharRoot + "/" + kind + "/Textures/" + Path.GetFileNameWithoutExtension(file) + "_basecolor.jpg", kind == "hoverbike" ? 0.75f : 0.6f, kind == "hoverbike" ? 0.35f : 0.5f);
+            var go = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true)) r.sharedMaterial = mat;   // applied on the instance below too
+            return go;
+        }
+
+        static GameObject SetupGenericModel(string kind, out AnimatorController ctl)
+        {
+            ctl = null;
+            var path = CopyExport(kind, kind + "_v1_rigged.fbx"); if (path == null) return null;
+            var imp = (ModelImporter)AssetImporter.GetAtPath(path);
+            imp.animationType = ModelImporterAnimationType.Generic; imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            imp.importAnimation = true; imp.materialImportMode = ModelImporterMaterialImportMode.None; imp.SaveAndReimport();
+            var clips = imp.defaultClipAnimations;
+            foreach (var c in clips) { var n = c.takeName.Contains("|") ? c.takeName.Substring(c.takeName.LastIndexOf('|') + 1) : c.takeName; c.name = n; c.loopTime = n == "wriggle" || n == "idle_under"; }
+            imp.clipAnimations = clips; imp.SaveAndReimport();
+            var cpath = AnimDir + "/" + kind + ".controller";
+            AssetDatabase.DeleteAsset(cpath);
+            ctl = AnimatorController.CreateAnimatorControllerAtPath(cpath);
+            var sm = ctl.layers[0].stateMachine;
+            foreach (var clip in AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview__")))
+            { var st = sm.AddState(clip.name); st.motion = clip; if (clip.name == "wriggle") sm.defaultState = st; }
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        /// <summary>The Elarim: Humanoid (Mixamo skeleton), Dan's eight Mixamo clips retargeted.</summary>
+        static GameObject SetupElarim(AnimatorController sevenCtl, out AnimatorController ctl, out Material mat)
+        {
+            ctl = null; mat = null;
+            var path = CopyExport("elarim", "elarim_v1_rigged.fbx"); if (path == null) return null;
+            mat = TexturedMat("Elarim_armour", ElarimDir + "/Textures/elarim_v1_basecolor.jpg", 0.82f, 0.55f);
+            mat.SetFloat("_Rim", 0.55f); mat.SetFloat("_RimPower", 2.2f);
+            mat.EnableKeyword("_EMISSION"); mat.SetColor("_EmissionColor", Color.white * 0.12f);     // they glow softly all over
+            EditorUtility.SetDirty(mat);
+            var imp = (ModelImporter)AssetImporter.GetAtPath(path);
+            imp.animationType = ModelImporterAnimationType.Human; imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            imp.importAnimation = false; imp.materialImportMode = ModelImporterMaterialImportMode.None; imp.SaveAndReimport();
+            ApplyMixamoHumanMap(imp, path);
+            var avatar = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
+            Log($"{path}: Elarim avatar human={avatar?.isHuman} valid={avatar?.isValid}");
+            if (avatar == null || !avatar.isHuman) return null;
+            var clipDir = ElarimDir + "/Clips"; Directory.CreateDirectory(Path.Combine(ProjectRoot, clipDir));
+            var loops = new[] { "idle", "talk", "walk", "sword_idle", "carry", "lift" };
+            var states = new List<AnimationClip>();
+            foreach (var f in Directory.GetFiles(Path.Combine(RepoRoot, "Art", "Mixamo", "elarim"), "elarim_*.fbx"))
+            {
+                var dst = clipDir + "/" + Path.GetFileName(f);
+                File.Copy(f, Path.Combine(ProjectRoot, dst), true);
+                AssetDatabase.ImportAsset(dst, ImportAssetOptions.ForceSynchronousImport);
+                var ci = (ModelImporter)AssetImporter.GetAtPath(dst);
+                ci.animationType = ModelImporterAnimationType.Human; ci.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                ci.materialImportMode = ModelImporterMaterialImportMode.None; ci.importAnimation = true;
+                ci.SaveAndReimport();
+                ApplyMixamoHumanMap(ci, dst);
+                var state = Path.GetFileNameWithoutExtension(f).Substring("elarim_".Length);
+                var cl = ci.defaultClipAnimations;
+                foreach (var c in cl) { c.name = state; c.loopTime = loops.Contains(state); c.lockRootRotation = true; c.lockRootHeightY = true; c.lockRootPositionXZ = true; c.keepOriginalOrientation = true; c.keepOriginalPositionY = true; c.keepOriginalPositionXZ = true; }
+                ci.clipAnimations = cl; ci.SaveAndReimport();
+                var clip = AssetDatabase.LoadAllAssetsAtPath(dst).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+                if (clip != null) { states.Add(clip); Log($"Elarim clip {clip.name} {clip.length:0.00}s humanMotion={clip.humanMotion}"); }
+            }
+            var cpath = AnimDir + "/Elarim.controller";
+            AssetDatabase.DeleteAsset(cpath);
+            ctl = AnimatorController.CreateAnimatorControllerAtPath(cpath);
+            var sm = ctl.layers[0].stateMachine;
+            foreach (var c in states) { var st = sm.AddState(c.name); st.motion = c; if (c.name == "idle") sm.defaultState = st; }
+            return AssetDatabase.LoadAssetAtPath<GameObject>(path);
+        }
+
+        /// <summary>Explicit Humanoid map for a Mixamo skeleton (Unity's name guesser did not take the Blender round-trip).</summary>
+        static readonly (string mix, string human)[] MixamoMap =
+        {
+            ("Hips", "Hips"), ("Spine", "Spine"), ("Spine1", "Chest"), ("Spine2", "UpperChest"), ("Neck", "Neck"), ("Head", "Head"),
+            ("LeftShoulder", "LeftShoulder"), ("LeftArm", "LeftUpperArm"), ("LeftForeArm", "LeftLowerArm"), ("LeftHand", "LeftHand"),
+            ("RightShoulder", "RightShoulder"), ("RightArm", "RightUpperArm"), ("RightForeArm", "RightLowerArm"), ("RightHand", "RightHand"),
+            ("LeftUpLeg", "LeftUpperLeg"), ("LeftLeg", "LeftLowerLeg"), ("LeftFoot", "LeftFoot"), ("LeftToeBase", "LeftToes"),
+            ("RightUpLeg", "RightUpperLeg"), ("RightLeg", "RightLowerLeg"), ("RightFoot", "RightFoot"), ("RightToeBase", "RightToes"),
+        };
+        static void ApplyMixamoHumanMap(ModelImporter imp, string path)
+        {
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            var all = model.GetComponentsInChildren<Transform>(true);
+            string Find(string mix) => all.FirstOrDefault(t => t.name == "mixamorig:" + mix || t.name == "mixamorig_" + mix || t.name == mix || t.name.EndsWith(":" + mix))?.name;
+            var hd = imp.humanDescription;
+            var human = new List<HumanBone>();
+            foreach (var (mix, hu) in MixamoMap)
+            {
+                var n = Find(mix); if (n == null) continue;
+                var unityName = HumanTrait.BoneName.FirstOrDefault(h => h.Replace(" ", "") == hu) ?? hu;
+                human.Add(new HumanBone { boneName = n, humanName = unityName, limit = new HumanLimit { useDefaultValues = true } });
+            }
+            hd.human = human.ToArray();
+            hd.skeleton = all.Select(t => new SkeletonBone { name = t.name, position = t.localPosition, rotation = t.localRotation, scale = t.localScale }).ToArray();
+            hd.hasTranslationDoF = false;
+            imp.humanDescription = hd;
+            imp.SaveAndReimport();
+            var av = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
+            Log($"{path}: explicit Mixamo human map {human.Count} bones -> avatar human={av?.isHuman} valid={av?.isValid} (first bone name '{all.Skip(1).FirstOrDefault()?.name}')");
+        }
+
+        static GameObject BuildAtmosphereVenus(GameObject atmoPrefab)
+        {
+            var inst = (GameObject)PrefabUtility.InstantiatePrefab(atmoPrefab);
+            var a = inst.GetComponent<Seven.Atmosphere>();
+            // Kyle's fog / glow: dark near silhouettes against a bright glowing misty distance, soft light inside the fog,
+            // strong ground fog in the gardens, a thick bright cloud ceiling (soft diffuse light from above).
+            a.FogStart = 8f;
+            a.GroundDensity = 0.02f; a.GroundBase = -2f; a.GroundFalloff = 3.2f; a.GroundRange = 70f;
+            a.ValleyDensity = 0.014f; a.ValleyBase = -16f; a.ValleyFalloff = 10f;
+            a.DistanceDensity = 0.0062f; a.HazeHeight = 60f; a.MaxFog = 1f;
+            a.NearBrightness = 0.22f; a.FarBrightness = 1.35f; a.BrightnessDistance = 70f; a.ZenithBrightness = 0.85f;
+            a.NoiseStrength = 0.45f; a.NoiseScale = 0.04f; a.NoiseSpeed = 0.02f; a.NoiseFadeDistance = 70f;
+            a.GlowIntensity = 0.38f; a.GlowRadius = 40f;
+            var glows = new[]
+            {
+                (new Vector3(30f, 30f, 300f), new Vector3(2.2f, 1.6f, 1f)),       // behind the temple
+                (new Vector3(-90f, 20f, 160f), new Vector3(1.6f, 1.2f, 1f)),
+                (new Vector3(150f, 10f, 120f), new Vector3(1.8f, 1.2f, 1f)),      // over the basin
+                (new Vector3(-60f, 25f, 360f), new Vector3(2.6f, 1.5f, 1f)),
+                (new Vector3(110f, 30f, 340f), new Vector3(2.2f, 1.4f, 1f)),
+                (new Vector3(0f, 18f, -120f), new Vector3(2.0f, 1.2f, 1f)),
+                (new Vector3(30f, 40f, 520f), new Vector3(7f, 1.8f, 1f)),
+                (new Vector3(-200f, 20f, 260f), new Vector3(5f, 1.6f, 1f)),
+            };
+            int gi = 0;
+            foreach (Transform c in inst.transform)
+            {
+                if (c.name.StartsWith("Glow") && gi < glows.Length) { c.position = glows[gi].Item1; c.localScale = glows[gi].Item2; gi++; }
+                if (c.name == "BackLight") { c.rotation = Quaternion.Euler(52f, 165f, 0f); var l = c.GetComponent<Light>(); l.intensity = 0.95f; l.shadowStrength = 0.45f; }
+                if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(60f, 15f, 0f); c.GetComponent<Light>().intensity = 0.45f; }
+            }
+            var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoVenusPath);
+            Object.DestroyImmediate(inst);
+            Log("atmosphere variant saved " + AtmoVenusPath);
+            return prefab;
+        }
+
+        // ---------------------------------------------------------------------------------------------- geometry helpers
+        static GameObject SlopeSlab(string name, float x0, float z0, float x1, float z1, float y0, float y1, int axis, Material mat, Transform parent, float thick = 0.6f)
+        {
+            var v = new List<Vector3>(); var t = new List<int>();
+            Vector3 P(float x, float z, float dy) { float u = axis == 0 ? Mathf.InverseLerp(x0, x1, x) : Mathf.InverseLerp(z0, z1, z); return new Vector3(x, Mathf.Lerp(y0, y1, u) + dy, z); }
+            var c = new[] { P(x0, z0, 0), P(x1, z0, 0), P(x1, z1, 0), P(x0, z1, 0), P(x0, z0, -thick), P(x1, z0, -thick), P(x1, z1, -thick), P(x0, z1, -thick) };
+            int[][] quads = { new[] { 3, 2, 1, 0 }, new[] { 4, 5, 6, 7 }, new[] { 0, 1, 5, 4 }, new[] { 1, 2, 6, 5 }, new[] { 2, 3, 7, 6 }, new[] { 3, 0, 4, 7 } };
+            foreach (var q in quads) { int b = v.Count; foreach (var i in q) v.Add(c[i]); t.AddRange(new[] { b, b + 1, b + 2, b, b + 2, b + 3 }); }
+            var go = MeshObject(name, SaveMesh(Finish(v, t), "Venus_" + name), mat, parent);
+            go.AddComponent<MeshCollider>();
+            return go;
+        }
+
+        static void Shrub(List<Vector3> v, List<int> t, System.Random r, Vector3 at, float size)
+        {
+            Lump(v, t, at + Vector3.up * size * 0.5f, new Vector3(size, size * (0.7f + (float)r.NextDouble() * 0.5f), size), 0.35f, r.Next(1000));
+        }
+
+        static void Tree(List<Vector3> v, List<int> t, System.Random r, Vector3 at, float h)
+        {
+            // a tall slender garden tree: trunk + stacked soft lumps (cypress-like, grown rather than built)
+            AddBox(v, t, at + Vector3.up * h * 0.2f, new Vector3(0.25f, h * 0.4f, 0.25f));
+            for (int i = 0; i < 4; i++)
+            {
+                float y = h * (0.35f + i * 0.17f), s = h * (0.24f - i * 0.04f);
+                Lump(v, t, at + Vector3.up * y, new Vector3(s, s * 1.4f, s), 0.3f, r.Next(1000));
+            }
+        }
+
+        // ---------------------------------------------------------------------------------------------- the scene
+        static void BuildVenusScene(AnimatorController sevenCtl, AnimatorController catCtl, Material catFur, Material catWhisker, Seven.VoiceBank bank,
+            VenusMats m, GameObject atmoVenus, GameObject elarim, AnimatorController elarimCtl, GameObject worm, AnimatorController wormCtl, GameObject bike, GameObject sword)
+        {
+            var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
+            RenderSettings.skybox = null; RenderSettings.fog = false;
+            RenderSettings.ambientMode = AmbientMode.Flat; RenderSettings.ambientLight = new Color(0.34f, 0.34f, 0.34f);
+            var sh = new SphericalHarmonicsL2(); sh.AddAmbientLight(RenderSettings.ambientLight); RenderSettings.ambientProbe = sh;
+            RenderSettings.defaultReflectionMode = DefaultReflectionMode.Custom;
+            var atmo = (GameObject)PrefabUtility.InstantiatePrefab(atmoVenus); atmo.name = "Atmosphere_Venus";
+            var world = new GameObject("Venus").transform;
+            var rnd = new System.Random(11);
+
+            // ---- floors (every zone; sloped ones as slabs) + parapets with gaps along the road edges
+            foreach (var z in V.Zones)
+            {
+                var mat = z.Name.StartsWith("Road") || z.Name == "Bend" || z.Name.StartsWith("Maint") ? m.path : z.Name.StartsWith("Temple") || z.Name == "CubeRoom" ? m.stone : z.Name.StartsWith("Detour") ? m.stoneMid : m.stoneMid;
+                if (Mathf.Approximately(z.Y0, z.Y1)) Block($"Floor_{z.Name}", new Vector3(z.X0, z.Y0 - 0.6f, z.Z0), new Vector3(z.X1, z.Y0, z.Z1), mat, world);
+                else SlopeSlab($"Floor_{z.Name}", z.X0, z.Z0, z.X1, z.Z1, z.Y0, z.Y1, z.Axis, mat, world);
+            }
+            // the platform: a broad round deck (the square zone is its walkable core) with a pale rim
+            MeshObject("PlatformDisc", SaveMesh(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(15f, 0.01f), new Vector2(15.4f, -0.2f), new Vector2(14.5f, -2.5f), new Vector2(0f, -2.5f) }, 0f, 360f, 64), "Venus_PlatformDisc"), m.stone, world);
+            // terraces stepping down on both sides of the road (inhabited gardens), with shrubs, trees, hanging gardens
+            var gv = new List<Vector3>(); var gt = new List<int>(); var dv = new List<Vector3>(); var dt = new List<int>(); var pv = new List<Vector3>(); var pt = new List<int>(); var trv = new List<Vector3>(); var trt = new List<int>();
+            for (float zz = 16f; zz < 190f; zz += 9f)
+            {
+                foreach (var side in new[] { -1f, 1f })
+                {
+                    float roadX = zz < 52f ? 0f : 30f, edge = roadX + side * (zz is > 44f and < 56f ? 14f : 4.5f);
+                    if (zz > V.CollapseZ0 - 16f && zz < V.CollapseZ1 + 10f && side < 0) continue;     // the detour terraces live here
+                    for (int step = 0; step < 3; step++)
+                    {
+                        float x0 = edge + side * (1.5f + step * 5f), x1 = x0 + side * 5f, top = -1.2f - step * 1.6f + (float)rnd.NextDouble() * 0.4f;
+                        Block($"Terrace_{zz}_{side}_{step}", new Vector3(Mathf.Min(x0, x1), top - 3f, zz - 4.4f), new Vector3(Mathf.Max(x0, x1), top, zz + 4.4f), step % 2 == 0 ? m.stoneMid : m.stone, world, false);
+                        for (int k = 0; k < 3; k++) Shrub(gv, gt, rnd, new Vector3(Mathf.Lerp(x0, x1, 0.2f + 0.3f * k), top, zz - 3f + (float)rnd.NextDouble() * 6f), 0.8f + (float)rnd.NextDouble() * 1.2f);
+                        if (rnd.NextDouble() < 0.45) Tree(trv, trt, rnd, new Vector3(Mathf.Lerp(x0, x1, 0.6f), top, zz + (float)rnd.NextDouble() * 3f), 6f + (float)rnd.NextDouble() * 6f);
+                    }
+                    // a water channel along the road edge (pale, smooth) - broken and spilling at the damaged section
+                    if (!(zz > V.TremorZ - 4f && zz < V.CollapseZ1))
+                        Block($"Channel_{zz}_{side}", new Vector3(edge + side * 0.2f - 0.5f, -0.25f, zz - 4.5f), new Vector3(edge + side * 0.2f + 0.5f, -0.08f, zz + 4.5f), m.water, world, false);
+                    // a low parapet with gaps
+                    if (rnd.NextDouble() < 0.7) Block($"Parapet_{zz}_{side}", new Vector3(edge + side * 0.9f - 0.2f, 0f, zz - 3f), new Vector3(edge + side * 0.9f + 0.2f, 0.7f, zz + 3f), m.stone, world);
+                }
+                // hanging gardens: arches over the road with drooping plants
+                if (((int)zz) % 27 == 7)
+                {
+                    float rx = zz < 52f ? 0f : 30f;
+                    var arc = new List<Vector3>(); for (int i = 0; i <= 16; i++) { float a = i / 16f * Mathf.PI; arc.Add(new Vector3(rx - Mathf.Cos(a) * 7f, 1f + Mathf.Sin(a) * 9f, zz)); }
+                    Sweep(pv, pt, arc, 0.55f, false, 8);
+                    for (int i = 2; i < 15; i += 2) for (int k = 0; k < 3; k++) Lump(dv, dt, arc[i] + new Vector3(0f, -0.9f - k * 0.9f, (float)rnd.NextDouble() - 0.5f), new Vector3(0.6f, 0.8f, 0.6f), 0.4f, rnd.Next(1000));
+                }
+            }
+            // the platform's gardens (seen in C01) and the vista
+            for (int i = 0; i < 40; i++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, r = 18f + (float)rnd.NextDouble() * 26f; Shrub(gv, gt, rnd, new Vector3(Mathf.Cos(a) * r, -3f - (float)rnd.NextDouble() * 4f, Mathf.Sin(a) * r), 1.5f + (float)rnd.NextDouble() * 2.5f); }
+            MeshObject("Gardens_Shrubs", SaveMesh(SmoothFinish(gv, gt), "Venus_Shrubs"), m.leaf, world);
+            MeshObject("Gardens_Trees", SaveMesh(SmoothFinish(trv, trt), "Venus_Trees"), m.leafDark, world);
+            MeshObject("Gardens_HangingArches", SaveMesh(SmoothFinish(pv, pt), "Venus_Arches"), m.stone, world);
+            MeshObject("Gardens_HangingPlants", SaveMesh(SmoothFinish(dv, dt), "Venus_Hanging"), m.leafPale, world);
+
+            // ---- the damaged route: the collapse (broken edges + rubble far below), the stopping area, the detour
+            var rv = new List<Vector3>(); var rt = new List<int>();
+            for (int i = 0; i < 26; i++) Lump(rv, rt, new Vector3(26f + (float)rnd.NextDouble() * 8f, -7f + (float)rnd.NextDouble() * 2f, V.CollapseZ0 + (float)rnd.NextDouble() * 10f), Vector3.one * (0.5f + (float)rnd.NextDouble() * 1.2f), 0.4f, rnd.Next(1000));
+            for (int i = 0; i < 8; i++) Lump(rv, rt, new Vector3(26f + i, -0.2f, V.CollapseZ0 + 0.2f), new Vector3(0.6f, 0.35f, 0.4f), 0.5f, rnd.Next(1000));
+            MeshObject("Collapse_Rubble", SaveMesh(SmoothFinish(rv, rt), "Venus_CollapseRubble"), m.stoneDark, world);
+            Block("Collapse_Pit", new Vector3(24f, -9f, V.CollapseZ0), new Vector3(36f, -8f, V.CollapseZ1), m.stoneDark, world, false);
+            Block("Collapse_SpillWater", new Vector3(28f, -0.02f, 108f), new Vector3(33f, 0.0f, V.CollapseZ0), m.water, world, false);
+            // the detour: the garden wall (mantle face), its terrace, the broken channel gap, the far terrace, the ramp down
+            Block("Detour_Wall", new Vector3(15f, -0.6f, 104f), new Vector3(V.DetourMantle.FaceAt, 1.0f, 126f), m.stoneMid, world);
+            Block("Detour_FarWall", new Vector3(15f, -0.6f, 128.6f), new Vector3(23.4f, 1.0f, 136f), m.stoneMid, world);
+            Block("Detour_ChannelWater", new Vector3(15f, -1.4f, 126f), new Vector3(23.4f, -1.2f, 128.6f), m.water, world, false);
+            Lamp("Detour_Lamp", new Vector3(19.2f, 2.8f, 127.3f), 7f, 1.4f, m.glow, world);
+
+            // ---- VEN_03: the temple - grown rather than built; everything at 3.5 m-Elarim scale
+            float tz = V.DoorZ;
+            Block("Temple_FrontW", new Vector3(14f, 0f, tz - 0.8f), new Vector3(30f - V.DoorHalf, 18f, tz), m.stone, world);
+            Block("Temple_FrontE", new Vector3(30f + V.DoorHalf, 0f, tz - 0.8f), new Vector3(46f, 18f, tz), m.stone, world);
+            Block("Temple_FrontTop", new Vector3(30f - V.DoorHalf, V.DoorH, tz - 0.8f), new Vector3(30f + V.DoorHalf, 18f, tz), m.stone, world);
+            Block("Temple_HallW", new Vector3(21f, 0f, tz), new Vector3(22f, 14f, 262f), m.stoneMid, world);
+            Block("Temple_HallE", new Vector3(38f, 0f, tz), new Vector3(39f, 14f, 262f), m.stoneMid, world);
+            Block("Temple_HallBackW", new Vector3(21f, 0f, 262f), new Vector3(25f, 14f, 263f), m.stoneMid, world);
+            Block("Temple_HallBackE", new Vector3(35f, 0f, 262f), new Vector3(39f, 14f, 263f), m.stoneMid, world);
+            Block("Temple_HallRoof", new Vector3(20f, 14f, tz - 1f), new Vector3(40f, 15f, 263f), m.stone, world);
+            Block("Temple_CubeW", new Vector3(24f, 0f, 262f), new Vector3(25f, 10f, 275f), m.stone, world);
+            Block("Temple_CubeE", new Vector3(35f, 0f, 262f), new Vector3(36f, 10f, 275f), m.stone, world);
+            Block("Temple_CubeBack", new Vector3(24f, 0f, 274f), new Vector3(36f, 10f, 275f), m.stone, world);
+            Block("Temple_CubeRoof", new Vector3(24f, 10f, 262f), new Vector3(36f, 10.8f, 275f), m.stone, world);
+            // organic ribs growing up the hall (Elarim architecture: like roots and stems)
+            var tv = new List<Vector3>(); var tt = new List<int>();
+            for (float z = tz + 3f; z < 262f; z += 5f)
+                foreach (var x in new[] { 22.3f, 37.7f })
+                {
+                    float ix = x < 30f ? 1f : -1f;
+                    Tube(tv, tt, new[] { new Vector3(x, 0f, z), new Vector3(x + ix * 0.6f, 5f, z + 0.5f), new Vector3(x + ix * 3f, 11f, z + 1f), new Vector3(30f, 13.6f, z + 1.2f) }, 0.55f, 0.25f);
+                }
+            MeshObject("Temple_GrownRibs", SaveMesh(SmoothFinish(tv, tt), "Venus_TempleRibs"), m.stone, world);
+            // the protected structure around the original cube: a cage of pale stems, the cube inside on its pedestal
+            var cv = new List<Vector3>(); var ct = new List<int>();
+            for (int i = 0; i < 8; i++)
+            {
+                float a = i / 8f * Mathf.PI * 2f;
+                var b = V.CubeAt + new Vector3(Mathf.Cos(a) * 1.5f, -V.CubeAt.y, Mathf.Sin(a) * 1.5f);
+                Tube(cv, ct, new[] { b, b + new Vector3(-Mathf.Cos(a) * 0.3f, 1.6f, -Mathf.Sin(a) * 0.3f), b + new Vector3(-Mathf.Cos(a) * 1.2f, 3.1f, -Mathf.Sin(a) * 1.2f), V.CubeAt + Vector3.up * 2.2f }, 0.12f, 0.06f);
+            }
+            var cage = MeshObject("Cube_ProtectedStructure", SaveMesh(SmoothFinish(cv, ct), "Venus_CubeCage"), m.stone, world);
+            MeshObject("Cube_Pedestal", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.7f, 0f), new Vector2(0.5f, 0.2f), new Vector2(0.32f, V.CubeAt.y - 0.42f), new Vector2(0.55f, V.CubeAt.y - 0.32f), new Vector2(0f, V.CubeAt.y - 0.32f) }, 0f, 360f, 24, null, new Vector3(V.CubeAt.x, 0f, V.CubeAt.z)), "Venus_CubePedestal"), m.stoneMid, world);
+            var em = ElarimMaterials(false);
+            var cube = BuildVenusCube(world, m, em);
+            // VEN_03 court + garden: planters, trees, a fountain basin
+            var fv = new List<Vector3>(); var ft = new List<int>();
+            for (int i = 0; i < 14; i++) Tree(fv, ft, rnd, new Vector3(16f + (float)rnd.NextDouble() * 28f, 0f, 205f + (float)rnd.NextDouble() * 8f + (i % 2) * 18f), 7f + (float)rnd.NextDouble() * 5f);
+            MeshObject("Court_Trees", SaveMesh(SmoothFinish(fv, ft), "Venus_CourtTrees"), m.leafDark, world);
+            MeshObject("Court_Fountain", SaveMesh(Lathe(new[] { new Vector2(0f, 0.4f), new Vector2(2.6f, 0.4f), new Vector2(2.8f, 0.7f), new Vector2(3.0f, 0f), new Vector2(0f, 0f) }, 0f, 360f, 32, null, new Vector3(22f, 0f, 200f)), "Venus_Fountain"), m.stone, world);
+            Block("Court_FountainWater", new Vector3(19.8f, 0.42f, 197.8f), new Vector3(24.2f, 0.5f, 202.2f), m.water, world, false);
+
+            // ---- VEN_04: the maintenance path gate (shut until C04), observation railing, the basin, the root gate
+            var maintGate = Block("Maint_Gate", new Vector3(44.2f, 0f, 195f), new Vector3(44.8f, 2.4f, 203f), m.stoneDark, world);
+            Block("Obs_Rail", new Vector3(87.6f, -6f, 134f), new Vector3(88f, -5f, 152f), m.stone, world);
+            Block("Obs_RailS", new Vector3(64f, -6f, 133.6f), new Vector3(88f, -5f, 134f), m.stone, world);
+            Block("Basin_Floor", new Vector3(88f, -15f, 80f), new Vector3(170f, -14f, 190f), m.dust, world, false);
+            Block("RootGate_Door", new Vector3(V.RootGate.x - 2f, -6f, V.RootGate.z - 0.4f), new Vector3(V.RootGate.x + 2f, -1f, V.RootGate.z), m.stoneDark, world);
+            var bv = new List<Vector3>(); var bt = new List<int>();
+            for (int i = 0; i < 30; i++) Lump(bv, bt, new Vector3(90f + (float)rnd.NextDouble() * 70f, -14f, 85f + (float)rnd.NextDouble() * 100f), new Vector3(1.5f, 0.6f, 1.5f) * (0.6f + (float)rnd.NextDouble()), 0.5f, rnd.Next(1000));
+            MeshObject("Basin_Mounds", SaveMesh(SmoothFinish(bv, bt), "Venus_BasinMounds"), m.stoneDark, world);
+            // distant towers (tall, pale, some unfinished) and the cloud ceiling
+            var wv = new List<Vector3>(); var wt = new List<int>();
+            var towers = new[] { (new Vector3(-80f, -20f, 330f), 140f, false), (new Vector3(120f, -20f, 300f), 110f, true), (new Vector3(-150f, -20f, 120f), 90f, false), (new Vector3(30f, -20f, 420f), 170f, false), (new Vector3(200f, -20f, 200f), 120f, true), (new Vector3(-40f, -20f, -140f), 80f, true) };
+            foreach (var (at, h, unfinished) in towers)
+            {
+                var tw = Lathe(new[] { new Vector2(0f, 0f), new Vector2(9f, 0f), new Vector2(6f, h * 0.3f), new Vector2(4.5f, h * 0.8f), new Vector2(unfinished ? 4.3f : 2f, h), new Vector2(0f, unfinished ? h : h * 1.08f) }, 0f, unfinished ? 300f : 360f, 24, null, at);
+                MeshObject($"Tower_{at.x}_{at.z}", SaveMesh(tw, $"Venus_Tower{at.x}_{at.z}"), m.tower, world, false);
+            }
+            var cloud = Block("CloudCeiling", new Vector3(-600f, 160f, -600f), new Vector3(700f, 162f, 900f), m.cloud, world, false);
+            cloud.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+
+            // ---- the saucer (landed), its ramp, the storage hatch
+            var saucer = new GameObject("Saucer").transform; saucer.SetParent(world, false); saucer.position = V.SaucerAt + Vector3.up * V.SaucerHover;
+            MeshObject("Saucer_Top", SaveMesh(Lathe(new[] { new Vector2(0f, 1.9f), new Vector2(1.8f, 1.75f), new Vector2(3.4f, 1.0f), new Vector2(V.SaucerRadius, 0.35f), new Vector2(V.SaucerRadius, 0.2f) }, 0f, 360f, 48), "Venus_SaucerTop"), m.hull, saucer);
+            MeshObject("Saucer_Under", SaveMesh(Lathe(new[] { new Vector2(V.SaucerRadius, 0.2f), new Vector2(3.2f, -0.2f), new Vector2(1.5f, -0.45f), new Vector2(0f, -0.5f) }, 0f, 360f, 48), "Venus_SaucerUnder"), m.hullUnder, saucer);
+            var ramp = new GameObject("Ramp").transform; ramp.SetParent(saucer, false);
+            SlopeSlab("Saucer_Ramp", -0.8f, V.RampFoot.z - 3.4f, 0.8f, V.RampFoot.z, V.SaucerHover, 0f, 1, m.hullUnder, ramp, 0.08f);
+            var hatch = new GameObject("StorageHatch").transform; hatch.SetParent(saucer, false); hatch.position = V.HatchAt + Vector3.up * (V.SaucerHover + 0.1f);
+            Block("Hatch_Door", V.HatchAt + new Vector3(-0.8f, V.SaucerHover, -0.05f), V.HatchAt + new Vector3(0.8f, V.SaucerHover + 0.1f, 1.2f), m.hullUnder, hatch, false);
+            var pads = new List<Vector3> { new Vector3(V.SaucerAt.x, V.SaucerAt.z, V.SaucerRadius + 0.3f) };
+
+            // ---- ground
+            var wg = new GameObject("WorldGround").AddComponent<Seven.WorldGround>();
+            wg.Shape = Seven.Ground.Shape.Zones;
+            wg.Zones = V.Zones.Select(z => new Seven.WorldGround.ZoneDef { Name = z.Name, Min = new Vector2(z.X0, z.Z0), Max = new Vector2(z.X1, z.Z1), Y0 = z.Y0, Y1 = z.Y1, Axis = z.Axis, Enabled = z.On }).ToArray();
+            pads.Add(new Vector3(22f, 200f, 3.2f));             // the fountain
+            pads.Add(new Vector3(V.CubeAt.x, V.CubeAt.z, 1.7f));   // the protected structure
+            wg.ZoneObstacles = pads.ToArray();
+
+            // ---- 7, Panther, the camera, the bike
+            var seven = Spawn(SevenDir + "/7_character.fbx", "7", V.RampFoot, Vector3.forward, sevenCtl);
+            var catRoot = SpawnCat("Cat", V.RampFoot + new Vector3(-1f, 0f, 0f), Vector3.forward, catCtl, catFur, catWhisker, out var catAnim);
+            var camGo = new GameObject("ChapterCamera"); camGo.tag = "MainCamera";
+            var cam = camGo.AddComponent<Camera>();
+            cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(0.86f, 0.86f, 0.86f);
+            cam.fieldOfView = 52f; cam.nearClipPlane = 0.08f; cam.farClipPlane = 3000f;
+            camGo.AddComponent<AudioListener>();
+            var camData = cam.GetUniversalAdditionalCameraData(); camData.renderPostProcessing = true; camData.requiresDepthTexture = true; camData.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
+            camGo.transform.position = V.RampFoot + new Vector3(0f, 1.8f, -2.5f);
+            var dirGo = new GameObject("VenusDirector");
+            var input = dirGo.AddComponent<Seven.ChapterInput>();
+            var s7 = seven.AddComponent<Seven.ChapterSeven>(); s7.Input = input; s7.CameraTransform = camGo.transform;
+            var ccam = camGo.AddComponent<Seven.ChapterCamera>(); ccam.Target = seven.transform; ccam.Input = input;
+            var cat = catRoot.AddComponent<Seven.ChapterCat>(); cat.Seven = seven.transform; cat.Anim = catAnim; cat.Cam = cam;
+
+            var bikeRoot = new GameObject("HoverBike").transform; bikeRoot.position = V.BikeUnpacked;
+            var visual = new GameObject("Visual").transform; visual.SetParent(bikeRoot, false);
+            if (bike != null)
+            {
+                var bm = (GameObject)PrefabUtility.InstantiatePrefab(bike); bm.name = "BikeModel"; bm.transform.SetParent(visual, false);
+                var bmat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Venus_hoverbike_v1.mat");
+                foreach (var r in bm.GetComponentsInChildren<Renderer>()) r.sharedMaterial = bmat;
+            }
+            else Block("BikePlaceholder", new Vector3(-0.45f, 0f, -1.15f), new Vector3(0.45f, 0.7f, 1.15f), m.hull, visual, false);
+            var seat = new GameObject("Seat").transform; seat.SetParent(visual, false); seat.localPosition = new Vector3(0f, -0.12f, -0.05f);
+            var gl = new GameObject("GripL").transform; gl.SetParent(visual, false); gl.localPosition = new Vector3(-0.29f, 0.31f, 0.5f);
+            var gr = new GameObject("GripR").transform; gr.SetParent(visual, false); gr.localPosition = new Vector3(0.29f, 0.31f, 0.5f);
+            var vent = MeshObject("VentGlow", SaveMesh(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(0.28f, 0.01f), new Vector2(0f, 0.012f) }, 0f, 360f, 20), "Venus_BikeVent"), m.bikeVent, visual, false);
+            var vl = new GameObject("VentLight").AddComponent<Light>(); vl.transform.SetParent(visual, false); vl.transform.localPosition = new Vector3(0f, -0.15f, 0f);
+            vl.type = LightType.Point; vl.range = 2.2f; vl.intensity = 0.4f; vl.color = Color.white; vl.shadows = LightShadows.None;
+            var hb = bikeRoot.gameObject.AddComponent<Seven.HoverBike>();
+            hb.Seat = seat; hb.GripL = gl; hb.GripR = gr; hb.Visual = visual; hb.VentLight = vl; hb.VentGlow = vent.GetComponent<Renderer>();
+
+            // ---- the Elarim: the guardian (at the temple entrance garden), the attendant (comes in C04), workers
+            Seven.ElarimNpc MakeElarim(string name, Vector3 at, Vector3 facing, string post, bool withSword = false)
+            {
+                GameObject go;
+                if (elarim != null)
+                {
+                    go = new GameObject(name); go.transform.SetPositionAndRotation(at, Quaternion.LookRotation(facing));
+                    var model = (GameObject)PrefabUtility.InstantiatePrefab(elarim); model.name = "ElarimModel"; model.transform.SetParent(go.transform, false);
+                    var anim = model.GetComponent<Animator>() ?? model.AddComponent<Animator>();
+                    anim.runtimeAnimatorController = elarimCtl; anim.applyRootMotion = false; anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+                    var mat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Elarim_armour.mat");
+                    foreach (var smr in model.GetComponentsInChildren<SkinnedMeshRenderer>()) { smr.sharedMaterial = mat; smr.updateWhenOffscreen = true; }
+                    if (withSword && sword != null)
+                    {
+                        var hand = anim.isHuman ? anim.GetBoneTransform(HumanBodyBones.RightHand) : null;
+                        var sw = (GameObject)PrefabUtility.InstantiatePrefab(sword); sw.name = "Sword";
+                        sw.transform.SetParent(hand != null ? hand : go.transform, false);
+                        sw.transform.localRotation = Quaternion.Euler(0f, 0f, 90f); sw.transform.localPosition = new Vector3(0f, 0.05f, 0f);
+                        var smat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Venus_elarim_sword_v1.mat"); foreach (var r in sw.GetComponentsInChildren<Renderer>()) r.sharedMaterial = smat;
+                    }
+                }
+                else
+                {
+                    // placeholder (only if the model failed): a 3.5 m armoured figure
+                    go = new GameObject(name + "_placeholder"); go.transform.SetPositionAndRotation(at, Quaternion.LookRotation(facing));
+                    Block("Body", at + new Vector3(-0.5f, 0f, -0.3f), at + new Vector3(0.5f, 3.5f, 0.3f), m.tower, go.transform, false);
+                    Log("WARNING: Elarim model missing - Elarim_placeholder used");
+                }
+                var npc = go.AddComponent<Seven.ElarimNpc>(); npc.PostClip = post;
+                return npc;
+            }
+            var guardian = MakeElarim("Elarim_Guardian", V.GuardianSpot, Vector3.back, "idle");
+            var attendant = MakeElarim("Elarim_Attendant", new Vector3(30f, 0f, 250f), Vector3.back, "idle"); attendant.gameObject.SetActive(false);
+            var workers = new List<Seven.ElarimNpc>
+            {
+                MakeElarim("Elarim_Worker_Vessel", new Vector3(37.6f, 0f, 104.5f), Vector3.left, "carry"),
+                MakeElarim("Elarim_Worker_Road", new Vector3(32.8f, 0f, 84f), Vector3.left, "lift"),
+                MakeElarim("Elarim_Worker_Court", new Vector3(17f, 0f, 196f), Vector3.right, "sword_idle", true),
+                MakeElarim("Elarim_Worker_Channel", new Vector3(-6.5f, -1.2f, 30f), Vector3.right, "lift"),
+            };
+            // C02's vessel (water shakes in it; the worker steadies it)
+            var vessel = MeshObject("Vessel", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.35f, 0f), new Vector2(0.45f, 0.45f), new Vector2(0.38f, 0.8f), new Vector2(0.34f, 0.8f), new Vector2(0.4f, 0.45f), new Vector2(0.3f, 0.05f), new Vector2(0f, 0.05f) }, 0f, 360f, 24, null, V.VesselAt - Vector3.up * 0.9f), "Venus_Vessel"), m.stone, world).transform;
+            var water = MeshObject("VesselWater", SaveMesh(Lathe(new[] { new Vector2(0f, 0.68f), new Vector2(0.37f, 0.68f), new Vector2(0f, 0.681f) }, 0f, 360f, 20, null, V.VesselAt - Vector3.up * 0.9f), "Venus_VesselWater"), m.water, world, false).transform;
+            Block("Vessel_Stand", V.VesselAt + new Vector3(-0.5f, -0.95f, -0.5f), V.VesselAt + new Vector3(0.5f, -0.9f, 0.5f), m.stoneDark, world);
+            // the burrowing creatures in the basin
+            var worms = new List<Seven.WormCreature>();
+            for (int i = 0; i < 4; i++)
+            {
+                var root = new GameObject($"Creature{i}");
+                var c0 = V.BasinCentre + new Vector3(Mathf.Cos(i * 1.7f) * 25f, 0f, Mathf.Sin(i * 1.7f) * 30f);
+                root.transform.position = c0;
+                if (worm != null)
+                {
+                    var wm = (GameObject)PrefabUtility.InstantiatePrefab(worm); wm.name = "WormModel"; wm.transform.SetParent(root.transform, false);
+                    var an = wm.GetComponent<Animator>() ?? wm.AddComponent<Animator>(); an.runtimeAnimatorController = wormCtl; an.applyRootMotion = false;
+                    var wmat = TexturedMat("Venus_worm", CharRoot + "/worm/Textures/worm_v1_basecolor.jpg", 0.35f);
+                    foreach (var r in wm.GetComponentsInChildren<Renderer>()) r.sharedMaterial = wmat;
+                }
+                var w = root.AddComponent<Seven.WormCreature>();
+                w.Route = Enumerable.Range(0, 5).Select(k => V.BasinCentre + new Vector3(Mathf.Cos(i + k * 1.3f) * 32f, 0f, Mathf.Sin(i + k * 1.3f) * 40f)).ToArray();
+                var dust = new GameObject("Dust").AddComponent<ParticleSystem>(); dust.transform.SetParent(root.transform, false);
+                var main = dust.main; main.startColor = new Color(0.55f, 0.55f, 0.55f, 0.5f); main.startSize = 2.5f; main.startLifetime = 2.5f; main.startSpeed = 1.2f;
+                var emi = dust.emission; emi.rateOverTime = 14f;
+                dust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f);
+                w.Dust = dust;
+                worms.Add(w);
+            }
+            // flyers high over the platform (C01)
+            var flyers = new List<Transform>();
+            for (int i = 0; i < 5; i++)
+            {
+                var fv2 = new List<Vector3> { new Vector3(0f, 0f, 0.6f), new Vector3(-1.4f, 0.1f, -0.4f), new Vector3(1.4f, 0.1f, -0.4f) }; var ft2 = new List<int> { 0, 1, 2, 0, 2, 1 };
+                var f = MeshObject($"Flyer{i}", SaveMesh(Finish(fv2, ft2), $"Venus_Flyer{i}"), m.tower, world, false);
+                var fl = f.AddComponent<Seven.VenusFlyer>(); fl.Centre = new Vector3(0f, 0f, 30f); fl.Radius = 24f + i * 6f; fl.Height = 30f + i * 5f; fl.Phase = i * 1.3f; fl.Speed = 0.08f + i * 0.01f;
+                flyers.Add(f.transform);
+            }
+            // C04: dust falling from the cube chamber ceiling
+            var cdust = new GameObject("CeilingDust").AddComponent<ParticleSystem>(); cdust.transform.position = V.CubeAt + Vector3.up * 8.5f;
+            { var mn = cdust.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 3f; mn.startColor = new Color(0.8f, 0.8f, 0.8f, 0.6f); mn.startSize = 0.08f; mn.startLifetime = 3f; mn.startSpeed = 0f; mn.gravityModifier = 0.25f;
+              var sh2 = cdust.shape; sh2.shapeType = ParticleSystemShapeType.Box; sh2.scale = new Vector3(8f, 0.1f, 8f); var e2 = cdust.emission; e2.rateOverTime = 120f;
+              cdust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f); cdust.Stop(); }
+            // the dodecahedron (in her pocket)
+            var shape = BuildElarimShape("Dodecahedron", world, em, "Venus_Dodeca");
+
+            var ui = new GameObject("ChapterUI").AddComponent<Seven.ChapterUI>(); ui.Cam = cam;
+            var dlg = dirGo.AddComponent<Seven.DialoguePlayer>(); dlg.Bank = bank; dlg.UI = ui;
+            var legend = new GameObject("ControlsLegend").AddComponent<Seven.ControlsLegend>(); legend.Cam = cam; legend.Set = Seven.ControlsLegend.Layout.Chapter; legend.HidePanels = true;
+            var d = dirGo.AddComponent<Seven.VenusDirector>();
+            d.Seven = s7; d.Cat = cat; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend; d.Bike = hb;
+            d.Saucer = saucer; d.Hatch = hatch; d.Ramp = ramp; d.Vessel = vessel; d.VesselWater = water; d.Cube = cube; d.CubeCage = cage.transform;
+            d.Guardian = guardian; d.Attendant = attendant; d.Workers = workers.ToArray(); d.Worms = worms.ToArray(); d.CeilingDust = cdust;
+            d.Flyers = flyers.ToArray(); d.Shape = shape; d.MaintGate = maintGate; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
+            AddProbe(new Vector3(0f, 3f, 20f), new Vector3(60f, 20f, 60f), Vector3.zero);
+            AddProbe(new Vector3(30f, 5f, 250f), new Vector3(30f, 16f, 50f), Vector3.zero);
+            ZFightFix("Venus");
+            EditorSceneManager.SaveScene(scene, VenusScenePath);
+            Log("scene saved " + VenusScenePath);
+        }
+
+        /// <summary>The original Venus cube: pale stone, glowing edges, the same Elarim marking (placeholder glyph) on one face.</summary>
+        static Transform BuildVenusCube(Transform parent, VenusMats m, ElarimMats em)
+        {
+            var root = new GameObject("VenusCube").transform; root.SetParent(parent, false); root.position = V.CubeAt;
+            root.rotation = Quaternion.Euler(0f, 30f, 0f);
+            const float s = 0.42f;
+            var v = new List<Vector3>(); var t = new List<int>(); AddBox(v, t, Vector3.zero, Vector3.one * s);
+            MeshObject("Body", SaveMesh(Finish(v, t), "Venus_Cube_Body"), em.stone, root);
+            var ev = new List<Vector3>(); var et = new List<int>();
+            float h = s / 2f;
+            var corners = new[] { new Vector3(-h, -h, -h), new Vector3(h, -h, -h), new Vector3(h, h, -h), new Vector3(-h, h, -h), new Vector3(-h, -h, h), new Vector3(h, -h, h), new Vector3(h, h, h), new Vector3(-h, h, h) };
+            int[,] edges = { { 0, 1 }, { 1, 2 }, { 2, 3 }, { 3, 0 }, { 4, 5 }, { 5, 6 }, { 6, 7 }, { 7, 4 }, { 0, 4 }, { 1, 5 }, { 2, 6 }, { 3, 7 } };
+            for (int i = 0; i < 12; i++) Sweep(ev, et, new[] { corners[edges[i, 0]], corners[edges[i, 1]] }, 0.006f, false, 6);
+            MeshObject("Edges", SaveMesh(SmoothFinish(ev, et), "Venus_Cube_Edges"), em.edges, root, false);
+            var mv = new List<Vector3> { new Vector3(-h * 0.8f, -h * 0.8f, -h - 0.002f), new Vector3(h * 0.8f, -h * 0.8f, -h - 0.002f), new Vector3(h * 0.8f, h * 0.8f, -h - 0.002f), new Vector3(-h * 0.8f, h * 0.8f, -h - 0.002f) };
+            var mesh = new Mesh { name = "Venus_Cube_Mark" }; mesh.SetVertices(mv); mesh.SetTriangles(new[] { 0, 2, 1, 0, 3, 2 }, 0);
+            mesh.SetUVs(0, new List<Vector2> { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) }); mesh.RecalculateNormals();
+            MeshObject("Mark", SaveMesh(mesh, "Venus_Cube_Mark"), em.mark, root, false);
+            var l = new GameObject("CubeLight").AddComponent<Light>(); l.transform.SetParent(root, false); l.type = LightType.Point; l.range = 5f; l.intensity = 0.8f; l.shadows = LightShadows.None;
+            return root;
+        }
+    }
+}

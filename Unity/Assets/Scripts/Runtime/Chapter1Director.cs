@@ -104,6 +104,7 @@ namespace Seven
         void Start()
         {
             I = this;
+            MoonTraversal.UseMoon();                        // Round 11: Venus may have swapped in its own traversal set
             if (Chapter1State.StartedAt < 0f) Chapter1State.StartedAt = Time.time;
             _motes = MakeMotes();
             Legend.SetLayout(ControlsLegend.Layout.Chapter);

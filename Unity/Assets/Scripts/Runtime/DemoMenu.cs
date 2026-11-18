@@ -26,9 +26,11 @@ namespace Seven
         static (string, string)[] BuildItems()
         {
             var l = new System.Collections.Generic.List<(string, string)>();
-            if (SaveGame.HasChapter1Save)
+            if (VenusState.Reached)
+                l.Add(("Continue  —  Venus: " + (VenusState.Objective ?? "the gardens"), "Venus"));
+            else if (SaveGame.HasChapter1Save)
                 l.Add((SaveGame.Progress >= Chapter1State.CpExplore ? "Continue  —  explore the saucer" : "Continue  —  " + Chapter1State.CpName(SaveGame.Progress), ContinueScene));
-            l.Add(("Chapter 1 — The Moon Prison", "Chapter1")); l.Add(("Scene select", SelectScene)); l.Add(("Fight demo", "FightDemo")); l.Add(("Saucer demo", "Saucer"));
+            l.Add(("Chapter 1 — The Moon Prison", "Chapter1")); l.Add(("Chapter 2 — Venus", "Venus")); l.Add(("Scene select", SelectScene)); l.Add(("Fight demo", "FightDemo")); l.Add(("Saucer demo", "Saucer"));
             l.Add(("Ratwing", "Ratwing")); l.Add(("Quit", QuitScene));
             return l.ToArray();
         }
@@ -37,7 +39,7 @@ namespace Seven
         {
             var l = new System.Collections.Generic.List<(string, string)>();
             for (int cp = Chapter1State.CpCell; cp <= Chapter1State.CpGalley; cp++) l.Add((Chapter1State.CpName(cp), "@cp" + cp));
-            l.Add(("Venus  —  later (not built yet)", LaterScene)); l.Add(("Back", BackScene));
+            l.Add(("Venus  —  the gardens (Chapter 2)", "Venus")); l.Add(("Back", BackScene));
             return l.ToArray();
         }
         public static DemoMenu I { get; private set; }
@@ -62,6 +64,7 @@ namespace Seven
             if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }
             if (DemoBoot.Continue) { SaveGame.Continue(); return; }
             if (DemoBoot.Chapter1Aboard) { Chapter1State.StartAboard(); return; }
+            if (DemoBoot.Chapter2) { SceneManager.LoadScene("Venus"); return; }
             if (DemoBoot.Chapter1) { SceneManager.LoadScene("Chapter1"); return; }
             if (DemoBoot.Saucer) { SceneManager.LoadScene("Saucer"); return; }
             if (DemoBoot.Ratwing) { SceneManager.LoadScene("Ratwing"); return; }

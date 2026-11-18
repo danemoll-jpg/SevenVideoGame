@@ -18,6 +18,8 @@ namespace Seven
             public float PauseAfter;
             public AudioClip Clip;
             public bool IsCat => Speaker == "cat";
+            /// <summary>Round 11: the subtitle name when it is not "7" / "Cat" ("Panther", "Guardian", "Attendant").</summary>
+            [System.NonSerialized] public string Label;
         }
 
         public List<Line> Lines = new List<Line>();

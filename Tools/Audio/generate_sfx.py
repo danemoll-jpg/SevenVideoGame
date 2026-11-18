@@ -71,6 +71,15 @@ SFX = [
     ("fight_block", "Forearm blocking a punch, dull firm thud and cloth rustle.", 0.5, False, "QF9 fight: blocked / defended"),
     ("scree_grunt", "Short non-verbal effort grunt of a large insect-like creature, low raspy chitter, not aggressive, no words.", 0.7, False, "QF9 fight: Scree effort / being hit"),
     ("body_fall", "A large body falling onto a stone floor and sliding a little, soft heavy thud, no crack.", 1.0, False, "QF9 fight: a Scree goes down / 7 knocked down"),
+    # Round 11: Venus (Chapter 2, part 1)
+    ("amb_venus_gardens", "Lush terraced garden ambience: flowing water in stone channels, soft wind in leaves, distant gentle birdlike calls, calm and airy.", 20, True, "Venus gardens ambience"),
+    ("bike_hum", "Smooth low hover engine hum of a small futuristic hover bike, steady, soft electric whirr, no combustion.", 4, True, "the hover bike (loop; pitch / volume follow the speed)"),
+    ("saucer_descent", "A large flying saucer descending slowly through clouds: deep smooth hum swelling, soft air rush, gentle settling.", 6, False, "Venus arrival: the descent under the clouds"),
+    ("tremor_rumble", "A deep ground tremor rumble passing under stone terraces, low and heavy, stones shifting faintly, about three seconds.", 3.5, False, "C02 / C04 tremors"),
+    ("vessel_slosh", "Water sloshing inside a large stone vessel that is being shaken, a few splashes.", 1.5, False, "C02: water shakes in a vessel"),
+    ("dust_fall", "Fine dust and small grit trickling down from a stone ceiling in a large hall.", 2.5, False, "C04: falling dust"),
+    ("signal_pulse", "A distinct, slightly unsettling low pulsing tone with a faint metallic ring, rising then fading, synthetic, not loud.", 2.5, False, "C05: the signal pulse"),
+    ("worm_surface", "A large creature breaking through soft earth and sliding back under, deep earth crumble and slide.", 2.5, False, "burrowing creatures surfacing / diving"),
     ("climb_scuff", "Boots scuffing and scraping on a rough stone wall while someone climbs, two or three soft scrapes.", 1.2, False, "wall climb / climbing up a ledge"),
     ("slab_lift", "A heavy stone slab grinding as it lifts off a stone floor, low scrape fading into a soft hum.", 1.2, False, "telekinesis lifts the fallen slab (ruins)"),
     # Round 10: the galley scene (ship's hum + eating sounds only during the silences)

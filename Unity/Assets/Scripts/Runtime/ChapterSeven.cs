@@ -16,7 +16,7 @@ namespace Seven
         [Tooltip("Telekinesis clip frame held for the 'touch' pose (arm forward, open hand).")]
         public float TouchFrame = 0.45f;
 
-        public enum Mode { Free, Locked, Touch, Gesture, Look, Float, Air, Hang, Climb, Land, Fight }
+        public enum Mode { Free, Locked, Touch, Gesture, Look, Float, Air, Hang, Climb, Land, Fight, Ride }
         public Mode Current { get; private set; } = Mode.Free;
         [System.NonSerialized] public bool Sneak;
         [System.NonSerialized] public bool ScriptDriven;
@@ -75,7 +75,7 @@ namespace Seven
         public void BeginFloat() { Current = Mode.Float; if (State != "idle") Play("idle", 0.4f); _floatT = 0f; }
         public void EndFloat() { Current = Mode.Locked; }
         // the beam carries her; Round 9: jumps, hangs, climbs and landings place her themselves
-        protected override bool Grounded => Current != Mode.Float && Current != Mode.Air && Current != Mode.Hang && Current != Mode.Climb && Current != Mode.Land;
+        protected override bool Grounded => Current != Mode.Ride && Current != Mode.Float && Current != Mode.Air && Current != Mode.Hang && Current != Mode.Climb && Current != Mode.Land;
         protected override bool UseRootMotion => Current == Mode.Free || Current == Mode.Fight || Current == Mode.Locked || Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Look;
         float _floatT;
 
@@ -84,7 +84,8 @@ namespace Seven
             TraversalLateUpdate();
             if (_dotLevel != _dotTarget) { _dotLevel = Mathf.MoveTowards(_dotLevel, _dotTarget, _dotRate * Time.deltaTime); }
             ApplyDot();
-            WallClearance();                              // QF8: keep her whole body out of walls
+            RideLateUpdate();                             // Round 11: leaning forward on the bike
+            if (Current != Mode.Ride) WallClearance();    // QF8: keep her whole body out of walls
             if (Current != Mode.Float) return;
             _floatT += Time.deltaTime;
             float w = Mathf.Clamp01(_floatT / 1.2f);
@@ -175,6 +176,7 @@ namespace Seven
                     Speed = 0f;
                     break;
                 case Mode.Fight: UpdateFight(); break;                 // QF9: the terrace fight
+                case Mode.Ride: Speed = 0f; Context = null; break;     // Round 11: the hover bike carries her
             }
             if (Current != Mode.Free && Current != Mode.Hang) Context = null;
             Ground.BlockLow = false;

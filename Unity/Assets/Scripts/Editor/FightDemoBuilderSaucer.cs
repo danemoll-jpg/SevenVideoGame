@@ -97,7 +97,7 @@ namespace Seven.EditorTools
             imp.animationCompression = ModelImporterAnimationCompression.KeyframeReduction;
             imp.SaveAndReimport();
             var clips = imp.defaultClipAnimations;
-            var loops = new[] { "idle", "walk", "sit", "wash", "sleep", "lap" };
+            var loops = new[] { "idle", "walk", "sit", "wash", "sleep", "lap", "lie_down" };
             foreach (var c in clips)
             {
                 var n = c.takeName.Contains("|") ? c.takeName.Substring(c.takeName.LastIndexOf('|') + 1) : c.takeName;
