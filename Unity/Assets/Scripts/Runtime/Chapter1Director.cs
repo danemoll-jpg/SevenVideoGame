@@ -68,6 +68,27 @@ namespace Seven
         RenderTexture _vpRT;
 
         bool Auto => DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim;     // QF5: the cat-follow test plays like a person
+
+        // ---- QF6: what a player can see / do right now (read by the -playtest driver, which plays like a person)
+        public static Chapter1Director I { get; private set; }
+        /// <summary>-noqf6fix: 0.10.1's behaviour (the take step blocks, no story watchdog) - reproduces Dan's soft-lock.</summary>
+        public static bool QF6Fix = true;
+        public bool PromptInRange => PromptNear;
+        public string PromptLabel => _promptLabel;
+        public bool PromptIsTk => _promptTk;
+        public bool InCutscene => _cut;
+        public bool Resetting => _resetting || _resettingFall;
+        public bool SlabMoved => _slabMoved;
+        public bool StoneDown => _stoneDown;
+        public bool ShapeTaken => _shapeTaken;
+        public ScreeGuard HallGuard => Guard;
+        public int TakeFallbacks { get; private set; }
+        public int StoryWatchdogs { get; private set; }
+        public int PlayerArea => AreaOf(Seven.transform.position);
+        /// <summary>QF6: the step the story waits for now (shown in logs / the audit) and the area its trigger lives in.</summary>
+        public string StepName => _step;
+        string _step = "-"; int _stepArea; Vector3 _stepSpot; bool _stepRearm;
+        string _objective;
         ChapterCapture Cap => ChapterCapture.I;
         ParticleSystem _motes;
         string _promptLabel; bool _promptTk; Vector3 _promptAt; float _promptR; bool _promptHit;
@@ -78,6 +99,7 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ setup
         void Start()
         {
+            I = this;
             if (Chapter1State.StartedAt < 0f) Chapter1State.StartedAt = Time.time;
             _motes = MakeMotes();
             Legend.SetLayout(ControlsLegend.Layout.Chapter);
@@ -118,6 +140,7 @@ namespace Seven
             if (Auto && DemoBoot.OpeningTest <= 0) StartCoroutine(SpeakerViewSampler());
             StartCoroutine(DemoBoot.OpeningTest > 0 ? OpeningTestRun() : DemoBoot.CatFollowTest > 0 ? CatFollowTestRun() : Flow());
             if (DemoBoot.OpeningTest <= 0) StartCoroutine(TeachWatch());
+            if (DemoBoot.OpeningTest <= 0 && DemoBoot.CatFollowTest <= 0 && QF6Fix) StartCoroutine(StoryWatchdog());
             StartCoroutine(ShapeIdle());
             if (VisionVideo != null)
             {
@@ -138,7 +161,7 @@ namespace Seven
         void SetupAudio()
         {
             int cp = Chapter1State.Checkpoint;
-            if (cp < 4 || !_cityLook) { _amb = AudioKit.Loop("amb_cavern", null, null, 1f, AudioKit.Bus.Ambience); MusicSystem.Play("moon_prison", 2f); }
+            if (cp < Chapter1State.CpCity || !_cityLook) { _amb = AudioKit.Loop("amb_cavern", null, null, 1f, AudioKit.Bus.Ambience); MusicSystem.Play("moon_prison", 2f); }
             else { _amb = AudioKit.Loop("amb_city", null, null, 1f, AudioKit.Bus.Ambience); MusicSystem.Play("moon_prison", 2f); }
             if (cp == 0 && LaserDoor != null) _hum = AudioKit.Loop("laser_hum", LaserDoor, null, 0.7f, AudioKit.Bus.Sfx, 1.2f, 14f);
             var f7 = Seven.gameObject.AddComponent<Footsteps>();
@@ -197,17 +220,19 @@ namespace Seven
         /// <summary>World state for a checkpoint (doors, walls, guards, positions).</summary>
         void SetupCheckpoint(int cp)
         {
-            bool doorOpen = cp >= 1, wallOpen = cp >= 2, sealedOpen = cp >= 4;
-            _cityLook = cp >= 4;
+            // QF6: 8 checkpoints (Chapter1State.Cp*), each a Scene Select entry; the state is what a real playthrough
+            // has there (doors / wall / slab / sealed door, the shape on the pedestal or at her hip, the city look).
+            bool doorOpen = cp >= Chapter1State.CpBlock, wallOpen = cp >= Chapter1State.CpPassage, sealedOpen = cp >= Chapter1State.CpCity;
+            _cityLook = cp >= Chapter1State.CpCity;
             SetZone("CellDoor", doorOpen);
             SetZone("Alcove", doorOpen);
             SetZone("Passage0", wallOpen); SetZone("Passage1", wallOpen);
             SetZone("VisionExit", sealedOpen);
             // Round 9: the fallen slab blocks the ruins stair until telekinesis moves it (checkpoint 3 = past the hall)
-            _slabMoved = cp >= 3;
+            _slabMoved = cp >= Chapter1State.CpHall;
             SetZone("Stair", _slabMoved);
             if (Slab != null) { Slab.gameObject.SetActive(!_slabMoved); Slab.position = MoonTraversal.SlabRest; Slab.rotation = Quaternion.Euler(4f, 12f, -6f); }
-            _shapeGlow = sealedOpen ? 0.45f : 1.4f;
+            _shapeGlow = cp >= Chapter1State.CpDoor ? 0.45f : 1.4f;        // after the vision it dims to a faint glow
             _shapeTaken = sealedOpen;                        // Round 10: from checkpoint 4 on she carries it
             if (Shape != null) Show(Shape.gameObject, true);
             if (Shape != null && sealedOpen)
@@ -218,13 +243,14 @@ namespace Seven
                 _carry.Set(CarriedShape.Where.Hip, 0f);
             }
             if (ShapeLight != null) ShapeLight.enabled = !sealedOpen;
-            Glow(DoorSymbol, sealedOpen ? 0.7f : 0f);
+            Glow(DoorSymbol, sealedOpen ? 0.7f : cp == Chapter1State.CpDoor ? 0.9f : 0f);
             Ground.IgnoreObstacle = -1;
             Show(Seven.gameObject, true); Show(Cat.gameObject, true);
             foreach (var b in LaserBeams) if (b != null) b.enabled = !doorOpen;
             if (LaserLight != null) LaserLight.enabled = !doorOpen;
             Seven.SetEnergyPoint(doorOpen ? 1f : 0f);       // the laser field dampens her powers: dark inside the cell
             if (_cityLook) StartCoroutine(CityLook(0f));
+            if (cp >= Chapter1State.CpBay && City != null) City.StartMachinery();     // QF6: after the reveal it keeps working
             OldWallSlab.localPosition = wallOpen ? new Vector3(0f, -2.7f, 0f) : Vector3.zero;
             SealedDoorSlab.localPosition = sealedOpen ? new Vector3(-LeafOpen, 0f, 0f) : Vector3.zero;
             if (DoorRight != null) DoorRight.localPosition = sealedOpen ? new Vector3(LeafOpen, 0f, 0f) : Vector3.zero;
@@ -243,8 +269,11 @@ namespace Seven
                 case 0: p7 = MoonLayout.SevenStart; f7 = Vector3.forward; pc = MoonLayout.VentMouth; break;
                 case 1: p7 = new Vector3(0f, 0f, 2.9f); f7 = Vector3.right; pc = new Vector3(1f, 0f, 3.5f); break;
                 case 2: p7 = new Vector3(16.5f, 0f, 1.2f); f7 = Vector3.back; pc = new Vector3(16.9f, 0f, 2.3f); break;
-                case 3: p7 = new Vector3(16.5f, MoonLayout.Lower, -26.5f); f7 = Vector3.back; pc = new Vector3(16.9f, MoonLayout.Lower, -25.4f); break;
-                default: p7 = new Vector3(16.5f, MoonLayout.Lower, -38.85f); f7 = Vector3.back; pc = new Vector3(17.05f, MoonLayout.Lower, -38.3f); break;
+                case 3: p7 = MoonLayout.HallEntry + Vector3.forward * 0.4f; f7 = Vector3.back; pc = MoonLayout.HallEntry + new Vector3(0.8f, 0f, 0.9f); break;
+                case 4: p7 = new Vector3(16.5f, MoonLayout.Lower, -26.5f); f7 = Vector3.back; pc = new Vector3(16.9f, MoonLayout.Lower, -25.4f); break;
+                case 5: p7 = MoonLayout.ShapeSpot + new Vector3(-0.6f, 0f, 0.5f); f7 = Vector3.right; pc = MoonLayout.ShapeSpot + new Vector3(-0.9f, 0f, 1.0f); break;
+                case 6: p7 = new Vector3(16.5f, MoonLayout.Lower, -38.85f); f7 = Vector3.back; pc = new Vector3(17.05f, MoonLayout.Lower, -38.3f); break;
+                default: p7 = MoonLayout.RevealSpot + new Vector3(0.6f, 0f, -0.4f); f7 = new Vector3(0.6f, 0f, -1f); pc = MoonLayout.RevealSpot + new Vector3(1.2f, 0f, 0.1f); break;
             }
             Seven.Place(p7, f7);
             Cat.Place(pc, f7);
@@ -265,7 +294,7 @@ namespace Seven
                 if (Auto && Time.time - t0 > autoTimeout) { Cap.Soft++; Cap.Log($"SOFT-LOCK? timed out waiting for {what} (7 at {Seven.transform.position}, {Seven.Current}/{Seven.State}; cat at {Cat.transform.position} {Cat.Current})"); yield break; }
                 yield return null;
             }
-            if (Auto) Cap.Log($"ok: {what} ({Time.time - t0:0.0}s)");
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"ok: {what} ({Time.time - t0:0.0}s)");
         }
 
         /// <summary>QF4 watchdog: wait for a condition; after <paramref name="timeout"/> seconds (in play too, not only on
@@ -279,13 +308,13 @@ namespace Seven
                 {
                     Chapter1State.Watchdogs++;
                     Debug.Log($"[Seven] watchdog after {timeout:0}s: {what}");
-                    if (Auto) Cap.Log($"WATCHDOG fallback after {timeout:0.0}s: {what} (7 at {Seven.transform.position}; cat at {Cat.transform.position} {Cat.Current})");
+                    if (Auto || DemoBoot.PlayerSim) Cap?.Log($"WATCHDOG fallback after {timeout:0.0}s: {what} (7 at {Seven.transform.position}; cat at {Cat.transform.position} {Cat.Current})");
                     fallback?.Invoke();
                     yield break;
                 }
                 yield return null;
             }
-            if (Auto) Cap.Log($"ok: {what} ({Time.time - t0:0.0}s)");
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"ok: {what} ({Time.time - t0:0.0}s)");
         }
 
         /// <summary>Scripted walk for 7 (watchdog fallbacks): steer, then place her if she could not get there.</summary>
@@ -324,7 +353,7 @@ namespace Seven
             Cap.Log($"auto walk done at {Seven.transform.position}");
         }
 
-        void Objective(string s) { UI.SetObjective(s); if (Auto) Cap.Log("objective: " + s); }
+        void Objective(string s) { _objective = s; UI.SetObjective(s); if (Auto || DemoBoot.PlayerSim) Cap?.Log("objective: " + s); }
 
         void Prompt(string label, Vector3 at, float radius, bool tk = false)
         {
@@ -414,14 +443,83 @@ namespace Seven
         IEnumerator Flow()
         {
             int cp = Chapter1State.Checkpoint;
-            if (cp <= 0) yield return Scene1And2();
-            if (cp <= 1) yield return Scene3And4();
-            if (cp <= 2) yield return Scene5();
-            if (cp <= 3) yield return Scene6();
-            yield return Scene7And8();
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"flow starts at checkpoint {cp} ({Chapter1State.CpName(cp)})");
+            if (cp <= Chapter1State.CpCell) yield return Scene1And2();
+            if (cp <= Chapter1State.CpBlock) yield return Scene3And4();
+            if (cp <= Chapter1State.CpPassage) yield return Scene5Ruins();
+            if (cp <= Chapter1State.CpHall) yield return Scene5Hall();
+            if (cp <= Chapter1State.CpVision) yield return Scene6Vision();
+            if (cp <= Chapter1State.CpDoor) yield return Scene6Door();
+            if (cp <= Chapter1State.CpCity) yield return Scene6bReveal();
+            yield return SceneBay();
         }
 
-        void Checkpoint(int n) { Chapter1State.Checkpoint = n; if (Auto) Cap.Log($"checkpoint {n}"); }
+        /// <summary>QF6: a checkpoint is also the Continue save (quit and Continue resumes here) and a Scene Select entry.</summary>
+        void Checkpoint(int n)
+        {
+            Chapter1State.Checkpoint = n;
+            if (DemoBoot.CatFollowTest <= 0 && DemoBoot.OpeningTest <= 0) SaveGame.SaveProgress(n);
+            Debug.Log($"[Seven] checkpoint {n} ({Chapter1State.CpName(n)})");
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"checkpoint {n} ({Chapter1State.CpName(n)})");
+        }
+
+        // ------------------------------------------------------------------------------------------ QF6 story watchdog
+        /// <summary>Which stretch of the chapter a point is in (0 cell · 1 cell block · 2 old passage + ruins · 3 Scree hall ·
+        /// 4 vision chamber · 5 mining cut · 6 terrace + ramp · 7 bay floor). Only the traversal links join them, in order.</summary>
+        public static int AreaOf(Vector3 p)
+        {
+            if (p.y < MoonLayout.Bay + 0.6f) return 7;
+            if (p.z < MoonLayout.ViewpointZ) return 6;
+            if (p.z < -38.0f) return 5;
+            if (p.z < MoonLayout.HallExitZ) return 4;
+            if (p.z < MoonLayout.HallEnterZ) return 3;
+            if (Mathf.Abs(p.x) < 1.65f && p.z < MoonLayout.CellWallZ0 + 0.05f && Mathf.Abs(p.y) < 0.5f) return 0;   // the cell first (it reaches z -1.6)
+            if (p.z < -0.2f || p.y > 2.6f && p.x > 15.5f) return 2;
+            return 1;
+        }
+        static readonly string[] AreaNames = { "cell", "cell block", "old passage + ruins", "Scree hall", "vision chamber", "mining cut", "terrace + ramp", "bay floor" };
+
+        /// <summary>QF6: declare the story step the flow waits for: its trigger fires in <paramref name="area"/> (or later);
+        /// the watchdog re-arms the objective if the player is ever further along than that (see <see cref="StoryWatchdog"/>).</summary>
+        void Step(string name, int area, Vector3 spot, bool rearm = true)
+        {
+            _step = name; _stepArea = area; _stepSpot = spot; _stepRearm = rearm;
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"story step: {name} (fires in area {area} '{AreaNames[Mathf.Clamp(area, 0, 7)]}' or later)");
+        }
+
+        /// <summary>QF6 rule: no trigger may depend on one exact moment or spot. Every trigger in the flow already fires
+        /// when 7 is at OR PAST it; this watchdog is the net under that: (1) the current objective is re-shown whenever the
+        /// player has control and it has gone missing; (2) if 7 is ever further along the chapter than the step the story is
+        /// waiting for (for 4 s, outside cutscenes and resets), it logs WATCHDOG and returns her - white fade, no harm - to that
+        /// step's spot, so its trigger can fire. In a correct flow (2) never happens.</summary>
+        IEnumerator StoryWatchdog()
+        {
+            float ahead = 0f;
+            while (true)
+            {
+                yield return null;
+                bool control = !_cut && !_resetting && !_resettingFall && !PauseMenu.IsOpen && !Dlg.Busy && UI.FadeAlpha < 0.05f;
+                if (!control) { ahead = 0f; continue; }
+                if (_objective != null && UI.Objective != _objective) { UI.SetObjective(_objective); Debug.Log($"[Seven] objective re-shown: {_objective}"); }
+                if (!_stepRearm || Seven.Current != ChapterSeven.Mode.Free) { ahead = 0f; continue; }
+                int a = PlayerArea;
+                ahead = a > _stepArea ? ahead + Time.deltaTime : 0f;
+                if (ahead < 4f) continue;
+                ahead = 0f;
+                StoryWatchdogs++; Chapter1State.Watchdogs++; Chapter1State.StoryWatchdogs++;
+                var msg = $"WATCHDOG: 7 is in area {a} '{AreaNames[a]}' while the story waits for '{_step}' (area {_stepArea}) - back to {_stepSpot}";
+                Debug.Log("[Seven] " + msg);
+                Cap?.Log(msg);
+                _resettingFall = true;
+                yield return UI.Fade(1f, 0.45f, 1f);
+                Seven.Place(_stepSpot, Vector3.back);
+                Cat.Place(_stepSpot + new Vector3(0.7f, 0f, 0.6f), Vector3.back);
+                Cat.Follow();
+                Cam.SnapBehind();
+                yield return UI.Fade(0f, 0.6f, 1f);
+                _resettingFall = false;
+            }
+        }
 
         /// <summary>The cell up to the first-contact shot. QF4: the cat walks a fixed route to his mark outside the door
         /// (he can never enter the cell: <see cref="ChapterCat.NoCat"/>); scene 1 starts when 7 reaches the door, or by
@@ -463,7 +561,7 @@ namespace Seven
             }
             OpeningTrigger = trigger;
             ClearPrompt();
-            if (Auto) Cap.Log($"opening trigger: {trigger} ({Time.time - tStart:0.0}s after the cat was sent; cat arrived {(catAt > 0f ? (catAt - tStart).ToString("0.0") + "s" : "no")})");
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"opening trigger: {trigger} ({Time.time - tStart:0.0}s after the cat was sent; cat arrived {(catAt > 0f ? (catAt - tStart).ToString("0.0") + "s" : "no")})");
             if (trigger != "7 at the door") Chapter1State.Watchdogs++;
             // the cat must be on his mark (outside the door) before the scene: wait a moment, else place him
             yield return UntilOr(() => Cat.Arrived, "cat on his mark outside the door", 4f, () => Cat.ForceArrive());
@@ -483,6 +581,7 @@ namespace Seven
 
         IEnumerator Scene1And2()
         {
+            Step("first contact + the cat opens the door (cell)", 1, MoonLayout.DoorApproach, false);   // the laser door holds her in the cell
             yield return Opening();
             if (Auto && DemoBoot.Quick) { Cap.Finish("quick chapter check (first shots only)"); yield break; }
             yield return Dlg.PlayScene(1);
@@ -624,6 +723,7 @@ namespace Seven
 
         IEnumerator Scene3And4()
         {
+            Step("look closer at the older wall", 1, MoonLayout.OldWallSpot, false);                // the wall itself is the way on
             Objective("Follow the cat");
             // Round 9: the cat leads over the broken catwalk, under the pipes and over the bulkhead, waiting at each one.
             float px() => Seven.transform.position.x;
@@ -670,8 +770,10 @@ namespace Seven
             Checkpoint(2);
         }
 
-        IEnumerator Scene5()
+        /// <summary>QF6: scene 5 is two checkpoints now - the old passage + ruins (up to the hall door), then the hall.</summary>
+        IEnumerator Scene5Ruins()
         {
+            Step("ancient hall entrance", 3, MoonLayout.HallEntry);
             Objective("Follow the old passage");
             // Round 9: up the cracked wall, along the shaft lip over the dark drop, down into the ruins, across the broken
             // terraces, telekinesis on the fallen slab, down the stair to the hall door. The cat shows the way.
@@ -692,6 +794,14 @@ namespace Seven
             StartCoroutine(SlabSequence());
             if (Auto) StartCoroutine(AutoPassageRuins());
             yield return Until(() => Seven.transform.position.z < MoonLayout.HallEnterZ, "ancient hall entrance", 600f);
+            _slabMoved = true;                                   // (the stair is the only way down here)
+            Checkpoint(Chapter1State.CpHall);
+        }
+
+        IEnumerator Scene5Hall()
+        {
+            Step("slip past the Scree guard", 4, MoonLayout.HallEntry);
+            yield return Until(() => Seven.transform.position.z < MoonLayout.HallEnterZ, "in the ancient hall", 60f);
             yield return Cutscene(true);
             // QF4: the old camera (17.6, -7.6) sat behind the passage wall. They step a little into the hall so one
             // framing from inside it holds 7, the cat and the guard beyond them (and the clear-view check guards it).
@@ -759,7 +869,7 @@ namespace Seven
             yield return ReadyToTalk();
             yield return Dlg.PlayScene(5, 4, 4);
             yield return Cutscene(false);
-            Checkpoint(3);
+            Checkpoint(Chapter1State.CpVision);
             if (Auto) Cap.Log($"Scree room: spotted {_spotted}x (each reset to the entrance), guard never attacks");
         }
 
@@ -837,8 +947,9 @@ namespace Seven
             if (Auto) Seven.ScriptMove = Vector3.zero;
         }
 
-        IEnumerator Scene6()
+        IEnumerator Scene6Vision()
         {
+            Step("touch the glowing shape", 4, MoonLayout.ShapeSpot);
             Objective("Keep going");
             Cat.Follow();
             Prompt("Touch", MoonLayout.ShapeSpot, 1.3f);
@@ -938,6 +1049,15 @@ namespace Seven
             yield return Shot("s06_vision_after");
             yield return ReadyToTalk(2f);
             yield return Dlg.PlayScene(6, 3, 7);             // lines 3-7 (DIALOGUE.md scene 6)
+            Checkpoint(Chapter1State.CpDoor);
+        }
+
+        /// <summary>QF6: the lunar door (checkpoint 5): she notices the mechanism, opens the door, takes the shape.</summary>
+        IEnumerator Scene6Door()
+        {
+            Step("touch the mechanism, then take the shape", 4, MoonLayout.MechanismSpot);
+            yield return Cutscene(true);
+            Seven.Release(); Seven.Lock(true);
             // She notices the control: the round three-spoke mechanism beside the door.
             Glow(DoorSymbol, 0.9f);
             var toMech = Flat(MoonLayout.DoorSymbol - Seven.transform.position);
@@ -996,7 +1116,8 @@ namespace Seven
                 yield return null;
             }
             if (DoorEngrave != null) foreach (var r in DoorEngrave) Glow(r, 0.6f);
-            SetZone("VisionExit", true);
+            // QF6 (no points of no return): the doorway beyond stays closed for walking - the drop into the mining cut
+            // behind it is one-way - until she has the shape (TakeShape opens it).
             Glow(DoorSymbol, 0.7f);
             yield return Shot("s06_passage_opens");
             var faceCat = Flat(Cat.transform.position - Seven.transform.position);
@@ -1008,7 +1129,8 @@ namespace Seven
             MusicSystem.Play("moon_prison", 4f);
             yield return Cutscene(false);
             yield return TakeShape();
-            Checkpoint(4);
+            SetZone("VisionExit", true);                     // only now: the way on (and its one-way drop) opens
+            Checkpoint(Chapter1State.CpCity);
         }
 
         /// <summary>Round 10: after the door scene, X "Take": 7 picks up the dodecahedron and keeps it (stowed at her
@@ -1017,9 +1139,25 @@ namespace Seven
         {
             if (Shape == null) yield break;
             Objective("Take the shape");
-            Prompt("Take", MoonLayout.ShapeSpot, 1.4f);
             if (Auto) yield return AutoWalk(MoonLayout.ShapeSpot);
-            yield return WaitPrompt("take the dodecahedron");
+            // QF6 (Dan's 0.10.1 soft-lock + his notes): no "Take" prompt and no button any more. She takes it the moment she
+            // walks up to the pedestal. The doorway stays closed until then (no point of no return); if she goes to the
+            // doorway instead, she turns and draws the shape to her hand with telekinesis, then it goes into her pouch.
+            // -noqf6fix = the 0.10.1 behaviour (X "Take" only, the doorway open) for the repro.
+            float t0 = Time.time;
+            if (!QF6Fix) { SetZone("VisionExit", true); Prompt("Take", MoonLayout.ShapeSpot, 1.4f); }
+            while (true)
+            {
+                if (!QF6Fix) { if (_promptHit || Auto && PromptNear) break; yield return null; continue; }
+                var p = Seven.transform.position;
+                bool free = Seven.Current == ChapterSeven.Mode.Free && !PauseMenu.IsOpen && !_resettingFall;
+                if (free && Flat(p - MoonLayout.ShapeSpot).magnitude < 1.5f) break;
+                bool doorway = p.z < MoonLayout.VisionMin.y + 0.35f && p.x > MoonLayout.PassageX.x - 0.3f && p.x < MoonLayout.PassageX.y + 0.3f;
+                if (free && (doorway || AreaOf(p) > 4)) { yield return TakeShapeFallback(); yield break; }
+                yield return null;
+            }
+            ClearPrompt();
+            if (Auto) Cap.Log($"ok: take the dodecahedron ({Time.time - t0:0.0}s)");
             Objective(null);
             yield return Cutscene(true);
             Cam.Subjects.Clear();
@@ -1067,6 +1205,60 @@ namespace Seven
             if (Auto) Cap.Log($"dodecahedron taken: held in her right hand (beat {1.7f:0.0}s on her hand), radius {MoonLayout.ShapeRadius:0.000} m (~{MoonLayout.ShapeRadius * 2f * 100f:0} cm across), marking file {MoonLayout.ElarimMarkFile}");
             Objective("Keep going");
             StartCoroutine(StowWhenOut());
+            yield return Cutscene(false);
+        }
+
+        /// <summary>QF6 fallback for "Take": she walked to the open door without it. She stops, turns back and lifts a hand;
+        /// the shape drifts across the chamber to her (telekinesis, as with the stone and the slab) and goes into the pouch
+        /// at her belt. If she is somehow already past the doorway or not standing (a hang, a jump), it simply joins her.</summary>
+        IEnumerator TakeShapeFallback()
+        {
+            TakeFallbacks++;
+            var at = Seven.transform.position;
+            Debug.Log($"[Seven] take fallback: 7 left for the door without the dodecahedron (at {at}) - she draws it to her with telekinesis");
+            Cap?.Log($"take fallback: 7 went to the (still closed) doorway at ({at.x:0.00}, {at.y:0.00}, {at.z:0.00}) before the pedestal - telekinesis brings it to her, then the pouch");
+            Objective(null);
+            _shapeTaken = true;
+            if (ShapeLight != null) ShapeLight.enabled = false;
+            bool standing = Seven.Current == ChapterSeven.Mode.Free || Seven.Current == ChapterSeven.Mode.Land;
+            _carry = CarriedShape.Attach(Seven.gameObject, Shape);
+            if (!standing || AreaOf(at) > 4)
+            {
+                _carry.Carrying = true;
+                _carry.Set(CarriedShape.Where.Hip, 0.6f);
+                Objective("Keep going");
+                yield break;
+            }
+            yield return Cutscene(true);
+            Cam.Subjects.Clear();
+            var toShape = Flat(MoonLayout.ShapeAt - Seven.transform.position);
+            Cam.Shot(Seven.transform.position - toShape.normalized * 2.2f + Vector3.up * 1.7f + Vector3.Cross(Vector3.up, toShape.normalized) * 0.8f,
+                     Vector3.Lerp(Seven.transform.position + Vector3.up * 1.3f, MoonLayout.ShapeAt, 0.5f), 0.6f, false, 56f);
+            Seven.Gesture(MoonLayout.ShapeAt);
+            Seven.SetEnergyPoint(1.9f, 0.25f);
+            for (float t = 0f; t < 2f && Seven.Current == ChapterSeven.Mode.Gesture && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
+            TkStream(MoonLayout.ShapeAt);
+            AudioKit.Play("energy_point", MoonLayout.ShapeAt, 0.5f, 0f, AudioKit.Bus.Sfx, 15f);
+            var hand = Seven.Bone(HumanBodyBones.RightHand);
+            var p0 = Shape.position;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.9f)
+            {
+                var hp = hand != null ? hand.position : Seven.transform.position + Vector3.up * 1.2f;
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Shape.position = Vector3.Lerp(p0, hp, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 0.35f;
+                Shape.Rotate(Vector3.up, 220f * Time.deltaTime, Space.World);
+                yield return null;
+            }
+            _carry.Set(CarriedShape.Where.Hand, 0.15f);
+            yield return Shot("qf6_take_fallback_telekinesis");
+            yield return Wait(0.5f);
+            Seven.SetEnergyPoint(1f, 1.0f);
+            Seven.Release();
+            _carry.Carrying = true;
+            _carry.Set(CarriedShape.Where.Hip, 0.45f);
+            Debug.Log("[Seven] dodecahedron into the pouch at her belt (take fallback)");
+            yield return Wait(0.5f);
+            Objective("Keep going");
             yield return Cutscene(false);
         }
 
@@ -1203,6 +1395,8 @@ namespace Seven
 
         IEnumerator Scene6bReveal()
         {
+            Step("the city reveal (out onto the terrace)", 6, MoonLayout.RevealSpot);
+            if (Auto) StartCoroutine(HipShots());
             Objective("Find the way out");
             StartCoroutine(WatchCityBlend());
             // Round 9: past the sealed door the floor drops into an old mining cut; she climbs the far wall out onto the terrace.
@@ -1220,6 +1414,19 @@ namespace Seven
             yield return Cutscene(true);
             Cam.Subjects.Clear();               // 6b: scenic shots of the city (the lines play over them on purpose)
             Objective(null);
+            // QF6: "at or past" - if she is already well beyond the viewpoint (down the ramp, on a scaffold, in the bay) the
+            // reveal still plays from the terrace (a short fade there and back), never from wherever she happens to be.
+            Vector3? resume = null;
+            if (Dist7(MoonLayout.RevealSpot) > 5f || Seven.transform.position.y < MoonLayout.Lower - 0.5f)
+            {
+                resume = Seven.transform.position;
+                Cap?.Log($"6b: 7 already past the viewpoint at {resume.Value} - the reveal plays from the terrace, then back there");
+                yield return UI.Fade(1f, 0.5f);
+                Seven.Place(MoonLayout.RevealSpot + new Vector3(0.2f, 0f, 2.0f), Vector3.back);
+                Cat.Place(MoonLayout.RevealSpot + new Vector3(1.1f, 0f, 2.4f), Vector3.back);
+                Cam.SnapBehind();
+                StartCoroutine(UI.Fade(0f, 0.6f));
+            }
             MusicSystem.Play("main_theme", 4f);
             StartCoroutine(SwapAmbience("amb_city", 3f));
             Seven.ScriptDriven = true;
@@ -1280,8 +1487,17 @@ namespace Seven
             yield return Shot("c06_saucer_spotted");
             yield return Dlg.PlayScene(7);
             Seven.Release();
+            if (resume.HasValue && resume.Value.z < -48.6f)
+            {
+                yield return UI.Fade(1f, 0.5f);
+                Seven.Place(resume.Value, Vector3.back);
+                Cat.Place(resume.Value + new Vector3(0.8f, 0f, 0.6f), Vector3.back);
+                Cat.Follow();
+                Cam.SnapBehind();
+                StartCoroutine(UI.Fade(0f, 0.6f));
+            }
             yield return Cutscene(false);
-            Checkpoint(4);
+            Checkpoint(Chapter1State.CpBay);
         }
 
         IEnumerator WatchCityBlend()
@@ -1294,10 +1510,10 @@ namespace Seven
         }
 
         // ------------------------------------------------------------------------------------------ 7-8: bay, beam
-        IEnumerator Scene7And8()
+        /// <summary>Scenes 7-8 after the reveal (checkpoint 7): down to the bay, release the saucer, the beam, liftoff.</summary>
+        IEnumerator SceneBay()
         {
-            if (Auto) StartCoroutine(HipShots());
-            yield return Scene6bReveal();
+            Step("release the saucer, then board in the light", 7, MoonLayout.LeverSpot);
             MusicSystem.Play("moon_prison", 5f);
             Objective("Get down to the bay and release the saucer");
             // Round 9: down the broken ramp, two scaffolds and drops to the bay floor; the cat hops ahead.
@@ -1357,7 +1573,6 @@ namespace Seven
             Cam.Shot(MoonLayout.BeamCentre + new Vector3(6.6f, 1.7f, 4.6f), MoonLayout.BeamCentre + new Vector3(1.4f, 1.6f, 0f), 1.2f, false, 50f);
             yield return ReadyToTalk();
             yield return Dlg.PlayScene(8);
-            Checkpoint(4);
             yield return Board();
         }
 
@@ -1517,7 +1732,7 @@ namespace Seven
             }
             if (Auto) Cap.Log($"moon level done in {Time.time - Chapter1State.StartedAt:0.0}s game time; lines so far {Chapter1State.Played.Count}; cat max distance while following/leading {Cap.CatMaxBehind:0.00} m; cat catch-ups {Cat.CatchUps}; 7 footsteps {Seven.GetComponent<Footsteps>()?.Count}");
             Chapter1State.Aboard = true;
-            SaveGame.SaveChapter1Aboard();             // Round 7: Continue = explore the saucer after the chapter
+            SaveGame.SaveProgress(Chapter1State.CpAboard);   // QF6: Continue resumes aboard (scene 9)
             MusicSystem.Play("aboard_saucer", 3f);
             SceneManager.LoadScene("Saucer");
         }
@@ -1831,7 +2046,7 @@ namespace Seven
             bool finished = false;
             while (Time.time - t0r < 300f)
             {
-                if (s5 == null && Chapter1State.Checkpoint >= 2) s5 = StartCoroutine(Scene5());
+                if (s5 == null && Chapter1State.Checkpoint >= 2) s5 = StartCoroutine(Scene5Ruins());
                 if (phase == "end") { finished = true; break; }
                 yield return null;
             }
@@ -1959,7 +2174,8 @@ namespace Seven
         {
             if (_resettingFall) yield break;
             _resettingFall = true;
-            if (Auto) Cap.Log($"fall into the dark at ({at.x:0.00}, {at.y:0.00}, {at.z:0.00}) -> white fade, back to the last safe ledge {Seven.LastSafe}");
+            Chapter1State.FallResets++;
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"fall into the dark at ({at.x:0.00}, {at.y:0.00}, {at.z:0.00}) -> white fade, back to the last safe ledge {Seven.LastSafe}");
             AudioKit.Play("energy_point", null, 0.5f);
             yield return UI.Fade(1f, 0.45f, 1f);
             if (Auto) yield return Shot("tr_fall_white");
@@ -1970,7 +2186,7 @@ namespace Seven
             yield return UI.Fade(0f, 0.6f, 1f);
             Seven.Lock(false);
             _resettingFall = false;
-            if (Auto) Cap.Log($"fall reset done: 7 at {Seven.transform.position} ({Seven.Current})");
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"fall reset done: 7 at {Seven.transform.position} ({Seven.Current})");
         }
 
         // ------------------------------------------------------------------------------------------ teaching prompts

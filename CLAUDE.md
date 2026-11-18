@@ -46,6 +46,22 @@ apply to every asset and scene:
 2. **Never steal focus**: prefer batch mode / off-screen rendering for screenshots. Otherwise start minimized with
    run-in-background on. If a test truly needs a visible/focused window, **stop and ask Dan first.**
 3. One heavy job at a time at Below Normal priority. Clean up temp files at the end of each round.
+4. **Testing must never take hours (Dan, QF6).** All automated testing for a round or quick fix stays under **about
+   20 minutes of game time in total**.
+   - Run at accelerated game speed where possible (`-testspeed 2`, check runs only).
+   - At most **one** player-style run through the chapter.
+   - Rely on the trigger rules below (fire at or past, watchdogs, no points of no return), not on repeating runs.
+   - 25-run tests (playtest, cat-follow, opening) are not part of testing any more. Use them only to investigate a
+     specific bug, with Dan's OK.
+
+## Level / story rules (Dan, QF6) — whole game
+- **No points of no return.** The player must never be able to pass a point she can't come back from while something
+  the story needs is still behind her. Either the way forward stays closed until it's done (the door or path opens only
+  after it), or she can walk back. Every one-way drop, ramp, ledge, stair or jump is listed in `Docs/TRIGGER-AUDIT.md`
+  with its verdict. Add new ones there.
+- **Story triggers fire at or past their place**, never only at one exact moment or spot. Every step the flow waits on
+  is declared (`Chapter1Director.Step`) and watched (`StoryWatchdog`).
+- **No required pick-up buttons:** story items are taken by walking up to them (the dodecahedron).
 
 ## Commands
 - Blender 3.6.1: `F:\blender\blender.exe` (not under Program Files, not on PATH).
@@ -126,13 +142,34 @@ apply to every asset and scene:
   odd runs); `capture_log.txt` must end `OPENING TEST: 25/25` (cat inside the cell 0 frames each run). The normal Chapter 1
   check run also logs `speaker view scene N …` (occluded / outside the frame during every line: must be 0 %), `WATCHDOG`
   fallbacks, Scree feet and `scree tucked abdomen vs legs` (must say "clears").
-  **Cat-follow test (QF5):** `SevenDemo.exe -mute -catfollowtest 25 -capture <dir> …` (~27 min) → 25 runs from the end of
-  the cell rescue out of the cell block and up the cracked wall, 7 played like a person (virtual gamepad on the real
-  input actions, free camera, no autopilot; paths fast / wait / backtrack / circle / hurry over the bulkhead, hitches on
-  odd runs); `capture_log.txt` must end `CAT FOLLOW TEST: 25/25, soft-locks 0`. `-noqf5catfix` = the 0.10.0 behaviour (repro).
+  **Cat-follow test (QF5; investigation only, not a standing check since QF6):** `-catfollowtest n` = n player-style runs
+  from the cell rescue to the cracked wall (must end `CAT FOLLOW TEST: n/n, soft-locks 0`). `-noqf5catfix` = 0.10.0 (repro).
   The cat's leash (`ChapterCat.Leash`, allowed by `Chapter1Director` only while the player has 7): > 6 m behind or not
   closing in for 3 s → trot after her; blocked → fade (`_Fade` on `Seven/DissolveLit`) and reappear a step behind her out
   of view; route stops also go once 7 has passed them (`ChapterCat.ArcOf`).
+  **Player-style run (QF6) — the release check, ONE run (testing rule 4):**
+  `SevenDemo.exe -mute -testspeed 2 -playtest 5 -playtestfrom 4 -capture <dir> …` (`PlaytestRun.cs`, run 5 of the habit
+  table, ~5 min) → the whole chapter from the main menu to "Set course" in the galley, played like a person.
+  - Inputs: a virtual gamepad on the real input actions, the real menus (pause menu, Main menu, Continue), a free camera.
+    No autopilot, no teleports.
+  - The driver reads only what a player sees: the objective, the context prompt, 7's position or hang, the Scree guard.
+  - Run 5's habits: it skips optional bits and ignores the pedestal (the doorway take), falls on purpose, quits to the
+    menu and Continues at two checkpoints.
+  - Must end `PLAYTEST: 1/1, soft-locks 0`. A soft-lock means the story has not moved for 240 s of game time.
+  - `-playtest n` with other `-playtestfrom` values gives other habits (hurry / patient / backtrack / wander). More than
+    one run is for investigations only.
+  - `-noqf6fix` = the 0.10.1 behaviour (repro of Dan's soft-lock).
+  - An autopilot pass alone does not count for a release. **Story triggers (QF6 rule):** no trigger may depend on one exact moment or spot — each fires
+  at *or past* its place; every step the flow waits on is declared with `Chapter1Director.Step(...)` and watched by
+  `StoryWatchdog` (re-shows the objective; returns 7 to the step if she is ever further along — must stay 0). Audit table:
+  `Docs/TRIGGER-AUDIT.md` (update it when a trigger is added).
+  **Checkpoints / Continue / Scene Select (QF6):** `Chapter1State.Cp*`: 0 cell · 1 escape (cat leads) · 2 old passage + ruins ·
+  3 Scree guard · 4 vision · 5 lunar door + take the shape · 6 city reveal · 7 saucer rescue + beam · 8 aboard · 9 galley ·
+  10 free exploration. Each is a restart point (d-pad down), the persistent Continue save (`SaveGame.Progress`, PlayerPrefs
+  `seven_ch1_progress`; old `seven_ch1_aboard` saves load as 10) and a **Scene select** entry (main menu + pause menu;
+  "Venus — later" listed, not selectable); `Chapter1State.StartAt(cp)` + `SetupCheckpoint` give the state a real playthrough
+  has there. **Scene Select test:** `-testspeed 2 -sceneselecttest` (~12 min) → every entry started from the menu (6 from the pause menu)
+  and played like a person to the next; must end `SCENE SELECT TEST: 10/10`.
   **Phantom-wall proof (QF3):** every build runs `FightDemoBuilderPhantomCheck.cs` on the Chapter 1 scene →
   `Docs/Previews/qf3/phantom_check.txt` + build log: city (layer 20) triangles in a walkable volume and inside the host
   structure must both be **0**; it also lists every non-city renderer without a collider in a walkable volume (props).
@@ -140,8 +177,9 @@ apply to every asset and scene:
   **Telepathy sound check** (the one allowed unmuted step):
   `SevenDemo.exe -mute -soundcheck -capture <dir> …` → `soundcheck_log.txt` (~2 s of sound, then muted again).
   **SFX sound check** (Round 7): `-mute -soundcheck sfx -capture <dir> …` → 5 SFX, ≤ 1.2 s each (~5.4 s of sound), muted again.
-  Round 7 switches: `-ch1cp <n>` (start Chapter 1 at checkpoint n; 4 = the city reveal onward, ~3 min check run),
-  `-continue` (like the menu's Continue: explore the saucer after the chapter), `-cityreveal primary|alternate|off`.
+  Round 7 switches: `-ch1cp <n>` (start Chapter 1 at checkpoint n, QF6 numbering; 6 = the city reveal onward, ~3 min check
+  run), `-continue` (like the menu's Continue: the saved checkpoint; test runs use their own `seven_test_*` keys),
+  `-cityreveal primary|alternate|off`.
   Chapter 1 check-run extras in `capture_log.txt`: laser-door collision (furthest z), line of sight cell → hidden
   release (must be 0), release panel in in-cell shots, energy point, every sound/music cue (`audio:` lines).
 - **City reveal (Round 7, scene 6b)**: `FightDemoBuilderCity.cs` (host structure, hollow-Moon shell, terraces,
@@ -178,9 +216,10 @@ apply to every asset and scene:
   `t_<lesson>_xbox|keys` shots, `traversal ok:` steps, `deliberate fall` resets (all must be ok), `hands on the ledge` gaps,
   `cat waits at <route> stop`, `traversal summary`, `LEGEND VISIBLE` (must never appear). The SFX sound check
   (`-soundcheck sfx`) now plays the 5 Round 9 traversal sounds.
-- Play: run the exe normally → main menu (Continue when a Chapter 1 save exists · Chapter 1 · demos · Quit); Xbox
-  controller or keyboard/mouse (the legend bottom-left switches automatically). Esc / Start = pause menu (Resume ·
-  Settings · Main menu · Quit, with confirms); fight reset / checkpoint restart = Backspace / d-pad down.
+- Play: run the exe normally → main menu (Continue — the saved checkpoint, when a Chapter 1 save exists · Chapter 1 ·
+  Scene select · demos · Quit); Xbox controller or keyboard/mouse (the legend bottom-left switches automatically).
+  Esc / Start = pause menu (Resume · Settings · Controls · Scene select · Main menu · Quit, with confirms); fight reset /
+  checkpoint restart = Backspace / d-pad down.
 
 - **Auto-update launcher + releases (Round 8; every round now ends with a published release)** — details and
   player instructions (Windows, Steam Deck/Proton) in `Docs/LAUNCHER.md`. `SevenLauncher.exe` (C++, `Launcher/`)
@@ -226,7 +265,8 @@ apply to every asset and scene:
   (tulip table + seats, plate, raised cat feeder, porthole with the Moon). After the scene: objective "Set course for
   Venus", free exploration (Continue starts here); X "Set course" at her galley seat = placeholder (Moon falls away,
   "Chapter 2 — Venus (coming soon)").
-- **Dodecahedron** (hand-held, 15 cm, pale stone + glowing edges): `ElarimShape.cs`; X "Take" after the door scene.
+- **Dodecahedron** (hand-held, 15 cm, pale stone + glowing edges): `ElarimShape.cs`; taken automatically when she walks up to the pedestal after the door scene (QF6: no prompt or button;
+  the doorway stays closed until she has it; at the doorway she draws it to her by telekinesis instead).
   QF5: she keeps it visibly (`CarriedShape.cs` on 7: right hand, or the small belt pouch at her right hip — `HipOffset`,
   material `Elarim_pouch`); walks out of the chamber holding it, pouch from past the door on; in the galley she takes it
   out and sets it beside her plate. The lunar door's mechanism is on the RIGHT (seen from the chamber) as in the vision.
@@ -241,7 +281,16 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–10 + QF1–QF5 complete (2026-11-18), release 0.10.1** — Chapter 1 "The Moon Prison" ends with the galley
-scene (Round 10); QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, the lock mechanism is on the right as
-in the vision, she visibly keeps the dodecahedron. History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.1, then Round 11**
+**Rounds 1–10 + QF1–QF6 complete (2026-11-18), release 0.10.2.** Chapter 1 "The Moon Prison" ends with the galley
+scene (Round 10).
+- QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
+  vision.
+- QF6 (Dan's 0.10.1 soft-lock):
+  - The shape is taken automatically.
+  - There are no points of no return; the doorway stays closed until she has the shape.
+  - Every story step is declared and watched.
+  - Checkpoints save for Continue, and Scene select is in both menus.
+  - New testing rule: under 20 minutes per round.
+
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.2, then Round 11**
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

@@ -1,0 +1,82 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.05s] playtest: virtual gamepad 'PlaytestPad' on the real input actions; muted=True listenerVolume=0; QF6 fix OFF - repro
+[   0.88s] playtest: run 5/5 starts: habits [skips-optional falls skips-lines], quit+Continue at checkpoints [5,10], restart at -
+[   1.51s] playtest: main menu: 'Chapter 1 — The Moon Prison' (A)
+[   2.10s] flow starts at checkpoint 0 (Cell (scenes 1-2))
+[   2.10s] story step: first contact + the cat opens the door (cell) (fires in area 1 'cell block' or later)
+[   5.28s] objective: Look around
+[   5.28s] objective: Go to the cell door
+[   6.81s] opening trigger: 7 at the door (3.1s after the cat was sent; cat arrived no)
+[   7.71s] ok: cat on his mark outside the door (1.7s)
+[   7.97s] objective: 
+[  14.43s] checkpoint 0 (Cell (scenes 1-2))
+[  14.91s] objective: Stand back from the door
+[  15.03s] ok: 7 stands back (0.3s)
+[  16.45s] ok: cat in the guard alcove (out of sight) (2.8s)
+[  16.45s] ok: lines finished (0.0s)
+[  16.45s] objective: 
+[  16.86s] ok: cat on the crate in the alcove (0.8s)
+[  18.69s] ok: cat down from the crate (0.6s)
+[  18.69s] objective: Step out
+[  19.38s] ok: 7 steps out (1.4s)
+[  19.81s] ok: cat back from the alcove (0.9s)
+[  22.51s] checkpoint 1 (Escape - the cat leads (scenes 3-4))
+[  22.51s] story step: look closer at the older wall (fires in area 1 'cell block' or later)
+[  22.51s] objective: Follow the cat
+[  22.60s] playtest: run 5: checkpoint 1 (Escape - the cat leads (scenes 3-4)) after 22s
+[  23.91s] ok: corridor: scene 3 trigger (2.8s)
+[  34.57s] ok: on top of the bulkhead (the gate in view) (0.0s)
+[  34.58s] objective: Find another way out
+[  34.64s] ok: look closer at the older wall (0.1s)
+[  34.64s] objective: 
+[  38.64s] checkpoint 2 (Old passage + ruins)
+[  38.64s] story step: ancient hall entrance (fires in area 3 'Scree hall' or later)
+[  38.64s] objective: Follow the old passage
+[  38.71s] playtest: run 5: checkpoint 2 (Old passage + ruins) after 38s
+[  44.52s] playtest: run 5: lets go over the dark drop on purpose at x 14.6
+[  44.53s] fall into the dark at (14.60, 0.92, -2.68) -> white fade, back to the last safe ledge (16.50, 2.80, -1.81)
+[  45.21s] fall reset done: 7 at (16.50, 2.80, -1.81) (Free)
+[  54.43s] playtest: run 5: lets go over the terrace gap on purpose
+[  54.64s] fall into the dark at (10.33, -2.11, -6.15) -> white fade, back to the last safe ledge (9.15, -0.70, -6.15)
+[  55.32s] fall reset done: 7 at (9.15, -0.70, -6.15) (Free)
+[  57.23s] ok: ruins: up on terrace C (37.2s)
+[  57.23s] objective: Clear the fallen slab
+[  57.71s] ok: lift the fallen slab (1.0s)
+[  59.73s] objective: Follow the old passage
+[  62.95s] ok: ancient hall entrance (48.6s)
+[  62.95s] checkpoint 3 (Scree guard (scene 5))
+[  62.95s] story step: slip past the Scree guard (fires in area 4 'vision chamber' or later)
+[  62.95s] ok: in the ancient hall (0.0s)
+[  62.96s] playtest: run 5: checkpoint 3 (Scree guard (scene 5)) after 62s
+[  64.89s] objective: Get past the Scree guard without hurting anyone
+[  80.04s] ok: slipped past the guard (30.3s)
+[  82.15s] checkpoint 4 (Vision (scene 6))
+[  82.15s] story step: touch the glowing shape (fires in area 4 'vision chamber' or later)
+[  82.15s] objective: Keep going
+[  83.79s] ok: vision chamber (3.3s)
+[  83.79s] objective: Look at the glowing shape
+[  83.86s] playtest: run 5: checkpoint 4 (Vision (scene 6)) after 83s
+[  85.51s] ok: touch the shape (3.4s)
+[  85.51s] objective: 
+[  93.27s] ok: vision lines (0.0s)
+[  95.38s] checkpoint 5 (Lunar door + take the shape)
+[  95.38s] story step: touch the mechanism, then take the shape (fires in area 4 'vision chamber' or later)
+[  95.38s] playtest: run 5: checkpoint 5 (Lunar door + take the shape) after 95s
+[  96.45s] objective: Touch the mechanism beside the door
+[  96.95s] playtest: run 5: quit to the main menu at checkpoint 5 (Lunar door + take the shape), 7 at (19.79, -2.40, -34.65) -> Continue
+[  97.10s] playtest: pause menu: 'Main menu' (A)
+[  97.43s] playtest: pause menu: 'Yes, main menu' (A)
+[  98.38s] shot 01_menu_continue_from_checkpoint.png  audioPeak=0.000000  cursorVisible=False
+[  98.38s] playtest: main menu: 'Continue  —  Lunar door + take the shape' (A)
+[  98.43s] flow starts at checkpoint 5 (Lunar door + take the shape)
+[  98.43s] story step: touch the mechanism, then take the shape (fires in area 4 'vision chamber' or later)
+[  99.46s] playtest: continued: scene Chapter1, checkpoint 5, explore False, galley start False
+[  99.77s] objective: Touch the mechanism beside the door
+[ 101.78s] ok: touch the round mechanism (4.0s)
+[ 101.78s] objective: 
+[ 106.72s] objective: Take the shape
+[ 106.87s] playtest: run 5: ignores the pedestal and heads for the open door
+[ 346.88s] playtest: playtest run  5/5: FAIL in 5.8 min - SOFT-LOCK at 'the release lever' (objective 'Take the shape', step 'touch the mechanism, then take the shape', 7 at (22.45, -10.00, -73.17), Free/idle); quit+Continue 1x, restarts 0, deliberate falls 2 (fall resets 2), wanders 0, backtracks 0, waits 12, take fallback 0, story watchdog (QF6, must be 0) 0, QF4 watchdogs (cell / cat marks) 0, cat leash 6, hitches 0
+[ 346.92s] shot 02_pt05_FAIL.png  audioPeak=0.000000  cursorVisible=False
+[ 346.92s] PLAYTEST: 0/1, soft-locks 1, story watchdog fallbacks 0 (QF6 fix OFF - repro)
+[ 346.92s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

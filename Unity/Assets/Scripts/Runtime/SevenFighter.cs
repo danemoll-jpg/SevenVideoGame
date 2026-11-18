@@ -155,7 +155,7 @@ namespace Seven
             Time.timeScale = 0.05f;
             float t0 = Time.realtimeSinceStartup;
             while (Time.realtimeSinceStartup - t0 < seconds) { if (PauseMenu.IsOpen) yield break; yield return null; }
-            if (!PauseMenu.IsOpen) Time.timeScale = 1f;
+            if (!PauseMenu.IsOpen) Time.timeScale = DemoBoot.TestSpeed;
         }
 
         /// <summary>The bot's punch landed on an unguarded 7: short push back, no injury.</summary>

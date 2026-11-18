@@ -48,8 +48,21 @@ namespace Seven
         /// <summary>-catfollowtest n (with -capture): QF5 check - n runs from the end of the cell rescue out of the cell
         /// block and up into the old passage, 7 driven like a player (virtual gamepad, free camera, varied paths).</summary>
         public static int CatFollowTest { get; private set; }
-        /// <summary>QF5 cat-follow test: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0;
+        /// <summary>QF6 -playtest n (with -capture): n full-chapter runs from the main menu to "Set course" in the galley,
+        /// played like a person (virtual gamepad on the real input actions, menus included, no autopilot, no teleports).</summary>
+        public static int Playtest { get; private set; }
+        /// <summary>QF6 -sceneselecttest (with -capture): every Scene Select entry started from the menu and played (like a
+        /// person) until the next entry's checkpoint is reached.</summary>
+        public static bool SceneSelectTest { get; private set; }
+        /// <summary>-playtestseed n: offset for the playtest's per-run seeds (repeat a run).</summary>
+        public static int PlaytestSeed { get; private set; }
+        /// <summary>-playtestfrom k: start at run k+1 (same seeds / habits as in the full test - e.g. repeat one run).</summary>
+        public static int PlaytestFrom { get; private set; }
+        /// <summary>QF6 -testspeed x (with -capture only): game time runs x times faster (Time.timeScale) so automated
+        /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
+        public static float TestSpeed { get; private set; } = 1f;
+        /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -74,6 +87,12 @@ namespace Seven
                 if (args[i] == "-openingtest" && i + 1 < args.Length && int.TryParse(args[i + 1], out var ot)) { OpeningTest = ot; Chapter1 = true; }
                 if (args[i] == "-catfollowtest" && i + 1 < args.Length && int.TryParse(args[i + 1], out var cf)) { CatFollowTest = cf; Chapter1 = true; Chapter1State.Checkpoint = 1; }
                 if (args[i] == "-noqf5catfix") ChapterCat.QF5Fix = false;
+                if (args[i] == "-playtest" && i + 1 < args.Length && int.TryParse(args[i + 1], out var pt)) Playtest = pt;
+                if (args[i] == "-playtestfrom" && i + 1 < args.Length && int.TryParse(args[i + 1], out var pf)) PlaytestFrom = pf;
+                if (args[i] == "-playtestseed" && i + 1 < args.Length && int.TryParse(args[i + 1], out var ps)) PlaytestSeed = ps;
+                if (args[i] == "-sceneselecttest") SceneSelectTest = true;
+                if (args[i] == "-noqf6fix") Chapter1Director.QF6Fix = false;
+                if (args[i] == "-testspeed" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var ts)) TestSpeed = Mathf.Clamp(ts, 1f, 4f);
                 if (args[i] == "-gallery") { Gallery = true; Saucer = true; }
                 if (args[i] == "-capture" && i + 1 < args.Length) CaptureDir = args[i + 1];
                 if (args[i].StartsWith("-screen-") || args[i] == "-window-mode" || args[i] == "-popupwindow") WindowFromCommandLine = true;
@@ -84,6 +103,12 @@ namespace Seven
                 AudioListener.pause = true;
             }
             if (CaptureDir != null) Application.runInBackground = true;
+            if (CaptureDir == null) TestSpeed = 1f;          // only ever for automated check runs
+            if (TestSpeed != 1f)
+            {
+                Time.timeScale = TestSpeed;
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => { if (!PauseMenu.IsOpen) Time.timeScale = TestSpeed; };
+            }
             bool forceFullscreen = CaptureDir == null && !WindowFromCommandLine && !Application.isEditor;
             FullscreenToggle.Install(forceFullscreen);
             Debug.Log($"[Seven] boot: muted={Muted} listenerVolume={AudioListener.volume} capture={CaptureDir ?? "-"} fight={Fight} saucer={Saucer} ratwing={Ratwing} chapter1={Chapter1} forceFullscreen={forceFullscreen} mode={Screen.fullScreenMode}");

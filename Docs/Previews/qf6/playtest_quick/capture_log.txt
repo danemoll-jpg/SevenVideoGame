@@ -1,0 +1,113 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.05s] playtest: virtual gamepad 'PlaytestPad' on the real input actions; muted=True listenerVolume=0; QF6 fix on
+[   0.89s] playtest: run 5/5 starts: habits [skips-optional falls skips-lines], quit+Continue at checkpoints [5,10], restart at -
+[   4.33s] playtest: main menu: 'Chapter 1 — The Moon Prison' (A)
+[   5.02s] flow starts at checkpoint 0 (Cell (scenes 1-2))
+[   5.02s] story step: first contact + the cat opens the door (cell) (fires in area 1 'cell block' or later)
+[   7.90s] objective: Look around
+[   7.90s] objective: Go to the cell door
+[   9.29s] opening trigger: 7 at the door (2.6s after the cat was sent; cat arrived no)
+[  10.36s] ok: cat on his mark outside the door (1.8s)
+[  10.37s] objective: 
+[  15.15s] checkpoint 0 (Cell (scenes 1-2))
+[  15.59s] objective: Stand back from the door
+[  15.70s] ok: 7 stands back (0.2s)
+[  17.13s] ok: cat in the guard alcove (out of sight) (2.9s)
+[  18.14s] ok: lines finished (2.0s)
+[  18.14s] objective: 
+[  18.54s] ok: cat on the crate in the alcove (0.8s)
+[  20.36s] ok: cat down from the crate (0.6s)
+[  20.36s] objective: Step out
+[  21.05s] ok: 7 steps out (1.4s)
+[  21.49s] ok: cat back from the alcove (0.9s)
+[  24.32s] checkpoint 1 (Escape - the cat leads (scenes 3-4))
+[  24.32s] story step: look closer at the older wall (fires in area 1 'cell block' or later)
+[  24.32s] objective: Follow the cat
+[  24.42s] playtest: run 5: checkpoint 1 (Escape - the cat leads (scenes 3-4)) after 24s
+[  25.73s] ok: corridor: scene 3 trigger (2.8s)
+[  37.03s] ok: on top of the bulkhead (the gate in view) (0.0s)
+[  37.03s] objective: Find another way out
+[  37.07s] ok: look closer at the older wall (0.1s)
+[  37.07s] objective: 
+[  41.20s] checkpoint 2 (Old passage + ruins)
+[  41.20s] story step: ancient hall entrance (fires in area 3 'Scree hall' or later)
+[  41.20s] objective: Follow the old passage
+[  41.20s] playtest: run 5: checkpoint 2 (Old passage + ruins) after 40s
+[  50.33s] playtest: run 5: lets go over the dark drop on purpose at x 14.6
+[  50.34s] fall into the dark at (14.60, 0.84, -2.69) -> white fade, back to the last safe ledge (16.50, 2.80, -1.82)
+[  51.02s] fall reset done: 7 at (16.50, 2.80, -1.82) (Free)
+[  60.25s] playtest: run 5: lets go over the terrace gap on purpose
+[  60.45s] fall into the dark at (10.33, -2.11, -6.16) -> white fade, back to the last safe ledge (9.15, -0.70, -6.16)
+[  61.13s] fall reset done: 7 at (9.15, -0.70, -6.16) (Free)
+[  63.05s] ok: ruins: up on terrace C (43.7s)
+[  63.05s] objective: Clear the fallen slab
+[  63.52s] ok: lift the fallen slab (1.0s)
+[  65.54s] objective: Follow the old passage
+[  68.78s] ok: ancient hall entrance (55.2s)
+[  68.78s] checkpoint 3 (Scree guard (scene 5))
+[  68.78s] story step: slip past the Scree guard (fires in area 4 'vision chamber' or later)
+[  68.78s] ok: in the ancient hall (0.0s)
+[  68.78s] playtest: run 5: checkpoint 3 (Scree guard (scene 5)) after 68s
+[  70.92s] objective: Get past the Scree guard without hurting anyone
+[  90.01s] ok: slipped past the guard (38.2s)
+[  92.10s] checkpoint 4 (Vision (scene 6))
+[  92.10s] story step: touch the glowing shape (fires in area 4 'vision chamber' or later)
+[  92.10s] objective: Keep going
+[  93.75s] ok: vision chamber (3.3s)
+[  93.75s] objective: Look at the glowing shape
+[  93.81s] playtest: run 5: checkpoint 4 (Vision (scene 6)) after 93s
+[  95.45s] ok: touch the shape (3.4s)
+[  95.45s] objective: 
+[ 103.21s] ok: vision lines (0.0s)
+[ 105.49s] checkpoint 5 (Lunar door + take the shape)
+[ 105.49s] story step: touch the mechanism, then take the shape (fires in area 4 'vision chamber' or later)
+[ 105.49s] playtest: run 5: checkpoint 5 (Lunar door + take the shape) after 105s
+[ 106.56s] objective: Touch the mechanism beside the door
+[ 106.99s] playtest: run 5: quit to the main menu at checkpoint 5 (Lunar door + take the shape), 7 at (19.78, -2.40, -34.64) -> Continue
+[ 107.13s] playtest: pause menu: 'Main menu' (A)
+[ 107.47s] playtest: pause menu: 'Yes, main menu' (A)
+[ 108.42s] shot 01_menu_continue_from_checkpoint.png  audioPeak=0.000000  cursorVisible=False
+[ 108.42s] playtest: main menu: 'Continue  —  Lunar door + take the shape' (A)
+[ 108.46s] flow starts at checkpoint 5 (Lunar door + take the shape)
+[ 108.46s] story step: touch the mechanism, then take the shape (fires in area 4 'vision chamber' or later)
+[ 109.49s] playtest: continued: scene Chapter1, checkpoint 5, explore False, galley start False
+[ 109.83s] objective: Touch the mechanism beside the door
+[ 111.84s] ok: touch the round mechanism (4.0s)
+[ 111.84s] objective: 
+[ 116.90s] objective: Take the shape
+[ 117.05s] playtest: run 5: ignores the pedestal and heads for the open door
+[ 118.02s] take fallback: 7 went to the (still closed) doorway at (16.40, -2.40, -37.66) before the pedestal - telekinesis brings it to her, then the pouch
+[ 118.02s] objective: 
+[ 118.53s] shot 02_pt_take_fallback_telekinesis.png  audioPeak=0.000000  cursorVisible=False
+[ 118.92s] shot 03_pt_take_fallback_in_hand.png  audioPeak=0.000000  cursorVisible=False
+[ 119.82s] objective: Keep going
+[ 119.83s] checkpoint 6 (City reveal (6b-7))
+[ 119.83s] story step: the city reveal (out onto the terrace) (fires in area 6 'terrace + ramp' or later)
+[ 119.83s] objective: Find the way out
+[ 121.00s] playtest: run 5: checkpoint 6 (City reveal (6b-7)) after 120s
+[ 125.90s] ok: out onto the terrace (12.2s)
+[ 125.92s] objective: 
+[ 146.55s] checkpoint 7 (Saucer rescue + beam (scene 8))
+[ 146.55s] story step: release the saucer, then board in the light (fires in area 7 'bay floor' or later)
+[ 146.55s] objective: Get down to the bay and release the saucer
+[ 150.25s] playtest: run 5: checkpoint 7 (Saucer rescue + beam (scene 8)) after 149s
+[ 154.83s] ok: down in the bay (16.6s)
+[ 158.52s] ok: pull the release lever (7.4s)
+[ 163.10s] objective: Board the saucer
+[ 166.51s] ok: at the edge of the light (6.8s)
+[ 166.51s] objective: 
+[ 180.77s] playtest: run 5: checkpoint 8 (Aboard (scene 9)) after 180s
+[ 184.66s] galley scene starts (scene 10)
+[ 185.39s] playtest: run 5: in the galley - dodecahedron with her: Hip
+[ 185.39s] playtest: run 5: checkpoint 9 (Galley (scene 10)) after 184s
+[ 265.63s] aboard: free exploration (chapter done)
+[ 265.63s] playtest: run 5: checkpoint 10 (Free exploration (chapter done)) after 265s
+[ 266.50s] playtest: run 5: quit to the main menu at checkpoint 10 (Free exploration (chapter done)), 7 at (-7.11, 0.00, -3.25) -> Continue
+[ 266.64s] playtest: pause menu: 'Main menu' (A)
+[ 266.98s] playtest: pause menu: 'Yes, main menu' (A)
+[ 267.88s] playtest: main menu: 'Continue  —  explore the saucer' (A)
+[ 268.88s] aboard: free exploration (chapter done)
+[ 268.98s] playtest: continued: scene Saucer, checkpoint 0, explore True, galley start False
+[ 277.15s] playtest: playtest run  5/5: PASS in 4.6 min; quit+Continue 2x, restarts 0, deliberate falls 2 (fall resets 2), wanders 0, backtracks 0, waits 4, take fallback 1, story watchdog (QF6, must be 0) 0, QF4 watchdogs (cell / cat marks) 0, cat leash 3, hitches 0
+[ 277.15s] PLAYTEST: 1/1, soft-locks 0, story watchdog fallbacks 0 (QF6 fix on)
+[ 277.15s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

@@ -1,0 +1,55 @@
+Mono path[0] = 'C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/SevenDemo_Data/Managed'
+Mono config path = 'C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/MonoBleedingEdge/etc'
+CodeReloadManager initialized
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.6.1f1 (7efac9f6c10e)
+[EntityIdStore] init: VM path (explicit commit), pageSize=4096, blockCount=1048576, entitiesPerBlock=256, slots reserved=4294967296 bytes
+[Subsystems] Discovering subsystems at path C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/SevenDemo_Data/UnitySubsystems
+GfxDevice: creating device client; kGfxThreadingModeClientWorkerJobs
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 1660 Ti (ID=0x2182)
+    Vendor:   NVIDIA
+    VRAM:     5966 MB
+    Driver:   32.0.16.1088
+Begin MonoManager ReloadAssembly
+- Finished resetting the current domain, in  0.013 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+<RI> Initializing input.
+Using Windows.Gaming.Input
+Input Polling Thread started.
+UnloadTime: 0.799000 ms
+[Seven] fullscreen: borderless 3840x2160
+[Seven] boot: muted=False listenerVolume=1 capture=- fight=False saucer=False ratwing=False chapter1=False forceFullscreen=True mode=FullScreenWindow
+[Launcher] 7: The Observer 0.10.0 (build 1000)
+Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
+Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
+GPUResidentDrawer Disabled due to some configured Universal Renderers not using the Forward+ or Deferred+ rendering paths.
+Unloading 6 Unused Serialized files (Serialized files now loaded: 0)
+UnloadTime: 3.063400 ms
+Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 5913.
+Total: 2.037200 ms (FindLiveObjects: 0.283000 ms CreateObjectMapping: 0.067300 ms MarkObjects: 1.583200 ms  DeleteObjects: 0.019600 ms)
+
+Unexpected timestamp values detected. This can occur in H.264 videos not encoded with the baseline profile. Timestamps will be skewed to correct the playback for C:\Users\danmo\SevenVideoGame\Unity\Builds\Seven\SevenDemo_Data\sharedassets1.resource
+[Seven] gallery preloaded: 24 of 24 images in 6.72s
+[Seven] dialogue camera reframed: (0.45, 1.75, 4.30) -> (0.47, 1.57, 4.35) (cut)
+[Seven] dialogue camera reframed: (14.20, 0.80, -9.20) -> (16.07, -0.49, -5.32) (cut)
+[Seven] dialogue camera reframed: (15.77, -0.80, -27.61) -> (18.77, -0.61, -23.07) (cut)
+[Seven] cat caught up out of sight (#1) at (15.76, -2.40, -24.88)
+[Seven] dialogue camera reframed: (17.60, -0.30, -32.70) -> (18.39, -0.93, -32.10) (eased)
+[Seven] dialogue camera reframed: (17.20, -0.50, -33.00) -> (17.10, -0.84, -32.93) (eased)
+[Seven] quit requested
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input Polling Thread stopped.
+Input Polling Thread exited.
+Input System module state changed to: Shutdown.
+CodeReloadManager destroyed

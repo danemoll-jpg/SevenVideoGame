@@ -124,15 +124,32 @@ namespace Seven
     /// <summary>Carries Chapter 1 progress between its two scenes (Moon level, saucer) and across checkpoint restarts.</summary>
     public static class Chapter1State
     {
-        public static int Checkpoint;          // 0 cell, 1 corridor, 2 ancient hall, 3 vision, 4 impound
-        public static bool Aboard;             // saucer scene runs scenes 9-11
-        public static bool Explore;            // Continue: skip scenes 9-11, straight into free exploration
+        // QF6: the chapter's checkpoints - each is a restart point (d-pad down), a Continue save and a Scene Select entry.
+        public const int CpCell = 0, CpBlock = 1, CpPassage = 2, CpHall = 3, CpVision = 4, CpDoor = 5, CpCity = 6, CpBay = 7;
+        // ... and the saucer part (Saucer scene): scene 9 aboard, scene 10 the galley, free exploration after the chapter.
+        public const int CpAboard = 8, CpGalley = 9, CpExplore = 10;
+        public static readonly string[] CpNames =
+        {
+            "Cell (scenes 1-2)", "Escape - the cat leads (scenes 3-4)", "Old passage + ruins", "Scree guard (scene 5)",
+            "Vision (scene 6)", "Lunar door + take the shape", "City reveal (6b-7)", "Saucer rescue + beam (scene 8)",
+            "Aboard (scene 9)", "Galley (scene 10)", "Free exploration (chapter done)",
+        };
+        public static string CpName(int cp) => cp >= 0 && cp < CpNames.Length ? CpNames[cp] : "checkpoint " + cp;
+
+        public static int Checkpoint;          // CpCell..CpBay on the Moon level
+        public static bool Aboard;             // saucer scene runs scenes 9-10
+        public static bool Explore;            // Continue: skip scenes 9-10, straight into free exploration
+        public static bool GalleyStart;        // QF6 Scene Select / Continue: start aboard at scene 10 (the galley)
         public static float StartedAt = -1f;
         public static readonly System.Collections.Generic.List<string> Played = new System.Collections.Generic.List<string>();
         public static readonly System.Text.StringBuilder CaptureLog = new System.Text.StringBuilder();
         public static int ShotCount;
         /// <summary>QF4: watchdog fallbacks taken (story triggers that did not happen on their own in time).</summary>
         public static int Watchdogs;
+        /// <summary>QF6: fall resets (white fade back to the last safe ledge) since boot - the playtest counts them per run.</summary>
+        public static int FallResets;
+        /// <summary>QF6: story watchdog returns (7 further along than the step the story waits for) - must stay 0.</summary>
+        public static int StoryWatchdogs;
         /// <summary>QF4 opening test (-openingtest n): run index and per-run results across scene reloads.</summary>
         public static int OpeningRun;
         public static readonly System.Collections.Generic.List<string> OpeningResults = new System.Collections.Generic.List<string>();
@@ -143,7 +160,28 @@ namespace Seven
         /// <summary>Round 9: teaching prompts already shown this playthrough (each appears once; kept across checkpoint restarts).</summary>
         public static readonly System.Collections.Generic.HashSet<string> Taught = new System.Collections.Generic.HashSet<string>();
 
-        public static void Reset() { Checkpoint = 0; Aboard = false; Explore = false; StartedAt = -1f; Played.Clear(); Taught.Clear(); }
+        public static void Reset() { Checkpoint = 0; Aboard = false; Explore = false; GalleyStart = false; StartedAt = -1f; Played.Clear(); Taught.Clear(); }
+
+        /// <summary>QF6: start at a checkpoint with the story state a real playthrough has there (Scene Select, Continue):
+        /// the doors / wall / slab / shape / cat are set by the director's SetupCheckpoint; the controls taught before it
+        /// count as taught.</summary>
+        public static void StartAt(int cp)
+        {
+            Reset();
+            string[][] lessons = { new[] { "move", "interact" }, new[] { "jump", "crouch", "ledge", "hang" }, new[] { "tk" } };
+            if (cp >= CpBlock) foreach (var l in lessons[0]) Taught.Add(l);
+            if (cp >= CpPassage) foreach (var l in lessons[1]) Taught.Add(l);
+            if (cp >= CpHall) foreach (var l in lessons[2]) Taught.Add(l);
+            if (cp >= CpAboard)
+            {
+                Explore = cp >= CpExplore; GalleyStart = cp == CpGalley;
+                if (cp >= CpExplore) Taught.Add("sit");
+                StartAboard();
+                return;
+            }
+            Checkpoint = Mathf.Clamp(cp, CpCell, CpBay);
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Chapter1");
+        }
 
         public static void StartAboard()
         {

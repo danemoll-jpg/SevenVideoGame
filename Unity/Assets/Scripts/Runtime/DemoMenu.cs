@@ -19,16 +19,32 @@ namespace Seven
         public VoiceBank Bank;          // for the -soundcheck run
 
         // Round 7: "Continue" on top when a Chapter 1 save exists; "Quit" at the bottom (with a confirm).
-        const string ContinueScene = "@continue", QuitScene = "@quit";
+        // QF6: Continue resumes at the saved checkpoint; "Scene select" jumps to any part of Chapter 1.
+        const string ContinueScene = "@continue", QuitScene = "@quit", SelectScene = "@select", BackScene = "@back", LaterScene = "@later";
         (string label, string scene)[] Items;
+        bool _selectPage;
         static (string, string)[] BuildItems()
         {
             var l = new System.Collections.Generic.List<(string, string)>();
-            if (SaveGame.HasChapter1Save) l.Add(("Continue  —  explore the saucer", ContinueScene));
-            l.Add(("Chapter 1 — The Moon Prison", "Chapter1")); l.Add(("Fight demo", "FightDemo")); l.Add(("Saucer demo", "Saucer"));
+            if (SaveGame.HasChapter1Save)
+                l.Add((SaveGame.Progress >= Chapter1State.CpExplore ? "Continue  —  explore the saucer" : "Continue  —  " + Chapter1State.CpName(SaveGame.Progress), ContinueScene));
+            l.Add(("Chapter 1 — The Moon Prison", "Chapter1")); l.Add(("Scene select", SelectScene)); l.Add(("Fight demo", "FightDemo")); l.Add(("Saucer demo", "Saucer"));
             l.Add(("Ratwing", "Ratwing")); l.Add(("Quit", QuitScene));
             return l.ToArray();
         }
+        /// <summary>QF6: the Scene Select page (also in the pause menu): every checkpoint of Chapter 1, then Venus (not built).</summary>
+        public static (string, string)[] SelectItems()
+        {
+            var l = new System.Collections.Generic.List<(string, string)>();
+            for (int cp = Chapter1State.CpCell; cp <= Chapter1State.CpGalley; cp++) l.Add((Chapter1State.CpName(cp), "@cp" + cp));
+            l.Add(("Venus  —  later (not built yet)", LaterScene)); l.Add(("Back", BackScene));
+            return l.ToArray();
+        }
+        public static DemoMenu I { get; private set; }
+        /// <summary>QF6 playtest: what the highlighted entry says (the driver reads the menu like a person).</summary>
+        public string SelectedLabel => Items != null && _sel >= 0 && _sel < Items.Length ? Items[_sel].label : null;
+        public bool OnSelectPage => _selectPage;
+        GameObject _canvasGo;
         bool _confirmQuit;
         Text _hint;
         int _sel;
@@ -39,6 +55,8 @@ namespace Seven
 
         void Start()
         {
+            I = this;
+            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1) { Build(); return; }     // QF6 playtest: the driver uses the menu
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
             if (DemoBoot.Gallery) GalleryTV.Preload();      // the gallery check run exercises the preload path
             if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }
@@ -53,11 +71,12 @@ namespace Seven
 
         void Build()
         {
-            Items = BuildItems();
-            MusicSystem.Play("main_theme", 1.5f);
-            GalleryTV.Preload();            // Round 8: decode the gallery while the menu is idle
+            Items = _selectPage ? SelectItems() : BuildItems();
+            if (_canvasGo == null) { MusicSystem.Play("main_theme", 1.5f); GalleryTV.Preload(); }   // Round 8: decode the gallery while the menu is idle
+            else Destroy(_canvasGo);
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var canvasGo = new GameObject("MenuCanvas");
+            _canvasGo = canvasGo;
             var canvas = canvasGo.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = Cam;
@@ -68,7 +87,9 @@ namespace Seven
             scaler.matchWidthOrHeight = 1f;
 
             // Round 10 (Dan): the logo image ("7" + THE OBSERVER, Arial Bold typeset by Tools/make_logo.py; no font shipped)
-            if (Logo.Add(canvasGo.transform, new Vector2(0, 215), 360f, new Color(0.95f, 0.95f, 0.95f)) == null)
+            if (_selectPage)
+                Text(canvasGo.transform, "SCENE SELECT  —  CHAPTER 1", new Vector2(0, 300), 30, new Color(0.95f, 0.95f, 0.95f));
+            else if (Logo.Add(canvasGo.transform, new Vector2(0, 215), 360f, new Color(0.95f, 0.95f, 0.95f)) == null)
             {
                 Text(canvasGo.transform, "7", new Vector2(0, 240), 110, new Color(0.95f, 0.95f, 0.95f));
                 Text(canvasGo.transform, "THE OBSERVER", new Vector2(0, 160), 26, new Color(0.7f, 0.7f, 0.7f));
@@ -77,13 +98,13 @@ namespace Seven
             _marks = new Image[Items.Length];
             for (int i = 0; i < Items.Length; i++)
             {
-                var y = 30 - i * 56;
+                float y = _selectPage ? 245 - i * 43 : 30 - i * 56 + (Items.Length > 5 ? 40 : 0) + (Items.Length > 6 ? 16 : 0);
                 var bar = new GameObject("Item" + i, typeof(RectTransform));
                 bar.transform.SetParent(canvasGo.transform, false);
                 var rt = (RectTransform)bar.transform;
-                rt.anchoredPosition = new Vector2(0, y + (Items.Length > 5 ? 40 : 0)); rt.sizeDelta = new Vector2(Items[i].scene.StartsWith("@") || Items[i].scene == "Chapter1" ? 520 : 360, 50);
+                rt.anchoredPosition = new Vector2(0, y); rt.sizeDelta = new Vector2(_selectPage ? 560 : Items[i].scene.StartsWith("@") || Items[i].scene == "Chapter1" ? 520 : 360, _selectPage ? 38 : 50);
                 _marks[i] = bar.AddComponent<Image>();
-                _labels[i] = Text(bar.transform, Items[i].label, Vector2.zero, 28, Color.white);
+                _labels[i] = Text(bar.transform, Items[i].label, Vector2.zero, _selectPage ? 22 : 28, Color.white);
             }
             _hint = Text(canvasGo.transform, "stick / d-pad + A    ·    W S / arrows + Enter", new Vector2(0, -305), 16, new Color(0.55f, 0.55f, 0.55f));
             Refresh();
@@ -109,13 +130,13 @@ namespace Seven
                 bool on = i == _sel;
                 if (Items[i].scene == QuitScene) _labels[i].text = _confirmQuit ? "Quit?  Yes (A / Enter)" : "Quit";
                 _marks[i].color = on ? new Color(0.92f, 0.92f, 0.92f, 1f) : new Color(1f, 1f, 1f, 0.06f);
-                _labels[i].color = on ? new Color(0.05f, 0.05f, 0.05f) : new Color(0.85f, 0.85f, 0.85f);
+                _labels[i].color = on ? new Color(0.05f, 0.05f, 0.05f) : Items[i].scene == LaterScene ? new Color(0.45f, 0.45f, 0.45f) : new Color(0.85f, 0.85f, 0.85f);
             }
         }
 
         void Update()
         {
-            if (_labels == null || DemoBoot.CaptureDir != null) return;
+            if (_labels == null || (DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim)) return;
             int d = 0;
             var kb = Keyboard.current; var gp = Gamepad.current;
             if (kb != null && (kb.wKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame)) d = -1;
@@ -133,9 +154,14 @@ namespace Seven
                       || (gp != null && gp.buttonSouth.wasPressedThisFrame);
             bool back = (kb != null && kb.escapeKey.wasPressedThisFrame) || (gp != null && gp.buttonEast.wasPressedThisFrame);
             if (back && _confirmQuit) { _confirmQuit = false; Refresh(); return; }
+            if (back && _selectPage) { _selectPage = false; _sel = 0; Build(); return; }
             if (!go) return;
             AudioKit.Play("menu_confirm", null, 0.7f);
             var scene = Items[_sel].scene;
+            if (scene == SelectScene) { _selectPage = true; _sel = 0; Build(); return; }
+            if (scene == BackScene) { _selectPage = false; _sel = 0; Build(); return; }
+            if (scene == LaterScene) return;
+            if (scene.StartsWith("@cp")) { Debug.Log($"[Seven] scene select: {Items[_sel].label}"); Chapter1State.StartAt(int.Parse(scene.Substring(3))); return; }
             if (scene == QuitScene)
             {
                 if (!_confirmQuit) { _confirmQuit = true; Refresh(); return; }

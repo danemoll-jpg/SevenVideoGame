@@ -1,6 +1,8 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Quick fix QF6: story triggers that never fire + stop the replay grind (Dan, 2026-11-18)
+## Current Objective — Dan plays 0.10.2, then Round 11 (`Docs/ROUND11.md`)
+
+## Quick fix QF6: story triggers that never fire + stop the replay grind (Dan, 2026-11-18) — done, status below
 Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply; muted, off-screen runs.
 
 **What happened (Dan, playing 0.10.1 by hand):** the cat now leaves the cell block, but later **the city reveal (scene
@@ -34,6 +36,78 @@ want to find another one this way. So this fix is about the cause *and* the meth
 5. **Checks + release.** `PLAYTEST: 25/25`, cat-follow 25/25, the full `-chapter1` run, galley run; every Scene Select
    entry starts and plays through to the next one. Publish **0.10.2**; docs; commit + push; per-item status in
    "QF6 — status"; captures in `Docs/Previews/qf6/`; "For Dan to check (QF6)".
+
+### Dan's changes during QF6 (2026-11-18)
+6. **The dodecahedron is taken automatically** when 7 walks up to it: no "Take" prompt, no button. Keep the beat in her
+   hand and the pouch. Nothing may rely on that prompt any more.
+7. **No points of no return** (a rule for the whole game). Never let the player pass a point she can't come back from
+   while something the story needs is behind it. Either keep the way forward closed until it's done, or let her walk
+   back. Check every one-way drop, ramp, ledge and stair in Chapter 1 and on the saucer, and list them in
+   TRIGGER-AUDIT.md.
+8. **Testing must never take hours again.** Remove the 25-run playtest and the 25-run cat-follow test from the standing
+   checks. All automated testing for a round stays under ~20 minutes: accelerated game speed, at most one player-style
+   run, and the trigger-audit rules instead of repetition. Put this rule in CLAUDE.md.
+
+## QF6 — status (2026-11-18): done, exe-verified off-screen; release 0.10.2
+Testing conditions for every run:
+- Muted: output peak 0.000000, listener 0.
+- Minimized and not activated, Below Normal priority, one heavy job at a time.
+- Monochrome: max |R−G|,|G−B| = 0 over all new shots.
+- Captures and logs in `Docs/Previews/qf6/`.
+
+0. **Checkpoint — done:** `7423bbb`.
+1. **Cause — found:**
+   - Source: Dan's own 0.10.1 `Player.log` and save, copied to `qf6/dan_0.10.1_session/`.
+   - He never took the shape: there is no `dodecahedron ->` line. He walked out through the open lunar door, down to the
+     bay floor, and quit there.
+   - Why the story stopped: 6b and the saucer objective came after a blocking X "Take" wait, and the door was already
+     open.
+   - Round 10 built that order. QF5 made it likely: moving the mechanism to the right put her 6.4 m from the pedestal,
+     with the door beside her.
+   - The cat leash and the pouch were not involved.
+   - Details in `Docs/TRIGGER-AUDIT.md`.
+2. **Trigger audit — done:** `Docs/TRIGGER-AUDIT.md`.
+   - 28 triggers, each with its condition, how a player could miss it, and its fallback.
+   - Every trigger fires at or past its place.
+   - Every step is declared and watched (`StoryWatchdog`).
+   - The flow is split so that 6b and the bay can no longer hang on the take.
+3. **Player-style test — done, then cut back at Dan's request:**
+   - `-playtest` (`PlaytestRun.cs`): virtual gamepad on the real input actions, real menus, no autopilot, no teleports.
+   - The 25-run version was stopped as asked at **22/25 PASS, 0 soft-locks, story watchdog 0** (`playtest_25_stopped_at_22/`).
+   - The standing check is now **one** run at 2× speed: `-testspeed 2 -playtest 5 -playtestfrom 4` = **PLAYTEST 1/1,
+     soft-locks 0, watchdog 0, 4.6 min** (`playtest_quick/`).
+4. **Scene Select — done:** in the main menu and the pause menu, entries cp 0–9 plus "Venus — later" (not selectable).
+   Checkpoints are saved for Continue. **SCENE SELECT TEST 10/10** at 2× speed in 5.9 min (`sceneselect/`). The right
+   state at each entry is checked: shape on the pedestal or at her hip, slab, doors, cat.
+5. **Checks + release:**
+   - Playtest 1/1, Scene Select 10/10 (this includes the galley through "Set course").
+   - **Repro with the fix off** (`-noqf6fix`, same run): **0/1, SOFT-LOCK**, 7 on the bay floor at (22.45, −10, −73.17)
+     with the objective still "Take the shape". This is Dan's 0.10.1 session (`repro_fix_off/`).
+   - **Not run (testing rule 8):** the 25-run cat-follow test, the full `-chapter1` autopilot run and a separate
+     `-ch1aboard` run. The Scene Select test already plays the galley.
+   - Total automated testing this round after Dan's message: 16.3 min of wall-clock time over three runs (4.6 + 5.9 + 5.8; game time ×2).
+   - 0.10.2 published (see below).
+6. **Automatic take — done:**
+   - Walking up to the pedestal (1.5 m) takes it, then the 2 s beat in her hand, then the pouch past the door.
+   - The X "Take" prompt is gone; nothing else used it.
+   - Scene Select entry 5 logs `dodecahedron -> Hand`, then `-> Hip`.
+   - If she goes to the doorway first: telekinesis take (the quick run did this: `pt_take_fallback_telekinesis`).
+7. **No points of no return — done:**
+   - Found: the doorway behind the lunar door (zone `VisionExit`, the one-way drop into the mining cut) opened with the
+     door, before the take. It now opens only after she has the shape.
+   - All 13 one-way or two-way crossings in Chapter 1 and on the saucer are listed with verdicts in TRIGGER-AUDIT.md.
+     Every other one-way move already has nothing the story needs behind it.
+   - The rule is in CLAUDE.md.
+8. **Testing rule — done:** in CLAUDE.md (testing rule 4: under ~20 min, `-testspeed`, at most one player-style run).
+   - The 25-run checks are removed from the standing checks.
+   - New switch `-testspeed x` (1–4, only with `-capture`).
+
+### For Dan to check (QF6)
+- Play 0.10.2 the way you did. After the door opens, walk straight to the doorway: she should stop, draw the shape to
+  her and pouch it, then the way opens. Or walk to the pedestal: she takes it without a button.
+- Main menu → **Scene select**: jump to any part, for example "Lunar door + take the shape" or "City reveal".
+- Pause menu → Scene select works mid-game. Quit and **Continue** resumes at the last checkpoint.
+- Point-of-no-return table: `Docs/TRIGGER-AUDIT.md`. Tell me if a crossing feels like a trap.
 
 ## Quick fix QF5: Dan's playtest of 0.10.0 (Dan, 2026-11-17) — done, status below
 
@@ -264,6 +338,9 @@ monochrome max |R−G|,|G−B| = 0 over every shot (154 + 92 + menu). Previews +
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Quick fix QF6 — Dan's 0.10.1 soft-lock found (blocking "Take"), automatic take, no points of no return, trigger
+  audit + watchdogs, saved checkpoints + Scene select, the 20-minute testing rule — done (2026-11-18), exe-verified
+  off-screen; release 0.10.2 (`game-1002`).** Status in "QF6 — status" above.
 - **Quick fix QF5 — the cat always comes along (route stops 7 has passed + leash), lock mechanism on the right as in
   the vision, the dodecahedron visibly kept (hand → belt pouch → galley) — done (2026-11-18), exe-verified off-screen;
   release 0.10.1 (`game-1001`).** Status in "QF5 — status" above.

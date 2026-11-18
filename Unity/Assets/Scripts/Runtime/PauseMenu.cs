@@ -21,8 +21,10 @@ namespace Seven
         /// <summary>Another screen owns Esc right now (the gallery full view): Esc does not open the menu.</summary>
         public static System.Func<bool> EscapeOwned;
 
-        enum Page { Main, Settings, ConfirmMenu, ConfirmQuit, Controls }
-        const int MainSettings = 1, MainControls = 2, MainMenu = 3, MainQuit = 4;
+        enum Page { Main, Settings, ConfirmMenu, ConfirmQuit, Controls, Select }
+        const int MainSettings = 1, MainControls = 2, MainSelect = 3, MainMenu = 4, MainQuit = 5;
+        /// <summary>QF6 playtest: the highlighted entry (the driver reads the menu like a person).</summary>
+        public string SelectedLabel { get { var it = Items(); return _sel >= 0 && _sel < it.Count ? it[_sel] : null; } }
         readonly List<GameObject> _extra = new List<GameObject>();
         Page _page;
         int _sel;
@@ -104,7 +106,7 @@ namespace Seven
             }
             if (back)
             {
-                if (_page == Page.Main) Close(); else Show(Page.Main, _page == Page.Settings ? MainSettings : _page == Page.Controls ? MainControls : _page == Page.ConfirmMenu ? MainMenu : MainQuit);
+                if (_page == Page.Main) Close(); else Show(Page.Main, _page == Page.Settings ? MainSettings : _page == Page.Controls ? MainControls : _page == Page.Select ? MainSelect : _page == Page.ConfirmMenu ? MainMenu : MainQuit);
                 return;
             }
             if (!ok) return;
@@ -115,6 +117,7 @@ namespace Seven
                     if (_sel == 0) Close();
                     else if (_sel == MainSettings) Show(Page.Settings, 0);
                     else if (_sel == MainControls) Show(Page.Controls, 0);
+                    else if (_sel == MainSelect) Show(Page.Select, 0);
                     else if (_sel == MainMenu) Show(Page.ConfirmMenu, 1);
                     else Show(Page.ConfirmQuit, 1);
                     break;
@@ -125,6 +128,14 @@ namespace Seven
                 case Page.Controls:
                     Show(Page.Main, MainControls);
                     break;
+                case Page.Select:
+                {
+                    var sel = DemoMenu.SelectItems();
+                    var target = sel[Mathf.Clamp(_sel, 0, sel.Length - 1)].Item2;
+                    if (target == "@back") Show(Page.Main, MainSelect);
+                    else if (target.StartsWith("@cp")) { Close(); Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); Chapter1State.StartAt(int.Parse(target.Substring(3))); }
+                    break;
+                }
                 case Page.ConfirmMenu:
                     if (_sel == 0) { Close(); Chapter1State.Reset(); SceneManager.LoadScene(DemoMenu.SceneName); }
                     else Show(Page.Main, MainMenu);
@@ -154,13 +165,14 @@ namespace Seven
                     return new List<string> { "Music   " + Bar(AudioKit.MusicVolume), "Sound effects   " + Bar(AudioKit.SfxVolume), "Voice   " + Bar(AudioKit.VoiceVolume),
                                               "Button hints   " + (ControlsLegend.HintsOn ? "On" : "Off"), "Back" };
                 case Page.Controls: return new List<string> { "Back" };
+                case Page.Select: { var l = new List<string>(); foreach (var (label, _) in DemoMenu.SelectItems()) l.Add(label); return l; }
                 case Page.ConfirmMenu: return new List<string> { "Yes, main menu", "No" };
                 case Page.ConfirmQuit: return new List<string> { "Yes, quit", "No" };
-                default: return new List<string> { "Resume", "Settings", "Controls", "Main menu", "Quit game" };
+                default: return new List<string> { "Resume", "Settings", "Controls", "Scene select", "Main menu", "Quit game" };
             }
         }
         static string Bar(float v) { int n = Mathf.RoundToInt(v * 10f); return new string('■', n) + new string('□', 10 - n); }
-        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
+        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.Select ? "SCENE SELECT" : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
 
         public void Open()
         {
@@ -178,7 +190,7 @@ namespace Seven
         {
             if (!_open) return;
             _open = false;
-            Time.timeScale = _prevTimeScale <= 0f ? 1f : _prevTimeScale;
+            Time.timeScale = _prevTimeScale <= 0f ? DemoBoot.TestSpeed : _prevTimeScale;
             AudioListener.pause = DemoBoot.Muted;
             if (_canvasGo != null) Destroy(_canvasGo);
             _labels.Clear(); _bars.Clear(); _extra.Clear();
@@ -273,7 +285,11 @@ namespace Seven
                 bool vis = i < items.Count;
                 _bars[i].gameObject.SetActive(vis);
                 if (!vis) continue;
-                var rt = (RectTransform)_bars[i].transform; rt.anchoredPosition = _page == Page.Controls ? new Vector2(0, -230) : new Vector2(0, 80 - i * 54); rt.sizeDelta = new Vector2(440, 46);
+                var rt = (RectTransform)_bars[i].transform;
+                bool sel = _page == Page.Select;
+                rt.anchoredPosition = _page == Page.Controls ? new Vector2(0, -230) : sel ? new Vector2(0, 135 - i * 37) : new Vector2(0, 100 - i * 52);
+                rt.sizeDelta = sel ? new Vector2(540, 32) : new Vector2(440, 46);
+                _labels[i].fontSize = sel ? 19 : 26;
                 bool on = i == _sel;
                 _bars[i].color = on ? new Color(0.92f, 0.92f, 0.92f, 1f) : new Color(1f, 1f, 1f, 0.07f);
                 _labels[i].text = items[i];
@@ -283,21 +299,37 @@ namespace Seven
         }
     }
 
-    /// <summary>Round 7 (3d): "Continue" save — set when 7 and the cat reach the saucer in Chapter 1.</summary>
+    /// <summary>Round 7 (3d) "Continue" save. QF6: it remembers the furthest checkpoint reached in Chapter 1 (0-7 on the
+    /// Moon, 8 aboard, 9 galley, 10 the chapter done = free exploration), so quitting never means replaying the chapter.
+    /// Saves from 0.10.1 and earlier (only "aboard") load as 10, as before.</summary>
     public static class SaveGame
     {
-        // Check runs use their own key and remove it again, so a test never leaves a save on Dan's PC.
-        static string Key => DemoBoot.CaptureDir != null ? "seven_test_ch1_aboard" : "seven_ch1_aboard";
-        public static bool HasChapter1Save => PlayerPrefs.GetInt(Key, 0) == 1;
-        public static void SaveChapter1Aboard() { PlayerPrefs.SetInt(Key, 1); PlayerPrefs.Save(); Debug.Log("[Seven] saved: chapter 1 aboard (" + Key + ")"); }
-        public static void ClearTestSave() { if (DemoBoot.CaptureDir != null) { PlayerPrefs.DeleteKey("seven_test_ch1_aboard"); PlayerPrefs.Save(); } }
+        // Check runs use their own keys and remove them again, so a test never leaves a save on Dan's PC.
+        static bool Test => DemoBoot.CaptureDir != null;
+        static string OldKey => Test ? "seven_test_ch1_aboard" : "seven_ch1_aboard";
+        static string Key => Test ? "seven_test_ch1_progress" : "seven_ch1_progress";
+        public static int Progress => PlayerPrefs.HasKey(Key) ? PlayerPrefs.GetInt(Key) : PlayerPrefs.GetInt(OldKey, 0) == 1 ? Chapter1State.CpExplore : -1;
+        public static bool HasChapter1Save => Progress >= 0;
+        /// <summary>Save the checkpoint just reached (a later Scene Select start may go back: the save follows the player).</summary>
+        public static void SaveProgress(int cp)
+        {
+            PlayerPrefs.SetInt(Key, cp);
+            if (cp >= Chapter1State.CpAboard) PlayerPrefs.SetInt(OldKey, 1);
+            PlayerPrefs.Save();
+            Debug.Log($"[Seven] saved: chapter 1 checkpoint {cp} ({Chapter1State.CpName(cp)}) ({Key})");
+        }
+        public static void ClearTestSave()
+        {
+            if (!Test) return;
+            PlayerPrefs.DeleteKey("seven_test_ch1_aboard"); PlayerPrefs.DeleteKey("seven_test_ch1_progress"); PlayerPrefs.Save();
+        }
 
-        /// <summary>Continue: straight into exploring the saucer after the chapter.</summary>
+        /// <summary>The main menu's Continue: back to the saved checkpoint (free exploration once the chapter is done).</summary>
         public static void Continue()
         {
-            Chapter1State.Reset();
-            Chapter1State.Explore = true;
-            Chapter1State.StartAboard();
+            int p = Progress;
+            Debug.Log($"[Seven] continue from checkpoint {p} ({Chapter1State.CpName(p)})");
+            Chapter1State.StartAt(Mathf.Max(0, p));
         }
     }
 }

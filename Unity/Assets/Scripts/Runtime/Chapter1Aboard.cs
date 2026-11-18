@@ -36,8 +36,12 @@ namespace Seven
         [Tooltip("Renderer index of UI_Renderer (no fog pass) for the subtitle overlay camera; -1 = none.")]
         public int UiRendererIndex = -1;
 
-        bool Auto => DemoBoot.CaptureDir != null;
+        bool Auto => DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim;     // QF6: the playtest plays it like a person
         ChapterCapture Cap => ChapterCapture.I;
+        // QF6: read by the -playtest driver
+        public static Chapter1Aboard I { get; private set; }
+        public Vector3 SeatStandPos => SeatStand;
+        public bool InGalleyScene { get; private set; }
         SaucerSeven Seven => Director.Seven;
         CatCompanion Cat => Director.Cat;
         public bool Active { get; private set; }
@@ -62,6 +66,7 @@ namespace Seven
         void Start()
         {
             if (!Chapter1State.Aboard) { enabled = false; return; }
+            I = this;
             Active = true;
             Director.ChapterMode = true;
             Cat.RoamScale = 1f; Cat.LapScale = 1f; Cat.StrollSpeed = 1.0f; Cat.TrotSpeed = 1.6f;
@@ -398,6 +403,19 @@ namespace Seven
         // ------------------------------------------------------------------------------------- scene 9 + 10
         IEnumerator Flow()
         {
+            if (Chapter1State.GalleyStart)
+            {
+                // QF6 Scene Select / Continue: straight into scene 10 at the open fridge (the cat already by the table)
+                Seven.transform.SetPositionAndRotation(FridgeSpot, Quaternion.LookRotation(Flat(FridgeFacing)));
+                Cat.transform.SetPositionAndRotation(TableCentre - TableAlong * 0.75f - TableOut * 0.55f, Quaternion.LookRotation(Flat(FridgeSpot - TableCentre)));
+                yield return Wait(0.4f);
+                StartCoroutine(UI.Fade(0f, 1.2f));
+                ChapterCapture.I?.Log("aboard: galley start (scene 10)");
+                yield return Galley();
+                yield return Explore(false);
+                yield break;
+            }
+            SaveGame.SaveProgress(Chapter1State.CpAboard);
             Cat.ForceAction = "sit";
             yield return Wait(0.5f);
             yield return UI.Fade(0f, 1.6f);
@@ -430,6 +448,9 @@ namespace Seven
         IEnumerator Galley()
         {
             float sceneStart = Time.time;
+            InGalleyScene = true;
+            SaveGame.SaveProgress(Chapter1State.CpGalley);           // QF6: Continue / Scene Select can start here
+            ChapterCapture.I?.Log("galley scene starts (scene 10)");
             MusicSystem.Stop(2.5f);                                  // only the ship's hum (and eating) under this scene
             Seven.Frozen = true; Seven.Cutscene = true;
             Director.Cam.Hold = true;
@@ -872,6 +893,9 @@ namespace Seven
             Cat.enabled = true;
             Cat.RoamScale = 1f; Cat.LapScale = 1f; Cat.transform.localScale = Vector3.one;
             Explored = true;
+            InGalleyScene = false;
+            SaveGame.SaveProgress(Chapter1State.CpExplore);
+            ChapterCapture.I?.Log("aboard: free exploration (chapter done)");
             if (Auto) Cap.Log($"free exploration of the saucer begins ({(fromContinue ? "Continue from the menu" : "after scene 10 - chapter complete")}); music {MusicSystem.Current}");
             StartCoroutine(SetCourseWatch());
             Objective("Set course for Venus");
@@ -922,6 +946,10 @@ namespace Seven
             yield return null;
             yield return Cap.Shot("s12_pause_controls");
             PauseMenu.I.Handle(0, 0, false, true);                                            // back (Controls selected)
+            PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);    // QF6: Scene select page
+            yield return null;
+            yield return Cap.Shot("qf6_pause_scene_select");
+            PauseMenu.I.Handle(0, 0, false, true);                                            // back (Scene select selected)
             PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);   // Quit game -> confirm
             yield return Cap.Shot("s12_pause_quit_confirm");
             PauseMenu.I.Handle(0, 0, false, true);                                            // No / back
