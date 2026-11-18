@@ -296,7 +296,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–10 + QF1–QF7 complete (2026-11-18), release 0.10.3.** Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–10 + QF1–QF7 complete (2026-11-18), release 0.10.4.** Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
