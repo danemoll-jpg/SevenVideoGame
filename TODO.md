@@ -1,6 +1,8 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Quick fix QF5: Dan's playtest of 0.10.0 (Dan, 2026-11-17)
+## Quick fix QF5: Dan's playtest of 0.10.0 (Dan, 2026-11-17) — done, status below
+**Current objective: Dan plays 0.10.1, then Round 11 (`Docs/ROUND11.md`, queued).**
+
 Do this **before Round 11** (`Docs/ROUND11.md` stays queued; start it after QF5 is released). Commit the repo as it is
 first (it holds new gallery art + reference images added by the chat). All standing rules apply; muted, off-screen runs.
 
@@ -28,6 +30,52 @@ first (it holds new gallery art + reference images added by the chat). All stand
 4. **Checks + release.** Full `-chapter1` run (0 soft-locks), the cat-follow test above, galley run; publish **0.10.1**
    via the launcher; update docs; commit + push; per-item status (done / not done / deferred + why) in "QF5 — status";
    captures in `Docs/Previews/qf5/` and a "For Dan to check (QF5)" list.
+
+## QF5 — status (2026-11-18): done, exe-verified off-screen; release 0.10.1 (`game-1001`, Latest)
+Every run muted (output peak 0.000000 / listener 0), minimized-not-activated, Below Normal, one heavy job at a time;
+monochrome max |R−G|,|G−B| = 0 over all 305 shots. Captures + logs: `Docs/Previews/qf5/`.
+0. **Checkpoint — done:** `77b2c9b` (Kyle's 10 new gallery pieces + 6 reference images, as the chat left them; they are
+   also in this build's gallery).
+1. **Cat left in the cell block — done.** *Cause:* the cat's traversal-route stops wait for "7 is at X right now"
+   conditions (e.g. stop 5 "7 is on top of the bulkhead", stop 2 "the walk-and-talk is over"). A player who hurries past
+   (jumps down from the bulkhead before he got up there) makes the condition false for good: he sat on the bulkhead for ever
+   (and the next route could not walk him off it). The autopilot always waited for him, so the check runs passed.
+   *Reproduced* with a new player-style test (`-catfollowtest n`: virtual gamepad on the real input actions, free camera,
+   no autopilot; paths: walks away fast · waits · backtracks past the cell · circles · hurries over the bulkhead during
+   the walk-and-talk; hitches every 2nd run): **fix off (`-noqf5catfix`) 2/5** — Dan's path: waited 19.4 s at a stop she had
+   passed, 8.7 m behind, still on the bulkhead at the end. *Fix* (`ChapterCat.cs`): a route stop also goes once 7 is level
+   with it or past it along the route; plus a **leash** everywhere in Chapter 1 while the player has 7 (never in cutscenes,
+   resets, or while she is in her cell): > 6 m behind, or not closing in for 3 s while she moves on → he trots after her;
+   blocked (no progress 1.2 s, a ledge or a gap) → he fades out (new `_Fade` dither on `Seven/DissolveLit`, only if seen)
+   and reappears a step behind her out of the camera's view, then leads the route on from the first stop ahead of her.
+   While leading he may wait up to 14 m ahead (that is the route, not a soft-lock). QF4's rule kept (never in the cell:
+   0 frames in every run). Audit: no story trigger waits on the cat without a fallback (all cat waits are `UntilOr`
+   watchdogs or bounded `ReadyToTalk`). **CAT FOLLOW TEST: 25/25, 0 soft-locks** (16 runs needed no help, 9 used the
+   leash: 14 reappearances, 5 trots; max distance in play 12.3 m on the backtrack path, never > 6 m behind for long).
+2. **Lock mechanism on the right — done (moved; the video is unchanged).** The chamber looks toward −z, so the vision's
+   "right" is −x: emblem + touch spot mirrored about the door (x 19.35 → 13.65, `MoonLayout.DoorSymbol/MechanismSpot`),
+   the two rubble lumps there moved to the other side, the cat's mark and the three cameras of that beat mirrored. Traversal
+   untouched (the chamber is symmetric). Side by side: `qf5/vision_vs_present_mechanism_right.png`.
+3. **She keeps the dodecahedron visibly — done** (`CarriedShape.cs`). After "Take": a 2 s beat — she raises it to chest
+   height and looks at it, camera on her face and the glow, edges brighten; she walks out of the chamber holding it in her
+   right hand; past the door (or as soon as she needs both hands) it goes into a small dark-grey pouch at the right of her
+   belt and rides there, edges glowing above the rim + a faint white light (checked at the terrace, the ramp, the bay
+   floor: 0.01–0.03 m from the belt point; also through the beam boarding). In the galley, seated, she takes it out of the
+   pouch, lifts it over the table, her left hand sets it beside her plate (marking down as before), then she picks up her
+   fork. Still 15 cm, glowing edges. Side effect: the scripted silence "For a while, neither speaks" now lasts 10.6 s
+   (script 6.0 s) because this beat plays inside it — say if it should be shorter.
+4. **Checks + release — done.** Full `-chapter1` run: **0 soft-locks, 0 watchdog fallbacks**, 101/105 lines (the 4 = the
+   alternate 6b set), speakers 0 % occluded, 130 shots. Galley run (`-ch1aboard`): 0 soft-locks, scene 10 158.5 s, marking
+   up 1.00 at the end. Cat-follow test 25/25. **0.10.1 published** via the launcher (component update on 0.10.0; starter zip
+   not remade — 0.10.0's starter updates itself).
+
+### For Dan to check (QF5) — `Docs/Previews/qf5/`
+- Play the cell rescue → the bulkhead the way you did (hurry, run back, wait) — the cat should always come along; if he
+  ever pops in where you can see it, tell me where.
+- `vision_vs_present_mechanism_right.png` — vision frame / present day / her hand on the mechanism.
+- Dodecahedron (`chapter1/`): `67` in her hand (close-up), `68` walking out holding it, `78`/`79`/`83` at her belt in play,
+  `84` full figure with the pouch; galley `100`/`101` (and `galley/04`, `05`) taking it out. Pouch look / side OK?
+- Cat test logs: `catfollow/capture_log.txt` (fix on, 25/25), `catfollow_repro_fix_off/capture_log.txt` (fix off, 2/5).
 
 ## Round 10 plan (done — status below)
 Plan text below as given; status in "Round 10 — status" (added when the round ends).
@@ -182,6 +230,9 @@ monochrome max |R−G|,|G−B| = 0 over every shot (154 + 92 + menu). Previews +
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Quick fix QF5 — the cat always comes along (route stops 7 has passed + leash), lock mechanism on the right as in
+  the vision, the dodecahedron visibly kept (hand → belt pouch → galley) — done (2026-11-18), exe-verified off-screen;
+  release 0.10.1 (`game-1001`).** Status in "QF5 — status" above.
 - **Round 10 — the galley scene ends Chapter 1 — done (2026-11-17), exe-verified off-screen; release 0.10.0 (`game-1000`).**
   Hand-held dodecahedron + placeholder Elarim marking, voiced scene 10 (Dan's edited text) as a cutscene with his camera
   direction, the galley set with the Moon in the porthole, "Set course for Venus" placeholder, silver saucer, the logo.

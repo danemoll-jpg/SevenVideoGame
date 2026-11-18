@@ -261,10 +261,11 @@ namespace Seven.EditorTools
             {
                 var v = new List<Vector3>(); var t = new List<int>();
                 int seed = 900;
-                foreach (var (x, z, s) in new[] { (13.5f, -36.9f, 0.5f), (14.1f, -31.0f, 0.38f), (19.4f, -30.7f, 0.45f), (13.1f, -31.6f, 0.5f), (13.2f, -33.9f, 0.3f), (18.8f, -32.3f, 0.32f), (14.4f, -37.5f, 0.25f) })
+                // QF5: the two lumps by the door moved to the east side (the mechanism is on the west side now)
+                foreach (var (x, z, s) in new[] { (19.5f, -36.9f, 0.5f), (14.1f, -31.0f, 0.38f), (19.4f, -30.7f, 0.45f), (13.1f, -31.6f, 0.5f), (13.2f, -33.9f, 0.3f), (18.8f, -32.3f, 0.32f), (18.6f, -37.5f, 0.25f) })
                     Lump(v, t, new Vector3(x, y0 + s * 0.35f, z), new Vector3(s * 1.3f, s * 0.7f, s), 0.35f, seed++);
                 MeshObject("FallenChunks", SaveMesh(SmoothFinish(v, t), "Moon_FallenChunks"), rib, root);
-                foreach (var (x, z) in new[] { (13.5f, -36.9f), (13.1f, -31.6f), (19.4f, -30.7f) }) props.extraObstacles.Add(new Vector3(x, z, 0.55f));
+                foreach (var (x, z) in new[] { (19.5f, -36.9f), (13.1f, -31.6f), (19.4f, -30.7f) }) props.extraObstacles.Add(new Vector3(x, z, 0.55f));
             }
             // skylight slits high up (soft light through gaps in the shell), and low drifting fog sheets
             foreach (var z in new[] { -31.4f, -33.4f, -35.5f })

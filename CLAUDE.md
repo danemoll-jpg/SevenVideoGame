@@ -126,6 +126,13 @@ apply to every asset and scene:
   odd runs); `capture_log.txt` must end `OPENING TEST: 25/25` (cat inside the cell 0 frames each run). The normal Chapter 1
   check run also logs `speaker view scene N …` (occluded / outside the frame during every line: must be 0 %), `WATCHDOG`
   fallbacks, Scree feet and `scree tucked abdomen vs legs` (must say "clears").
+  **Cat-follow test (QF5):** `SevenDemo.exe -mute -catfollowtest 25 -capture <dir> …` (~27 min) → 25 runs from the end of
+  the cell rescue out of the cell block and up the cracked wall, 7 played like a person (virtual gamepad on the real
+  input actions, free camera, no autopilot; paths fast / wait / backtrack / circle / hurry over the bulkhead, hitches on
+  odd runs); `capture_log.txt` must end `CAT FOLLOW TEST: 25/25, soft-locks 0`. `-noqf5catfix` = the 0.10.0 behaviour (repro).
+  The cat's leash (`ChapterCat.Leash`, allowed by `Chapter1Director` only while the player has 7): > 6 m behind or not
+  closing in for 3 s → trot after her; blocked → fade (`_Fade` on `Seven/DissolveLit`) and reappear a step behind her out
+  of view; route stops also go once 7 has passed them (`ChapterCat.ArcOf`).
   **Phantom-wall proof (QF3):** every build runs `FightDemoBuilderPhantomCheck.cs` on the Chapter 1 scene →
   `Docs/Previews/qf3/phantom_check.txt` + build log: city (layer 20) triangles in a walkable volume and inside the host
   structure must both be **0**; it also lists every non-city renderer without a collider in a walkable volume (props).
@@ -220,6 +227,9 @@ apply to every asset and scene:
   Venus", free exploration (Continue starts here); X "Set course" at her galley seat = placeholder (Moon falls away,
   "Chapter 2 — Venus (coming soon)").
 - **Dodecahedron** (hand-held, 15 cm, pale stone + glowing edges): `ElarimShape.cs`; X "Take" after the door scene.
+  QF5: she keeps it visibly (`CarriedShape.cs` on 7: right hand, or the small belt pouch at her right hip — `HipOffset`,
+  material `Elarim_pouch`); walks out of the chamber holding it, pouch from past the door on; in the galley she takes it
+  out and sets it beside her plate. The lunar door's mechanism is on the RIGHT (seen from the chamber) as in the vision.
   **Elarim marking = placeholder** `Art/Marks/elarim_mark_placeholder.png` (`Tools/Model/make_elarim_mark.py`; swap the
   PNG or `MoonLayout.ElarimMarkFile`) — OPEN until Kyle designs it.
 - **Saucer exterior = silver** (Round 10, replaces the dark hull): materials `Saucer_hull` / `Saucer_under` in
@@ -231,7 +241,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–10 + QF1–QF4 complete (2026-11-17), release 0.10.0** — Chapter 1 "The Moon Prison" now ends with the galley
-scene (Round 10: hand-held dodecahedron + placeholder Elarim marking, voiced scene 10 with cutscene cameras, "Set course
-for Venus" placeholder, silver saucer, the logo) plus the demos. History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.0
-and sets Round 11** (Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.
+**Rounds 1–10 + QF1–QF5 complete (2026-11-18), release 0.10.1** — Chapter 1 "The Moon Prison" ends with the galley
+scene (Round 10); QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, the lock mechanism is on the right as
+in the vision, she visibly keeps the dodecahedron. History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.1, then Round 11**
+(`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

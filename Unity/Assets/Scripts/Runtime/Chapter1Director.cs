@@ -67,7 +67,7 @@ namespace Seven
         UnityEngine.Video.VideoPlayer _vp;
         RenderTexture _vpRT;
 
-        bool Auto => DemoBoot.CaptureDir != null;
+        bool Auto => DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim;     // QF5: the cat-follow test plays like a person
         ChapterCapture Cap => ChapterCapture.I;
         ParticleSystem _motes;
         string _promptLabel; bool _promptTk; Vector3 _promptAt; float _promptR; bool _promptHit;
@@ -97,6 +97,18 @@ namespace Seven
                 Dlg.LineStarted += OnLineForShots;
                 StartCoroutine(TrackCat());
             }
+            if (DemoBoot.PlayerSim)
+            {
+                ChapterCapture.Ensure();
+                Cap.Attach(Cam.GetComponent<Camera>());
+                StartCoroutine(TrackCat());
+            }
+            // QF5: the cat's leash (catch up when left behind) works whenever the player has 7 - never in a cutscene, a
+            // reset fade, or while she is still in her cell (he waits outside it).
+            Cat.LeashAllowed = () => !_cut && !_resetting && !_resettingFall && !PauseMenu.IsOpen && DemoBoot.OpeningTest <= 0
+                && Seven.Current != ChapterSeven.Mode.Locked && Seven.Current != ChapterSeven.Mode.Touch && Seven.Current != ChapterSeven.Mode.Float
+                && !ChapterCat.InNoCat(Seven.transform.position, 0.3f);
+            Cat.SevenGrounded = () => Seven.Current == ChapterSeven.Mode.Free || Seven.Current == ChapterSeven.Mode.Land;
             // QF4: the cat may never be inside 7's cell (laser door on or off).
             ChapterCat.NoCat.Clear();
             ChapterCat.NoCat.Add(Rect.MinMaxRect(-1.75f, -1.75f, 1.75f, MoonLayout.CellWallZ1));
@@ -104,7 +116,7 @@ namespace Seven
             SetupAudio();
             if (Auto && DemoBoot.OpeningTest <= 0) { AudioKit.Log = s => Cap.Log("audio: " + s); LineOfSightCheck(); }
             if (Auto && DemoBoot.OpeningTest <= 0) StartCoroutine(SpeakerViewSampler());
-            StartCoroutine(DemoBoot.OpeningTest > 0 ? OpeningTestRun() : Flow());
+            StartCoroutine(DemoBoot.OpeningTest > 0 ? OpeningTestRun() : DemoBoot.CatFollowTest > 0 ? CatFollowTestRun() : Flow());
             if (DemoBoot.OpeningTest <= 0) StartCoroutine(TeachWatch());
             StartCoroutine(ShapeIdle());
             if (VisionVideo != null)
@@ -196,8 +208,15 @@ namespace Seven
             SetZone("Stair", _slabMoved);
             if (Slab != null) { Slab.gameObject.SetActive(!_slabMoved); Slab.position = MoonTraversal.SlabRest; Slab.rotation = Quaternion.Euler(4f, 12f, -6f); }
             _shapeGlow = sealedOpen ? 0.45f : 1.4f;
-            _shapeTaken = sealedOpen;                        // Round 10: from checkpoint 4 on she carries it (stowed)
-            if (Shape != null) Show(Shape.gameObject, !sealedOpen);
+            _shapeTaken = sealedOpen;                        // Round 10: from checkpoint 4 on she carries it
+            if (Shape != null) Show(Shape.gameObject, true);
+            if (Shape != null && sealedOpen)
+            {
+                // QF5: it rides visibly at her hip (small pouch on her belt) from the door scene on
+                _carry = CarriedShape.Attach(Seven.gameObject, Shape);
+                _carry.Carrying = true;
+                _carry.Set(CarriedShape.Where.Hip, 0f);
+            }
             if (ShapeLight != null) ShapeLight.enabled = !sealedOpen;
             Glow(DoorSymbol, sealedOpen ? 0.7f : 0f);
             Ground.IgnoreObstacle = -1;
@@ -324,8 +343,10 @@ namespace Seven
             ClearPrompt();
         }
 
+        bool _cut;
         IEnumerator Cutscene(bool on)
         {
+            _cut = on;
             Seven.Lock(on);
             if (!on) { Cam.Follow(); if (Auto) Seven.ScriptMove = Vector3.zero; }
             yield return null;
@@ -922,7 +943,8 @@ namespace Seven
             var toMech = Flat(MoonLayout.DoorSymbol - Seven.transform.position);
             for (float t = 0f; t < 0.7f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(toMech), 260f * Time.deltaTime); yield return null; }
             Talk();
-            Cam.Shot(new Vector3(17.2f, MoonLayout.Lower + 1.9f, -33.0f), new Vector3(19.4f, MoonLayout.Lower + 1.3f, -36.6f), 1.0f, false, 54f);
+            // QF5: the mechanism is on the right of the door now (as in the vision): frame her at the alcove and it
+            Cam.Shot(new Vector3(17.6f, MoonLayout.Lower + 2.1f, -30.2f), new Vector3(16.8f, MoonLayout.Lower + 1.2f, -36.4f), 1.0f, false, 54f);
             yield return ReadyToTalk(1.5f);
             yield return Dlg.PlayScene(6, 8, 8);             // "But I think I know how this opens."
             yield return Cutscene(false);
@@ -932,9 +954,9 @@ namespace Seven
             yield return WaitPrompt("touch the round mechanism");
             Objective(null);
             yield return Cutscene(true);
-            Cat.GoTo(MoonLayout.MechanismSpot + new Vector3(-1.3f, 0f, 1.2f), Cat.StrollSpeed, MoonLayout.SealedDoor);
+            Cat.GoTo(MoonLayout.MechanismSpot + new Vector3(1.3f, 0f, 1.2f), Cat.StrollSpeed, MoonLayout.SealedDoor);
             Cam.Subjects.Clear();          // no lines here: a fixed over-the-shoulder view of her hand on the mechanism
-            Cam.Shot(new Vector3(18.0f, MoonLayout.Lower + 1.7f, -35.4f), new Vector3(19.3f, MoonLayout.Lower + 1.35f, -37.9f), 0.8f, false, 50f);
+            Cam.Shot(new Vector3(15.0f, MoonLayout.Lower + 1.7f, -35.4f), new Vector3(13.7f, MoonLayout.Lower + 1.35f, -37.9f), 0.8f, false, 50f);   // QF5: mirrored with the mechanism
             if (Dist7(MoonLayout.MechanismSpot) > 0.1f) yield return WalkSeven(MoonLayout.MechanismSpot, 2.5f);
             Seven.Lock(true);
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Vector3.back), 400f * Time.deltaTime); yield return null; }
@@ -944,7 +966,7 @@ namespace Seven
             for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Glow(DoorSymbol, Mathf.Lerp(0.9f, 4.5f, t / 0.5f)); yield return null; }
             AudioKit.Play("energy_point", MoonLayout.DoorSymbol, 0.9f, 0f, AudioKit.Bus.Sfx, 20f);
             yield return Shot("s06_touching_mechanism");
-            Cam.Shot(new Vector3(17.4f, MoonLayout.Lower + 1.9f, -33.4f), new Vector3(17.1f, MoonLayout.Lower + 1.8f, -38.1f), 0.8f, false, 54f);
+            Cam.Shot(new Vector3(15.6f, MoonLayout.Lower + 1.9f, -33.4f), new Vector3(15.9f, MoonLayout.Lower + 1.8f, -38.1f), 0.8f, false, 54f);   // QF5: mirrored
             for (float t = 0f; t < 1.6f; t += Time.deltaTime)
             {
                 float u = t / 1.6f;
@@ -953,6 +975,14 @@ namespace Seven
                 yield return null;
             }
             yield return Shot("s06_emblem_and_engravings_lit");
+            if (Auto)
+            {
+                // QF5 capture: the present day from where the vision looks at the door (mechanism on the right, her hand on it)
+                Cam.Shot(new Vector3(16.6f, MoonLayout.Lower + 1.6f, -31.0f), new Vector3(16.2f, MoonLayout.Lower + 2.0f, -38.0f), 0.01f, true, 62f);
+                yield return null; yield return null;
+                yield return Shot("s06_like_the_vision");
+                Cam.Shot(new Vector3(15.6f, MoonLayout.Lower + 1.9f, -33.4f), new Vector3(15.9f, MoonLayout.Lower + 1.8f, -38.1f), 0.01f, true, 54f);
+            }
             Seven.Release(); Seven.Lock(true);
             Burst(MoonLayout.SealedDoor + Vector3.up * 1.6f, 80, 1.3f);
             AudioKit.Play("stone_door", MoonLayout.SealedDoor + Vector3.up, 1f, 0f, AudioKit.Bus.Sfx, 25f);
@@ -1009,17 +1039,91 @@ namespace Seven
                 Shape.position = Vector3.Lerp(p0, hp, Mathf.SmoothStep(0f, 1f, t / 0.5f));
                 yield return null;
             }
-            if (hand != null) { Shape.SetParent(hand, true); Shape.localPosition = new Vector3(0f, -0.06f, 0.04f); }
+            // QF5: it stays in her hand - a short beat on her hand and the glow, then she walks out holding it; past the
+            // door (or as soon as she needs both hands) it goes into the small pouch at her belt and rides there.
+            _carry = CarriedShape.Attach(Seven.gameObject, Shape);
+            _carry.Set(CarriedShape.Where.Hand, 0.2f);
             yield return Wait(0.35f);
             yield return Shot("s06_take_shape_in_hand");
             Seven.Release(); Seven.Lock(true);
-            yield return Wait(0.6f);
-            // stowed at her side: it stays with her (hidden; the galley shows it again)
-            Show(Shape.gameObject, false);
             if (ShapeLight != null) ShapeLight.enabled = false;
-            if (Auto) Cap.Log($"dodecahedron taken: in her hand, then stowed (radius {MoonLayout.ShapeRadius:0.000} m, ~{MoonLayout.ShapeRadius * 2f * 100f:0} cm across; marking file {MoonLayout.ElarimMarkFile})");
+            yield return Wait(0.5f);
+            // the beat: she raises it to chest height and looks at it; the camera holds her face and the glow (portrait
+            // framing - faces / shoulders up, never on her body), the edges brighten softly
+            var es = Shape.GetComponent<ElarimShape>();
+            var ik = Seven.gameObject.AddComponent<SevenTableIK>();
+            var head = Seven.Bone(HumanBodyBones.Head);
+            var fwd = Flat(Seven.transform.forward).normalized; var side = Vector3.Cross(Vector3.up, fwd);
+            var hold = (head != null ? head.position : Seven.transform.position + Vector3.up * 1.6f) + Vector3.down * 0.34f + fwd * 0.3f + side * 0.04f;
+            ik.RightPos = hold; ik.RightW = 1f; ik.LookPos = hold; ik.LookW = 1f; ik.Ease = 2.2f;
+            var face = head != null ? head.position : hold + Vector3.up * 0.34f;
+            Cam.Shot(hold + fwd * 0.85f + side * 0.45f + Vector3.up * 0.12f, Vector3.Lerp(hold, face, 0.45f), 0.9f, false, 34f);
+            for (float t = 0f; t < 2.0f; t += Time.deltaTime) { if (es != null) es.Glow = Mathf.Lerp(1.6f, 2.4f, Mathf.Sin(Mathf.Clamp01(t / 2.0f) * Mathf.PI)); yield return null; }
+            yield return Shot("qf5_01_shape_in_hand_closeup");
+            if (es != null) es.Glow = _carry.GlowInHand;
+            ik.RightW = 0f; ik.LookW = 0f;
+            yield return Wait(0.5f);
+            Destroy(ik);                                     // 7's own ledge IK takes the hands again
+            if (Auto) Cap.Log($"dodecahedron taken: held in her right hand (beat {1.7f:0.0}s on her hand), radius {MoonLayout.ShapeRadius:0.000} m (~{MoonLayout.ShapeRadius * 2f * 100f:0} cm across), marking file {MoonLayout.ElarimMarkFile}");
             Objective("Keep going");
+            StartCoroutine(StowWhenOut());
             yield return Cutscene(false);
+        }
+
+        /// <summary>QF5: she walks out of the chamber with it in her hand; past the door - or the moment she needs both
+        /// hands (a hang, a climb, a jump) - it goes into the pouch at her belt (a quick, visible move).</summary>
+        IEnumerator StowWhenOut()
+        {
+            bool shotWalk = false;
+            while (_carry != null && _carry.At == CarriedShape.Where.Hand)
+            {
+                var m = Seven.Current;
+                bool hands = m == ChapterSeven.Mode.Hang || m == ChapterSeven.Mode.Climb || m == ChapterSeven.Mode.Air;
+                if (Auto && !shotWalk && m == ChapterSeven.Mode.Free && Seven.Speed > 0.3f && Seven.transform.position.z < -36.2f)
+                {
+                    shotWalk = true;
+                    bool w = Cam.InShot;
+                    var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f);
+                    Cam.Shot(Seven.transform.position + f * 2.1f + r * 1.0f + Vector3.up * 1.35f, Seven.transform.position + Vector3.up * 0.95f, 0.01f, true, 50f);
+                    yield return null;
+                    yield return Shot("qf5_02_walking_out_holding_it");
+                    if (!w) Cam.Follow();
+                }
+                if (hands || Seven.transform.position.z < -38.45f)
+                {
+                    _carry.Carrying = true;
+                    _carry.Set(CarriedShape.Where.Hip, hands ? 0.2f : 0.45f);
+                    Debug.Log($"[Seven] dodecahedron into the pouch at her belt ({(hands ? "she needs both hands: " + m : "past the door")})");
+                    if (Auto) Cap.Log($"dodecahedron: walked out holding it, into the pouch at her belt at z {Seven.transform.position.z:0.00} ({(hands ? "needs both hands: " + m : "past the door")})");
+                    break;
+                }
+                yield return null;
+            }
+        }
+        CarriedShape _carry;
+
+        /// <summary>QF5 check-run captures: the dodecahedron at her hip from the normal follow camera in play (the mining
+        /// cut, the terrace, the bay floor) plus one close side view at the bay; logs where it is each time.</summary>
+        IEnumerator HipShots()
+        {
+            bool Free() => Seven.Current == ChapterSeven.Mode.Free && !Cam.InShot && !Dlg.Busy;
+            void Where(string what) { if (_carry != null && Shape != null) Cap.Log($"dodecahedron {what}: {_carry.At}, {Vector3.Distance(Shape.position, _carry.HipPoint):0.000} m from the belt point, shown {Shape.GetComponentInChildren<Renderer>().enabled}"); }
+            // on the terrace after the city reveal (the follow camera has room there)
+            while (!(Free() && Seven.transform.position.z < -45.0f && Seven.Speed > 0.3f)) yield return null;
+            yield return Wait(0.6f);
+            Where("on the terrace"); yield return Shot("qf5_03_at_her_hip_terrace");
+            while (!(Free() && Seven.transform.position.z < -48.6f)) yield return null;
+            yield return Wait(0.3f);
+            Where("on the way down to the bay"); yield return Shot("qf5_04_at_her_hip_ramp");
+            while (!(Free() && Seven.transform.position.y < MoonLayout.Bay + 0.5f)) yield return null;
+            yield return Wait(0.6f);
+            Where("on the bay floor"); yield return Shot("qf5_05_at_her_hip_bay");
+            // a full-figure view from a few metres (as the follow camera sees her when it swings round) - not a body close-up
+            var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f);
+            Cam.Shot(Seven.transform.position + r * 2.6f + f * 1.6f + Vector3.up * 1.5f, Seven.transform.position + Vector3.up * 0.95f, 0.01f, true, 52f);
+            yield return null; yield return null;
+            yield return Shot("qf5_06_full_figure_pouch_visible");
+            Cam.Follow();
         }
         bool _shapeTaken;
 
@@ -1192,6 +1296,7 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ 7-8: bay, beam
         IEnumerator Scene7And8()
         {
+            if (Auto) StartCoroutine(HipShots());
             yield return Scene6bReveal();
             MusicSystem.Play("moon_prison", 5f);
             Objective("Get down to the bay and release the saucer");
@@ -1552,6 +1657,201 @@ namespace Seven
             if (Chapter1State.OpeningRun < n) { SceneManager.LoadScene(SceneManager.GetActiveScene().name); yield break; }
             int passed = Chapter1State.OpeningResults.FindAll(x => x.Contains(": PASS")).Count;
             Cap.Finish($"OPENING TEST: {passed}/{n} runs reached scene 1 with the cat outside the cell; watchdog fallbacks taken {Chapter1State.Watchdogs}");
+        }
+
+        // ------------------------------------------------------------------------------------------ QF5 cat-follow test
+        /// <summary>-catfollowtest n: from the end of the cell rescue (scene 2 over, the cat on his spot) out of the cell
+        /// block - corridor + walk-and-talk, the catwalk gap, the pipes, the bulkhead, the older wall (scene 4) - and up the
+        /// cracked wall into the old passage, n times. 7 is played like a person: a virtual gamepad on the real input
+        /// actions, the free player camera (no autopilot, no check-run shortcuts in the story code), each run with its
+        /// own seed and path: walks away fast (runs, skips lines) · waits, then walks · backtracks to the far end ·
+        /// circles · hurries over the bulkhead while the walk-and-talk still plays (Dan's path). Every 2nd run adds frame
+        /// hitches. Pass = the run gets through (no soft-lock), the cat ends within 6 m of her, is never left waiting
+        /// behind her at a route stop, is never left more than 6 m behind for long, and never enters the cell.</summary>
+        IEnumerator CatFollowTestRun()
+        {
+            int i = Chapter1State.FollowRun, n = DemoBoot.CatFollowTest;
+            var rng = new System.Random(5000 + i * 7919);
+            int variant = i % 5; bool hitches = i % 2 == 1;
+            string[] names = { "walks away fast", "waits, then walks", "backtracks to the far end", "circles", "hurries over the bulkhead during the walk-and-talk" };
+            // the state at the end of scene 2 ("Which way?"): 7 just outside the door, the cat on his spot looking at his opening
+            var start = new Vector3((float)(rng.NextDouble() - 0.5), 0f, 2.55f + (float)rng.NextDouble() * 0.7f);
+            Seven.Place(start, Quaternion.Euler(0f, (float)(rng.NextDouble() * 360.0), 0f) * Vector3.forward);
+            Cat.Place(new Vector3(-0.4f, 0f, 2.9f), Vector3.right);
+            Cat.Hold(MoonLayout.VentMouth);
+            Cam.SnapBehind();
+            var pad = UnityEngine.InputSystem.InputSystem.AddDevice<UnityEngine.InputSystem.Gamepad>("FollowTestPad");
+            Vector2 stick = Vector2.zero, look = Vector2.zero; bool run = false; int pulse = 0; uint pulseBit = 0;
+            bool done = false, stuckFlag = false; string phase = "start";
+            int inside = 0, frames = 0, hitchCount = 0; float maxDt = 0f, maxD = 0f, behindRun = 0f, maxBehindRun = 0f, waitingBehind = 0f, maxWaitingBehind = 0f;
+            float dAtWall = -1f, dAtEnd = -1f;
+            IEnumerator Feed()
+            {
+                while (!done)
+                {
+                    uint b = run ? (1u << (int)UnityEngine.InputSystem.LowLevel.GamepadButton.LeftShoulder) : 0u;
+                    if (pulse > 0) { b |= pulseBit; pulse--; }
+                    UnityEngine.InputSystem.InputSystem.QueueStateEvent(pad, new UnityEngine.InputSystem.LowLevel.GamepadState { leftStick = stick, rightStick = look, buttons = b });
+                    yield return null;
+                }
+                UnityEngine.InputSystem.InputSystem.QueueStateEvent(pad, new UnityEngine.InputSystem.LowLevel.GamepadState());
+            }
+            void Press(UnityEngine.InputSystem.LowLevel.GamepadButton btn) { pulseBit = 1u << (int)btn; pulse = 3; }
+            const UnityEngine.InputSystem.LowLevel.GamepadButton A = UnityEngine.InputSystem.LowLevel.GamepadButton.South,
+                B = UnityEngine.InputSystem.LowLevel.GamepadButton.East, X = UnityEngine.InputSystem.LowLevel.GamepadButton.West,
+                Y = UnityEngine.InputSystem.LowLevel.GamepadButton.North;
+            // world direction -> left stick, relative to the camera (as a person steers)
+            Vector2 StickFor(Vector3 dir)
+            {
+                var f = Flat(Cam.transform.forward).normalized; var r = new Vector3(f.z, 0f, -f.x);
+                dir = Flat(dir); if (dir.sqrMagnitude > 1f) dir.Normalize();
+                return new Vector2(Vector3.Dot(dir, r), Vector3.Dot(dir, f));
+            }
+            IEnumerator Go(Vector3 to, float tol = 0.3f, float timeout = 25f, float speed = 1f)
+            {
+                for (float t0 = Time.time; Dist7(to) > tol && Time.time - t0 < timeout && !done;)
+                {
+                    if (Seven.Current == ChapterSeven.Mode.Free) stick = StickFor((to - Seven.transform.position).normalized * speed); else stick = Vector2.zero;
+                    yield return null;
+                }
+                stick = Vector2.zero;
+            }
+            IEnumerator Idle(float s) { stick = Vector2.zero; for (float t = 0f; t < s && !done; t += Time.deltaTime) yield return null; }
+            IEnumerator LookAround(float s, float x) { for (float t = 0f; t < s && !done; t += Time.deltaTime) { look = new Vector2(x, 0f); yield return null; } look = Vector2.zero; }
+            IEnumerator Circle(Vector3 c, float r, int loops)
+            {
+                for (float a = 0f; a < loops * 360f && !done; a += 150f * Time.deltaTime)
+                {
+                    var p = c + new Vector3(Mathf.Cos(a * Mathf.Deg2Rad), 0f, Mathf.Sin(a * Mathf.Deg2Rad)) * r;
+                    if (Seven.Current == ChapterSeven.Mode.Free) stick = StickFor((p - Seven.transform.position).normalized);
+                    yield return null;
+                }
+                stick = Vector2.zero;
+            }
+            // one traversal move: steer into it, press, until it is done; retry after a fall reset
+            IEnumerator Move(string what, Vector3 from, Vector3 dir, UnityEngine.InputSystem.LowLevel.GamepadButton btn, Func<bool> ok, float hold = 0.5f)
+            {
+                for (int tries = 0; tries < 4 && !done; tries++)
+                {
+                    phase = what;
+                    yield return Go(from, 0.2f, 20f, 0.6f);
+                    for (float t = 0f; t < 0.25f; t += Time.deltaTime) { stick = StickFor(dir) * 0.35f; yield return null; }
+                    Press(btn);
+                    for (float t = 0f; t < hold; t += Time.deltaTime) { stick = StickFor(dir) * 0.35f; yield return null; }
+                    stick = Vector2.zero;
+                    // wait for the move to finish: 4 s after she is back in free control (climbs take longer), 25 s at most
+                    for (float t0 = Time.time, tMax = Time.time + 25f; Time.time - t0 < 4f && Time.time < tMax && !ok() && !_resettingFall;)
+                    { if (Seven.Current != ChapterSeven.Mode.Free) t0 = Time.time; yield return null; }
+                    while (_resettingFall) yield return null;
+                    if (ok()) yield break;
+                }
+                stuckFlag = true; Cap.Log($"follow run {i + 1}: could not do '{what}' (7 at {Seven.transform.position} {Seven.Current}/{Seven.State})");
+            }
+            IEnumerator Watch()
+            {
+                while (!done)
+                {
+                    frames++; maxDt = Mathf.Max(maxDt, Time.deltaTime);
+                    var c = Cat.transform.position;
+                    if (c.x > -1.6f && c.x < 1.6f && c.z < MoonLayout.CellWallZ1) inside++;
+                    float d = Cat.DistanceTo7;
+                    bool play = Cat.LeashAllowed();
+                    if (play) maxD = Mathf.Max(maxD, d);
+                    // "left behind": more than 6 m away and she is further along (or he is not leading)
+                    bool behindFar = play && d > 6f && !(Cat.Current == ChapterCat.Mode.Route && !Cat.WaitingBehind && Cat.ArcOf(c) >= Cat.ArcOf(Seven.transform.position) - 0.75f);
+                    behindRun = behindFar ? behindRun + Time.deltaTime : 0f; maxBehindRun = Mathf.Max(maxBehindRun, behindRun);
+                    waitingBehind = play && Cat.WaitingBehind ? waitingBehind + Time.deltaTime : 0f; maxWaitingBehind = Mathf.Max(maxWaitingBehind, waitingBehind);
+                    yield return null;
+                }
+            }
+            IEnumerator Hitches()
+            {
+                while (!done) { if (rng.NextDouble() < 0.03) { System.Threading.Thread.Sleep(150 + rng.Next(300)); hitchCount++; } yield return null; }
+            }
+            IEnumerator SkipLines(bool on) { while (!done) { if (on && Dlg.Busy && rng.NextDouble() < 0.02) Press(Y); yield return null; } }
+            bool fast = variant == 0 || variant == 4;
+            IEnumerator Drive()
+            {
+                yield return Idle(0.6f);
+                run = fast;
+                switch (variant)
+                {
+                    case 1: yield return Idle(10f + (float)rng.NextDouble() * 10f); yield return LookAround(0.8f, 0.7f); break;
+                    case 2:
+                        yield return Go(new Vector3(6.8f, 0f, 3.3f));           // toward the gap (the walk-and-talk starts)...
+                        run = true; yield return Go(new Vector3(-6.6f, 0f, 3.4f));   // ...then all the way back past the cell
+                        yield return Idle(1.5f + (float)rng.NextDouble() * 2f); run = rng.NextDouble() < 0.5; break;
+                    case 3:
+                        yield return Go(new Vector3(2.8f, 0f, 3.3f));
+                        yield return Circle(new Vector3(2.8f, 0f, 3.3f), 0.9f, 2);
+                        yield return LookAround(1.0f, -0.8f); break;
+                }
+                phase = "corridor";
+                yield return Go(new Vector3(7.6f, 0f, 3.3f), 0.3f, 40f);
+                if (!fast && variant != 3) while (_scene3 && !done) yield return null;   // a calm player listens to the walk-and-talk first
+                yield return Move("jump the catwalk gap", new Vector3(7.95f, 0f, 3.3f), Vector3.right, A, () => FreeAt(0f) && Seven.transform.position.x > 10f);
+                if (variant == 3) yield return Circle(new Vector3(10.5f, 0f, 3.3f), 0.5f, 1);
+                if (variant == 2) { yield return Go(new Vector3(10.3f, 0f, 2.6f)); yield return Idle(1f); }
+                phase = "pipes";
+                yield return Move("crouch at the pipes", new Vector3(10.95f, 0f, 3.3f), Vector3.right, B, () => Seven.Crouched, 0.2f);
+                yield return Go(new Vector3(13.75f, 0f, 3.3f), 0.25f, 25f, 0.8f);
+                if (Seven.Crouched) { Press(B); yield return Idle(0.6f); }
+                yield return Move("jump to grab the bulkhead", new Vector3(13.6f, 0f, 3.3f), Vector3.right, A, () => Hanging(MoonTraversal.Bulkhead));
+                phase = "climb the bulkhead";
+                for (float t0 = Time.time; Time.time - t0 < 6f && !FreeAt(MoonTraversal.BulkheadTop) && !done;) { stick = StickFor(Vector3.right); yield return null; }
+                stick = Vector2.zero;
+                if (!FreeAt(MoonTraversal.BulkheadTop)) { stuckFlag = true; Cap.Log($"follow run {i + 1}: could not climb the bulkhead ({Seven.Current}/{Seven.State})"); }
+                if (variant == 1) yield return Idle(2f);
+                yield return Move("jump down from the bulkhead", new Vector3(14.95f, MoonTraversal.BulkheadTop, 3.3f), Vector3.right, A, () => FreeAt(0f) && Seven.transform.position.x > 15.3f);
+                if (variant == 3) yield return Circle(new Vector3(17.2f, 0f, 3.4f), 0.8f, 1);
+                phase = "older wall";
+                yield return Go(MoonLayout.OldWallSpot, 0.4f, 30f);
+                for (float t0 = Time.time; !PromptNear && Time.time - t0 < 90f && !done;) yield return null;   // the prompt (after the gate hint / the walk-and-talk)
+                dAtWall = Cat.DistanceTo7;
+                Press(X);
+                for (float t0 = Time.time; Chapter1State.Checkpoint < 2 && Time.time - t0 < 90f && !done;) yield return null;
+                if (Chapter1State.Checkpoint < 2) yield break;
+                phase = "old passage";
+                yield return Idle(0.4f);
+                yield return Move("climb the cracked wall", new Vector3(16.5f, 0f, 0.15f), Vector3.back, A, () => FreeAt(2.8f), 0.3f);
+                for (float t0 = Time.time; Time.time - t0 < 12f && !FreeAt(2.8f) && !done;) yield return null;
+                yield return Go(new Vector3(16.4f, 2.8f, -1.2f), 0.3f, 6f, 0.5f);
+                yield return Idle(5f);
+                dAtEnd = Cat.DistanceTo7;
+                phase = "end";
+            }
+            StartCoroutine(Feed());
+            StartCoroutine(Watch());
+            StartCoroutine(SkipLines(variant == 0));
+            if (hitches) StartCoroutine(Hitches());
+            var flow = StartCoroutine(Scene3And4());
+            Coroutine s5 = null;
+            var drive = StartCoroutine(Drive());
+            float t0r = Time.time;
+            bool finished = false;
+            while (Time.time - t0r < 300f)
+            {
+                if (s5 == null && Chapter1State.Checkpoint >= 2) s5 = StartCoroutine(Scene5());
+                if (phase == "end") { finished = true; break; }
+                yield return null;
+            }
+            done = true;
+            StopCoroutine(drive); StopCoroutine(flow); if (s5 != null) StopCoroutine(s5);
+            yield return null;
+            UnityEngine.InputSystem.InputSystem.RemoveDevice(pad);
+            bool pass = finished && !stuckFlag && inside == 0 && dAtEnd >= 0f && dAtEnd <= 6f && maxWaitingBehind < 1f && maxBehindRun < 6f;
+            var line = $"follow run {i + 1,2}/{n}: {(pass ? "PASS" : "FAIL")} '{names[variant]}', start {start.x:0.00},{start.z:0.00}, hitches {(hitches ? hitchCount + " (longest frame " + (maxDt * 1000f).ToString("0") + " ms)" : "off")}, " +
+                       $"{(finished ? "out of the block in " + (Time.time - t0r).ToString("0.0") + "s" : "SOFT-LOCK at '" + phase + "' after " + (Time.time - t0r).ToString("0") + "s")}, cat at the older wall {dAtWall:0.0} m, at the end {dAtEnd:0.0} m, " +
+                       $"longest wait at a stop she had passed {maxWaitingBehind:0.0}s, longest > 6 m behind {maxBehindRun:0.0}s, max distance in play {maxD:0.0} m, leash {Cat.Leashes} (trotted {Cat.LeashTrots}, reappeared {Cat.LeashBlinks}), " +
+                       $"cat inside the cell {inside}/{frames} frames, cat {Cat.Current} at {Cat.transform.position} (route stop {Cat.RouteStop + 1}), 7 at {Seven.transform.position}";
+            Cap.Log(line);
+            Chapter1State.FollowResults.Add(line);
+            if (i < 5) yield return Cap.Shot($"cf{i + 1:00}_end_{variant}");
+            Chapter1State.FollowRun++;
+            if (Chapter1State.FollowRun < n) { Chapter1State.Checkpoint = 1; SceneManager.LoadScene(SceneManager.GetActiveScene().name); yield break; }
+            int passed = Chapter1State.FollowResults.FindAll(x => x.Contains(": PASS")).Count;
+            int soft = Chapter1State.FollowResults.FindAll(x => x.Contains("SOFT-LOCK")).Count;
+            Cap.Finish($"CAT FOLLOW TEST: {passed}/{n}, soft-locks {soft} (QF5 cat fix {(ChapterCat.QF5Fix ? "on" : "OFF - repro")})");
         }
 
         // ------------------------------------------------------------------------------------------ QF4 dialogue view

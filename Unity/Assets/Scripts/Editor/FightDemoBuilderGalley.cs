@@ -20,7 +20,7 @@ namespace Seven.EditorTools
         const float TableAngle = 197f, TableR = 8.1f, TableTopY = 0.745f, SeatOff = 0.58f, PortholeY = 1.24f, PortholeRad = 0.255f;
 
         // --------------------------------------------------------------------------- the dodecahedron
-        struct ElarimMats { public Material stone, edges, mark; }
+        struct ElarimMats { public Material stone, edges, mark, pouch; }
 
         static Texture2D ElarimMarkTexture()
         {
@@ -48,6 +48,7 @@ namespace Seven.EditorTools
                 edges = Dissolve("Elarim_edges" + sfx, Color.white, 0.5f, ship),
             };
             em.stone.SetFloat("_Rim", 0.22f);
+            em.pouch = Dissolve("Elarim_pouch", Gray(0.16f), 0.2f, false);      // QF5: the small belt pouch she carries it in
             em.edges.EnableKeyword("_EMISSION"); em.edges.SetColor("_EmissionColor", Color.white * 1.4f);
             // The engraving: URP Lit, alpha-clipped mark texture, dark grey lines with a faint white inner glow.
             var mk = Lit("Elarim_mark" + sfx, Gray(0.16f), 0.4f);
@@ -74,6 +75,7 @@ namespace Seven.EditorTools
             var mark = MeshObject("Mark", SaveMesh(Seven.ElarimShape.MarkMesh(r, 0.86f), meshPrefix + "_Mark"), em.mark, root, false);
             var es = root.gameObject.AddComponent<Seven.ElarimShape>();
             es.Edges = edges.GetComponent<Renderer>();
+            es.PouchMaterial = em.pouch;
             return es;
         }
 

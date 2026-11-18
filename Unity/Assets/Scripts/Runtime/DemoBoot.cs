@@ -45,6 +45,11 @@ namespace Seven
         /// <summary>-openingtest n (with -capture): QF4 check - run Chapter 1's opening n times with varied timing / 7's
         /// position and movement / frame hitches; every run must reach scene 1 with the cat never inside the cell.</summary>
         public static int OpeningTest { get; private set; }
+        /// <summary>-catfollowtest n (with -capture): QF5 check - n runs from the end of the cell rescue out of the cell
+        /// block and up into the old passage, 7 driven like a player (virtual gamepad, free camera, varied paths).</summary>
+        public static int CatFollowTest { get; private set; }
+        /// <summary>QF5 cat-follow test: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
+        public static bool PlayerSim => CatFollowTest > 0;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -67,6 +72,8 @@ namespace Seven
                 if (args[i] == "-cityreveal" && i + 1 < args.Length) CityRevealDialogue = args[i + 1];
                 if (args[i] == "-quick") Quick = true;
                 if (args[i] == "-openingtest" && i + 1 < args.Length && int.TryParse(args[i + 1], out var ot)) { OpeningTest = ot; Chapter1 = true; }
+                if (args[i] == "-catfollowtest" && i + 1 < args.Length && int.TryParse(args[i + 1], out var cf)) { CatFollowTest = cf; Chapter1 = true; Chapter1State.Checkpoint = 1; }
+                if (args[i] == "-noqf5catfix") ChapterCat.QF5Fix = false;
                 if (args[i] == "-gallery") { Gallery = true; Saucer = true; }
                 if (args[i] == "-capture" && i + 1 < args.Length) CaptureDir = args[i + 1];
                 if (args[i].StartsWith("-screen-") || args[i] == "-window-mode" || args[i] == "-popupwindow") WindowFromCommandLine = true;

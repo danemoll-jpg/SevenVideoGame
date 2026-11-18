@@ -70,7 +70,7 @@ namespace Seven
 
         void Update()
         {
-            if (!Busy || DemoBoot.CaptureDir != null || PauseMenu.IsOpen) return;
+            if (!Busy || (DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim) || PauseMenu.IsOpen) return;
             var kb = Keyboard.current; var gp = Gamepad.current;
             if ((kb != null && (kb.enterKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) || (gp != null && gp.buttonNorth.wasPressedThisFrame))   // Round 9: Y skips (A is jump in Chapter 1)
                 _skip = true;

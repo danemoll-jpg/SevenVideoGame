@@ -1,0 +1,667 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.04s] line of sight cell -> hidden release panel: 1452 rays from a grid inside the cell, 0 unobstructed (must be 0)
+[   2.92s] release panel in shot 's01_cell_start' (camera inside the cell): in frame=False, visible=False (must be false)
+[   2.97s] shot 01_s01_cell_start.png  audioPeak=0.000000  cursorVisible=False
+[   4.08s] teach: 'move' shown (Move Move · Camera Camera)
+[   4.40s] release panel in shot 't_move_xbox' (camera inside the cell): in frame=False, visible=False (must be false)
+[   4.40s] prompts in shot 't_move_xbox': teach [Move:Move|Camera:Camera|] context []
+[   4.44s] shot 02_t_move_xbox.png  audioPeak=0.000000  cursorVisible=False
+[   4.72s] release panel in shot 't_move_keys' (camera inside the cell): in frame=False, visible=False (must be false)
+[   4.72s] prompts in shot 't_move_keys': teach [Move:Move|Camera:Camera|] context []
+[   4.77s] shot 03_t_move_keys.png  audioPeak=0.000000  cursorVisible=False
+[   6.37s] teach: 'move' cleared after 2.3s (done)
+[  10.01s] laser door collision: 5 runs into the beams (straight, diagonal, running) - 7's furthest z 1.050 (root; beams at z 1.315, body radius 0.25) -> stays inside
+[  11.52s] objective: Look around
+[  15.26s] ok: cat at the cell door (3.7s)
+[  15.26s] objective: Go to the cell door
+[  16.02s] auto walk done at (0.06, 0.00, 0.56)
+[  16.02s] teach: 'interact' shown (Interact Look)
+[  16.35s] release panel in shot 't_interact_xbox' (camera inside the cell): in frame=False, visible=False (must be false)
+[  16.35s] prompts in shot 't_interact_xbox': teach [Interact:Look|] context [Interact:Look|]
+[  16.39s] shot 04_t_interact_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  16.67s] release panel in shot 't_interact_keys' (camera inside the cell): in frame=False, visible=False (must be false)
+[  16.67s] prompts in shot 't_interact_keys': teach [Interact:Look|] context [Interact:Look|]
+[  16.72s] shot 05_t_interact_keys.png  audioPeak=0.000000  cursorVisible=False
+[  17.37s] opening trigger: 7 at the door (1.4s after the cat was sent; cat arrived 0.0s)
+[  17.38s] ok: cat on his mark outside the door (0.0s)
+[  17.38s] objective: 
+[  18.37s] teach: 'interact' cleared after 2.4s (done)
+[  18.39s] prompts in shot 's01_laser_door_on': teach [Interact:Look|] context []
+[  18.44s] shot 06_s01_laser_door_on.png  audioPeak=0.000000  cursorVisible=False
+[  21.20s] shot 07_s01_first_contact.png  audioPeak=0.000000  cursorVisible=False
+[  29.30s] checkpoint 0
+[  30.50s] objective: Stand back from the door
+[  30.86s] auto walk done at (0.09, 0.00, -0.06)
+[  30.86s] ok: 7 stands back (0.0s)
+[  32.10s] shot 08_s02_cat_at_release.png  audioPeak=0.000000  cursorVisible=False
+[  33.38s] ok: cat in the guard alcove (out of sight) (2.5s)
+[  33.38s] ok: lines finished (0.0s)
+[  33.38s] objective: 
+[  34.18s] ok: cat on the crate in the alcove (0.8s)
+[  34.29s] shot 09_s02_checkonly_cat_at_hidden_release.png  audioPeak=0.000000  cursorVisible=False
+[  35.34s] audio: sfx release_click @(-3.0, 1.0, 0.5)
+[  35.69s] release panel in shot 's02_heard_click_beams_on' (camera inside the cell): in frame=False, visible=False (must be false)
+[  35.74s] shot 10_s02_heard_click_beams_on.png  audioPeak=0.000000  cursorVisible=False
+[  35.74s] audio: sfx laser_power_down @(0.0, 1.2, 1.3)
+[  37.24s] laser door: all beams off, doorway open
+[  37.24s] release panel in shot 's02_beams_off' (camera inside the cell): in frame=False, visible=False (must be false)
+[  37.28s] shot 11_s02_beams_off.png  audioPeak=0.000000  cursorVisible=False
+[  37.84s] ok: cat down from the crate (0.6s)
+[  37.84s] objective: Step out
+[  37.85s] release panel in shot 's02_energy_point_dark_closeup' (camera inside the cell): in frame=False, visible=False (must be false)
+[  37.90s] shot 12_s02_energy_point_dark_closeup.png  audioPeak=0.000000  cursorVisible=False
+[  39.13s] audio: sfx energy_point
+[  39.13s] energy point relights at z 2.10 (beams at 1.32)
+[  39.36s] auto walk done at (0.08, 0.00, 2.50)
+[  39.36s] ok: 7 steps out (0.0s)
+[  40.07s] ok: cat back from the alcove (0.7s)
+[  41.09s] shot 13_s02_energy_point_relit_closeup.png  audioPeak=0.000000  cursorVisible=False
+[  43.84s] shot 14_s02_door_open_which_way.png  audioPeak=0.000000  cursorVisible=False
+[  47.05s] checkpoint 1
+[  47.05s] objective: Follow the cat
+[  47.06s] cat leads the prison route (6 stops)
+[  49.68s] ok: corridor: scene 3 trigger (2.6s)
+[  50.51s] auto walk done at (5.90, 0.00, 3.26)
+[  50.51s] ok: scene 3 starts (0.0s)
+[  50.54s] cat waits at prison stop 1 (7.9, 0.0, 2.5); 7 at (5.9, 0.0, 3.3), 2.2 m away
+[  54.86s] shot 15_s03_walk_and_talk.png  audioPeak=0.000000  cursorVisible=False
+[  61.68s] ok: scene 3 walk-and-talk done (11.2s)
+[  61.97s] teach: 'jump' shown (Jump Jump)
+[  62.29s] prompts in shot 't_jump_xbox': teach [Jump:Jump|] context []
+[  62.35s] shot 16_t_jump_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  62.62s] cat waits at prison stop 2 (10.5, 0.0, 2.4); 7 at (7.5, 0.0, 3.3), 3.1 m away
+[  62.62s] prompts in shot 't_jump_keys': teach [Jump:Jump|] context [Jump:Jump|]
+[  62.67s] shot 17_t_jump_keys.png  audioPeak=0.000000  cursorVisible=False
+[  62.79s] auto walk done at (7.80, 0.00, 3.29)
+[  64.15s] move: jump at (7.80, 0.00, 3.29)
+[  64.97s] move: fall at (9.11, -1.44, 3.29)
+[  64.97s] fall into the dark at (9.11, -1.44, 3.29) -> white fade, back to the last safe ledge (7.80, 0.00, 3.29)
+[  64.97s] audio: sfx energy_point
+[  65.15s] teach: 'jump' cleared after 3.2s (done)
+[  65.42s] prompts in shot 'tr_fall_white': teach [Jump:Jump|] context []
+[  65.45s] shot 18_tr_fall_white.png  audioPeak=0.000000  cursorVisible=False
+[  66.32s] fall reset done: 7 at (7.80, 0.00, 3.29) (Free)
+[  66.32s] deliberate fall (short hop into the catwalk gap): reset to the last safe ledge (7.80, 0.00, 3.29) - ok
+[  66.32s] auto walk done at (7.80, 0.00, 3.29)
+[  66.33s] move: jump at (7.80, 0.00, 3.29)
+[  66.90s] audio: sfx land_soft @(10.7, 0.0, 3.3)
+[  66.90s] move: land at (10.68, 0.00, 3.29), fall 0.56 m
+[  67.32s] teach: 'crouch' shown (Crouch Crouch)
+[  67.32s] traversal ok: jump the catwalk gap (1.0s)
+[  67.37s] shot 19_tr01_across_the_gap.png  audioPeak=0.000000  cursorVisible=False
+[  67.37s] auto walk done at (10.68, 0.00, 3.29)
+[  67.64s] prompts in shot 't_crouch_xbox': teach [Crouch:Crouch|] context []
+[  67.69s] shot 20_t_crouch_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  67.97s] prompts in shot 't_crouch_keys': teach [Crouch:Crouch|] context []
+[  68.02s] shot 21_t_crouch_keys.png  audioPeak=0.000000  cursorVisible=False
+[  68.20s] cat waits at prison stop 3 (13.6, 0.0, 2.3); 7 at (10.7, 0.0, 3.3), 3.0 m away
+[  68.72s] move: crouch at (10.68, 0.00, 3.29)
+[  68.72s] traversal ok: crouch at the pipes (0.0s)
+[  69.70s] auto walk done at (11.90, 0.00, 3.30)
+[  69.70s] prompts in shot 'tr02_crouched_under_pipes': teach [Crouch:Crouch|] context []
+[  69.74s] shot 22_tr02_crouched_under_pipes.png  audioPeak=0.000000  cursorVisible=False
+[  69.74s] teach: 'crouch' cleared after 2.4s (done)
+[  70.97s] auto walk done at (13.50, 0.00, 3.30)
+[  70.98s] move: stand at (13.50, 0.00, 3.30)
+[  70.98s] teach: 'ledge' shown (Jump Grab the ledge)
+[  70.98s] traversal ok: stand up after the pipes (0.0s)
+[  70.98s] auto walk done at (13.50, 0.00, 3.30)
+[  71.30s] prompts in shot 't_ledge_xbox': teach [Jump:Grab the ledge|] context [Jump:Grab the ledge|]
+[  71.35s] shot 23_t_ledge_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  71.35s] cat waits at prison stop 4 (14.6, 2.4, 2.4); 7 at (13.5, 0.0, 3.3), 1.5 m away
+[  71.63s] prompts in shot 't_ledge_keys': teach [Jump:Grab the ledge|] context [Jump:Grab the ledge|]
+[  71.68s] shot 24_t_ledge_keys.png  audioPeak=0.000000  cursorVisible=False
+[  72.34s] move: jump at (13.50, 0.00, 3.30)
+[  73.78s] audio: sfx ledge_grab @(13.7, 2.3, 3.3)
+[  73.78s] move: grab at (13.72, 0.08, 3.30), ledge 'bulkhead'
+[  73.78s] traversal ok: jump to grab the bulkhead (1.4s)
+[  74.38s] hands on the ledge 'bulkhead': wrist height vs lip 0.025 m, along the wall normal 0.022 m (state hang_idle)
+[  74.78s] teach: 'ledge' cleared after 3.8s (done)
+[  74.78s] teach: 'hang' shown (ClimbUp Climb up · Shimmy Shimmy · LetGo Let go)
+[  75.57s] prompts in shot 't_hang_xbox': teach [ClimbUp:Climb up|Shimmy:Shimmy|LetGo:Let go|] context [ClimbUp:Climb up|]
+[  75.62s] shot 25_t_hang_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  75.89s] prompts in shot 't_hang_keys': teach [ClimbUp:Climb up|Shimmy:Shimmy|LetGo:Let go|] context [ClimbUp:Climb up|]
+[  75.95s] shot 26_t_hang_keys.png  audioPeak=0.000000  cursorVisible=False
+[  77.16s] prompts in shot 'tr03_hanging_bulkhead': teach [ClimbUp:Climb up|Shimmy:Shimmy|LetGo:Let go|] context [ClimbUp:Climb up|]
+[  77.21s] shot 27_tr03_hanging_bulkhead.png  audioPeak=0.000000  cursorVisible=False
+[  77.21s] move: shimmy at (13.72, 0.54, 3.30)
+[  77.89s] traversal ok: shimmy along the bulkhead (0.40 m in 0.7s)
+[  77.89s] prompts in shot 'tr04_shimmy_bulkhead': teach [ClimbUp:Climb up|Shimmy:Shimmy|LetGo:Let go|] context [ClimbUp:Climb up|]
+[  77.95s] shot 28_tr04_shimmy_bulkhead.png  audioPeak=0.000000  cursorVisible=False
+[  79.17s] ok: on top of the bulkhead (the gate in view) (17.4s)
+[  79.17s] prompts in shot 's04_guarded_route': teach [ClimbUp:Climb up|Shimmy:Shimmy|LetGo:Let go|] context []
+[  79.22s] shot 29_s04_guarded_route.png  audioPeak=0.000000  cursorVisible=False
+[  79.22s] objective: Find another way out
+[  79.23s] audio: sfx climb_scuff @(14.3, 3.6, 3.7)
+[  79.23s] move: climb at (14.28, 2.40, 3.70)
+[  79.23s] traversal ok: climb up the bulkhead (1.3s)
+[  79.23s] prompts in shot 'tr05_on_the_bulkhead': teach [ClimbUp:Climb up|Shimmy:Shimmy|LetGo:Let go|] context []
+[  79.30s] shot 30_tr05_on_the_bulkhead.png  audioPeak=0.000000  cursorVisible=False
+[  79.51s] auto walk done at (14.70, 2.40, 3.45)
+[  79.52s] move: jump at (14.70, 2.40, 3.45)
+[  80.01s] cat waits at prison stop 5 (15.9, 0.0, 2.4); 7 at (15.5, 2.6, 3.4), 1.2 m away
+[  80.23s] teach: 'hang' cleared after 5.4s (done)
+[  80.41s] cat waits at prison stop 6 (15.4, 0.0, 3.4); 7 at (16.1, 0.3, 3.4), 0.8 m away
+[  80.45s] audio: sfx land_hard @(15.3, 0.0, 3.4)
+[  80.45s] move: land at (15.33, 0.00, 3.45), fall 2.96 m
+[  82.13s] ok: look closer at the older wall (in range) (3.0s)
+[  82.13s] ok: look closer at the older wall (0.0s)
+[  82.13s] traversal ok: jump down from the bulkhead (2.6s)
+[  82.13s] objective: 
+[  85.21s] shot 31_s04_older_wall.png  audioPeak=0.000000  cursorVisible=False
+[  88.22s] audio: sfx stone_door @(16.5, 1.2, 2.0)
+[  88.58s] auto walk done at (16.43, 0.00, 2.84)
+[  91.63s] checkpoint 2
+[  91.63s] objective: Follow the old passage
+[  91.63s] cat leads the passage + ruins route (10 stops)
+[  92.82s] cat waits at passage + ruins stop 1 (17.0, 0.0, 0.6); 7 at (16.5, 0.0, 0.8), 0.6 m away
+[  92.90s] auto walk done at (16.49, 0.00, 0.69)
+[  93.20s] audio: sfx climb_scuff @(16.5, 1.2, 0.1)
+[  93.20s] move: wallclimb at (16.50, 0.00, 0.05)
+[  93.90s] cat waits at passage + ruins stop 2 (17.2, 1.5, 0.0); 7 at (16.5, 0.0, 0.1), 0.7 m away
+[  94.46s] shot 32_tr06_wall_climb.png  audioPeak=0.000000  cursorVisible=False
+[  94.59s] cat waits at passage + ruins stop 3 (17.0, 2.8, -0.8); 7 at (16.5, 0.0, 0.1), 0.9 m away
+[  96.08s] audio: sfx climb_scuff @(16.5, 4.0, -0.5)
+[  96.08s] move: climb at (16.50, 2.80, -0.48)
+[  96.08s] traversal ok: climb the cracked wall (3.2s)
+[  96.78s] auto walk done at (16.50, 2.80, -1.65)
+[  97.18s] audio: sfx climb_scuff @(16.5, 4.0, -2.1)
+[  97.18s] move: climbdown at (16.50, 2.80, -2.08), ledge ''
+[  97.73s] traversal ok: climb down onto the shaft lip (1.0s)
+[  97.79s] hands on the ledge 'shaft lip': wrist height vs lip 0.031 m, along the wall normal 0.034 m (state hang_idle)
+[  98.33s] prompts in shot 'tr07_hanging_shaft_lip': teach [] context [ClimbUp:Climb up|]
+[  98.38s] shot 33_tr07_hanging_shaft_lip.png  audioPeak=0.000000  cursorVisible=False
+[  98.38s] move: shimmy at (16.50, 0.94, -2.68)
+[  99.15s] cat waits at passage + ruins stop 4 (14.4, 1.3, -3.5); 7 at (16.1, 0.9, -2.7), 1.8 m away
+[ 101.06s] traversal ok: shimmy out over the drop (1.50 m in 2.7s)
+[ 101.07s] move: letgo at (15.00, 0.94, -2.68)
+[ 101.07s] move: fall at (15.00, 0.94, -2.68)
+[ 101.07s] fall into the dark at (15.00, 0.94, -2.68) -> white fade, back to the last safe ledge (16.50, 2.80, -1.65)
+[ 101.07s] audio: sfx energy_point
+[ 101.56s] shot 34_tr_fall_white.png  audioPeak=0.000000  cursorVisible=False
+[ 102.43s] fall reset done: 7 at (16.50, 2.80, -1.65) (Free)
+[ 102.43s] deliberate fall (let go over the shaft): reset to the last safe ledge (16.50, 2.80, -1.65) - ok
+[ 102.43s] auto walk done at (16.50, 2.80, -1.65)
+[ 102.84s] audio: sfx climb_scuff @(16.5, 4.0, -2.1)
+[ 102.84s] move: climbdown at (16.50, 2.80, -2.08), ledge ''
+[ 103.39s] traversal ok: climb down onto the shaft lip again (1.0s)
+[ 103.39s] move: shimmy at (16.50, 0.94, -2.68)
+[ 103.44s] hands on the ledge 'shaft lip': wrist height vs lip 0.035 m, along the wall normal 0.040 m (state shimmy)
+[ 107.57s] prompts in shot 'tr08_shimmy_over_the_drop': teach [] context [Shimmy:Shimmy|]
+[ 107.61s] shot 35_tr08_shimmy_over_the_drop.png  audioPeak=0.000000  cursorVisible=False
+[ 108.75s] cat waits at passage + ruins stop 5 (11.3, -1.6, -3.2); 7 at (13.6, 0.9, -2.7), 2.3 m away
+[ 110.66s] traversal ok: shimmy along the shaft lip (4.00 m in 7.3s)
+[ 110.67s] move: letgo at (12.50, 0.94, -2.68)
+[ 111.27s] audio: sfx land_soft @(12.5, -1.6, -3.0)
+[ 111.27s] move: land at (12.50, -1.60, -2.98), fall 2.54 m
+[ 111.70s] traversal ok: let go onto the ruins ledge (1.0s)
+[ 111.74s] shot 36_tr09_dropped_into_the_ruins.png  audioPeak=0.000000  cursorVisible=False
+[ 112.56s] auto walk done at (11.12, -1.60, -3.50)
+[ 112.57s] move: jump at (11.12, -1.60, -3.50)
+[ 112.75s] cat waits at passage + ruins stop 6 (7.5, -1.6, -3.3); 7 at (10.3, -1.1, -3.5), 2.8 m away
+[ 113.13s] audio: sfx land_soft @(8.4, -1.6, -3.5)
+[ 113.13s] move: land at (8.42, -1.60, -3.50), fall 0.56 m
+[ 113.55s] traversal ok: jump the ruins gap (1.0s)
+[ 113.59s] shot 37_tr10_ruins_terrace_a.png  audioPeak=0.000000  cursorVisible=False
+[ 113.90s] auto walk done at (8.27, -1.60, -4.07)
+[ 114.15s] audio: sfx climb_scuff @(8.3, -1.1, -4.5)
+[ 114.15s] move: mantle at (8.27, -2.34, -4.48)
+[ 114.55s] cat waits at passage + ruins stop 7 (7.2, -0.7, -6.3); 7 at (8.3, -2.3, -4.5), 2.1 m away
+[ 114.77s] traversal ok: mantle onto terrace B (0.9s)
+[ 115.54s] auto walk done at (9.11, -0.70, -6.07)
+[ 115.55s] prompts in shot 'tr11_terrace_b_cat_ahead': teach [] context [Jump:Grab the ledge|]
+[ 115.59s] shot 38_tr11_terrace_b_cat_ahead.png  audioPeak=0.000000  cursorVisible=False
+[ 115.59s] move: jump at (9.11, -0.70, -6.07)
+[ 116.02s] cat waits at passage + ruins stop 8 (13.0, 0.8, -6.6); 7 at (9.5, -1.4, -6.1), 3.6 m away
+[ 117.03s] audio: sfx ledge_grab @(10.5, 1.1, -6.1)
+[ 117.03s] move: grab at (10.52, -1.06, -6.07), ledge 'terrace C lip'
+[ 117.03s] traversal ok: jump to grab terrace C (1.5s)
+[ 117.63s] hands on the ledge 'terrace C lip': wrist height vs lip 0.027 m, along the wall normal 0.029 m (state hang_idle)
+[ 117.63s] prompts in shot 'tr12_hanging_terrace_c': teach [] context [Shimmy:Shimmy|]
+[ 117.67s] shot 39_tr12_hanging_terrace_c.png  audioPeak=0.000000  cursorVisible=False
+[ 117.67s] move: letgo at (10.52, -1.06, -6.07)
+[ 118.06s] move: fall at (10.33, -2.11, -6.07)
+[ 118.06s] fall into the dark at (10.33, -2.11, -6.07) -> white fade, back to the last safe ledge (9.11, -0.70, -6.07)
+[ 118.06s] audio: sfx energy_point
+[ 118.55s] shot 40_tr_fall_white.png  audioPeak=0.000000  cursorVisible=False
+[ 119.42s] fall reset done: 7 at (9.11, -0.70, -6.07) (Free)
+[ 119.42s] deliberate fall (let go over the terrace gap): reset to the last safe ledge (9.11, -0.70, -6.07) - ok
+[ 119.42s] auto walk done at (9.11, -0.70, -6.07)
+[ 119.43s] move: jump at (9.11, -0.70, -6.07)
+[ 120.87s] audio: sfx ledge_grab @(10.5, 1.1, -6.1)
+[ 120.87s] move: grab at (10.52, -1.06, -6.07), ledge 'terrace C lip'
+[ 120.87s] traversal ok: jump to grab terrace C again (1.4s)
+[ 120.88s] move: shimmy at (10.52, -1.06, -6.07)
+[ 121.37s] traversal ok: shimmy north to the clear top (0.27 m in 0.5s)
+[ 121.47s] hands on the ledge 'terrace C lip': wrist height vs lip 0.035 m, along the wall normal 0.040 m (state hang_idle)
+[ 122.66s] audio: sfx climb_scuff @(11.1, 2.0, -5.5)
+[ 122.66s] move: climb at (11.05, 0.80, -5.55)
+[ 122.66s] teach: 'tk' shown (Tk Telekinesis)
+[ 122.66s] ok: ruins: up on terrace C (31.0s)
+[ 122.66s] objective: Clear the fallen slab
+[ 122.66s] ok: slab in telekinesis range (0.0s)
+[ 122.66s] traversal ok: climb up terrace C (1.3s)
+[ 122.99s] prompts in shot 't_tk_xbox': teach [Tk:Telekinesis|] context [Tk:Telekinesis|]
+[ 123.04s] shot 41_t_tk_xbox.png  audioPeak=0.000000  cursorVisible=False
+[ 123.31s] prompts in shot 't_tk_keys': teach [Tk:Telekinesis|] context [Tk:Telekinesis|]
+[ 123.36s] shot 42_t_tk_keys.png  audioPeak=0.000000  cursorVisible=False
+[ 123.58s] auto walk done at (12.60, 0.80, -5.46)
+[ 124.02s] prompts in shot 'tr_slab_highlighted': teach [Tk:Telekinesis|] context [Tk:Telekinesis|]
+[ 124.06s] shot 43_tr_slab_highlighted.png  audioPeak=0.000000  cursorVisible=False
+[ 124.06s] ok: lift the fallen slab (in range) (0.0s)
+[ 124.06s] ok: lift the fallen slab (0.0s)
+[ 125.39s] audio: sfx tk_gather @(12.6, 2.0, -5.5)
+[ 125.39s] audio: sfx tk_push @(14.1, 1.0, -5.2)
+[ 125.39s] audio: sfx slab_lift @(14.1, 1.0, -5.2)
+[ 126.10s] prompts in shot 'tr_slab_lifted_energy_point_bright': teach [Tk:Telekinesis|] context []
+[ 126.14s] shot 44_tr_slab_lifted_energy_point_bright.png  audioPeak=0.000000  cursorVisible=False
+[ 126.69s] audio: sfx stone_fall @(14.6, -4.4, -3.4)
+[ 128.09s] objective: Follow the old passage
+[ 128.09s] fallen slab moved by telekinesis; energy point during the lift up to 1.9 (now 1.00); stair open
+[ 128.09s] ok: fallen slab moved (telekinesis) (4.5s)
+[ 129.10s] teach: 'tk' cleared after 6.4s (done)
+[ 130.80s] cat waits at passage + ruins stop 9 (18.8, -2.4, -5.4); 7 at (17.2, -1.9, -5.2), 1.6 m away
+[ 132.65s] cat waits at passage + ruins stop 10 (16.0, -2.4, -7.6); 7 at (17.5, -2.4, -7.2), 1.6 m away
+[ 134.05s] ok: ancient hall entrance (42.4s)
+[ 136.03s] shot 45_s05_scree_guard.png  audioPeak=0.000000  cursorVisible=False
+[ 139.25s] objective: Get past the Scree guard without hurting anyone
+[ 139.26s] prompts in shot 's05_checkonly_scree_guard_idle': teach [] context [Tk:Telekinesis: loose stone|]
+[ 139.30s] shot 46_s05_checkonly_scree_guard_idle.png  audioPeak=0.000000  cursorVisible=False
+[ 139.30s] scree feet (guard idle at the post): lowest foot/toe bone 0.030 m above its root, root 0.000 m above the ground (state idle, model Scree)
+[ 141.76s] scree tucked abdomen vs legs (guard idle, 2.5s of 'idle'): smallest centre-line distance 0.317 m (abdomen + covers ~0.15 m thick, leg ~0.05 m: needs > 0.20) -> clears
+[ 144.19s] spotted by the guard at (16.55, -2.40, -13.50) -> reset to the hall entrance
+[ 144.19s] prompts in shot 's05_spotted': teach [] context [Tk:Telekinesis: loose stone|]
+[ 144.19s] ok: spotted -> reset (0.0s)
+[ 144.24s] shot 47_s05_spotted.png  audioPeak=0.000000  cursorVisible=False
+[ 146.72s] audio: sfx tk_gather @(16.5, -1.2, -9.7)
+[ 146.72s] audio: sfx tk_push @(23.3, -0.5, -13.2)
+[ 146.72s] audio: sfx stone_fall @(23.3, -0.5, -13.2)
+[ 146.72s] ok: stone knocked down (1.3s)
+[ 147.48s] stone falls: noise at (22.20, -2.08, -12.20)
+[ 147.48s] ok: guard hears the stone (0.8s)
+[ 147.88s] shot 48_s05_checkonly_scree_guard_alert.png  audioPeak=0.000000  cursorVisible=False
+[ 147.88s] scree feet (guard alert): lowest foot/toe bone 0.081 m above its root, root 0.000 m above the ground (state alert, model Scree)
+[ 147.88s] guard alert reactions played: 1 (state Alert)
+[ 148.74s] ok: guard walks to the noise (0.9s)
+[ 149.59s] shot 49_s05_checkonly_scree_guard_walking.png  audioPeak=0.000000  cursorVisible=False
+[ 149.59s] scree feet (guard walking): lowest foot/toe bone 0.042 m above its root, root 0.000 m above the ground (state walk, model Scree)
+[ 152.05s] scree tucked abdomen vs legs (guard walking, 2.5s of 'walk'): smallest centre-line distance 0.273 m (abdomen + covers ~0.15 m thick, leg ~0.05 m: needs > 0.20) -> clears
+[ 157.27s] ok: guard studies the noise (5.2s)
+[ 157.31s] shot 50_s05_guard_distracted.png  audioPeak=0.000000  cursorVisible=False
+[ 177.30s] auto walk done at (16.48, -2.40, -26.70)
+[ 177.30s] ok: slipped past the guard (0.0s)
+[ 178.96s] shot 51_s05_slipped_past.png  audioPeak=0.000000  cursorVisible=False
+[ 179.77s] checkpoint 3
+[ 179.77s] Scree room: spotted 1x (each reset to the entrance), guard never attacks
+[ 179.78s] objective: Keep going
+[ 185.02s] auto walk done at (19.74, -2.40, -34.59)
+[ 185.02s] ok: vision chamber (0.0s)
+[ 185.03s] objective: Look at the glowing shape
+[ 185.03s] prompts in shot 's06_chamber_before': teach [] context [Interact:Touch|]
+[ 185.08s] shot 52_s06_chamber_before.png  audioPeak=0.000000  cursorVisible=False
+[ 185.08s] prompts in shot 's06_shape_in_alcove': teach [] context [Interact:Touch|]
+[ 185.12s] shot 53_s06_shape_in_alcove.png  audioPeak=0.000000  cursorVisible=False
+[ 185.12s] ok: touch the shape (in range) (0.0s)
+[ 185.13s] ok: touch the shape (0.0s)
+[ 185.13s] objective: 
+[ 186.99s] shot 54_s06_shape_touch_flare.png  audioPeak=0.000000  cursorVisible=False
+[ 186.99s] audio: music -> (none)
+[ 186.99s] audio: sfx vision_whoosh
+[ 186.99s] audio: loop vision_shimmer (Sfx)
+[ 187.48s] shot 55_s06_whitewash_in.png  audioPeak=0.000000  cursorVisible=False
+[ 187.90s] vision: video vision_01_door (12.1s, 1920x1044) full-screen, sides cropped to the screen aspect
+[ 189.49s] shot 56_s06_vision_during_far_voice.png  audioPeak=0.000000  cursorVisible=False
+[ 194.15s] shot 57_s06_vision_video_frame.png  audioPeak=0.000000  cursorVisible=False
+[ 200.62s] ok: vision lines (0.0s)
+[ 200.62s] audio: sfx vision_whoosh
+[ 200.62s] vision lasted 12.7s (white wash in/out included)
+[ 201.42s] shot 58_s06_whitewash_out.png  audioPeak=0.000000  cursorVisible=False
+[ 201.92s] shot 59_s06_vision_after.png  audioPeak=0.000000  cursorVisible=False
+[ 206.90s] shot 60_s06_after_vision.png  audioPeak=0.000000  cursorVisible=False
+[ 210.56s] objective: Touch the mechanism beside the door
+[ 214.33s] auto walk done at (13.92, -2.40, -37.29)
+[ 214.33s] ok: touch the round mechanism (in range) (0.0s)
+[ 214.33s] ok: touch the round mechanism (0.0s)
+[ 214.34s] objective: 
+[ 216.29s] audio: sfx energy_point @(13.7, -0.9, -38.0)
+[ 216.33s] shot 61_s06_touching_mechanism.png  audioPeak=0.000000  cursorVisible=False
+[ 217.94s] shot 62_s06_emblem_and_engravings_lit.png  audioPeak=0.000000  cursorVisible=False
+[ 217.99s] shot 63_s06_like_the_vision.png  audioPeak=0.000000  cursorVisible=False
+[ 217.99s] audio: sfx stone_door @(16.5, -1.4, -38.1)
+[ 219.05s] shot 64_s06_door_parting.png  audioPeak=0.000000  cursorVisible=False
+[ 221.00s] shot 65_s06_passage_opens.png  audioPeak=0.000000  cursorVisible=False
+[ 225.80s] audio: music -> moon_prison
+[ 225.81s] objective: Take the shape
+[ 229.50s] auto walk done at (19.68, -2.40, -34.91)
+[ 229.50s] ok: take the dodecahedron (in range) (0.0s)
+[ 229.50s] ok: take the dodecahedron (0.0s)
+[ 229.50s] objective: 
+[ 230.80s] audio: sfx energy_point @(21.1, -1.2, -34.8)
+[ 231.69s] shot 66_s06_take_shape_in_hand.png  audioPeak=0.000000  cursorVisible=False
+[ 234.21s] shot 67_qf5_01_shape_in_hand_closeup.png  audioPeak=0.000000  cursorVisible=False
+[ 234.66s] dodecahedron taken: held in her right hand (beat 1.7s on her hand), radius 0.075 m (~15 cm across), marking file elarim_mark_placeholder.png
+[ 234.66s] objective: Keep going
+[ 234.66s] checkpoint 4
+[ 234.67s] objective: Find the way out
+[ 234.67s] cat leads the mining cut route (5 stops)
+[ 235.71s] shot 68_qf5_02_walking_out_holding_it.png  audioPeak=0.000000  cursorVisible=False
+[ 235.95s] cat waits at mining cut stop 1 (17.1, -2.4, -39.0); 7 at (18.3, -2.4, -36.6), 2.7 m away
+[ 237.55s] dodecahedron: walked out holding it, into the pouch at her belt at z -38.45 (past the door)
+[ 237.80s] auto walk done at (16.58, -2.40, -38.84)
+[ 238.20s] audio: sfx climb_scuff @(16.6, -1.2, -39.1)
+[ 238.20s] move: climbdown at (16.58, -2.40, -39.08), ledge ''
+[ 238.75s] traversal ok: climb down into the mining cut (1.0s)
+[ 238.80s] hands on the ledge 'vision exit lip': wrist height vs lip 0.031 m, along the wall normal 0.034 m (state hang_idle)
+[ 239.25s] prompts in shot 'tr13_hanging_into_the_cut': teach [] context [ClimbUp:Climb up|]
+[ 239.30s] shot 69_tr13_hanging_into_the_cut.png  audioPeak=0.000000  cursorVisible=False
+[ 239.30s] move: letgo at (16.58, -4.26, -39.68)
+[ 239.61s] cat waits at mining cut stop 2 (17.0, -6.4, -40.1); 7 at (16.6, -4.9, -39.8), 0.5 m away
+[ 239.85s] audio: sfx land_soft @(16.6, -6.4, -40.0)
+[ 239.85s] move: land at (16.58, -6.40, -39.96), fall 2.14 m
+[ 240.28s] traversal ok: let go into the cut (1.0s)
+[ 240.57s] auto walk done at (16.53, -6.40, -40.45)
+[ 240.88s] audio: sfx climb_scuff @(16.5, -5.2, -41.0)
+[ 240.88s] move: wallclimb at (16.50, -6.40, -40.95)
+[ 241.16s] atmosphere: city look applied
+[ 241.63s] cat waits at mining cut stop 3 (17.2, -4.5, -41.0); 7 at (16.5, -6.4, -41.0), 0.7 m away
+[ 242.39s] cat waits at mining cut stop 4 (17.0, -2.4, -41.9); 7 at (16.5, -6.4, -41.0), 1.0 m away
+[ 242.90s] shot 70_tr14_climbing_out.png  audioPeak=0.000000  cursorVisible=False
+[ 245.71s] audio: sfx climb_scuff @(16.5, -1.2, -41.5)
+[ 245.71s] move: climb at (16.50, -2.40, -41.48)
+[ 245.71s] traversal ok: climb out of the cut (two climbs) (5.1s)
+[ 245.76s] shot 71_tr15_out_onto_the_terrace_passage.png  audioPeak=0.000000  cursorVisible=False
+[ 246.22s] cat waits at mining cut stop 5 (17.4, -2.4, -43.2); 7 at (16.5, -2.4, -42.3), 1.2 m away
+[ 246.85s] ok: out onto the terrace (12.2s)
+[ 246.85s] objective: 
+[ 246.85s] audio: music -> main_theme
+[ 246.85s] audio: loop amb_city (Ambience)
+[ 246.91s] auto walk done at (16.50, -2.40, -43.50)
+[ 253.22s] shot 72_c01_terrace_wide_before_dialogue.png  audioPeak=0.000000  cursorVisible=False
+[ 258.42s] shot 73_c02_looking_up_one_of_many.png  audioPeak=0.000000  cursorVisible=False
+[ 267.33s] shot 74_c03_up_the_curve.png  audioPeak=0.000000  cursorVisible=False
+[ 271.66s] shot 75_c04_pyramids_and_depression.png  audioPeak=0.000000  cursorVisible=False
+[ 271.66s] audio: city: quiet district machinery starts
+[ 273.22s] audio: sfx city_stone_fall
+[ 275.86s] shot 76_c05_stone_falls.png  audioPeak=0.000000  cursorVisible=False
+[ 281.01s] shot 77_c06_saucer_spotted.png  audioPeak=0.000000  cursorVisible=False
+[ 288.12s] checkpoint 4
+[ 288.12s] audio: music -> moon_prison
+[ 288.12s] objective: Get down to the bay and release the saucer
+[ 288.12s] cat leads the bay descent route (6 stops)
+[ 288.72s] dodecahedron on the terrace: Hip, 0.014 m from the belt point, shown True
+[ 288.77s] shot 78_qf5_03_at_her_hip_terrace.png  audioPeak=0.000000  cursorVisible=False
+[ 290.51s] cat waits at bay descent stop 1 (21.0, -2.4, -48.2); 7 at (20.3, -2.4, -46.7), 1.7 m away
+[ 292.38s] dodecahedron on the way down to the bay: Hip, 0.013 m from the belt point, shown True
+[ 292.43s] shot 79_qf5_04_at_her_hip_ramp.png  audioPeak=0.000000  cursorVisible=False
+[ 294.63s] cat waits at bay descent stop 2 (21.0, -4.3, -54.6); 7 at (21.5, -3.5, -52.9), 1.7 m away
+[ 295.45s] auto walk done at (21.50, -4.11, -54.33)
+[ 295.85s] audio: sfx climb_scuff @(21.5, -3.2, -54.7)
+[ 295.85s] move: climbdown at (21.50, -4.40, -54.68), ledge ''
+[ 296.40s] traversal ok: climb down at the broken ramp (1.0s)
+[ 296.45s] hands on the ledge 'broken ramp end': wrist height vs lip 0.031 m, along the wall normal 0.034 m (state hang_idle)
+[ 296.90s] prompts in shot 'tr16_hanging_broken_ramp': teach [] context [ClimbUp:Climb up|]
+[ 296.95s] shot 80_tr16_hanging_broken_ramp.png  audioPeak=0.000000  cursorVisible=False
+[ 296.95s] move: letgo at (21.50, -6.26, -55.28)
+[ 297.10s] cat waits at bay descent stop 3 (20.3, -7.6, -56.2); 7 at (21.5, -6.4, -55.4), 1.5 m away
+[ 297.40s] audio: sfx land_soft @(21.5, -7.6, -55.5)
+[ 297.40s] move: land at (21.50, -7.60, -55.50), fall 1.34 m
+[ 297.82s] traversal ok: drop onto scaffold 1 (0.9s)
+[ 298.92s] cat waits at bay descent stop 4 (20.3, -7.6, -60.3); 7 at (21.5, -7.6, -57.4), 3.2 m away
+[ 299.00s] auto walk done at (21.50, -7.60, -57.51)
+[ 299.00s] move: jump at (21.50, -7.60, -57.51)
+[ 299.57s] audio: sfx land_soft @(21.5, -7.6, -60.1)
+[ 299.57s] move: land at (21.50, -7.60, -60.12), fall 0.56 m
+[ 299.99s] traversal ok: jump to scaffold 2 (1.0s)
+[ 300.04s] shot 81_tr17_scaffold_2.png  audioPeak=0.000000  cursorVisible=False
+[ 300.95s] auto walk done at (21.50, -7.60, -61.75)
+[ 301.13s] cat waits at bay descent stop 5 (20.1, -10.0, -63.4); 7 at (21.5, -7.6, -61.9), 2.1 m away
+[ 301.36s] audio: sfx climb_scuff @(21.5, -6.4, -62.1)
+[ 301.36s] move: climbdown at (21.50, -7.60, -62.08), ledge ''
+[ 301.91s] traversal ok: climb down the scaffold (1.0s)
+[ 301.91s] move: letgo at (21.50, -9.46, -62.68)
+[ 303.21s] audio: sfx land_soft @(21.5, -10.0, -63.1)
+[ 303.21s] move: land at (21.50, -10.00, -63.12), fall 2.40 m
+[ 303.21s] traversal ok: drop to the bay floor (1.3s)
+[ 303.26s] shot 82_tr18_down_in_the_bay.png  audioPeak=0.000000  cursorVisible=False
+[ 303.81s] dodecahedron on the bay floor: Hip, 0.012 m from the belt point, shown True
+[ 303.86s] shot 83_qf5_05_at_her_hip_bay.png  audioPeak=0.000000  cursorVisible=False
+[ 303.91s] shot 84_qf5_06_full_figure_pouch_visible.png  audioPeak=0.000000  cursorVisible=False
+[ 307.12s] cat waits at bay descent stop 6 (21.0, -10.0, -72.4); 7 at (21.5, -10.0, -69.8), 2.7 m away
+[ 309.28s] auto walk done at (22.44, -10.00, -73.15)
+[ 309.28s] ok: down in the bay (0.0s)
+[ 309.28s] scree feet (worker Scree_Worker0): lowest foot/toe bone 0.069 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 309.28s] scree feet (worker Scree_Worker1): lowest foot/toe bone 0.069 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 309.28s] scree feet (worker Scree_Worker2): lowest foot/toe bone 0.069 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 309.28s] scree feet (worker Scree_Worker3): lowest foot/toe bone 0.069 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 309.28s] scree feet (worker Scree_Worker4): lowest foot/toe bone 0.069 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 309.28s] scree feet (worker Scree_Worker5): lowest foot/toe bone 0.069 m above its root, root 0.000 m above the ground (state work, model Scree)
+[ 311.68s] scree tucked abdomen vs legs (worker, 2.4s of 'work'): smallest centre-line distance 0.303 m (abdomen + covers ~0.15 m thick, leg ~0.05 m: needs > 0.20) -> clears
+[ 311.68s] prompts in shot 's07_checkonly_scree_worker_bay': teach [] context [Tk:Telekinesis: clamp release lever|]
+[ 311.73s] shot 85_s07_checkonly_scree_worker_bay.png  audioPeak=0.000000  cursorVisible=False
+[ 311.73s] prompts in shot 's07_checkonly_scree_worker_terrace': teach [] context [Tk:Telekinesis: clamp release lever|]
+[ 311.77s] shot 86_s07_checkonly_scree_worker_terrace.png  audioPeak=0.000000  cursorVisible=False
+[ 311.77s] prompts in shot 's07_silver_saucer_in_bay': teach [] context [Tk:Telekinesis: clamp release lever|]
+[ 311.81s] shot 87_s07_silver_saucer_in_bay.png  audioPeak=0.000000  cursorVisible=False
+[ 311.82s] prompts in shot 's07_silver_saucer_low_angle': teach [] context [Tk:Telekinesis: clamp release lever|]
+[ 311.87s] shot 88_s07_silver_saucer_low_angle.png  audioPeak=0.000000  cursorVisible=False
+[ 311.87s] silver saucer: reflection probe riding with it renders so far 78
+[ 311.87s] ok: pull the release lever (in range) (0.0s)
+[ 311.87s] ok: pull the release lever (0.0s)
+[ 313.20s] audio: sfx tk_gather @(22.4, -8.8, -73.2)
+[ 313.20s] audio: sfx tk_push @(25.2, -8.9, -74.2)
+[ 314.02s] audio: sfx clamps_release @(11.5, -9.0, -80.0)
+[ 316.30s] audio: loop saucer_hum (Sfx)
+[ 318.70s] audio: sfx hatch_iris @(11.5, -6.8, -80.0)
+[ 319.81s] audio: sfx tractor_beam @(11.5, -8.0, -80.0)
+[ 321.15s] shot 89_s07_saucer_released_beam_on.png  audioPeak=0.000000  cursorVisible=False
+[ 321.15s] saucer released: clamps open, rim glow up, hovering, iris open, tractor beam on (no ramp)
+[ 321.15s] objective: Board the saucer
+[ 328.00s] auto walk done at (14.40, -10.00, -79.57)
+[ 328.00s] ok: at the edge of the light (0.0s)
+[ 328.01s] objective: 
+[ 328.01s] audio: music -> main_theme
+[ 330.94s] shot 90_s08_at_the_edge_of_the_light.png  audioPeak=0.000000  cursorVisible=False
+[ 334.16s] checkpoint 4
+[ 337.85s] shot 91_s08_7_rising.png  audioPeak=0.000000  cursorVisible=False
+[ 339.52s] shot 92_s08_7_drawn_into_hatch.png  audioPeak=0.000000  cursorVisible=False
+[ 345.09s] shot 93_s08_cat_rising.png  audioPeak=0.000000  cursorVisible=False
+[ 347.81s] audio: sfx hatch_iris @(11.5, -6.7, -80.0)
+[ 348.36s] shot 94_s08_hatch_closing.png  audioPeak=0.000000  cursorVisible=False
+[ 349.12s] audio: sfx liftoff
+[ 351.41s] shot 95_s08_liftoff_rising.png  audioPeak=0.000000  cursorVisible=False
+[ 354.56s] shot 96_s08_liftoff_leaving.png  audioPeak=0.000000  cursorVisible=False
+[ 357.82s] traversal summary: 27 scripted traversal steps ok, deliberate falls reset 3, falls total 3, worst hand-to-lip gap 0.040 m, moves: jump 8, fall 3, land 8, crouch 1, stand 1, grab 3, shimmy 4, climb 4, wallclimb 2, climbdown 5, letgo 6, mantle 1, taught: [move, interact, jump, crouch, ledge, hang, tk], permanent legend panels visible now: 0
+[ 357.82s] moon level done in 357.2s game time; lines so far 62; cat max distance while following/leading 5.38 m; cat catch-ups 2; 7 footsteps 189
+[ 357.82s] audio: music -> aboard_saucer
+[ 357.85s] speaker view scene  1 7: 80 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  1 cat: 80 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  2 7: 72 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  2 cat: 54 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  3 7: 88 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  3 cat: 88 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  4 7: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  4 cat: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  5 7: 35 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  5 cat: 35 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  5 guard: 27 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  6 7: 77 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  6 cat: 77 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  7 7: 52 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  7 cat: 52 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  8 7: 35 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene  8 cat: 35 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene 65 7: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.85s] speaker view scene 65 cat: 42 samples during lines, occluded 0 (0.0%), outside the frame 0 (0.0%), camera reframes so far 4
+[ 357.87s] audio: loop amb_saucer (Ambience)
+[ 357.87s] audio: music -> aboard_saucer
+[ 357.87s] galley: cat ear bones pending; table at (-7.75, 0.00, -2.37), porthole at (-9.28, 1.24, -2.84)
+[ 362.09s] shot 97_s09_larger_interior.png  audioPeak=0.000000  cursorVisible=False
+[ 365.99s] objective: Find the kitchen
+[ 370.01s] objective: 
+[ 370.01s] ok: fridge reached
+[ 370.01s] scene 10 plays every line in full with the script's pauses (check run too)
+[ 370.02s] audio: music -> (none)
+[ 371.82s] audio: sfx fridge_open @(-7.7, 0.0, -4.8)
+[ 374.15s] fridge: 7 plays open_fridge (Mixamo 'Opening'); the cat sits on the table at (-7.93, 0.75, -2.19) (y 0.75 = table top 0.75)
+[ 374.20s] shot 98_s10_01_fridge_cat_on_table.png  audioPeak=0.000000  cursorVisible=False
+[ 377.73s] line s10_01_7 played 3.58s of 3.58s, subtitle 'So what do you eat? Canned food?' (cat mouth moving: -)
+[ 378.18s] line s10_02_cat: starts 0.45s after the previous line ended
+[ 380.29s] line s10_02_cat played 2.12s of 2.12s, subtitle 'Chicken. But only free-range.' (cat mouth moving: no)
+[ 381.35s] line s10_03_cat: starts 1.05s after the previous line ended
+[ 385.63s] line s10_03_cat played 4.28s of 4.28s, subtitle 'Having experienced confinement, I feel strongly about it.' (cat mouth moving: no)
+[ 387.03s] silence after s10_03_cat: 1.40s (script 1.4s)
+[ 387.08s] shot 99_s10_02_she_looks_back.png  audioPeak=0.000000  cursorVisible=False
+[ 387.63s] line s10_04_7: starts 2.00s after the previous line ended
+[ 390.01s] line s10_04_7 played 2.38s of 2.38s, subtitle 'I'll see what we have.' (cat mouth moving: -)
+[ 390.81s] audio: sfx fridge_close @(-7.7, 0.0, -4.8)
+[ 390.82s] seated at the table: hips 0.65 m above the floor (cushion top 0.50), facing the cat
+[ 390.83s] audio: loop cat_eating (Sfx)
+[ 391.63s] cat at his bowl: muzzle 0.000 m from the bowl centre after aligning (moved 0.021 m), muzzle 0.196 m above the table (bowl rim 0.212)
+[ 393.43s] audio: sfx fork_clink @(-7.2, 0.7, -3.4)
+[ 393.73s] galley: she takes the dodecahedron from the pouch at her belt (hand 0.06 m from the belt point)
+[ 393.80s] shot 100_qf5_07_galley_takes_it_from_her_belt.png  audioPeak=0.000000  cursorVisible=False
+[ 394.59s] shot 101_qf5_08_galley_over_the_table.png  audioPeak=0.000000  cursorVisible=False
+[ 396.34s] audio: sfx fork_clink @(-7.9, 0.8, -2.7)
+[ 396.59s] galley: dodecahedron set beside her plate at (-7.86, 0.80, -2.68)
+[ 397.39s] audio: sfx fork_clink @(-7.5, 0.7, -2.6)
+[ 398.30s] audio: sfx fork_clink @(-7.6, 0.8, -2.6)
+[ 399.06s] shot 102_s10_03_eating_two_shot.png  audioPeak=0.000000  cursorVisible=False
+[ 400.64s] shot 103_s10_04_cat_eating_mouth_hidden.png  audioPeak=0.000000  cursorVisible=False
+[ 400.64s] silence after s10_04_7 ('For a while, neither speaks'): 10.58s (script 6.0s), incl. the cut to the table
+[ 403.50s] audio: sfx fork_clink @(-7.6, 0.8, -2.6)
+[ 406.26s] shot 104_s10_05_eyes_on_the_object.png  audioPeak=0.000000  cursorVisible=False
+[ 406.71s] line s10_05_cat: starts 16.70s after the previous line ended
+[ 407.13s] shot 105_s10_ots_over_her_shoulder.png  audioPeak=0.000000  cursorVisible=False
+[ 408.49s] line s10_05_cat played 1.78s of 1.78s, subtitle 'You're letting it get cold.' (cat mouth moving: no)
+[ 408.94s] line s10_06_7: starts 0.45s after the previous line ended
+[ 409.63s] shot 106_s10_eyes_1_those_people.png  audioPeak=0.000000  cursorVisible=False
+[ 409.96s] line s10_06_7 played 1.02s of 1.02s, subtitle 'Those people…' (cat mouth moving: -)
+[ 411.47s] shot 107_s10_06_ear_turns_toward_her.png  audioPeak=0.000000  cursorVisible=False
+[ 411.47s] cat ear bones: earL + earR (cleanup_cat.py)
+[ 411.47s] line s10_07_cat: starts 1.45s after the previous line ended
+[ 412.59s] line s10_07_cat played 1.18s of 1.18s, subtitle 'At the door?' (cat mouth moving: chewing (eating))
+[ 413.85s] line s10_08_7: starts 1.25s after the previous line ended
+[ 418.16s] line s10_08_7 played 4.31s of 4.31s, subtitle 'They were just going somewhere. Like it was an ordinary day.' (cat mouth moving: -)
+[ 418.61s] line s10_09_cat: starts 0.45s after the previous line ended
+[ 419.90s] line s10_09_cat played 1.29s of 1.28s, subtitle 'Perhaps it was.' (cat mouth moving: chewing (eating))
+[ 420.35s] line s10_10_7: starts 0.45s after the previous line ended
+[ 426.25s] line s10_10_7 played 5.90s of 5.90s, subtitle 'The walls were whole. Everything was… looked after.' (cat mouth moving: -)
+[ 426.71s] line s10_11_7: starts 0.46s after the previous line ended
+[ 431.98s] line s10_11_7 played 5.28s of 5.28s, subtitle 'One of them opened the door. I watched where they put their hand.' (cat mouth moving: -)
+[ 432.43s] line s10_12_cat: starts 0.45s after the previous line ended
+[ 433.72s] line s10_12_cat played 1.29s of 1.28s, subtitle 'Useful.' (cat mouth moving: chewing (eating))
+[ 434.17s] line s10_13_7: starts 0.45s after the previous line ended
+[ 435.69s] line s10_13_7 played 1.52s of 1.52s, subtitle 'Yes.' (cat mouth moving: -)
+[ 438.70s] silence after s10_13_7: 3.00s (script 3.0s)
+[ 438.70s] line s10_14_7: starts 3.00s after the previous line ended
+[ 440.29s] shot 108_s10_eyes_2_not_somewhere_new.png  audioPeak=0.000000  cursorVisible=False
+[ 441.23s] line s10_14_7 played 2.54s of 2.53s, subtitle 'But it didn't feel like seeing somewhere new.' (cat mouth moving: -)
+[ 442.38s] line s10_15_cat: starts 1.15s after the previous line ended
+[ 444.03s] line s10_15_cat played 1.65s of 1.65s, subtitle 'What did it feel like?' (cat mouth moving: no)
+[ 445.84s] silence after s10_15_cat: 1.80s (script 1.8s)
+[ 445.84s] line s10_16_7: starts 1.80s after the previous line ended
+[ 447.33s] shot 109_s10_eyes_3_remembering.png  audioPeak=0.000000  cursorVisible=False
+[ 448.21s] line s10_16_7 played 2.38s of 2.38s, subtitle 'Remembering.' (cat mouth moving: -)
+[ 452.21s] silence after s10_16_7: 4.00s (script 4.0s)
+[ 452.21s] line s10_17_cat: starts 4.00s after the previous line ended
+[ 453.95s] line s10_17_cat played 1.73s of 1.72s, subtitle 'Have you been there before?' (cat mouth moving: no)
+[ 454.40s] line s10_18_7: starts 0.45s after the previous line ended
+[ 455.74s] line s10_18_7 played 1.34s of 1.33s, subtitle 'I don't know.' (cat mouth moving: -)
+[ 457.00s] audio: sfx fork_clink @(-7.6, 0.8, -2.6)
+[ 459.70s] audio: sfx fork_clink @(-7.7, 0.8, -2.5)
+[ 459.96s] line s10_19_7: starts 4.23s after the previous line ended
+[ 462.11s] line s10_19_7 played 2.15s of 2.14s, subtitle 'It happened when I touched this.' (cat mouth moving: -)
+[ 462.16s] shot 110_s10_07_object_beside_her_plate.png  audioPeak=0.000000  cursorVisible=False
+[ 465.62s] shot 111_s10_08_cat_leans_closer.png  audioPeak=0.000000  cursorVisible=False
+[ 466.37s] line s10_20_cat: starts 4.26s after the previous line ended
+[ 467.54s] line s10_20_cat played 1.18s of 1.18s, subtitle 'Turn it over.' (cat mouth moving: no)
+[ 471.30s] shot 112_s10_09_marking_closeup.png  audioPeak=0.000000  cursorVisible=False
+[ 471.30s] marking close-up: marked face toward the camera 0.97 (1 = straight on, must be > 0.5), shape on screen at (0.50, 0.50), distance 0.34 m
+[ 471.85s] line s10_21_cat: starts 4.12s after the previous line ended
+[ 473.30s] shot 113_s10_cat_eyes_that_marking.png  audioPeak=0.000000  cursorVisible=False
+[ 474.93s] line s10_21_cat played 3.08s of 3.08s, subtitle 'That marking. I've seen it before.' (cat mouth moving: no)
+[ 475.38s] line s10_22_7: starts 0.45s after the previous line ended
+[ 475.78s] shot 114_s10_ots_behind_the_cat.png  audioPeak=0.000000  cursorVisible=False
+[ 476.63s] line s10_22_7 played 1.25s of 1.25s, subtitle 'Where?' (cat mouth moving: -)
+[ 477.08s] line s10_23_cat: starts 0.45s after the previous line ended
+[ 479.44s] line s10_23_cat played 2.36s of 2.35s, subtitle 'On something from Venus. Elarim.' (cat mouth moving: no)
+[ 479.89s] line s10_24_7: starts 0.45s after the previous line ended
+[ 481.57s] line s10_24_7 played 1.67s of 1.67s, subtitle 'So this is theirs?' (cat mouth moving: -)
+[ 482.03s] line s10_25_cat: starts 0.46s after the previous line ended
+[ 484.69s] line s10_25_cat played 2.67s of 2.66s, subtitle 'I don't know. But their marking is on it.' (cat mouth moving: no)
+[ 486.97s] shot 115_s10_10_she_studies_the_object.png  audioPeak=0.000000  cursorVisible=False
+[ 486.97s] line s10_26_7: starts 1.54s after the previous line ended
+[ 488.61s] line s10_26_7 played 1.67s of 1.67s, subtitle 'What was it doing on the Moon?' (cat mouth moving: -)
+[ 489.08s] line s10_27_cat: starts 0.46s after the previous line ended
+[ 490.53s] line s10_27_cat played 1.37s of 1.36s, subtitle 'We could ask them.' (cat mouth moving: no)
+[ 490.89s] line s10_28_7: starts 0.45s after the previous line ended
+[ 492.38s] shot 116_s10_eyes_4_explain_what_i_saw.png  audioPeak=0.000000  cursorVisible=False
+[ 493.27s] line s10_28_7 played 2.38s of 2.38s, subtitle 'Maybe they can explain what I saw.' (cat mouth moving: -)
+[ 494.22s] line s10_29_7: starts 0.95s after the previous line ended
+[ 495.48s] line s10_29_7 played 1.25s of 1.25s, subtitle 'Us?' (cat mouth moving: -)
+[ 496.43s] line s10_30_cat: starts 0.95s after the previous line ended
+[ 498.86s] line s10_30_cat played 2.43s of 2.43s, subtitle 'Unless this was a farewell dinner.' (cat mouth moving: no)
+[ 499.31s] line s10_31_7: starts 0.45s after the previous line ended
+[ 503.05s] line s10_31_7 played 3.74s of 3.74s, subtitle 'You were sent to get me out. You did that.' (cat mouth moving: -)
+[ 503.51s] line s10_32_cat: starts 0.46s after the previous line ended
+[ 504.61s] line s10_32_cat played 1.10s of 1.10s, subtitle 'I did.' (cat mouth moving: no)
+[ 505.06s] line s10_33_7: starts 0.45s after the previous line ended
+[ 507.72s] line s10_33_7 played 2.62s of 2.53s, subtitle 'You could go home.' (cat mouth moving: -)
+[ 509.83s] line s10_34_cat: starts 2.15s after the previous line ended
+[ 512.37s] line s10_34_cat played 2.14s of 2.14s, subtitle 'I'd like to know what happens next.' (cat mouth moving: no)
+[ 514.58s] silence after s10_34_cat: 2.20s (script 2.2s)
+[ 514.58s] line s10_35_7: starts 2.20s after the previous line ended
+[ 516.64s] line s10_35_7 played 2.07s of 2.06s, subtitle 'So would I.' (cat mouth moving: -)
+[ 519.40s] audio: sfx fork_clink @(-7.9, 0.8, -2.7)
+[ 519.65s] line s10_36_7: starts 3.01s after the previous line ended
+[ 520.98s] line s10_36_7 played 1.33s of 1.33s, subtitle 'Venus, then.' (cat mouth moving: -)
+[ 521.05s] shot 117_s10_11_venus_then.png  audioPeak=0.000000  cursorVisible=False
+[ 522.18s] silence after s10_36_7: 1.20s (script 1.2s)
+[ 522.18s] audio: loop cat_eating (Sfx)
+[ 522.98s] audio: sfx fork_clink @(-7.6, 0.8, -2.6)
+[ 522.98s] cat back at his food: muzzle 0.025 m from the bowl centre, 0.197 m above the table
+[ 523.89s] audio: sfx fork_clink @(-7.6, 0.8, -2.6)
+[ 526.04s] shot 118_s10_12_this_time_she_eats.png  audioPeak=0.000000  cursorVisible=False
+[ 526.04s] dodecahedron beside her plate at (-7.86, 0.80, -2.68): marking up 1.00 (1 = straight up)
+[ 529.31s] audio: sfx fork_clink @(-7.6, 0.8, -2.6)
+[ 530.50s] scene 10 'The galley' lasted 159.2s; bites 3; cat chewing 55.6s (only while eating); silences: silence after s10_03_cat: 1.40s (script 1.4s) | silence after s10_04_7 ('For a while, neither speaks'): 10.58s (script 6.0s), incl. the cut to the table | silence after s10_13_7: 3.00s (script 3.0s) | silence after s10_15_cat: 1.80s (script 1.8s) | silence after s10_16_7: 4.00s (script 4.0s) | silence after s10_34_cat: 2.20s (script 2.2s) | silence after s10_36_7: 1.20s (script 1.2s)
+[ 530.90s] audio: music -> aboard_saucer
+[ 532.50s] free exploration of the saucer begins (after scene 10 - chapter complete); music aboard_saucer
+[ 532.50s] objective: Set course for Venus
+[ 538.51s] objective: 
+[ 538.55s] shot 119_s10_13_free_exploration.png  audioPeak=0.000000  cursorVisible=False
+[ 539.15s] at her seat in the galley: context prompt 'Set course' (legend context 'Interact:Set course|')
+[ 539.19s] shot 120_x02_set_course_prompt.png  audioPeak=0.000000  cursorVisible=False
+[ 540.81s] shot 121_x03_set_course_porthole.png  audioPeak=0.000000  cursorVisible=False
+[ 540.82s] audio: sfx course_set
+[ 543.13s] shot 122_x04_set_course_moon_falls_away.png  audioPeak=0.000000  cursorVisible=False
+[ 546.37s] shot 123_x05_chapter2_card.png  audioPeak=0.000000  cursorVisible=False
+[ 551.18s] set course placeholder shown (1x): the Moon fell away behind the porthole, card 'Chapter 2 — Venus (coming soon)', back to free exploration
+[ 557.26s] teach: sit shown
+[ 559.98s] teach prompt at the chair: 'Sit:Sit|' shown=True; permanent legend panels visible: 0
+[ 560.04s] shot 124_t_sit_xbox.png  audioPeak=0.000000  cursorVisible=False
+[ 560.62s] shot 125_t_sit_keys.png  audioPeak=0.000000  cursorVisible=False
+[ 560.98s] teach: sit cleared
+[ 562.99s] sit in her chair after the chapter: seated=True
+[ 563.00s] teach: sit done (seated)
+[ 565.21s] cat on her lap after the chapter: True (cat scale 1.00)
+[ 565.29s] shot 126_s10_14_explore_seated_cat_on_lap.png  audioPeak=0.000000  cursorVisible=False
+[ 565.31s] audio: pause menu opened
+[ 565.36s] shot 127_s12_pause_menu.png  audioPeak=0.000000  cursorVisible=False
+[ 565.36s] audio: sfx menu_move
+[ 565.36s] audio: sfx menu_confirm
+[ 565.36s] pause menu settings: music 0.9 sfx 1.0 voice 1.0 (check runs never save these)
+[ 565.41s] shot 128_s12_pause_settings.png  audioPeak=0.000000  cursorVisible=False
+[ 565.41s] audio: sfx menu_move
+[ 565.41s] audio: sfx menu_confirm
+[ 565.46s] shot 129_s12_pause_controls.png  audioPeak=0.000000  cursorVisible=False
+[ 565.46s] audio: sfx menu_move
+[ 565.46s] audio: sfx menu_move
+[ 565.46s] audio: sfx menu_confirm
+[ 565.51s] shot 130_s12_pause_quit_confirm.png  audioPeak=0.000000  cursorVisible=False
+[ 565.51s] pause menu closed; timeScale 1
+[ 565.52s] voice lines: bank 105, with audio 105, played+subtitled 101; not played: [s06b_a01_7, s06b_a02_cat, s06b_a03_7, s06b_a04_cat]; no audio: []; total voice length 211.5s
+[ 565.52s] cat max distance from 7 while following/leading on the Moon level: 5.38 m
+[ 565.52s] save written for Continue: True (test key; removed now)
+[ 565.52s] chapter 1 check run finished: soft-lock suspicions 0, shots 130, game time 561.8s since boot
+[ 565.52s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

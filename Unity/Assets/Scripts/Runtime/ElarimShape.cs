@@ -16,6 +16,8 @@ namespace Seven
         public bool Hover;
         public Vector3 HoverAnchor;
         public Renderer Edges;
+        [Tooltip("QF5: material of the small belt pouch 7 carries it in (CarriedShape).")]
+        public Material PouchMaterial;
         [Tooltip("Edge emission (white).")]
         public float Glow = 1.4f;
         float _t, _lastGlow = -1f;

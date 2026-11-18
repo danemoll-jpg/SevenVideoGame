@@ -76,7 +76,17 @@ namespace Seven
             _catPose = Cat.gameObject.AddComponent<CatPoseOverlay>();
             if (Moon != null) { _moonHome = Moon.position; _moonScale = Moon.localScale; }
             if (Fork != null) { _forkHome = Fork.position; _forkHomeRot = Fork.rotation; }
-            if (Shape != null) PlaceShape(BesidePlate, MarkingDown());
+            if (Shape != null)
+            {
+                if (Chapter1State.Explore) PlaceShape(BesidePlate, MarkingDown());
+                else
+                {
+                    // QF5: she still carries it in the pouch at her belt (as on the Moon); she takes it out at the table
+                    _carry = CarriedShape.Attach(Seven.gameObject, Shape.transform);
+                    _carry.Carrying = true;
+                    _carry.Set(CarriedShape.Where.Hip, 0f);
+                }
+            }
             Dlg.LineStarted += l => { if (!Chapter1State.Played.Contains(l.Id)) Chapter1State.Played.Add(l.Id); };
             AudioKit.Loop("amb_saucer", null, null, 1f, AudioKit.Bus.Ambience);
             MusicSystem.Play("aboard_saucer", 2.5f);
@@ -284,8 +294,10 @@ namespace Seven
         Quaternion MarkingUp() => ElarimShape.FaceToward(Vector3.up, -TableAlong);
         /// <summary>The marked face toward the cat (and up a little) - what he studies after "Turn it over".</summary>
         Quaternion MarkingToCat() => ElarimShape.FaceToward((Vector3.up * 0.8f - TableOut * 0.45f - TableAlong * 0.3f).normalized, TableOut);
+        CarriedShape _carry;
         void PlaceShape(Vector3 at, Quaternion rot)
         {
+            if (_carry != null) _carry.Set(CarriedShape.Where.Away, 0f);
             Shape.Hover = false;
             Shape.transform.SetParent(null, true);
             Shape.transform.SetPositionAndRotation(at, rot);
@@ -475,6 +487,7 @@ namespace Seven
             yield return Wait(0.8f);
             AlignCatToBowl();
             yield return UI.Fade(0f, 1.0f);
+            yield return TakeFromBelt();                            // QF5: from the pouch at her belt to beside her plate
             StartEating(2);                                         // "7 takes a few bites."
             yield return Wait(1.6f);
             yield return Shot("s10_03_eating_two_shot");
@@ -648,7 +661,7 @@ namespace Seven
             // hips over the cushion (a little toward the table), height from the clip
             var hips = Seven.Hips.position; var want = Seat7.position - TableAlong * 0.04f;
             Seven.transform.position += Flat(want - hips);
-            _forkInHand = true;
+            _forkInHand = _carry == null || Chapter1State.Explore;      // QF5: first the dodecahedron from her belt, then the fork
             if (Auto) Cap.Log($"seated at the table: hips {Seven.HipsAboveRoot:0.00} m above the floor (cushion top 0.50), facing the cat");
         }
 
@@ -669,6 +682,33 @@ namespace Seven
             AudioKit.Play("fork_clink", Fork.position, 0.4f, 0.05f, AudioKit.Bus.Sfx, 6f);
             _ik.RightW = 0f;
             yield return Wait(0.4f);
+        }
+
+        /// <summary>QF5: seated, her right hand takes the dodecahedron out of the pouch at her belt and lifts it over the
+        /// table; her left hand takes it and sets it beside her plate (marking down); then she picks up her fork.</summary>
+        IEnumerator TakeFromBelt()
+        {
+            if (_carry == null || Shape == null) { if (Fork != null && !_forkInHand) yield return PickUpFork(); yield break; }
+            _ik.RightPos = _carry.HipPoint + Up * 0.03f; _ik.RightW = 1f;
+            _ik.LookPos = _carry.HipPoint; _ik.LookW = 0.55f;
+            yield return Wait(0.8f);
+            _carry.Set(CarriedShape.Where.Hand, 0.25f);
+            AudioKit.Play("fork_clink", _carry.HipPoint, 0.08f, 0.3f, AudioKit.Bus.Sfx, 4f);
+            yield return Wait(0.3f);
+            if (Auto) { Cap.Log($"galley: she takes the dodecahedron from the pouch at her belt (hand {Vector3.Distance(_carry.Palm, _carry.HipPoint):0.00} m from the belt point)"); yield return Shot("qf5_07_galley_takes_it_from_her_belt"); }
+            var front = Flat(Seven.transform.position) + Flat(Seven.transform.forward).normalized * 0.32f + Up * (TableTopY + 0.16f);
+            _ik.RightPos = front; _ik.LookPos = front; _ik.LookW = 0.9f;
+            yield return Wait(0.8f);
+            if (Auto) yield return Shot("qf5_08_galley_over_the_table");
+            var held = Shape.transform.position;
+            _carry.Set(CarriedShape.Where.Away, 0f);
+            Shape.transform.position = held;
+            _ik.RightW = 0f;
+            yield return MoveShape(BesidePlate, MarkingDown(), 1.1f);
+            _carry.Carrying = true;                                 // the empty pouch stays on her belt
+            if (Auto) Cap.Log($"galley: dodecahedron set beside her plate at {Shape.transform.position}");
+            _ik.LookW = 0f;
+            yield return PickUpFork();
         }
 
         IEnumerator PickUpFork()

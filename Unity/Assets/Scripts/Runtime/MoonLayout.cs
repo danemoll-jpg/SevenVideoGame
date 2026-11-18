@@ -81,8 +81,10 @@ namespace Seven
         public static readonly Vector2 AlcoveZ = new Vector2(-35.6f, -34.0f);
         public const float AlcoveBackX = 21.9f;
         // Round 9 (8b addition): the round three-spoke emblem beside the door - the shape's outline glows in it
-        public static readonly Vector3 DoorSymbol = new Vector3(19.35f, Lower + 1.55f, -37.97f);
-        public static readonly Vector3 MechanismSpot = new Vector3(19.35f, Lower, -37.42f);   // where 7 stands to touch it
+        // QF5 (Dan): on the RIGHT of the door as seen from the chamber, as in the vision video (vision_01_door.mp4) -
+        // the chamber looks toward -z, so "right" is the -x side (mirrored from 19.35 about the door centre 16.5).
+        public static readonly Vector3 DoorSymbol = new Vector3(13.65f, Lower + 1.55f, -37.97f);
+        public static readonly Vector3 MechanismSpot = new Vector3(13.65f, Lower, -37.42f);   // where 7 stands to touch it
 
         // ---- Impound (scene 7-8)
         public static readonly Vector2 LedgeMin = new Vector2(11f, -48.2f), LedgeMax = new Vector2(22.5f, -42f);
@@ -134,6 +136,9 @@ namespace Seven
         /// <summary>QF4 opening test (-openingtest n): run index and per-run results across scene reloads.</summary>
         public static int OpeningRun;
         public static readonly System.Collections.Generic.List<string> OpeningResults = new System.Collections.Generic.List<string>();
+        /// <summary>QF5 cat-follow test (-catfollowtest n): run index and per-run results across scene reloads.</summary>
+        public static int FollowRun;
+        public static readonly System.Collections.Generic.List<string> FollowResults = new System.Collections.Generic.List<string>();
 
         /// <summary>Round 9: teaching prompts already shown this playthrough (each appears once; kept across checkpoint restarts).</summary>
         public static readonly System.Collections.Generic.HashSet<string> Taught = new System.Collections.Generic.HashSet<string>();

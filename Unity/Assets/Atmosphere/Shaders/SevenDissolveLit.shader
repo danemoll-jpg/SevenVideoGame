@@ -17,6 +17,7 @@ Shader "Seven/DissolveLit"
         _Rim ("Rim", Range(0,2)) = 0
         _RimPower ("Rim Power", Range(0.5,8)) = 3
         _Dissolvable ("Dissolvable", Float) = 1
+        _Fade ("Fade (QF5 cat reappear: 1 shown, 0 gone)", Range(0,1)) = 1
         [Enum(UnityEngine.Rendering.CullMode)] _Cull ("Cull", Float) = 2
     }
     SubShader
@@ -31,7 +32,7 @@ Shader "Seven/DissolveLit"
         half4 _BaseColor;
         half _Smoothness, _Metallic;
         half4 _EmissionColor;
-        half _Rim, _RimPower, _Dissolvable, _Cull;
+        half _Rim, _RimPower, _Dissolvable, _Cull, _Fade;
         CBUFFER_END
         float4 _SevenDissolve;
         float4 _SevenDissolveEdge;
@@ -52,6 +53,12 @@ Shader "Seven/DissolveLit"
         // Returns edge glow 0..1 and clips dissolved pixels.
         half DissolveClip(float3 positionWS)
         {
+            // QF5: per-object fade (the cat fading out / in when he reappears behind 7) - a fine noisy dissolve
+            if (_Fade < 0.999)
+            {
+                float fn = Noise3(positionWS * 38.0) * 0.7 + Hash3(floor(positionWS * 400.0)) * 0.3;
+                clip(_Fade - fn);
+            }
             if (_Dissolvable < 0.5 || _SevenDissolve.w < 0.0) return 0;
             float d = distance(positionWS, _SevenDissolve.xyz);
             float n = Noise3(positionWS * _SevenDissolveEdge.z) * 0.65 + Noise3(positionWS * _SevenDissolveEdge.z * 3.1) * 0.35;
