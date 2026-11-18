@@ -296,7 +296,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–10 + QF1–QF8 complete (2026-11-18), release 0.10.5.** Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–10 + QF1–QF9 complete (2026-11-18), release 0.10.6.** Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -322,5 +322,13 @@ scene (Round 10).
   - `ChapterSevenWalls` (rendered push out of walls, `wall clearance (QF8)` line); `CarriedShape` palm grip + finger curl
     (`grip '…': palm contact error`), `HandLeft` too.
   - `Tools/Voice/retake_no_pause.py <id> <word>` re-takes a line and measures the gap after the word.
+- QF9: the door-frame flicker was z-fighting between coplanar level blocks — `FightDemoBuilderZFight.cs` moves them apart at
+  every Chapter 1 build (`QF9 z-fighting check … 0 left`, `Docs/Previews/qf9/zfight_check_Chapter1.txt`); architecture
+  never fades for the camera (`CameraOccluders.IsLooseProp`); URP shadow bias 1 / 1, main shadow map 4096. `-flickertest`
+  = door frames / walls measured frame by frame in motion (`FLICKER TEST: … events N`, `-noqf9fix` = 0.10.5 fade + shadow
+  values). **The terrace fight** (fighting tutorial, the two terrace Scree before 6b): `ChapterSevenFight.cs` (7: combo,
+  block, dodge, takedown; Attack X/LMB/F, Block LT/Q, Dodge B/Ctrl, Takedown Y/E), `ScreeGuardFight.cs` (slow telegraphed
+  punch, dazed after 3 blows, takedown → down → sits up, alive), `Chapter1Director.ExitFight` (arena, first-use prompts,
+  restart on knockdown, 90 s watchdog). `-fightonly` = check run from checkpoint 6 that stops at the reveal (~1 min).
 History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.2, then Round 11**
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

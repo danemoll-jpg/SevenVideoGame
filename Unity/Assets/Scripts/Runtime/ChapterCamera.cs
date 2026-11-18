@@ -411,7 +411,7 @@ namespace Seven
             // 3. props that are only meshes fade out of the way (and, if even the closest pull-in is still blocked, the wall)
             var cp = transform.position;
             bool stillBlind = Seen(cp, mask) < 2;
-            FadeBlockers(cp, stillBlind, dt);
+            FadeBlockers(cp, !CameraOccluders.QF9Fix && stillBlind, dt);   // QF9: loose props only, never architecture
             // check runs: was her body hidden this frame (after all of the above)?
             FollowFrames++;
             if (DemoBoot.CaptureDir != null || DemoBoot.PlayerSim) SampleVisibility(cp);

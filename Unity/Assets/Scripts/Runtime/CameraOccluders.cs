@@ -29,6 +29,18 @@ namespace Seven
         public static int Count => _items.Count;
         public static bool Ready => _scene.IsValid() && _builtFor.IsValid() && _builtFor == SceneManager.GetActiveScene();
 
+        static readonly string[] LooseProps = { "Chunk", "Rubble", "Lump", "Stone", "Crate", "Cart", "Debris", "Pipe", "Barricade", "Bracket", "Rock", "Shard", "Piece", "Fallen" };
+        static readonly string[] Architecture = { "Door", "Frame", "Rim", "Leaf", "Wall", "Arch", "Rib", "Column", "Pillar", "Gate", "Jamb", "Lintel", "Emblem", "Mechanism", "Pedestal", "Alcove" };
+        /// <summary>QF9: may this mesh fade out of the camera's way? Never architecture.</summary>
+        /// <summary>-noqf9fix = 0.10.5's behaviour (architecture under 2.6 m could fade; solids faded when still blind) - repro only.</summary>
+        public static bool QF9Fix = true;
+        public static bool IsLooseProp(string n)
+        {
+            foreach (var a in Architecture) if (n.Contains(a)) return false;
+            foreach (var p in LooseProps) if (n.Contains(p)) return true;
+            return false;
+        }
+
         static bool Skip(Renderer r, Transform[] exclude)
         {
             var go = r.gameObject;
@@ -65,7 +77,9 @@ namespace Seven
                 if (r.gameObject.scene != active || Skip(r, exclude)) { skipped++; continue; }
                 var mesh = r.GetComponent<MeshFilter>().sharedMesh;
                 var s = r.bounds.size;
-                bool small = Mathf.Max(s.x, Mathf.Max(s.y, s.z)) < FadeSize || r.gameObject.layer == 21;
+                // QF9 (Dan: door frames still flicker): architecture never fades - frames, walls, columns, ribs, arches
+                // only make the camera pull in. Only loose props (chunks, rubble, crates, carts, pipes) may fade.
+                bool small = (Mathf.Max(s.x, Mathf.Max(s.y, s.z)) < FadeSize && (IsLooseProp(r.name) || !QF9Fix)) || r.gameObject.layer == 21;
                 var go = new GameObject("occ_" + r.name) { layer = small ? FadeOnly : Solid };
                 SceneManager.MoveGameObjectToScene(go, _scene);
                 Collider c;

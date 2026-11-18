@@ -16,7 +16,7 @@ namespace Seven
         [Tooltip("Telekinesis clip frame held for the 'touch' pose (arm forward, open hand).")]
         public float TouchFrame = 0.45f;
 
-        public enum Mode { Free, Locked, Touch, Gesture, Look, Float, Air, Hang, Climb, Land }
+        public enum Mode { Free, Locked, Touch, Gesture, Look, Float, Air, Hang, Climb, Land, Fight }
         public Mode Current { get; private set; } = Mode.Free;
         [System.NonSerialized] public bool Sneak;
         [System.NonSerialized] public bool ScriptDriven;
@@ -76,7 +76,7 @@ namespace Seven
         public void EndFloat() { Current = Mode.Locked; }
         // the beam carries her; Round 9: jumps, hangs, climbs and landings place her themselves
         protected override bool Grounded => Current != Mode.Float && Current != Mode.Air && Current != Mode.Hang && Current != Mode.Climb && Current != Mode.Land;
-        protected override bool UseRootMotion => Current == Mode.Free || Current == Mode.Locked || Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Look;
+        protected override bool UseRootMotion => Current == Mode.Free || Current == Mode.Fight || Current == Mode.Locked || Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Look;
         float _floatT;
 
         void LateUpdate()
@@ -174,6 +174,7 @@ namespace Seven
                 case Mode.Float:
                     Speed = 0f;
                     break;
+                case Mode.Fight: UpdateFight(); break;                 // QF9: the terrace fight
             }
             if (Current != Mode.Free && Current != Mode.Hang) Context = null;
             Ground.BlockLow = false;

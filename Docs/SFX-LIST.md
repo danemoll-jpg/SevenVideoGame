@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-41 sounds.
+46 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -46,6 +46,11 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `ledge_grab` | Hands catching hold of a rough stone ledge, a quick soft slap of palms and a faint cloth rustle. | 0.8 |  | 7 grabs a ledge (Chapter 1 traversal) |
 | `land_soft` | A person landing lightly on their feet on a stone floor after a short jump, soft thud, boots. | 0.8 |  | 7 lands after a jump / short drop |
 | `land_hard` | A person landing heavily on stone after a long drop, firm thud, boots and a short cloth rustle. | 1.0 |  | 7 lands after a big drop |
+| `fight_swing` | Quick swish of a fist or arm swinging through the air, soft cloth whoosh. | 0.5 |  | QF9 fight: 7's blows |
+| `fight_hit` | Muffled padded punch landing on a body, soft thump, no crack. | 0.5 |  | QF9 fight: a blow lands |
+| `fight_block` | Forearm blocking a punch, dull firm thud and cloth rustle. | 0.5 |  | QF9 fight: blocked / defended |
+| `scree_grunt` | Short non-verbal effort grunt of a large insect-like creature, low raspy chitter, not aggressive, no words. | 0.7 |  | QF9 fight: Scree effort / being hit |
+| `body_fall` | A large body falling onto a stone floor and sliding a little, soft heavy thud, no crack. | 1.0 |  | QF9 fight: a Scree goes down / 7 knocked down |
 | `climb_scuff` | Boots scuffing and scraping on a rough stone wall while someone climbs, two or three soft scrapes. | 1.2 |  | wall climb / climbing up a ledge |
 | `slab_lift` | A heavy stone slab grinding as it lifts off a stone floor, low scrape fading into a soft hum. | 1.2 |  | telekinesis lifts the fallen slab (ruins) |
 | `fork_clink` | A fork lightly touching a ceramic dinner plate, one soft clink, quiet table sound. | 0.8 |  | Chapter 1 galley: 7 eats |

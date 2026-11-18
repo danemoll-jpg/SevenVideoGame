@@ -1,0 +1,41 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.03s] atmosphere: city look applied
+[   0.14s] line of sight cell -> hidden release panel: 1452 rays from a grid inside the cell, 0 unobstructed (must be 0)
+[   0.14s] flicker test: shadows depth bias 1, normal bias 1, main light shadow map 4096 (QF9)
+[   0.17s] Z-FIGHT CHECK: 0 coplanar same-facing overlapping block faces (must be 0)
+[   0.17s] flicker test (QF9): 78 door-frame meshes: RuinColumn, Gate_Beam, VisionExit_Lip, VisionExit_Floor, Vision_WallN0, Pillar, LeafR, Ruins_Ceiling, ChamberRibs, Hall_WallS0, CrackedWall_Lip, Passage0_WallE, Hall_WallE0, Cell_WallN0, RuinColumn, Vision_WallS1, Ruins_WallSW, Vision_WallS0, Cell_WallN2, Ruins_WallE, Vision_WallW0, Pillar, Gate_PostA, Cell_Ceiling, Pillar, RuinColumn, Hall_WallN0, HallExit_WallW, Ruins_WallSLow, Passage0_Ceiling, Pillar, Passage0_WallW, Ruins_WallW, FallenColumn, Vision_WallE0, RuinColumn, VisionExit_Ceiling, Hall_WallN1, Vision_WallN2, Vision_WallN1, Vision_WallE1, Alcove_WallE, Cell_WallW0, DoorFrameFill, Alcove_Ceiling, Vision_Ceiling, VisionExit_WallW, Pillar, Passage0_Floor, Ruins_WallSHigh, ShaftColumn, CrackedWall_Cracks, Cell_WallN1, StonePillar, CrackedWall, LeafL, Alcove_WallW, VisionExit_WallE, HallExit_Floor, OldWallLines, Cell_WallS0, Gate_PostB, Hall_Ceiling, Hall_WallN2, Hall_WallW0, RuinColumn, DoorRim, Hall_WallS2, Vision_WallE2, Cell_WallE0, Pillar, HallFallenRib, Vision_WallS2, HallExit_Ceiling, CurvyApproachRibs, Hall_WallS1, RuinColumn, HallExit_WallE
+[  24.14s] flicker test: EVENT VisionExit_Lip frame 1355 (vision_exit_doorway): 5/10 points jumped > 0.2, camera (17.43, -0.65, -38.10), faded False
+[  28.72s] flicker test: EVENT VisionExit_Lip frame 1621 (vision_exit_doorway): 5/5 points jumped > 0.2, camera (17.79, -0.70, -37.40), faded False
+[  44.69s] flicker test: EVENT DoorRim frame 2565 (chamber_corners): 18/54 points jumped > 0.2, camera (13.78, -0.87, -31.27), faded False
+[  44.74s] flicker test: EVENT DoorFrameFill frame 2567 (chamber_corners): 7/21 points jumped > 0.2, camera (13.78, -0.88, -31.23), faded False
+[  44.77s] flicker test: EVENT DoorRim frame 2568 (chamber_corners): 17/56 points jumped > 0.2, camera (13.78, -0.88, -31.20), faded False
+[  45.08s] flicker test: EVENT DoorFrameFill frame 2584 (chamber_corners): 8/21 points jumped > 0.2, camera (13.72, -0.88, -30.82), faded False
+[  45.49s] flicker test: EVENT DoorFrameFill frame 2607 (chamber_corners): 16/21 points jumped > 0.2, camera (13.56, -0.91, -30.44), faded False
+[  54.56s] flicker test: RuinColumn: 581 frame pairs, mean change 0.006, largest point change 0.52, flicker events 0, frames faded 0, surface noise 0.0074
+[  54.56s] flicker test: Gate_Beam: 56 frame pairs, mean change 0.018, largest point change 0.21, flicker events 0, frames faded 0, surface noise 0.0204
+[  54.56s] flicker test: VisionExit_Lip: 459 frame pairs, mean change 0.011, largest point change 0.45, flicker events 2, frames faded 0, surface noise 0.0194
+[  54.56s] flicker test: Vision_WallN0: 150 frame pairs, mean change 0.005, largest point change 0.18, flicker events 0, frames faded 0, surface noise 0.0023
+[  54.56s] flicker test: ChamberRibs: 1834 frame pairs, mean change 0.007, largest point change 0.61, flicker events 0, frames faded 0, surface noise 0.0091
+[  54.56s] flicker test: RuinColumn: 483 frame pairs, mean change 0.010, largest point change 0.51, flicker events 0, frames faded 0, surface noise 0.0105
+[  54.56s] flicker test: Vision_WallS0: 98 frame pairs, mean change 0.001, largest point change 0.00, flicker events 0, frames faded 0, surface noise 0.0017
+[  54.56s] flicker test: Gate_PostA: 90 frame pairs, mean change 0.003, largest point change 0.24, flicker events 0, frames faded 0, surface noise 0.0034
+[  54.56s] flicker test: RuinColumn: 1298 frame pairs, mean change 0.007, largest point change 0.32, flicker events 0, frames faded 0, surface noise 0.0086
+[  54.56s] flicker test: Vision_WallE0: 52 frame pairs, mean change 0.000, largest point change 0.00, flicker events 0, frames faded 0, surface noise 0.0001
+[  54.56s] flicker test: RuinColumn: 751 frame pairs, mean change 0.009, largest point change 0.73, flicker events 0, frames faded 0, surface noise 0.0056
+[  54.56s] flicker test: Hall_WallN1: 6 frame pairs, mean change 0.000, largest point change 0.00, flicker events 0, frames faded 0, surface noise 0.0003
+[  54.56s] flicker test: Vision_WallN2: 173 frame pairs, mean change 0.004, largest point change 0.24, flicker events 0, frames faded 0, surface noise 0.0020
+[  54.56s] flicker test: Vision_WallN1: 136 frame pairs, mean change 0.001, largest point change 0.01, flicker events 0, frames faded 0, surface noise 0.0004
+[  54.56s] flicker test: DoorFrameFill: 832 frame pairs, mean change 0.006, largest point change 0.81, flicker events 3, frames faded 0, surface noise 0.0030
+[  54.56s] flicker test: VisionExit_WallW: 684 frame pairs, mean change 0.005, largest point change 0.56, flicker events 0, frames faded 0, surface noise 0.0032
+[  54.56s] flicker test: CrackedWall_Cracks: 25 frame pairs, mean change 0.054, largest point change 0.44, flicker events 0, frames faded 0, surface noise 0.0579
+[  54.56s] flicker test: VisionExit_WallE: 31 frame pairs, mean change 0.002, largest point change 0.06, flicker events 0, frames faded 0, surface noise 0.0064
+[  54.56s] flicker test: Gate_PostB: 106 frame pairs, mean change 0.001, largest point change 0.03, flicker events 0, frames faded 0, surface noise 0.0013
+[  54.56s] flicker test: Hall_WallN2: 34 frame pairs, mean change 0.018, largest point change 0.19, flicker events 0, frames faded 0, surface noise 0.0058
+[  54.56s] flicker test: RuinColumn: 1286 frame pairs, mean change 0.004, largest point change 0.68, flicker events 0, frames faded 0, surface noise 0.0048
+[  54.56s] flicker test: DoorRim: 2314 frame pairs, mean change 0.013, largest point change 0.81, flicker events 2, frames faded 0, surface noise 0.0169
+[  54.56s] flicker test: Vision_WallE2: 110 frame pairs, mean change 0.000, largest point change 0.01, flicker events 0, frames faded 0, surface noise 0.0002
+[  54.56s] flicker test: Vision_WallS2: 898 frame pairs, mean change 0.002, largest point change 0.83, flicker events 0, frames faded 0, surface noise 0.0007
+[  54.56s] flicker test: RuinColumn: 243 frame pairs, mean change 0.010, largest point change 0.30, flicker events 0, frames faded 0, surface noise 0.0090
+[  54.56s] FLICKER TEST: 3173 consecutive frames, door-frame flicker events 7 (must be 0), frames with a door frame faded 0 (must be 0); mean surface noise 0.0087; largest mean frame-to-frame change 0.303 (VisionExit_Lip, frame 1621)
+[  54.56s] flicker test
+[  54.56s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

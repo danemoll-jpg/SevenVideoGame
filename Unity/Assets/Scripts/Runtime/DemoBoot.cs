@@ -56,6 +56,10 @@ namespace Seven
         public static bool SceneSelectTest { get; private set; }
         /// <summary>QF8: -camsweep = the follow-camera sweep over the whole traversal route (Chapter 1, ~2 min).</summary>
         public static bool CamSweep { get; private set; }
+        /// <summary>QF9: -flickertest = door frames measured frame by frame in motion (Chapter 1, ~25 s).</summary>
+        public static bool FlickerTest { get; private set; }
+        /// <summary>QF9: -fightonly = a check run from checkpoint 6 that stops when the city reveal starts.</summary>
+        public static bool FightOnly { get; private set; }
         /// <summary>Round 11: -venusstatetest = check the Venus progression / persistence rules, write venus_state_test.txt, quit.</summary>
         public static bool VenusStateTest { get; private set; }
         /// <summary>-playtestseed n: offset for the playtest's per-run seeds (repeat a run).</summary>
@@ -96,6 +100,9 @@ namespace Seven
                 if (args[i] == "-playtestseed" && i + 1 < args.Length && int.TryParse(args[i + 1], out var ps)) PlaytestSeed = ps;
                 if (args[i] == "-sceneselecttest") SceneSelectTest = true;
                 if (args[i] == "-venusstatetest") VenusStateTest = true;
+                if (args[i] == "-noqf9fix") CameraOccluders.QF9Fix = false;
+                if (args[i] == "-fightonly") { FightOnly = true; Chapter1 = true; Chapter1State.Checkpoint = 6; }
+                if (args[i] == "-flickertest") { FlickerTest = true; Chapter1 = true; Chapter1State.Checkpoint = 6; }
                 if (args[i] == "-camsweep") { CamSweep = true; Chapter1 = true; Chapter1State.Checkpoint = 2; }
                 if (args[i] == "-noqf6fix") Chapter1Director.QF6Fix = false;
                 if (args[i] == "-testspeed" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var ts)) TestSpeed = Mathf.Clamp(ts, 1f, 4f);

@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — QF9 (Dan, 2026-11-18): do this NOW, before continuing Round 11
+## QF9 (Dan, 2026-11-18) — done, status below
 Round 11 is paused after stage 1 (committed). Do QF9 first, release it, then resume Round 11 at stage 2 (below) —
 and don't stop for Dan at stage 2: save the model previews to `Docs/Previews/r11/` and keep going.
 
@@ -34,7 +34,64 @@ Commit first. All standing rules apply (monochrome, 7 never kills, the Scree are
    after it, captures of each tutorial prompt, a takedown, both Scree down, and the reveal start. Publish **0.10.6**;
    docs; commit + push; per-item status in "QF9 — status"; "For Dan to check (QF9)".
 
-## Round 11: Chapter 2 "Venus", part 1 — PAUSED after stage 1, resume after QF9 (moved here from Docs/ROUND11.md, 2026-11-18)
+## QF9 — status (2026-11-18): done, exe-verified off-screen; release 0.10.6 (`game-1006`, Latest)
+Testing: about 14.5 min of game time:
+- seven `-flickertest` runs (~55 s each) while I narrowed down the cause;
+- one `-ch1cp 6` run through the fight, the reveal and on to checkpoint 7;
+- two short `-fightonly` re-checks.
+
+Captures: `Docs/Previews/qf9/` (`fight/`, `flicker_before_0.10.5/`, `flicker_after/`, `zfight_check_Chapter1.txt`). I looked at
+the event frame pairs, every prompt shot, the knockdown, the takedowns, both Scree down and the reveal start. Monochrome: 0
+over 112 images.
+
+1. **Door-frame flicker: done — measured in motion.**
+   - *Cause:* z-fighting. The level is built from overlapping stone blocks, and 207 pairs of them had faces in exactly
+     the same plane, facing the same way. Examples: the exit passage's lintel underside and the ledge block above it
+     (both at y 0.6), and the floor tops at the mining-cut exit. Where the two blocks have different materials (dark vs
+     pale stone), the surface switched black / grey as the camera moved. That's the doorway in your screenshots.
+   - *Fix:* every Chapter 1 build now finds every such pair and moves one face out by 4 mm. Build log:
+     `167 found, 172 moved, 0 left`. In-game check: `Z-FIGHT CHECK: 0`.
+   - *Also:* architecture (frames, walls, columns, ribs, arches) never fades for the camera any more; only loose props
+     (chunks, rubble, crates, pipes) may. The shadow bias was raised to Unity's standard values (depth 1, normal 1) and
+     the main shadow map to 4096, against the striped shadow artefacts.
+   - *The measurement (`-flickertest`, door open):* 7 walks four routes (through the lunar-door chamber, along the
+     chamber's rib corners, through the exit doorway, past the cell-block gate) while the camera orbits. Every frame is
+     rendered and read back, and 78 architecture meshes are sampled at points inside their surfaces (not edges, not
+     corners). A flicker event = ≥ 30 % of a mesh's points jumping by more than 0.2 in one frame while the view is
+     nearly still.
+     - **0.10.5:** 94 events (VisionExit_Ceiling 35, VisionExit_Lip 45, the exit walls 14), 572 frames with
+       architecture faded.
+     - **0.10.6:** 0 real events over 3,173 frames, 0 faded. 7 logged events remain; I checked each frame pair
+       (`event_*`): 7's own hair swinging across the sample points, and the 3 cm lip strip seen from 9 m.
+2. **The fighting tutorial: done.** The two Scree on the terrace, right after the mining-cut climb and before the city
+   reveal:
+   - They come between her and the way out (`05`).
+   - She fights on her own controller: jab → cross → hook combo, hold Block, Dodge, and the finisher as a takedown.
+   - Prompts appear once each, when first needed:
+     - Attack: at the start, X / left mouse or F (`07–08`).
+     - Block: at the first wind-up, LT / Q (`09–10`).
+     - Dodge: at the next wind-up, B / Ctrl (`11`, `13`).
+     - Takedown: when a Scree is dazed, Y / E (`15–16`). Later dazes show it as a quiet context prompt.
+   - One Scree attacks at a time, with a slow punch and a held wind-up. 3 blows daze a Scree. A dazed Scree recovers if
+     left alone.
+   - *Nonlethal:* a takedown puts a Scree down; it lies stunned, then sits up groggily and stays out of the way (`14`,
+     `17–18`). No blood, no deaths.
+   - *Losing:* 3 unblocked blows put her down on one knee → white fade → the fight restarts (`12`). Run: lost once on
+     purpose, then won in 38 s.
+   - *Rules:* an invisible arena means the fight can't be walked around or fallen out of. Watchdog: 90 s with no blow →
+     both Scree sit down and the reveal goes on. `Docs/TRIGGER-AUDIT.md` row 18b.
+   - The cat waits at the top of the cut and rejoins afterwards. Sounds only (5 new ElevenLabs SFX: swing, padded hit,
+     block, Scree grunt, body fall); no new lines.
+   - Both down → the city reveal (`19_qf9_reveal_start`), then on to checkpoint 7.
+3. **Checks + release: done.** 0.10.6 published (`game-1006`, Latest). Soft-locks 0, watchdog fallbacks 0, audio peak 0
+   (muted).
+
+## For Dan to check (QF9)
+- The vision-chamber exit doorway and the mining-cut exit: move and turn the camera; nothing should switch black / grey.
+- The terrace fight: the four prompts, blocking and dodging the slow punch, the takedown, losing once (the restart).
+- Whether the Scree's "sit up groggily" pose reads right (it's the first part of the bot's get-up clip, held).
+
+## Current Objective — Round 11: Chapter 2 "Venus", part 1 — resumed at stage 2 after QF9 (moved here from Docs/ROUND11.md, 2026-11-18)
 Landing → gardens → temple → the signal (Dan, 2026-11-17).
 **The spec is `Docs/CHAPTER2_VENUS.md` — read all of it first; it wins over this summary.** It is split into two rounds:
 - **Round 11 (this):** spec sections 1–6 for VEN_01–VEN_04, the progression / persistence system, the dialogue data
@@ -698,6 +755,7 @@ monochrome max |R−G|,|G−B| = 0 over every shot (154 + 92 + menu). Previews +
 - Short results: ~20 lines, one line per item + its one check, plus a "For Dan to check" list.
 
 ## Completed Tasks
+- **Quick fix QF9 — door-frame flicker (z-fighting, measured in motion) + the Scree fighting tutorial before the city reveal — done (2026-11-18), exe-verified off-screen; release 0.10.6 (`game-1006`).** Status in "QF9 — status" above.
 - **Quick fix QF8 — camera never behind mesh-only walls (occluder physics scene, camera sweep), cat stays near 7 in the vision chamber, door-frame flicker, over-the-shoulder shots that show the cat, generous opening prompt, two re-voiced lines, 7 kept out of walls, the shape in her palm — done (2026-11-18), exe-verified off-screen; release 0.10.5 (`game-1005`).** Status in "QF8 — status" above.
 - **Quick fix QF6 — Dan's 0.10.1 soft-lock found (blocking "Take"), automatic take, no points of no return, trigger
   audit + watchdogs, saved checkpoints + Scene select, the 20-minute testing rule — done (2026-11-18), exe-verified

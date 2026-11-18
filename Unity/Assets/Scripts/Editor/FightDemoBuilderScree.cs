@@ -94,6 +94,14 @@ namespace Seven.EditorTools
                 var ns = sm.AddState(st.name); ns.motion = st.motion; ns.writeDefaultValues = true;
                 if (st.name == "idle") sm.defaultState = ns;
             }
+            // QF9: the fighting tutorial on the terrace - the Scree take the sparring bot's fight clips (Humanoid retarget):
+            // fight stance, a slow punch, hit reactions, knocked down, getting up, dazed. Nothing lethal exists in the set.
+            var botCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/TrainingBot.controller");
+            if (botCtl != null)
+                foreach (var st in botCtl.layers[0].stateMachine.states.Select(s => s.state).Where(s => s.name != "float"))
+                {
+                    var ns = sm.AddState(st.name); ns.motion = st.motion; ns.writeDefaultValues = true;
+                }
             foreach (var clip in AssetDatabase.LoadAllAssetsAtPath(ScreeFbx).OfType<AnimationClip>().Where(c => !c.name.StartsWith("__preview__")))
             {
                 var ns = sm.AddState(clip.name); ns.motion = clip; ns.writeDefaultValues = true;

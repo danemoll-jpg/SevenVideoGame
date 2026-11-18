@@ -144,10 +144,10 @@ namespace Seven
             ChapterCamera.CatRoot = Cat != null ? Cat.transform : null;
             CameraOccluders.Build(Seven.transform, Cat != null ? Cat.transform : null, Guard != null ? Guard.transform : null, Shape);
             if (Auto && DemoBoot.OpeningTest <= 0) { AudioKit.Log = s => Cap.Log("audio: " + s); LineOfSightCheck(); }
-            if (Auto && DemoBoot.OpeningTest <= 0 && !DemoBoot.CamSweep) StartCoroutine(SpeakerViewSampler());
-            StartCoroutine(DemoBoot.CamSweep ? CamSweepRun() : DemoBoot.OpeningTest > 0 ? OpeningTestRun() : DemoBoot.CatFollowTest > 0 ? CatFollowTestRun() : Flow());
-            if (DemoBoot.OpeningTest <= 0 && !DemoBoot.CamSweep) StartCoroutine(TeachWatch());
-            if (DemoBoot.OpeningTest <= 0 && DemoBoot.CatFollowTest <= 0 && !DemoBoot.CamSweep && QF6Fix) StartCoroutine(StoryWatchdog());
+            if (Auto && DemoBoot.OpeningTest <= 0 && !DemoBoot.CamSweep && !DemoBoot.FlickerTest) StartCoroutine(SpeakerViewSampler());
+            StartCoroutine(DemoBoot.FlickerTest ? FlickerTestRun() : DemoBoot.CamSweep ? CamSweepRun() : DemoBoot.OpeningTest > 0 ? OpeningTestRun() : DemoBoot.CatFollowTest > 0 ? CatFollowTestRun() : Flow());
+            if (DemoBoot.OpeningTest <= 0 && !DemoBoot.CamSweep && !DemoBoot.FlickerTest) StartCoroutine(TeachWatch());
+            if (DemoBoot.OpeningTest <= 0 && DemoBoot.CatFollowTest <= 0 && !DemoBoot.CamSweep && !DemoBoot.FlickerTest && QF6Fix) StartCoroutine(StoryWatchdog());
             StartCoroutine(ShapeIdle());
             if (VisionVideo != null)
             {
@@ -1132,6 +1132,205 @@ namespace Seven
             Checkpoint(Chapter1State.CpDoor);
         }
 
+        /// <summary>QF9 item 1 (Dan: door frames flicker black / grey as 7 / the camera move): measure it in motion. 7 walks
+        /// through the lunar-door chamber (door shut, as Dan saw it) and past the gate in the cell block while the follow
+        /// camera orbits and pulls in as in play. Every frame is rendered to a texture and read back; each door-frame mesh's
+        /// brightness is sampled at its own visible surface points (depth-tested by raycast). Per sample point visible in
+        /// two consecutive frames the brightness change is taken; a frame where >= 30 % of a frame's points jump by > 0.2
+        /// (0..1) is a flicker event (the orbit moves the view < 1 deg per frame, so real lighting cannot do that).
+        /// Logs per mesh: frames, mean / max change, flicker events (must be 0), and whether it was ever faded.</summary>
+        Vector3 _flPrevPos; Quaternion _flPrevRot = Quaternion.identity;
+        readonly Dictionary<Renderer, Vector2> _noise = new Dictionary<Renderer, Vector2>();
+        byte[] _prevFrame;
+        IEnumerator FlickerTestRun()
+        {
+            {
+                var urp = UnityEngine.Rendering.GraphicsSettings.currentRenderPipeline as UnityEngine.Rendering.Universal.UniversalRenderPipelineAsset;
+                if (urp != null && !CameraOccluders.QF9Fix) { urp.shadowDepthBias = 0.1f; urp.shadowNormalBias = 0.5f; urp.mainLightShadowmapResolution = 2048; }
+                if (urp != null) Cap.Log($"flicker test: shadows depth bias {urp.shadowDepthBias}, normal bias {urp.shadowNormalBias}, main light shadow map {urp.mainLightShadowmapResolution} ({(CameraOccluders.QF9Fix ? "QF9" : "0.10.5 values")})");
+            }
+            Cam.AutoBehind = false; Seven.ScriptDriven = true; Seven.Lock(false);
+            Cat.gameObject.SetActive(false);
+            UI.SetFade(1f); UI.SetObjective(null);
+            var cam = Cam.GetComponent<Camera>();
+            const int W = 640, H = 360;
+            var rt = new RenderTexture(W, H, 24); var tex = new Texture2D(W, H, TextureFormat.RGB24, false);
+            var targets = new List<(Renderer r, Vector3[] pts)>();
+            foreach (var r in FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
+            {
+                var n = r.name;
+                if (n.Contains("Glow") || n.Contains("Engrave") || n.Contains("Seam")) continue;
+                if (!(n.Contains("DoorFrame") || n.Contains("DoorRim") || n.Contains("Leaf") || n.Contains("Gate_") || n.Contains("Frame") || n.Contains("Jamb")
+                      || n.Contains("Rib") || n.Contains("Column") || n.Contains("Arch") || n.Contains("Pillar")
+                      || n.Contains("Exit_") || n.Contains("Wall") || n.Contains("Passage") || n.Contains("Ceiling"))) continue;
+                if (!r.gameObject.activeInHierarchy) continue;
+                var mf = r.GetComponent<MeshFilter>(); if (mf == null || mf.sharedMesh == null || !mf.sharedMesh.isReadable) continue;
+                // points INSIDE the surface (random spots on triangles, area-weighted) - never corners / silhouette edges
+                var v = mf.sharedMesh.vertices; var tr = mf.sharedMesh.triangles; var m = r.transform.localToWorldMatrix;
+                var rnd = new System.Random(r.name.GetHashCode()); var pts = new List<Vector3>();
+                float total = 0f; var areas = new float[tr.Length / 3];
+                for (int i = 0; i < areas.Length; i++) { var a0 = m.MultiplyPoint3x4(v[tr[i * 3]]); var a1 = m.MultiplyPoint3x4(v[tr[i * 3 + 1]]); var a2 = m.MultiplyPoint3x4(v[tr[i * 3 + 2]]); areas[i] = Vector3.Cross(a1 - a0, a2 - a0).magnitude * 0.5f; total += areas[i]; }
+                for (int k = 0; k < 80 && total > 0f; k++)
+                {
+                    float pick = (float)rnd.NextDouble() * total; int ti = 0;
+                    for (; ti < areas.Length - 1 && pick > areas[ti]; ti++) pick -= areas[ti];
+                    var a0 = m.MultiplyPoint3x4(v[tr[ti * 3]]); var a1 = m.MultiplyPoint3x4(v[tr[ti * 3 + 1]]); var a2 = m.MultiplyPoint3x4(v[tr[ti * 3 + 2]]);
+                    float u = 0.2f + 0.6f * (float)rnd.NextDouble(), w = (1f - u) * (0.25f + 0.5f * (float)rnd.NextDouble());
+                    var nrm = Vector3.Cross(a1 - a0, a2 - a0).normalized;
+                    pts.Add(a0 * (1f - u - w) + a1 * u + a2 * w + nrm * 0.01f);
+                }
+                targets.Add((r, pts.ToArray()));
+            }
+            // z-fighting check: two blocks whose faces lie in the same plane, face the same way and overlap
+            {
+                var boxes = new List<(string n, Bounds b)>();
+                foreach (var mf in FindObjectsByType<MeshFilter>(FindObjectsSortMode.None))
+                {
+                    var mr = mf.GetComponent<MeshRenderer>();
+                    if (mr == null || !mr.enabled || !mf.gameObject.activeInHierarchy || mf.sharedMesh == null || !mf.sharedMesh.name.StartsWith("Cube")) continue;
+                    if (Quaternion.Angle(mf.transform.rotation, Quaternion.identity) > 0.01f) continue;
+                    if (mr.sharedMaterial != null && mr.sharedMaterial.renderQueue > 2500) continue;
+                    boxes.Add((mf.name, mr.bounds));
+                }
+                int found = 0;
+                for (int i = 0; i < boxes.Count; i++)
+                    for (int j = i + 1; j < boxes.Count; j++)
+                        for (int ax = 0; ax < 3; ax++)
+                            foreach (var side in new[] { -1, 1 })
+                            {
+                                var A = boxes[i].b; var B = boxes[j].b;
+                                float fa = side < 0 ? A.min[ax] : A.max[ax], fb = side < 0 ? B.min[ax] : B.max[ax];
+                                if (Mathf.Abs(fa - fb) > 0.002f) continue;
+                                int u = (ax + 1) % 3, v = (ax + 2) % 3;
+                                float ou = Mathf.Min(A.max[u], B.max[u]) - Mathf.Max(A.min[u], B.min[u]);
+                                float ov = Mathf.Min(A.max[v], B.max[v]) - Mathf.Max(A.min[v], B.min[v]);
+                                if (ou <= 0.01f || ov <= 0.01f) continue;
+                                found++;
+                                if (found <= 60) Cap.Log($"z-fight: {boxes[i].n} & {boxes[j].n}: {(side < 0 ? "-" : "+")}{"xyz"[ax]} faces both at {fa:0.000}, overlap {ou:0.00} x {ov:0.00} m");
+                            }
+                Cap.Log($"Z-FIGHT CHECK: {found} coplanar same-facing overlapping block faces (must be 0)");
+            }
+            Cap.Log($"flicker test (QF9): {targets.Count} door-frame meshes: {string.Join(", ", targets.ConvertAll(x => x.r.name))}");
+            var stats = new Dictionary<Renderer, (int frames, float sum, float max, int events, int faded)>();
+            foreach (var t in targets) stats[t.r] = (0, 0f, 0f, 0, 0);
+            var prev = new Dictionary<Renderer, float[]>();
+            float worstJump = 0f; int worstFrame = -1; string worstName = null;
+            int frameNo = 0;
+            float Lum(Color c) => 0.299f * c.r + 0.587f * c.g + 0.114f * c.b;
+
+            IEnumerator Sample(string leg)
+            {
+                yield return new WaitForEndOfFrame();
+                var old = cam.targetTexture; cam.targetTexture = rt; cam.Render(); cam.targetTexture = old;
+                var a = RenderTexture.active; RenderTexture.active = rt; tex.ReadPixels(new Rect(0, 0, W, H), 0, 0, false); tex.Apply(false); RenderTexture.active = a;
+                frameNo++;
+                var cp = cam.transform.position; var cr = cam.transform.rotation;
+                // a jump only counts as flicker while the view is (nearly) still: < 2 deg and < 6 cm this frame
+                bool still = (cp - _flPrevPos).magnitude < 0.06f && Quaternion.Angle(cr, _flPrevRot) < 2f;
+                _flPrevPos = cp; _flPrevRot = cr;
+                foreach (var (r, pts) in targets)
+                {
+                    if (r == null || !r.isVisible) { prev.Remove(r); continue; }
+                    var cur = new float[pts.Length];
+                    for (int i = 0; i < pts.Length; i++)
+                    {
+                        cur[i] = -1f;
+                        var vp = cam.WorldToViewportPoint(pts[i]);
+                        if (vp.z < cam.nearClipPlane || vp.x < 0.01f || vp.x > 0.99f || vp.y < 0.01f || vp.y > 0.99f) continue;
+                        var d = pts[i] - cp; float len = d.magnitude;
+                        if (Physics.Raycast(cp, d / len, len - 0.03f, ~((1 << 20) | (1 << 5) | (1 << 22)), QueryTriggerInteraction.Ignore)) continue;
+                        if (CameraOccluders.Raycast(cp, d, len - 0.03f, out var oh, CameraOccluders.AllMask) && CameraOccluders.RendererOf(oh.collider) != r) continue;
+                        // not on a silhouette edge: rays 3 pixels left / right / up / down of it must be clear too
+                        {
+                            float pxw = 2f * len * Mathf.Tan(cam.fieldOfView * 0.5f * Mathf.Deg2Rad) / H * 3f;
+                            bool edge = false;
+                            foreach (var off in new[] { cam.transform.right, -cam.transform.right, cam.transform.up, -cam.transform.up })
+                            {
+                                var q = pts[i] + off * pxw; var dq = q - cp; float lq = dq.magnitude;
+                                if (Physics.Raycast(cp, dq / lq, lq - 0.05f, ~((1 << 20) | (1 << 5) | (1 << 22)), QueryTriggerInteraction.Ignore)
+                                    || CameraOccluders.Raycast(cp, dq, lq - 0.05f, out var oq, CameraOccluders.AllMask) && CameraOccluders.RendererOf(oq.collider) != r) { edge = true; break; }
+                            }
+                            if (edge) continue;
+                        }
+                        int px = (int)(vp.x * W), py = (int)(vp.y * H);
+                        cur[i] = Lum(tex.GetPixel(px, py));
+                        // surface noise: neighbour-pixel contrast on the surface (shadow-acne stripes make a flat wall "busy")
+                        _noise.TryGetValue(r, out var nz);
+                        nz.x += (Mathf.Abs(cur[i] - Lum(tex.GetPixel(px + 1, py))) + Mathf.Abs(cur[i] - Lum(tex.GetPixel(px, py + 1)))) * 0.5f; nz.y += 1f;
+                        _noise[r] = nz;
+                    }
+                    var st = stats[r];
+                    bool faded = r.shadowCastingMode == UnityEngine.Rendering.ShadowCastingMode.ShadowsOnly || r.HasPropertyBlock();
+                    if (faded) st.faded++;
+                    if (prev.TryGetValue(r, out var p))
+                    {
+                        int both = 0, jumps = 0; float sum = 0f, mx = 0f;
+                        for (int i = 0; i < pts.Length; i++)
+                        {
+                            if (cur[i] < 0f || p[i] < 0f) continue;
+                            float dl = Mathf.Abs(cur[i] - p[i]); both++; sum += dl; mx = Mathf.Max(mx, dl);
+                            if (dl > 0.2f) jumps++;
+                        }
+                        if (both >= 5)
+                        {
+                            st.frames++; st.sum += sum / both; st.max = Mathf.Max(st.max, mx);
+                            if (still && jumps >= both * 0.3f && st.events < 2 && _prevFrame != null)
+                            {
+                                System.IO.File.WriteAllBytes(System.IO.Path.Combine(DemoBoot.CaptureDir, $"event_{r.name}_{frameNo:0000}_a.jpg"), _prevFrame);
+                                System.IO.File.WriteAllBytes(System.IO.Path.Combine(DemoBoot.CaptureDir, $"event_{r.name}_{frameNo:0000}_b.png"), tex.EncodeToPNG());
+                            }
+                            if (still && jumps >= both * 0.3f) { st.events++; Cap.Log($"flicker test: EVENT {r.name} frame {frameNo} ({leg}): {jumps}/{both} points jumped > 0.2, camera {cp}, faded {faded}"); }
+                            if (sum / both > worstJump) { worstJump = sum / both; worstFrame = frameNo; worstName = r.name; }
+                        }
+                    }
+                    stats[r] = st;
+                    prev[r] = cur;
+                }
+                _prevFrame = tex.EncodeToJPG(85);
+                if (frameNo % (leg == "vision_exit_doorway" ? 20 : 60) == 1 || frameNo <= 3)
+                    System.IO.File.WriteAllBytes(System.IO.Path.Combine(DemoBoot.CaptureDir, $"flicker_{leg}_{frameNo:000}.png"), tex.EncodeToPNG());
+            }
+
+            IEnumerator Leg(string leg, Vector3 start, Vector3[] path, float yawSpeed, float seconds)
+            {
+                Seven.Place(start, Flat(path[0] - start)); Cam.Yaw = Seven.transform.eulerAngles.y; Cam.Pitch = 15f; Cam.SnapTo();
+                prev.Clear();
+                UI.SetFade(0f);
+                int k = 0;
+                for (float t = 0f; t < seconds; t += Time.deltaTime)
+                {
+                    var to = path[k % path.Length];
+                    if (Dist7(to) < 0.4f) k++;
+                    Seven.ScriptMove = Flat(to - Seven.transform.position).normalized * 0.6f;
+                    Cam.Yaw += yawSpeed * Time.deltaTime;
+                    Cam.Pitch = 15f + 12f * Mathf.Sin(t * 0.7f);
+                    yield return Sample(leg);
+                }
+                Seven.ScriptMove = Vector3.zero;
+            }
+
+            float L0 = MoonLayout.Lower;
+            yield return Leg("lunar_door", new Vector3(16.5f, L0, -31.0f),
+                new[] { new Vector3(16.5f, L0, -36.6f), new Vector3(14.6f, L0, -36.0f), new Vector3(18.4f, L0, -36.0f), new Vector3(16.5f, L0, -33.0f) }, 28f, 14f);
+            // Dan's doorway (2026-11-18 screenshots): the box doorway out of the vision chamber, hatched shadow stripes
+            yield return Leg("vision_exit_doorway", new Vector3(16.5f, L0, -35.8f),
+                new[] { new Vector3(16.5f, L0, -38.9f), new Vector3(16.0f, L0, -37.4f), new Vector3(17.0f, L0, -38.9f), new Vector3(16.6f, L0, -36.6f) }, 22f, 16f);
+            yield return Leg("chamber_corners", new Vector3(18.6f, L0, -33.6f),
+                new[] { new Vector3(19.4f, L0, -35.2f), new Vector3(18.6f, L0, -37.3f), new Vector3(14.6f, L0, -37.3f), new Vector3(13.2f, L0, -34.0f), new Vector3(13.4f, L0, -30.6f) }, 40f, 16f);
+            yield return Leg("cell_block_gate", new Vector3(21.5f, 0f, 3.4f),
+                new[] { new Vector3(25.6f, 0f, 3.4f), new Vector3(24.0f, 0f, 2.6f), new Vector3(24.0f, 0f, 4.2f) }, -30f, 8f);
+            int events = 0, fadedFrames = 0; float noiseSum = 0f, noiseN = 0f;
+            foreach (var kv in stats)
+            {
+                var st = kv.Value; events += st.events; fadedFrames += st.faded;
+                _noise.TryGetValue(kv.Key, out var nz);
+                if (st.frames > 0) Cap.Log($"flicker test: {kv.Key.name}: {st.frames} frame pairs, mean change {st.sum / st.frames:0.000}, largest point change {st.max:0.00}, flicker events {st.events}, frames faded {st.faded}, surface noise {(nz.y > 0 ? nz.x / nz.y : 0f):0.0000}");
+                if (nz.y > 0) { noiseSum += nz.x; noiseN += nz.y; }
+            }
+            Cap.Log($"FLICKER TEST: {frameNo} consecutive frames, door-frame flicker events {events} (must be 0), frames with a door frame faded {fadedFrames} (must be 0); mean surface noise {(noiseN > 0 ? noiseSum / noiseN : 0f):0.0000}; largest mean frame-to-frame change {worstJump:0.000} ({worstName}, frame {worstFrame})");
+            Cap.Finish("flicker test");
+        }
+
         /// <summary>QF8 item 1 check: the follow camera over the whole traversal route. 7 is put at points along every
         /// walkable zone of the climbing stretch (prison catwalk to the scaffolds, 2 m apart), at every climb-down edge and
         /// into a hang on every ledge (every 0.7 m along it); at each point the camera starts from four directions (behind
@@ -1533,6 +1732,186 @@ namespace Seven
             yield return Dlg.PlayScene(65, from, to);
         }
 
+        // ------------------------------------------------------------------------------------------ QF9: the exit fight
+        // Dan (2026-11-18): the two Scree on the terrace right before the city reveal become the fighting tutorial. They
+        // block the way out; the controls are taught as they are needed (attack, block, dodge, takedown - first use only);
+        // nonlethal always (a takedown leaves a Scree on the ground, then sitting up dazed, alive); if 7 is knocked down
+        // the fight restarts (white fade, no game over); when both are down the city reveal plays. An invisible arena
+        // (the terrace between the mining cut and the viewpoint) keeps the fight from being walked around or fallen out
+        // of; a watchdog ends it (both sit down) if nothing has happened for 90 s, so it can never soft-lock.
+        static readonly Vector3 FightStart = new Vector3(16.5f, MoonLayout.Lower, -42.0f);
+        static readonly Vector3[] FightSpots = { new Vector3(15.6f, MoonLayout.Lower, -44.4f), new Vector3(17.5f, MoonLayout.Lower, -44.7f) };
+        const float ArenaZMin = -45.3f, ArenaZMax = -41.45f, ArenaXMin = 13.6f, ArenaXMax = 19.6f;
+        bool _fightWon, _fighting;
+        ScreeGuard[] _fighters;
+        int _fightResets; float _fightProgress;
+        public bool FightWon => _fightWon;
+
+        ScreeGuard[] FindExitPair()
+        {
+            if (Workers == null) return null;
+            var want = new[] { new Vector3(12.6f, MoonLayout.Lower, -42.9f), new Vector3(11.8f, MoonLayout.Lower, -47.4f) };
+            var pair = new ScreeGuard[2];
+            for (int k = 0; k < 2; k++)
+            {
+                float best = 3f;
+                foreach (var w in Workers) { if (w == null || w == pair[0]) continue; float d = Flat(w.Post - want[k]).magnitude; if (d < best) { best = d; pair[k] = w; } }
+                if (pair[k] == null) return null;
+            }
+            return pair;
+        }
+
+        ScreeGuard EngagedScree()
+        {
+            ScreeGuard best = null; float bd = float.MaxValue;
+            foreach (var s in _fighters) { if (s == null || s.IsOut) continue; float d = Flat(s.transform.position - Seven.transform.position).magnitude; if (d < bd) { bd = d; best = s; } }
+            return best;
+        }
+
+        IEnumerator ArenaClamp()
+        {
+            while (_fighting)
+            {
+                var p = Seven.transform.position;
+                var q = new Vector3(Mathf.Clamp(p.x, ArenaXMin, ArenaXMax), p.y, Mathf.Clamp(p.z, ArenaZMin, ArenaZMax));
+                if ((q - p).sqrMagnitude > 1e-8f) { q.y = Ground.Height(q.x, q.z); Seven.transform.position = q; }
+                yield return null;
+            }
+        }
+
+        void OnScreeFight(ScreeGuard s, string what)
+        {
+            _fightProgress = Time.time;
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"fight: {s.name} {what}");
+            if (what == "windup")
+            {
+                float tt = Time.time;
+                if (!Chapter1State.Taught.Contains("fight_block")) { s.WindupSeconds = 1.3f; StartTeach("fight_block", () => _defendedBlock || Time.time - tt > 9f, (ControlsLegend.Btn.Block, "Block")); }
+                else if (!Chapter1State.Taught.Contains("fight_dodge")) { s.WindupSeconds = 1.1f; StartTeach("fight_dodge", () => _defendedDodge || Time.time - tt > 9f, (ControlsLegend.Btn.Dodge, "Dodge")); }
+                else s.WindupSeconds = 0.75f;
+            }
+            if (what == "defended") { if (Seven.Act == ChapterSeven.FightAct.Block) _defendedBlock = true; else _defendedDodge = true; }
+            if (what == "dazed") StartTeach("fight_takedown", () => s.IsOut || !s.Dazed, (ControlsLegend.Btn.Takedown, "Takedown"));   // later dazes: the context prompt (ChapterSevenFight)
+            if (what == "taken_down" && Auto) StartCoroutine(ShotLater("qf9_takedown", 0.45f));
+            var sp = s.transform.position + Vector3.up;
+            if (what == "windup" || what == "dazed") AudioKit.Play("scree_grunt", sp, 0.7f, 0.12f, AudioKit.Bus.Sfx, 16f);
+            if (what == "defended") AudioKit.Play("fight_block", sp, 0.9f, 0.08f, AudioKit.Bus.Sfx, 16f);
+            if (what == "taken_down") StartCoroutine(PlayLater("body_fall", sp, 0.55f));
+        }
+        bool _defendedBlock, _defendedDodge;
+        IEnumerator PlayLater(string id, Vector3 at, float delay) { yield return Wait(delay); AudioKit.Play(id, at, 0.8f, 0.05f, AudioKit.Bus.Sfx, 16f); }
+
+        IEnumerator ExitFight()
+        {
+            Step("get past the two Scree at the terrace exit (fighting tutorial)", 6, FightStart);
+            _fighters = FindExitPair();
+            if (_fighters == null) { Cap?.Log("fight: the two terrace Scree were not found - no fight, the reveal goes on"); _fightWon = true; yield break; }
+            yield return Until(() => Seven.transform.position.z < -41.3f && Seven.transform.position.y > MoonLayout.Lower - 0.4f && Seven.Current == ChapterSeven.Mode.Free, "out of the mining cut onto the terrace", 400f);
+            // they see her and come to block the way out (a short beat, both in view)
+            yield return Cutscene(true);
+            Seven.Lock(true);
+            for (int i = 0; i < 2; i++) { _fighters[i].FightEvent -= OnScreeFight; _fighters[i].FightEvent += OnScreeFight; _fighters[i].BeginFight(Seven, FightSpots[i]); }
+            Cat.GoTo(new Vector3(16.9f, MoonLayout.Lower, -41.6f), Cat.TrotSpeed, Seven.transform.position + Vector3.back * 3f);   // keeps his distance
+            // from the open terrace, looking back at her (out of the cut) and the two Scree coming between her and the way out
+            Cam.Shot(new Vector3(17.6f, MoonLayout.Lower + 1.9f, -47.6f), new Vector3(16.4f, MoonLayout.Lower + 1.0f, -42.8f), 1.0f, false, 52f);
+            for (float t = 0f; t < 2.6f && (_fighters[0].FightState == ScreeGuard.Fight.Approach || _fighters[1].FightState == ScreeGuard.Fight.Approach); t += Time.deltaTime) yield return null;
+            yield return Shot("qf9_scree_block_the_way");
+            yield return Cutscene(false);
+            Objective("Get past the Scree");
+            Seven.FightTarget = EngagedScree;
+            Seven.BeginFight();
+            Seven.FightEvent -= OnSevenFight; Seven.FightEvent += OnSevenFight;
+            _fighting = true; _fightProgress = Time.time; StartCoroutine(ArenaClamp());
+            float t0 = Time.time;
+            float ta = Time.time;
+            StartTeach("fight_attack", () => Seven.HitsLanded >= 2 || Time.time - ta > 10f, (ControlsLegend.Btn.Attack, "Attack"));
+            if (Auto) StartCoroutine(AutoFight());
+            while (true)
+            {
+                var eng = EngagedScree();
+                // the dodge lesson needs its own punch: hold the next one while another prompt is still on screen
+                bool holdForDodge = Chapter1State.Taught.Contains("fight_block") && !Chapter1State.Taught.Contains("fight_dodge") && _teachCo != null;
+                foreach (var s in _fighters) { s.Engaged = s == eng; s.HoldPunch = holdForDodge; }
+                if (_fighters[0].IsOut && _fighters[1].IsOut) break;
+                if (Seven.FightDown)
+                {
+                    _fightResets++;
+                    if (Auto || DemoBoot.PlayerSim) Cap?.Log($"fight: 7 knocked down ({Seven.HitsTaken} blows) - reset #{_fightResets} to the start of the fight");
+                    if (Auto) yield return Shot("qf9_seven_knocked_down");
+                    yield return Wait(0.8f);
+                    yield return UI.Fade(1f, 0.4f, 1f);
+                    Seven.Place(FightStart, Vector3.back); Seven.BeginFight();
+                    foreach (var s in _fighters) s.ResetFight();
+                    Cam.SnapBehind();
+                    yield return UI.Fade(0f, 0.5f, 1f);
+                    _fightProgress = Time.time;
+                }
+                if (Time.time - _fightProgress > 90f && !PauseMenu.IsOpen)
+                {
+                    StoryWatchdogs++; Chapter1State.Watchdogs++;
+                    Cap?.Log("WATCHDOG: the terrace fight made no progress for 90 s - both Scree sit down, the reveal goes on");
+                    foreach (var s in _fighters) s.ForceOut();
+                    break;
+                }
+                yield return null;
+            }
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"fight won in {Time.time - t0:0.0}s: blows landed {Seven.HitsLanded}, blocks {Seven.Blocks}, dodges {Seven.Dodges}, blows taken {Seven.HitsTaken}, resets {_fightResets}; both Scree down and alive (nonlethal)");
+            yield return Wait(1.8f);
+            if (Auto) yield return Shot("qf9_both_scree_down");
+            _fighting = false;
+            Seven.EndFight();
+            Legend.Teach();
+            Objective(null);
+            Cat.Follow();
+            _fightWon = true;
+        }
+
+        void OnSevenFight(string what)
+        {
+            if (what == "hit" || what == "hit_taken" || what == "takedown_landed") _fightProgress = Time.time;
+            var at = Seven.transform.position + Vector3.up;
+            // ambient effort sounds only (no new dialogue): swings, padded hits, the fall
+            if (what == "jab" || what == "cross" || what == "hook" || what == "finisher") AudioKit.Play("fight_swing", at, 0.6f, 0.08f, AudioKit.Bus.Sfx, 14f);
+            if (what == "hit" || what == "takedown_landed") AudioKit.Play("fight_hit", at, 0.8f, 0.08f, AudioKit.Bus.Sfx, 16f);
+            if (what == "hit_taken") AudioKit.Play("fight_hit", at, 0.7f, 0.08f, AudioKit.Bus.Sfx, 16f);
+            if (what == "down") AudioKit.Play("body_fall", at, 0.8f, 0.05f, AudioKit.Bus.Sfx, 16f);
+        }
+
+        /// <summary>Check run: lose once on purpose (no defence, no attacks), then fight it like a player - attack in range,
+        /// block the first punch, dodge the second, take a dazed Scree down.</summary>
+        IEnumerator AutoFight()
+        {
+            Cap.Log("fight (check run): first attempt - standing still on purpose to be knocked down");
+            while (_fighting && _fightResets == 0) yield return null;
+            Cap.Log("fight (check run): second attempt - fighting");
+            bool blocked = false;
+            float nextAtk = 0f;
+            while (_fighting)
+            {
+                var s = EngagedScree();
+                Seven.ScriptMove = Vector3.zero;
+                if (s != null && Seven.InFight && !Seven.FightDown)
+                {
+                    var to = Flat(s.transform.position - Seven.transform.position);
+                    bool threat = s.FightState == ScreeGuard.Fight.Windup || s.FightState == ScreeGuard.Fight.Punch;
+                    if (threat)
+                    {
+                        if (!blocked) { Seven.AutoBlockHeld = true; if (s.FightState == ScreeGuard.Fight.Punch && s.Tn > 0.6f) blocked = true; }
+                        else if (s.FightState == ScreeGuard.Fight.Punch && s.Tn > 0.25f && Seven.Act != ChapterSeven.FightAct.Dodge) Seven.AutoDodge = true;
+                    }
+                    else
+                    {
+                        Seven.AutoBlockHeld = false;
+                        if (s.Dazed && to.magnitude < 1.8f) Seven.AutoTakedown = true;
+                        else if (to.magnitude > 1.45f) Seven.ScriptMove = to.normalized * 0.8f;
+                        else if (Time.time >= nextAtk) { Seven.AutoAttack = true; nextAtk = Time.time + 0.3f; }
+                    }
+                }
+                yield return null;
+            }
+            Seven.AutoBlockHeld = false; Seven.ScriptMove = Vector3.zero;
+        }
+
         IEnumerator Scene6bReveal()
         {
             Step("the city reveal (out onto the terrace)", 6, MoonLayout.RevealSpot);
@@ -1549,7 +1928,10 @@ namespace Seven
                 Walk(new Vector3(17.4f, MoonLayout.Lower, -43.2f), () => Seven.transform.position.z < -41.3f && Seven.transform.position.y > -2.6f),
             });
             if (Auto) StartCoroutine(AutoPit());
-            yield return Until(() => Seven.transform.position.z < MoonLayout.ViewpointZ, "out onto the terrace", 300f);
+            yield return ExitFight();                          // QF9: the two Scree on the terrace - the fighting tutorial
+            Step("the city reveal (out onto the terrace)", 6, MoonLayout.RevealSpot);
+            yield return Until(() => Seven.transform.position.z < MoonLayout.ViewpointZ || _fightWon, "out onto the terrace", 300f);
+            if (DemoBoot.FightOnly && Auto) { yield return Wait(2.5f); yield return Shot("qf9_reveal_start"); Cap.Log(ChapterCamera.Summary()); Cap.Finish("fight check (QF9): stopped at the start of the city reveal"); yield break; }
             // Emergence: no objective, no joke. She walks a few steps, then turns back to see where they escaped.
             yield return Cutscene(true);
             Cam.Subjects.Clear();               // 6b: scenic shots of the city (the lines play over them on purpose)
@@ -2402,7 +2784,8 @@ namespace Seven
         static ControlsLegend.Btn BtnOf(string key) => key switch
         {
             "jump" => ControlsLegend.Btn.Jump, "crouch" => ControlsLegend.Btn.Crouch, "up" => ControlsLegend.Btn.ClimbUp,
-            "letgo" => ControlsLegend.Btn.LetGo, "lr" => ControlsLegend.Btn.Shimmy, _ => ControlsLegend.Btn.Interact,
+            "letgo" => ControlsLegend.Btn.LetGo, "lr" => ControlsLegend.Btn.Shimmy, "takedown" => ControlsLegend.Btn.Takedown,
+            _ => ControlsLegend.Btn.Interact,
         };
 
         // ------------------------------------------------------------------------------------------ cat routes
@@ -2568,7 +2951,7 @@ namespace Seven
             StartCoroutine(ShotWhen(() => Seven.State == "wall_climb" && Seven.transform.position.y > -5.5f, "tr14_climbing_out"));
             yield return AutoDo("climb out of the cut (two climbs)", () => Seven.ScriptJump = true, () => FreeAt(MoonLayout.Lower) && Seven.transform.position.z < -41.2f, 14f);
             yield return Shot("tr15_out_onto_the_terrace_passage");
-            yield return AutoWalk(new Vector3(16.5f, MoonLayout.Lower, -42.2f), new Vector3(16.5f, MoonLayout.Lower, -43.8f));
+            // QF9: the fight starts as soon as she is out of the cut (AutoFight takes over from here)
         }
 
         IEnumerator AutoBay()

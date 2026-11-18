@@ -12,7 +12,7 @@ namespace Seven
     /// </summary>
     public class ChapterInput : MonoBehaviour
     {
-        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo;
+        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown;
 
         static InputAction Button(string name, params string[] paths)
         {
@@ -42,11 +42,16 @@ namespace Seven
             Crouch = Button("crouch", "<Gamepad>/buttonEast", "<Keyboard>/c");
             LetGo = Button("letgo", "<Gamepad>/buttonEast", "<Keyboard>/space", "<Keyboard>/c");
             Menu = Button("menu", "<Gamepad>/start", "<Keyboard>/escape");
+            // QF9: the fighting tutorial (only read during the terrace fight)
+            Attack = Button("attack", "<Gamepad>/buttonWest", "<Mouse>/leftButton", "<Keyboard>/f");
+            Block = Button("block", "<Gamepad>/leftTrigger", "<Keyboard>/q");
+            Dodge = Button("dodge", "<Gamepad>/buttonEast", "<Keyboard>/leftCtrl");
+            Takedown = Button("takedown", "<Gamepad>/buttonNorth", "<Keyboard>/e");
             Restart = Button("restart", "<Gamepad>/dpad/down", "<Keyboard>/backspace");
             foreach (var a in All()) a.Enable();
         }
 
-        InputAction[] All() => new[] { Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo };
+        InputAction[] All() => new[] { Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown };
 
         void OnDestroy()
         {

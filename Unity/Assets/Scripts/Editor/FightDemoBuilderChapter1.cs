@@ -380,6 +380,7 @@ namespace Seven.EditorTools
             obstacles.AddRange(props.extraObstacles);
             foreach (var (wp, _) in ScreeWorkSpots) obstacles.Add(new Vector3(wp.x, wp.z, 0.45f));   // QF4: Scree workers
             wg.ZoneObstacles = obstacles.ToArray();
+            ZFightFix("Chapter1");  // QF9: no two block faces in one plane (the black / grey flicker)
             PhantomCheck(wg);       // QF3: nothing phantom in the walkable spaces, no city surface inside the host
 
             // 7, the cat, the camera.

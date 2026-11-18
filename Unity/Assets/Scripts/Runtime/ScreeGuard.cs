@@ -10,7 +10,7 @@ namespace Seven
     /// spot, then return. Sees 7 inside a view cone (range, half-angle) with a clear line of sight. Never attacks:
     /// being seen only sends 7 back to the room's checkpoint.
     /// </summary>
-    public class ScreeGuard : FighterBase
+    public partial class ScreeGuard : FighterBase
     {
         public Vector3 Post;
         public Vector3 PostFacing = Vector3.forward;
@@ -84,6 +84,7 @@ namespace Seven
         protected override void Update()
         {
             base.Update();
+            if (UpdateFight()) return;                         // QF9: the terrace fight
             if (_rig != null) _rig.Brace = State == "work" ? 1f : State == "alert" ? 0.35f : 0f;
             switch (Current)
             {

@@ -1,0 +1,129 @@
+Mono path[0] = 'C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/SevenDemo_Data/Managed'
+Mono config path = 'C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/MonoBleedingEdge/etc'
+CodeReloadManager initialized
+Input System module state changed to: Initialized.
+[Physics::Module] Initialized fallback backend.
+[Physics::Module] Id: 0xdecafbad
+Initialize engine version: 6000.6.1f1 (7efac9f6c10e)
+[EntityIdStore] init: VM path (explicit commit), pageSize=4096, blockCount=1048576, entitiesPerBlock=256, slots reserved=4294967296 bytes
+[Subsystems] Discovering subsystems at path C:/Users/danmo/SevenVideoGame/Unity/Builds/Seven/SevenDemo_Data/UnitySubsystems
+GfxDevice: creating device client; kGfxThreadingModeClientWorkerJobs
+Direct3D:
+    Version:  Direct3D 11.0 [level 11.1]
+    Renderer: NVIDIA GeForce GTX 1660 Ti (ID=0x2182)
+    Vendor:   NVIDIA
+    VRAM:     5966 MB
+    Driver:   32.0.16.1088
+Begin MonoManager ReloadAssembly
+- Finished resetting the current domain, in  0.014 seconds
+[Physics::Module] Selected backend.
+[Physics::Module] Name: PhysX
+[Physics::Module] Id: 0xf2b8ea05
+[Physics::Module] SDK Version: 4.1.2
+[Physics::Module] Integration Version: 1.0.0
+[Physics::Module] Threading Mode: Multi-Threaded
+<RI> Initializing input.
+Using Windows.Gaming.Input
+Input Polling Thread started.
+UnloadTime: 0.705500 ms
+[Seven] boot: muted=True listenerVolume=0 capture=C:\Users\danmo\SevenVideoGame\Docs\Previews\qf9\flicker fight=False saucer=False ratwing=False chapter1=True forceFullscreen=False mode=Windowed
+[Launcher] 7: The Observer 0.10.5 (build 1005)
+Unloading 5 Unused Serialized files (Serialized files now loaded: 0)
+Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
+Shader 'Hidden/Universal Render Pipeline/PaniniProjection' is not supported or has been stripped from the build (in 'PaniniProjectionPostProcessPass'). PostProcessing render passes will not execute.
+GPUResidentDrawer Disabled due to some configured Universal Renderers not using the Forward+ or Deferred+ rendering paths.
+UnloadTime: 0.598600 ms
+Unloading 6 unused Assets to reduce memory usage. Loaded Objects now: 5911.
+Total: 2.064000 ms (FindLiveObjects: 0.373200 ms CreateObjectMapping: 0.106500 ms MarkObjects: 1.508800 ms  DeleteObjects: 0.022700 ms)
+
+[Seven] [   0.01s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[Seven] camera occluders (QF8): 82 solid + 19 fade-only visual meshes (315 skipped) in 60 ms
+[Seven] [   0.13s] line of sight cell -> hidden release panel: 1452 rays from a grid inside the cell, 0 unobstructed (must be 0)
+[Seven] [   0.14s] flicker test (QF9): 7 door-frame meshes: Gate_Beam, Gate_PostA, DoorRim, LeafR, Gate_PostB, LeafL, DoorFrameFill
+Unexpected timestamp values detected. This can occur in H.264 videos not encoded with the baseline profile. Timestamps will be skewed to correct the playback for C:\Users\danmo\SevenVideoGame\Unity\Builds\Seven\SevenDemo_Data\sharedassets1.resource
+[Seven] [  14.50s] flicker test: EVENT Gate_PostB frame 1578 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.57, 2.06, 3.41), faded False
+[Seven] [  14.52s] flicker test: EVENT Gate_PostB frame 1580 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.57, 2.07, 3.38), faded False
+[Seven] [  14.53s] flicker test: EVENT Gate_PostB frame 1582 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.57, 2.08, 3.34), faded False
+[Seven] [  14.55s] flicker test: EVENT Gate_PostB frame 1584 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.57, 2.10, 3.31), faded False
+[Seven] [  14.56s] flicker test: EVENT Gate_PostB frame 1586 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.58, 2.11, 3.29), faded False
+[Seven] [  14.60s] flicker test: EVENT Gate_PostB frame 1591 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.58, 2.14, 3.22), faded False
+[Seven] [  14.61s] flicker test: EVENT Gate_PostB frame 1592 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.58, 2.15, 3.20), faded False
+[Seven] [  14.62s] flicker test: EVENT Gate_PostB frame 1594 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.59, 2.16, 3.18), faded False
+[Seven] [  14.64s] flicker test: EVENT Gate_PostB frame 1597 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.59, 2.18, 3.14), faded False
+[Seven] [  14.66s] flicker test: EVENT Gate_PostB frame 1599 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.60, 2.20, 3.12), faded False
+[Seven] [  14.68s] flicker test: EVENT Gate_PostB frame 1603 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.62, 2.25, 3.07), faded False
+[Seven] [  14.70s] flicker test: EVENT Gate_PostB frame 1606 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.66, 2.31, 3.03), faded False
+[Seven] [  14.71s] flicker test: EVENT Gate_PostB frame 1607 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.82, 2.41, 3.01), faded False
+[Seven] [  14.75s] flicker test: EVENT Gate_Beam frame 1612 (cell_block_gate): 5/10 points jumped > 0.2, camera (15.63, 2.43, 2.95), faded False
+[Seven] [  14.75s] flicker test: EVENT Gate_PostB frame 1612 (cell_block_gate): 6/6 points jumped > 0.2, camera (15.63, 2.43, 2.95), faded False
+[Seven] [  14.76s] flicker test: EVENT Gate_PostB frame 1613 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.59, 2.44, 2.94), faded False
+[Seven] [  14.76s] flicker test: EVENT Gate_PostB frame 1614 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.57, 2.44, 2.93), faded False
+[Seven] [  14.77s] flicker test: EVENT Gate_PostB frame 1615 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.44, 2.92), faded False
+[Seven] [  14.78s] flicker test: EVENT Gate_PostB frame 1616 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.44, 2.91), faded False
+[Seven] [  14.78s] flicker test: EVENT Gate_PostB frame 1617 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.43, 2.91), faded False
+[Seven] [  14.79s] flicker test: EVENT Gate_PostB frame 1618 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.43, 2.90), faded False
+[Seven] [  14.81s] flicker test: EVENT Gate_PostB frame 1621 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.88), faded False
+[Seven] [  14.83s] flicker test: EVENT Gate_Beam frame 1622 (cell_block_gate): 5/10 points jumped > 0.2, camera (15.57, 2.41, 2.87), faded False
+[Seven] [  14.83s] flicker test: EVENT Gate_PostB frame 1622 (cell_block_gate): 4/6 points jumped > 0.2, camera (15.57, 2.41, 2.87), faded False
+[Seven] [  14.83s] flicker test: EVENT Gate_PostB frame 1623 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.85), faded False
+[Seven] [  14.84s] flicker test: EVENT Gate_PostB frame 1624 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.84), faded False
+[Seven] [  14.86s] flicker test: EVENT Gate_PostB frame 1626 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.82), faded False
+[Seven] [  14.86s] flicker test: EVENT Gate_PostB frame 1627 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.81), faded False
+[Seven] [  14.87s] flicker test: EVENT Gate_PostB frame 1628 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.80), faded False
+[Seven] [  14.88s] flicker test: EVENT Gate_PostB frame 1629 (cell_block_gate): 4/6 points jumped > 0.2, camera (15.56, 2.42, 2.80), faded False
+[Seven] [  14.88s] flicker test: EVENT Gate_PostB frame 1630 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.79), faded False
+[Seven] [  14.89s] flicker test: EVENT Gate_PostB frame 1631 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.78), faded False
+[Seven] [  14.90s] flicker test: EVENT Gate_PostB frame 1632 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.42, 2.77), faded False
+[Seven] [  14.90s] flicker test: EVENT Gate_PostB frame 1633 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.43, 2.76), faded False
+[Seven] [  14.91s] flicker test: EVENT Gate_PostB frame 1634 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.56, 2.43, 2.75), faded False
+[Seven] [  14.93s] flicker test: EVENT Gate_PostB frame 1637 (cell_block_gate): 4/6 points jumped > 0.2, camera (15.56, 2.44, 2.72), faded False
+[Seven] [  14.94s] flicker test: EVENT Gate_Beam frame 1638 (cell_block_gate): 4/10 points jumped > 0.2, camera (15.56, 2.44, 2.71), faded False
+[Seven] [  14.94s] flicker test: EVENT Gate_PostB frame 1638 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.44, 2.71), faded False
+[Seven] [  14.95s] flicker test: EVENT Gate_PostB frame 1640 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.44, 2.69), faded False
+[Seven] [  14.97s] flicker test: EVENT Gate_Beam frame 1643 (cell_block_gate): 4/10 points jumped > 0.2, camera (15.56, 2.45, 2.66), faded False
+[Seven] [  14.98s] flicker test: EVENT Gate_PostB frame 1643 (cell_block_gate): 5/6 points jumped > 0.2, camera (15.56, 2.45, 2.66), faded False
+[Seven] [  14.98s] flicker test: EVENT Gate_Beam frame 1644 (cell_block_gate): 5/10 points jumped > 0.2, camera (15.56, 2.46, 2.65), faded False
+[Seven] [  14.98s] flicker test: EVENT Gate_PostB frame 1644 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.56, 2.46, 2.65), faded False
+[Seven] [  14.99s] flicker test: EVENT Gate_PostB frame 1645 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.56, 2.46, 2.64), faded False
+[Seven] [  15.00s] flicker test: EVENT Gate_PostB frame 1646 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.56, 2.46, 2.63), faded False
+[Seven] [  15.02s] flicker test: EVENT Gate_PostB frame 1649 (cell_block_gate): 4/6 points jumped > 0.2, camera (15.57, 2.47, 2.60), faded False
+[Seven] [  15.02s] flicker test: EVENT Gate_Beam frame 1650 (cell_block_gate): 5/10 points jumped > 0.2, camera (15.57, 2.47, 2.59), faded False
+[Seven] [  15.02s] flicker test: EVENT Gate_PostB frame 1650 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.57, 2.47, 2.59), faded False
+[Seven] [  15.04s] flicker test: EVENT Gate_PostB frame 1652 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.57, 2.48, 2.57), faded False
+[Seven] [  15.05s] flicker test: EVENT Gate_PostB frame 1654 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.58, 2.49, 2.55), faded False
+[Seven] [  15.06s] flicker test: EVENT Gate_Beam frame 1655 (cell_block_gate): 3/8 points jumped > 0.2, camera (15.58, 2.49, 2.54), faded False
+[Seven] [  15.06s] flicker test: EVENT Gate_PostB frame 1655 (cell_block_gate): 5/6 points jumped > 0.2, camera (15.58, 2.49, 2.54), faded False
+[Seven] [  15.08s] flicker test: EVENT Gate_Beam frame 1657 (cell_block_gate): 3/8 points jumped > 0.2, camera (15.59, 2.50, 2.51), faded False
+[Seven] [  15.08s] flicker test: EVENT Gate_PostB frame 1657 (cell_block_gate): 4/6 points jumped > 0.2, camera (15.59, 2.50, 2.51), faded False
+[Seven] [  15.08s] flicker test: EVENT Gate_PostB frame 1658 (cell_block_gate): 3/6 points jumped > 0.2, camera (15.59, 2.50, 2.50), faded False
+[Seven] [  15.10s] flicker test: EVENT Gate_PostB frame 1660 (cell_block_gate): 2/6 points jumped > 0.2, camera (15.60, 2.50, 2.48), faded False
+[Seven] [  15.11s] flicker test: EVENT Gate_PostB frame 1661 (cell_block_gate): 2/5 points jumped > 0.2, camera (15.60, 2.51, 2.47), faded False
+[Seven] [  15.13s] flicker test: EVENT Gate_Beam frame 1664 (cell_block_gate): 2/5 points jumped > 0.2, camera (15.61, 2.52, 2.44), faded False
+[Seven] [  15.17s] flicker test: EVENT Gate_Beam frame 1669 (cell_block_gate): 2/5 points jumped > 0.2, camera (15.61, 2.54, 2.38), faded False
+[Seven] [  15.20s] flicker test: EVENT Gate_Beam frame 1674 (cell_block_gate): 2/5 points jumped > 0.2, camera (15.60, 2.57, 2.31), faded False
+[Seven] [  15.24s] flicker test: EVENT Gate_Beam frame 1679 (cell_block_gate): 2/5 points jumped > 0.2, camera (15.59, 2.60, 2.25), faded False
+[Seven] follow camera: only 53 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (20.25, 1.82, 2.47))
+[Seven] follow camera: only 47 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (20.87, 1.82, 2.56))
+[Seven] follow camera: only 41 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (21.60, 1.82, 2.78))
+[Seven] follow camera: only 41 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (21.97, 1.77, 3.20))
+[Seven] follow camera: only 47 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (21.46, 1.68, 5.57))
+[Seven] follow camera: only 47 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (21.13, 1.74, 5.97))
+[Seven] follow camera: only 47 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (20.77, 1.81, 6.31))
+[Seven] follow camera: only 59 % of 7 visible in cell block at (18.35, 0.00, 3.40) (camera (20.36, 1.91, 6.59))
+[Seven] [  22.49s] flicker test: Gate_Beam: 109 frame pairs, mean change 0.070, largest point change 0.51, flicker events 12, frames faded 0
+[Seven] [  22.49s] flicker test: Gate_PostA: 94 frame pairs, mean change 0.054, largest point change 0.53, flicker events 0, frames faded 0
+[Seven] [  22.49s] flicker test: DoorRim: 918 frame pairs, mean change 0.006, largest point change 0.64, flicker events 0, frames faded 0
+[Seven] [  22.49s] flicker test: LeafR: 723 frame pairs, mean change 0.062, largest point change 0.51, flicker events 0, frames faded 0
+[Seven] [  22.49s] flicker test: Gate_PostB: 84 frame pairs, mean change 0.116, largest point change 0.49, flicker events 49, frames faded 0
+[Seven] [  22.49s] flicker test: LeafL: 489 frame pairs, mean change 0.042, largest point change 0.62, flicker events 0, frames faded 0
+[Seven] [  22.49s] flicker test: DoorFrameFill: 903 frame pairs, mean change 0.035, largest point change 0.28, flicker events 0, frames faded 0
+[Seven] [  22.49s] FLICKER TEST: 2618 consecutive frames, door-frame flicker events 61 (must be 0), frames with a door frame faded 0 (must be 0); largest mean frame-to-frame change 0.310 (Gate_PostB, frame 1612)
+[Seven] [  22.49s] flicker test
+[Seven] [  22.49s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)
+[Physics::Module] Cleanup current backend.
+[Physics::Module] Id: 0xf2b8ea05
+Input System module state changed to: ShutdownInProgress.
+Input Polling Thread stopped.
+Input Polling Thread exited.
+Input System module state changed to: Shutdown.
+CodeReloadManager destroyed

@@ -267,13 +267,16 @@ namespace Seven
 
         // ------------------------------------------------------------------------------------ Round 9 hints
         /// <summary>Round 9: buttons named by what they do in Chapter 1 (glyphs per device).</summary>
-        public enum Btn { Move, Camera, Jump, Interact, Crouch, Tk, LetGo, ClimbUp, Shimmy, Run, Skip, Sit }
+        public enum Btn { Move, Camera, Jump, Interact, Crouch, Tk, LetGo, ClimbUp, Shimmy, Run, Skip, Sit, Attack, Block, Dodge, Takedown }
         static (G, string)[] PadGlyphs(Btn b) => b switch
         {
             Btn.Move => new[] { (G.Stick, "L") }, Btn.Camera => new[] { (G.Stick, "R") }, Btn.Jump => new[] { (G.Face, "A") },
             Btn.Interact => new[] { (G.Face, "X") }, Btn.Sit => new[] { (G.Face, "X") }, Btn.Crouch => new[] { (G.Face, "B") },
             Btn.Tk => new[] { (G.Trigger, "RT") }, Btn.LetGo => new[] { (G.Face, "B") }, Btn.ClimbUp => new[] { (G.Stick, "L") },
             Btn.Shimmy => new[] { (G.Stick, "L") }, Btn.Run => new[] { (G.Bumper, "LB") }, Btn.Skip => new[] { (G.Face, "Y") },
+            // QF9: the fighting tutorial on the terrace
+            Btn.Attack => new[] { (G.Face, "X") }, Btn.Block => new[] { (G.Trigger, "LT") }, Btn.Dodge => new[] { (G.Face, "B") },
+            Btn.Takedown => new[] { (G.Face, "Y") },
             _ => new[] { (G.Face, "?") },
         };
         static (G, string)[] KeyGlyphs(Btn b) => b switch
@@ -282,7 +285,10 @@ namespace Seven
             Btn.Jump => new[] { (G.WideKey, "Space") }, Btn.Interact => new[] { (G.Key, "E") }, Btn.Sit => new[] { (G.Key, "E") },
             Btn.Crouch => new[] { (G.Key, "C") }, Btn.Tk => new[] { (G.Mouse, "R") }, Btn.LetGo => new[] { (G.WideKey, "Space") },
             Btn.ClimbUp => new[] { (G.Key, "W") }, Btn.Shimmy => new[] { (G.Key, "A"), (G.Key, "D") }, Btn.Run => new[] { (G.WideKey, "Shift") },
-            Btn.Skip => new[] { (G.WideKey, "Enter") }, _ => new[] { (G.Key, "?") },
+            Btn.Skip => new[] { (G.WideKey, "Enter") },
+            Btn.Attack => new[] { (G.Mouse, "L"), (G.Key, "F") }, Btn.Block => new[] { (G.Key, "Q") }, Btn.Dodge => new[] { (G.WideKey, "Ctrl") },
+            Btn.Takedown => new[] { (G.Key, "E") },
+            _ => new[] { (G.Key, "?") },
         };
 
         /// <summary>Settings → Button hints: On / Off (teaching + context prompts). Saved on this PC.</summary>
