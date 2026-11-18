@@ -1,6 +1,52 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Dan plays 0.10.2, then Round 11 (`Docs/ROUND11.md`)
+## Current Objective — Quick fix QF7: Dan's playtest of 0.10.2 (Dan, 2026-11-18)
+Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply, **including the 20-minute
+testing rule** (no long repeated runs). Dan's screenshot: `Docs/Previews/qf7/dan_galley_0.10.2.png`.
+
+1. **Camera: walls keep getting in the way** in a couple of places in the traversal / climbing stretch (Dan: "the
+   Crofting area" = the Lara-Croft-style traversal: climbing, hanging, shimmying, wall climbs, ledges, jumps).
+   Wherever a wall comes between the camera and 7 during play, the camera must pull in (spherecast collision) or the
+   wall must fade, never block the view. Check every traversal area, not only one.
+2. **The shape: one step, from the start.** It is silly to touch the shape, walk to the lock, then walk back to take it.
+   New flow: the objective is **"Take the shape"** from the beginning (not "touch it"). She walks up to it, reaches for
+   it → the vision plays as she touches it → when the vision ends **she is holding it** (she took it in that moment).
+   No second visit, no prompt. Then the lock (item 4).
+3. **The shape's glow is far too strong.** After taking it she **puts it in a pocket** — it disappears from view, no light,
+   no glow, no bloom anywhere on her (the big white blob in Dan's screenshot is that light). In the galley, on the
+   table, keep only thin faint edge lines — no bloom halo, nothing that outshines the scene. Same toned-down look on the Moon pedestal.
+4. **The lock should be hidden in the present, revealed by the vision.** Today the lock is plainly visible by the door,
+   so the vision teaches nothing. Change: in the present, the lock is **buried behind collapsed rubble** (fallen rib /
+   stone chunks in front of it, readable as a collapse); the **vision shows the lock there**, intact, being used. After
+   the vision, 7 knows: she **clears the rubble with telekinesis (RT)**, exposing the lock, then uses it to open the door.
+   Objective after the vision: "Uncover the lock". Keep it on the right (as in the vision). The door path stays closed until the lock is used (no point of no return).
+5. **Galley: she is not sitting in the chair** (Dan's screenshot: her upper body floats behind the chair holding her
+   head, her legs are crouched beside it). Fix the seating so she is clearly seated in her chair the whole scene
+   (hips on the cushion, back against the backrest, feet on the floor) — check after the new pocket beat too. **Look at
+   your own captures before reporting** — this should have been caught. Add a numeric check: hips within 5 cm of the
+   seat point every frame she's seated.
+   **The cat's bowl:** replace the raised chalice-like feeder with a **plain ordinary cat bowl sitting on the table**.
+   Fix the clipping: his muzzle goes into the bowl without passing through its rim or walls (adjust his neck / head
+   pose for the low bowl). **When the cat speaks, he lifts his head out of the bowl and looks at her**, then goes back
+   to eating.
+6. **Emotion without faces (Dan's question).** Close-ups on her face don't work: it's stiff. For this QF:
+   - **Eyes and head:** add blinking and eye/gaze movement for 7 (eye bones or eyelid shape keys in Blender — whatever
+     the Tripo head allows), small natural head and neck motion while she speaks and listens, looking at the cat / the
+     shape / away. Same idea for the cat (blinks, ear and head turns).
+   - **Camera:** stop using tight face close-ups. Show emotion with framing instead: medium shots with body language,
+     slow push-ins for weight, pulling back for distance, holding on the listener's reaction, and the energy point's
+     brightness rising and dimming with her mood.
+   - **Facial shape keys — trial only:** in Blender, try a few simple shape keys on her head (eyes close, brows up,
+     brows knit, a slight smile, a sad mouth). If they look natural, use them sparingly in the galley; if not, drop
+     them and say so — don't ship anything that looks wrong. Report what you tried, with before/after captures.
+   - Body-language clips: use the emotional Mixamo clips Dan added to `Art/Mixamo/7/emotion/` (in, 2026-11-18): `7_talking`, `7_thinking`, `7_sad_idle`, `7_nod_yes`, `7_thoughtful_nod`, `7_shake_head_no`, `7_shrug`, `7_look_away`, `7_sit_idle`, `7_sit_talking`, `7_sit_disapproval`, `7_sit_laughing` (talking, thinking,
+     sad, nod, shake head, shrug, seated versions).
+7. **Checks + release** (20-minute rule): one quick player-style run from the cell to the galley, the vision-chamber
+   sequence, and the galley scene. **Look at every capture of the galley and the vision chamber** before reporting.
+   Publish **0.10.3**; docs; commit + push; per-item status in "QF7 — status"; captures in `Docs/Previews/qf7/`;
+   "For Dan to check (QF7)".
+
+## After QF7 — Dan plays 0.10.3, then Round 11 (`Docs/ROUND11.md`)
 
 ## Quick fix QF6: story triggers that never fire + stop the replay grind (Dan, 2026-11-18) — done, status below
 Before Round 11 (`Docs/ROUND11.md` stays queued). Commit first. All standing rules apply; muted, off-screen runs.
