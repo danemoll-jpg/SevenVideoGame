@@ -1,5 +1,84 @@
 # Active Development Plan — 7: The Observer
 
+## Current Objective — Quick fix QF10: Venus fixes from Dan's 0.11.0 play (Dan, 2026-11-18)
+Commit first. Standing rules + 20-minute testing rule; look at your own captures before reporting. Spec changes are
+already in `Docs/CHAPTER2_VENUS.md` (VEN_B01, VEN_B03) — it wins.
+
+Dan got stuck at "Find a way round the collapse". Causes found by the chat: the detour mantle only works within 0.9 m
+of one point (`VenusLayout.DetourMantle`), nothing shows where, and `VenusDirector.Until(...)` only times out for the
+autopilot — a real player waits forever.
+
+1. **Climb anywhere it makes sense.** Mantles and hang-downs (`MoonTraversal.Mantle` / `HangDown`, both points today)
+   become segments along the whole climbable edge, like `Ledge` — in Venus *and* Chapter 1. "Climb up" shows anywhere
+   along a wall low enough to climb.
+2. **The collapse is crossed with telekinesis, on the bike (new VEN_B03, Dan).** Replace the on-foot detour: in the
+   stopping area 7 gets off, a long fallen slab / broken column lies beside the gap; with **RT telekinesis** she lifts it
+   and lays it across the hole as a bridge (it settles with dust and a heavy thud), gets back on and **rides over it**.
+   The slab stays as a bridge for return trips. Make the slab obviously the thing to lift (it's the right length, lit
+   edge / the telekinesis highlight when she looks at it); objective "Lay something across the gap" → "Ride across".
+   Keep the garden wall climbable (item 1) for exploring, but it isn't the solution any more.
+3. **Grass, like Kyle's art.** Venus's gardens get soft grass: tall, swaying grass on the terraces, slopes and verges
+   along the road, like `Art/Reference/kyle_world_mood.jpg` ("Grassy rise in the fog") — grayscale, catching the light,
+   fading into the fog. GPU-instanced / cheap; not on the road surface itself.
+4. **The bike's appearance must be elegant** (Dan didn't like it). New VEN_B01 beat: a seamless panel on the saucer's
+   hull glows along its seam and **slides / irises open** with a soft light from inside; the bike **glides out on its
+   hover glow**, turns slowly and settles beside her at riding height with a low hum — unhurried, graceful, no pop-in.
+   **Afterwards the hatch closes and the hull is seamless again** — the saucer looks normal. Same in reverse when she
+   parks it back in VEN_B07 (Round 12).
+5. **The guardian's legs clip through his cape.** Fix the cape so legs never pass through it: split the cape onto its
+   own bones (spine + hip-following chain) or a simple cloth / collision setup; walking, kneeling and standing must all
+   be clean. Check captures of each.
+6. **Camera after the cube (VEN_C04, from the tremor on): it stays in one place on the least interesting thing.** Give
+   C04 (and check C03 and C05 the same way) real coverage per the spec's cues: wide chamber, over-7's-shoulder to the
+   guardian and to the cube, the attendant's arrival, falling dust insert, the guardian towering (low angle on him,
+   level on her), medium two-shots for the exchange, cut on speaker change, always framed on who's speaking or reacting.
+   Never hold a shot on scenery while people talk. Look at every shot of C03–C05 yourself.
+6b. **VEN_B01 rewritten (Dan, 2026-11-18 — the spec has the final text, VEN_B01_06–16):** after "Panther." he stretches
+   and grows; 7 steps back catching the fairing; new exchange ("You can do that?" / "Apparently." / "We crawled through
+   a prison drain." / "An excellent time to be small." / "You're not getting a bigger bowl." / "We can discuss that
+   when you return."), then "Look after the ship, Panther." / he lies down large / "I intend to." Regenerate
+   `venus_dialogue.json` + `VENUS-LINES.md` from the spec, voice the new lines (Seven / Cat voices; drop the old
+   B01_09–13 takes), new beats: her hand catching the fairing, her look from his paws to the saucer, the head shake.
+   **Keep Panther fully in frame** for the whole scene — he half disappears off screen today. Every B01 shot after
+   the growth must contain all of him (frame for his large size: wider / pulled back / lower), checked by measuring his
+   screen bounds in each capture (0 % off screen).
+6c. **The hover bike feels small** (Dan). Scale it up so it reads as a substantial machine under her, matching Kyle's
+   sketch proportions (rider small against a long bike — about 3 m long, up from 2.3 m). Re-place the seat point and
+   the grip targets after scaling, and re-check her riding pose reaches the grips.
+   **Her riding pose: there is no Mixamo clip for it** (Dan looked — no straddle / motorcycle clip). Make it yourself:
+   author a riding pose in Blender on 7's rig (legs astride the saddle, knees bent and gripping the body, feet back on
+   the bike's sides, hips low, torso leaning forward toward the forked front, arms forward) as a short looping clip with
+   a subtle breathing / settle; in Unity, IK her hands into the two fairing grips and her feet onto the sides, and lean
+   her body into turns (a few degrees, procedural). Check captures from the side and the riding camera: hands in the
+   grips (≤ 2 cm), no legs through the bike, clearly astride — not the chair pose.
+6d. **Fighting still feels clunky** (Dan — said before, still true after Round 8's "fluid fighting" and the QF9
+   tutorial). She should feel **fast, light and easy to control**. Concretely, in the shared fighting system (Moon
+   tutorial, fight demo, anything later):
+   - **Snappy starts:** a strike's first active frame within ~0.12–0.15 s of the button; play attack clips faster
+     (trim wind-ups, ~1.3–1.5× speed) without losing readability.
+   - **Cancels + buffering:** any attack's recovery can cancel into dodge or block; the next attack chains from the
+     previous one's second half; inputs pressed up to ~0.2 s early are buffered, never dropped.
+   - **Light movement:** quick acceleration / deceleration and turning in fight stance (no sliding, no heavy inertia),
+     a short fast dodge with brief invulnerability, she can reposition between hits.
+   - **Gentle aim assist:** attacks turn her toward the nearest opponent in front of her (soft lock), so hits connect
+     without precise stick work.
+   - Light hit feedback: a 2–3 frame hit-pause and a small camera nudge on contact.
+   - Report the before / after numbers (button → active frame, recovery → next action) for each move, and capture a
+     short sequence of a combo, a dodge-cancel and a block. Still nonlethal against the Scree.
+6e. **The Scree get a voice** (Dan made it: `Unity/Assets/Audio/SFX/scree_chirp.mp3` — a buzzing, chirping insect
+   call, 2.7 s, 48 kHz stereo). Add it to every Scree as 3D positional sound: occasional idle calls (random intervals,
+   ~8–20 s, slight pitch variation ±10 % so a group doesn't sound cloned, shorter cuts from the clip too), an alert call
+   when they notice 7, and short, sharper chirps for effort / getting hit / going down in the fight tutorial. Keep it
+   under the dialogue (duck during lines). Dan wants to "see how it goes" — easy to tune: put volume, interval and
+   pitch range in one place and list them in the status.
+7. **Player fallback for every Venus wait** (as Chapter 1's QF6): no progress for ~45 s → re-show the objective with a
+   hint and briefly highlight the next step; after ~2 min → offer a skip (fade, the step is done). Audit every `Until`
+   in `VenusDirector`; no wait that only the autopilot can escape.
+8. **Checks + release:** quick player-style run (virtual gamepad, not autopilot) from B01 to C05 incl. the telekinesis
+   bridge; captures of the hatch opening / bike gliding out / hatch closed, the grass, the bridge beat, the guardian
+   kneeling and walking (cape), every C03–C05 shot, the hint and the skip; publish **0.11.1**; docs; commit + push;
+   per-item status in "QF10 — status"; "For Dan to check (QF10)".
+
 ## QF9 (Dan, 2026-11-18) — done, status below
 Round 11 is paused after stage 1 (committed). Do QF9 first, release it, then resume Round 11 at stage 2 (below) —
 and don't stop for Dan at stage 2: save the model previews to `Docs/Previews/r11/` and keep going.

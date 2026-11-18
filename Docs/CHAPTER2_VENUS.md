@@ -175,7 +175,10 @@ VEN_B01_03 | 7
 VEN_B01_04 | Cat, telepathic  
 “I’m establishing that my advice is useful.”
 
-The ship’s storage area opens, revealing the hover bike.
+The ship’s storage area opens, revealing the hover bike. **(Dan, 2026-11-18: make it elegant.)** A seamless panel on
+the hull glows along its seam and slides / irises open with soft light from inside; the bike glides out on its hover
+glow, turns slowly and settles beside her at riding height with a low hum — unhurried, no pop-in. Once it is out, the
+hatch closes and the hull is seamless again (the saucer looks normal). VEN_B07 does the same in reverse.
 
 Low three-quarter on the bike: 7 approaches and slides her hands into the recessed grips. The underside vents hum,
 lifting the bike gently. (The cat is visible at the top of the ramp / the open storage hatch for the rest of the scene.)
@@ -183,7 +186,7 @@ lifting the bike gently. (The cat is visible at the top of the ramp / the open s
 VEN_B01_05 | Cat, telepathic  
 “I’ll watch the ship.”
 
-She starts to mount, then pauses and looks back at him.
+7 starts to mount the hover bike, then pauses.
 
 VEN_B01_06 | 7  
 “What should I call you?”
@@ -191,23 +194,52 @@ VEN_B01_06 | 7
 VEN_B01_07 | Panther, telepathic  
 “Panther.”
 
-A beat. Her gaze travels over the small cat.
+She looks him up and down.
 
 VEN_B01_08 | 7  
 “Panther.”
 
-VEN_B01_09 | Panther, telepathic  
-“You can say it without looking me up and down.”
+**Wide two-shot — 7 and Panther (keep him fully in frame, large, the whole time).** Panther stretches — and grows
+smoothly into a large, powerful cat. His movement stays relaxed and unmistakably feline.
 
-She settles into the low saddle and leans toward the fairing.
+7 steps back, catching the bike’s fairing with one hand.
 
-VEN_B01_10 | 7  
+VEN_B01_09 | 7  
+“You can do that?”
+
+VEN_B01_10 | Panther, telepathic  
+“Apparently.”
+
+VEN_B01_11 | 7  
+“We crawled through a prison drain.”
+
+VEN_B01_12 | Panther, telepathic  
+“An excellent time to be small.”
+
+She looks from his enormous paws to the saucer.
+
+VEN_B01_13 | 7  
+“You’re not getting a bigger bowl.”
+
+VEN_B01_14 | Panther, telepathic  
+“We can discuss that when you return.”
+
+She shakes her head and settles into the saddle.
+
+VEN_B01_15 | 7  
 “Look after the ship, Panther.”
 
-VEN_B01_11 | Panther, telepathic  
-“Try not to rearrange the bike.”
+He lies down beside the ramp, still large.
 
-She glances back once before riding toward the gardens. Return control to the player, riding.
+VEN_B01_16 | Panther, telepathic  
+“I intend to.”
+
+Return control to the player, riding. (Panther stays large by the ramp while she rides off; by VEN_B02 he is back
+inside the ship at normal size, off screen.)
+
+**Panther changes size (Dan, 2026-11-18):** from a normal house cat up to elephant size. This scene is the first time
+7 (and the player) sees it. Growth / shrinking is a smooth, continuous scale during a natural feline motion (a stretch),
+never a pop or flash; the model and rig stay the same (one cat, uniformly scaled; his telepathic voice does not change).
 
 **The cat's name reveal (Dan, 2026-11-18):** the cat is named **Panther**. From VEN_B01_07 on, his subtitle / speaker
 label is **"Panther"** everywhere (all later Venus scenes and every later chapter; same ElevenLabs voice `Cat`). Lines
@@ -249,8 +281,10 @@ Ahead, workers signal for 7 to slow down. Water spills from a damaged channel ac
 the terrace → VEN_C02_01 “Something’s wrong here.” / VEN_C02_02 “I felt that through the landing supports.”
 
 The player reaches a clear stopping area before a collapsed walkway, with enough distance to brake comfortably.
-Gameplay: dismount and inspect the obstruction; follow a short alternate route on foot, then return to the bike or reach
-a nearby connected riding path. Not a surprise death trap and not a forced jump tutorial.
+Gameplay **(changed by Dan, 2026-11-18)**: dismount and inspect the gap. A long fallen slab / broken column lies beside
+it; 7 uses **telekinesis** to lift it and lay it across the hole as a bridge, gets back on the bike and **rides across**.
+The bridge stays for return trips. Not a surprise death trap and not a forced jump tutorial. (The garden wall beside the
+road stays climbable anywhere for exploring, but the bridge is the way through.)
 
 SCENE VEN_B04 — TEMPLE ARRIVAL: A NATURAL TRANSITION TO WALKING
 
