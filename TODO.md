@@ -1,5 +1,141 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF12: Dan's 0.13.0 play (Dan, 2026-11-19) — to do
+Commit first. All standing rules (monochrome, Kyle's fog/glow, non-sexual presentation, no exact-spot triggers, look at
+your own captures). **20-minute rule, strictly** — Round 13 ran ~57 game-minutes; use targeted switches and captures,
+one release run at the end. Release **0.13.1**; per-item status in "QF12 — status"; "For Dan to check (QF12)".
+Dan reports what he SAW in the release build, so "done in the log" is not enough: for every item, look at an in-game
+capture from a normal play (not only a test switch) before calling it done.
+
+1. **Chapter 1, after the first vision: 7's body shakes violently until she finishes talking** — only her, not the
+   camera or anything else (Dan: "like she is stuck in an animation"). Likely her animation / IK flipping every frame:
+   the Animator toggling between two states or retriggering a clip each frame (e.g. the vision exit and the dialogue /
+   reaction both driving her), the Round 13 reaction body cues or `SevenTableIK` fighting the standing dialogue pose, or
+   an IK target jumping each frame. Log her Animator state + IK weights per frame through that exchange to find it, then
+   fix so she stands calm through it. Check the same moment after the Venus vision.
+2. **On the Moon, the beam's door (the opening on the saucer's underside) is far below the ship.** Since the beam is
+   shared (`BuildSaucerBeam` / `SaucerBeam.cs`), its door must sit flush on the saucer's underside on every world — place
+   it from the saucer's actual hull (measured), not a fixed height. Check the Moon and Venus captures.
+3. **The bike hold opening: the black bands became white bands — remove them entirely.** When the hatch opens the hold
+   reads as an **empty, softly lit opening** (just the bike), no floor / ceiling slabs or strips visible from outside.
+4. **The guardian's legs still go through his cape — and his legs move oddly (Dan: part of the cause).** So fix the
+   body, not just the cape: **use the Mixamo route now.** Dan is uploading `Art/Export/elarim/elarim_body_for_mixamo.fbx`
+   to Mixamo's auto-rigger and saving it ("FBX for Unity", with skin) as `Art/Mixamo/elarim/elarim_body_mixamo.fbx`.
+   When it's there: use it as his body (Humanoid), retarget his existing clips (idle / talk / point / walk / kneel / sword
+   idle / carry / lift) onto it, and re-attach the cape (`elarim_cape_part.fbx`) on its own bones that follow the hips and
+   trail behind the legs, with runtime push-out against the thighs and calves. If the file isn't there yet when you
+   reach this item, do items 5–11 first and come back; if it's still missing at the end of QF12, **don't stop** (Dan is asleep): do the best cape fix you can on the current rig, mark the Mixamo step open in the status, and go on to Round 14. Measure the
+   cape in the real scenes and camera angles (standing, walking ahead in "Follow me", kneeling) — it must never show a
+   leg through it — and look at his legs while walking: natural steps, knees bending forward, no odd twisting. Also
+   still open from Round 13: **his kneel in C03 doesn't show** — fix (the new rig may solve it).
+5. **The bridge slab must come from the quake.** Right now the piece she lays across the gully is just lying there,
+   which makes no sense. The slab she lifts with telekinesis is **a broken piece of the walkway that fell during the
+   tremor's collapse (0k)** — it falls with the rest into the gully, lies there broken and dusty, and that's the piece she
+   raises and lays across. No separate, ready-made slab anywhere before the collapse.
+6. **The cube is missing in the temple — the pedestal is empty.** The original Venus cube must sit in its protected
+   structure the whole time (C04's rattling cage, C10: "The original remains visible"); she is given a small copy.
+7. **Venus, on the way downstairs: a wall that shouldn't be there, with a cube in front of it.** Find and remove the
+   stray wall so the way down is open. (The cube there may be item 6's cube placed in the wrong spot — check; if so,
+   move it back to the pedestal, otherwise remove it.)
+8. **The boss fight: still nobody attacks — no worms, and no Wormmaster now either. No challenge at all.** Round 13
+   logged pulses / lunges / taunts, but Dan saw none of it in the release build. Find out why from a **normal play from
+   the main menu / Continue** (not `-r13 encounter`): are the creatures and the Wormmaster spawned, visible, above
+   ground, in front of the camera? Does the harass loop only start under a test switch, or after a state a real player
+   never reaches? Then make it plainly visible and a real (fair, nonlethal) first-boss challenge: the Wormmaster on
+   screen, worms surfacing and lunging at her, shielded devices, knockbacks. Prove it with captures from the normal play.
+9. **Arriving on Venus, you briefly see her standing on the ground before the title card.** The title card (or a black
+   frame) must cover from the very first frame; she appears only when the arrival scene begins.
+10. **Petting Panther: her hand is too low** — she strokes at her knee, not the top of the cat. Every petting moment (the
+    chair / lap scenes C11 → C13 and any other) puts her hand IK target **on the top of his back**, measured from his
+    actual pose and size, with the stroke moving along his back.
+11. **Back on the ship after Venus they should already be in the chair.** After the beam up, C11 starts with 7 seated in
+    the pilot's chair and Panther on her lap — no walk to the chair or hop up first.
+
+Checks + release: targeted captures for each item (a normal-play capture for 1, 4, 8, 9), the release run, publish
+**0.13.1**; docs; commit + push.
+
+
+## Round 14: Chapter "Europa — Beneath the Ice", first playable pass (Dan, 2026-11-19) — to do, AFTER QF12
+**Runs unattended overnight, straight after QF12 (Dan is asleep): never stop to ask.** Make the most reasonable call,
+note it under "Round 14 — decisions made" in the status, and keep going. Commit a checkpoint first. All standing rules
+(monochrome, Kyle's fog/glow, non-sexual, 7 never kills, no exact-spot triggers, look at your own captures, the
+"Saucer — fixed design" rule: beam, no ramp). **20-minute rule** for this round's checks. Release **0.14.0**; per-item
+status in "Round 14 — status"; "For Dan to check (Round 14)".
+
+**The spec is `Docs/CHAPTER_EUROPA.md`** (Dan's final text, sections 1–17 + progression notes). Build it as playable
+connected spaces with placeholder assets where needed, the way Round 11 did Venus: reuse the player controller, hover
+bike, dialogue / voice / reaction systems, saves, Scene Select, the vision player, `MusicSystem`. "PROPOSED" sections in
+the spec are to be built as written for the prototype (they stay easy to replace).
+
+**Everything Dan made for it is in the repo:**
+- Models: `Art/Source/cetacean/whale_v1.glb` (large Cetacean = the keeper + the huge one under the bike) and
+  `dolphin_v1.glb` (the guide; ×0.6 for the young one). Notes in `Docs/MODELS-NEEDED.md` ("Cetaceans — Europa"):
+  ~1.9 M tris each → decimate; head toward −X; tails already flat; no Mixamo — a spine bone chain head→tail + a bone per
+  flipper, procedural swim in Unity; the keeper's head / flippers move with its voice's loudness. Render preview sheets
+  into `Docs/Previews/r14/` (don't stop for Dan — he'll look in the morning). Existing: Tunneler, Scree, 7, Panther, saucer,
+  hover bike.
+- Music: `europa_underwater.mp3`, `europa_base.mp3` (`Docs/MUSIC.md`, Europa section — where each plays, the cross-fade
+  at the pressure chamber, quiet after the escape until the calls).
+- Vision: `Art/Video/vision_03_europa.mp4` + still `Resources/Europa/vision_03_still.jpg` (spec section 15: its audio is
+  nearly silent; the `europa_call_learning` call carries it; play like the Venus vision).
+- Voices (`Docs/VOICES.md`): **Keeper** = Dan's saved voice `Keeper`; **Tunneler** = his existing voice; **Scree worker** =
+  a premade ElevenLabs voice you pick (don't create or save a voice), with Dan's scene-1 Scree noise layered under each
+  line; 7 (v3 + delivery tags from the spec's directions) and Panther (telepathic treatment) as usual. Cetacean speech =
+  the voice line over a soft whale-call layer, underwater reverb on both (spec section 4). Give every line an id
+  (`EUR_<scene>_<nn>`), dialogue as data + `Docs/EUROPA-LINES.md`, generate all the voices.
+- SFX (`Docs/VOICES.md` "Cetacean calls"): `europa_call_deep`, `europa_call_answer`, `europa_call_learning`,
+  `europa_dolphin_chirp` via `generate_sfx.py`; add what else the chapter needs (extraction pulse, drill machinery,
+  alarm, pressure chamber, demolition, bubbles / underwater ambience, bike underwater hum) to `Docs/SFX-LIST.md`.
+
+**Items**
+1. **Getting there.** On the star map Europa becomes **playable** (Mars stays "coming soon"); choosing Europa in VEN_C13
+   (or later from the star map) starts the chapter with a title card ("Europa — Beneath the Ice"; covers from the first
+   frame — see QF12 item 9). The chapter works whether or not Mars is done.
+2. **Arrival + the dive (spec 1–2):** saucer over the ice field (fractures, Kyle's fog/glow, pale ice); the pilot's-chair
+   lap scene with Panther (reuse C13's chair, with the hand on top of his back — QF12 item 10); the saucer hovers over a
+   sheltered shelf by the opening; the bike and 7 come down **in the beam**. **Bubble helmet:** a simple transparent sphere
+   / glass shader on her head (not a generated model) whenever she's underwater or in an unsafe environment; the seal
+   check insert with its soft tone. Panther stays aboard (telepathic) the whole chapter.
+3. **The bike underwater (spec 2–3):** the same hover bike now swims: steer, **ascend / descend**, brake; slower, floaty
+   handling, bubbles trailing, the underwater hum. A gentle tutorial passage down through the ice into the water.
+4. **First descent — wonder (spec 3):** the enormous chamber under the ice: light through the ceiling, curtains of rising
+   bubbles, ancient structures descending into the depths with small white lights, vast shapes far below; the huge
+   Cetacean passes beneath the bike so its scale reads; the call. Uninterrupted riding; quiet stretch after "Tell me."
+5. **The settlement + the keeper (spec 4):** the dolphin guide escorts her (chirps, swims alongside); platforms around
+   open swimming passages, small vehicles moving, broad chambers; the receiving platform; the keeper conversation; the
+   distant mechanical pulse.
+6. **The optional race (spec 5):** a course through carved arches, under ice shelves and round great pillars, with a few
+   placeholder rival vehicles; registration lines, overtake / loss / win lines. Optional, no history reward; teaches the
+   moves the escape needs. Exploration of the settlement before the mission advances.
+7. **The machinery + the way in (spec 6–7):** the damaged migration route (shattered supports, debris, sealed passage,
+   creatures turning away from the noise); the pulse drowning a call; Tunneler named; objective "Investigate Tunneler's
+   underwater base"; the course turning industrial (pipes, intakes, tunnels); Scree workers laboring (fatigue,
+   coercion); she parks in an access bay and goes in on foot through a pressure chamber.
+8. **Tunneler's base (spec 8–10):** Tunneler on a screen (lit from below; drill head moves with his voice); barriers close;
+   reach the worker area and restore the evacuation route — **no killing guards or workers** (existing nonlethal moves);
+   free the Scree (the threshold moment kept simple); workers with agency (they open doors, show safe routes, the
+   schematic); place the abstract demolition devices; **detonation unavailable until workers and nearby creature routes
+   are clear** — Panther tracks the transports; tension without a timer.
+9. **Tunneler escapes + the escape ride (spec 11–12):** across the sealed window he boards his craft and leaves (not a boss
+   fight); she mounts, triggers the demolition; the chase out — ruptures following her, readable steering, warnings,
+   Panther's calls, the low tracking shot, the burst into open water, the pressure wave she recovers from (don't cut
+   away). Fair and retryable: a hit or a crash = restart from the start of the ride.
+10. **After the noise + the temple + the vision (spec 13–15):** the quiet moment, the calls answering across open water;
+    the temple built for its inhabitants (broad, huge, understood through movement and sound); the rune = **icosahedron,
+    generated in code like the cube and dodecahedron**; the vision (item above); the keeper's lines; the record awarded
+    once — **insert: 7 secures the small icosahedron beside the cube and the dodecahedron.**
+11. **Home (spec 16–17):** the bike recovered in the beam, 7 boards in the beam; helmet off; Panther waiting near the
+    boarding area; the reunion; the debrief in the pilot's chair with Panther on her lap (already seated — QF12 item 11),
+    the purr, hold the two-shot; back to free exploration with the star map (Mars available, Europa done).
+12. **Progression + saves:** the spec's progression notes; checkpoints for Continue; **Scene Select entries** for the main
+    beats (arrival, settlement, base, escape, temple, debrief); the Log and Field Guide on the console get Europa entries
+    (the Cetaceans, the keeper, the Scree here, Tunneler again). The icosahedron sits with the other records on the chair arm.
+
+**Checks + release (20-minute rule):** targeted runs per section with captures you look at (the descent, the keeper, the
+race, the base, the escape ride, the temple + vision, the debrief), one player-style run from VEN_C13's Europa choice to
+the debrief, Scene Select entries start correctly. Publish **0.14.0**; docs (`CLAUDE.md` "Where things stand", the status
+and "For Dan to check"); commit + push.
+
 ## Round 13: conversation sounds + the ship's console (Dan, 2026-11-19) — done, status below; release 0.13.0
 Commit first. All standing rules (monochrome, Kyle's fog/glow, non-sexual presentation, 20-minute testing rule, look at
 your own captures, no exact-spot triggers). One release at the end: **0.13.0**; per-item status in "Round 13 — status";
