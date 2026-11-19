@@ -246,6 +246,10 @@ namespace Seven
             ("Skip a line", "Y", "Enter"),
             ("Restart from the checkpoint", "D-pad down", "Backspace"),
             ("Pause menu", "Start", "Esc"),
+            // QF13 (12): the hover bike, on land and under water (flying controls: the stick steers AND pitches)
+            ("Bike: steer · accelerate · brake", "Left stick · RT · LT", "A/D · W (or right mouse) · S / Q"),
+            ("Bike under water: steer · dive / climb", "Left stick (push forward = dive)", "A/D · W dive / S climb"),
+            ("Bike under water: forward · brake", "RT · LT", "Shift / right mouse · Q"),
         };
 
         void BuildControlsTable()
@@ -257,7 +261,7 @@ namespace Seven
             Cell("", -150, 132, 16, head, 420, TextAnchor.MiddleLeft); Cell("XBOX", 170, 132, 16, head, 230, TextAnchor.MiddleLeft); Cell("KEYBOARD / MOUSE", 400, 132, 16, head, 260, TextAnchor.MiddleLeft);
             for (int i = 0; i < ControlMap.Length; i++)
             {
-                float y = 104 - i * 25;
+                float y = 108 - i * 21;
                 Cell(ControlMap[i].what, -150, y, 17, ink, 420, TextAnchor.MiddleLeft);
                 Cell(ControlMap[i].pad, 170, y, 17, ink, 230, TextAnchor.MiddleLeft);
                 Cell(ControlMap[i].keys, 400, y, 17, ink, 260, TextAnchor.MiddleLeft);
@@ -307,14 +311,14 @@ namespace Seven
     /// ← → adjust a row; A / Enter toggles a switch row.</summary>
     public static class GameSettings
     {
-        public const int Music = 0, Sfx = 1, Voice = 2, Hints = 3;
-        public const int Count = 4;
-        public static string Name(int i) => i == Music ? "Music" : i == Sfx ? "Sound effects" : i == Voice ? "Voice" : i == Hints ? "Button hints" : "";
+        public const int Music = 0, Sfx = 1, Voice = 2, Hints = 3, InvertSwim = 4;
+        public const int Count = 5;
+        public static string Name(int i) => i == Music ? "Music" : i == Sfx ? "Sound effects" : i == Voice ? "Voice" : i == Hints ? "Button hints" : i == InvertSwim ? "Invert up / down (bike under water)" : "";
         public static string Value(int i) => i == Music ? Bar(AudioKit.MusicVolume) : i == Sfx ? Bar(AudioKit.SfxVolume) : i == Voice ? Bar(AudioKit.VoiceVolume)
-                                           : i == Hints ? (ControlsLegend.HintsOn ? "On" : "Off") : "";
+                                           : i == Hints ? (ControlsLegend.HintsOn ? "On" : "Off") : i == InvertSwim ? (HoverBike.InvertPitch ? "On" : "Off") : "";
         public static string Label(int i) => Name(i) + "   " + Value(i);
         /// <summary>The raw value of a row (volumes 0-1, switches 0 / 1) - check runs log it before / after a change.</summary>
-        public static float Raw(int i) => i == Music ? AudioKit.MusicVolume : i == Sfx ? AudioKit.SfxVolume : i == Voice ? AudioKit.VoiceVolume : i == Hints ? (ControlsLegend.HintsOn ? 1f : 0f) : 0f;
+        public static float Raw(int i) => i == Music ? AudioKit.MusicVolume : i == Sfx ? AudioKit.SfxVolume : i == Voice ? AudioKit.VoiceVolume : i == Hints ? (ControlsLegend.HintsOn ? 1f : 0f) : i == InvertSwim ? (HoverBike.InvertPitch ? 1f : 0f) : 0f;
         public static string Bar(float v) { int n = Mathf.Clamp(Mathf.RoundToInt(v * 10f), 0, 10); return new string('■', n) + new string('□', 10 - n); }
 
         /// <summary>← → on a row: volumes in steps of 10 %, switches flip.</summary>
@@ -326,12 +330,14 @@ namespace Seven
             else if (i == Sfx) { AudioKit.SfxVolume = Mathf.Round((AudioKit.SfxVolume + step) * 10f) / 10f; AudioKit.Play("menu_move", null, 1f); }
             else if (i == Voice) AudioKit.VoiceVolume = Mathf.Round((AudioKit.VoiceVolume + step) * 10f) / 10f;
             else if (i == Hints) { ControlsLegend.HintsOn = !ControlsLegend.HintsOn; AudioKit.Play("menu_move", null, 0.6f); }
+            else if (i == InvertSwim) { HoverBike.InvertPitch = !HoverBike.InvertPitch; AudioKit.Play("menu_move", null, 0.6f); }
         }
 
         /// <summary>A / Enter on a row: switches flip (volumes do nothing).</summary>
         public static void Activate(int i)
         {
             if (i == Hints) ControlsLegend.HintsOn = !ControlsLegend.HintsOn;
+            if (i == InvertSwim) HoverBike.InvertPitch = !HoverBike.InvertPitch;
         }
 
         public static string Describe() => $"music {AudioKit.MusicVolume:0.0} sfx {AudioKit.SfxVolume:0.0} voice {AudioKit.VoiceVolume:0.0} hints {(ControlsLegend.HintsOn ? "on" : "off")}";

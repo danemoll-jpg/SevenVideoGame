@@ -25,8 +25,9 @@ namespace Seven
         /// <summary>The objective shown at each stage (S01 reworded by the hover bike, spec VEN_B01).</summary>
         public static readonly string[] Objectives =
         {
-            "Land on Venus", "Ride to the Elarim temple", "Follow the guardian to the cube chamber", "Investigate beneath the gardens",
-            "Find the source of the signal", "Disable the control devices", "Return to the guardian", "Return to the saucer", null,
+            // QF13 (8): each objective says what to do AND where (the start of each stays the same: the check drivers match on it)
+            "Land on Venus", "Ride to the Elarim temple - north along the garden road", "Follow the guardian to the cube chamber", "Investigate beneath the gardens - the root gate below the lookout",
+            "Find the source of the signal - down the root pit stairs, then east along the tunnels", "Disable the control devices - all three, around the chamber", "Return to the guardian at the temple", "Return to the saucer at the landing platform", null,
         };
 
         [System.Serializable]

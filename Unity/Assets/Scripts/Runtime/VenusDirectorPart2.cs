@@ -186,6 +186,15 @@ namespace Seven
         }
         IEnumerator WayDownShots()
         {
+            // QF13 (19): Dan's screenshot - halfway down the stairs, the follow camera behind her right shoulder looking down
+            // the pit: first the camera the player has (follow), then Dan's exact framing
+            while (!(P7.z < 124.5f && P7.z > 119f && P7.y < -8f) && !VenusState.SceneDone("VEN_C06")) yield return null;
+            if (!VenusState.SceneDone("VEN_C06"))
+            {
+                yield return Shot("qf13_19a_stairs_follow_camera");
+                var p = P7; Shoot(p + new Vector3(1.3f, 1.9f, 2.4f), p + new Vector3(-1.0f, -0.6f, -6f), 52f, 0.01f);
+                yield return Wait(0.15f); yield return Shot("qf13_19b_stairs_dan_view"); FollowCamera();
+            }
             var marks = new (Func<bool>, string)[] { (() => P7.z < 126f && P7.y < -9f, "w02_root_pit_steps"), (() => P7.z < 108f && P7.z > 98f, "w03_root_tunnel"), (() => P7.z < 92f && P7.x < 78f, "w04_root_chamber"), (() => P7.x > 88f && P7.x < 100f, "w05_deep_tunnel") };
             foreach (var (when, name) in marks) { while (!when() && !VenusState.SceneDone("VEN_C06")) yield return null; if (VenusState.SceneDone("VEN_C06")) yield break; yield return Shot(name); }
         }
@@ -1056,18 +1065,8 @@ namespace Seven
             yield return Wait(1.0f);
             yield return Shot("b07_01_parked_hull_seamless");
             // the seam glows, the panel sinks and slides round
-            if (HatchSeam != null) HatchSeam.enabled = true;
-            var seamM = HatchSeam != null ? HatchSeam.material : null; var backM = BayBack != null ? BayBack.sharedMaterial : null;
-            AudioKit.Play("hatch_iris", mouth, 0.7f);
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.9f) { if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.SmoothStep(0f, 3.2f, t)); yield return null; }
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
-            {
-                float sink = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.3f)), slide = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 0.25f) / 0.75f));
-                if (Hatch != null) { Hatch.localScale = Vector3.one * Mathf.Lerp(1f, 0.984f, sink); Hatch.localRotation = Quaternion.Euler(0f, slide * (VenusLayout.HatchSpan + 3f), 0f); }
-                if (BayLight != null) BayLight.intensity = 2.4f * slide;
-                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 0.55f, slide));
-                yield return null;
-            }
+            Material seamM = null, backM = null;
+            yield return Hold.Open();                          // QF13 (1): the shared hold - an empty opening, no bars
             yield return Shot("b07_02_hatch_open");
             // the bike rises off its spot, turns and glides in, unhurried; the hum fades
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.6f)

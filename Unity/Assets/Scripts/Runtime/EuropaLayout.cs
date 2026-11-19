@@ -26,7 +26,7 @@ namespace Seven
         public static readonly Vector3 SaucerAt = new Vector3(0f, 0f, -6f);    // its root on the shelf; the underside SaucerHover above
         public const float SaucerHover = 3.35f;                                 // the shared design (CLAUDE.md "Saucer — fixed design")
         public static readonly Vector3 BeamFoot = new Vector3(0f, 0f, -6f);
-        public static readonly Vector3 BikeDown = new Vector3(3.2f, 0f, -2.5f);  // where the beam sets the bike down
+        public static readonly Vector3 BikeDown = new Vector3(7.5f, 0f, 1.5f);   // QF13 (5): where the bike settles after gliding out of the hold (clear of the hull)
         public static readonly Vector3 SevenDown = new Vector3(0f, 0f, -6f);
         public static readonly Vector3 OpeningAt = new Vector3(0f, 0f, 12f);    // the hole in the ice
 

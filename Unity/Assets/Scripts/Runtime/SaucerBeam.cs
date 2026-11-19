@@ -14,6 +14,9 @@ namespace Seven
         public Light BeamLight;
         public Renderer BeamFloor, HatchGlow;
         public float HatchRadius = 0.9f, BellyY = 1.15f;
+        /// <summary>QF13 (16): the one saucer prefab's hull underside above its root (its hover height on every world; on the
+        /// Moon the clamped ship sits HoverLift lower until it lifts off).</summary>
+        public const float ShipBelly = 3.35f;
         public bool IsOn { get; private set; }
 
         /// <summary>World point on the ground under the hatch.</summary>

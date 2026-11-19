@@ -26,6 +26,8 @@ namespace Seven
         public HoverBike Bike;
         public SaucerBeam SaucerBeam;
         public Transform Saucer;
+        /// <summary>QF13 (5): the bike always uses the bike hold (out on arrival, in going home); the beam is only for 7.</summary>
+        public SaucerHold Hold;
         public Atmosphere Atmo;
         public BubbleHelmet Helmet;
         public Cetacean Keeper, Guide, HugeOne;
@@ -65,8 +67,9 @@ namespace Seven
         public int Hints { get; private set; }
         public int Skips { get; private set; }
         public int Crashes { get; private set; }
-        public float HintAfter => DemoBoot.VenusHintFast ? 12f : 45f;
-        public float SkipAfter => DemoBoot.VenusHintFast ? 30f : 120f;
+        public float HintAfter => DemoBoot.VenusHintFast ? 12f : Bike != null && Bike.Riding ? 25f : 45f;
+        // QF13 (9): ~60 s without progress in a riding section (was 120 s everywhere)
+        public float SkipAfter => DemoBoot.VenusHintFast ? 30f : Bike != null && Bike.Riding ? 60f : 120f;
         AudioSource _amb, _drill;
 
         // ------------------------------------------------------------------------------------------ setup
@@ -90,6 +93,8 @@ namespace Seven
             if (Pod != null) foreach (var c in Pod) if (c != null) ex.Add(c.transform);
             foreach (var arr in new[] { Scree, Rivals, Vehicles, DeviceSlots }) if (arr != null) foreach (var t in arr) if (t != null) ex.Add(t);
             CameraOccluders.Build(ex.ToArray());
+            ValidateSwimPaths();
+            CollectBaseWalls();
             Dlg.LineStarted += OnLine;
             _amb = AudioKit.Loop("europa_amb_underwater", null, null, 0f, AudioKit.Bus.Ambience);
             if (Tunneler != null) Tunneler.gameObject.SetActive(false);
@@ -131,25 +136,85 @@ namespace Seven
         AudioSource _voiceSrc;
         AudioSource FindVoiceSource() { if (_voiceSrc == null) { var go = GameObject.Find("Voice_7"); if (go != null) _voiceSrc = go.GetComponent<AudioSource>(); } return _voiceSrc; }
 
+        // QF13 (11): Dan - the drill head must SPIN like a drill when he talks (MODELS-NEEDED: "twists/spins driven by the
+        // voice"), not twist back and forth. Before, its angle only grew while a syllable was loud and snapped back to rest
+        // after every line - a twitch. Now it is a real drill: a continuous rotation about its own axis (the cone's axis =
+        // his body's up through the collar socket), faster on louder syllables, spinning down smoothly when he stops (it
+        // keeps its angle - never snaps back), with a slight forward nod on stressed words.
+        float _drillAngle, _drillSpeed; Coroutine _drillSpin; Quaternion _drillRest; bool _drillRestSet;
+        public float DrillMaxSpeed { get; private set; }
+        public int DrillTurns => Mathf.FloorToInt(Mathf.Abs(_drillAngle) / 360f);
         IEnumerator TunnelerTalks(VoiceBank.Line l)
         {
-            // his drill head twists and nods with his voice's loudness (no face, no lip-sync)
-            var src = FindVoiceSource(); var buf = new float[256]; float spin = 0f;
+            var src = FindVoiceSource(); var buf = new float[256];
             if (TunnelerHead == null) yield break;
-            var r0 = TunnelerHead.localRotation;
-            for (float t = 0f; t < 8f && Dlg.Current == l; t += Time.deltaTime)
+            if (!_drillRestSet) { _drillRest = TunnelerHead.localRotation; _drillRestSet = true; }
+            if (_drillSpin == null) _drillSpin = StartCoroutine(DrillSpin());
+            float t0 = Time.time;
+            while (Dlg.Current == l && Time.time - t0 < 12f)
             {
-                float lvl = 0f; if (src != null && src.isPlaying) { src.GetOutputData(buf, 0); foreach (var v in buf) lvl = Mathf.Max(lvl, Mathf.Abs(v)); }
-                spin += lvl * 900f * Time.deltaTime;
-                TunnelerHead.localRotation = r0 * Quaternion.Euler(lvl * 14f, spin, 0f);
+                float lvl = 0f;
+                if (src != null && src.isPlaying) { src.GetOutputData(buf, 0); foreach (var v in buf) lvl = Mathf.Max(lvl, Mathf.Abs(v)); }
+                if (lvl <= 0.0001f && (src == null || !src.isPlaying || DemoBoot.Muted)) lvl = 0.25f + 0.2f * Mathf.Abs(Mathf.Sin((Time.time - t0) * 7.3f)) * Mathf.Abs(Mathf.Sin((Time.time - t0) * 2.1f));   // no audible voice (muted runs): a syllable rhythm
+                _drillTarget = 240f + Mathf.Clamp01(lvl * 2.2f) * 900f;      // deg/s: always turning while he speaks, faster on loud syllables
+                _drillNod = Mathf.Clamp01(lvl * 2f) * 7f;
                 yield return null;
             }
-            TunnelerHead.localRotation = r0;
+            _drillTarget = 0f; _drillNod = 0f;
+        }
+        float _drillTarget, _drillNod, _drillNodNow;
+        IEnumerator DrillSpin()
+        {
+            while (TunnelerHead != null)
+            {
+                float dt = Time.deltaTime;
+                _drillSpeed = Mathf.MoveTowards(_drillSpeed, _drillTarget, (_drillTarget > _drillSpeed ? 2400f : 380f) * dt);   // quick to spin up, a long spin-down
+                _drillAngle += _drillSpeed * dt;
+                DrillMaxSpeed = Mathf.Max(DrillMaxSpeed, _drillSpeed);
+                _drillNodNow = Mathf.Lerp(_drillNodNow, _drillNod, dt * 10f);
+                var parent = TunnelerHead.parent;
+                var axisLocal = parent != null ? parent.InverseTransformDirection(Tunneler != null ? Tunneler.up : Vector3.up) : Vector3.up;
+                var rightLocal = parent != null ? parent.InverseTransformDirection(Tunneler != null ? Tunneler.right : Vector3.right) : Vector3.right;
+                TunnelerHead.localRotation = Quaternion.AngleAxis(_drillNodNow, rightLocal) * Quaternion.AngleAxis(_drillAngle, axisLocal) * _drillRest;
+                yield return null;
+            }
         }
 
         // ------------------------------------------------------------------------------------------ helpers
         IEnumerator Wait(float s) { for (float t = 0f; t < s; t += Time.deltaTime) yield return null; }
-        void Objective(string s) { _objective = s; UI.SetObjective(s); Log("objective: " + s); }
+        void Objective(string s) { s = Where(s); _objective = s; UI.SetObjective(s); Log("objective: " + s); }
+        // QF13 (8): Dan - "Explore beneath the ice" says nothing ("what exactly?"). Every objective says what to do AND where
+        // (the guide marker shows the way on the riding legs). Kept short enough for the objective box (two lines at most).
+        string Where(string s)
+        {
+            if (s == null) return null;
+            switch (s)
+            {
+                case "Dive through the passage in the ice": return "Ride down the ice passage - follow the white light into the water";
+                case "Explore beneath the ice": return "Ride down into the great chamber under the ice";
+                case "Follow the guide to the settlement": return "Follow the young Cetacean to the settlement";
+                case "Explore the settlement - the race arch is open - then return to the keeper": return "Explore the settlement (the race starts at the lit arch) - then go back to the keeper";
+                case "Race: through the rings": return "Race: through every ring - follow the light";
+                case "Return to the keeper": return "Go back to the keeper at the receiving platform (X)";
+                case "Follow the keeper": return EuropaState.Checkpoint >= EuropaLayout.CpTemple ? "Follow the keeper to the temple" : "Follow the keeper to the damaged passage";
+                case "Investigate Tunneler's underwater base": return "Ride to Tunneler's base - follow the pipes down the industrial tunnel";
+                case "Park in the access bay": return "Park in the access bay beside the dock (X to get off)";
+                case "Go in through the pressure chamber": return "Walk into the pressure chamber at the end of the dock";
+                case "Find the workers": return "Find the workers - follow the corridor north to the control room";
+                case "Reach the worker holding area": return "Open the barred door in the control room's west wall (X at its panel)";
+                case "Free the workers": return "Free the workers in the holding area (west)";
+                case "Restore power to the evacuation lift": return "Restore the evacuation lift's power - the panel in the transport dock (west)";
+                case "Talk to the worker at the schematic": return "Talk to the worker at the schematic on the holding area's north wall";
+                case "Wait until everyone is clear": return "Wait by the transports until everyone is clear";
+                case "Return to the bike": return "Back to the bike: through the control room, south down the corridor to the dock";
+                case "Get out!": return "Get out! Ride flat out down the tunnel ahead";
+                case "Go to the rune": return "Go to the glowing rune at the temple's heart";
+                case "Return to the saucer": return "Follow the light up to the saucer";
+            }
+            if (s.StartsWith("Place the demolition devices")) return s.Replace("Place the demolition devices", "Place the demolition devices in the machinery section (east)");
+            return s;
+        }
+        public string ObjectiveNowText => _objective;
         void Log(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) Cap?.Log(s); }
         IEnumerator Shot(string name) { if (!Shots) yield break; yield return Cap.Shot(name); }
         void Shoot(Vector3 pos, Vector3 look, float fov = 50f, float ease = 1f) { Cam.Subjects.Clear(); Cam.Shot(pos, look, ease, ease <= 0.05f, fov); }
@@ -160,12 +225,18 @@ namespace Seven
             if (!on) FollowCamera();
             yield return null;
         }
+        float _wayHintAt;
+        // QF13 (13): riding, the camera sits a little further back and lower (the 2.4-3 m bike stays readable at speed).
+        // QF13 (7): on foot inside the base (narrow 4 m rooms under a 3.6 m ceiling) the camera stays close and high over
+        // her shoulder, and the base's walls fade out of its way instead of standing between it and her (BaseCamera).
         void FollowCamera()
         {
-            if (Bike.Riding) { Cam.Target = Bike.transform; Cam.Distance = 7.2f; Cam.LookHeight = 1.5f; Cam.AutoBehind = true; }
-            else { Cam.Target = Seven.transform; Cam.Distance = 3.8f; Cam.LookHeight = 1.45f; Cam.AutoBehind = Auto; }
+            if (Bike.Riding) { Cam.Target = Bike.transform; Cam.Distance = 8.2f; Cam.LookHeight = 1.2f; Cam.AutoBehind = true; Cam.DefaultPitch = 12f; }
+            else if (InBase(P7)) { Cam.Target = Seven.transform; Cam.Distance = 2.7f; Cam.LookHeight = 1.5f; Cam.AutoBehind = true; Cam.DefaultPitch = 24f; }   // stays behind her walking direction in the narrow rooms
+            else { Cam.Target = Seven.transform; Cam.Distance = 3.8f; Cam.LookHeight = 1.45f; Cam.AutoBehind = Auto; Cam.DefaultPitch = 15f; }
             Cam.Follow();
         }
+        static bool InBase(Vector3 p) => p.y < EuropaLayout.BaseY + 3f && p.y > EuropaLayout.BaseY - 1f && p.x < -146f && p.x > -227f && p.z > 443f && p.z < 510f;
         IEnumerator Say(string scene, int from = 1, int to = 99)
         {
             var ls = EuropaDialogue.Scene(scene, from, to);
@@ -195,7 +266,13 @@ namespace Seven
                 if (at.HasValue) { float d = Vector3.Distance(Bike.Riding ? Bike.transform.position : P7, at.Value); if (d < best - 2f) { best = d; since = Time.time; } }
                 if (!Auto)
                 {
-                    if (!hinted && hint != null && Time.time - since > HintAfter) { hinted = true; Hints++; UI.Hint(hint, 8f); Log($"HINT: '{what}' -> \"{hint}\""); if (at.HasValue) ShowGuide(at.Value); }
+                    if (!hinted && hint != null && Time.time - since > HintAfter) { hinted = true; Hints++; var hx = at.HasValue && Bike.Riding ? WhichWay(at.Value) + ". " + hint : hint; UI.Hint(hx, 8f); Log($"HINT: '{what}' -> \"{hx}\""); if (at.HasValue) ShowGuide(at.Value); }
+                    // QF13 (9): far off course (she rode away from the light): say which way, at once and again every 12 s
+                    if (at.HasValue && Bike.Riding)
+                    {
+                        float dNow = Vector3.Distance(Bike.transform.position, at.Value);
+                        if (dNow > best + 30f && Time.time > _wayHintAt) { _wayHintAt = Time.time + 12f; var wh = WhichWay(at.Value); UI.Hint(wh, 6f); Hints++; Log($"OFF COURSE (QF13 9): {dNow:0} m from the light (best {best:0}) -> \"{wh}\""); }
+                    }
                     if (!SkipOffered && skip != null && Time.time - since > SkipAfter) { SkipOffered = true; UI.Hint("Y / Enter: skip this step", 6f); Log($"SKIP OFFERED: '{what}'"); }
                     if (SkipOffered && SkipButton())
                     {
@@ -218,8 +295,115 @@ namespace Seven
         public bool Riding => Bike != null && Bike.Riding;
         public bool InCutscene => _cut;
 
-        void ShowGuide(Vector3 at) { NextMarker = at; if (GuideLight != null) { GuideLight.gameObject.SetActive(true); GuideLight.position = at; } }
-        void HideGuide() { NextMarker = null; if (GuideLight != null) GuideLight.gameObject.SetActive(false); }
+        // QF13 (9): the guide is always findable - the light itself (bigger, brighter, a halo that cuts through the fog and
+        // keeps its size on screen however far away it is) AND the on-screen marker (ChapterUI.SetMarker: a diamond on it, or
+        // an arrow at the screen's edge with the distance and an up / down cue when it is off screen or behind her)
+        void ShowGuide(Vector3 at) { NextMarker = at; UI.SetMarker(at); if (GuideLight != null) { GuideLight.gameObject.SetActive(true); GuideLight.position = at; } }
+        void HideGuide() { NextMarker = null; UI.SetMarker(null); if (GuideLight != null) GuideLight.gameObject.SetActive(false); }
+        // ---- QF13 (7): inside the base the walls never stand between the camera and her - any wall / door / barrier whose
+        // box the line camera -> her head crosses is cut away (not drawn) while it is in the way; the camera stays close
+        Renderer[] _baseWalls; int _cutFrames, _baseFrames, _blockedFrames;
+        void CollectBaseWalls()
+        {
+            var list = new List<Renderer>();
+            var root = GameObject.Find("TunnelerBase");
+            if (root != null) foreach (var r in root.GetComponentsInChildren<Renderer>(true)) { var n = r.name; if (n.StartsWith("W_") || n.StartsWith("Door_") || n.StartsWith("Barrier_") || n == "Machinery" || n.StartsWith("Connection")) list.Add(r); }
+            _baseWalls = list.ToArray();
+            Log($"base camera (QF13 7): {_baseWalls.Length} walls / doors can be cut away when they stand between the camera and her");
+        }
+        void BaseCutaway()
+        {
+            if (_baseWalls == null) return;
+            bool inside = !Bike.Riding && InBase(P7) && !_cut;
+            var cam = Cam.transform.position; var head = P7 + Vector3.up * 1.45f; var seg = head - cam; float len = seg.magnitude;
+            bool any = false, blocked = false;
+            foreach (var r in _baseWalls)
+            {
+                if (r == null) continue;
+                bool hide = false;
+                if (inside && len > 0.05f)
+                {
+                    var b = r.bounds; b.Expand(0.1f);
+                    hide = b.Contains(cam) || (b.IntersectRay(new Ray(cam, seg / len), out float d) && d < len - 0.25f);
+                }
+                if (r.forceRenderingOff != hide) r.forceRenderingOff = hide;
+                any |= hide;
+            }
+            if (inside)
+            {
+                _baseFrames++; if (any) _cutFrames++;
+                if (Physics.Linecast(cam, head, out var hit, ~0, QueryTriggerInteraction.Ignore) && hit.collider != null && !hit.collider.transform.IsChildOf(Seven.transform))
+                { var hr = hit.collider.GetComponent<Renderer>(); if (hr == null || !hr.forceRenderingOff) { blocked = true; _blockedFrames++; } }
+                if (Shots && Time.frameCount % 240 == 0) Log($"base camera (QF13 7): {_baseFrames} frames inside, walls cut away in {_cutFrames}, her head hidden behind something still drawn in {_blockedFrames}{(blocked ? " (now)" : "")}");
+            }
+        }
+
+        // ---- QF13 (10): swim paths stay in open water - every loop segment of the settlement Cetaceans and every shuttle
+        // path of the small vehicles is swept against the level's meshes; a blocked one is lifted until it is clear
+        void ValidateSwimPaths()
+        {
+            if (!CameraOccluders.Ready) return;
+            bool Blocked(Vector3 a, Vector3 b, float r) { var d = b - a; float l = d.magnitude; if (l < 0.01f) return false; return CameraOccluders.SphereCast(a, r, d, out _, l) || CameraOccluders.SphereCast(b, r, -d, out _, l); }
+            int podBad = 0, podFixed = 0;
+            if (Pod != null) foreach (var c in Pod)
+                {
+                    if (c == null || c.Points == null || c.Points.Length < 2) continue;
+                    var p = c.Points; int n = p.Length; float r = 2.4f * c.transform.lossyScale.x;
+                    for (int k = 0; k < n; k++)
+                    {
+                        int k1 = (k + 1) % n;
+                        if (!Blocked(p[k], p[k1], r)) continue;
+                        podBad++;
+                        for (int up = 0; up < 12 && Blocked(p[k], p[k1], r); up++) { p[k] += Vector3.up * 2f; p[k1] += Vector3.up * 3f; }
+                        if (!Blocked(p[k], p[k1], r)) podFixed++;
+                    }
+                    c.Points = p;
+                }
+            int vehBad = 0, vehFixed = 0;
+            if (Vehicles != null) for (int i = 0; i < Vehicles.Length; i++)
+                {
+                    var v = Vehicles[i]; if (v == null) continue;
+                    var c0 = v.position;
+                    Vector3 At(Vector3 o, float t) => o + new Vector3(Mathf.Sin(t * 0.12f + i * 1.7f) * 14f, Mathf.Sin(t * 0.3f + i) * 1.2f, Mathf.Cos(t * 0.1f + i) * 6f);
+                    bool Bad(Vector3 o) { for (int s = 0; s < 64; s++) if (Blocked(At(o, s * 1.6f), At(o, (s + 1) * 1.6f), 1.6f)) return true; return false; }
+                    if (!Bad(c0)) continue;
+                    vehBad++;
+                    for (int up = 1; up <= 12; up++) { var o = c0 + Vector3.up * 2.5f * up; if (!Bad(o)) { v.position = o; vehFixed++; break; } }
+                }
+            SwimPathReport = $"swim paths (QF13 10): settlement Cetaceans - {podBad} loop segments crossed geometry, {podFixed} lifted clear; small vehicles - {vehBad} paths crossed geometry, {vehFixed} lifted clear";
+            Log(SwimPathReport);
+        }
+        public string SwimPathReport { get; private set; }
+
+        void LateUpdate()
+        {
+            BaseCutaway();
+            if (Bike != null && Bike.Riding && Shots && Time.frameCount % 300 == 0) Log($"bike (QF13 10/13): speed {Bike.Speed:0.0} m/s, pitch {Bike.SwimPitch:0} deg, wall slides so far {Bike.WallSlides}, camera speed push {Cam.SpeedKick:0.00}");
+            // hidden during cutscenes (marker too); inside the base's small rooms the light stays small (no halo filling the room)
+            if (GuideLight != null && Cam != null)
+            {
+                bool show = NextMarker.HasValue && !_cut;
+                if (GuideLight.gameObject.activeSelf != show) GuideLight.gameObject.SetActive(show);
+                UI.SetMarker(show ? NextMarker : null);
+                if (show)
+                {
+                    float d = Vector3.Distance(Cam.transform.position, GuideLight.position);
+                    GuideLight.localScale = Vector3.one * (InBase(GuideLight.position) ? 0.22f : Mathf.Max(1f, d * 0.035f));   // never a dot in the distance
+                    GuideLight.rotation = Quaternion.LookRotation(GuideLight.position - Cam.transform.position);
+                }
+            }
+        }
+        /// <summary>QF13 (9): which way the light is, in words, from where she is facing.</summary>
+        string WhichWay(Vector3 at)
+        {
+            var from = Bike.Riding ? Bike.transform.position : P7; var fwd = Bike.Riding ? Bike.transform.forward : Seven.transform.forward;
+            var to = at - from; var flat = Flat(to);
+            float ang = Vector3.SignedAngle(Flat(fwd), flat, Vector3.up);
+            string h = Mathf.Abs(ang) > 120f ? "behind you" : ang > 35f ? "to your right" : ang < -35f ? "to your left" : "ahead";
+            string v = to.y > Mathf.Max(6f, flat.magnitude * 0.25f) ? " and above" : to.y < -Mathf.Max(6f, flat.magnitude * 0.25f) ? " and below" : "";
+            string lead = Mathf.Abs(ang) > 120f ? "Turn around - the light is " : "The light is ";
+            return $"{lead}{h}{v} ({flat.magnitude:0} m)";
+        }
 
         /// <summary>Ride a route: the guide light moves ahead along the points as she reaches them (at or past each: the
         /// nearest point ahead counts); the autopilot steers the bike along them.</summary>
@@ -235,7 +419,7 @@ namespace Seven
                 ShowGuide(pts[k]);
                 int kk = k;
                 yield return Until(() => Vector3.Distance(Bike.transform.position, pts[kk]) < radius || ReachedAfter(pts, kk, radius), $"{what} ({kk + 1}/{pts.Length})", autoTimeout,
-                    "Follow the soft white light (steer with the left stick, RT forward, A up, B down)", pts[kk], () => PlaceRiding(pts[kk]));
+                    "Follow the white light (left stick: steer and dive / climb, RT forward)", pts[kk], () => PlaceRiding(pts[kk]));
                 k = kk + 1;
             }
             HideGuide();
@@ -484,12 +668,11 @@ namespace Seven
                 yield return null;
             }
             Saucer.position = land;
-            // the beam lowers the bike into position, then 7 (in her bubble helmet); Panther watches from inside
+            // QF13 (5): the bike comes out of the bike hold (as on Venus) and settles on the shelf; then 7 comes down in the
+            // beam (in her bubble helmet); Panther watches from inside
+            yield return HoldBikeOut(EuropaLayout.BikeDown, 0f);
             Shoot(land + new Vector3(10f, 2.2f, 9f), land + new Vector3(0f, 2.2f, 0f), 46f, 0.01f);
             if (SaucerBeam != null) { yield return SaucerBeam.Iris(true); yield return SaucerBeam.BeamOn(true); }
-            Bike.gameObject.SetActive(true);
-            if (SaucerBeam != null) yield return SaucerBeam.Lower(Bike.transform, 2.6f, Vector3.forward);
-            yield return GlideBike(EuropaLayout.BikeDown, 1.2f);
             Seven.gameObject.SetActive(true); Seven.Lock(true); Seven.BeginFloat();
             _helmetForced = true;
             bool s2 = false;
@@ -523,6 +706,84 @@ namespace Seven
             Teach();
             Log($"dive done: bike at {Bike.transform.position} (under water: {Bike.transform.position.y < EuropaLayout.WaterY})");
         }
+        // ---- QF13 (5): the bike hold (Saucer prefab, SaucerHold) - the same opening, glide and close as Venus B01 / B07
+        void ShowBike(bool on)
+        {
+            foreach (var r in Bike.GetComponentsInChildren<Renderer>(true)) r.enabled = on;
+            foreach (var l in Bike.GetComponentsInChildren<Light>(true)) l.enabled = on;
+        }
+        bool _holdShot;
+        IEnumerator HoldBikeOut(Vector3 settle, float settleYaw)
+        {
+            if (Hold == null) { Bike.gameObject.SetActive(true); Bike.Place(settle, settleYaw); yield break; }
+            var dir = Hold.Dir; var tan = Vector3.Cross(Vector3.up, dir); var mouth = Hold.Mouth;
+            float yawOut = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg, bottomIn = Hold.transform.position.y + Hold.BottomIn;
+            Bike.gameObject.SetActive(true); ShowBike(false);
+            Bike.Glide(Hold.Inside, yawOut, bottomIn);
+            var camAt = mouth + dir * 6.2f + tan * 2.6f - Vector3.up * 0.3f;
+            Shoot(camAt, mouth - Vector3.up * 0.1f, 42f, 0.01f);
+            yield return Wait(1.0f);
+            yield return Shot("qf13_05a_europa_hull_seamless");
+            yield return Hold.Open(null, s =>
+            {
+                if (s > 0.97f) ShowBike(true);
+                if (!_holdShot && s > 0.5f) { _holdShot = true; StartCoroutine(Shot("qf13_05b_europa_hold_opening_player_view")); }
+            });
+            ShowBike(true);
+            yield return Shot("qf13_05c_europa_hold_open_bike_inside");
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Bike.Glide(Vector3.Lerp(Hold.Inside, Hold.Outside, u), yawOut, bottomIn);
+                Cam.Shot(camAt + dir * 1.5f * u, Bike.transform.position + Vector3.up * (bottomIn - Bike.transform.position.y + 0.4f), 0.8f, false, 42f);
+                if (t > 0.6f && t - Time.deltaTime / 2.8f <= 0.6f) StartCoroutine(Shot("qf13_05d_europa_bike_glides_out_of_the_hold"));
+                yield return null;
+            }
+            StartCoroutine(CloseHoldLater(1.2f));
+            float settleBottom = settle.y + Bike.HoverHeight - 0.12f; var outAt = Hold.Outside;
+            Shoot((outAt + settle) * 0.5f + Vector3.Cross(Vector3.up, Flat(settle - outAt).normalized) * -7.5f + Vector3.up * 1.6f, (outAt + settle) * 0.5f + Vector3.up * 0.6f, 48f, 1.6f);
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 3.0f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Bike.Glide(Vector3.Lerp(outAt, settle, u), Mathf.LerpAngle(yawOut, settleYaw, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t * 1.2f))), Mathf.Lerp(bottomIn, settleBottom, u * u));
+                yield return null;
+            }
+            Bike.EndGlide(); Bike.Place(settle, settleYaw);
+            while (Hold.IsOpen) yield return null;
+            yield return Shot("qf13_05e_europa_bike_out_hull_seamless_again");
+            Log("QF13 (5): the bike came out of the bike hold and settled on the shelf; the hold closed seamlessly (7 comes down in the beam)");
+        }
+        IEnumerator CloseHoldLater(float s) { yield return Wait(s); yield return Hold.Close(); }
+        IEnumerator HoldBikeIn()
+        {
+            if (Hold == null) { Bike.gameObject.SetActive(false); yield break; }
+            var dir = Hold.Dir; var tan = Vector3.Cross(Vector3.up, dir); var mouth = Hold.Mouth;
+            float yawOut = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg, bottomIn = Hold.transform.position.y + Hold.BottomIn;
+            var settle = Bike.transform.position; float settleBottom = settle.y + Bike.HoverHeight - 0.12f;
+            Shoot(mouth + dir * 7.5f + tan * 4.2f + Vector3.up * 0.4f, (mouth + settle) * 0.5f, 46f, 0.6f);
+            yield return Wait(0.6f);
+            yield return Hold.Open();
+            yield return Shot("qf13_05f_europa_hold_open_for_the_return");
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Bike.Glide(Vector3.Lerp(settle, Hold.Outside, u), Mathf.LerpAngle(Bike.transform.eulerAngles.y, yawOut + 180f, Mathf.Clamp01(t * 1.5f)), Mathf.Lerp(settleBottom, bottomIn, u));
+                yield return null;
+            }
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Bike.Glide(Vector3.Lerp(Hold.Outside, Hold.Inside, u), yawOut + 180f, bottomIn);
+                if (t > 0.5f && t - Time.deltaTime / 2.4f <= 0.5f) StartCoroutine(Shot("qf13_05g_europa_bike_rises_into_the_hold"));
+                yield return null;
+            }
+            ShowBike(false); Bike.EndGlide();
+            yield return Hold.Close();
+            Bike.gameObject.SetActive(false);
+            yield return Shot("qf13_05h_europa_hull_seamless_bike_aboard");
+            Log("QF13 (5): going home the bike rose back into the bike hold; it closed seamlessly (7 boards in the beam)");
+        }
+
         IEnumerator GlideBike(Vector3 to, float seconds)
         {
             var p0 = Bike.transform.position;
@@ -531,10 +792,9 @@ namespace Seven
         }
         IEnumerator TeachSwim()
         {
-            Teach((ControlsLegend.Btn.Move, "Steer"), (ControlsLegend.Btn.Tk, "Forward"));
-            yield return Wait(6f); if (Auto) yield return Shot("t_swim_steer");
-            Teach((ControlsLegend.Btn.Jump, "Ascend"), (ControlsLegend.Btn.Crouch, "Descend"));
-            yield return Wait(6f); if (Auto) yield return Shot("t_swim_up_down");
+            // QF13 (12): flying controls - the stick steers left / right AND up / down (push forward = dive, pull back = climb)
+            Teach((ControlsLegend.Btn.Move, HoverBike.InvertPitch ? "Steer - push up to climb, pull back to dive" : "Steer - push forward to dive, pull back to climb"), (ControlsLegend.Btn.Tk, "Forward"));
+            yield return Wait(7f); if (Auto) yield return Shot("t_swim_steer_and_pitch");
             Teach((ControlsLegend.Btn.Block, "Brake"));
             yield return Wait(5f);
             Teach();
@@ -548,6 +808,19 @@ namespace Seven
             // uninterrupted riding; the lines come as she goes (at or past their place)
             if (Auto) StartCoroutine(AutoSwim(EuropaLayout.Descent, 5f));
             ShowGuide(EuropaLayout.Descent[0]);
+            if (Shots)
+            {
+                // QF13 (9) check: she faces away from the light (as Dan did) - the edge arrow and the "which way" hint
+                float y0 = Bike.transform.eulerAngles.y; Bike.transform.rotation = Quaternion.Euler(0f, y0 + 180f, 0f); Cam.SnapBehind();
+                yield return Wait(0.4f);
+                var wh = WhichWay(EuropaLayout.Descent[0]); UI.Hint(wh, 3f);
+                Log($"guide marker (QF13 9) facing away from the light: marker {UI.MarkerState} at {UI.MarkerScreen}, hint \"{wh}\"");
+                yield return Shot("qf13_09_light_behind_her_edge_arrow");
+                Bike.transform.rotation = Quaternion.Euler(0f, y0, 0f); Cam.SnapBehind();
+                yield return Wait(0.3f);
+                Log($"guide marker (QF13 9) facing the light: marker {UI.MarkerState}");
+                yield return Shot("qf13_09_light_ahead_marker_on_it");
+            }
             yield return Until(() => Bike.transform.position.z > EuropaLayout.Descent[0].z - 4f, "into the great chamber", 60f, "Ride on into the great chamber", EuropaLayout.Descent[0], () => PlaceRiding(EuropaLayout.Descent[0]));
             HideGuide();
             Shoot(Bike.transform.position + new Vector3(-6f, 3f, -10f), Bike.transform.position + new Vector3(10f, -6f, 40f), 58f, 1.6f);
@@ -578,6 +851,7 @@ namespace Seven
             Complete("EUR_03");
             // let the next stretch remain quiet
             Log("descent: a quiet stretch after 'Tell me.' (no lines)");
+            Objective("Follow the lights down toward the settlement");
             yield return RideRoute(new[] { EuropaLayout.Descent[2], EuropaLayout.Descent[3] }, "the quiet stretch", 8f);
         }
 
@@ -674,7 +948,7 @@ namespace Seven
             yield return Cutscene(false);
             Objective("Race: through the rings");
             var start = EuropaLayout.RaceRegistration;
-            var rp = new Vector3[Rivals != null ? Rivals.Length : 0]; var rk = new int[rp.Length]; var rs = new float[] { 7.4f, 8.1f, 8.8f };
+            var rp = new Vector3[Rivals != null ? Rivals.Length : 0]; var rk = new int[rp.Length]; var rs = new float[] { 19f, 21.5f, 23.5f };   // QF13 (13): retuned for the 25 m/s bike (a close race, beatable flat out)
             for (int i = 0; i < rp.Length; i++) { rp[i] = start + new Vector3(2f + i * 2f, 0.5f * i, -2f); if (Rivals[i] != null) Rivals[i].gameObject.SetActive(true); }
             int gate = 0; float t0 = Time.time; bool overtook = false; int behind0 = -1;
             if (Auto) StartCoroutine(AutoSwim(EuropaLayout.RaceGates, 5f));

@@ -2260,7 +2260,7 @@ namespace Seven
             // QF12 (2): the beam's iris hatch sits flush on the hull's underside (measured), also in a normal play
             if (DemoBoot.CaptureDir != null && Cap != null)
             {
-                float hullY = Saucer.position.y + MoonLayout.SaucerBaseY - 0.1f; float gap = Hatch.position.y - hullY;
+                float hullY = Saucer.position.y + SaucerBeam.ShipBelly - 0.1f; float gap = Hatch.position.y - hullY;
                 Cap.Log($"beam hatch (QF12 2): iris at y {Hatch.position.y:0.00}, hull underside at y {hullY:0.00} - gap {gap * 100f:0.0} cm (flush = within 2 cm)");
                 if (!Auto) yield return Shot("qf12_02_beam_on_player_view");
             }
@@ -2308,7 +2308,7 @@ namespace Seven
         IEnumerator Rise(Transform who, float seconds, float turn, System.Action<float> each = null)
         {
             var p0 = who.position;
-            float top = Saucer.position.y + MoonLayout.SaucerBaseY - 0.1f;
+            float top = Saucer.position.y + SaucerBeam.ShipBelly - 0.1f;
             var r0 = who.rotation;
             for (float t = 0f; t < 1f; t += Time.deltaTime / seconds)
             {

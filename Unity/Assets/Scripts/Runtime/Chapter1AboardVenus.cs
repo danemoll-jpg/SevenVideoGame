@@ -272,6 +272,9 @@ namespace Seven
 
         IEnumerator StandFromPilotChair()
         {
+            // QF13 (15): standing up ends every seated hand moment (petting, the console, the armrest) - stop the stroke loop
+            _stroke = 0f; if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
+            if (_ik != null) _ik.ReleaseAll("she stands up from the pilot's chair");
             if (Cat.Current == CatCompanion.Mode.OnLap) { Cat.HopOffLap(Flat(PilotHips + PilotRight * 1.0f - PilotFwd * 0.3f)); yield return Wait(Cat.HopTime + 0.1f); }
             Cat.LapFrame = null;
             _seated = false; _inPilotChair = false;

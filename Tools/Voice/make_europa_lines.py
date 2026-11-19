@@ -19,6 +19,9 @@ DOC = os.path.join(ROOT, "Docs", "EUROPA-LINES.md")
 SPK = {"7": ("seven", "7", "Seven"), "PANTHER": ("cat", "Panther", "Cat"), "KEEPER": ("keeper", "Keeper", "Keeper"),
        "TUNNELER": ("tunneler", "Tunneler", "Tunneler"), "SCREE WORKER": ("scree", "Scree worker", "scree")}
 TITLES = {}
+# QF13 (18): the bike talk aboard (EUR_16_01..03) is cut from the spec; the reunion line "Good." keeps its id EUR_16_04
+# (and its voice file), so numbering in that scene starts after the cut lines
+START = {"EUR_16": 3}
 
 text = open(SRC, encoding="utf-8").read().replace("\r\n", "\n")
 scenes, lines = [], []
@@ -44,7 +47,7 @@ for raw in text.split("\n"):
     sid = f"EUR_{sec:02d}" + (sub if sec == 5 and sub else "")
     if sec == 5 and sub and not any(x["id"] == sid for x in scenes):
         scenes.append({"id": sid, "title": {"R": "Race registration", "O": "Race: clean overtake", "L": "Race: after a loss", "W": "Race: after a win", "E": "After the race"}[sub], "round": 14})
-    n[sid] = n.get(sid, 0) + 1
+    n[sid] = n.get(sid, START.get(sid, 0)) + 1
     speaker, label, voice = SPK[who]
     lines.append({"id": f"{sid}_{n[sid]:02d}", "scene": sid, "speaker": speaker, "label": label, "text": said,
                   "direction": direction, "voice": voice, "delivery": "", "cue": ""})

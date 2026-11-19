@@ -129,6 +129,9 @@ namespace Seven.EditorTools
             EditorUtility.SetDirty(mat);
             var imp = (ModelImporter)AssetImporter.GetAtPath(path);
             imp.animationType = ModelImporterAnimationType.Human; imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            // QF13 (3, 17): Read/Write ON - ElarimCape reads the cape vertices at run time; with it off the vertex list was
+            // empty in the game, so the cape never swung clear of his legs and every "leg contact 0.0 cm" check (QF10, QF12) measured nothing
+            imp.isReadable = true;
             imp.importAnimation = false; imp.materialImportMode = ModelImporterMaterialImportMode.None; imp.SaveAndReimport();
             ApplyMixamoHumanMap(imp, path);
             var avatar = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
@@ -160,6 +163,18 @@ namespace Seven.EditorTools
             ctl = AnimatorController.CreateAnimatorControllerAtPath(cpath);
             var sm = ctl.layers[0].stateMachine;
             foreach (var c in states) { var st = sm.AddState(c.name); st.motion = c; if (c.name == "idle") sm.defaultState = st; }
+            // QF13 (3b): the walk. Dan's elarim_walk clip itself is the problem (measured in Blender: the torso leans 1-5 deg
+            // forward, one hand reaches 0.27 of his height forward, palm up, hands 0.24 out to the sides - on the 3.5 m figure
+            // it reads as a stooped, groping walk). Use Dan's new walk if he adds Art/Mixamo/elarim/elarim_walk_v2.fbx;
+            // otherwise 7's own Mixamo walk (upright: lean -2..1 deg, hands 0.20 forward / 0.18 out), retargeted through his
+            // Humanoid avatar. ElarimNpc then matches its playback to his speed (no skating) and relaxes the arms.
+            {
+                var walkSt = sm.states.FirstOrDefault(s => s.state.name == "walk").state;
+                var v2 = states.FirstOrDefault(c => c.name == "walk_v2");
+                var sevenWalk = AssetDatabase.LoadAllAssetsAtPath(SevenDir + "/7_walk.fbx").OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+                var use = v2 != null ? v2 : sevenWalk;
+                if (walkSt != null && use != null) { walkSt.motion = use; Log($"QF13 (3b): the guardian's walk state plays {(v2 != null ? "Dan's elarim_walk_v2" : "7's Mixamo walk (7_walk.fbx)")} ({use.length:0.00}s, loop {use.isLooping})"); }
+            }
             // Round 12 (B1): Dan's Mixamo "kneel" never kneels (hips at standing height in every frame) - the Blender-made
             // kneel (Tools/Blender/make_kneel_pose.py) replaces the state's motion
             var kp = Path.Combine(RepoRoot, "Art", "Export", "anim", "elarim_kneel_pose.fbx");
@@ -526,17 +541,12 @@ namespace Seven.EditorTools
             // ---- the saucer (hovering low), its tractor beam, the storage hatch
             // Round 12 (2f): the one shared saucer exterior (Chapter 1's look: the 12 m silver disc, rim glow, dome, belly
             // glow) with the storage hatch toward the bike's spot; its root on the ground, the underside SaucerHover above it
-            var saucer = new GameObject("Saucer").transform; saucer.SetParent(world, false); saucer.position = V.SaucerAt;
-            var rimMat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Saucer_rim.mat") ?? Dissolve("Saucer_rim", Color.white, 0.6f, false);
-            var metalDark = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Moon_metal_dark.mat") ?? Dissolve("Moon_metal_dark", Gray(0.16f), 0.5f, false, 0.4f);
-            var ext = BuildSaucerExterior(saucer, V.SaucerHover, m.hull, m.hullUnder, metalDark, rimMat);
-            var hatch = ext.Panel;
-            foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;   // its own probe never sees it
-            // Round 13 (0b): no ramp, ever - the tractor beam (shared with Chapter 1). The saucer hovers (underside 3.35 m),
-            // so nothing under it blocks her: no ground obstacle for the hull.
-            var fieldMat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Moon_field.mat") ?? AdditiveMat("Moon_field", 0.8f);
-            var beamC = BuildSaucerBeam(saucer, V.SaucerHover, V.SaucerHover - 0.1f, Seven.MoonLayout.HatchRadius, Seven.MoonLayout.BeamFloorRadius, metalDark, rimMat, fieldMat);
-            foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;
+            // QF13 (16): the ONE saucer prefab, unchanged (exterior, beam, bike hold); it hovers (underside 3.35 m), so nothing
+            // under it blocks her: no ground obstacle for the hull. No ramp, ever - the beam for her, the hold for the bike.
+            var saucer = PlaceSaucer(world, V.SaucerAt);
+            var hatch = saucer.Find("HatchPanel");
+            var beamC = saucer.GetComponent<Seven.SaucerBeam>();
+            CheckSaucer("Venus", saucer);
             var pads = new List<Vector3>();
 
             // ---- ground
@@ -706,7 +716,7 @@ namespace Seven.EditorTools
             d.Flyers = flyers.ToArray(); d.Shape = shape; d.MaintGate = maintGate; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
             d.Slab = slab; d.BridgeRamps = ramps; d.WalkwayIntact = walkway; d.TremorStones = stones; d.SlabDust = slabDust; d.TkMotes = tkMotes;                 // QF10: the telekinesis bridge
             d.HatchSeam = saucer.Find("HatchSeam").GetComponent<Renderer>(); d.BayLight = saucer.Find("Bay/BayLight").GetComponent<Light>();
-            d.BayBack = saucer.Find("Bay/BayBack").GetComponent<Renderer>();
+            d.BayBack = saucer.Find("Bay/BayBack").GetComponent<Renderer>(); d.Hold = saucer.GetComponent<Seven.SaucerHold>();
             BuildVenusPart2(world, m, em, d, worm, wormCtl, (n, p, f, c) => MakeElarim(n, p, f, c), dlg);      // Round 12
             AddProbe(new Vector3(0f, 3f, 20f), new Vector3(60f, 20f, 60f), Vector3.zero);
             AddProbe(new Vector3(30f, 5f, 250f), new Vector3(30f, 16f, 50f), Vector3.zero);

@@ -222,10 +222,9 @@ namespace Seven.EditorTools
                 // small vehicles moving between the platforms
                 for (int i = 0; i < 6; i++)
                 {
-                    var pv = new List<Vector3>(); var pt = new List<int>(); Ellipsoid(pv, pt, Vector3.zero, new Vector3(0.7f, 0.5f, 1.6f), 6, 10);
-                    var veh = MeshObject($"Vehicle{i}", SaveMesh(SmoothFinish(pv, pt), $"Europa_Vehicle{i}"), m.pod, st, false);
-                    veh.transform.position = new Vector3(80f + i * 9f, -62f + (i % 3) * 3f, 270f + (i % 2) * 30f); vehicles.Add(veh.transform);
-                    PointLight($"VehicleLight{i}", veh.transform.position + Vector3.forward * 1.6f, 6f, 0.8f, veh.transform);
+                    // QF13 (10): believable small craft (rounded hull, canopy, running lights, a thruster glow) - not plain pods
+                    var veh = SmallCraft($"Vehicle{i}", st, 3.2f, 1.4f, 1.0f, m, $"Europa_Vehicle{i}");
+                    veh.position = new Vector3(80f + i * 9f, -62f + (i % 3) * 3f, 270f + (i % 2) * 30f); vehicles.Add(veh);
                 }
                 // the race: registration arch, rings, carved arches, ice shelves, great pillars
                 var arch = new List<Vector3>(); var archT = new List<int>(); var ap = new List<Vector3>();
@@ -251,9 +250,7 @@ namespace Seven.EditorTools
                 // three rival vehicles (placeholders)
                 for (int i = 0; i < 3; i++)
                 {
-                    var pv = new List<Vector3>(); var pt = new List<int>(); Ellipsoid(pv, pt, Vector3.zero, new Vector3(0.6f, 0.4f, 1.5f), 6, 10);
-                    var rv2 = MeshObject($"Rival{i}", SaveMesh(SmoothFinish(pv, pt), $"Europa_Rival{i}"), m.pod, st, false); rv2.SetActive(false); rivals.Add(rv2.transform);
-                    Block($"RivalGlow{i}", new Vector3(-0.15f, -0.1f, -1.6f), new Vector3(0.15f, 0.1f, -1.4f), m.glow, rv2.transform, false);
+                    var rv2 = SmallCraft($"Rival{i}", st, 3.0f, 1.2f, 0.8f, m, $"Europa_Rival{i}"); rv2.gameObject.SetActive(false); rivals.Add(rv2);
                 }
             }
             // ---------------------------------------------------------------- the damaged migration route
@@ -347,7 +344,26 @@ namespace Seven.EditorTools
                 panels.Add(Block("Panel_Schematic", E.SchematicAt + new Vector3(-1.4f, 0.8f, 0.1f), E.SchematicAt + new Vector3(1.4f, 2.6f, 0.3f), m.panel, bs, false).GetComponent<Renderer>());
                 Block("Panel_HoldingOverride", E.HoldingDoor + new Vector3(1.0f, 1.0f, -2.4f), E.HoldingDoor + new Vector3(1.4f, 1.8f, -2.0f), m.panel, bs, false);
                 // the transports (they leave one by one through the west tunnel), the machinery, the device slots
-                for (int i = 0; i < 3; i++) { var tr = Block($"Transport{i}", new Vector3(-223.6f, y, 483f + i * 4f), new Vector3(-219.6f, y + 2.6f, 485.6f + i * 4f), m.pod, bs, false); transports.Add(tr.transform); }
+                // QF13 (10): the evacuation transports are real vessels (a rounded hull, a canopy at the bow, lit windows, a
+                // thruster ring at the stern), nose west, and they leave through a proper launch tunnel in the dock's west wall
+                for (int i = 0; i < 3; i++) { var tr = SmallCraft($"Transport{i}", bs, 4.6f, 2.4f, 2.0f, m, $"Europa_Transport{i}", true); tr.position = new Vector3(-221.6f, y + 1.15f, 484.3f + i * 4f); tr.rotation = Quaternion.Euler(0f, -90f, 0f); transports.Add(tr); }
+                {
+                    // the launch tunnel: the west wall with a 13 m wide opening, a lit portal frame, the tube running 70 m west
+                    float x0 = -224.6f, zA = 481.4f, zB = 494.6f, h = 3.4f;
+                    Block("LaunchTube_Floor", new Vector3(x0 - 70f, y - 0.4f, zA), new Vector3(x0, y, zB), m.metal, bs, false);
+                    Block("LaunchTube_Ceiling", new Vector3(x0 - 70f, y + h, zA - 0.6f), new Vector3(x0, y + h + 0.4f, zB + 0.6f), m.metalDark, bs, false);
+                    Block("LaunchTube_WallS", new Vector3(x0 - 70f, y - 0.4f, zA - 0.6f), new Vector3(x0, y + h, zA), m.metalDark, bs, false);
+                    Block("LaunchTube_WallN", new Vector3(x0 - 70f, y - 0.4f, zB), new Vector3(x0, y + h, zB + 0.6f), m.metalDark, bs, false);
+                    Block("LaunchTube_End", new Vector3(x0 - 70.6f, y - 0.4f, zA - 0.6f), new Vector3(x0 - 70f, y + h + 0.4f, zB + 0.6f), m.metalDark, bs, false);
+                    var fv = new List<Vector3>(); var ft = new List<int>();
+                    AddBox(fv, ft, new Vector3(x0 + 0.1f, y + h - 0.15f, (zA + zB) / 2f), new Vector3(0.3f, 0.3f, zB - zA + 1.2f));
+                    AddBox(fv, ft, new Vector3(x0 + 0.1f, y + h / 2f, zA - 0.3f), new Vector3(0.3f, h, 0.3f)); AddBox(fv, ft, new Vector3(x0 + 0.1f, y + h / 2f, zB + 0.3f), new Vector3(0.3f, h, 0.3f));
+                    MeshObject("LaunchTube_PortalFrame", SaveMesh(Finish(fv, ft), "Europa_LaunchPortal"), m.metal, bs);
+                    var lv = new List<Vector3>(); var lt = new List<int>();
+                    for (float x = x0 - 4f; x > x0 - 70f; x -= 6f) { AddBox(lv, lt, new Vector3(x, y + h - 0.05f, zA + 0.4f), new Vector3(1.2f, 0.08f, 0.2f)); AddBox(lv, lt, new Vector3(x, y + h - 0.05f, zB - 0.4f), new Vector3(1.2f, 0.08f, 0.2f)); }
+                    MeshObject("LaunchTube_StripLights", SaveMesh(Finish(lv, lt), "Europa_LaunchLights"), m.glow, bs, false);
+                    for (int k = 0; k < 4; k++) PointLight($"LaunchTubeLight{k}", new Vector3(x0 - 8f - k * 18f, y + 2.6f, (zA + zB) / 2f), 14f, 1.2f, bs);
+                }
                 var mv = new List<Vector3>(); var mt = new List<int>();
                 for (int i = 0; i < 6; i++) { var c = new Vector3(-165f + i * 3f, y, 490f); var mesh = Lathe(new[] { new Vector2(0f, 0f), new Vector2(1.2f, 0f), new Vector2(1.2f, 3.4f), new Vector2(0f, 3.4f) }, 0f, 360f, 14, null, c); int b = mv.Count; mv.AddRange(mesh.vertices); mt.AddRange(mesh.triangles.Select(k => k + b)); }
                 MeshObject("Machinery", SaveMesh(Finish(mv, mt), "Europa_Machinery"), m.metal, bs);
@@ -360,9 +376,25 @@ namespace Seven.EditorTools
                 Block("ObservationGlass", new Vector3(-183f, y, 504.5f), new Vector3(-179f, y + 3.4f, 504.6f), GlassMat("Europa_window_glass", 0.1f), bs, false);
                 shutter = Block("WindowShutter", new Vector3(-183f, y, 504.6f), new Vector3(-179f, y + 3.4f, 504.9f), m.metalDark, bs, false);
                 Block("TunnelerDockFloor", E.TunnelerDock + new Vector3(-8f, -0.4f, -6f), E.TunnelerDock + new Vector3(8f, 0f, 8f), m.metal, bs, false);
-                var cvv = new List<Vector3>(); var ctt = new List<int>(); Ellipsoid(cvv, ctt, Vector3.zero, new Vector3(1.6f, 1.2f, 3.6f), 8, 14);
-                var cr = MeshObject("TunnelerCraft", SaveMesh(SmoothFinish(cvv, ctt), "Europa_TunnelerCraft"), m.metalDark, bs, false); cr.transform.position = E.TunnelerDock + new Vector3(2f, 1.2f, 3f); craft = cr.transform;
+                // QF13 (10): his escape craft is a real vessel (a long dark hull, a canopy, fins, a thruster glow) and it leaves
+                // through its own docking passage north of his dock - a lit portal and a tube, never through a wall
+                var crT = SmallCraft("TunnelerCraft", bs, 7.2f, 3.0f, 2.2f, m, "Europa_TunnelerCraft", true, true); crT.position = E.TunnelerDock + new Vector3(2f, 1.2f, 3f); craft = crT;
                 PointLight("TunnelerDockLight", E.TunnelerDock + Vector3.up * 3f, 12f, 2f, bs);
+                {
+                    var dk = E.TunnelerDock; float z0 = dk.z + 8f, z1 = dk.z + 80f;
+                    Block("DockPassage_Floor", new Vector3(dk.x - 4f, dk.y - 0.6f, z0), new Vector3(dk.x + 8f, dk.y - 0.2f, z1), m.metal, bs, false);
+                    Block("DockPassage_Ceiling", new Vector3(dk.x - 4.6f, dk.y + 7f, z0), new Vector3(dk.x + 8.6f, dk.y + 7.4f, z1), m.metalDark, bs, false);
+                    Block("DockPassage_WallW", new Vector3(dk.x - 4.6f, dk.y - 0.6f, z0), new Vector3(dk.x - 4f, dk.y + 7f, z1), m.metalDark, bs, false);
+                    Block("DockPassage_WallE", new Vector3(dk.x + 8f, dk.y - 0.6f, z0), new Vector3(dk.x + 8.6f, dk.y + 7f, z1), m.metalDark, bs, false);
+                    Block("DockPassage_End", new Vector3(dk.x - 4.6f, dk.y - 0.6f, z1), new Vector3(dk.x + 8.6f, dk.y + 7.4f, z1 + 0.6f), m.metalDark, bs, false);
+                    var fv = new List<Vector3>(); var ft = new List<int>();
+                    AddBox(fv, ft, new Vector3(dk.x + 2f, dk.y + 6.8f, z0), new Vector3(13.2f, 0.4f, 0.4f)); AddBox(fv, ft, new Vector3(dk.x - 4.3f, dk.y + 3.2f, z0), new Vector3(0.4f, 7.6f, 0.4f)); AddBox(fv, ft, new Vector3(dk.x + 8.3f, dk.y + 3.2f, z0), new Vector3(0.4f, 7.6f, 0.4f));
+                    MeshObject("DockPassage_PortalFrame", SaveMesh(Finish(fv, ft), "Europa_DockPortal"), m.metal, bs);
+                    var lv = new List<Vector3>(); var lt = new List<int>();
+                    for (float z = z0 + 4f; z < z1; z += 7f) { AddBox(lv, lt, new Vector3(dk.x - 3.7f, dk.y + 6.6f, z), new Vector3(0.2f, 0.1f, 1.4f)); AddBox(lv, lt, new Vector3(dk.x + 7.7f, dk.y + 6.6f, z), new Vector3(0.2f, 0.1f, 1.4f)); }
+                    MeshObject("DockPassage_StripLights", SaveMesh(Finish(lv, lt), "Europa_DockLights"), m.glow, bs, false);
+                    for (int k = 0; k < 3; k++) PointLight($"DockPassageLight{k}", new Vector3(dk.x + 2f, dk.y + 5f, z0 + 10f + k * 22f), 16f, 1.2f, bs);
+                }
                 // the workers in the holding area
                 for (int i = 0; i < 6; i++) screeIn.Add(Scree($"ScreeWorker{i}", new Vector3(-197.5f - 2.2f * (i % 3), E.BaseY, 491.6f + 1.6f * (i / 3)), Vector3.back, bs).transform);   // by the north wall, off the door line (z 488)
                 // the access bay: the pool and the dock edge
@@ -370,7 +402,7 @@ namespace Seven.EditorTools
                 Block("BayWaterSurface", new Vector3(-176f, -94.35f, 444f), new Vector3(-164f, -94.3f, 456f), m.water, bs, false);
             }
             // ---------------------------------------------------------------- the escape tunnel, the open water, the temple
-            Transform collapse, rune, recordIco; ParticleSystem ruptures;
+            Transform collapse, rune, recordIco, blast = null; ParticleSystem ruptures; var debris = new List<Transform>();
             var supports = new List<Transform>();
             {
                 var esc = new GameObject("EscapeTunnel").transform; esc.SetParent(world, false);
@@ -387,6 +419,23 @@ namespace Seven.EditorTools
                 var colv = new List<Vector3>(); var colt = new List<int>();
                 for (int i = 0; i < 14; i++) Lump(colv, colt, E.EscapeMouth + new Vector3((float)rnd.NextDouble() * 10f - 5f, (float)rnd.NextDouble() * 10f - 5f, (float)rnd.NextDouble() * 6f + 3f), Vector3.one * (1.5f + (float)rnd.NextDouble() * 2f), 0.4f, rnd.Next(1000));
                 var col = MeshObject("EntranceCollapsed", SaveMesh(SmoothFinish(colv, colt), "Europa_Collapse"), m.rock, esc); collapse = col.transform; col.SetActive(false);
+                // QF13 (14): the blast front that chases her down the tunnel - a white-hot core filling the tube, a boiling
+                // shell, a wide halo (faces the camera), its light (lights the tunnel and the obstacles ahead of it); debris
+                {
+                    var bl = new GameObject("EscapeBlast").transform; bl.SetParent(esc, false);
+                    var cv = new List<Vector3>(); var ct = new List<int>(); Ellipsoid(cv, ct, Vector3.zero, new Vector3(5.2f, 5.2f, 3.4f), 12, 18);
+                    MeshObject("BlastCore", SaveMesh(SmoothFinish(cv, ct), "Europa_BlastCore"), m.glow, bl, false);
+                    var sv2 = new List<Vector3>(); var st2 = new List<int>(); Ellipsoid(sv2, st2, Vector3.zero, new Vector3(6.4f, 6.4f, 5.2f), 12, 18);
+                    var shell = Finish(sv2, st2); shell.colors = shell.vertices.Select(p => new Color(1f, 1f, 1f, 0.35f + 0.3f * Mathf.PerlinNoise(p.x * 0.4f + 3f, p.y * 0.4f + p.z * 0.3f))).ToArray();
+                    MeshObject("BlastShell", SaveMesh(shell, "Europa_BlastShell"), AdditiveMat("Europa_blast_shell", 0.9f), bl, false);
+                    var hv2 = new List<Vector3>(); var ht2 = new List<int>(); for (int k = 0; k < 32; k++) { var a0 = Polar(16f, k * 11.25f, 0f); var a1 = Polar(16f, (k + 1) * 11.25f, 0f); Quad(hv2, ht2, Vector3.zero, new Vector3(a1.x, a1.z, 0f), new Vector3(a0.x, a0.z, 0f), Vector3.zero); }
+                    var halo = Finish(hv2, ht2); halo.colors = halo.vertices.Select(p => new Color(1f, 1f, 1f, Mathf.Lerp(1f, 0f, Mathf.Clamp01(p.magnitude / 16f)))).ToArray();
+                    MeshObject("BlastHalo", SaveMesh(halo, "Europa_BlastHalo"), AdditiveMat("Europa_blast_halo", 1.4f), bl, false);
+                    var bLight = new GameObject("BlastLight").AddComponent<Light>(); bLight.transform.SetParent(bl, false); bLight.type = LightType.Point; bLight.range = 48f; bLight.intensity = 0f; bLight.shadows = LightShadows.None;
+                    bl.gameObject.SetActive(false); blast = bl;
+                    var dg = new GameObject("EscapeDebris").transform; dg.SetParent(esc, false);
+                    for (int i = 0; i < 16; i++) { var lv = new List<Vector3>(); var lt = new List<int>(); Lump(lv, lt, Vector3.zero, Vector3.one * (0.5f + (float)rnd.NextDouble() * 1.3f), 0.45f, rnd.Next(1000)); var lg = MeshObject($"Debris{i}", SaveMesh(SmoothFinish(lv, lt), $"Europa_EscDebris{i}"), i % 3 == 0 ? m.metalDark : m.rock, dg, false); lg.SetActive(false); debris.Add(lg.transform); }
+                }
                 ruptures = new GameObject("Ruptures").AddComponent<ParticleSystem>(); ruptures.transform.SetParent(esc, false);
                 { var mn = ruptures.main; mn.playOnAwake = false; mn.loop = false; mn.startLifetime = 2.2f; mn.startSpeed = new ParticleSystem.MinMaxCurve(2f, 7f); mn.startSize = new ParticleSystem.MinMaxCurve(0.5f, 2.6f); mn.maxParticles = 2000; mn.startColor = new Color(1f, 1f, 1f, 0.8f);
                   var sh = ruptures.shape; sh.shapeType = ParticleSystemShapeType.Sphere; sh.radius = 4f; var em = ruptures.emission; em.rateOverTime = 0f;
@@ -408,14 +457,10 @@ namespace Seven.EditorTools
                 recordIco = BuildIcosahedronShape("EuropaRecordCopy", tem, 0.07f, em2, "Europa_RecordIco").transform; recordIco.gameObject.SetActive(false);
             }
             // ---------------------------------------------------------------- the saucer (hovering over the shelf) + the beam
-            var saucer = new GameObject("Saucer").transform; saucer.SetParent(world, false); saucer.position = E.SaucerAt;
-            var rimMat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Saucer_rim.mat") ?? Dissolve("Saucer_rim", Color.white, 0.6f, false);
-            var mdark = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Moon_metal_dark.mat") ?? Dissolve("Moon_metal_dark", Gray(0.16f), 0.5f, false, 0.4f);
-            var hull = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Saucer_hull.mat"); var hullUnder = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Saucer_under.mat");
-            BuildSaucerExterior(saucer, E.SaucerHover, hull, hullUnder, mdark, rimMat);
-            var fieldMat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Moon_field.mat") ?? AdditiveMat("Moon_field", 0.8f);
-            var beam = BuildSaucerBeam(saucer, E.SaucerHover, E.SaucerHover - 0.1f, Seven.MoonLayout.HatchRadius, Seven.MoonLayout.BeamFloorRadius, mdark, rimMat, fieldMat);
-            foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;
+            // QF13 (16): the ONE saucer prefab, unchanged - the beam for 7, the bike hold for the bike (QF13 5)
+            var saucer = PlaceSaucer(world, E.SaucerAt);
+            var beam = saucer.GetComponent<Seven.SaucerBeam>();
+            CheckSaucer("Europa", saucer);
 
             // ---------------------------------------------------------------- ground, 7, the bike, the helmet, the Cetaceans
             var wg = new GameObject("WorldGround").AddComponent<Seven.WorldGround>();
@@ -433,11 +478,18 @@ namespace Seven.EditorTools
             var s7 = seven.AddComponent<Seven.ChapterSeven>(); s7.Input = input; s7.CameraTransform = camGo.transform;
             var ccam = camGo.AddComponent<Seven.ChapterCamera>(); ccam.Target = seven.transform; ccam.Input = input;
             // the bubble helmet: a clear glass sphere riding her head
-            var glassMat = GlassMat("Europa_helmet_glass", 0.14f);
-            var hv = new List<Vector3>(); var ht = new List<int>(); Ellipsoid(hv, ht, Vector3.zero, Vector3.one * 0.5f, 14, 22);
+            // QF13 (6): the helmet reads in bright misty water too - Seven/Bubble (a bright fresnel rim, soft highlights and a
+            // reflection streak, a faint veil over what is behind it) and a solid collar ring where it seals at her neck
+            var glassMat = BubbleMat();
+            var hv = new List<Vector3>(); var ht = new List<int>(); Ellipsoid(hv, ht, Vector3.zero, Vector3.one * 0.5f, 18, 28);
             var helmetSphere = MeshObject("BubbleHelmet", SaveMesh(SmoothFinish(hv, ht), "Europa_Helmet"), glassMat, world, false);
             helmetSphere.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
-            var helmet = seven.AddComponent<Seven.BubbleHelmet>(); helmet.Sphere = helmetSphere.transform; helmet.Anim = seven.GetComponent<Animator>();
+            var collarMat = Dissolve("Europa_helmet_collar", Gray(0.62f), 0.65f, false, 0.6f);
+            var colV = new List<Vector3>(); var colT = new List<int>();
+            Sweep(colV, colT, Enumerable.Range(0, 32).Select(i => new Vector3(Mathf.Cos(i / 32f * Mathf.PI * 2f) * 0.148f, 0f, Mathf.Sin(i / 32f * Mathf.PI * 2f) * 0.148f)).ToList(), 0.022f, true, 8);
+            Sweep(colV, colT, Enumerable.Range(0, 32).Select(i => new Vector3(Mathf.Cos(i / 32f * Mathf.PI * 2f) * 0.142f, 0.026f, Mathf.Sin(i / 32f * Mathf.PI * 2f) * 0.142f)).ToList(), 0.01f, true, 6);
+            var collar = MeshObject("HelmetCollar", SaveMesh(SmoothFinish(colV, colT), "Europa_HelmetCollar"), collarMat, world, false);
+            var helmet = seven.AddComponent<Seven.BubbleHelmet>(); helmet.Sphere = helmetSphere.transform; helmet.Collar = collar.transform; helmet.Anim = seven.GetComponent<Animator>();
 
             var bikeRoot = new GameObject("HoverBike").transform; bikeRoot.position = E.BikeDown;
             var visual = new GameObject("Visual").transform; visual.SetParent(bikeRoot, false);
@@ -453,6 +505,11 @@ namespace Seven.EditorTools
             { var mn = bubbles.main; mn.startLifetime = 3f; mn.startSpeed = 1.5f; mn.startSize = new ParticleSystem.MinMaxCurve(0.04f, 0.16f); mn.simulationSpace = ParticleSystemSimulationSpace.World; mn.gravityModifier = -0.12f; mn.startColor = new Color(1f, 1f, 1f, 0.7f);
               var sh = bubbles.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 18f; sh.radius = 0.3f; sh.rotation = new Vector3(0f, 180f, 0f); var em = bubbles.emission; em.rateOverTime = 0f;
               bubbles.GetComponent<ParticleSystemRenderer>().sharedMaterial = m.bubble; }
+            // QF13 (13): speed streaks - fine white motes rushing past the bike at speed (stretched along their motion)
+            var streaks = new GameObject("BikeSpeedStreaks").AddComponent<ParticleSystem>(); streaks.transform.SetParent(world, false);
+            { var mn = streaks.main; mn.startLifetime = 0.7f; mn.startSpeed = new ParticleSystem.MinMaxCurve(-38f, -26f); mn.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.08f); mn.simulationSpace = ParticleSystemSimulationSpace.World; mn.startColor = new Color(1f, 1f, 1f, 0.55f); mn.maxParticles = 600;
+              var sh = streaks.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(9f, 5f, 2f); var em = streaks.emission; em.rateOverTime = 0f;
+              var pr = streaks.GetComponent<ParticleSystemRenderer>(); pr.sharedMaterial = m.bubble; pr.renderMode = ParticleSystemRenderMode.Stretch; pr.velocityScale = 0.05f; pr.lengthScale = 2f; }
 
             Seven.Cetacean MakeCetacean(GameObject model, string name, Vector3 at, float scale, string matName)
             {
@@ -479,22 +536,28 @@ namespace Seven.EditorTools
                 c.Speed = i % 2 == 0 ? 3f : 6f; pod.Add(c);
             }
             // the guide light (the way to go): a small soft white orb with its light
-            var gl = new List<Vector3>(); var glt = new List<int>(); Ellipsoid(gl, glt, Vector3.zero, Vector3.one * 0.35f, 8, 12);
+            // QF13 (9): a much brighter, bigger guide light that cuts through the fog: a bright core, a wide soft halo (a
+            // camera-facing disc, scaled with distance by the director so it never shrinks to a dot) and a strong light
+            var gl = new List<Vector3>(); var glt = new List<int>(); Ellipsoid(gl, glt, Vector3.zero, Vector3.one * 0.6f, 10, 14);
             var guideLight = MeshObject("GuideLight", SaveMesh(SmoothFinish(gl, glt), "Europa_GuideLight"), m.glow, world, false);
-            PointLight("GuideLightLamp", Vector3.zero, 10f, 2f, guideLight.transform).transform.localPosition = Vector3.zero;
+            { var hvv = new List<Vector3>(); var htt = new List<int>(); for (int k = 0; k < 24; k++) { var a0 = Polar(3.2f, k * 15f, 0f); var a1 = Polar(3.2f, (k + 1) * 15f, 0f); Quad(hvv, htt, Vector3.zero, new Vector3(a1.x, a1.z, 0f), new Vector3(a0.x, a0.z, 0f), Vector3.zero); }
+              var halo = Finish(hvv, htt); halo.colors = halo.vertices.Select(p => new Color(1f, 1f, 1f, Mathf.Lerp(0.85f, 0f, Mathf.Clamp01(p.magnitude / 3.2f)))).ToArray();
+              MeshObject("GuideHalo", SaveMesh(halo, "Europa_GuideHalo"), AdditiveMat("Europa_guide_halo", 1.6f), guideLight.transform, false); }
+            PointLight("GuideLightLamp", Vector3.zero, 40f, 6f, guideLight.transform).transform.localPosition = Vector3.zero;
             guideLight.SetActive(false);
 
             var ui = new GameObject("ChapterUI").AddComponent<Seven.ChapterUI>(); ui.Cam = cam;
             var dlg = dirGo.AddComponent<Seven.DialoguePlayer>(); dlg.Bank = bank; dlg.UI = ui;
             var legend = new GameObject("ControlsLegend").AddComponent<Seven.ControlsLegend>(); legend.Cam = cam; legend.Set = Seven.ControlsLegend.Layout.Chapter; legend.HidePanels = true;
             var d = dirGo.AddComponent<Seven.EuropaDirector>();
-            d.Seven = s7; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend; d.Bike = hb; d.SaucerBeam = beam; d.Saucer = saucer;
+            d.Seven = s7; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend; d.Bike = hb; d.SaucerBeam = beam; d.Saucer = saucer; d.Hold = saucer.GetComponent<Seven.SaucerHold>();
             d.Atmo = atmo.GetComponent<Seven.Atmosphere>(); d.Helmet = helmet; d.Keeper = keeper; d.Guide = guide; d.HugeOne = huge; d.Pod = pod.ToArray();
             d.Vehicles = vehicles.ToArray(); d.RaceRings = rings.ToArray(); d.Rivals = rivals.ToArray(); d.RaceRegistration = registration;
             d.Tunneler = tunneler; d.TunnelerHead = drill; d.TunnelerCraft = craft; d.ScreenCam = screenCam; d.Screen = screenR;
             d.Barriers = barriers.ToArray(); d.DoorHolding = doorHolding; d.DoorTransport = doorTransport; d.DoorMachine = doorMachine; d.WindowShutter = shutter;
             d.Scree = screeIn.ToArray(); d.Transports = transports.ToArray(); d.DeviceSlots = devSlots.ToArray(); d.BasePanels = panels.ToArray();
-            d.EscapeSupports = supports.ToArray(); d.EscapeCollapse = collapse; d.Ruptures = ruptures; d.Bubbles = bubbles;
+            d.EscapeSupports = supports.ToArray(); d.EscapeCollapse = collapse; d.Ruptures = ruptures; d.Bubbles = bubbles; hb.Streaks = streaks;
+            d.EscapeBlast = blast; d.EscapeDebris = debris.ToArray();
             d.Rune = rune; d.RecordIco = recordIco; d.BaseLights = baseLights.ToArray(); d.GuideLight = guideLight.transform;
             d.Vision3 = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_03_europa.mp4");
             AddProbe(new Vector3(0f, -60f, 220f), new Vector3(300f, 100f, 240f), Vector3.zero);
@@ -504,6 +567,44 @@ namespace Seven.EditorTools
         }
 
         /// <summary>Round 14: clear glass (URP Lit, transparent, almost no tint - monochrome): the helmet, the observation window.</summary>
+        static Material BubbleMat()
+        {
+            var path = MatDir + "/Europa_helmet_bubble.mat"; var sh = Shader.Find("Seven/Bubble");
+            var g = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (g == null) { g = new Material(sh); AssetDatabase.CreateAsset(g, path); }
+            g.shader = sh; g.SetFloat("_Veil", 0.1f); g.SetFloat("_VeilGray", 0.55f); g.SetFloat("_Rim", 1.5f); g.SetFloat("_RimPower", 2.6f); g.SetFloat("_Highlight", 1f);
+            EditorUtility.SetDirty(g); return g;
+        }
+
+        /// <summary>QF13 (10): a small craft built from simple shapes in Kyle's style - a rounded hull (forward = +z), a canopy
+        /// toward the bow, running lights along the sides, a thruster ring + glow at the stern, optional fins. Returns its root
+        /// (meshes local, so it can be moved / turned as one).</summary>
+        static Transform SmallCraft(string name, Transform parent, float len, float wid, float hgt, EuMats m, string meshName, bool windows = false, bool fins = false)
+        {
+            var root = new GameObject(name).transform; root.SetParent(parent, false);
+            var hv = new List<Vector3>(); var ht = new List<int>();
+            Ellipsoid(hv, ht, Vector3.zero, new Vector3(wid * 0.5f, hgt * 0.5f, len * 0.5f), 10, 16);
+            Ellipsoid(hv, ht, new Vector3(0f, -hgt * 0.18f, -len * 0.08f), new Vector3(wid * 0.56f, hgt * 0.22f, len * 0.36f), 6, 12);       // a keel / skirt
+            if (fins) foreach (var sx in new[] { -1f, 1f }) Ellipsoid(hv, ht, new Vector3(sx * wid * 0.55f, 0f, -len * 0.3f), new Vector3(wid * 0.28f, hgt * 0.06f, len * 0.16f), 4, 8);
+            MeshObject(name + "_Hull", SaveMesh(SmoothFinish(hv, ht), meshName + "_Hull"), fins ? m.metalDark : m.pod, root, false);
+            var cv = new List<Vector3>(); var ct = new List<int>();
+            Ellipsoid(cv, ct, new Vector3(0f, hgt * 0.32f, len * 0.22f), new Vector3(wid * 0.3f, hgt * 0.26f, len * 0.2f), 8, 12);
+            MeshObject(name + "_Canopy", SaveMesh(SmoothFinish(cv, ct), meshName + "_Canopy"), m.metalDark, root, false);
+            var lv = new List<Vector3>(); var lt = new List<int>();
+            int n = windows ? 5 : 2;
+            for (int i = 0; i < n; i++) foreach (var sx in new[] { -1f, 1f })
+                { float z = Mathf.Lerp(len * 0.22f, -len * 0.2f, n == 1 ? 0.5f : i / (float)(n - 1)); AddBox(lv, lt, new Vector3(sx * wid * 0.47f, hgt * 0.08f, z), new Vector3(0.05f, hgt * 0.09f, len * 0.05f)); }
+            AddBox(lv, lt, new Vector3(0f, hgt * 0.05f, len * 0.5f), new Vector3(wid * 0.18f, hgt * 0.08f, 0.06f));                            // the bow light
+            MeshObject(name + "_Lights", SaveMesh(Finish(lv, lt), meshName + "_Lights"), m.glow, root, false);
+            var tv = new List<Vector3>(); var tt = new List<int>();
+            Sweep(tv, tt, Enumerable.Range(0, 20).Select(i => new Vector3(Mathf.Cos(i / 20f * Mathf.PI * 2f) * wid * 0.22f, Mathf.Sin(i / 20f * Mathf.PI * 2f) * hgt * 0.22f, -len * 0.47f)).ToList(), Mathf.Max(0.04f, wid * 0.035f), true, 6);
+            MeshObject(name + "_ThrusterRing", SaveMesh(SmoothFinish(tv, tt), meshName + "_Ring"), m.metal, root, false);
+            var gv = new List<Vector3>(); var gt = new List<int>(); Ellipsoid(gv, gt, new Vector3(0f, 0f, -len * 0.5f), new Vector3(wid * 0.18f, hgt * 0.18f, len * 0.05f), 6, 10);
+            MeshObject(name + "_ThrusterGlow", SaveMesh(SmoothFinish(gv, gt), meshName + "_Glow"), m.glow, root, false);
+            var l = PointLight(name + "_Light", Vector3.zero, Mathf.Max(5f, len * 1.6f), 0.9f, root); l.transform.localPosition = new Vector3(0f, 0f, -len * 0.62f);
+            return root;
+        }
+
         static Material GlassMat(string name, float alpha)
         {
             var g = Lit(name, new Color(0.95f, 0.95f, 0.95f, alpha), 0.97f);

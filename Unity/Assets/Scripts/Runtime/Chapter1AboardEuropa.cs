@@ -130,7 +130,8 @@ namespace Seven
                 yield return ShotV("ea10_helmet_off_panther_waiting");
                 // she notices where he is
                 yield return Turn(Seven.transform, catAt, 0.6f);
-                yield return SayE("EUR_16", 1, 2);               // Were you waiting for the bike? / Someone had to inspect the damage.
+                // QF13 (18): the bike talk is cut (the bike is not in view aboard) - EUR_16_01..03 removed; the reunion stays
+                yield return Wait(0.6f);
                 // she kneels beside him
                 Seven.Frozen = false; bool sd = Seven.ScriptDriven; Seven.ScriptDriven = true;
                 yield return AutoWalk(catAt + Flat(at - catAt).normalized * 0.75f);
@@ -138,7 +139,7 @@ namespace Seven
                 if (Seven.HasState("crouch_idle")) Seven.PlayClip("crouch_idle", 0.5f);
                 yield return Turn(Seven.transform, catAt, 0.4f);
                 CamTo(catAt + new Vector3(1.6f, 0.8f, 1.2f), (catAt + Seven.transform.position) * 0.5f + Up * 0.5f, 0.8f, 42f);
-                yield return SayE("EUR_16", 3, 3);               // No damage.
+                yield return Wait(0.8f);
                 // he presses his head against her hand
                 var head = catAt + Up * 0.32f + Cat.transform.forward * 0.18f;
                 _ik.RightPos = head + Up * 0.04f; _ik.RightW = 1f; _ik.LookPos = head; _ik.LookW = 0.8f;
@@ -188,7 +189,25 @@ namespace Seven
             EuropaState.Reach(EuropaLayout.CpDone);
             EuropaDebriefDone = true;
             if (DemoBoot.CaptureDir != null) Cap?.Log($"EUROPA CHAPTER DONE: {EuropaState.Summary()}");
+            // QF13 (15): the petting moment ends here - its stroke loop owned her left hand for as long as it ran (it was never
+            // stopped, so after standing up her arm kept reaching for the cat wherever she walked)
+            _stroke = 0f; yield return Wait(0.4f);
+            if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
+            _ik.ReleaseAll("the Europa debrief ends");
             yield return StandFromPilotChair();
+            if (DemoBoot.CaptureDir != null)
+            {
+                // QF13 (15) check: after standing up she walks off - her arms hang naturally (no hand still reaching for the cat)
+                Seven.Frozen = false; bool sd = Seven.ScriptDriven; Seven.ScriptDriven = true;
+                var to = Seven.transform.position + Seven.transform.forward * 3.5f;
+                CamTo(Seven.transform.position + Seven.transform.right * 3.2f + Up * 1.4f + Seven.transform.forward * 1.5f, Seven.transform.position + Up * 1.0f + Seven.transform.forward * 1.5f, 0.3f, 48f);
+                var walk = StartCoroutine(AutoWalk(to));
+                yield return Wait(1.6f);
+                Cap?.Log($"arms after the debrief (QF13 15): hand IK weights left {_ik.LeftW:0.00} right {_ik.RightW:0.00} look {_ik.LookW:0.00}; safety-net releases so far {SevenTableIK.NetReleases}");
+                yield return ShotV("qf13_15b_after_the_debrief_walking_arms_free");
+                yield return walk;
+                Seven.ScriptMove = Vector2.zero; Seven.ScriptDriven = sd;
+            }
             ShipConsole.StoryLock = false;
             yield return ExploreVenus(false);
         }

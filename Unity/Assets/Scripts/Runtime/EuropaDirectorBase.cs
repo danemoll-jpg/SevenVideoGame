@@ -97,6 +97,7 @@ namespace Seven
         IEnumerator BaseContact()
         {
             Objective("Find the workers");
+            if (Shots) StartCoroutine(WalkInShots());
             if (Auto) StartCoroutine(WalkRoute(EuropaLayout.ControlSpot, 30f)); StartCoroutine(GuideTo(EuropaLayout.ControlSpot, () => P7.z > 481.5f));
             yield return Until(() => P7.z > 481.5f, "into the control area", 60f, "Follow the corridor to the control room", EuropaLayout.ControlSpot, () => Seven.Place(EuropaLayout.ControlSpot, Vector3.forward));
             yield return Cutscene(true);
@@ -128,6 +129,7 @@ namespace Seven
             yield return Shot("e17_security_barriers_close");
             if (alarm != null) StartCoroutine(AudioKit.Fade(alarm, 0f, 3f, true));
             Complete("EUR_08");
+            Log($"Tunneler's drill (QF13 11): spun continuously while he spoke - {DrillTurns} full turns, top speed {DrillMaxSpeed:0} deg/s, spinning down when he stopped (never twisting back)");
             yield return Cutscene(false);
             // reach the worker holding area: the override panel beside the barred door (no guard is ever harmed)
             Objective("Reach the worker holding area");
@@ -137,6 +139,19 @@ namespace Seven
             AudioKit.Play("europa_pressure_door", EuropaLayout.HoldingDoor, 0.7f);
             yield return Wait(0.6f);
         }
+        /// <summary>QF13 (7): the walk in, from the gameplay camera - the dock, the pressure chamber, the corridor, the
+        /// control room door - one capture every 1.2 s with the cut-away / blocked state.</summary>
+        IEnumerator WalkInShots()
+        {
+            for (int i = 0; i < 14 && P7.z < 482f; i++)
+            {
+                yield return Wait(1.2f);
+                if (_cut) continue;
+                Log($"walk in (QF13 7) #{i}: 7 at {P7:0.0}, camera {Cam.transform.position:0.0} ({Vector3.Distance(Cam.transform.position, P7 + Vector3.up * 1.45f):0.0} m from her head), walls cut away now {(_baseWalls != null ? System.Linq.Enumerable.Count(_baseWalls, r => r != null && r.forceRenderingOff) : 0)}");
+                yield return Shot($"qf13_07_walk_in_{i:00}");
+            }
+        }
+
         IEnumerator Drop(GameObject g, bool open = false)
         {
             if (!open) { g.SetActive(true); var p1 = g.transform.position; var p0 = p1 + Vector3.up * 3f; for (float t = 0f; t < 1f; t += Time.deltaTime / 0.6f) { g.transform.position = Vector3.Lerp(p0, p1, t * t); yield return null; } g.transform.position = p1; }
@@ -360,16 +375,11 @@ namespace Seven
                 yield return Wait(0.6f);
                 yield return Shot("e23_insert_hands_settle_into_the_grips");
                 yield return Say("EUR_12", 1, 4);                // Panther? / I'm here. / Everyone clear? / Everyone we brought out...
-                // she triggers the demolition: white flashes inside the extraction structure, power fails in sections
-                Shoot(EuropaLayout.Approach[4] + new Vector3(0f, 14f, -26f), EuropaLayout.Approach[6] + Vector3.up * 2f, 58f, 0.01f);
-                AudioKit.Play("europa_demolition", null, 1f);
+                // QF13 (14): the detonation is SHOWN - she triggers it; a wide shot of the base: the first blast erupts (a huge
+                // white flash, a rolling boil of bubbles and debris, the structure buckling), the shockwave hits the camera
                 if (_alarm != null) StartCoroutine(AudioKit.Fade(_alarm, 0f, 1f, true));
                 if (_drill != null) { StartCoroutine(AudioKit.Fade(_drill, 0f, 1.5f, true)); _drill = null; }
-                for (int i = 0; BaseLights != null && i < BaseLights.Length; i++) StartCoroutine(Flash(BaseLights[i], i * 0.25f));
-                CameraShake.Quake(1.4f, 0.8f);
-                yield return Wait(0.9f);
-                yield return Shot("e24_extreme_wide_white_flashes");
-                yield return Wait(1.0f);
+                yield return Detonation();
                 yield return Cutscene(false);
                 yield return EscapeRide();
                 Complete("EUR_12");
@@ -383,6 +393,55 @@ namespace Seven
             float i0 = l.intensity;
             for (float t = 0f; t < 0.5f; t += Time.deltaTime) { l.intensity = i0 + 6f * (1f - t / 0.5f); yield return null; }
             l.intensity = 0f;                                   // power fails in that section
+        }
+
+        public Transform EscapeBlast; public Transform[] EscapeDebris;
+        static Vector3 BaseCore => EuropaLayout.Approach[6] + Vector3.up * 2f;          // where the first blast erupts (the extraction structure at the bay)
+        /// <summary>QF13 (14): the first blast, seen from outside the base.</summary>
+        IEnumerator Detonation()
+        {
+            // the wide down the industrial approach tube (on its axis, so its walls never block the view), ~40 m from the bay
+            var camAt = Vector3.Lerp(EuropaLayout.Approach[4], EuropaLayout.Approach[6], 0.7f) + Vector3.up * 3.5f;
+            Shoot(camAt, BaseCore + Vector3.up * 2f, 54f, 0.01f);
+            yield return Wait(0.6f);
+            yield return Shot("qf13_14a_the_base_before_the_blast");
+            AudioKit.Play("europa_demolition", null, 1f);
+            for (int i = 0; BaseLights != null && i < BaseLights.Length; i++) StartCoroutine(Flash(BaseLights[i], i * 0.12f));
+            var bl = EscapeBlast; Light bLight = bl != null ? bl.GetComponentInChildren<Light>(true) : null;
+            if (bl != null) { bl.gameObject.SetActive(true); bl.position = BaseCore; bl.localScale = Vector3.one * 0.2f; }
+            var buckle = new List<(Transform t, Vector3 p, Quaternion r)>();
+            foreach (var n in new[] { "WorkPlatform", "PipesAndIntakes" }) { var g = GameObject.Find(n); if (g != null) buckle.Add((g.transform, g.transform.position, g.transform.rotation)); }
+            StartCoroutine(UI.Fade(0.85f, 0.08f, 1f));
+            if (Ruptures != null) { Ruptures.transform.position = BaseCore; Ruptures.Emit(500); }
+            ThrowDebris(BaseCore, 22f, 16);
+            bool shot = false, hit = false;
+            for (float t = 0f; t < 2.6f; t += Time.deltaTime)
+            {
+                float u = Mathf.Clamp01(t / 1.6f);
+                if (bl != null) { bl.localScale = Vector3.one * Mathf.Lerp(0.2f, 2.8f, Mathf.SmoothStep(0f, 1f, u)); bl.rotation = Quaternion.LookRotation(bl.position - Cam.transform.position); }
+                if (bLight != null) bLight.intensity = Mathf.Lerp(30f, 6f, u);
+                if (t > 0.12f && t - Time.deltaTime <= 0.12f) StartCoroutine(UI.Fade(0f, 0.6f, 1f));
+                foreach (var b in buckle) b.t.SetPositionAndRotation(b.p + Vector3.down * 2.5f * u * u, b.r * Quaternion.Euler(6f * u, 0f, -9f * u));
+                if (Ruptures != null && Mathf.Repeat(t, 0.15f) < Time.deltaTime) { Ruptures.transform.position = BaseCore + UnityEngine.Random.insideUnitSphere * 10f; Ruptures.Emit(60); }
+                if (!shot && t > 0.5f) { shot = true; StartCoroutine(Shot("qf13_14b_the_blast_erupts")); }
+                if (!hit && t > 1.2f) { hit = true; AudioKit.Play("europa_pressure_wave", null, 0.9f); CameraShake.Quake(1.6f, 1.1f); Cam.Shot(camAt + (camAt - BaseCore).normalized * 3f, BaseCore + Vector3.up * 2f, 0.25f, false, 58f); StartCoroutine(Shot("qf13_14c_the_shockwave_hits")); }
+                yield return null;
+            }
+            if (bl != null) bl.gameObject.SetActive(false);
+            Log("escape (QF13 14): the detonation shown - wide on the base, the blast (white flash, boil of bubbles + debris), the structure buckling, the shockwave on the camera");
+        }
+        void ThrowDebris(Vector3 at, float speed, int n)
+        {
+            if (EscapeDebris == null) return;
+            for (int i = 0; i < Mathf.Min(n, EscapeDebris.Length); i++) { var d = EscapeDebris[(i + _debrisNext) % EscapeDebris.Length]; if (d != null) StartCoroutine(Fly(d, at + UnityEngine.Random.insideUnitSphere * 3f, UnityEngine.Random.onUnitSphere * speed * UnityEngine.Random.Range(0.4f, 1f))); }
+            _debrisNext += n;
+        }
+        int _debrisNext;
+        IEnumerator Fly(Transform d, Vector3 from, Vector3 v)
+        {
+            d.gameObject.SetActive(true); d.position = from; var spin = UnityEngine.Random.onUnitSphere * 200f;
+            for (float t = 0f; t < 2.4f; t += Time.deltaTime) { v *= Mathf.Pow(0.45f, Time.deltaTime); v += Vector3.down * 3f * Time.deltaTime; d.position += v * Time.deltaTime; d.Rotate(spin * Time.deltaTime, Space.World); yield return null; }
+            d.gameObject.SetActive(false);
         }
 
         /// <summary>Section 12: the chase out. The destruction advances behind her along the tunnel (a little slower than the
@@ -400,7 +459,7 @@ namespace Seven
                 if (!Bike.Riding) Bike.Mount();
                 FollowCamera(); Cam.SnapBehind();
                 bool crashed = false; string why = null;
-                float front = -22f;                             // the destruction's distance along the path (behind her start)
+                float front = -34f;                             // the blast front's distance along the path (behind her start)
                 var pts = EuropaLayout.Escape;
                 float total = 0f; var seg = new float[pts.Length]; for (int i = 1; i < pts.Length; i++) { seg[i] = Vector3.Distance(pts[i - 1], pts[i]); total += seg[i]; }
                 Vector3 OnPath(float s) { if (s <= 0f) return pts[0] + (pts[0] - pts[1]).normalized * -s; for (int i = 1; i < pts.Length; i++) { if (s <= seg[i]) return Vector3.Lerp(pts[i - 1], pts[i], s / seg[i]); s -= seg[i]; } return pts[pts.Length - 1]; }
@@ -408,16 +467,59 @@ namespace Seven
                 var safe = SafeLine();
                 if (Auto) StartCoroutine(AutoSwim(safe, 3.5f));
                 bool saidJunction = false, saidNext = false, saidNarrow = false, saidKeep = false, lowShot = false;
-                float lastRupture = 0f; float t0 = Time.time;
+                float lastRupture = 0f, lastDebris = 0f; float t0 = Time.time;
+                // QF13 (14): the blast front - a white-hot wall filling the tunnel, always racing up behind her (it starts 34 m
+                // back and runs a little under the bike's top speed, faster if she dawdles); the supports ahead fall in as she
+                // nears them, lit by its glow; real chase framing she can steer in: a low camera in front looking back at her
+                // with the blast behind (the start), the chase camera, a side tracking shot (mid-tunnel), the chase camera
+                var bl = EscapeBlast; Light bLight = bl != null ? bl.GetComponentInChildren<Light>(true) : null;
+                if (bl != null) { bl.gameObject.SetActive(true); bl.localScale = Vector3.one; }
+                var fell = new bool[EscapeSupports != null ? EscapeSupports.Length : 0];
+                if (EscapeSupports != null) foreach (var s in EscapeSupports) if (s != null) s.gameObject.SetActive(false);   // they fall in during the ride
+                string frame = "";
+                float minGap = 999f, maxGap = 0f; int inFrame = 0, frames = 0;
                 while (Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeMouth) > 6f && Time.time - t0 < 120f)
                 {
                     float me = Along(Bike.transform.position);
                     foreach (var q in safe) if (q.z < Bike.transform.position.z - 3f) { ShowGuide(q); break; }
-                    front += (Auto ? 5.6f : 6.0f) * Time.deltaTime;          // the bike tops out at 8.5: a clean line stays ahead
-                    if (Time.time - lastRupture > 0.7f && Ruptures != null) { lastRupture = Time.time; Ruptures.transform.position = OnPath(front); Ruptures.Emit(30); AudioKit.Play("europa_rupture", OnPath(front), 0.7f, 0.1f, AudioKit.Bus.Sfx, 60f); }
-                    if (front > me - 1.5f) { crashed = true; why = "caught by the ruptures"; break; }
-                    foreach (var s in EuropaLayout.EscapeSupports) if (Vector3.Distance(Bike.transform.position, s) < 1.7f) { crashed = true; why = "hit a broken support"; }
+                    float gap0 = me - front;
+                    float fs = Mathf.Lerp(17f, 22.5f, Mathf.Clamp01(me / total)) + Mathf.Clamp(gap0 - 22f, 0f, 24f) * 0.5f;   // closes in if she is far ahead; never faster than she can ride
+                    front += fs * Time.deltaTime;
+                    var fp = OnPath(front); var fdir = (OnPath(front + 2f) - fp).normalized;
+                    if (bl != null) { bl.position = fp; bl.rotation = Quaternion.LookRotation(fp - Cam.transform.position); }
+                    if (bLight != null) bLight.intensity = 9f + 3f * Mathf.PerlinNoise(Time.time * 6f, 0f);
+                    if (Time.time - lastRupture > 0.18f && Ruptures != null) { lastRupture = Time.time; Ruptures.transform.position = fp + fdir * 2f; Ruptures.Emit(45); }
+                    if (Time.time - lastDebris > 0.5f) { lastDebris = Time.time; ThrowDebris(fp + fdir * 3f + Vector3.up * 3f, 9f, 2); AudioKit.Play("europa_rupture", fp, 0.85f, 0.1f, AudioKit.Bus.Sfx, 80f); }
+                    float gap = me - front; minGap = Mathf.Min(minGap, gap); maxGap = Mathf.Max(maxGap, gap);
+                    if (front > me - 2.5f) { crashed = true; why = "caught by the blast"; break; }
+                    // the supports fall in ahead of her, lit by the blast (readable obstacles)
+                    for (int i = 0; EscapeSupports != null && i < EscapeSupports.Length; i++)
+                        if (!fell[i] && EscapeSupports[i] != null && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeSupports[i]) < 48f) { fell[i] = true; StartCoroutine(SupportFalls(EscapeSupports[i])); }
+                    foreach (var s in EuropaLayout.EscapeSupports) if (Vector3.Distance(Bike.transform.position, s) < 1.7f) { crashed = true; why = "hit a falling support"; }
                     if (crashed) break;
+                    // the chase framing by where she is along the tunnel (short cuts, never confusing about where she goes)
+                    string want = me < 30f || (me > total * 0.72f && me < total * 0.8f) ? "front" : me > total * 0.42f && me < total * 0.56f ? "side" : "chase";
+                    {
+                        // every framing is kept inside the tunnel (the swim volume) - a follow camera behind her slid
+                        // through the tunnel's walls at the bends and showed nothing (Dan: "you couldn't even tell what happened")
+                        var b = Bike.transform; Vector3 cp, lk; float fov;
+                        if (want == "front") { cp = b.position + b.forward * 6f + Vector3.up * 0.8f + b.right * 1.0f; lk = b.position + Vector3.up * 0.8f - b.forward * 8f; fov = 60f; }
+                        else if (want == "side")
+                        {
+                            // the side with room (the tunnel wall must not push the camera into her); too tight = the chase framing
+                            var r1 = EuropaLayout.SwimClamp(b.position + b.right * 2.8f + Vector3.up * 1.0f - b.forward * 1.5f, 1.3f);
+                            var r2 = EuropaLayout.SwimClamp(b.position - b.right * 2.8f + Vector3.up * 1.0f - b.forward * 1.5f, 1.3f);
+                            cp = (r1 - b.position).magnitude >= (r2 - b.position).magnitude ? r1 : r2; lk = b.position + b.forward * 3f + Vector3.up * 0.5f; fov = 62f;
+                            if ((cp - b.position).magnitude < 2.2f) { cp = b.position - b.forward * 6.5f + Vector3.up * 1.8f; lk = b.position + b.forward * 6f + Vector3.up * 0.5f; fov = 60f; }
+                        }
+                        else { cp = b.position - b.forward * 6.5f + Vector3.up * 1.8f; lk = b.position + b.forward * 6f + Vector3.up * 0.5f; fov = 60f; }
+                        cp = EuropaLayout.SwimClamp(cp, 1.3f);
+                        Cam.Shot(cp, lk, frame != want ? 0.01f : 0.12f, frame != want, fov);
+                    }
+                    if (frame != want) { Log($"escape (QF13 14): cut to the {want} framing at {me:0} m (blast {gap:0} m behind her)"); StartCoroutine(Shot($"qf13_14d_chase_{want}_{me:000}m")); }
+                    frame = want;
+                    if (Shots && Time.time > _seqAt) { _seqAt = Time.time + 0.4f; StartCoroutine(Shot($"qf13_14s_{_seqN++:00}_chase_{want}")); }
+                    frames++; if (bl != null) { var vp = Cam.GetComponent<Camera>().WorldToViewportPoint(bl.position); if (vp.z > 0f && vp.x > -0.2f && vp.x < 1.2f && vp.y > -0.2f && vp.y < 1.2f) inFrame++; }
                     if (!saidJunction && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeJunction) < 22f) { saidJunction = true; StartCoroutine(Say("EUR_12", 5, 6)); }   // Left at the junction / I see it.
                     if (!saidNext && me > total * 0.45f) { saidNext = true; StartCoroutine(Say("EUR_12", 7, 8)); }                                                         // The next opening— / I see it!
                     if (!saidNarrow && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeNarrow) < 14f) { saidNarrow = true; if (EscapeCollapse != null) StartCoroutine(Narrowing()); }
@@ -434,7 +536,9 @@ namespace Seven
                     yield return null;
                 }
                 StopAutoSwim(); HideGuide();
+                Log($"escape (QF13 14): try {tries}: blast {minGap:0}..{maxGap:0} m behind her; the blast (or its light) in the frame in {inFrame} of {frames} frames; {(crashed ? why : "out")}");
                 if (!crashed) break;
+                if (bl != null) bl.gameObject.SetActive(false);
                 Crashes++;
                 Log($"escape ride: {why} at {Bike.transform.position} - white flash, retry from the start (try {tries + 1})");
                 yield return UI.Fade(1f, 0.25f, 1f);
@@ -442,22 +546,43 @@ namespace Seven
                 yield return UI.Fade(0f, 0.6f, 1f);
                 if (tries >= 6 && Auto) { Log("escape ride: autopilot could not finish - placed at the mouth (check run only)"); Bike.Place(EuropaLayout.EscapeMouth, 200f); break; }
             }
-            // she bursts out into open water; the entrance collapses behind her; the pressure wave throws the bike off line
-            if (EscapeCollapse != null) EscapeCollapse.gameObject.SetActive(true);
-            AudioKit.Play("europa_demolition", EuropaLayout.EscapeMouth, 0.8f, 0f, AudioKit.Bus.Sfx, 200f);
-            Shoot(EuropaLayout.OpenWaterStop + new Vector3(16f, 6f, 6f), EuropaLayout.EscapeMouth + Vector3.forward * -6f, 56f, 0.01f);
-            yield return Wait(0.6f);
-            AudioKit.Play("europa_pressure_wave", null, 1f);
-            Bike.Shove((EuropaLayout.OpenWaterStop - EuropaLayout.EscapeMouth).normalized * 9f + Vector3.up * 2f, 260f);
-            CameraShake.Quake(1.2f, 1f);
-            yield return Wait(0.5f);
-            yield return Shot("e26_the_pressure_wave");
-            yield return Wait(1.2f);                             // do not cut away before she recovers
-            yield return Shot("e27_she_recovers");
-            FollowCamera();
+            // QF13 (14): the money shot - she bursts out of the tunnel mouth a split second ahead of the blast; the fireball
+            // erupts out of the opening behind her (slow motion for a moment), the pressure wave catches and spins the bike,
+            // she wrestles it back under control - the player sees her recover; then the entrance collapses and it goes quiet
+            {
+                var bl = EscapeBlast; Light bLight = bl != null ? bl.GetComponentInChildren<Light>(true) : null;
+                var mouth = EuropaLayout.EscapeMouth; var outDir = (EuropaLayout.OpenWaterStop - mouth).normalized;
+                var wide = mouth + outDir * 28f + Vector3.Cross(Vector3.up, outDir) * 3f + Vector3.up * 1.5f;     // in the open water, looking straight back into the mouth: she bursts out toward the camera, the fireball behind her
+                Shoot(wide, mouth, 50f, 0.01f);
+                float ts0 = Time.timeScale;
+                if (bl != null) { bl.gameObject.SetActive(true); bl.position = mouth - outDir * 6f; bl.localScale = Vector3.one; }
+                AudioKit.Play("europa_demolition", mouth, 1f, 0f, AudioKit.Bus.Sfx, 300f);
+                bool s1 = false, s2 = false, shoved = false;
+                for (float t = 0f; t < 2.4f; t += Time.unscaledDeltaTime)
+                {
+                    Time.timeScale = ts0 * (t < 0.3f ? 1f : t < 1.5f ? 0.3f : Mathf.Lerp(0.3f, 1f, (t - 1.5f) / 0.9f));
+                    float u = Mathf.Clamp01((t - 0.15f) / 1.6f);
+                    if (bl != null) { bl.position = mouth + outDir * Mathf.Lerp(-6f, 1f, u); bl.localScale = Vector3.one * Mathf.Lerp(1f, 1.6f, u); bl.rotation = Quaternion.LookRotation(bl.position - Cam.transform.position); }
+                    if (bLight != null) bLight.intensity = Mathf.Lerp(14f, 4f, u);
+                    if (Ruptures != null && Mathf.Repeat(t, 0.1f) < Time.unscaledDeltaTime) { Ruptures.transform.position = mouth + outDir * 4f * u; Ruptures.Emit(70); }
+                    if (!shoved && t > 0.45f) { shoved = true; AudioKit.Play("europa_pressure_wave", null, 1f); Bike.Shove(outDir * 9f + Vector3.up * 2f, 260f); CameraShake.Quake(1.4f, 1f); ThrowDebris(mouth, 14f, 10); }
+                    if (!s1 && t > 0.7f) { s1 = true; StartCoroutine(Shot("qf13_14e_burst_out_fireball_behind_her")); }
+                    if (Shots && Time.unscaledTime > _seqAt) { _seqAt = Time.unscaledTime + 0.3f; StartCoroutine(Shot($"qf13_14s_{_seqN++:00}_burst_out")); }
+                    if (!s2 && t > 1.4f) { s2 = true; StartCoroutine(Shot("e26_the_pressure_wave")); }
+                    yield return null;
+                }
+                Time.timeScale = ts0;
+                if (bl != null) bl.gameObject.SetActive(false);
+                if (EscapeCollapse != null) EscapeCollapse.gameObject.SetActive(true);
+                // she wrestles it back under control - stay on her until she has
+                var b = Bike.transform; Shoot(EuropaLayout.SwimClamp(b.position + outDir * 7f + Vector3.Cross(Vector3.up, outDir) * 3f + Vector3.up * 1.2f, 1.5f), b.position + Vector3.up * 0.8f, 50f, 0.6f);
+                yield return Wait(1.4f);
+                yield return Shot("e27_she_recovers");
+                FollowCamera();
+            }
             Log($"escape ride: out in open water after {tries} try/tries ({Crashes} crash(es) in total) - the pressure wave, she recovers");
         }
-        bool _escShot;
+        bool _escShot; float _seqAt; int _seqN;
         Vector3[] SafeLine()
         {
             // the autopilot line: the tunnel's centre, with a side-step round each support
@@ -470,6 +595,17 @@ namespace Seven
             l.Sort((a, b) => b.z.CompareTo(a.z));
             return l.ToArray();
         }
+        /// <summary>QF13 (14): a broken support drops into the tunnel ahead of her (from the ceiling, tumbling), dust.</summary>
+        IEnumerator SupportFalls(Transform s)
+        {
+            var p1 = s.position; var r1 = s.rotation; var p0 = p1 + Vector3.up * 7f; var r0 = r1 * Quaternion.Euler(0f, 0f, 35f);
+            s.gameObject.SetActive(true);
+            AudioKit.Play("europa_rupture", p1, 0.9f, 0.1f, AudioKit.Bus.Sfx, 80f);
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.75f) { float u = t * t; s.SetPositionAndRotation(Vector3.Lerp(p0, p1, u), Quaternion.Slerp(r0, r1, u)); yield return null; }
+            s.SetPositionAndRotation(p1, r1);
+            if (Ruptures != null) { Ruptures.transform.position = p1; Ruptures.Emit(40); }
+        }
+
         IEnumerator Narrowing()
         {
             // a collapsing section narrows the route (a slab tilting in from the wall)
@@ -630,9 +766,9 @@ namespace Seven
             Shoot(land + new Vector3(16f, 4f, 14f), land + new Vector3(0f, 2.5f, 0f), 50f, 0.01f);
             yield return UI.Fade(0f, 1.0f);
             yield return Shot("e33_wide_saucer_above_the_ice");
+            // QF13 (5): the bike rises back into the bike hold, which closes seamlessly; the beam is only for her
+            yield return HoldBikeIn();
             if (SaucerBeam != null) { yield return SaucerBeam.Iris(true); yield return SaucerBeam.BeamOn(true); }
-            yield return GlideBike(EuropaLayout.SaucerAt, 1.4f);
-            if (SaucerBeam != null) yield return SaucerBeam.Rise(Bike.transform, 2.8f, 30f);
             // she boards through the beam - no ramp
             yield return WalkSeven(EuropaLayout.SevenDown, 6f);
             Seven.Lock(true); Seven.BeginFloat();

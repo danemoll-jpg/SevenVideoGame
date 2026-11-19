@@ -847,21 +847,19 @@ namespace Seven.EditorTools
             PointLight("ConsoleLight", L.Lever + new Vector3(0f, 1.6f, -0.8f), 3f, 0.8f, root);
 
             // 7's saucer: wide flat disc, glowing rim, polished silver hull (Round 10; was dark glossy); on a cradle, held by four clamps.
-            var saucer = new GameObject("Saucer").transform; saucer.SetParent(root, false); saucer.position = L.SaucerCentre;
+            // QF13 (16): the ONE saucer prefab (exterior, beam, bike hold), unchanged. Clamped on its cradle its underside is at
+            // SaucerBaseY (1.15 m), so its root sits HoverLift below the bay floor; lifting off by HoverLift puts it at its hover
+            // height (3.35 m) - exactly where it hovers on Venus and Europa, so the beam reaches the floor everywhere.
             float b0 = L.SaucerBaseY;
-            // Round 12 (2f): the one shared saucer exterior (also Venus's), with the storage hatch closed (seamless)
-            var ext = BuildSaucerExterior(saucer, b0, m.hull, m.hullUnder, m.metalDark, m.rim);
-            props.rimGlow.AddRange(ext.Glow);
-            props.underLight = ext.UnderLight;
+            var saucer = PlaceSaucer(root, L.SaucerCentre + Vector3.down * (Seven.SaucerBeam.ShipBelly - b0));
+            props.rimGlow.Add(saucer.Find("RimGlow").GetComponent<Renderer>()); props.rimGlow.Add(saucer.Find("BellyGlow").GetComponent<Renderer>());
+            props.underLight = saucer.Find("UnderLight").GetComponent<Light>();
             var col = saucer.gameObject.AddComponent<CapsuleCollider>();
-            col.direction = 0; col.center = new Vector3(0f, b0 + 0.6f, 0f); col.radius = 0.9f; col.height = 11f;
-            // Round 7: no ramp. An iris hatch in the belly (8 blades that slide out under the hull) over a white glow
-            // disc, and a soft cone of light from the hatch to the floor (shown when the saucer hovers HoverLift up).
-            // Round 13: the one shared beam (FightDemoBuilderSaucerExt.BuildSaucerBeam, also Venus's)
-            var sbeam = BuildSaucerBeam(saucer, b0, b0 - 0.1f + L.HoverLift, L.HatchRadius, L.BeamFloorRadius, m.metalDark, m.rim, m.field);
+            col.direction = 0; col.center = new Vector3(0f, Seven.SaucerBeam.ShipBelly + 0.6f, 0f); col.radius = 0.9f; col.height = 11f;
+            var sbeam = saucer.GetComponent<Seven.SaucerBeam>();
             props.hatch = sbeam.Hatch; props.hatchGlow = sbeam.HatchGlow; props.beamFloor = sbeam.BeamFloor; props.beamLight = sbeam.BeamLight; props.beam = sbeam.Beam;
             props.saucer = saucer;
-            foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;   // Round 10: its own probe never sees it
+            CheckSaucer("Chapter1", saucer);
             // Cradle (stays when she lifts off) and clamps.
             var cr = new List<Vector3>(); var crt = new List<int>();
             AddRing(cr, crt, L.SaucerCentre, 2.6f, 4.6f, 0.05f, 0f, 360f, 64);      // flat: 7 walks over it to the beam

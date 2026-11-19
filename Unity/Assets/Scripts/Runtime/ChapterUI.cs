@@ -117,6 +117,64 @@ namespace Seven
 
         public void HideSubtitle() { if (_subPanel != null) _subPanel.SetActive(false); }
 
+        // ---- QF13 (9): the next point is always findable - an on-screen marker. On screen: a small diamond on the guide
+        // light with its distance and an up / down cue (she swims in 3D); off screen, behind her or lost in the fog: an arrow
+        // at the screen's edge pointing the way, with the same distance and cue. Monochrome (white with a dark shadow).
+        Text _mark, _markInfo; Vector3? _markAt;
+        /// <summary>Check runs: the marker's state this frame ("on screen" / "edge arrow" / "off").</summary>
+        public string MarkerState { get; private set; } = "off";
+        public Vector2 MarkerScreen { get; private set; }
+        public void SetMarker(Vector3? world) { Build(); _markAt = world; if (_mark == null) BuildMarker(); }
+        void BuildMarker()
+        {
+            var root = _hint.transform.parent;
+            _mark = MakeText(root, "", 30, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(60f, 60f));
+            var rt = (RectTransform)_mark.transform; rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f); rt.pivot = new Vector2(0.5f, 0.5f);
+            _markInfo = MakeText(root, "", 16, TextAnchor.UpperCenter, Vector2.zero, new Vector2(140f, 40f));
+            var rt2 = (RectTransform)_markInfo.transform; rt2.anchorMin = rt2.anchorMax = new Vector2(0.5f, 0.5f); rt2.pivot = new Vector2(0.5f, 1f);
+        }
+        void LateUpdate()
+        {
+            if (_mark == null) return;
+            var cam = Cam != null ? Cam : Camera.main;
+            bool fading = _fade != null && _fade.color.a > 0.5f;
+            if (!_markAt.HasValue || cam == null || fading || (_video != null && _video.enabled && _video.color.a > 0.1f)) { _mark.text = ""; _markInfo.text = ""; MarkerState = "off"; return; }
+            var w = _markAt.Value;
+            var vp = cam.WorldToViewportPoint(w);
+            var canvasRt = (RectTransform)_mark.transform.parent;
+            var size = canvasRt.rect.size;
+            float dist = Vector3.Distance(cam.transform.position, w);
+            var target = cam.transform.parent != null ? cam.transform.position : cam.transform.position;
+            float dy = w.y - (cam.transform.position.y - 1.5f);
+            string cue = dy > 4f ? "  ↑ above" : dy < -4f ? "  ↓ below" : "";
+            string info = $"{dist:0} m{cue}";
+            bool onScreen = vp.z > 0f && vp.x > 0.06f && vp.x < 0.94f && vp.y > 0.08f && vp.y < 0.92f;
+            Vector2 pos;
+            if (onScreen)
+            {
+                pos = new Vector2((vp.x - 0.5f) * size.x, (vp.y - 0.5f) * size.y);
+                _mark.text = "◊"; _mark.transform.localRotation = Quaternion.identity; _mark.fontSize = 30;
+                MarkerState = "on screen";
+            }
+            else
+            {
+                var d = new Vector2(vp.x - 0.5f, vp.y - 0.5f);
+                if (vp.z < 0f) d = -d;                                                    // behind: mirror
+                if (d.sqrMagnitude < 1e-6f) d = Vector2.down;
+                d.Normalize();
+                float hx = size.x * 0.5f - 46f, hy = size.y * 0.5f - 52f;
+                float k = Mathf.Min(hx / Mathf.Max(1e-4f, Mathf.Abs(d.x)), hy / Mathf.Max(1e-4f, Mathf.Abs(d.y)));
+                pos = d * k;
+                _mark.text = "▲"; _mark.fontSize = 34;
+                _mark.transform.localRotation = Quaternion.Euler(0f, 0f, Mathf.Atan2(d.y, d.x) * Mathf.Rad2Deg - 90f);
+                MarkerState = "edge arrow";
+            }
+            ((RectTransform)_mark.transform).anchoredPosition = pos;
+            ((RectTransform)_markInfo.transform).anchoredPosition = pos + new Vector2(0f, -22f);
+            _markInfo.text = info;
+            MarkerScreen = pos;
+        }
+
         public void SetObjective(string text)
         {
             Build();

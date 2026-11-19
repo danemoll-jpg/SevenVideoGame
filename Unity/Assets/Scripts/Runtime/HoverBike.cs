@@ -27,7 +27,9 @@ namespace Seven
         [System.NonSerialized] public float GlideBottom = float.NaN;
         public Light VentLight;
         public Renderer VentGlow;
-        public float MaxSpeed = 11f, Accel = 5.5f, Brake = 9f, Drag = 1.6f, TurnRate = 95f, HoverHeight = 0.5f;
+        // QF13 (13): Dan - "way too slow, make it fast everywhere": on land about twice the top speed and acceleration (the
+        // paths, the bridge and the turns were checked at speed; it still slows to walking pace near people)
+        public float MaxSpeed = 24f, Accel = 13f, Brake = 20f, Drag = 3f, TurnRate = 115f, HoverHeight = 0.5f;
         public bool Riding { get; private set; }
         public float Speed { get; private set; }
         public bool Stuck => _stuckFor > 2.5f;
@@ -123,34 +125,55 @@ namespace Seven
         [System.NonSerialized] public System.Func<Vector3, Vector3> SwimClamp;
         [System.NonSerialized] public float ScriptRise;
         public ParticleSystem Bubbles;
-        public float SwimMax = 8.5f, SwimAccel = 3.2f, SwimDrag = 0.7f, SwimBrake = 5f, SwimTurn = 70f, SwimRise = 3.4f;
+        /// <summary>QF13 (13): the sense of speed under water - fine streaking particles rushing past (white, stretched).</summary>
+        public ParticleSystem Streaks;
+        // QF13 (13): under water ~3x today's (8.5 -> 25 m/s), quick to accelerate, responsive turning
+        public float SwimMax = 25f, SwimAccel = 11f, SwimDrag = 2.2f, SwimBrake = 16f, SwimTurn = 95f, SwimRise = 3.4f;
         float _vy;
         public float VerticalSpeed => _vy;
+        // QF13 (12): flying controls under water - left stick X turns, left stick Y pitches the nose (push forward = dive,
+        // pull back = climb; Settings: "Invert up / down"), RT throttle, LT brake. The bike travels along its nose.
+        public static bool InvertPitch { get { try { return PlayerPrefs.GetInt("seven_swim_invert", 0) == 1; } catch { return false; } } set { try { PlayerPrefs.SetInt("seven_swim_invert", value ? 1 : 0); PlayerPrefs.Save(); } catch { } } }
+        public const float MaxPitchDeg = 40f;
+        float _swimPitch;
+        /// <summary>The nose's pitch under water (degrees, + = climbing).</summary>
+        public float SwimPitch => _swimPitch;
+        /// <summary>QF13 (10): frames the bike slid along a wall / structure under water instead of passing through it.</summary>
+        public int WallSlides { get; private set; }
+        public const float BodyRadius = 1.0f;
         /// <summary>Round 14: a scripted push (the pressure wave): adds to its motion for a moment, spun off line.</summary>
         public void Shove(Vector3 v, float spinDeg) { _shove = v; _spin = spinDeg; }
         Vector3 _shove; float _spin;
 
         void SwimUpdate(float dt)
         {
-            float steer, throttle, rise;
-            if (ScriptDriven) { steer = ScriptSteer; throttle = ScriptThrottle; rise = ScriptRise; }
+            float steer, throttle, pitchIn;
+            if (ScriptDriven) { steer = ScriptSteer; throttle = ScriptThrottle; pitchIn = ScriptRise; }
             else
             {
                 var mv = Input != null ? Input.Move.ReadValue<Vector2>() : Vector2.zero;
                 float rt = Input != null ? Input.Telekinesis.ReadValue<float>() : 0f, lt = Input != null ? Input.Block.ReadValue<float>() : 0f;
-                steer = mv.x; throttle = Mathf.Clamp(Mathf.Max(rt, mv.y) - Mathf.Max(lt, -mv.y), -1f, 1f);
-                rise = (Input != null && Input.Jump.IsPressed() ? 1f : 0f) - (Input != null && Input.Crouch.IsPressed() ? 1f : 0f);
+                bool fwdKey = UnityEngine.InputSystem.Keyboard.current != null && (UnityEngine.InputSystem.Keyboard.current.leftShiftKey.isPressed || UnityEngine.InputSystem.Keyboard.current.spaceKey.isPressed);
+                steer = mv.x;
+                throttle = Mathf.Clamp(Mathf.Max(rt, fwdKey ? 1f : 0f) - lt, -1f, 1f);
+                pitchIn = InvertPitch ? mv.y : -mv.y;                        // push forward = dive (like flying)
             }
             if (throttle > 0.05f) Speed = Mathf.MoveTowards(Speed, SwimMax * throttle, SwimAccel * dt);
             else if (throttle < -0.05f) Speed = Mathf.MoveTowards(Speed, 0f, SwimBrake * -throttle * dt);
             else Speed = Mathf.MoveTowards(Speed, 0f, SwimDrag * dt);
-            _vy = Mathf.MoveTowards(_vy, rise * SwimRise, 2.6f * dt);
+            // the nose pitches toward the stick; it travels where the nose points (and drifts up / down a little when slow)
+            _swimPitch = Mathf.MoveTowards(_swimPitch, Mathf.Clamp(pitchIn, -1f, 1f) * MaxPitchDeg, 110f * dt);
+            float sp = Mathf.Sin(_swimPitch * Mathf.Deg2Rad), cp = Mathf.Cos(_swimPitch * Mathf.Deg2Rad);
+            _vy = Mathf.MoveTowards(_vy, Speed * sp + Mathf.Clamp(pitchIn, -1f, 1f) * SwimRise * (1f - Mathf.Clamp01(Speed / 6f)), 30f * dt);
             float turn = steer * SwimTurn * Mathf.Lerp(0.6f, 1f, Mathf.Clamp01(Speed / 3f)) * dt;
             _spin = Mathf.MoveTowards(_spin, 0f, 120f * dt);
             transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y + turn + _spin * dt * 2f, 0f);
             var from = transform.position;
-            var p = from + transform.forward * Speed * dt + Vector3.up * _vy * dt + _shove * dt;
+            var p = from + transform.forward * Speed * cp * dt + Vector3.up * _vy * dt + _shove * dt;
             _shove = Vector3.MoveTowards(_shove, Vector3.zero, 9f * dt);
+            // QF13 (10): real collision under water - the bike's body (a 1 m sphere) sweeps against the level's meshes (the
+            // camera-occluder copy: structures, pillars, arches, platforms, pipes) and slides along a surface, never through it
+            p = SlideSwim(from, p);
             if (SwimClamp != null) p = SwimClamp(p);
             float moved = (p - from).magnitude;
             if (Speed > 1f && moved < Speed * dt * 0.25f) { _stuckFor += dt; Speed *= 0.6f; } else _stuckFor = Mathf.Max(0f, _stuckFor - dt);
@@ -158,7 +181,26 @@ namespace Seven
             Odometer += moved;
             _lean = Mathf.Lerp(_lean, -steer * Mathf.Clamp01(Speed / 5f) * 18f, dt * 3f);
             if (Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = p; }
-            if (Bubbles != null) { var e = Bubbles.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 6f + 22f * Mathf.Clamp01(Speed / SwimMax) : 0f; }
+            if (Bubbles != null) { var e = Bubbles.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 8f + 70f * Mathf.Clamp01(Speed / SwimMax) : 0f; }
+            if (Streaks != null) { var e = Streaks.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 160f * Mathf.Clamp01((Speed - 6f) / (SwimMax - 6f)) : 0f; Streaks.transform.position = transform.position + transform.forward * 9f + Vector3.up * 0.8f; Streaks.transform.rotation = transform.rotation; }
+        }
+
+        Vector3 SlideSwim(Vector3 from, Vector3 to)
+        {
+            if (!CameraOccluders.Ready) return to;
+            var c0 = from + Vector3.up * 0.6f; var mv = to - from;
+            for (int it = 0; it < 3; it++)
+            {
+                float len = mv.magnitude; if (len < 1e-4f) break;
+                if (!CameraOccluders.SphereCast(c0, BodyRadius, mv, out var hit, len + 0.05f)) { c0 += mv; mv = Vector3.zero; break; }
+                float go = Mathf.Max(0f, hit.distance - 0.06f);
+                c0 += mv.normalized * go;
+                var rest = mv.normalized * (len - go);
+                mv = Vector3.ProjectOnPlane(rest, hit.normal);
+                if (Vector3.Dot(hit.normal, transform.forward) < -0.5f) Speed *= Mathf.Pow(0.4f, Time.deltaTime);   // head-on: scrapes speed off
+                WallSlides++;
+            }
+            return c0 - Vector3.up * 0.6f;
         }
 
         /// <summary>Round 14: get off onto a given spot (the base's dock), standing beside the bike.</summary>
@@ -268,11 +310,12 @@ namespace Seven
                 }
                 // give way: anyone (worker, creature) ahead within 6 m -> walking pace
                 float cap = MaxSpeed;
+                float look = 6f + Speed * 0.9f;                                     // QF13 (13): look further ahead at speed
                 foreach (var c in Ground.Obstacles)
                 {
                     var to = new Vector3(c.C.x - transform.position.x, 0f, c.C.y - transform.position.z);
                     float d = to.magnitude - c.R;
-                    if (d < 6f && Vector3.Dot(to.normalized, transform.forward) > 0.5f) { cap = Mathf.Min(cap, Mathf.Lerp(1.6f, MaxSpeed, (d - 1.5f) / 4.5f)); }
+                    if (d < look && Vector3.Dot(to.normalized, transform.forward) > 0.5f) { cap = Mathf.Min(cap, Mathf.Lerp(1.6f, MaxSpeed, (d - 1.5f) / (look - 1.5f))); }
                 }
                 if (cap < MaxSpeed * 0.5f && Speed > cap + 0.5f) GiveWays++;
                 if (throttle > 0.05f) Speed = Mathf.MoveTowards(Speed, MaxSpeed * throttle, Accel * dt);
@@ -303,12 +346,12 @@ namespace Seven
                 // QF10 (6f): it follows the land - pitched to the slope under it (smoothed), so it never snags on a rise
                 var fw = transform.forward; var p0 = transform.position;
                 float ahead = Ground.Height(p0.x + fw.x * 1.3f, p0.z + fw.z * 1.3f), behind = Ground.Height(p0.x - fw.x * 1.3f, p0.z - fw.z * 1.3f);
-                float slope = Swim ? Mathf.Clamp(_vy * 6f, -22f, 22f) : float.IsNaN(GlideBottom) ? Mathf.Clamp(Mathf.Atan2(ahead - behind, 2.6f) * Mathf.Rad2Deg, -18f, 18f) : 0f;
+                float slope = Swim ? (Riding ? _swimPitch : Mathf.Clamp(_vy * 6f, -22f, 22f)) : float.IsNaN(GlideBottom) ? Mathf.Clamp(Mathf.Atan2(ahead - behind, 2.6f) * Mathf.Rad2Deg, -18f, 18f) : 0f;
                 _pitch = Mathf.Lerp(_pitch, slope, dt * 6f);
                 // Round 13 (0k): a tremor makes the bike wobble on its hover
                 Wobble = Mathf.MoveTowards(Wobble, 0f, dt * 0.35f);
                 float wob = Wobble * 9f;
-                Visual.localRotation = Quaternion.Euler(-Speed * 0.25f - _pitch + (Mathf.PerlinNoise(_bob * 7f, 1f) - 0.5f) * wob, 0f, _lean + (Mathf.PerlinNoise(2f, _bob * 6f) - 0.5f) * wob * 1.6f);
+                Visual.localRotation = Quaternion.Euler(-Mathf.Min(Speed, 11f) * 0.25f - _pitch + (Mathf.PerlinNoise(_bob * 7f, 1f) - 0.5f) * wob, 0f, _lean + (Mathf.PerlinNoise(2f, _bob * 6f) - 0.5f) * wob * 1.6f);
                 Visual.localPosition += Vector3.up * (Mathf.PerlinNoise(_bob * 9f, 3f) - 0.5f) * Wobble * 0.12f;
             }
             float glow = Riding ? 0.7f + 0.3f * Mathf.Clamp01(Speed / MaxSpeed) : 0.45f;

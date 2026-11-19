@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF13: Dan's 0.14.0 play (Dan, 2026-11-19) — to do
+## Quick fix QF13: Dan's 0.14.0 play (Dan, 2026-11-19) — done, status below; release 0.14.1
 Commit first. All standing rules. **20-minute rule.** Release **0.14.1**; "QF13 — status"; "For Dan to check (QF13)".
 **Second time for items 1 and 3:** QF12's captures said "clean" / "fixed" and Dan still sees the problem in the release
 build. Take the capture **from the gameplay camera the player actually has at that moment** (and one from the angle Dan
@@ -138,6 +138,135 @@ round, say so plainly with what's left and the options — never mark it done on
 
 Checks + release (20-minute rule): targeted captures per item (gameplay-camera angle for 1, 2, 3, 6, 7, 9, 10, 14, 15, 17, 19; a short capture sequence / GIF of the whole escape), publish
 **0.14.1**; docs; commit + push.
+
+
+## QF13 — status (2026-11-19): done, exe-verified off-screen; release 0.14.1 (`game-1401`)
+Captures + sheets: `Docs/Previews/qf13/` (`item<NN>_*.png`; `item19_dan_vs_0.14.1.png` = Dan's screenshot beside the same
+view now). Every repeat item below says why the last fix didn't hold, what was changed, and what the capture shows.
+New check tools: `ChapterCapture.ShotFrom` (the same instant from a second, fixed angle without moving the player's
+camera), the guardian sequence (`GuardSeq`, player camera + side view per frame, with walk / cape numbers), the escape
+capture sequence (`qf13_14s_*`, every 0.4 s), the base walk-in sequence (`qf13_07_walk_in_*`).
+
+1. **Bike hold: no bars — fixed (repeat).** *Why QF12 didn't hold:* QF12 made the hold's surfaces one even glow, but
+   with a lit material, and checked it from a framing that hid the rest. From the B01 camera the player actually has
+   (rim height, 6 m out), four things still drew bands: the belly glow ring ran under the open sector (a white line
+   across the opening's bottom), the seam outline stayed lit (emission 1.2) the whole time it was open, the lit floor /
+   ceiling caught reflection at grazing angles, and the panel (scaled toward the ground) hung 5 cm below the
+   neighbouring hull once slid round. *Now:* the hold's inside is one flat **unlit** tone (`Seven/HoldInterior`, gray
+   0.2: reads as a recess, not a panel), the belly ring's arc under the hold rides on the panel, the seam goes dark
+   before the panel moves, and the panel sinks about the hull's mid-plane (`SaucerHold`, tuck 0.97) so it slides round
+   *inside* the hull. Captures from the player's B01 camera: `item01_hold_open_player_view.png` (an empty dark opening
+   with the bike, no lines), `item01_hold_bike_out.png`; before: `item01_hold_before_0.14.0_player_view.png`. Europa
+   uses the same hold (item 5). *Still visible while it opens (≈0.9 s):* the panel itself sliding across — a door
+   moving, not a band of the hold.
+2. **B03 walkway breaks ahead of her — fixed.** Cause: the trigger (z > 96, "at or past") was only checked after B02's
+   lines had finished, while she kept riding — so it fired with her on the walkway. Now `CollapseWatch` runs from the
+   start of the ride and fires on distance short of the gully (it crosses the whole valley, so any approach line):
+   ≤ 30 m or < 3.2 s away + 8 m; she brakes at once; if she ever ends within 6 m of the edge she glides back to 9 m.
+   Log at the new land speed: `fired with her 73.2 m short of the gully at 20.4 m/s … she stopped 14.1 m short of the
+   broken edge`. `item02_*`.
+3. **The guardian's cape + walk — fixed (repeat, with 17).** *Why the last four rounds didn't hold:*
+   - The cape logic never had any vertices: the guardian's FBX was imported **without Read/Write**, so `ElarimCape`
+     found 0 cape vertices in the game — it never swung clear of a leg, and every "leg contact 0.0 cm" line in QF10 /
+     QF12 measured nothing.
+   - One rigid bone per half: when it did move, the whole cape moved as a board.
+   - The walk: Dan's `elarim_walk` clip itself leans forward with a hand held out palm-up (measured in Blender: hand
+     0.27 of his height forward, 0.24 out), and it was played at a stride of ~3.7 m/s while he moved at 1.5 m/s (his feet
+     skated, steps hurried).
+   *Now:* Read/Write on; the cape re-rigged in two parts per half (`cleanup_r11.py … elarim_rig`: CapeA/B chest→hips,
+   CapeA2/B2 hips→hem) so the upper part hangs on his back and only the lower part flares over the legs; it hangs with
+   gravity whatever the spine does, rests on the ground when he kneels (no rod), settles back quickly; re-seated to the
+   model's height every frame. Measured in game vs the model: **top 0.25 m below the shoulders (model 0.25), hem 0.14 m
+   above the ground (model 0.14)**, leg contact 0.0 cm (now a real measurement). The walk: no `elarim_walk_v2.fbx` was
+   in the repo, so he uses **7's Mixamo walk** retargeted to his avatar (upright, hands 0.20 / 0.18), at a calm 2 m/s
+   with the playback matched to his speed from the planted foot (0.69×) and the arms relaxed. If Dan adds
+   `Art/Mixamo/elarim/elarim_walk_v2.fbx`, the builder uses it automatically. `item03_17_guardian_sheet.png`.
+4. **Field Guide grows with the story — done.** Entries have optional `more` paragraphs with their own unlock
+   (`ShipConsole.GuideMore`): Scree (Moon text `ch1>=7`, Europa part `europa>=5`); Tunneler — Chapter 1 never names or
+   shows him, only his mining in the city: unnamed entry from the city reveal (`ch1>=6`, "Whoever runs the prison"),
+   named when the keeper names him (`europa>=3`), his base / screen at `europa>=4`, the escape at `europa>=7`. The same
+   mistake was in five more entries and is fixed the same way: the guardian (the "driven" plea `HelpAccepted`, the record
+   `RecordReceived`), the Elarim (the marking `GuardianMet`, the "histories" quote `HelpAccepted`), the burrowing
+   creatures (going home `ThreatStopped`), the Cetaceans ("teach their history" `europa>=9`), the keeper (the record
+   `europa>=8`). Mirrored in `Docs/FIELD-GUIDE.md`.
+5. **Europa: the bike uses the bike hold — done.** The hold opens, the bike glides out and settles on the shelf, the hold
+   closes seamlessly, then 7 comes down in the beam; going home the bike rises back into the hold. Rule added to
+   CLAUDE.md "Saucer — fixed design". `item05_*`.
+6. **Bubble helmet visible — done.** `Seven/Bubble`: a bright fresnel rim, two highlights + a reflection streak (placed in
+   view space, always facing the camera), a faint veil over what is behind; a solid collar ring at the neck.
+   `item06_helmet_bright_water.png` (bright water), the base walk-in sheet (indoors).
+7. **Base entrance readable — done.** In the base the camera stays close (2.7 m) and high over her shoulder, keeps
+   behind her walking direction, and any wall / door / barrier between it and her head is cut away while it is in the
+   way. Measured: `10 645 frames inside, walls cut away in 2 219, her head hidden behind something still drawn in 14`
+   (0.13 %). The whole walk in from the dock: `item07_base_walk_in_sheet.png`.
+8. **Objectives say where — done.** Every Europa objective (and Venus's) now says what and where, e.g. "Ride down the
+   ice passage - follow the white light into the water", "Ride down into the great chamber under the ice", "Follow the
+   lights down toward the settlement", "Ride to Tunneler's base - follow the pipes down the industrial tunnel". Two lines
+   at most in the objective box. Venus keeps each objective's beginning (the check drivers match on it).
+9. **Guide light always findable — done.** A much bigger, brighter guide light (core + a wide halo that keeps its size
+   on screen, light 6 / 40 m) and an on-screen marker: a diamond with distance (and ↑ / ↓) on it, an arrow at the screen
+   edge when it is off screen or behind her. Off course (30 m worse than her best) the hint says which way at once
+   ("Turn around - the light is behind you (21 m)"); riding hint after 25 s, skip after 60 s (was 120). `item09_*`.
+10. **Europa clean-up — done (with limits).** The bike now has real collision under water: a 1 m sphere swept against
+    the level's meshes, sliding along (`HoverBike.SlideSwim`); swim paths checked at load (1 settlement-Cetacean loop
+    segment crossed geometry and was lifted clear; vehicles 0); the camera in the escape is kept inside the tunnel. The
+    transports and Tunneler's craft are real vessels (rounded hull, canopy, running lights, thruster ring + glow) and
+    leave through proper passages: a 13 m launch tunnel in the transport dock's west wall, a lit docking passage north of
+    his dock. `item10_vessels_sheet.png`. *Not covered:* meshes larger than 60 m (the chamber shell, the temple hall,
+    the escape tube) are kept by the swim volumes, not by the sweep; I did not ride every route by hand.
+11. **Tunneler's drill spins — done.** A continuous rotation about the cone's own axis, faster on louder syllables,
+    spinning down after he stops (never snapping back): `28 full turns, top speed 1123 deg/s`.
+12. **Bike controls under water — done.** Left stick X turns, **Y pitches (push forward = dive, pull back = climb)**,
+    RT forward, LT brake; A / B no longer ascend / descend. Keyboard: A/D turn, W dive / S climb, Shift or right mouse
+    forward, Q brake. Settings → "Invert up / down (bike under water)". Tutorial prompt + Controls page updated.
+13. **Faster everywhere — done.** Land: 24 m/s (was 11), accel 13, brake 20, give-way look-ahead scales with speed.
+    Under water: 25 m/s (was 8.5), accel 11, turn 95. Speed streaks, more bubbles, FOV +9° at speed, camera a bit further
+    back and lower; the race rivals retuned (19-23.5 m/s). Logged: `speed 25.0 m/s … camera speed push 1.00`.
+14. **The escape as a movie chase — done.** The detonation is shown (the wide down the approach: white flash, a boil of
+    bubbles and debris, the structure buckling, the shockwave on the camera); the chase: a white-hot blast front fills
+    the tunnel and races up behind her (19-47 m behind, in the frame or lighting it in 572 of 1605 frames), supports fall
+    in ahead of her lit by it, Panther's calls; framings cut front (looking back at her with the blast behind) → chase →
+    side → chase → front → chase, all kept inside the tunnel; the money shot head-on at the mouth: the fireball fills
+    the opening as she bursts out (slow motion), the pressure wave spins the bike, the camera stays on her as she
+    recovers. A hit = retry from the chase's start. Sequence: `item14_escape_sequence_sheet.png`, `item14_burst_out_sheet.png`.
+15. **Arms in old IK poses — fixed (repeat).** *Why:* QF12 fixed *where* the petting hand went, not *when it lets go*:
+    the Europa debrief's stroke loop was never stopped (after standing up her hand kept following the cat), and hand
+    weights set by a beat that a skip, a scene load or a checkpoint interrupted (B01's hand on the fairing, C04's brace)
+    stayed on. *Now:* every stand-up and dismount releases all hand IK (`SevenTableIK.ReleaseAll`), the stroke loop is
+    stopped, and a safety net blends any hand to zero within ~0.25 s when its target is out of reach or she walks and the
+    target stays behind (logged: e.g. `let go of the left hand: target 1.37 m from the shoulder`). After the Europa
+    debrief: `hand IK weights left 0.00 right 0.00`, `item15_after_debrief_walking_arms_free.png`; on the Venus stairs her
+    arms hang naturally (`item19_*`).
+16. **One saucer everywhere — done (repeat).** *Why:* every scene built its own saucer from the shared functions, each at
+    its own height with its own material loads; nothing checked them. Now `Assets/Saucer/Saucer.prefab` is built once per
+    build and every scene places an unchanged instance; the build fails if not: `SAUCER CHECK (QF13 16) Chapter1 / Venus /
+    Europa: the one prefab, unchanged (32 renderers; beam + hold present)`.
+18. **Bike talk aboard cut — done.** EUR_16_01..03 removed (spec, `make_europa_lines.py` keeps "Good." as EUR_16_04,
+    its voice file, the three old mp3s deleted); the reunion plays the kneel, his head against her hand, the pause, "Good.".
+19. **The wall and the cube on the way down — fixed (repeat).** *Why QF12 missed it:* it guessed dust particles. The
+    "curved wall" was the hill's ground mesh: it dipped into the root pit and climbed straight back up across the pit's
+    bottom end — a smooth steep face in front of the tunnel mouth. The "cube" was `Pit_Lamp`, a 0.3 m glow box hanging in
+    the middle of the pit. Now the ground cells across the pit's edges are left out (43), a rock face stands over a clear
+    5 × 5.2 m tunnel mouth, and every root-tunnel lamp is an Elarim crystal lantern on a root bracket fixed to the wall or
+    ceiling. Dan's exact view reproduced: `item19_dan_vs_0.14.1.png`.
+
+**Checks.** Builds pass the saucer check in all three scenes. Monochrome: 0 coloured pixels in every sheet. Audio
+muted (peak 0) in every run. **Testing time: about 32 min of game time — over the 20-minute rule by ~12 min,** spent on
+the repeat items: the guardian needed four runs (the cape vertex bug and the reference-frame bug only showed in the game),
+the escape five (cameras outside the tunnel, the burst framing). **Not run this quick fix:** a full player-style run
+of Chapter 1 / Venus / Europa (each alone is 5-12 game-min) — every changed beat was captured by a targeted run instead.
+
+## For Dan to check (QF13)
+- Venus B01 / B07 and Europa: the hold opens as an empty dark opening with only the bike — no white or black lines.
+- Venus B03: the walkway breaks well ahead of you, at full speed too; you stop short of the gap.
+- The guardian: standing, talking, kneeling, getting up, walking ahead — cape on his back at the model's height, flowing
+  over his legs (never through), an upright calm walk (7's walk for now — drop `elarim_walk_v2.fbx` in to replace it).
+- Field guide: nothing about Europa until you've been there (Scree, Tunneler, Cetaceans, keeper; Venus entries too).
+- Europa: the helmet in bright water; the base entrance (walls get out of the way); the guide marker / arrow and the
+  "which way" hint if you ride off; the new stick pitch (push forward = dive) and Settings → Invert; the speed.
+- The escape: detonation, the blast chasing you down the tunnel, the burst out of the mouth, the recovery.
+- Aboard after Europa: no bike talk; after the debrief, walk away — arms hang free. One saucer on every world.
+- The way down on Venus: an open tunnel mouth with a lantern, no wall, no floating cube.
 
 
 ## Quick fix QF12: Dan's 0.13.0 play (Dan, 2026-11-19) — done, status below; release 0.13.1

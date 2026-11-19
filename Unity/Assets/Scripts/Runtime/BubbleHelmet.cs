@@ -11,9 +11,11 @@ namespace Seven
     public class BubbleHelmet : MonoBehaviour
     {
         public Transform Sphere;
+        /// <summary>QF13 (6): the solid collar ring where the dome seals at her neck.</summary>
+        public Transform Collar;
         public Animator Anim;
         public float Radius = 0.2f;
-        public bool On { get => _on; set { _on = value; if (Sphere != null && Sphere.gameObject.activeSelf != value) Sphere.gameObject.SetActive(value); } }
+        public bool On { get => _on; set { _on = value; if (Sphere != null && Sphere.gameObject.activeSelf != value) Sphere.gameObject.SetActive(value); if (Collar != null && Collar.gameObject.activeSelf != value) Collar.gameObject.SetActive(value); } }
         bool _on = true; float _pulse;
         Transform _head; Renderer _r;
 
@@ -26,10 +28,17 @@ namespace Seven
             Sphere.position = _head.position + _head.up * 0.06f + Anim.transform.forward * 0.02f;
             Sphere.rotation = Anim.transform.rotation;
             Sphere.localScale = Vector3.one * Radius * 2f;
+            if (Collar != null)
+            {
+                // the ring sits where the dome meets her neck (the dome's circle of radius 0.148 m, below its centre)
+                float r = Radius, rc = 0.148f * Radius / 0.2f, below = Mathf.Sqrt(Mathf.Max(0f, r * r - rc * rc));
+                Collar.SetPositionAndRotation(Sphere.position - Anim.transform.up * below, Anim.transform.rotation);
+                Collar.localScale = Vector3.one * (Radius / 0.2f);
+            }
             if (_pulse > 0f && _r != null)
             {
                 _pulse = Mathf.MoveTowards(_pulse, 0f, Time.deltaTime * 1.2f);
-                var m = _r.material; m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.white * (0.05f + 0.6f * _pulse));
+                _r.material.SetFloat("_Pulse", _pulse);
             }
         }
     }

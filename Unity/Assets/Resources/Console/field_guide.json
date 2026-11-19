@@ -1,5 +1,5 @@
 {
- "note": "Ship console Field guide: 7's short observations of the people and creatures she has met, only from what the story has shown. titleBefore/textBefore are used until nameUnlock is met (the cat is \"The cat\" until VEN_B01). portrait = image key (cat, scree, elarim_guardian, elarim_attendant, elarim, worm, wormmaster, tunneler, ratwing). Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), \"europa>=N\" (Europa checkpoint N), or \"never\". Mirror: Docs/FIELD-GUIDE.md.",
+ "note": "Ship console Field guide: 7's short observations of the people and creatures she has met, only from what the story has shown. titleBefore/textBefore are used until nameUnlock is met (the cat is \"The cat\" until VEN_B01). portrait = image key (cat, scree, elarim_guardian, elarim_attendant, elarim, worm, wormmaster, tunneler, ratwing). Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), \"europa>=N\" (Europa checkpoint N), or \"never\". QF13: an entry grows with the story - optional \"more\": [{\"text\", \"unlock\"}] paragraphs are shown after the main text, each only once its unlock is met (never mention a place or event the player has not reached). Mirror: Docs/FIELD-GUIDE.md.",
  "entries": [
   {
    "id": "cat",
@@ -14,16 +14,32 @@
   {
    "id": "scree",
    "title": "The Scree",
-   "text": "Tall, armored people who guard the Moon prison; some of them were working rather than watching. I got past them without hurting anyone. The two on the terrace went down and sat up again afterwards. I don’t know yet whether any of them chose this. On Europa they laboured in Tunneler's underwater base until the doors were open - then they opened doors themselves and showed me the safe routes.",
+   "text": "Tall, armored people who guard the Moon prison; some of them were working rather than watching. I got past them without hurting anyone. The two on the terrace went down and sat up again afterwards. I don’t know yet whether any of them chose this.",
    "unlock": "ch1>=7",
-   "portrait": "scree"
+   "portrait": "scree",
+   "more": [
+    {
+     "text": "On Europa they laboured in Tunneler’s underwater base until the doors were open - then they opened doors themselves and showed me the safe routes.",
+     "unlock": "europa>=5"
+    }
+   ]
   },
   {
    "id": "elarim_guardian",
    "title": "The guardian",
-   "text": "Keeper of the Elarim temple on Venus and its cube. Asked to see the shape before anything else, and listened to all of it. Asked me to remember that the creatures were being driven. Gave me a copy of their record; the original stays in the temple.",
+   "text": "Keeper of the Elarim temple on Venus and its cube. Asked to see the shape before anything else, and listened to all of it.",
    "unlock": "venus>=GuardianMet",
-   "portrait": "elarim_guardian"
+   "portrait": "elarim_guardian",
+   "more": [
+    {
+     "text": "Asked me to remember that the creatures were being driven.",
+     "unlock": "venus>=HelpAccepted"
+    },
+    {
+     "text": "Gave me a copy of their record; the original stays in the temple.",
+     "unlock": "venus>=RecordReceived"
+    }
+   ]
   },
   {
    "id": "elarim_attendant",
@@ -35,16 +51,32 @@
   {
    "id": "elarim",
    "title": "The Elarim",
-   "text": "The people of the Venus gardens. They tend the terraces and the water channels and keep repairing the ground. Their marking is on the shape I found on the Moon. “Our histories were not always kept apart,” the guardian said.",
+   "text": "The people of the Venus gardens. They tend the terraces and the water channels and keep repairing the ground.",
    "unlock": "scene:VEN_B03",
-   "portrait": "elarim"
+   "portrait": "elarim",
+   "more": [
+    {
+     "text": "Their marking is on the shape I found on the Moon.",
+     "unlock": "venus>=GuardianMet"
+    },
+    {
+     "text": "“Our histories were not always kept apart,” the guardian said.",
+     "unlock": "venus>=HelpAccepted"
+    }
+   ]
   },
   {
    "id": "worm",
    "title": "The burrowing creatures",
-   "text": "Burrowers that live beneath the Venus gardens. They never attacked the people. They were following a signal through the foundations. When the devices stopped, they went home, all of them unharmed.",
+   "text": "Burrowers that live beneath the Venus gardens. They never attacked the people. They were following a signal through the foundations.",
    "unlock": "venus>=ControlDiscovered",
-   "portrait": "worm"
+   "portrait": "worm",
+   "more": [
+    {
+     "text": "When the devices stopped, they went home, all of them unharmed.",
+     "unlock": "venus>=ThreatStopped"
+    }
+   ]
   },
   {
    "id": "wormmaster",
@@ -56,9 +88,22 @@
   {
    "id": "tunneler",
    "title": "Tunneler",
-   "text": "Ring-segmented, with a spiral drill for a head that turns when he speaks. He kept me in the Moon prison; on Europa his machinery silenced the Cetaceans' calls and he worked Scree who could not leave. He promised to take only what nobody would miss. He escaped in his own craft - and he will remember.",
-   "unlock": "europa>=4",
-   "portrait": "tunneler"
+   "text": "He calls himself Tunneler. He ran the Moon prison I was held in, and the mining that is cutting into the city inside the Moon; the Scree did the work.",
+   "unlock": "ch1>=6",
+   "portrait": "tunneler",
+   "titleBefore": "Whoever runs the prison",
+   "textBefore": "Someone runs the prison I was held in on the Moon, and the mining that is cutting into the city inside it. The Scree do the work. I never saw who.",
+   "nameUnlock": "europa>=3",
+   "more": [
+    {
+     "text": "On Europa he spoke to me from a screen in his underwater base: ring-segmented, with a spiral drill for a head that turns when he speaks. His machinery silenced the Cetaceans’ calls, and he worked Scree who could not leave. He promised to take only what nobody would miss.",
+     "unlock": "europa>=4"
+    },
+    {
+     "text": "He escaped in his own craft - and he will remember.",
+     "unlock": "europa>=7"
+    }
+   ]
   },
   {
    "id": "ratwing",
@@ -71,16 +116,28 @@
   {
    "id": "cetaceans",
    "title": "The Cetaceans",
-   "text": "Europa's people live in the ocean under the ice: vast, slow, and they speak - an understandable voice carried on their calls. They teach their history through sound, one voice to another.",
+   "text": "Europa’s people live in the ocean under the ice: vast, slow, and they speak - an understandable voice carried on their calls.",
    "unlock": "europa>=2",
-   "portrait": "cetacean"
+   "portrait": "cetacean",
+   "more": [
+    {
+     "text": "They teach their history through sound, one voice to another.",
+     "unlock": "europa>=9"
+    }
+   ]
   },
   {
    "id": "keeper",
    "title": "The keeper",
-   "text": "An ancient Cetacean who keeps the settlement and the old routes. Calm, patient; becomes very still when something does not belong. Gave me Europa's record and asked me to carry it somewhere it can be heard.",
+   "text": "An ancient Cetacean who keeps the settlement and the old routes. Calm, patient; becomes very still when something does not belong.",
    "unlock": "europa>=3",
-   "portrait": "keeper"
+   "portrait": "keeper",
+   "more": [
+    {
+     "text": "Gave me Europa’s record and asked me to carry it somewhere it can be heard.",
+     "unlock": "europa>=8"
+    }
+   ]
   }
  ]
 }

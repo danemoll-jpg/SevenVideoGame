@@ -740,26 +740,35 @@ def do_elarim_rig():
     bpy.ops.object.mode_set(mode='EDIT')
     eb_parent = arm.data.edit_bones["mixamorig:Spine2"]
     inv = arm.matrix_world.inverted()
+    # QF13 (17): each half in two - CapeA / CapeB hang from the chest to the hips, CapeA2 / CapeB2 (their children) from the
+    # hips to the hem: in the game the upper part hangs on his back and only the lower part flares back over the legs
+    # (one rigid bone per half swung the whole cape out like a board)
+    z_split = float(hips.z)
     for nm, sx in (("CapeA", -1.0), ("CapeB", 1.0)):
         b = arm.data.edit_bones.new(nm)
-        b.head = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z)); b.tail = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z - 0.3 * Hh))
+        b.head = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z)); b.tail = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, z_split))
         b.parent = eb_parent; b.use_connect = False; b.use_deform = True
+        b2 = arm.data.edit_bones.new(nm + "2")
+        b2.head = inv @ Vector((hips.x + sx * 0.07 * Hh, yb + 0.02 * Hh, z_split)); b2.tail = inv @ Vector((hips.x + sx * 0.07 * Hh, yb + 0.02 * Hh, z_split - 0.25 * Hh))
+        b2.parent = b; b2.use_connect = False; b2.use_deform = True
     bpy.ops.object.mode_set(mode='OBJECT')
     for vg in list(cp.vertex_groups): cp.vertex_groups.remove(vg)
     ga = cp.vertex_groups.new(name="CapeA"); gb = cp.vertex_groups.new(name="CapeB"); gs = cp.vertex_groups.new(name="mixamorig:Spine2")
-    band = 0.05 * Hh
+    ga2 = cp.vertex_groups.new(name="CapeA2"); gb2 = cp.vertex_groups.new(name="CapeB2")
+    band = 0.05 * Hh; sb = 0.05 * Hh
     for i in range(len(Pc)):
         x = Pc[i, 0] - hips.x; z = Pc[i, 2]
         wb = min(1.0, max(0.0, 0.5 + x / (0.10 * Hh)))
         top_k = min(1.0, max(0.0, (z - (piv_z - band)) / band))
         c = 1.0 - top_k
-        if c * (1 - wb) > 1e-4: ga.add([i], c * (1 - wb), 'REPLACE')
-        if c * wb > 1e-4: gb.add([i], c * wb, 'REPLACE')
+        low = min(1.0, max(0.0, (z_split + sb - z) / (2 * sb)))          # 1 below the hips (soft blend across them)
+        for g, w in ((ga, c * (1 - wb) * (1 - low)), (gb, c * wb * (1 - low)), (ga2, c * (1 - wb) * low), (gb2, c * wb * low)):
+            if w > 1e-4: g.add([i], w, 'REPLACE')
         if top_k > 1e-4: gs.add([i], top_k, 'REPLACE')
     for m in list(cp.modifiers): cp.modifiers.remove(m)
     bpy.ops.object.select_all(action='DESELECT'); cp.select_set(True); ob.select_set(True); bpy.context.view_layer.objects.active = ob
     bpy.ops.object.join()
-    log(f"cape: {len(Pc)} vertices on CapeA / CapeB (pivot z {piv_z:.3f}, back y {yb:.3f}), top band {band:.3f} on Spine2")
+    log(f"cape: {len(Pc)} vertices on CapeA / CapeB + CapeA2 / CapeB2 below the hips (split z {z_split:.3f}; pivot z {piv_z:.3f}, back y {yb:.3f}), top band {band:.3f} on Spine2")
     k = HEIGHT_ELARIM / Hh
     arm.scale = (k, k, k); arm.location = (0, 0, -zmin * k)
     bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); ob.select_set(True); bpy.context.view_layer.objects.active = arm

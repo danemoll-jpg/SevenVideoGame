@@ -12,7 +12,23 @@ namespace Seven
     {
         public Vector3 RightPos, LeftPos, LookPos;
         public Quaternion RightRot = Quaternion.identity, LeftRot = Quaternion.identity;
-        [Range(0f, 1f)] public float RightW, LeftW, LookW;
+        // QF13 (15): every hand moment (bike grip in B01, petting, holding a shape, the table, the console) sets these
+        // weights; a moment that ended without setting them back (a skipped line, a stopped coroutine, a never-ending stroke
+        // loop) left her arm reaching for an old target. Each weight now remembers when it was last set, and a safety net
+        // (OnAnimatorIK) blends a hand to zero within ~0.25 s when its target is out of natural reach, or when she walks and
+        // the target does not move with her. ReleaseAll() is called at every stand-up, dismount, scene start and checkpoint.
+        [Range(0f, 1f), SerializeField] float _rightW, _leftW, _lookW;
+        public float RightW { get => _rightW; set { _rightW = value; } }
+        public float LeftW { get => _leftW; set { _leftW = value; } }
+        public float LookW { get => _lookW; set { _lookW = value; } }
+        /// <summary>Check runs: how often the safety net let a hand go (stale / unreachable / walking away), and the last reason.</summary>
+        public static int NetReleases; public static string LastNet;
+        public void ReleaseAll(string why)
+        {
+            bool any = _rightW > 0.01f || _leftW > 0.01f || _lookW > 0.01f || _r > 0.01f || _l > 0.01f;
+            _rightW = _leftW = _lookW = 0f;
+            if (any) Debug.Log($"[Seven] hand IK released ({why})");
+        }
         [Tooltip("How fast the weights ease (per second).")]
         public float Ease = 3f;
         float _r, _l, _look;
@@ -26,13 +42,46 @@ namespace Seven
         Vector3 _gaze, _gazeTo; float _nextGaze, _talk, _t;
         Transform _neckB, _headB;
 
-        void Awake() { _anim = GetComponent<Animator>(); }
+        void Awake() { _anim = GetComponent<Animator>(); _rightW = _leftW = _lookW = 0f; }
+        void OnDisable() { _r = _l = 0f; }
+
+        float _armLen = -1f; Vector3 _lastMe, _lastL, _lastR; float _walkT; float _netL = 1f, _netR = 1f;
+        /// <summary>QF13 (15) safety net: 1 = this hand may follow its target, 0 = let go (blends over ~0.25 s).</summary>
+        float Net(ref float k, HumanBodyBones upper, Vector3 target, Vector3 last, float want, string hand)
+        {
+            bool ok = true; string why = null;
+            if (want > 0.01f)
+            {
+                var sh = _anim.GetBoneTransform(upper);
+                if (sh != null && _armLen > 0f && (target - sh.position).magnitude > _armLen * 1.15f) { ok = false; why = $"target {(target - sh.position).magnitude:0.00} m from the shoulder (reach {_armLen:0.00})"; }
+                if (ok && _walkT > 0.3f)
+                {
+                    float dt = Mathf.Max(1e-4f, Time.deltaTime);
+                    var vMe = (transform.position - _lastMe) / dt; var vT = (target - last) / dt; vMe.y = 0f; vT.y = 0f;
+                    if ((vT - vMe).magnitude > 0.45f) { ok = false; why = "she walks and the target stays behind"; }
+                }
+            }
+            float before = k;
+            k = Mathf.MoveTowards(k, ok ? 1f : 0f, Time.deltaTime * (ok ? 2f : 4f));
+            if (before > 0.5f && k <= 0.5f) { NetReleases++; LastNet = $"{hand} hand: {why}"; Debug.Log($"[Seven] hand IK safety net let go of the {LastNet}"); }
+            return k;
+        }
 
         void OnAnimatorIK(int layer)
         {
             float dt = Time.deltaTime;
-            _r = Mathf.MoveTowards(_r, RightW, dt * Ease);
-            _l = Mathf.MoveTowards(_l, LeftW, dt * Ease);
+            if (_armLen < 0f)
+            {
+                var u = _anim.GetBoneTransform(HumanBodyBones.LeftUpperArm); var lo = _anim.GetBoneTransform(HumanBodyBones.LeftLowerArm); var h = _anim.GetBoneTransform(HumanBodyBones.LeftHand);
+                _armLen = u != null && lo != null && h != null ? Vector3.Distance(u.position, lo.position) + Vector3.Distance(lo.position, h.position) + 0.08f : 0.7f;
+                _lastMe = transform.position; _lastL = LeftPos; _lastR = RightPos;
+            }
+            { var mv = transform.position - _lastMe; mv.y = 0f; _walkT = mv.magnitude / Mathf.Max(1e-4f, dt) > 0.6f ? _walkT + dt : 0f; }
+            float nl = Net(ref _netL, HumanBodyBones.LeftUpperArm, LeftPos, _lastL, _leftW, "left");
+            float nr = Net(ref _netR, HumanBodyBones.RightUpperArm, RightPos, _lastR, _rightW, "right");
+            _lastMe = transform.position; _lastL = LeftPos; _lastR = RightPos;
+            _r = Mathf.MoveTowards(_r, RightW * nr, dt * Mathf.Max(Ease, nr < 1f ? 4f : 0f));
+            _l = Mathf.MoveTowards(_l, LeftW * nl, dt * Mathf.Max(Ease, nl < 1f ? 4f : 0f));
             _look = Mathf.MoveTowards(_look, LookW, dt * Ease);
             _anim.SetIKPositionWeight(AvatarIKGoal.RightHand, _r);
             _anim.SetIKRotationWeight(AvatarIKGoal.RightHand, 0f);

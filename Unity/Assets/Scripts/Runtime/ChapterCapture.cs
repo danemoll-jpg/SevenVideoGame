@@ -76,6 +76,32 @@ namespace Seven
             Log($"shot {file}  audioPeak={_peak:0.000000}  cursorVisible={Cursor.visible}");
         }
 
+        /// <summary>QF13: the same frame from a second, fixed angle (a side view) without moving the player's camera - a
+        /// temporary copy of the camera rendered into its own texture.</summary>
+        public IEnumerator ShotFrom(string name, Vector3 pos, Vector3 look, float fov = 40f)
+        {
+            yield return new WaitForEndOfFrame();
+            if (_cam == null) yield break;
+            var go = new GameObject("QF13_SideCam"); var c = go.AddComponent<Camera>(); c.CopyFrom(_cam); c.enabled = false;
+            go.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(look - pos)); c.fieldOfView = fov;
+            var src = _cam.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            var dst = c.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>() ?? go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            if (src != null) { dst.renderPostProcessing = src.renderPostProcessing; dst.antialiasing = src.antialiasing; }
+            var rt = new RenderTexture(_rt.width, _rt.height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            var req = new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest { destination = rt };
+            if (UnityEngine.Rendering.RenderPipeline.SupportsRenderRequest(c, req)) UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(c, req);
+            else { c.targetTexture = rt; c.Render(); c.targetTexture = null; }
+            var prev = RenderTexture.active; RenderTexture.active = rt;
+            var tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
+            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0); tex.Apply();
+            RenderTexture.active = prev;
+            Chapter1State.ShotCount++;
+            var file = $"{Chapter1State.ShotCount:00}_{name}.png";
+            File.WriteAllBytes(Path.Combine(DemoBoot.CaptureDir, file), tex.EncodeToPNG());
+            Destroy(tex); rt.Release(); Destroy(rt); Destroy(go);
+            Log($"shot {file} (second angle)");
+        }
+
         public void Finish(string summary)
         {
             Log(ChapterCat.SpeedReport());              // QF11: never the walk cycle on the spot

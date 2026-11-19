@@ -170,6 +170,9 @@ namespace Seven
             Place(0.02f);
         }
 
+        Transform _bikeOf; HoverBike _bike;
+        /// <summary>QF13 (13): 0..1 how much of the speed push is on (FOV +9 deg at full).</summary>
+        [System.NonSerialized] public float SpeedKick;
         public void SnapBehind()
         {
             if (Target == null) return;
@@ -191,6 +194,15 @@ namespace Seven
                 return;
             }
             if (Target == null) return;
+            // QF13 (13): a sense of speed on the bike - the field of view opens a little at speed and the camera sits a bit
+            // further back and lower (the 2.4-3 m bike stays readable)
+            {
+                if (_bikeOf != Target) { _bikeOf = Target; _bike = Target.GetComponent<HoverBike>(); }
+                var cm = GetComponent<Camera>(); if (_baseFov <= 0f) _baseFov = cm.fieldOfView;
+                float k = _bike != null && _bike.Riding ? Mathf.Clamp01((_bike.Speed - 8f) / 16f) : 0f;
+                SpeedKick = Mathf.MoveTowards(SpeedKick, k, dt * 1.5f);
+                cm.fieldOfView = Mathf.Lerp(cm.fieldOfView, _baseFov + 9f * SpeedKick, dt * 4f);
+            }
             Vector2 stick = Input != null ? Input.Look.ReadValue<Vector2>() : Vector2.zero;
             _yawVel = Mathf.MoveTowards(_yawVel, stick.x * StickYawSpeed, 500f * dt);
             _pitchVel = Mathf.MoveTowards(_pitchVel, -stick.y * StickPitchSpeed, 500f * dt);

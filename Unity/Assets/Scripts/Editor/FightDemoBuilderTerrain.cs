@@ -16,6 +16,7 @@ namespace Seven.EditorTools
         static void BuildVenusTerrain(Transform world, VenusMats m)
         {
             var root = new GameObject("Terrain").transform; root.SetParent(world, false);
+            PitCellsCut = 0;
             var ga = FineArea;
             var mats = new[] { m.leafDark, m.path, m.stoneMid, m.stoneDark };
             // ---- fine: the valley and the hills you can see from it (split into strips so no mesh gets too big)
@@ -32,7 +33,18 @@ namespace Seven.EditorTools
             const float coarse = 8f; var far = new Rect(-320f, -300f, 700f, 860f);
             TerrainPiece("Ground_Far", far.xMin, far.yMin, Mathf.RoundToInt(far.width / coarse), Mathf.RoundToInt(far.height / coarse), coarse, mats, root, true, ga);
             BuildVenusWater(world, m.water);
+            Log($"QF13 (19): {PitCellsCut} ground cells across the root pit edges left out (the steep face that hid the tunnel mouth)");
             Log($"terrain: fine {ga} at {fine} m in {strips} strips + coarse {far} at {coarse} m; route {Seven.VenusTerrain.RouteLength:0} m");
+        }
+
+        static int PitCellsCut;
+        static bool MixedPitCell(float x, float z, float c)
+        {
+            if (z + c < Seven.VenusLayout.RootPitBotZ - 0.01f || z > Seven.VenusLayout.RootLandZ) return false;   // the landing end stays (same height)
+            int n = 0;
+            if (Seven.VenusLayout.InRootPit(x, z)) n++; if (Seven.VenusLayout.InRootPit(x + c, z)) n++;
+            if (Seven.VenusLayout.InRootPit(x, z + c)) n++; if (Seven.VenusLayout.InRootPit(x + c, z + c)) n++;
+            return n > 0 && n < 4;
         }
 
         /// <summary>The fine ground: the valley plus the hills seen from it (beyond, the coarse ground is lost in the fog).</summary>
@@ -93,6 +105,11 @@ namespace Seven.EditorTools
                 {
                     float cx = x0 + (i + 0.5f) * cell, cz = z0 + (j + 0.5f) * cell;
                     if (hole.HasValue) { var h = hole.Value; if (cx - cell * 0.5f >= h.xMin + cell && cx + cell * 0.5f <= h.xMax - cell && cz - cell * 0.5f >= h.yMin + cell && cz + cell * 0.5f <= h.yMax - cell) continue; }
+                    // QF13 (19): a cell with some corners on the root pit's floor and some on the hillside was a steep smooth
+                    // face - across the pit's bottom end it was the big dark curved "wall" in front of the stairs that hid the
+                    // tunnel mouth (Dan's screenshot). Those cells are left out: the pit's rock walls and the headwall over the
+                    // tunnel (FightDemoBuilderVenus2) close the edges instead.
+                    if (!coarse && MixedPitCell(x0 + i * cell, z0 + j * cell, cell)) { PitCellsCut++; continue; }
                     int a = j * (nx + 1) + i, b = a + 1, c = a + nx + 1, d = c + 1;
                     var nrm = Vector3.Cross(v[c] - v[a], v[b] - v[a]).normalized;
                     int mi = 0;

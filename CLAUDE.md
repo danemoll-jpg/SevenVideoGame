@@ -18,13 +18,21 @@ apply to every asset and scene:
   cost in `Docs/ATMOSPHERE.md`.
 
 ## Saucer — fixed design (Dan, 2026-11-19; never let it drift)
-- **One shared exterior** on every world: `BuildSaucerExterior` (`Editor/FightDemoBuilderSaucerExt.cs`) — the ~12 m
-  polished silver disc, glowing rim band, low dome, belly glow. No per-world variants.
-- **No ramp, ever.** Getting in and out is **the tractor beam**: iris hatch in the belly + cone of light
+- **One saucer, one prefab (QF13):** `Assets/Saucer/Saucer.prefab` — exterior, belly iris + beam, the bike hold + its
+  seamless panel — is built ONCE per build (`FightDemoBuilderSaucerExt.SaucerPrefab()`, from `BuildSaucerExterior` +
+  `BuildSaucerBeam` at the one hover height `SaucerBeam.ShipBelly` 3.35 m) and every scene places an **unchanged instance**
+  (`PlaceSaucer`). Only where it sits may differ (the Moon's clamped ship sits `HoverLift` lower until it lifts off). No
+  per-scene building, sizes, hover tweaks or materials. `CheckSaucer` **fails the build** if a scene's saucer differs from
+  the prefab (meshes, materials, scales, overrides, beam + hold present) — build log `SAUCER CHECK (QF13 16)`.
+- **The bike always uses the bike hold; the beam is only for 7 (and the cat)** — on every world (QF13: Venus B01 / B07,
+  Europa arrival / home). The hold opens with `SaucerHold.Open()` (seam lights, panel sinks into the hull and slides
+  round inside it, seam dark again) and its inside is one flat unlit tone (`Seven/HoldInterior`): an empty opening, no bars.
+- The ~12 m polished silver disc, glowing rim band, low dome, belly glow. No per-world variants.
+- **No ramp, ever.** Getting in and out (for 7) is **the tractor beam**: iris hatch in the belly + cone of light
   (`BuildSaucerBeam` + runtime `SaucerBeam.cs`), the same on the Moon, on Venus and any later world. On a world it
   hovers (underside 3.35 m) so 7 can walk under it to the beam.
-- **The bike hatch is seamless when closed** (hull panel + hair-thin seam that glows only while it opens); the bay
-  behind it is lit and pale (no dark bands).
+- **The bike hatch is seamless when closed** (hull panel + hair-thin seam that glows only while it starts to open); the
+  hold behind it is one flat unlit tone (no bands of any kind - QF11 black, QF12 white).
 
 ## Tech Stack
 - Unity **6000.6.1f1**, **URP**, **Input System only** (same as Woodstock Rush / Chastain Rush, so systems can be ported).
@@ -305,7 +313,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–14 + QF1–QF12 complete (2026-11-19), release 0.14.0.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–14 + QF1–QF13 complete (2026-11-19), release 0.14.1.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -447,7 +455,27 @@ scene (Round 10).
   - Switches: `-europacp <n>` (check run at checkpoint n), `-europa` (start as from the star map), `-europarace`
     (autopilot rides the race), `-europaplay` (player-style run `EuropaPlaytest.cs`; with
     `-menupick "Scene select|Chapter 2 — Venus|Venus: the debrief"` it starts in the main menu and chooses Europa on the star map).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.0** (QF12 + Round 14 status in `TODO.md`).
+- **QF13 (release 0.14.1)** — Dan's 0.14.0 play (status + "For Dan to check (QF13)" in `TODO.md`):
+  - One saucer prefab (`Assets/Saucer/Saucer.prefab`, `SaucerPrefab` / `PlaceSaucer` / `CheckSaucer`), the bike hold
+    (`SaucerHold.cs`, `Seven/HoldInterior`); the bike always uses the hold (Venus B01 / B07, Europa).
+  - Guardian: the Elarim FBX is imported **Read/Write on** (ElarimCape reads the cape vertices - it was empty before);
+    the cape has four bones (`CapeA/B` chest→hips, `CapeA2/B2` hips→hem; `cleanup_r11.py … elarim_rig`), hangs with
+    gravity, is re-seated to the model's height; the walk = `elarim_walk_v2.fbx` if present, else 7's walk, playback
+    matched to his speed (`ElarimNpc.WalkMatch`). Check-run lines `guardian (QF13 17) …` (`GuardSeq`, player camera + side).
+  - Hand IK lifecycle: `SevenTableIK.ReleaseAll` at every stand-up / dismount + a safety net (out of reach / walking away).
+  - Venus: `CollapseWatch` (B03 breaks ahead, on distance + speed); the root pit (ground cells across its edges left out,
+    `Tunnel_Headwall`), lamps = `Lantern(...)` (crystal on a root bracket, never a floating box); objectives say where.
+  - Bike: land 24 m/s, under water 25 m/s; under water the stick pitches (push forward = dive; Settings "Invert up /
+    down", `HoverBike.InvertPitch`), collision under water (`SlideSwim` against `CameraOccluders`), speed streaks + FOV push
+    (`ChapterCamera.SpeedKick`).
+  - Europa: `Seven/Bubble` helmet + collar; guide light + on-screen marker (`ChapterUI.SetMarker`) + "which way" hints,
+    skip after 60 s riding; base cut-away camera (`BaseCutaway`); swim paths checked at load (`ValidateSwimPaths`);
+    `SmallCraft` vessels, launch tunnel + docking passage; drill spins (`DrillSpin`); the escape chase (`Detonation`,
+    `EscapeBlast`, framings kept inside the tunnel, the burst-out); EUR_16_01..03 cut (`make_europa_lines.py` START).
+  - Field guide entries grow: optional `more` paragraphs with their own unlock (`ShipConsole.GuideMore`).
+  - Check tools: `ChapterCapture.ShotFrom` (a second angle of the same frame).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.1** (QF13 status in `TODO.md`).
+**Before: Dan plays 0.14.0** (QF12 + Round 14 status in `TODO.md`).
 **Before: Dan plays 0.13.1** (Round 13 status in `TODO.md`), then Round 14.
 **Before: Dan plays 0.12.0** (Round 12 status in `TODO.md`), then Round 13.
 **Before:** Dan plays 0.10.2, then Round 11

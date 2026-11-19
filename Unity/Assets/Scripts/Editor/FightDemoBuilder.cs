@@ -62,6 +62,7 @@ namespace Seven.EditorTools
         [MenuItem("Seven/Build Fight Demo (assets + scene)")]
         public static void BuildAll()
         {
+            _saucerPrefab = null; SaucerChecks.Clear();      // QF13 (16): the one saucer prefab is rebuilt once per build
             CopyArt();
             var sevenAvatar = SetupCharacter(SevenDir + "/7_character.fbx");
             var botAvatar = SetupCharacter(BotDir + "/ybot_character.fbx");

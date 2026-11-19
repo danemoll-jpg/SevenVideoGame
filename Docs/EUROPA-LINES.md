@@ -218,9 +218,6 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 
 | id | who | line | direction |
 | --- | --- | --- | --- |
-| `EUR_16_01` | 7 | Were you waiting for the bike? | gently teasing |
-| `EUR_16_02` | Panther | Someone had to inspect the damage. |  |
-| `EUR_16_03` | 7 | No damage. |  |
 | `EUR_16_04` | Panther | Good. |  |
 
 ## EUR_17 — Debrief — an ordinary sound

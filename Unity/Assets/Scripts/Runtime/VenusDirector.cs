@@ -50,6 +50,8 @@ namespace Seven
         public ParticleSystem SlabDust, TkMotes;
         public Renderer HatchSeam, BayBack;
         public Light BayLight;
+        /// <summary>QF13 (1): the saucer prefab's bike hold (open / close; the same on every world).</summary>
+        public SaucerHold Hold;
 
         public static VenusDirector I { get; private set; }
         bool Auto => DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim;
@@ -228,7 +230,7 @@ namespace Seven
 
         void FollowCamera()
         {
-            if (Bike.Riding) { Cam.Target = Bike.transform; Cam.Distance = 6.6f; Cam.LookHeight = 1.6f; Cam.AutoBehind = true; }
+            if (Bike.Riding) { Cam.Target = Bike.transform; Cam.Distance = 7.4f; Cam.LookHeight = 1.35f; Cam.AutoBehind = true; }   // QF13 (13): a bit further back and lower at the new speeds
             else { Cam.Target = Seven.transform; Cam.Distance = 3.8f; Cam.LookHeight = 1.45f; Cam.AutoBehind = Auto; }
             Cam.Follow();
         }
@@ -772,25 +774,15 @@ namespace Seven
             yield return Wait(1.3f);
             LogBikeThroughHull("hull closed, before the hatch opens");
             yield return Shot("v06a_b01_seamless_hull");
-            // the seam glows, running round the panel
-            if (HatchSeam != null) HatchSeam.enabled = true;
-            var seamM = HatchSeam != null ? HatchSeam.material : null;
-            AudioKit.Play("hatch_iris", mouth, 0.7f);
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.0f) { if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.SmoothStep(0f, 3.2f, t)); yield return null; }
-            yield return Shot("v06b_b01_hatch_seam_glows");
-            // the panel sinks a few centimetres and slides round under the hull; soft light from inside
-            var backM = BayBack != null ? BayBack.sharedMaterial : null;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
+            // QF13 (1): the shared hold (SaucerHold): the seam lights, the panel sinks into the hull and slides round inside
+            // it, the seam goes dark again - an empty opening (flat unlit inside) with only the bike in it
+            Material seamM = null, backM = null;
+            yield return Hold.Open(() => StartCoroutine(Shot("v06b_b01_hatch_seam_glows")), slide =>
             {
-                float sink = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.3f)), slide = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 0.25f) / 0.75f));
-                if (Hatch != null) { Hatch.localScale = Vector3.one * Mathf.Lerp(1f, 0.984f, sink); Hatch.localRotation = Quaternion.Euler(0f, slide * (VenusLayout.HatchSpan + 3f), 0f); }
-                if (BayLight != null) BayLight.intensity = 2.4f * slide;
-                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 0.55f, slide));
-                if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(3.2f, 1.2f, slide));
                 if (slide > 0.97f && !_bikeShown) BikeShown(true);
                 if (Shots && !_bikeShown && !_hullCheckLogged) { _hullCheckLogged = true; LogBikeThroughHull("hatch opening (panel " + (slide * 100f).ToString("0") + " % open)"); }
-                yield return null;
-            }
+                if (Shots && slide > 0.5f && !_holdMidShot) { _holdMidShot = true; StartCoroutine(Shot("qf13_01a_b01_hold_half_open_player_view")); }
+            });
             BikeShown(true);
             yield return Shot("v06c_b01_hatch_open_light_inside");
             // the bike glides out on its hover glow, unhurried
@@ -825,7 +817,7 @@ namespace Seven
             if (Shots) { Shoot(VenusLayout.SaucerAt + Chapter1Director.SaucerCheckOffset, VenusLayout.SaucerAt + Vector3.up * 1.6f, 45f, 0.01f); yield return Wait(0.3f); yield return Shot("saucer_side_by_side_venus"); }
             Log($"hatch (QF10): opened along the seam, the bike glided out and settled at riding height; closed again - panel offset {(Hatch != null ? Hatch.localRotation.eulerAngles.y : 0f):0.000} deg, scale {(Hatch != null ? Hatch.localScale.x : 1f):0.000}, seam emission {(seamM != null ? seamM.GetColor("_EmissionColor").r : 0f):0.000}, bay light {(BayLight != null ? BayLight.intensity : 0f):0.00}");
         }
-        bool _hatchOpen = true, _bikeShown = true, _hullCheckLogged;
+        bool _hatchOpen = true, _bikeShown = true, _hullCheckLogged, _holdMidShot;
         void BikeShown(bool on)
         {
             _bikeShown = on;
@@ -842,20 +834,7 @@ namespace Seven
         {
             _hatchOpen = true;
             yield return Wait(1.2f);
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
-            {
-                float slide = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.75f)), sink = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 0.7f) / 0.3f));
-                if (Hatch != null) { Hatch.localScale = Vector3.one * Mathf.Lerp(1f, 0.984f, sink); Hatch.localRotation = Quaternion.Euler(0f, slide * (VenusLayout.HatchSpan + 3f), 0f); }
-                if (BayLight != null) BayLight.intensity = 2.4f * slide;
-                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 0.55f, slide));
-                if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * (1.2f + 1.0f * Mathf.Sin(t * Mathf.PI)));
-                yield return null;
-            }
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.9f) { if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(1.2f, 0f, t)); yield return null; }
-            if (Hatch != null) { Hatch.localScale = Vector3.one; Hatch.localRotation = Quaternion.identity; }
-            if (seamM != null) seamM.SetColor("_EmissionColor", Color.black);
-            if (HatchSeam != null) HatchSeam.enabled = false;
-            if (BayLight != null) BayLight.intensity = 0f;
+            yield return Hold.Close();
             _hatchOpen = false;
         }
 
@@ -983,24 +962,27 @@ namespace Seven
         IEnumerator RideToTemple()
         {
             if (Auto) StartCoroutine(AutoRide(RoutePts(P7.z, 104f), () => VenusState.SceneDone("VEN_B03") && P7.z > 100f || P7.z > 104f));
+            // QF13 (2): the walkway breaks AHEAD of her - its own watcher from the start of the ride (not after B02's lines)
+            _collapseFired = _collapseDone = VenusState.SceneDone("VEN_B03");
+            if (!_collapseDone) StartCoroutine(CollapseWatch());
             // B02 at the long open bend (in gameplay, the normal riding camera)
             if (!VenusState.SceneDone("VEN_B02"))
             {
                 yield return Until(() => P7.z > VenusLayout.BendZ - 6f && P7.x > 6f || P7.z > 60f, "the long open bend (B02)", 120f,
                     "Ride north along the garden road (RT to accelerate)", VenusLayout.BendSpot, () => PlaceRiding(VenusLayout.BendSpot + Vector3.right * 4f, 90f));
                 yield return Shot("v11_b02_the_long_open_bend");
-                yield return SayInGameplay("VEN_B02", 1, 3);
-                yield return Wait(1.2f);                                    // a short pause
-                yield return SayInGameplay("VEN_B02", 4, 4);
+                if (!_collapseFired) yield return SayInGameplay("VEN_B02", 1, 3);
+                if (!_collapseFired) yield return Wait(1.2f);              // a short pause
+                if (!_collapseFired) yield return SayInGameplay("VEN_B02", 4, 4);
                 Complete("VEN_B02");
             }
             // B03 + C02: workers signal to slow down, water across the route, the tremor (movement never locked)
             if (!VenusState.SceneDone("VEN_B03"))
             {
-                yield return Until(() => P7.z > VenusLayout.TremorZ, "the damaged route (B03)", 120f,
+                // QF13 (2): the watcher fires the tremor + collapse while she is still well short of the gully (on any
+                // approach line); here the flow only waits for it to be over
+                yield return Until(() => _collapseDone, "the damaged route (B03)", 120f,
                     "Follow the road on round the bend", new Vector3(30f, 0f, VenusLayout.TremorZ), () => PlaceRiding(new Vector3(30f, 0f, VenusLayout.TremorZ + 1f), 0f));
-                // Round 13 (0k): a strong, obvious tremor - and in front of her the walkway cracks and collapses; she brakes hard
-                yield return TremorAndCollapse();
                 yield return SayInGameplay("VEN_C02", 1, 2);
                 Complete("VEN_C02"); Complete("VEN_B03");
             }
@@ -1215,18 +1197,57 @@ namespace Seven
             Log($"cube (QF12 6) at {when}: active {Cube.gameObject.activeInHierarchy}, renderers on {on}/{all}, at {Cube.position} ({Vector3.Distance(Cube.position, VenusLayout.CubeAt):0.00} m from its pedestal), scale {Cube.lossyScale.x:0.00}");
         }
 
+        // ---- QF13 (2): Dan - "it waits until she's on top of it and can't move forward". Cause: the trigger (z > 96, "at or
+        // past") was only checked after B02's dialogue had finished, and she rode on meanwhile - by then she was on the
+        // walkway, so it fell under her. Now a watcher runs from the start of the ride and fires on distance short of the
+        // gully (which crosses the whole valley, so any approach line), early enough for her speed: <= 30 m, or < 3.2 s
+        // away + 8 m. She brakes at once, watches it fall, and is never left on or at the broken edge.
+        bool _collapseFired, _collapseDone;
+        IEnumerator CollapseWatch()
+        {
+            while (true)
+            {
+                if (VenusState.SceneDone("VEN_B03")) { _collapseFired = _collapseDone = true; yield break; }
+                var p = Bike.Riding ? Bike.transform.position : P7;
+                float dz = VenusLayout.CollapseZ0 - p.z, v = Bike.Riding ? Mathf.Max(0f, Bike.Speed) : 0f;
+                bool busy = PauseMenu.IsOpen;
+                if (!busy && p.z > 40f && (dz < 30f || dz < v * 3.2f + 8f)) break;
+                yield return null;
+            }
+            _collapseFired = true;
+            var at = Bike.Riding ? Bike.transform.position : P7;
+            Log($"collapse (QF13 2): fired with her {VenusLayout.CollapseZ0 - at.z:0.0} m short of the gully at {(Bike.Riding ? Bike.Speed : 0f):0.0} m/s ({(Bike.Riding ? "riding" : "on foot")}, x {at.x:0.0}) - never with her on it");
+            yield return TremorAndCollapse();
+            _collapseDone = true;
+        }
+
         IEnumerator TremorAndCollapse()
         {
+            // QF13 (2): she brakes at once (the bike stops well short of the edge), then watches it fall
+            bool sd = Bike.ScriptDriven; float thr = Bike.ScriptThrottle;
+            if (Bike.Riding) { Bike.ScriptDriven = true; Bike.ScriptThrottle = -1f; Bike.ScriptSteer = 0f; }
             StartCoroutine(Tremor(5.0f, 1.1f));
             yield return Wait(0.9f);
             yield return Shot("v12_c02_tremor_vessel");
             yield return Cutscene(true);
-            bool sd = Bike.ScriptDriven; float thr = Bike.ScriptThrottle;
-            if (Bike.Riding) { Bike.ScriptDriven = true; Bike.ScriptThrottle = -1f; Bike.ScriptSteer = 0f; }
             // the cut: from beside the road, the walkway ahead and her braking toward it
             Shoot(new Vector3(37.5f, 3.4f, 106f), new Vector3(30f, -0.4f, 121f), 52f, 0.01f);
             yield return Collapse();
             if (Bike.Riding) { for (float t = 0f; t < 2f && Bike.Speed > 0.3f; t += Time.deltaTime) yield return null; }
+            // never left on or at the broken edge: if she ended within 6 m of it (or on it), she glides back to a safe stop
+            {
+                var p = Bike.Riding ? Bike.transform.position : P7;
+                float gap = VenusLayout.CollapseZ0 - p.z;
+                if (gap < 6f)
+                {
+                    var safe = new Vector3(p.x, 0f, VenusLayout.CollapseZ0 - 9f);
+                    if (Bike.Riding) { var b0 = Bike.transform.position; for (float t = 0f; t < 1f; t += Time.deltaTime / 1.2f) { var q = Vector3.Lerp(b0, safe, Mathf.SmoothStep(0f, 1f, t)); Bike.Place(q, Bike.transform.eulerAngles.y); yield return null; } }
+                    else Seven.Place(new Vector3(safe.x, Ground.Height(safe.x, safe.z), safe.z), Vector3.forward);
+                    Log($"collapse (QF13 2): she had stopped {gap:0.0} m from the edge - moved back to {VenusLayout.CollapseZ0 - safe.z:0.0} m");
+                }
+                var e = Bike.Riding ? Bike.transform.position : P7;
+                Log($"collapse (QF13 2): she stopped {VenusLayout.CollapseZ0 - e.z:0.0} m short of the broken edge (must be > 5)");
+            }
             Bike.ScriptThrottle = thr; Bike.ScriptDriven = sd;
             FollowCamera();
             yield return Cutscene(false);
@@ -1417,6 +1438,7 @@ namespace Seven
             if (Guardian != null) { Guardian.Stop(); Guardian.transform.position = VenusLayout.MeetSpot + Vector3.forward * 1.6f; Guardian.Face(P7); }
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) { if (Guardian != null) Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(Guardian.transform.position - P7)), 400f * Time.deltaTime); yield return null; }
             yield return Shot("v14b_c03_guardian_standing_cape");
+            if (Shots) StartCoroutine(GuardSeq("1_standing_talking", 4, 0.7f));
             yield return Say("VEN_C03", 1, 2);
             yield return Shot("v15_c03_wide_two_shot");
             // she takes the dodecahedron out and holds it out; the guardian kneels to her level and looks - without taking it
@@ -1433,6 +1455,7 @@ namespace Seven
             if (Guardian != null) TwoShot(Guardian, -_side, 5.2f);
             yield return Wait(0.3f);
             yield return Shot("v16_c03_guardian_kneels_examines_it");
+            if (Shots) StartCoroutine(GuardSeq("2_kneeling", 2, 0.6f));
             if (Shots) { var wb = CameraOccluders.WalkBlockers(out int nb); Log($"walk blockers (QF12 7) at C03: {nb} blocked samples in the walkable ground - {wb}"); }
             if (Guardian != null) Log($"guardian kneel (QF12): hips at {Guardian.KneelHipsRatio:0.00} of standing height ({(Guardian.KneelProcedural ? "procedural kneel - the clip did not lower him" : "the kneel clip")}; must be < 0.7)");
             if (Guardian != null) Log($"cape (QF10) kneeling: worst leg contact {Guardian.GetComponent<ElarimCape>()?.WorstDepth * 100f:0.0} cm, swing {Guardian.GetComponent<ElarimCape>()?.MaxAngle:0} deg");
@@ -1446,9 +1469,11 @@ namespace Seven
             // Round 13 (0e): he turns toward the temple doors and tells her to follow, then walks ahead to the cube chamber
             // (waiting for her if she falls behind)
             if (Guardian != null) { Guardian.Play("idle"); Guardian.Face(new Vector3(30f, 0f, 240f)); }
+            if (Shots) StartCoroutine(GuardSeq("3_getting_up", 4, 0.22f));
             yield return Wait(0.6f);
             yield return Say("VEN_C03", 11, 11);                          // "Follow me."
             if (Guardian != null) { StartCoroutine(GuardianLeads()); }
+            if (Shots) StartCoroutine(GuardSeq("4_walking_follow_me", 10, 0.18f, 0.5f));
             if (Guardian != null) { TwoShot(Guardian, _side, 6.5f, 1.0f); yield return Wait(1.6f); yield return Shot("v17b_c03_guardian_walks_cape"); Log($"cape (QF10) walking: worst leg contact {Guardian.GetComponent<ElarimCape>()?.WorstDepth * 100f:0.0} cm"); }
             _coverage = false;
             Log($"C03: the guardian examined the dodecahedron without taking it (still hers: {(_carry != null ? _carry.At.ToString() : "-")})");
@@ -1456,6 +1481,25 @@ namespace Seven
             Complete("VEN_C03", VenusState.Stage.GuardianMet);
             Objective(VenusState.Objectives[(int)VenusState.Stage.GuardianMet]);
             yield return Cutscene(false);
+        }
+
+        /// <summary>QF13 (17): the guardian frame by frame - each frame from the player's camera (what is on screen) and the
+        /// same instant from his side, with the walk / cape measurements: the clip's ground speed and the playback that
+        /// matches it, the planted foot's slide, the cape's top below the shoulders and hem above the ground (now vs the
+        /// model), the re-seat shift, the deepest leg contact and the swing.</summary>
+        IEnumerator GuardSeq(string beat, int n, float every, float delay = 0f)
+        {
+            if (!Shots || Guardian == null) yield break;
+            if (delay > 0f) yield return Wait(delay);
+            for (int i = 0; i < n; i++)
+            {
+                var g = Guardian.transform; var cape = Guardian.GetComponent<ElarimCape>();
+                Log($"guardian (QF13 17) {beat} #{i}: state {(Guardian.Walking ? "walking" : "standing")}, clip ground speed {Guardian.ClipGroundSpeed:0.00} m/s, playback {Guardian.WalkAnimSpeed:0.00} for {Guardian.WalkSpeed:0.0} m/s, planted foot slide {Guardian.FootSlide:0.00} m/s, kneel hips {Guardian.KneelHipsRatio:0.00}"
+                    + (cape != null ? $"; cape top {cape.TopBelowShoulder:0.00} m below the shoulders (model {cape.RefTopBelowShoulder:0.00}), hem {cape.HemAboveGround:0.00} m above the ground (model {cape.RefHemAboveGround:0.00}), re-seat {cape.SeatShift * 100f:+0;-0} cm, leg contact {cape.WorstDepth * 100f:0.0} cm, swing {cape.MaxAngle:0} deg" : ""));
+                yield return Cap.Shot($"qf13_17_{beat}_{i}_player_camera");
+                yield return Cap.ShotFrom($"qf13_17_{beat}_{i}_side", g.position + g.right * 8f + g.forward * 1.0f + Vector3.up * 1.9f, g.position + Vector3.up * 1.8f, 38f);
+                if (every > 0f) yield return Wait(every);
+            }
         }
 
         /// <summary>Round 13 (0e): after "Follow me." the guardian walks ahead through the temple to the cube chamber; if 7

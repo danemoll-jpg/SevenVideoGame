@@ -21,6 +21,24 @@ namespace Seven.EditorTools
     {
         struct Part2 { public Seven.ControlDevice[] devices; public Transform crystal, barrier, console; public Renderer consoleGlow, barrierGlow; public Seven.WormmasterRig wm; public Seven.WormCreature[] worms; public GameObject gate, repaired, dry; public Transform record; public Light[] under; }
 
+        /// <summary>QF13 (19): a lamp that reads as a lamp - an Elarim crystal lantern (a glowing teardrop in a small root cup)
+        /// hanging from a grown root fixed to the ceiling or wall at `anchor`; its light just under it. Never a floating box.</summary>
+        static void Lantern(string name, Vector3 at, Vector3 anchor, float size, float range, float intensity, Material glow, Material stalk, Transform parent)
+        {
+            var go = new GameObject(name).transform; go.SetParent(parent, false);
+            float s = size;
+            var crystal = Lathe(new[] { new Vector2(0f, 0.55f * s), new Vector2(0.24f * s, 0.38f * s), new Vector2(0.34f * s, 0.05f * s), new Vector2(0.28f * s, -0.3f * s), new Vector2(0.12f * s, -0.62f * s), new Vector2(0f, -0.78f * s) }, 0f, 360f, 14, null, at);
+            MeshObject(name + "_Glow", SaveMesh(crystal, "Venus_Lantern_" + name), glow, go, false);
+            var v = new List<Vector3>(); var t = new List<int>();
+            var cup = Lathe(new[] { new Vector2(0f, 0.72f * s), new Vector2(0.2f * s, 0.7f * s), new Vector2(0.36f * s, 0.42f * s), new Vector2(0.39f * s, 0.3f * s), new Vector2(0.33f * s, 0.32f * s), new Vector2(0.18f * s, 0.6f * s), new Vector2(0f, 0.62f * s) }, 0f, 360f, 14, null, at);
+            { int b = v.Count; v.AddRange(cup.vertices); t.AddRange(cup.triangles.Select(k => k + b)); }
+            var top = at + Vector3.up * 0.7f * s;
+            var mid = new Vector3(Mathf.Lerp(top.x, anchor.x, 0.5f), Mathf.Max(top.y, anchor.y) - 0.05f, Mathf.Lerp(top.z, anchor.z, 0.5f));
+            if ((anchor - top).sqrMagnitude > 0.0004f) Tube(v, t, new[] { anchor, (anchor + mid) * 0.5f + Vector3.up * 0.04f, mid, top }, 0.07f * Mathf.Max(1f, s * 3f), 0.035f, 6);
+            MeshObject(name + "_Root", SaveMesh(SmoothFinish(v, t), "Venus_LanternRoot_" + name), stalk, go);
+            PointLight(name + "_Light", at + Vector3.down * 0.25f, range, intensity, go);
+        }
+
         static void BuildVenusPart2(Transform world, VenusMats m, ElarimMats em, Seven.VenusDirector d, GameObject worm, AnimatorController wormCtl,
             System.Func<string, Vector3, Vector3, string, Seven.ElarimNpc> makeElarim, Seven.DialoguePlayer dlg)
         {
@@ -44,7 +62,7 @@ namespace Seven.EditorTools
             var arcPts = new List<Vector3>(); for (int i = 0; i <= 12; i++) { float a = i / 12f * Mathf.PI; arcPts.Add(new Vector3(69f - Mathf.Cos(a) * 3.1f, -6.2f + Mathf.Sin(a) * 6f, 134.1f)); }
             Sweep(arch, archT, arcPts, 0.45f, false, 8);
             MeshObject("RootGate_Arch", SaveMesh(SmoothFinish(arch, archT), "Venus_RootGateArch"), rootMat, world);
-            Lamp("RootGate_Lamp", new Vector3(69f, -0.6f, 134.6f), 9f, 0.8f, m.glow, world, new Vector3(0.22f, 0.22f, 0.22f));
+            Lantern("RootGate_Lamp", new Vector3(69f, -0.75f, 134.75f), new Vector3(69f, -0.2f, 134.2f), 0.2f, 9f, 0.8f, m.glow, rootMat, world);
 
             // ---- the root pit: a slot cut into the hillside, rock walls up to the ground, steps down
             for (float z = V.RootPitBotZ - 4.6f; z < V.RootPitTopZ; z += 1.8f)
@@ -62,20 +80,32 @@ namespace Seven.EditorTools
               for (int i = 0; i < 18; i++) { float z = V.RootPitBotZ + (float)rnd.NextDouble() * 16f; float x = i % 2 == 0 ? 66.55f : 71.45f; float top = VenusTerrain.RawHeight(x + (x < 69f ? -1.5f : 1.5f), z);
                 Tube(v, t, new[] { new Vector3(x, top, z), new Vector3(x + (x < 69 ? 0.15f : -0.15f), Mathf.Lerp(top, V.RootPitHeight(z), 0.5f), z + 0.4f), new Vector3(x + (x < 69 ? 0.3f : -0.3f), V.RootPitHeight(z) + 0.4f, z + 0.2f) }, 0.12f, 0.05f, 6); }
               MeshObject("Pit_Roots", SaveMesh(SmoothFinish(v, t), "Venus_PitRoots"), rootMat, root, false); }
-            Lamp("Pit_Lamp", new Vector3(69f, V.RootPitBotY + 2.4f, V.RootPitBotZ + 1.5f), 10f, 1.0f, glowSoft, root, new Vector3(0.3f, 0.3f, 0.3f));
+            // QF13 (19): Dan's "glowing cube floating in mid-air" was this lamp - a 0.3 m glow box hanging in the middle of the
+            // pit. The lamp is now a lantern: a glowing crystal on a grown root bracket, fixed to the rock face over the tunnel
+            // mouth (QF12 had called it "the tunnel lamp" and left it).
+            Lantern("Pit_Lamp", new Vector3(69f, V.RootPitBotY + 5.9f, V.RootPitBotZ + 0.85f), new Vector3(69f, V.RootPitBotY + 6.6f, V.RootPitBotZ + 0.25f), 0.3f, 12f, 1.2f, glowSoft, rootMat, root);
 
             // ---- the root tunnel (z 96 -> 117.6, falling to the root chamber)
             float TunY(float z) => Mathf.Lerp(V.ChamberY, V.RootPitBotY, Mathf.InverseLerp(V.TunnelBotZ, V.RootPitBotZ + 0.6f, z));
             Block("Tunnel_WallW", new Vector3(64.9f, V.ChamberY - 1f, V.TunnelBotZ), new Vector3(66.5f, V.RootPitBotY + 6f, V.RootPitBotZ + 0.2f), rock, root);
             Block("Tunnel_WallE", new Vector3(71.5f, V.ChamberY - 1f, V.TunnelBotZ), new Vector3(73.1f, V.RootPitBotY + 6f, V.RootPitBotZ + 0.2f), rock, root);
             SlopeSlab("Tunnel_Ceiling", 64.9f, V.TunnelBotZ, 73.1f, V.RootPitBotZ + 0.2f, V.ChamberY + 5.2f, V.RootPitBotY + 5.2f, 1, rock, root, -1.2f);
+            // QF13 (19): the dark curved "wall" in front of the stairs (Dan's screenshot) was the hill's ground mesh: it dipped
+            // into the pit and climbed straight back up to the hillside across the pit's bottom end - a smooth steep face that
+            // closed off the tunnel mouth. The ground mesh no longer spans the pit's edges (FightDemoBuilderTerrain), and the
+            // hillside ends in a rock face over the tunnel: a clear 5 m mouth into the lit root tunnel at the foot of the stairs.
+            {
+                float hill = -99f; for (float x = 64.9f; x <= 73.1f; x += 0.4f) hill = Mathf.Max(hill, VenusTerrain.RawHeight(x, V.RootPitBotZ - 0.6f), VenusTerrain.RawHeight(x, V.RootPitBotZ - 1.4f));
+                Block("Tunnel_Headwall", new Vector3(64.9f, V.RootPitBotY + 5.2f, V.RootPitBotZ - 0.8f), new Vector3(73.1f, Mathf.Max(hill + 0.6f, V.RootPitBotY + 6.4f), V.RootPitBotZ + 0.25f), rock, root);
+                Log($"QF13 (19): tunnel headwall over the mouth from y {V.RootPitBotY + 5.2f:0.0} to {Mathf.Max(hill + 0.6f, V.RootPitBotY + 6.4f):0.0} (hillside {hill:0.0}); mouth 5.0 m wide x 5.2 m high");
+            }
             // the portal: a frame of grown roots where the pit enters the hill
             { var v = new List<Vector3>(); var t = new List<int>(); var p = new List<Vector3>();
               for (int i = 0; i <= 10; i++) { float a = i / 10f * Mathf.PI; p.Add(new Vector3(69f - Mathf.Cos(a) * 2.6f, V.RootPitBotY - 0.1f + Mathf.Sin(a) * 4.9f, V.RootPitBotZ + 0.1f)); }
               Sweep(v, t, p, 0.35f, false, 8);
               for (float z = V.TunnelBotZ + 2f; z < V.RootPitBotZ; z += 3.2f) { float y = TunY(z); Tube(v, t, new[] { new Vector3(66.6f, y, z), new Vector3(67.4f, y + 4.4f, z + 0.3f), new Vector3(70.6f, y + 4.5f, z + 0.3f), new Vector3(71.4f, y, z) }, 0.2f, 0.14f, 6); }
               MeshObject("Tunnel_Roots", SaveMesh(SmoothFinish(v, t), "Venus_TunnelRoots"), rootMat, root); }
-            for (float z = V.TunnelBotZ + 5f; z < V.RootPitBotZ; z += 7f) Lamp($"Tunnel_Bulb_{z:0}", new Vector3(z % 2 < 1 ? 66.9f : 71.1f, TunY(z) + 3.2f, z), 8f, 0.9f, glowSoft, root, new Vector3(0.25f, 0.32f, 0.25f));
+            for (float z = V.TunnelBotZ + 5f; z < V.RootPitBotZ; z += 7f) { float x = z % 2 < 1 ? 67.1f : 70.9f; Lantern($"Tunnel_Bulb_{z:0}", new Vector3(x, TunY(z) + 3.6f, z), new Vector3(x, TunY(z) + 5.2f, z), 0.22f, 8f, 0.9f, glowSoft, rootMat, root); }
 
             // ---- the root chamber (y -22): huge hanging roots, glowing root bulbs
             float cy = V.ChamberY;
@@ -96,13 +126,13 @@ namespace Seven.EditorTools
               }
               foreach (var (x, z) in new[] { (60.2f, 85f), (60.2f, 95f), (79.8f, 84.5f), (79.8f, 96f) }) Tube(v, t, new[] { new Vector3(x, cy, z), new Vector3(x, cy + 5f, z), new Vector3(x + (x < 70 ? 2f : -2f), cy + 10f, z) }, 1.1f, 0.6f, 9);
               MeshObject("RootCh_Roots", SaveMesh(SmoothFinish(v, t), "Venus_RootChamberRoots"), rootMat, root); }
-            foreach (var (x, z) in new[] { (63f, 87f), (77f, 94f), (70f, 85.5f), (76f, 88.5f) }) Lamp($"RootCh_Bulb_{x:0}_{z:0}", new Vector3(x, cy + 3.4f, z), 11f, 1.2f, glowSoft, root, new Vector3(0.35f, 0.45f, 0.35f));
+            foreach (var (x, z) in new[] { (63f, 87f), (77f, 94f), (70f, 85.5f), (76f, 88.5f) }) Lantern($"RootCh_Bulb_{x:0}_{z:0}", new Vector3(x, cy + 3.6f, z), new Vector3(x, cy + 10f, z), 0.32f, 11f, 1.2f, glowSoft, rootMat, root);
 
             // ---- the deep tunnel east (y -22 -> -30)
             Block("Deep_WallS", new Vector3(80f, V.ControlY - 1f, 84.8f), new Vector3(103.4f, cy + 7f, 86f), rock, root);
             Block("Deep_WallN", new Vector3(80f, V.ControlY - 1f, 92f), new Vector3(103.4f, cy + 7f, 93.2f), rock, root);
             SlopeSlab("Deep_Ceiling", 79.4f, 84.8f, 104f, 93.2f, cy + 5.6f, V.ControlY + 5.6f, 0, rock, root, -1.2f);
-            for (float x = 84f; x < 102f; x += 6f) Lamp($"Deep_Bulb_{x:0}", new Vector3(x, Mathf.Lerp(cy, V.ControlY, Mathf.InverseLerp(79.4f, 104f, x)) + 3.6f, x % 12 < 6 ? 86.5f : 91.5f), 8f, 0.8f, glowSoft, root, new Vector3(0.25f, 0.3f, 0.25f));
+            for (float x = 84f; x < 102f; x += 6f) { float yy = Mathf.Lerp(cy, V.ControlY, Mathf.InverseLerp(79.4f, 104f, x)); float zz = x % 12 < 6 ? 86.5f : 91.5f; Lantern($"Deep_Bulb_{x:0}", new Vector3(x, yy + 3.8f, zz), new Vector3(x, yy + 5.6f, zz), 0.22f, 8f, 0.8f, glowSoft, rootMat, root); }
 
             // ---- VEN_05: the control chamber (y -30)
             float y0 = V.ControlY;
@@ -146,8 +176,8 @@ namespace Seven.EditorTools
                 l.transform.position = V.DaisAt + new Vector3(Mathf.Cos(a * Mathf.Deg2Rad) * (V.DaisRadius - 0.3f), V.DaisHeight + 0.15f, Mathf.Sin(a * Mathf.Deg2Rad) * (V.DaisRadius - 0.3f));
                 l.type = LightType.Point; l.range = 9f; l.intensity = 4f; l.color = Color.white; l.shadows = LightShadows.None; under.Add(l);
             }
-            foreach (var (x, z) in new[] { (106f, 66f), (106f, 110f), (139f, 66f), (139f, 110f), (121f, 64.8f), (121f, 111.2f) }) Lamp($"Ctrl_Bulb_{x:0}_{z:0}", new Vector3(x, y0 + 4.2f, z), 14f, 1.1f, glowSoft, root, new Vector3(0.35f, 0.45f, 0.35f));
-            Lamp("Ctrl_EntryBulb", new Vector3(104.5f, y0 + 4.4f, 89f), 10f, 1.0f, glowSoft, root, new Vector3(0.3f, 0.4f, 0.3f));
+            foreach (var (x, z) in new[] { (106f, 66f), (106f, 110f), (139f, 66f), (139f, 110f), (121f, 64.8f), (121f, 111.2f) }) Lantern($"Ctrl_Bulb_{x:0}_{z:0}", new Vector3(x, y0 + 4.2f, z), new Vector3(x, y0 + 4.9f, z < 88f ? 64.2f : 111.8f), 0.32f, 14f, 1.1f, glowSoft, rootMat, root);
+            Lantern("Ctrl_EntryBulb", new Vector3(104.5f, y0 + 4.4f, 89f), new Vector3(103.4f, y0 + 5.1f, 89f), 0.28f, 10f, 1.0f, glowSoft, rootMat, root);
 
             // the three control devices
             var devs = new List<Seven.ControlDevice>(); Transform crystal = null;

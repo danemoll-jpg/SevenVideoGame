@@ -13,7 +13,14 @@ namespace Seven
     public class ElarimNpc : MonoBehaviour
     {
         public string PostClip = "idle";
-        public float WalkSpeed = 1.5f;
+        /// <summary>QF13 (3): a dignified walk for a 3.5 m figure (~2 m/s: a human's 1.4 m/s scaled by the square root of
+        /// his size). The clip is in place; its playback speed is matched to this (WalkAnimSpeed) so the planted foot stays put.</summary>
+        public float WalkSpeed = 2.0f;
+        /// <summary>QF13 (3): measured while walking - the clip's own ground speed at playback 1 (m/s, from the planted foot),
+        /// the playback speed that matches WalkSpeed, and the planted foot's remaining slide (m/s; ~0 = no skating).</summary>
+        public float ClipGroundSpeed { get; private set; } = -1f;
+        public float WalkAnimSpeed { get; private set; } = 1f;
+        public float FootSlide { get; private set; }
         /// <summary>White emission (the eyes glow brighter than the soft glow of the armour); set by the builder.</summary>
         public Material EyeMaterial;
         Animator _anim; string _state; Vector3? _walkTo; Vector3? _faceTo; float _stopAt;
@@ -84,6 +91,50 @@ namespace Seven
             if (!want && _kneelW <= 0f) _kneelProc = false;
             if (_kneelProc && _kneelW > 0f) ProceduralKneel(hips, gy, Mathf.SmoothStep(0f, 1f, _kneelW));
             if (_standHips > 0f) KneelHipsRatio = (hips.position.y - gy) / _standHips;
+            WalkMatch();
+            RelaxArms();
+        }
+
+        // ---- QF13 (3): Dan - "he still uses the awful walk". Why the earlier fixes didn't hold: the rig and the cape were
+        // fixed, never the walk itself. Dan's walk clip is in place and strides ~0.54 of his height per step: at his 3.5 m
+        // that covers ~3.7 m/s, but he was slid along at 1.5 m/s - his legs paced out steps two and a half times longer
+        // than the ground he covered (skating, a hurried shuffle), with the arms held out from the body. Now the clip's
+        // ground speed is measured from the planted foot and the playback is matched to his speed (the foot stays where
+        // it is planted), he walks at a calm 2 m/s, and his arms hang closer to his sides.
+        Transform _planted; float _plantedZ; Vector3 _plantedW; float _minRel = 9f; Quaternion _lastRot;
+        void WalkMatch()
+        {
+            bool walking = _state == "walk" && _walkTo.HasValue;
+            if (!walking) { if (_anim.speed != 1f) _anim.speed = 1f; _planted = null; return; }
+            var lf = _anim.GetBoneTransform(HumanBodyBones.LeftFoot); var rf = _anim.GetBoneTransform(HumanBodyBones.RightFoot);
+            if (lf == null || rf == null) return;
+            var low = lf.position.y < rf.position.y ? lf : rf;
+            float dt = Mathf.Max(1e-4f, Time.deltaTime);
+            float lz = transform.InverseTransformPoint(low.position).z;
+            // planted = the lower foot while it is near its lowest (within 4 cm of the lowest seen lately): its stance phase
+            float rel = low.position.y - transform.position.y;
+            _minRel = Mathf.Min(_minRel + dt * 0.05f, rel);
+            bool planted = rel < _minRel + 0.04f * transform.lossyScale.y;
+            if (low == _planted && planted && !_anim.IsInTransition(0) && Quaternion.Angle(transform.rotation, _lastRot) < 60f * dt)
+            {
+                float v = (_plantedZ - lz) / dt / Mathf.Max(0.05f, _anim.speed);         // in place: the planted foot moves back at the clip's speed
+                if (v > 0.2f && v < 12f) ClipGroundSpeed = ClipGroundSpeed < 0f ? v : Mathf.Lerp(ClipGroundSpeed, v, 0.05f);
+                FootSlide = Mathf.Lerp(FootSlide, (low.position - _plantedW).magnitude / dt, 0.1f);
+            }
+            _planted = low; _plantedZ = lz; _plantedW = low.position; _lastRot = transform.rotation;
+            if (ClipGroundSpeed > 0f) { WalkAnimSpeed = Mathf.Clamp(WalkSpeed / ClipGroundSpeed, 0.4f, 1.3f); _anim.speed = WalkAnimSpeed; }
+        }
+        void RelaxArms()
+        {
+            if (_state != "walk" && _state != "idle" && _state != "talk") return;
+            foreach (var (up, lo, sgn) in new[] { (HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, -1f), (HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, 1f) })
+            {
+                var u = _anim.GetBoneTransform(up); var l = _anim.GetBoneTransform(lo); if (u == null || l == null) continue;
+                var d = l.position - u.position; var side = Vector3.Dot(d, transform.right) * sgn;     // how far the elbow is out to the side
+                if (side <= 0.02f) continue;
+                float ang = Mathf.Min(14f, Mathf.Atan2(side, Mathf.Max(0.05f, -Vector3.Dot(d, Vector3.up))) * Mathf.Rad2Deg * 0.6f);
+                u.rotation = Quaternion.AngleAxis(-sgn * ang, transform.forward) * u.rotation;
+            }
         }
 
         void ProceduralKneel(Transform hips, float gy, float w)

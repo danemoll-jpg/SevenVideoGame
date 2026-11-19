@@ -86,7 +86,9 @@ namespace Seven
         // ---- data
         [System.Serializable] public class LogEntry { public string id, chapter, title, text, unlock; }
         [System.Serializable] class LogFile { public List<LogEntry> entries = new List<LogEntry>(); }
-        [System.Serializable] public class GuideEntry { public string id, title, titleBefore, textBefore, text, nameUnlock, unlock, portrait; }
+        [System.Serializable] public class GuideEntry { public string id, title, titleBefore, textBefore, text, nameUnlock, unlock, portrait; public GuideMore[] more; }
+        /// <summary>QF13 (4): an entry grows with the story - a paragraph shown after the main text once its unlock is met.</summary>
+        [System.Serializable] public class GuideMore { public string text, unlock; }
         [System.Serializable] class GuideFile { public List<GuideEntry> entries = new List<GuideEntry>(); }
 
         /// <summary>Unlock forms (the JSON files): "ch1>=N" (SaveGame.Furthest), "venus>=Stage" (VenusState.AtLeast),
@@ -121,7 +123,13 @@ namespace Seven
             return l;
         }
         public static string GuideTitle(GuideEntry e) => !string.IsNullOrEmpty(e.nameUnlock) && !Unlocked(e.nameUnlock) && !string.IsNullOrEmpty(e.titleBefore) ? e.titleBefore : e.title;
-        public static string GuideText(GuideEntry e) => !string.IsNullOrEmpty(e.nameUnlock) && !Unlocked(e.nameUnlock) && !string.IsNullOrEmpty(e.textBefore) ? e.textBefore : e.text;
+        public static string GuideText(GuideEntry e)
+        {
+            bool before = !string.IsNullOrEmpty(e.nameUnlock) && !Unlocked(e.nameUnlock) && !string.IsNullOrEmpty(e.textBefore);
+            var s = before ? e.textBefore : e.text;
+            if (!before && e.more != null) foreach (var m in e.more) if (m != null && !string.IsNullOrEmpty(m.text) && Unlocked(m.unlock)) s += "\n\n" + m.text;
+            return s;
+        }
 
         // ---- star map rules
         /// <summary>Only the places she can reach: the Moon and Venus always; Mars and Europa once VEN_C12 has happened.</summary>
