@@ -1,5 +1,61 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF14: Dan's 0.14.1 play — Europa focus + the menu (Dan, 2026-11-19) — to do
+Commit first. All standing rules; the QF13 rule for repeat items (say why the last fix didn't hold, fix the cause, prove
+it from the player's camera in normal play, never "done" on a partial fix). 20-minute rule except where proving a repeat
+item needs more. Release **0.14.2**; "QF14 — status"; "For Dan to check (QF14)". Dan is concentrating on Europa now.
+
+1. **The main menu only offers the first two chapters** — Europa isn't there even when unlocked. Every unlocked chapter
+   must appear (and future ones automatically, from one chapter list — not hard-coded per chapter).
+2. **Clean up the main menu.** New layout: **Start new game** (with the existing confirm when a save exists), then **one
+   entry per chapter you've unlocked** (Chapter 1 — The Moon, Venus, Europa, …). **Remove the two old test demos** (the
+   fight demo and the cave demo from the early rounds) from the menu — they were for testing. Keep Continue (when a save
+   exists, at the top), Settings, Controls and Quit — **decided by the chat, Dan can change it.** **Choosing a chapter
+   drills down to its sections** (today's Scene Select entries for that chapter: e.g. Europa — arrival, settlement, base,
+   escape, temple, debrief) plus "Play from the start"; the list **scrolls with a visible scroll bar** when it doesn't fit
+   on screen (controller and mouse wheel; the selected item always kept in view). The pause menu's Scene select uses the
+   same chapter → sections lists. Look at captures of every menu page at 16:9 and the Steam Deck's 16:10.
+3. **The bike bay — rebuild it to look like Dan's reference (repeat — the fourth try).** Dan: "after all I have said about
+   this bike bay it still looks like that. It's awful … that awful gray mush." His screenshot of 0.14.1:
+   `Docs/Previews/qf14/dan_bike_bay_0.14.1.png` (a big flat gray slab with the bike's shapes poking through it). **The look
+   he wants: `Art/Reference/bike_bay_ref.png`** — build the bay as a real modelled room **sized to fit the bike** (≈ 3 m
+   bike + a little clearance), in polished chrome / brushed steel like the reference and the Round 13 console:
+   - a thick **rounded chrome frame** around the opening;
+   - **curved side walls** with sweeping chrome ribs that arch up into the ceiling, panel seams;
+   - **ceiling: a recessed panel with three round lights** in a row (real light sources that light the bay);
+   - **storage drawers** low on both side walls; a small **control panel** (round button + two small buttons) on one wall;
+   - **floor:** dark polished metal with a **raised guide track / rails** running from the back to the opening, a centre
+     stop at the back, and **two chrome wheel / skid cradles** near the opening that the bike sits in;
+   - a rounded back wall; reflections and soft highlights (monochrome).
+   Build it as a proper hard-surface model (scripted Blender is fine for this) and put it inside the one saucer prefab
+   (QF13 16), behind the seamless hatch. When the hatch opens the player sees **this room with the bike sitting in its
+   cradles**, then the bike glides out along the track. **No flat slab, no unlit gray, no bike clipping through panels.**
+   Compare your capture from the player's B01 / Europa camera **side by side with the reference** before calling it done.
+4. **The Europa race can't be retried.** Let her race again: after a finish (win or lose) offer "Race again" right there,
+   and the registration arch stays open to start another race any time she's free in the settlement. Keep the best time.
+5. **Race camera keeps resetting — hard to race.** After she passes through a ring, the camera turns smoothly to look
+   toward **the next ring** (behind the bike, aimed at the next checkpoint); otherwise it follows her steering and never
+   snaps or resets on its own. Show the next ring's marker / arrow (QF13 9) during the race.
+6. **Inside Tunneler's base the game becomes unplayable — the camera bounces into 7 again and again, then resets, and
+   repeats** (Dan had to quit). This is QF13 item 7's new close camera + wall cut-away fighting itself. Find the cause
+   (likely the camera pulling in for a wall, then out when the wall is cut away, every few frames; or two camera systems
+   both driving it). Make it stable: smooth with hysteresis, cut walls away **instead of** pulling the camera in, a
+   minimum distance from her, never snapping back. Prove it: a **normal play walk through the whole base on foot** (dock →
+   pressure chamber → control room → holding area → transports → devices → back to the bike) with a per-frame log of
+   camera distance and a "jitter" count (direction reversals of the distance within 0.5 s) — **0 bounces**, and a capture
+   sequence of the walk.
+
+7. **The guardian's new walk is in:** `Art/Mixamo/elarim/elarim_walk_v2.fbx` (Dan, Mixamo "Catwalk Walk Forward",
+   animation only, downloaded on his rigged body; **not "In Place"** — it moves forward, so take the root motion out /
+   bake it into the pose and keep driving his movement from code as now, matching playback to his speed). Rebuild so he
+   uses it (QF13: the builder picks it up automatically). It's a runway walk — check it reads as **calm and dignified**
+   on him, not a hip-swaying strut; if the sway is too much, damp the hips / play it a little slower and say so. Capture him
+   walking ahead in "Follow me" (player camera + side), with the cape (no leg through it).
+
+Checks + release: captures for each (menus at 16:9 + 16:10; the bay beside the reference; the race camera through 3
+rings; the guardian's new walk; the base walk sequence), publish **0.14.2**; docs; commit + push.
+
+
 ## Quick fix QF13: Dan's 0.14.0 play (Dan, 2026-11-19) — done, status below; release 0.14.1
 Commit first. All standing rules. **20-minute rule.** Release **0.14.1**; "QF13 — status"; "For Dan to check (QF13)".
 **Second time for items 1 and 3:** QF12's captures said "clean" / "fixed" and Dan still sees the problem in the release
