@@ -1,3 +1,5 @@
+> **Update (2026-11-19):** VEN_B01 name reveal rewritten (Dan); C02_02 = "I felt that from here."; obvious tremors; no ramp — the saucer uses its beam.
+>
 > **Update (2026-11-18):** VEN_C09 vision video + new lines (Dan). Hover bike added — section 6b, scenes VEN_B01–VEN_B07 (Dan). Round 11 builds VEN_B01–B05, Round 12 VEN_B06–B07. VEN_B01 now holds the cat's name reveal: **Panther** (Dan).
 >
 > **Status (2026-11-17):** complete spec from Dan (sent in two parts, joined here). Build it in two rounds (Round 11: VEN_01–04, progression, C01–C05; Round 12: encounter, C06–C11). Wormmaster on Venus is provisional for the prototype.
@@ -155,7 +157,7 @@ The saucer lands on a broad platform beyond the inhabited terraces. The temple i
 winding garden paths. (The cat has gone back aboard after C01; from here he is telepathic from the ship.)
 
 Camera:
-- Wide — saucer and landscape: 7 walks down the ramp and looks toward the distant temple.
+- Wide — saucer and landscape: 7 comes down in the beam (no ramp) and looks toward the distant temple.
 - Low three-quarter on the bike: its broad front forks frame the rounded nose; the pointed tail extends behind the
   recessed saddle.
 - Insert — her hand settling into one of the recessed grips molded into the fairing.
@@ -181,14 +183,15 @@ glow, turns slowly and settles beside her at riding height with a low hum — un
 hatch closes and the hull is seamless again (the saucer looks normal). VEN_B07 does the same in reverse.
 
 Low three-quarter on the bike: 7 approaches and slides her hands into the recessed grips. The underside vents hum,
-lifting the bike gently. (The cat is visible at the top of the ramp / the open storage hatch for the rest of the scene.)
+lifting the bike gently. (The cat comes down in the beam with her and stays visible by the ship for the rest of the scene.)
 
 VEN_B01_05 | Cat, telepathic  
 “I’ll watch the ship.”
 
-7 starts to mount the hover bike, then pauses.
+7 starts to mount the hover bike, then pauses. **(Rewritten by Dan, 2026-11-19 — delivery directions are part of the
+script: use them for the voice takes, e.g. ElevenLabs v3 tags, and the reactions.)**
 
-VEN_B01_06 | 7  
+VEN_B01_06 | 7 — casually  
 “What should I call you?”
 
 VEN_B01_07 | Panther, telepathic  
@@ -196,46 +199,64 @@ VEN_B01_07 | Panther, telepathic
 
 She looks him up and down.
 
-VEN_B01_08 | 7  
-“Panther.”
+VEN_B01_08 | 7 — a small, surprised laugh  
+“Panther?”
 
-**Wide two-shot — 7 and Panther (keep him fully in frame, large, the whole time).** Panther stretches — and grows
-smoothly into a large, powerful cat. His movement stays relaxed and unmistakably feline.
+VEN_B01_09 | Panther, telepathic — dryly  
+“Ahem. You could say it without looking down at me.”
 
-7 steps back, catching the bike’s fairing with one hand.
+VEN_B01_10 | 7 — teasing  
+“I’d have to lie on the floor.”
 
-VEN_B01_09 | 7  
+**Wide two-shot (keep him fully in frame, large, the whole time).** Panther holds her gaze. Then he stretches — and grows
+smoothly into a large, powerful cat.
+
+7 takes a sharp breath and steps back, catching the bike’s fairing with one hand. Her gaze rises with him.
+
+VEN_B01_11 | Panther, telepathic — perfectly composed  
+“There. Saved you the trouble.”
+
+VEN_B01_12 | 7 — breathless, followed by a disbelieving laugh  
 “You can do that?”
 
-VEN_B01_10 | Panther, telepathic  
+VEN_B01_13 | Panther, telepathic  
 “Apparently.”
 
-VEN_B01_11 | 7  
-“We crawled through a prison drain.”
+She looks him over, taking in his enormous paws.
 
-VEN_B01_12 | Panther, telepathic  
+VEN_B01_14 | 7  
+“Hang on. We crawled through a prison drain.”
+
+VEN_B01_15 | Panther, telepathic — mildly  
 “An excellent time to be small.”
 
-She looks from his enormous paws to the saucer.
+She opens her mouth to argue, then gives a reluctant little chuckle.
 
-VEN_B01_13 | 7  
+VEN_B01_16 | 7  
+“Mm. Fair point.”
+
+Panther settles onto his haunches, looking thoroughly pleased with himself. She glances toward the saucer.
+
+VEN_B01_17 | 7 — pointing at him, still amused  
 “You’re not getting a bigger bowl.”
 
-VEN_B01_14 | Panther, telepathic  
-“We can discuss that when you return.”
+VEN_B01_18 | Panther, telepathic — with a thoughtful hum  
+“Mmm. We can discuss that when you return.”
 
-She shakes her head and settles into the saddle.
+7 laughs softly and shakes her head as she settles into the saddle.
 
-VEN_B01_15 | 7  
+VEN_B01_19 | 7 — warmly  
 “Look after the ship, Panther.”
 
-He lies down beside the ramp, still large.
+He lies down beneath the saucer, still large. *(Dan's script says "beside the ramp" — the saucer has no ramp any more,
+so he lies beside the ship / under its beam.)*
 
-VEN_B01_16 | Panther, telepathic  
+VEN_B01_20 | Panther, telepathic — quietly assured  
 “I intend to.”
 
-Return control to the player, riding. (Panther stays large by the ramp while she rides off; by VEN_B02 he is back
-inside the ship at normal size, off screen.)
+The hover bike rises with a low hum. She gives him one last look before riding toward the gardens. Return control to the
+player, riding. (Panther stays large by the ship while she rides off; by VEN_B02 he is back inside at normal size, off
+screen.)
 
 **Panther changes size (Dan, 2026-11-18):** from a normal house cat up to elephant size. This scene is the first time
 7 (and the player) sees it. Growth / shrinking is a smooth, continuous scale during a natural feline motion (a stretch),
@@ -277,8 +298,10 @@ SCENE VEN_B03 — THE DAMAGED ROUTE: DISCOVERING THE TROUBLE
 
 Delivery: In gameplay. **Carries VEN_C02** (its trigger moves here; its lines are unchanged).
 
-Ahead, workers signal for 7 to slow down. Water spills from a damaged channel across the route. A tremor passes through
-the terrace → VEN_C02_01 “Something’s wrong here.” / VEN_C02_02 “I felt that through the landing supports.”
+Ahead, workers signal for 7 to slow down. Water spills from a damaged channel across the route. **(Dan, 2026-11-19: the
+tremor must be obvious.)** A strong tremor hits — deep rumble, camera shake, the bike wobbles, dust and stones fall, water
+slops from the channel, workers stumble — and in front of her **the path cracks and collapses** into a gully; she brakes
+hard. → VEN_C02_01 “Something’s wrong here.” / VEN_C02_02 “I felt that from here.”
 
 The player reaches a clear stopping area before a collapsed walkway, with enough distance to brake comfortably.
 Gameplay **(changed by Dan, 2026-11-18)**: dismount and inspect the gap. A long fallen slab / broken column lies beside
@@ -410,7 +433,7 @@ VEN_C02_01 | 7
 “Something’s wrong here.”
 
 VEN_C02_02 | Cat, telepathic  
-“I felt that through the landing supports.”
+“I felt that from here.”
 
 The player follows an alternate route to the temple. This route must be usable with existing movement abilities.
 

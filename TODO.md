@@ -1,5 +1,127 @@
 # Active Development Plan — 7: The Observer
 
+## Current Objective — Round 13: conversation sounds + the ship's console (Dan, 2026-11-19)
+Commit first. All standing rules (monochrome, Kyle's fog/glow, non-sexual presentation, 20-minute testing rule, look at
+your own captures, no exact-spot triggers). One release at the end: **0.13.0**; per-item status in "Round 13 — status";
+"For Dan to check (Round 13)".
+
+### 0. Fixes from Dan's 0.12.0 play — do these FIRST (Dan, 2026-11-19)
+0a. **City reveal (6b) camera:** show them looking up only **briefly**, then cut to **what they're looking at** —
+    their view up the curve: the traffic streams overhead, the towers rising into the clouds (POV / over-the-shoulder
+    looking up). Then the extreme wide and the lower-districts view as before.
+0b. **The saucer has no ramp — lock this in.** Remove the ramp everywhere (it also appeared already extended). Getting
+    in and out is **the tractor beam, as in Chapter 1**, on the Moon, on Venus and any later world. Add a "Saucer —
+    fixed design" rule to `CLAUDE.md` (one shared exterior; no ramp; beam for boarding / disembarking; the bike hatch
+    seamless when closed) so it never drifts again. **The bike hold shows two black bands when it opens** — remove them
+    (the opening is lit and clean).
+0c. **A new game starts every chapter fresh.** Starting the game from the beginning (Chapter 1 from the menu) and
+    playing through "Set course" must arrive at **the start of Chapter 2** (the descent), not at an old Venus save. A
+    new playthrough clears later chapters' progress (ask once if saves exist: "Start a new game? Your saved progress
+    will be reset."). Continue still resumes.
+0d. **The bike hangs up on the telekinesis bridge** unless you hit it at one angle. Any reasonable approach angle must
+    ride over: wider bridge, smooth ramped ends meeting the ground on both sides (no lip), and the bike's hover glides
+    over small edges instead of snagging. Check from several angles both ways.
+0e. **The guardian:** legs still clip through his cape; arms and legs are stiff and awkward. Fix the body for real:
+    (1) first find the cause (skin weights on the arms / legs, the Humanoid avatar mapping, twist bones, the clips'
+    retarget settings) and fix it; (2) **if he still looks stiff, rig him through Mixamo** — export his body *without
+    the cape* as `Art/Export/elarim/elarim_body_for_mixamo.fbx` early in the round and tell Dan to upload it to
+    Mixamo's auto-rigger and download it (FBX for Unity, with skin) to `Art/Mixamo/elarim/elarim_body_mixamo.fbx`;
+    then re-attach the cape on its own bones (keep QF10's no-clip rule: 0 cm leg contact standing, walking, kneeling).
+    Also **he tells her to follow him** after C03 and walks ahead to the cube chamber: new line **VEN_C03_11 |
+    Guardian | "Follow me."** (voice it; add to the spec + dialogue data).
+0f. **The encounter is too easy — they should be trying to stop her.** Dan saw no worms, and nothing opposed her on the
+    way down or while she switched the devices off. Make it a real (still nonlethal) challenge: the **worms** are
+    visible and driven at her along the device routes on the way down and in the chamber — she dodges, blocks, and
+    pushes them aside / stuns them with telekinesis (they recover and withdraw — never killed, they're victims); the
+    **Wormmaster** actively fights back — he fires signal pulses that send worms at her, shifts routes, blocks the
+    next device, taunts. Getting hit knocks her back (existing failure / retry). Only when all three devices are off do
+    the worms withdraw; then the containment. Tune it as a fair first boss.
+0g. **The level music doesn't come back after the visions** (both chapters). After a vision ends, the level's track
+    resumes (fade in from where it left off, or restart), every time.
+0h. **The hover bike needs a sound:** an audible hum while idle that rises in pitch and adds a soft whoosh with speed,
+    a lift-off / settle sound, mount / dismount. The Round 11 bike hum isn't audible — fix the level / routing.
+0i. **Birds and other animals on Venus** — at least hear them: bird song and calls, insects, distant animal calls,
+    rustling in the grass, varied and positional across the gardens (quieter underground); plus a few visible birds
+    crossing the sky and small animals in the grass where cheap.
+0j. **The debrief (C11) at the end of the act:** she sits in her chair with **Panther curled on her lap** (the lap
+    moment from Chapter 1) for the conversation — not at the table. Keep the lines; the dodecahedron and the cube are
+    beside her (on the arm / a side table) for the insert shot.
+
+0k. **The tremor must be obvious, and we see the walkway break** (Dan). VEN_B03 / C02 today: no noticeable tremor and
+    the gap is just already there. New beat: as 7 rides toward the damaged stretch, a **strong tremor** hits — deep
+    rumble, camera shake, the bike wobbles, dust and small stones fall, water slops out of the channel, grass and trees
+    shiver, workers stumble and grab hold — then, in front of her (a short in-engine cut, she brakes hard), **the
+    walkway / path cracks and collapses** into the gully with dust and falling stone. C02's lines follow ("Something's
+    wrong here." / Panther: **"I felt that from here."** — Dan's new line, replaces "I felt that through the landing
+    supports."; re-voice it, update the dialogue data). Then the existing bridge beat: she gets off, lifts the slab across with
+    telekinesis, rides over. **Every tremor in the chapter must be just as obvious** — Dan: the second one (C04's interruption in
+    the temple) wasn't noticeable either: strong rumble, a **big** camera shake (Dan: don't hold back — no need to
+    keep it gentle), dust and stones raining from the ceiling, the guardian and 7 bracing, the cube's cage
+    rattling; any later tremors the same. Skippable like other cutscenes.
+
+0l. **VEN_B01 — the name reveal is rewritten again (Dan, 2026-11-19; the spec has the final text, VEN_B01_06–20).**
+    New lines and **delivery directions** (casually / a small surprised laugh / dryly / teasing / perfectly composed /
+    breathless then a disbelieving laugh / mildly / a reluctant chuckle / pointing, still amused / a thoughtful hum /
+    warmly / quietly assured) — record every line fresh with those deliveries (Seven on v3 with audio tags; Panther as
+    well as v3 allows), drop the old B01 takes. New beats: her surprised look down at him; his "Ahem."; she gasps and
+    steps back catching the fairing, her gaze rising with him as he grows; she starts to argue then chuckles; he settles
+    on his haunches pleased with himself; she points at him; she laughs and shakes her head mounting; one last look
+    back as the bike rises. He lies down **beside the ship** (no ramp — 0b). Regenerate the dialogue data. These
+    laughs / chuckles / hums are part of the lines themselves, not the reaction bank (item 1).
+
+### 1. Laughs, giggles, hmms — the sounds people make in conversation
+Dan: when one says something funny, the other laughs or giggles; and add "hmm", "mm-hmm" and the other little sounds
+people make while talking. Chapter 1 and Venus, every conversation.
+- **A reaction bank per character**, made with ElevenLabs (the same voices — `Seven` on v3 with audio tags such as
+  [laughs] / [chuckles] / [sighs]; try v3 for `Cat` too, so his match his voice): several takes each of — 7: a soft
+  laugh, a small giggle, a quiet chuckle, an amused breath through the nose, "hmm" (thinking), "mm-hmm" (agreeing),
+  "hm?" (questioning), a small sigh, a soft "oh". Panther / the cat: a dry low chuckle, an amused purr-hum, "hm",
+  "mm", a short pleased purr, a long-suffering sigh. Keep them short, natural, quiet; the cat's get the telepathy
+  treatment like his lines. Several takes so repeats don't sound identical.
+- **Where they go:** write `Docs/REACTIONS.md` — go through every scene in `Docs/DIALOGUE.md` and
+  `Docs/CHAPTER2_VENUS.md` and place reactions: the listener laughs / chuckles after a genuinely funny line (e.g. after
+  "Only conversationally.", "Having experienced confinement, I feel strongly about it.", "Apparently we escaped just
+  in time for traffic.", "An excellent time to be small.", "You're not getting a bigger bowl."), "hmm" / "mm-hmm"
+  while thinking or agreeing, a sigh where it fits. **Subtle and sparing** — a few per scene, never over a spoken
+  line, never undercutting a sincere moment (the cell "Thank you" / "You're welcome", "Remembering.", the seed, "I
+  think I knew them."). Reactions play with a small body cue (a head tilt, shoulders, his tail / ears). Make the
+  placement data (like the dialogue data) so Dan can move or remove one without code. List them all in the status.
+
+### 2. The ship's console — a chrome, retro-futuristic control station she stands at
+On the saucer (the main deck near the galley / the larger interior): an **all-chrome retro-futuristic console** —
+rounded polished chrome, curved glass screens with a soft glow, chunky switches and dials, the Kyle glow; grayscale
+like everything. 7 walks up to it and **stands** at it (context prompt X / E "Use console"; she steps in and rests her
+hands on it), the camera moves over her shoulder to the screens, B / Esc leaves. A menu on the screens, in the same
+chrome-and-glow style (readable text, the existing UI font):
+- **Log** — a log of all her adventures: an entry for each chapter and each major beat she has completed, in order
+  (date-less, short — two or three sentences each, plain and in the game's tone; e.g. the escape from the Moon prison,
+  the city, Venus and the Elarim, the cube). Entries appear as she reaches them (from the story / Venus state).
+  Draft the text in `Docs/ADVENTURE-LOG.md` **from what happens in the game only** — no new lore; Dan will edit it.
+- **Field guide** — a picture and a description of each creature and person she meets, unlocked when first met:
+  Panther (the cat — "the cat" until his name is revealed on Venus), the Scree, the Elarim (the guardian, the
+  attendant), the burrowing creatures, the Wormmaster; later others (Tunneler, Ratwing) as the story meets them. Picture
+  = a clean in-engine portrait render of the model (grayscale, Kyle-style lighting). Descriptions in
+  `Docs/FIELD-GUIDE.md`, short, written as 7's observations, **only from what the story has shown** (e.g. the Scree:
+  work the mines and guard for Tunneler, not evil) — no invented lore; Dan will edit.
+- **Star map — choosing the next destination** (Dan): Round 12's destination screen becomes a **planet / star map**
+  on the console. The solar system in grayscale with Kyle's glow — the Sun at the centre and only the worlds she can
+  reach on their orbits — the saucer's current position marked; move a cursor (stick / mouse) between bodies, each shows its
+  name and, once visited, a line from the Log. **Only places she can go to are shown** (Dan): the Moon and Venus — no other
+  planets or bodies on the map until the story makes them reachable (then they appear). "Set course"
+  on a selected world → the existing travel (the Moon falls away / the descent). The map is the only place to choose
+  a destination from now on (the galley seat's "Set course" points her to the console).
+- **Settings** — the same settings as the pause menu (audio volumes: music / voices / effects; subtitles; controls /
+  invert camera; display), one shared settings system.
+- **Upgrades** — not built; leave a slot for it in the menu code but don't show it yet.
+- Cutscene rule: the console never opens during a story beat; the galley table / chair still work as before.
+- Captures: the console from the deck, 7 standing at it, each screen (Log with a few entries, Field Guide list + one
+  entry, the star map with Venus selected, Settings).
+
+### 3. Checks + release (20-minute rule)
+A quick run through one funny exchange in each chapter (reactions audible, nothing over a line), the console's screens
+with a save that has Venus finished (Log + Field Guide filled) and one that has only Chapter 1, Settings changes take
+effect. Publish **0.13.0**; docs; commit + push.
+
 ## Round 12: QF11 fixes + Venus part 2, all in one — done, status below (Dan, 2026-11-18: "fold everything together")
 Commit first. **The spec is `Docs/CHAPTER2_VENUS.md` — it wins.** All standing rules (monochrome, Kyle's fog/glow,
 non-sexual presentation, 7 never kills, the 20-minute testing rule, look at your own captures, fire-at-or-past triggers +
