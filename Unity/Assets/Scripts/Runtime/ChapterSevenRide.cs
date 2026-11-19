@@ -15,8 +15,10 @@ namespace Seven
     public partial class ChapterSeven
     {
         public bool Riding => Current == Mode.Ride;
-        public const float RideTurnLean = 6f;
-        public const float TuckLean = 42f;         // QF10: the racing tuck, degrees forward from upright      // extra body lean into a full turn (degrees, on top of the bike's roll)
+        public const float RideTurnLean = 6f;      // extra body lean into a full turn (degrees, on top of the bike's roll)
+        public const float TuckLean = 42f;         // QF10: the racing tuck, degrees forward from upright
+        public const float MaxReachLean = 34f;     // QF10: up to this much further forward while her palms still miss the grips
+        public const float ShoulderRollMax = 25f;  // QF10: how far a shoulder may roll forward to put the palm on the grip
         HoverBike _bike;
         Vector3 _rideOffset;                       // root offset from the saddle (bike space), calibrated so the hips sit on it
         float _reachLean;                          // extra forward lean (degrees over the spine) so the palms reach the grips
@@ -103,6 +105,21 @@ namespace Seven
                 _rideOffset += Quaternion.Inverse(b.Seat.rotation) * err;
                 transform.position += err; _rideCal = true;
             }
+            // her arms are at full reach in the tuck: roll each shoulder (collarbone) forward the few degrees that put the
+            // palm centre on its grip, as a rider does (after the IK, so the whole arm comes along; at most 25 degrees)
+            foreach (var (sh, hand, mid, grip) in new[] { (HumanBodyBones.LeftShoulder, HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal, b.GripL),
+                                                          (HumanBodyBones.RightShoulder, HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal, b.GripR) })
+            {
+                var s = Bone(sh); var h = Bone(hand); var m = Bone(mid);
+                if (s == null || h == null || grip == null) continue;
+                for (int it = 0; it < 2; it++)
+                {
+                    var palm = m != null ? (h.position + m.position) * 0.5f : h.position;
+                    var target = grip.position + b.transform.up * 0.015f;
+                    var rot = Quaternion.FromToRotation(palm - s.position, target - s.position);
+                    s.rotation = Quaternion.RotateTowards(Quaternion.identity, rot, ShoulderRollMax) * s.rotation;
+                }
+            }
             // check-run numbers (after IK and the hips correction: what is rendered)
             float G(HumanBodyBones hand, HumanBodyBones mid, Transform grip)
             {
@@ -113,7 +130,7 @@ namespace Seven
             }
             float F(HumanBodyBones foot, Transform pt) { var f = Bone(foot); return f == null || pt == null ? -1f : Vector3.Distance(f.position, pt.position + b.transform.up * 0.06f); }
             float reach = Mathf.Max(G(HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal, b.GripL), G(HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal, b.GripR));
-            if (reach > 0.015f) _reachLean = Mathf.Min(22f, _reachLean + Mathf.Min(30f, reach * 300f) * Time.deltaTime);
+            if (reach > 0.015f) _reachLean = Mathf.Min(MaxReachLean, _reachLean + Mathf.Min(30f, reach * 300f) * Time.deltaTime);
             else if (reach < 0.005f) _reachLean = Mathf.Max(0f, _reachLean - 4f * Time.deltaTime);
             RideGaps = new Vector4(G(HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal, b.GripL), G(HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal, b.GripR),
                                    F(HumanBodyBones.LeftFoot, b.FootL), F(HumanBodyBones.RightFoot, b.FootR));

@@ -88,7 +88,7 @@ namespace Seven
             foreach (var c in cols) Destroy(c);
             Debug.Log($"[Seven] bike body measured: grips {(GripL != null ? GripL.localPosition.ToString("0.00") : "-")}, saddle top {SaddleTop:0.00} at z {Seat.localPosition.z:0.00}, knees half-width {KneeWidth:0.00}, side panels half-width {fw:0.00} at y {fy:0.00}");
         }
-        public const float SeatForward = -0.36f;          // QF10 (Dan): hips at the BACK of the saddle (racing tuck)
+        public const float SeatForward = -0.32f;          // QF10 (Dan): hips at the back of the saddle (racing tuck), 4 cm in from the very back for reach
 
         void Start()
         {

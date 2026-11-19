@@ -91,7 +91,7 @@ autopilot — a real player waits forever.
   = posture wanted): hips at the back of the saddle, torso laid forward, arms forward to the grips, knees tucked against
   the sides, feet back on the rear sides. Same checks + a side capture next to the reference.
 
-## QF10 — status (2026-11-18): done except the last few cm of the hand grip (6c); release 0.11.1 (`game-1101`, Latest)
+## QF10 — status (2026-11-18): done; release 0.11.1 (`game-1101`, Latest); the hand-grip fix after it (below) is committed, not released yet
 **Testing went over the 20-minute rule:** about 31 min of game time, plus one dead run (10 min idle on the main menu).
 - 3 short B01 checks (about 70 s each).
 - 1 full autopilot Venus run (8.4 min; 3.3 min of it was the autopilot stuck behind the bike-in-the-temple bug, found and
@@ -157,14 +157,16 @@ VEN_S04`**.
    - he lies down large.
 
    Panther is framed for his full grown size: **0.0 % off screen in all 11 shots after the growth.**
-6c. **Bigger bike + riding pose: mostly done.**
+6c. **Bigger bike + riding pose: done** (the hand grip finished after the 0.11.1 release; Dan approved the posture).
    - Bike: 3.0 m (was 2.3); saddle, grips and foot points come from the model and are re-measured in game by raycast.
    - Pose: Blender-made (`Tools/Blender/make_ride_pose.py`, looping breath) and, per Dan, a low racing tuck. Hips are
-     held on the back of the saddle, the body is laid forward 42° (+ up to 22° more for reach), she leans into turns, and
-     the feet are on the rear side panels (IK).
-   - Measured: hips to saddle 0 cm, feet 0 cm, **legs through the bike 0 of 28 points**.
-   - **Hands: 4.3 / 4.7 cm from the grips: not ≤ 2 cm yet.** The grips are the hollows on the cowl's sides and she is at
-     the limit of her reach.
+     held on the back of the saddle, the body is laid forward 42° (+ up to 34° more if the hands need it), she leans into
+     turns, and the feet are on the rear side panels (IK).
+   - Her arms are at full reach in the tuck, so after the IK each shoulder rolls forward the few degrees that put the palm
+     on its grip (`ChapterSevenRide.ShoulderRollMax`, at most 25°).
+   - Measured: **palms 1.5 / 1.2 cm from the grips**, hips to saddle 0 cm, feet 0 cm, **legs through the bike 0 of 28
+     points**.
+   - Two extra short B01 checks (70 s each) after the release.
    - `riding_pose_vs_reference.png` is the side capture beside the reference.
 6d. **Fighting: done** (chapter fights + the fight demo). Measured in play, before → after:
 
@@ -226,8 +228,8 @@ VEN_S04`**.
 
 ## For Dan to check (QF10)
 - The hatch and the bike gliding out; B01's new exchange with Panther large (always fully in frame).
-- The riding tuck (`Docs/Previews/qf10/riding_pose_vs_reference.png`): hands are 4–5 cm off the grips; say if the posture
-  is right before I chase the last centimetres.
+- The riding tuck (`Docs/Previews/qf10/riding_pose_vs_reference.png`): posture approved; palms now 1.2–1.5 cm from the grips
+  (in the next release).
 - The ride through the new valley: the worn path, the grass, the stream, the gully and the slab bridge (RT).
 - Climbing the low garden wall anywhere; the hint after 45 s and the skip after 2 min if you wait.
 - C03 / C04 cameras; the cape when the guardian walks and kneels (the kneel itself may not show — tell me).
