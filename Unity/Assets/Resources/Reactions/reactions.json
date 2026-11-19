@@ -1,0 +1,418 @@
+{
+ "note": "Conversation reactions (Round 13). Each placement plays one short sound by the listener in the gap AFTER the spoken line \"after\" and before the next line, after \"delay\" seconds; the next line waits for it. It never plays over a spoken line. To move one, change its \"after\" id; to remove one, delete its entry; to change the sound, change \"kind\" (must be in the bank for that speaker); \"cue\" = the small body move (head_tilt, shoulders, nod, look_down, tail, ears, none). No code changes needed. Only seven and cat. Line ids: Chapter 1 = Unity/Assets/Audio/Voice/voice_lines.json, Venus = Resources/Venus/venus_dialogue.json (VEN_B01_06..20 use the 2026-11-19 rewrite numbering in Docs/CHAPTER2_VENUS.md). See Docs/REACTIONS.md.",
+ "bank": {
+  "seven": [
+   "laugh_soft",
+   "giggle",
+   "chuckle",
+   "nose_laugh",
+   "hmm",
+   "mmhmm",
+   "hm_q",
+   "sigh",
+   "oh"
+  ],
+  "cat": [
+   "chuckle",
+   "purrhum",
+   "hm",
+   "mm",
+   "purr",
+   "sigh"
+  ]
+ },
+ "placements": [
+  {
+   "after": "s01_05_cat",
+   "who": "seven",
+   "kind": "oh",
+   "delay": 0.3,
+   "cue": "head_tilt",
+   "why": "she looks back at him: the voice was the cat"
+  },
+  {
+   "after": "s01_07_cat",
+   "who": "seven",
+   "kind": "nose_laugh",
+   "delay": 0.4,
+   "cue": "none",
+   "why": "his dry joke; a small disbelieving breath, still wary"
+  },
+  {
+   "after": "s01_09_cat",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.25,
+   "cue": "nod",
+   "why": "agreeing to the plan"
+  },
+  {
+   "after": "s02_03_cat",
+   "who": "seven",
+   "kind": "nose_laugh",
+   "delay": 0.3,
+   "cue": "shoulders",
+   "why": "his reply to her question is funny"
+  },
+  {
+   "after": "s02_07_cat",
+   "who": "seven",
+   "kind": "hmm",
+   "delay": 0.35,
+   "cue": "look_down",
+   "why": "she sizes up his small way in"
+  },
+  {
+   "after": "s03_02_cat",
+   "who": "seven",
+   "kind": "hm_q",
+   "delay": 0.3,
+   "cue": "head_tilt",
+   "why": "\"My people.\" raises a question"
+  },
+  {
+   "after": "s03_06_cat",
+   "who": "seven",
+   "kind": "hmm",
+   "delay": 0.35,
+   "cue": "none",
+   "why": "taking in that he was not told"
+  },
+  {
+   "after": "s03_10_cat",
+   "who": "seven",
+   "kind": "sigh",
+   "delay": 0.4,
+   "cue": "shoulders",
+   "why": "neither of them knows; a light rueful sigh"
+  },
+  {
+   "after": "s04_02_cat",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.25,
+   "cue": "nod",
+   "why": "agreeing: older"
+  },
+  {
+   "after": "s04_04_cat",
+   "who": "seven",
+   "kind": "chuckle",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "his dry line about the jailers"
+  },
+  {
+   "after": "s05_01_cat",
+   "who": "seven",
+   "kind": "hmm",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "she weighs the guard before answering"
+  },
+  {
+   "after": "s05_03_cat",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.25,
+   "cue": "nod",
+   "why": "quiet agreement; no one gets hurt"
+  },
+  {
+   "after": "s06_07_7",
+   "who": "cat",
+   "kind": "hm",
+   "delay": 0.4,
+   "cue": "ears",
+   "why": "he hears she does not know; ears turn to her"
+  },
+  {
+   "after": "s06_09_cat",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.2,
+   "cue": "nod",
+   "why": "yes, later"
+  },
+  {
+   "after": "s06b_04_cat",
+   "who": "seven",
+   "kind": "laugh_soft",
+   "delay": 0.35,
+   "cue": "shoulders",
+   "why": "his traffic joke"
+  },
+  {
+   "after": "s06b_05_7",
+   "who": "cat",
+   "kind": "mm",
+   "delay": 0.5,
+   "cue": "none",
+   "why": "he watches her, not the skyline"
+  },
+  {
+   "after": "s07_04_cat",
+   "who": "seven",
+   "kind": "chuckle",
+   "delay": 0.3,
+   "cue": "shoulders",
+   "why": "the mining-carts joke"
+  },
+  {
+   "after": "s07_06_cat",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.25,
+   "cue": "nod",
+   "why": "agreeing: a destination"
+  },
+  {
+   "after": "s08_04_cat",
+   "who": "seven",
+   "kind": "laugh_soft",
+   "delay": 0.3,
+   "cue": "head_tilt",
+   "why": "his reason to let her go first"
+  },
+  {
+   "after": "s09_02_7",
+   "who": "cat",
+   "kind": "hm",
+   "delay": 0.3,
+   "cue": "ears",
+   "why": "he considers whether it is a complaint"
+  },
+  {
+   "after": "s09_03_cat",
+   "who": "seven",
+   "kind": "giggle",
+   "delay": 0.3,
+   "cue": "shoulders",
+   "why": "the kitchen joke"
+  },
+  {
+   "after": "s10_02_cat",
+   "who": "seven",
+   "kind": "hm_q",
+   "delay": 0.3,
+   "cue": "head_tilt",
+   "why": "\"only free-range\": she looks back at him"
+  },
+  {
+   "after": "s10_03_cat",
+   "who": "seven",
+   "kind": "nose_laugh",
+   "delay": 0.35,
+   "cue": "look_down",
+   "why": "the confinement joke; she almost smiles"
+  },
+  {
+   "after": "s10_05_cat",
+   "who": "seven",
+   "kind": "oh",
+   "delay": 0.35,
+   "cue": "look_down",
+   "why": "she notices her fork has stopped"
+  },
+  {
+   "after": "s10_30_cat",
+   "who": "seven",
+   "kind": "laugh_soft",
+   "delay": 0.4,
+   "cue": "look_down",
+   "why": "the farewell-dinner joke, before she answers seriously"
+  },
+  {
+   "after": "s10_36_7",
+   "who": "cat",
+   "kind": "purr",
+   "delay": 0.6,
+   "cue": "tail",
+   "why": "he returns to his food, content"
+  },
+  {
+   "after": "VEN_C01_04",
+   "who": "cat",
+   "kind": "mm",
+   "delay": 0.5,
+   "cue": "ears",
+   "why": "quiet agreement with \"It's beautiful.\""
+  },
+  {
+   "after": "VEN_C01_07",
+   "who": "seven",
+   "kind": "nose_laugh",
+   "delay": 0.3,
+   "cue": "shoulders",
+   "why": "\"Experience.\" is a joke about the Moon"
+  },
+  {
+   "after": "VEN_B01_04",
+   "who": "seven",
+   "kind": "nose_laugh",
+   "delay": 0.3,
+   "cue": "shoulders",
+   "why": "his advice is useful, he insists"
+  },
+  {
+   "after": "VEN_B01_10",
+   "who": "cat",
+   "kind": "hm",
+   "delay": 0.4,
+   "cue": "ears",
+   "why": "dry answer to her tease, before he stretches"
+  },
+  {
+   "after": "VEN_B02_02",
+   "who": "seven",
+   "kind": "chuckle",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "he can only see the inside of the ship"
+  },
+  {
+   "after": "VEN_B02_04",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "she will tell him"
+  },
+  {
+   "after": "VEN_C02_02",
+   "who": "seven",
+   "kind": "hmm",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "uneasy: the tremor reached the ship"
+  },
+  {
+   "after": "VEN_C03_03",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.2,
+   "cue": "nod",
+   "why": "she holds it out"
+  },
+  {
+   "after": "VEN_C03_10",
+   "who": "seven",
+   "kind": "hmm",
+   "delay": 0.5,
+   "cue": "look_down",
+   "why": "she takes in the guardian's answer"
+  },
+  {
+   "after": "VEN_C04_02",
+   "who": "seven",
+   "kind": "hmm",
+   "delay": 0.35,
+   "cue": "head_tilt",
+   "why": "histories not kept apart"
+  },
+  {
+   "after": "VEN_C04_04",
+   "who": "seven",
+   "kind": "oh",
+   "delay": 0.3,
+   "cue": "look_down",
+   "why": "hers belongs to the Moon"
+  },
+  {
+   "after": "VEN_B05_03",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.25,
+   "cue": "nod",
+   "why": "on foot from there"
+  },
+  {
+   "after": "VEN_C05_01",
+   "who": "cat",
+   "kind": "hm",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "he listens, then asks"
+  },
+  {
+   "after": "VEN_C05_05",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.25,
+   "cue": "none",
+   "why": "agreeing: find the source"
+  },
+  {
+   "after": "VEN_B06_03",
+   "who": "seven",
+   "kind": "nose_laugh",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "\"unwelcome guest\": dry"
+  },
+  {
+   "after": "VEN_B06_04",
+   "who": "cat",
+   "kind": "chuckle",
+   "delay": 0.3,
+   "cue": "none",
+   "why": "\"Staying put.\""
+  },
+  {
+   "after": "VEN_B06_05",
+   "who": "cat",
+   "kind": "purrhum",
+   "delay": 0.5,
+   "cue": "none",
+   "why": "the creatures are going home"
+  },
+  {
+   "after": "VEN_C08_03",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.3,
+   "cue": "nod",
+   "why": "repairs they can make"
+  },
+  {
+   "after": "VEN_C10_03",
+   "who": "seven",
+   "kind": "hm_q",
+   "delay": 0.3,
+   "cue": "head_tilt",
+   "why": "why give her another, then"
+  },
+  {
+   "after": "VEN_B07_02",
+   "who": "cat",
+   "kind": "hm",
+   "delay": 0.6,
+   "cue": "none",
+   "why": "fills the scripted pause after \"Some.\""
+  },
+  {
+   "after": "VEN_C11_02",
+   "who": "cat",
+   "kind": "hm",
+   "delay": 0.35,
+   "cue": "ears",
+   "why": "taking in \"Venus has its own.\""
+  },
+  {
+   "after": "VEN_C11_08",
+   "who": "cat",
+   "kind": "purr",
+   "delay": 1.0,
+   "cue": "none",
+   "why": "he settles closer; a low purr in the held silence, comfort not a joke"
+  },
+  {
+   "after": "VEN_C11_10",
+   "who": "seven",
+   "kind": "mmhmm",
+   "delay": 0.3,
+   "cue": "nod",
+   "why": "agreeing: somewhere else to ask"
+  }
+ ]
+}

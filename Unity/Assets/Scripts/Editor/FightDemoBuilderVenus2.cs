@@ -268,6 +268,26 @@ namespace Seven.EditorTools
             rec.gameObject.SetActive(false);
 
             d.RootGate = gate.gameObject; d.Devices = devs.ToArray(); d.Crystal = crystal; d.Barrier = barrier; d.BarrierGlow = barrierGlow; d.Console = console; d.ConsoleGlow = consoleGlow;
+            // Round 13 (0m, VEN_C12): the ancient display in the cube chamber - a pale stone panel on the east wall; two
+            // locations (Mars, Europa) glow up on it when the guardian wakes it (dark until then)
+            {
+                var disp = new GameObject("LocationsDisplay").transform; disp.SetParent(world, false);
+                disp.position = new Vector3(34.3f, 0f, 267.5f);
+                Block("Display_Panel", new Vector3(34.15f, 0.6f, 265.9f), new Vector3(34.45f, 3.0f, 269.1f), m.stone, disp, false);
+                var dglow = Dissolve("Venus_display_glow", Gray(0.9f), 0.3f, false); dglow.EnableKeyword("_EMISSION"); dglow.SetColor("_EmissionColor", Color.black); EditorUtility.SetDirty(dglow);
+                foreach (var (n, z, y, r) in new[] { ("Loc_Mars", 266.7f, 2.0f, 0.26f), ("Loc_Europa", 268.4f, 1.6f, 0.2f) })
+                {
+                    var gv = new List<Vector3>(); var gt = new List<int>();
+                    Ellipsoid(gv, gt, Vector3.zero, new Vector3(0.03f, r, r), 6, 18);
+                    var g = MeshObject(n, SaveMesh(SmoothFinish(gv, gt), "Venus_" + n), dglow, disp, false);
+                    g.transform.position = new Vector3(34.1f, y, z);
+                    var ring = new List<Vector3>(); var rt = new List<int>();
+                    Sweep(ring, rt, Enumerable.Range(0, 33).Select(i => new Vector3(0f, Mathf.Sin(i * Mathf.PI / 16f) * r * 1.6f, Mathf.Cos(i * Mathf.PI / 16f) * r * 1.6f)).ToList(), 0.012f, false, 5);
+                    var rg = MeshObject(n + "_Ring", SaveMesh(SmoothFinish(ring, rt), "Venus_" + n + "_Ring"), dglow, disp, false);
+                    rg.transform.position = new Vector3(34.1f, y, z);
+                }
+                d.LocationsDisplay = disp;
+            }
             d.Wormmaster = wm; d.ChamberWorms = worms.ToArray(); d.UnderLights = under.ToArray(); d.RepairedChannel = wet; d.DamagedChannel = dry; d.ReturnWorkers = returning.ToArray(); d.RecordCopy = rec;
             d.Vision2 = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_02_venus.mp4");
             if (d.Vision2 == null) Log("WARNING: Assets/Video/vision_02_venus.mp4 missing - C09 uses the still fallback");

@@ -67,6 +67,8 @@ namespace Seven
         /// <summary>QF11: does the player's own save hold Venus progress? (the main menu's confirm before starting over)</summary>
         public static bool HasProgress { get { UseOwnSave(); return D.stage > (int)Stage.Available || D.conversationsDone.Count > 0; } }
         /// <summary>QF11: "Chapter 2 — Venus" always starts the chapter fresh (the descent, C01): the Venus save is cleared.</summary>
+        /// <summary>Round 13 (0c): clear the player's own Venus save without loading anything (a new game).</summary>
+        public static void ClearOwnSave() { UseOwnSave(); PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); _d = new Data(); }
         public static void StartFresh()
         {
             UseOwnSave(); PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); _d = new Data();
@@ -119,7 +121,7 @@ namespace Seven
             if (k > 6) { Done(Stage.ControlDiscovered, "VEN_C05"); Bike(VenusLayout.ObsPark, 180f, false); }
             if (k > 7) { Done(Stage.ThreatStopped, "VEN_WAYDOWN", "VEN_C06", "VEN_C07"); d.stage = (int)Stage.ThreatStopped; foreach (var id in VenusLayout.DeviceIds) d.devicesDisabled.Add(id); d.wormmasterContained = true; }
             if (k > 8) { Done(null, "VEN_B06"); Bike(VenusLayout.ParkSpot, 180f, false); }
-            if (k > 9) { Done(Stage.RecordReceived, "VEN_C08", "VEN_C09", "VEN_C10", "VEN_B07"); d.recordAwarded = true; d.recordAwards = 1; Bike(VenusLayout.BikeUnpacked, 0f, false); }
+            if (k > 9) { Done(Stage.RecordReceived, "VEN_C08", "VEN_C09", "VEN_C10", "VEN_C12", "VEN_B07"); d.recordAwarded = true; d.recordAwards = 1; Bike(VenusLayout.BikeUnpacked, 0f, false); }
             return d;
         }
 
@@ -231,12 +233,20 @@ namespace Seven
         public static Scene SceneInfo(string sceneId) => F.scenes.Find(s => s.id == sceneId);
         public static Line Get(string id) => F.lines.Find(l => l.id == id);
         /// <summary>A scene's lines n..m as playable voice lines (labels, telepathy, the voice file if there is one).</summary>
+        /// <summary>The line's number in its scene: "VEN_C04_07" = 7; Round 13 branch lines "VEN_C13_M1" = 901, "_E1" = 951.</summary>
+        public static int LineNumber(string id)
+        {
+            var suf = id.Substring(id.LastIndexOf('_') + 1);
+            if (int.TryParse(suf, out var n)) return n;
+            int k = int.TryParse(suf.Substring(1), out var m) ? m : 0;
+            return (suf[0] == 'E' ? 950 : 900) + k;
+        }
         public static List<VoiceBank.Line> AsVoiceLines(string scene, int from = 1, int to = 99)
         {
             var l = new List<VoiceBank.Line>();
             foreach (var x in SceneLines(scene))
             {
-                int n = int.Parse(x.id.Substring(x.id.Length - 2));
+                int n = VenusDialogue.LineNumber(x.id);
                 if (n < from || n > to) continue;
                 l.Add(new VoiceBank.Line { Id = x.id, Speaker = x.speaker, Text = x.text, Scene = 200, PauseAfter = 0.45f, Clip = Resources.Load<AudioClip>("VenusVoice/" + x.id), Label = x.label });
             }

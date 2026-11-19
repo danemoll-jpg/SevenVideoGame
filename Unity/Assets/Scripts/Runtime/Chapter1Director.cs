@@ -1049,8 +1049,9 @@ namespace Seven
             for (float t = 0f; t < 0.5f; t += Time.deltaTime) { _shapeGlow = Mathf.Lerp(ShapeGlowIdle, 4f, t / 0.5f); yield return null; }
             yield return Shot("s06_shape_touch_flare");
             // Wash to white; the vision (Dan, 2026-11-17): the video of this doorway long ago - the lock beside it intact,
-            // being used - full-screen; the cat is heard faintly, far away. The music fades out.
-            MusicSystem.Stop(1.2f);
+            // being used - full-screen; the cat is heard faintly, far away. The music fades out (Round 13 0g: suspended, it
+            // comes back where it left off when the vision ends).
+            MusicSystem.Suspend(1.2f);
             AudioKit.Play("vision_whoosh", null, 0.9f);
             var shimmer = AudioKit.Loop("vision_shimmer", null, null, 0f, AudioKit.Bus.Sfx);
             if (shimmer != null) StartCoroutine(AudioKit.Fade(shimmer, 0.7f, 1.5f));
@@ -1098,6 +1099,8 @@ namespace Seven
             AudioKit.Play("vision_whoosh", null, 0.6f);
             if (shimmer != null) StartCoroutine(AudioKit.Fade(shimmer, 0f, 1.6f, true));
             if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, 1f, 2.5f));
+            MusicSystem.Resume(3.5f);                                  // Round 13 (0g): the level's track returns
+            if (Auto) Cap.Log($"music after the vision (0g): '{MusicSystem.Current ?? "(none)"}' playing again");
             if (ghostRoutine != null) StopCoroutine(ghostRoutine);
             VisionWhole.SetActive(false); VisionRuins.SetActive(true); ShowRubble(true);
             Show(Cat.gameObject, true);
@@ -2024,9 +2027,21 @@ namespace Seven
             yield return Wait(1.2f);
             yield return Shot("c02_low_two_shot_looking_up");
             LogCatInFrame("6b low two-shot");
+            // Round 13 (0a, Dan): only briefly on them looking up - then cut to WHAT they are looking at: their view up the
+            // curve, over her shoulder, the traffic streams overhead and the towers rising into the clouds
+            Cut6b();
+            var povEye = p7 + Vector3.up * 1.6f - cityDir * 0.45f + side * 0.3f;
+            var upCurve = p7 + cityDir * 140f + Vector3.up * 150f;
+            Cam.Shot(povEye, upCurve, 0.01f, true, 64f);
+            pan = StartCoroutine(LookAlong(povEye, upCurve, sky + side * 30f, 7f, 64f));
+            yield return Wait(1.2f);
+            yield return Shot("c02b_pov_up_the_curve_traffic_towers");
             yield return Dlg.PlayScene(65, 1, 2);            // I've never seen the inside of a moon before. / Most people insist on looking at the outside.
-            // she barely hears him: her attention follows a stream of traffic overhead
+            // she barely hears him: her attention (and the shot) follows a stream of traffic overhead
+            Cut6b();
+            pan = StartCoroutine(LookAlong(povEye, sky + side * -40f, sky + side * 60f, 2.6f, 60f));
             for (float t = 0f; t < 1.4f; t += Time.deltaTime) { ik.LookPos = sky + side * Mathf.Lerp(-40f, 60f, t / 1.4f); yield return null; }
+            yield return Shot("c02c_pov_following_the_traffic");
             yield return Dlg.PlayScene(65, 3, 4);            // Are those cars? / Apparently we escaped just in time for traffic.
             ik.LookPos = p7 + cityDir * 30f + Vector3.up * 6f; ik.LookW = 0.6f;
             // EXTREME WIDE - THEIR SMALL FIGURES AT THE EXIT (hold; the city's distant hum)

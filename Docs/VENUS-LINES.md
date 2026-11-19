@@ -5,7 +5,7 @@ Data: `Unity/Assets/Resources/Venus/venus_dialogue.json`. Round 11 builds the sc
 ## VEN_B01 — LANDING: UNPACKING THE BIKE (R11, cutscene)
 Trigger: After VEN_C01, before 7 enters the outer gardens.  
 Result: Bike available; objective "Ride to the Elarim temple." (VEN_S01_LANDED's objective, reworded).  
-Camera: Wide — saucer and landscape: 7 walks down the ramp and looks toward the distant temple.; Low three-quarter on the bike: its broad front forks frame the rounded nose; the pointed tail extends behind the
+Camera: Wide — saucer and landscape: 7 comes down in the beam (no ramp) and looks toward the distant temple.; Low three-quarter on the bike: its broad front forks frame the rounded nose; the pointed tail extends behind the
 
 - `VEN_B01_01` **7** (spoken): That’s a walk. — *cue: wide - saucer and landscape*
 - `VEN_B01_02` **Cat** (telepathic): You have a vehicle.
@@ -14,15 +14,19 @@ Camera: Wide — saucer and landscape: 7 walks down the ramp and looks toward th
 - `VEN_B01_05` **Cat** (telepathic): I’ll watch the ship. — *cue: low three-quarter on the bike*
 - `VEN_B01_06` **7** (spoken): What should I call you?
 - `VEN_B01_07` **Panther** (telepathic): Panther.
-- `VEN_B01_08` **7** (spoken): Panther.
-- `VEN_B01_09` **7** (spoken): You can do that?
-- `VEN_B01_10` **Panther** (telepathic): Apparently. — *cue: side medium - 7 mounting*
-- `VEN_B01_11` **7** (spoken): We crawled through a prison drain.
-- `VEN_B01_12` **Panther** (telepathic): An excellent time to be small.
-- `VEN_B01_13` **7** (spoken): You’re not getting a bigger bowl.
-- `VEN_B01_14` **Panther** (telepathic): We can discuss that when you return.
-- `VEN_B01_15` **7** (spoken): Look after the ship, Panther.
-- `VEN_B01_16` **Panther** (telepathic): I intend to.
+- `VEN_B01_08` **7** (spoken): Panther?
+- `VEN_B01_09` **Panther** (telepathic): Ahem. You could say it without looking down at me.
+- `VEN_B01_10` **7** (spoken): I’d have to lie on the floor.
+- `VEN_B01_11` **Panther** (telepathic): There. Saved you the trouble.
+- `VEN_B01_12` **7** (spoken): You can do that?
+- `VEN_B01_13` **Panther** (telepathic): Apparently.
+- `VEN_B01_14` **7** (spoken): Hang on. We crawled through a prison drain.
+- `VEN_B01_15` **Panther** (telepathic): An excellent time to be small.
+- `VEN_B01_16` **7** (spoken): Mm. Fair point.
+- `VEN_B01_17` **7** (spoken): You’re not getting a bigger bowl.
+- `VEN_B01_18` **Panther** (telepathic): Mmm. We can discuss that when you return.
+- `VEN_B01_19` **7** (spoken): Look after the ship, Panther. — *cue: side medium - 7 mounting*
+- `VEN_B01_20` **Panther** (telepathic): I intend to.
 
 ## VEN_B02 — FIRST RIDE: LET VENUS BE BEAUTIFUL (R11, in-gameplay)
 
@@ -55,7 +59,7 @@ Trigger: After VEN_C07 (Wormmaster subdued), when 7 returns to her bike.
 - `VEN_B06_05` **7** (spoken): The others are going home.
 
 ## VEN_B07 — BACK TO THE SAUCER: LET THE MEMORY SETTLE (R12, cutscene)
-Trigger: After VEN_C10 (record received). Keep it quiet: a direct route or a shortcut opened during the chapter, so it  
+Trigger: After VEN_C12 (the two locations — VEN_C10 → VEN_C12 → leave the temple). Keep it quiet: a direct route or a shortcut opened during the chapter, so it  
 
 - `VEN_B07_01` **Panther** (telepathic): Did they have answers?
 - `VEN_B07_02` **7** (spoken): Some.
@@ -78,7 +82,7 @@ Camera: Extreme wide of saucer emerging beneath clouds.; Over 7’s shoulder tow
 Trigger: First approach to the damaged outer walkway — **now during the ride, see VEN_B03**.  
 
 - `VEN_C02_01` **7** (in-gameplay): Something’s wrong here.
-- `VEN_C02_02` **Panther** (telepathic): I felt that through the landing supports.
+- `VEN_C02_02` **Panther** (telepathic): I felt that from here.
 
 ## VEN_C03 — MEET THE GUARDIAN (R11, cutscene)
 Trigger: Interact with guardian before help is accepted.  
@@ -95,6 +99,7 @@ Camera: Wide two-shot at temple entrance.; Insert of dodecahedron.; Over 7’s s
 - `VEN_C03_08` **7** (spoken): A door opening.
 - `VEN_C03_09` **7** (spoken): It sounds small when I say it.
 - `VEN_C03_10` **Guardian** (spoken): Most of a life is small things. — *cue: close view of object between them*
+- `VEN_C03_11` **Guardian** (spoken): Follow me.
 
 ## VEN_C04 — CUBE AND INTERRUPTION (R11, cutscene)
 Trigger: Reach the cube chamber after VEN_C03.  
@@ -177,6 +182,30 @@ Result: Award Venus record once; set VEN_S07_RECORD_RECEIVED.
 - `VEN_C10_05` **Guardian** (spoken): You saw how close he came.
 - `VEN_C10_06` **Guardian** (spoken): If this place were lost, I would want someone to know we had been here.
 
+## VEN_C12 — TWO LOCATIONS (Dan, 2026-11-19) (R12, cutscene)
+Result: **Mars and Europa become available in the saucer's navigation** (the star map).  
+
+- `VEN_C12_01` **7** (spoken): These came from different worlds. Were your temples connected?
+- `VEN_C12_02` **Guardian** (spoken): Yes. We exchanged records. Each temple kept something the others could not.
+- `VEN_C12_03` **7** (spoken): Do you know where any of the others are?
+- `VEN_C12_04` **Guardian** (spoken): Two locations survive in our records. Mars—and Europa.
+- `VEN_C12_05` **7** (spoken): What will I find on Mars?
+- `VEN_C12_06` **Guardian** (spoken): A temple among the divided kingdoms. It stood before their borders were drawn.
+- `VEN_C12_07` **7** (spoken): And now it’s on someone’s side of a border.
+- `VEN_C12_08` **Guardian** (spoken): Almost certainly.
+- `VEN_C12_09` **7** (spoken): And this one?
+- `VEN_C12_10` **Guardian** (spoken): Beneath Europa’s ice. The Cetaceans were its keepers.
+- `VEN_C12_11` **7** (spoken): Were?
+- `VEN_C12_12` **Guardian** (spoken): We have not heard from either temple in a long time.
+- `VEN_C12_13` **7** (spoken): So we don’t know whether they’re still there.
+- `VEN_C12_14` **Guardian** (spoken): No. Only where to begin looking.
+- `VEN_C12_15` **7** (spoken): Can you send these to my ship?
+- `VEN_C12_16` **Guardian** (spoken): Of course.
+- `VEN_C12_17` **Panther** (telepathic): Received. Two destinations.
+- `VEN_C12_18` **7** (telepathic): We’ll look at them together when I get back.
+- `VEN_C12_19` **7** (spoken): Thank you. For trusting me with this.
+- `VEN_C12_20` **Guardian** (spoken): Thank you for giving us the chance to keep it.
+
 ## VEN_C11 — SAUCER DEBRIEF (R12, cutscene)
 Trigger: Enter saucer after receiving record (after VEN_B07, the ride back).  
 Result: Set VEN_S08_COMPLETE; enable normal destination selection.  
@@ -191,3 +220,38 @@ Result: Set VEN_S08_COMPLETE; enable normal destination selection.
 - `VEN_C11_08` **7** (spoken): I wish I could remember their face.
 - `VEN_C11_09` **7** (spoken): There are other temples.
 - `VEN_C11_10` **Panther** (telepathic): Then we have somewhere else to ask.
+
+## VEN_C13 — CHOOSING THE NEXT WORLD (Dan, 2026-11-19) (R12, cutscene)
+Result: the player chooses Mars or Europa; course set; **the other destination remains available**.  
+
+- `VEN_C13_01` **Panther** (telepathic): The guardian’s locations. Mars and Europa.
+- `VEN_C13_02` **7** (spoken): A temple between divided kingdoms.
+- `VEN_C13_03` **Panther** (telepathic): Convenient. Everyone can argue over it without travelling far.
+- `VEN_C13_04` **7** (spoken): Perhaps we’ll arrive on a quiet day.
+- `VEN_C13_05` **Panther** (telepathic): Mm.
+- `VEN_C13_06` **7** (spoken): Such confidence.
+- `VEN_C13_07` **7** (spoken): The Cetaceans’ temple is beneath the ice.
+- `VEN_C13_08` **Panther** (telepathic): Underwater.
+- `VEN_C13_09` **7** (spoken): Yes.
+- `VEN_C13_10` **Panther** (telepathic): I thought that deserved saying separately.
+- `VEN_C13_11` **7** (spoken): You’ll be perfectly dry in here.
+- `VEN_C13_12` **Panther** (telepathic): I intend to maintain that arrangement.
+- `VEN_C13_13` **7** (spoken): The guardian doesn’t know whether either temple is still there.
+- `VEN_C13_14` **Panther** (telepathic): No.
+- `VEN_C13_15` **7** (spoken): We could go all that way and find nothing.
+- `VEN_C13_16` **Panther** (telepathic): We found something here.
+- `VEN_C13_17` **7** (spoken): More questions.
+- `VEN_C13_18` **Panther** (telepathic): Those too.
+- `VEN_C13_19` **7** (spoken): All right. Where would you go?
+- `VEN_C13_20` **Panther** (telepathic): You’re asking a cat to choose between water and dry land.
+- `VEN_C13_21` **7** (spoken): Fair point.
+- `VEN_C13_22` **Panther** (telepathic): Either way, I’m coming with you.
+- `VEN_C13_23` **7** (spoken): Good.
+- `VEN_C13_M1` **7** (spoken): Mars. Let’s start there.
+- `VEN_C13_M2` **Panther** (telepathic): Dry land. An excellent feature in a destination.
+- `VEN_C13_M3` **7** (spoken): I chose it for the temple.
+- `VEN_C13_M4` **Panther** (telepathic): Naturally.
+- `VEN_C13_E1` **7** (spoken): Europa. I want to see what’s beneath that ice.
+- `VEN_C13_E2` **Panther** (telepathic): Of course you do.
+- `VEN_C13_E3` **7** (spoken): You said either way.
+- `VEN_C13_E4` **Panther** (telepathic): I did. A reckless moment of generosity.

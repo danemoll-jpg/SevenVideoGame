@@ -781,6 +781,7 @@ namespace Seven.EditorTools
             atmo.name = "Atmosphere_Above";
 
             var refs = BuildShip(sm);
+            var consoleRefs = BuildShipConsole(refs.obstacles, refs.lights);     // Round 13: the ship's console + pilot's chair (FightDemoBuilderConsole.cs)
             BuildCity(new GameObject("World").transform, sm);
             // QF3: the Round 8 dark overhead hull-edge ring is gone - it did not dissolve and stayed as a black band over
             // the revealed view (Dan). After the reveal only 7, her chair and the cat remain.
@@ -911,6 +912,7 @@ namespace Seven.EditorTools
             ch.UiRendererIndex = EnsureUiRenderer();
             ch.TableCentre = tb.centre; ch.TableAlong = tb.along; ch.TableOut = tb.outward; ch.TableTopY = TableTopY;
             ch.SofaCamPos = Polar(4.4f, 176f, 1.35f); ch.SofaCamLook = Polar(6.95f, 160f, 0.55f);
+            WireShipConsole(consoleRefs, dir, chUi);                                // Round 13: Seven.ShipConsole
 
             EditorSceneManager.SaveScene(scene, SaucerScenePath);
             Log("scene saved " + SaucerScenePath);

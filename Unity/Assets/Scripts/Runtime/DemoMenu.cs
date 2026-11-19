@@ -54,10 +54,12 @@ namespace Seven
         }
         public static DemoMenu I { get; private set; }
         /// <summary>QF6 playtest: what the highlighted entry says (the driver reads the menu like a person).</summary>
+        /// <summary>Round 13 (0c): the "Start a new game?" confirm is showing.</summary>
+        public bool ConfirmingNewGame => _confirmNew;
         public string SelectedLabel => Items != null && _sel >= 0 && _sel < Items.Length ? Items[_sel].label : null;
         public bool OnSelectPage => _selectPage;
         GameObject _canvasGo;
-        bool _confirmQuit, _confirmVenus, _venusPage;
+        bool _confirmQuit, _confirmVenus, _confirmNew, _venusPage;
         Text _hint;
         int _sel;
         Text[] _labels;
@@ -140,12 +142,14 @@ namespace Seven
         void Refresh()
         {
             if (_hint != null) _hint.text = _confirmQuit ? "Quit the game?   A / Enter = yes   ·   B / Esc = no"
-                : _confirmVenus ? "Start Chapter 2 over? Your Venus progress will be reset.   A / Enter = yes   ·   B / Esc = no" : "stick / d-pad + A    ·    W S / arrows + Enter";
+                : _confirmVenus ? "Start Chapter 2 over? Your Venus progress will be reset.   A / Enter = yes   ·   B / Esc = no"
+                : _confirmNew ? "Start a new game? Your saved progress will be reset.   A / Enter = yes   ·   B / Esc = no" : "stick / d-pad + A    ·    W S / arrows + Enter";
             for (int i = 0; i < Items.Length; i++)
             {
                 bool on = i == _sel;
                 if (Items[i].scene == QuitScene) _labels[i].text = _confirmQuit ? "Quit?  Yes (A / Enter)" : "Quit";
                 if (Items[i].scene == NewVenus) _labels[i].text = _confirmVenus ? "Start Chapter 2 over?  Yes (A / Enter)" : Items[i].label;
+                if (Items[i].scene == "Chapter1") _labels[i].text = _confirmNew ? "Start a new game?  Yes (A / Enter)" : Items[i].label;
                 _marks[i].color = on ? new Color(0.92f, 0.92f, 0.92f, 1f) : new Color(1f, 1f, 1f, 0.06f);
                 _labels[i].color = on ? new Color(0.05f, 0.05f, 0.05f) : Items[i].scene == LaterScene ? new Color(0.45f, 0.45f, 0.45f) : new Color(0.85f, 0.85f, 0.85f);
             }
@@ -166,11 +170,11 @@ namespace Seven
                 if (Mathf.Abs(y) < 0.3f) _stickReady = 0f;
                 else if (Time.time > _stickReady) { d = y > 0 ? -1 : 1; _stickReady = Time.time + 0.35f; }
             }
-            if (d != 0) { _sel = (_sel + d + Items.Length) % Items.Length; _confirmQuit = false; _confirmVenus = false; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
+            if (d != 0) { _sel = (_sel + d + Items.Length) % Items.Length; _confirmQuit = false; _confirmVenus = false; _confirmNew = false; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
             bool go = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
                       || (gp != null && gp.buttonSouth.wasPressedThisFrame);
             bool back = (kb != null && kb.escapeKey.wasPressedThisFrame) || (gp != null && gp.buttonEast.wasPressedThisFrame);
-            if (back && (_confirmQuit || _confirmVenus)) { _confirmQuit = false; _confirmVenus = false; Refresh(); return; }
+            if (back && (_confirmQuit || _confirmVenus || _confirmNew)) { _confirmQuit = false; _confirmVenus = false; _confirmNew = false; Refresh(); return; }
             if (back && _selectPage && _venusPage) { _venusPage = false; _sel = System.Array.FindIndex(SelectItems(), x => x.Item2 == "@venuspage"); Build(); return; }
             if (back && _selectPage) { _selectPage = false; _sel = 0; Build(); return; }
             if (!go) return;
@@ -197,6 +201,12 @@ namespace Seven
                 return;
             }
             if (scene == ContinueScene) { SaveGame.Continue(); return; }
+            // Round 13 (0c): "Chapter 1" from the menu is a new game - every chapter starts fresh (ask once if saves exist)
+            if (scene == "Chapter1")
+            {
+                if (SaveGame.AnyProgress && !_confirmNew) { _confirmNew = true; Refresh(); return; }
+                _confirmNew = false; SaveGame.NewGame();
+            }
             Chapter1State.Reset();
             Chapter1State.Intro = scene == "Chapter1";                   // Round 12 (2d): the opening shot plays from the menu
             SceneManager.LoadScene(scene);

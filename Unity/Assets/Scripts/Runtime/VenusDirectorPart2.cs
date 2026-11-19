@@ -22,7 +22,7 @@ namespace Seven
         // ---- Round 12 scene objects (FightDemoBuilderVenus2)
         public GameObject RootGate;
         public ControlDevice[] Devices;
-        public Transform Crystal, Barrier, Console, RecordCopy;
+        public Transform Crystal, Barrier, Console, RecordCopy, LocationsDisplay;
         public Renderer BarrierGlow, ConsoleGlow;
         public WormmasterRig Wormmaster;
         public WormCreature[] ChamberWorms;
@@ -50,6 +50,7 @@ namespace Seven
             if (!VenusState.SceneDone("VEN_B06")) { yield return B06(); if (ReloadCheck("VEN_B06")) yield break; }
             if (!VenusState.SceneDone("VEN_C08")) yield return C08();
             if (!VenusState.SceneDone("VEN_C10")) { yield return C09C10(); if (ReloadCheck("VEN_C10")) yield break; }
+            if (!VenusState.SceneDone("VEN_C12")) { yield return C12(); if (ReloadCheck("VEN_C12")) yield break; }     // Round 13 (0m)
             if (!VenusState.SceneDone("VEN_B07")) yield return B07();
             yield return Aboard();
         }
@@ -69,7 +70,7 @@ namespace Seven
             if (Cat != null && VenusState.SceneDone("VEN_B02")) Cat.gameObject.SetActive(false);   // spec: by B02 Panther is back inside, normal size
             if (RecordCopy != null) RecordCopy.gameObject.SetActive(false);
             // where she is
-            if (VenusState.SceneDone("VEN_C11")) { at = VenusLayout.RampFoot + Vector3.forward * 2.5f; face = Vector3.forward; Bike.Place(VenusLayout.BikeUnpacked, 0f); Bike.gameObject.SetActive(true); }
+            if (VenusState.SceneDone("VEN_C11")) { at = VenusLayout.StepOut + Vector3.forward * 2.5f; face = Vector3.forward; Bike.Place(VenusLayout.BikeUnpacked, 0f); Bike.gameObject.SetActive(true); }
             else if (VenusState.SceneDone("VEN_C10")) { at = VenusLayout.ParkSpot - Vector3.right * 1.7f; face = Vector3.forward; }
             else if (VenusState.SceneDone("VEN_B06")) { at = VenusLayout.ParkSpot - Vector3.right * 1.7f + Vector3.forward * 2f; face = Vector3.forward; }
             else if (VenusState.SceneDone("VEN_C07")) { at = (VenusState.BikeKnown ? VenusState.BikeAt : VenusLayout.ObsPark) - Vector3.right * 1.4f; face = Vector3.forward; }
@@ -114,7 +115,7 @@ namespace Seven
             while (true)
             {
                 bool under = VenusLayout.Underground(P7);
-                _under = Mathf.MoveTowards(_under, under ? 1f : 0f, Time.deltaTime / 2.5f);
+                _under = Mathf.MoveTowards(_under, under ? 1f : 0f, Time.deltaTime / 2.5f); if (_wild != null) _wild.Under = _under;
                 float k = Mathf.SmoothStep(0f, 1f, _under);
                 a.GroundDensity = Mathf.Lerp(_atmo0[0], cave[0], k); a.GroundBase = Mathf.Lerp(_atmo0[1], cave[1], k); a.ValleyDensity = Mathf.Lerp(_atmo0[2], cave[2], k);
                 a.DistanceDensity = Mathf.Lerp(_atmo0[3], cave[3], k); a.NearBrightness = Mathf.Lerp(_atmo0[4], cave[4], k); a.FarBrightness = Mathf.Lerp(_atmo0[5], cave[5], k);
@@ -173,6 +174,7 @@ namespace Seven
             if (Shots) { Shoot(VenusLayout.RootGateIn + new Vector3(-4.5f, 4.2f, 9f), VenusLayout.RootGateIn + new Vector3(0f, -3f, -5f), 50f, 0.01f); yield return Wait(0.3f); yield return Shot("w01_root_gate_open"); FollowCamera(); }
             if (Auto) StartCoroutine(AutoWalkPath(new[] { new Vector3(69f, -6f, 137f), new Vector3(69f, -6f, 132.5f), new Vector3(69f, -14f, 117.4f), new Vector3(69f, -18f, 107f), new Vector3(69f, -22f, 95f), new Vector3(71f, -22f, 89f), new Vector3(80f, -22f, 89f), new Vector3(96f, -27.4f, 89f), VenusLayout.ControlEntry }));
             if (Shots) StartCoroutine(WayDownShots());
+            StartCoroutine(WayDownHarass());                             // Round 13 (0f)
             yield return Until(() => P7.x > 104.5f && P7.y < -28f, "the control chamber (C06)", 120f,
                 "Through the root gate below the lookout, down the root pit and along the tunnels to the east", VenusLayout.ControlEntry,
                 () => Seven.Place(VenusLayout.ControlEntry, Vector3.right));
@@ -284,6 +286,7 @@ namespace Seven
             foreach (var d in Devices) if (d != null) d.Pulsed += OnDevicePulse;
             _encounterOn = true;
             StartCoroutine(EncounterWatch());
+            StartCoroutine(Harass());                                    // Round 13 (0f): they try to stop her
             if (Auto) StartCoroutine(AutoEncounter());
             else StartCoroutine(TeachEncounter());
             while (!AllOff)
@@ -360,6 +363,11 @@ namespace Seven
                     if (i == 2 && Flat(VenusLayout.DeviceAt[2] - P7).magnitude < 10f && TroughDist(P7) > 1.2f && CrystalInView()) { prompt = "Telekinesis: the signal crystal"; btn = ControlsLegend.Btn.Tk; _deviceHit = 2; }
                 }
                 if (AllOff && free && !_consoleHit && Flat(VenusLayout.ConsoleAt - P7).magnitude < 2.0f) { prompt = "Close the barrier"; btn = ControlsLegend.Btn.Interact; _deviceHit = 9; }
+                // Round 13 (0f): a shielded device waits; a creature coming at her can be pushed aside with telekinesis
+                if (_deviceHit >= 0 && _deviceHit < 3 && Shielded(_deviceHit)) { prompt = "Shielded by his signal - wait"; _deviceHit = -1; }
+                var stunT = free && _deviceHit != 2 ? StunTarget() : null;
+                if (stunT != null && prompt == null) { prompt = "Telekinesis: push it aside"; btn = ControlsLegend.Btn.Tk; }
+                if (stunT != null && free && (Auto ? stunT.Lunging && Flat(stunT.transform.position - P7).magnitude < 6f : Input.Telekinesis.WasPressedThisFrame())) { _encPrompt = null; yield return StunWorm(stunT); continue; }
                 _encPrompt = prompt; _encBtn = btn;
                 if (Auto || _deviceHit < 0) continue;
                 if (_deviceHit == 9 && Input.Interact.WasPressedThisFrame()) _consoleHit = true;
@@ -369,6 +377,151 @@ namespace Seven
             _encPrompt = null;
         }
         string _encPrompt; ControlsLegend.Btn _encBtn;
+        // ------------------------------------------------------------------------------------------ Round 13 (0f): they try to stop her
+        // Dan: "the encounter is too easy - they should be trying to stop her". A fair first boss, still nonlethal:
+        //  - the Wormmaster fires a signal pulse every few seconds (faster as devices fall) that sends the nearest creature
+        //    lunging at her (surfaced, fast, telegraphed by dust + rumble); contact knocks her back (the existing retry);
+        //  - the same pulse shields the device she is nearest for a few seconds ("shielded - wait") and pulls that device's
+        //    creatures across her path (he shifts their routes);
+        //  - he taunts (four short barks);
+        //  - her telekinesis (RT) at a surfaced creature pushes it aside and stuns it: it sinks and lies still, then recovers
+        //    and goes back to its trough (never harmed). Only when all three devices are off do they withdraw.
+        //  - fairness: after three knockbacks the pulses pause for 20 s; every wait keeps its hint (45 s) and skip (2 min).
+        static readonly (string id, string text)[] Taunts =
+        {
+            ("VEN_ENC_T1", "They answer to me. Not to you."), ("VEN_ENC_T2", "You cannot reach them all."),
+            ("VEN_ENC_T3", "Turn back, little traveller."), ("VEN_ENC_T4", "Another one? I can wait."),
+        };
+        readonly float[] _shieldUntil = new float[3];
+        float _harassPause; int _knocksSincePause, _pulses, _lunges, _stuns, _taunts, _shields;
+        bool Shielded(int i) => Time.time < _shieldUntil[i];
+
+        IEnumerator Harass()
+        {
+            int ti = 0; float nextTaunt = Time.time + 5f;
+            yield return Wait(3.5f);
+            while (_encounterOn && !AllOff)
+            {
+                float gap = Mathf.Lerp(7.5f, 4.5f, OffCount / 2f) * (Auto ? 1.5f : 1f);
+                yield return Wait(gap);
+                if (!_encounterOn || AllOff) break;
+                if (_cut || PauseMenu.IsOpen || _knocking || Time.time < _harassPause) continue;
+                if (_knocksSincePause >= 3) { _knocksSincePause = 0; _harassPause = Time.time + 20f; Log("encounter (0f): three knockbacks - the pulses pause for 20 s (fairness)"); continue; }
+                // the signal pulse from his head tip
+                _pulses++;
+                if (Wormmaster != null) Wormmaster.PulseGesture();
+                AudioKit.Play("signal_pulse", WmHead, 1f, 0.05f, AudioKit.Bus.Sfx, 90f);
+                // the nearest creature still under his control lunges at her
+                WormCreature best = null; float bd = 34f;
+                foreach (var w in ChamberWorms)
+                {
+                    if (w == null || !w.gameObject.activeSelf || w.Withdrawn || w.Stunned || w.Calm) continue;
+                    var dv = Devices != null ? System.Array.Find(Devices, x => x != null && x.Id == w.Group) : null;
+                    if (dv != null && !dv.On) continue;
+                    float d = Flat(w.transform.position - P7).magnitude; if (d < bd) { bd = d; best = w; }
+                }
+                if (best != null && Mathf.Abs(P7.y - VenusLayout.ControlY) < 1.5f)
+                {
+                    var lead = P7 + Flat(Seven.transform.forward) * 1.2f;
+                    best.Lunge(lead, 2.8f); _lunges++;
+                    if (Shots && _lunges <= 2) StartCoroutine(LungeShot(best, _lunges));
+                    Log($"encounter (0f): pulse {_pulses} - {best.name} sent lunging at her ({bd:0.0} m away)");
+                }
+                // he shields the device she is nearest and pulls its creatures across her path
+                int nd = NextDevice();
+                if (Devices[nd] != null && Devices[nd].On && Flat(VenusLayout.DeviceUse[nd] - P7).magnitude < 14f)
+                {
+                    _shieldUntil[nd] = Time.time + 3.5f; _shields++;
+                    AudioKit.Play("barrier_close", VenusLayout.DeviceAt[nd] + Vector3.up, 0.35f, 0.1f, AudioKit.Bus.Sfx, 30f);
+                    var mid = Vector3.Lerp(P7, VenusLayout.DeviceUse[nd], 0.5f);
+                    foreach (var w in ChamberWorms) if (w != null && w.gameObject.activeSelf && w.Group == Devices[nd].Id && w != best) w.Drive(mid, 2.2f);
+                }
+                // a taunt now and then
+                if (Time.time > nextTaunt && !Dlg.Busy)
+                {
+                    var (id, text) = Taunts[ti++ % Taunts.Length]; _taunts++;
+                    nextTaunt = Time.time + 15f;
+                    StartCoroutine(Dlg.PlayLines(new List<VoiceBank.Line> { new VoiceBank.Line { Id = id, Speaker = "wormmaster", Text = text, Scene = 200, PauseAfter = 0.2f, Clip = Resources.Load<AudioClip>("VenusVoice/" + id), Label = "Wormmaster" } }, false));
+                }
+            }
+            Log($"ENCOUNTER (0f): pulses {_pulses}, lunges {_lunges}, device shields {_shields}, taunts {_taunts}, stuns by telekinesis {_stuns}, knockbacks {Knockdowns}");
+        }
+
+        IEnumerator LungeShot(WormCreature w, int k)
+        {
+            yield return Wait(1.1f);
+            if (w == null || _knocking) yield break;
+            var mid = (w.transform.position + P7) * 0.5f; var side = Vector3.Cross(Vector3.up, Flat(w.transform.position - P7).normalized);
+            Shoot(mid + side * 7f + Vector3.up * 3.5f, mid + Vector3.up * 0.6f, 52f, 0.01f);
+            yield return Wait(0.15f);
+            yield return Shot($"enc_lunge_{k}_creature_comes_at_her");
+            Log($"lunge {k}: {w.name} surfaced {w.Surfaced}, {Flat(w.transform.position - P7).magnitude:0.0} m from her");
+            FollowCamera();
+        }
+
+        /// <summary>RT at a surfaced creature within 10 m (roughly ahead or close): push it aside and stun it.</summary>
+        WormCreature StunTarget()
+        {
+            WormCreature best = null; float bd = 10f;
+            foreach (var w in ChamberWorms)
+            {
+                if (w == null || !w.gameObject.activeSelf || w.Withdrawn || w.Stunned || !(w.Surfaced || w.Lunging)) continue;
+                var to = Flat(w.transform.position - P7); float d = to.magnitude;
+                if (d > bd) continue;
+                if (d > 4f && Vector3.Angle(Flat(Cam.transform.forward), to) > 70f && Vector3.Angle(Flat(Seven.transform.forward), to) > 70f) continue;
+                bd = d; best = w;
+            }
+            return best;
+        }
+        IEnumerator StunWorm(WormCreature w)
+        {
+            Seven.Gesture(w.transform.position + Vector3.up * 0.6f);
+            Seven.SetEnergyPoint(1.6f, 0.2f);
+            for (float t = 0f; t < 1.2f && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
+            AudioKit.Play("tk_push", w.transform.position, 0.9f);
+            w.Stun(6f, w.transform.position - P7); _stuns++;
+            Log($"encounter (0f): telekinesis pushed {w.name} aside - stunned for 6 s (it recovers; never harmed)");
+            Seven.SetEnergyPoint(1f, 0.8f);
+            yield return Wait(0.3f);
+            Seven.Release();
+        }
+
+        // ---- Round 13 (0f): on the way down, one creature in the root chamber is driven at her too
+        WormCreature _tunnelWorm;
+        IEnumerator WayDownHarass()
+        {
+            if (ChamberWorms == null || ChamberWorms.Length == 0 || ChamberWorms[0] == null) yield break;
+            var go = Instantiate(ChamberWorms[0].gameObject, new Vector3(74f, -24f, 89f), Quaternion.LookRotation(Vector3.right));
+            go.name = "TunnelWorm"; go.SetActive(true);
+            _tunnelWorm = go.GetComponent<WormCreature>();
+            _tunnelWorm.Group = null; _tunnelWorm.BaseY = -22f; _tunnelWorm.PingPong = true; _tunnelWorm.Telegraph = true;
+            _tunnelWorm.Route = new[] { new Vector3(71.5f, -22f, 89f), new Vector3(80.5f, -22f, 89f) };
+            _tunnelWorm.transform.localScale = Vector3.one * 0.7f;
+            float nextLunge = 0f; int lunges = 0, knocks = 0;
+            while (!VenusState.SceneDone("VEN_C06") && !(P7.x > 104.5f && P7.y < -28f))
+            {
+                yield return null;
+                if (_cut || PauseMenu.IsOpen || _knocking) continue;
+                float d = Flat(_tunnelWorm.transform.position - P7).magnitude;
+                bool inChamber = Mathf.Abs(P7.y + 22f) < 1.5f && P7.x > 68f && P7.x < 84f;
+                if (Seven.Current == ChapterSeven.Mode.Free && d > 4f) _encSafe = P7;
+                if (inChamber && d < 14f && Time.time > nextLunge) { _tunnelWorm.Lunge(P7, 2.4f); lunges++; nextLunge = Time.time + (Auto ? 12f : 7f); if (Shots && lunges == 1) StartCoroutine(LungeShot(_tunnelWorm, 0)); AudioKit.Play("signal_pulse", P7 + Vector3.up * 6f, 0.5f); }
+                if (_tunnelWorm.Surfaced && !_tunnelWorm.Stunned && d < 1.2f && inChamber && !Auto) { knocks++; yield return KnockBack(_tunnelWorm); }
+                if (!Auto && Input.Telekinesis.WasPressedThisFrame() && (_tunnelWorm.Surfaced || _tunnelWorm.Lunging) && d < 10f && Seven.Current == ChapterSeven.Mode.Free) yield return StunTunnelWorm();
+                if (Auto && _tunnelWorm.Lunging && d < 6f && Seven.Current == ChapterSeven.Mode.Free) yield return StunTunnelWorm();
+            }
+            Log($"way down (0f): the root-chamber creature lunged at her {lunges}x, knocked her back {knocks}x, stunned {_tunnelWorm.Stuns}x; it stays behind (alive)");
+        }
+        IEnumerator StunTunnelWorm()
+        {
+            Seven.Gesture(_tunnelWorm.transform.position + Vector3.up * 0.5f);
+            for (float t = 0f; t < 1.2f && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
+            AudioKit.Play("tk_push", _tunnelWorm.transform.position, 0.9f);
+            _tunnelWorm.Stun(6f, _tunnelWorm.transform.position - P7);
+            yield return Wait(0.3f);
+            Seven.Release();
+        }
+
         bool CrystalInView()
         {
             var to = Flat(VenusLayout.DeviceAt[2] - P7);
@@ -404,7 +557,7 @@ namespace Seven
 
         IEnumerator KnockBack(WormCreature w)
         {
-            _knocking = true; Knockdowns++;
+            _knocking = true; Knockdowns++; _knocksSincePause++;
             Seven.Lock(true);
             var away = Flat(P7 - w.transform.position).normalized; if (away.sqrMagnitude < 0.5f) away = -Seven.transform.forward;
             AudioKit.Play("body_fall", P7, 0.7f);
@@ -642,6 +795,82 @@ namespace Seven
             Objective(VenusState.Objectives[(int)VenusState.Stage.RecordReceived]);
             yield return Cutscene(false);
         }
+        // ------------------------------------------------------------------------------------------ C12: two locations (Round 13, 0m)
+        /// <summary>VEN_C12 (Dan, 2026-11-19): right after C10, before she leaves the temple. The guardian wakes an ancient
+        /// display - Mars and Europa - and sends both to her ship. Result: Mars and Europa on the saucer's star map.</summary>
+        IEnumerator C12()
+        {
+            yield return Cutscene(true);
+            _coverage = true; _lastSpeaker = null;
+            Seven.Lock(true);
+            var ik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
+            ik.enabled = true; ik.Alive = true;
+            if (Vector3.Distance(P7, VenusLayout.CubeView) > 3f) Seven.Place(VenusLayout.CubeView, Vector3.forward);
+            if (Guardian != null) { Guardian.Stop(); Guardian.Face(P7); }
+            // she secures the cube beside the dodecahedron, then pauses
+            yield return Wait(0.8f);
+            yield return Say("VEN_C12", 1, 3);
+            // the guardian approaches the ancient display; two locations appear
+            var dispAt = LocationsDisplay != null ? LocationsDisplay.position : VenusLayout.CubeAt + new Vector3(4.3f, 0f, -2.5f);
+            if (Guardian != null) { Guardian.WalkTo(dispAt + new Vector3(-1.1f, 0f, 2.0f)); /* beside the display, never between it and her */ for (float t = 0f; t < 6f && Guardian.Walking; t += Time.deltaTime) yield return null; Guardian.Face(dispAt + Vector3.up * 1.8f); }
+            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(dispAt - P7)), 300f * Time.deltaTime); yield return null; }
+            AudioKit.Play("energy_point", dispAt + Vector3.up * 1.8f, 0.8f);
+            Renderer mars = null, europa = null;
+            var locs = new List<Renderer>();
+            if (LocationsDisplay != null) foreach (var r in LocationsDisplay.GetComponentsInChildren<Renderer>(true)) { if (r.name == "Loc_Mars") mars = r; if (r.name == "Loc_Europa") europa = r; if (r.name.StartsWith("Loc_")) locs.Add(r); }
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.4f)
+            {
+                foreach (var r in locs) Glow(r, Mathf.Lerp(0f, r.name.EndsWith("Ring") ? 0.8f : 1.6f, t));
+                yield return null;
+            }
+            Shoot(dispAt + new Vector3(-5.2f, 2.4f, -3.0f), dispAt + Vector3.up * 1.7f, 46f, 0.8f);
+            yield return Wait(0.9f);
+            yield return Shot("c12_01_the_display_two_locations");
+            yield return Say("VEN_C12", 4, 4);
+            // over her shoulder - the display; she studies Mars first
+            {
+                var h = P7 + Vector3.up * 1.55f; var f = Flat(dispAt - P7).normalized; var rr = Vector3.Cross(Vector3.up, f);
+                Shoot(h - f * 1.3f + rr * 0.55f, dispAt + Vector3.up * 1.9f, 40f, 0.6f);
+            }
+            if (mars != null) { ik.LookPos = mars.transform.position; ik.LookW = 0.9f; Glow(mars, 2.6f); }
+            yield return Wait(0.6f);
+            yield return Shot("c12_02_over_her_shoulder_mars");
+            yield return Say("VEN_C12", 5, 8, false);
+            // her attention shifts to Europa
+            if (mars != null) Glow(mars, 1.4f);
+            if (europa != null) { ik.LookPos = europa.transform.position; Glow(europa, 2.6f); }
+            yield return Say("VEN_C12", 9, 11, false);
+            yield return Shot("c12_03_europa");
+            if (Guardian != null) TwoShot(Guardian, _side, 6.0f, 0.8f);
+            yield return Wait(0.8f);                                       // the guardian pauses
+            yield return Say("VEN_C12", 12, 14, false);
+            yield return Wait(0.6f);                                       // 7 considers the two locations
+            yield return Say("VEN_C12", 15, 16, false);
+            // a soft tone confirms the transfer; Panther from the ship
+            AudioKit.Play("console_select", dispAt + Vector3.up * 1.8f, 0.9f);
+            for (float t = 0f; t < 0.8f; t += Time.deltaTime) { float k = 1f + Mathf.Sin(t * 14f) * 0.5f; if (mars != null) Glow(mars, 1.6f * k); if (europa != null) Glow(europa, 1.6f * k); yield return null; }
+            yield return Say("VEN_C12", 17, 18, false);
+            // she turns to the guardian
+            if (Guardian != null)
+            {
+                for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(Guardian.transform.position - P7)), 300f * Time.deltaTime); yield return null; }
+                ik.LookPos = HeadOf(Guardian);
+            }
+            yield return Say("VEN_C12", 19, 19);
+            // her hand rests briefly over the secured cube (in her pocket)
+            if (_carry != null) { ik.RightPos = _carry.HipPoint; ik.RightW = 0.8f; }
+            yield return Say("VEN_C12", 20, 20, false);
+            yield return Shot("c12_04_thank_you");
+            ik.RightW = 0f;
+            // 7 inclines her head and leaves
+            if (Guardian != null) { ik.LookPos = HeadOf(Guardian) + Vector3.down * 0.5f; yield return Wait(0.7f); }
+            ik.LookW = 0f;
+            _coverage = false;
+            Complete("VEN_C12");
+            Log("C12 (0m): Mars and Europa sent to the ship - available on the star map from now on");
+            yield return Cutscene(false);
+        }
+
         static Vector3 CubeTouchSpot => VenusLayout.CubeAt + new Vector3(0f, -VenusLayout.CubeAt.y, -1.98f);
         bool _autoRideStop;
         IEnumerator PalmUpLater(SevenTableIK ik, Vector3 at, float delay) { yield return Wait(delay); ik.RightPos = at; ik.RightW = 1f; ik.LookW = 0f; }
@@ -650,7 +879,7 @@ namespace Seven
         UnityEngine.Video.VideoPlayer _vp2; RenderTexture _vp2RT;
         IEnumerator Vision2Play()
         {
-            MusicSystem.Stop(1.2f);
+            MusicSystem.Suspend(1.2f);                       // Round 13 (0g): resumed when the vision ends
             AudioKit.Play("vision_whoosh", null, 0.9f);
             var shimmer = AudioKit.Loop("vision_shimmer", null, null, 0f, AudioKit.Bus.Sfx);
             if (shimmer != null) StartCoroutine(AudioKit.Fade(shimmer, 0.6f, 1.5f));
@@ -698,6 +927,8 @@ namespace Seven
             UI.SetVideo(null, aspect, 0f);
             if (_vp2 != null) { _vp2.Stop(); Destroy(_vp2.gameObject); }
             if (skipped) Log("C09 vision skipped (Y) - the scene goes on to the match cut");
+            MusicSystem.Resume(3.5f);                                  // Round 13 (0g): the level's track returns
+            Log($"music after the vision (0g): '{MusicSystem.Current ?? "(none)"}' playing again");
         }
 
         // ------------------------------------------------------------------------------------------ B07: back to the saucer
@@ -722,8 +953,9 @@ namespace Seven
             yield return BikeIntoTheHatch();
             VenusState.SaveBike(VenusLayout.BikeUnpacked, 0f, false);
             Complete("VEN_B07");
-            yield return WalkSeven(VenusLayout.RampFoot + Vector3.forward * 0.4f, 6f);
-            Seven.Lock(true);
+            // Round 13 (0b): aboard by the tractor beam (no ramp); Panther (back to normal size) goes up after her
+            if (Cat != null && Cat.gameObject.activeInHierarchy) { Cat.transform.localScale = Vector3.one; Cat.Place(VenusLayout.BeamFoot + new Vector3(-2.2f, 0f, 1.2f), Vector3.right); }
+            yield return BeamUp(true);
         }
 
         IEnumerator BikeIntoTheHatch()
@@ -791,15 +1023,25 @@ namespace Seven
             ChapterDone = true;
             Objective(null);
             Log("return visit (section 9): the gardens as she left them - pulses stopped, creatures free, workers on the paths, water in the repaired channel, the damage still there; the reward is not repeated");
+            // Round 13 (0b): she comes down in the beam (no ramp)
+            yield return Cutscene(true);
+            Seven.gameObject.SetActive(false);
+            yield return BeamDown(false);
+            yield return Cutscene(false);
+            FollowCamera(); Cam.SnapBehind();
             if (Shots) { yield return Wait(1f); yield return Shot("rv_01_return_visit"); }
+            if (Auto) yield return WalkSeven(VenusLayout.BeamFoot + Vector3.forward * 1.2f, 8f);
             _talkPrompt = null;
             while (true)
             {
-                bool atRamp = Dist7(VenusLayout.RampFoot) < 2.2f && !Bike.Riding && Seven.Current == ChapterSeven.Mode.Free;
-                _boardPrompt = atRamp;
-                if (atRamp && (Input.Interact.WasPressedThisFrame() || Auto))
+                // Round 13 (0b): under the saucer, in the beam's spot (no ramp)
+                bool atBeam = Dist7(VenusLayout.BeamFoot) < 3.0f && !Bike.Riding && Seven.Current == ChapterSeven.Mode.Free;
+                _boardPrompt = atBeam;
+                if (atBeam && (Input.Interact.WasPressedThisFrame() || Auto))
                 {
                     _boardPrompt = false;
+                    yield return Cutscene(true);
+                    yield return BeamUp(false);
                     yield return UI.Fade(1f, 1f);
                     VenusState.VenusAboardStart = true; Chapter1State.Aboard = true;
                     if (Auto) { Cap.Log("return visit: boarded the saucer (Saucer scene: free exploration + destinations)"); Cap.Finish("Venus return visit check"); yield break; }

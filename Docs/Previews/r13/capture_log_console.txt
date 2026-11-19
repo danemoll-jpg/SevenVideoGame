@@ -1,0 +1,62 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.01s] CONSOLE CHECK (console): test save - chapter 1 furthest 10; Venus state: VEN_S08_COMPLETE, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05, VEN_WAYDOWN, VEN_C06, VEN_C07, VEN_B06, VEN_C08, VEN_C09, VEN_C10, VEN_C12, VEN_B07, VEN_C11, VEN_C13], devices [dev_north, dev_ledge, dev_crystal], Wormmaster contained True, record awarded True (awards 1), garden help [], bike - riding False
+[   0.88s] galley: cat ear bones pending; table at (-7.75, 0.00, -2.37), porthole at (-9.28, 1.24, -2.84)
+[   3.08s] aboard: free exploration (chapter done)
+[   3.08s] free exploration of the saucer begins (Continue from the menu); music aboard_saucer
+[   3.08s] objective: Set course for Venus
+[   4.19s] console: stand spot (-3.28, 0.00, -3.96), pilot seat (-2.28, 0.60, -4.13), display (-2.52, 1.24, -5.27), menu screen (-3.87, 1.37, -4.41); reachable [venus, moon, mars, europa], ship at moon, Mars/Europa available True/True
+[   4.83s] shot 01_c01_console_from_the_deck.png  audioPeak=0.000000  cursorVisible=False
+[   6.57s] objective: 
+[   7.68s] console: 7 0.12 m from the stand spot, near True, context prompt 'Use console' (legend 'Interact:Use console|')
+[   7.74s] shot 02_c02_use_console_prompt.png  audioPeak=0.000000  cursorVisible=False
+[   7.75s] audio: sfx console_open
+[   7.75s] console: used: 7 at (-3.17, 0.00, -3.90), stand spot (-3.28, 0.00, -3.96)
+[   8.89s] console: open; 7 at (-3.28, 0.00, -3.96) facing (-0.80, 0.00, -0.60) (stand spot 0.00 m), frozen True; hands: left 0.00 m, right 0.04 m from the rests
+[   9.33s] shot 03_c03_seven_at_the_console.png  audioPeak=0.000000  cursorVisible=False
+[   9.84s] console: Main menu: [Log | Field guide | Star map | Settings] (Upgrades slot hidden), row 0
+[   9.90s] shot 04_c04_console_main_menu.png  audioPeak=0.000000  cursorVisible=False
+[   9.91s] audio: sfx console_select
+[  10.06s] audio: sfx console_move
+[  10.06s] audio: sfx console_move
+[  10.51s] console: Log: 17 entries [The cat at the cell | The older wall | Past the Scree guard | The door and the shape | The terrace | The city inside the Moon | The ship | Dinner in the galley | Landing, and a name | The broken path | The guardian | The cube chamber | Beneath the gardens | The Wormmaster | The ground is quiet | The record | Back aboard], selected 'Past the Scree guard'
+[  10.58s] shot 05_c05_log.png  audioPeak=0.000000  cursorVisible=False
+[  10.58s] audio: sfx console_move
+[  10.59s] audio: sfx console_select
+[  10.92s] console: Field guide: 7 entries [Panther | The Scree | The guardian | The attendant | The Elarim | The burrowing creatures | The Wormmaster], selected 'Panther' (portrait loaded)
+[  11.00s] shot 06_c06_field_guide_list.png  audioPeak=0.000000  cursorVisible=False
+[  11.00s] audio: sfx console_move
+[  11.46s] console: Field guide: 7 entries [Panther | The Scree | The guardian | The attendant | The Elarim | The burrowing creatures | The Wormmaster], selected 'The Scree' (portrait loaded)
+[  11.59s] shot 07_c07_field_guide_entry.png  audioPeak=0.000000  cursorVisible=False
+[  11.59s] console: field guide - the cat is titled 'Panther' (Panther only after VEN_B01: True)
+[  11.59s] audio: sfx console_move
+[  11.59s] audio: sfx console_select
+[  11.59s] console: star map: shown [venus, moon, mars, europa], selectable [venus, moon, mars, europa], ship at moon, selected venus
+[  12.71s] console: star map: shown [venus, moon, mars, europa], selectable [venus, moon, mars, europa], ship at moon, selected venus, cursor on venus - STAR MAP OK: shown [europa, mars, moon, venus], expected [europa, mars, moon, venus]
+[  12.78s] shot 08_c08_star_map_venus_selected.png  audioPeak=0.000000  cursorVisible=False
+[  12.78s] audio: sfx console_select
+[  12.84s] shot 09_c09_star_map_mars_confirm.png  audioPeak=0.000000  cursorVisible=False
+[  12.84s] audio: sfx console_select
+[  12.84s] console: star map: set course for Mars (mars)
+[  12.84s] audio: sfx course_set
+[  12.84s] console: card 'Chapter 3 — Mars (coming soon)'
+[  13.91s] shot 10_c10_coming_soon_mars.png  audioPeak=0.000000  cursorVisible=False
+[  15.33s] console: after the Mars card - state Using, page Map
+[  15.84s] audio: sfx console_select
+[  16.04s] console: Settings: music 1.0 sfx 1.0 voice 1.0 hints on, row 0
+[  16.09s] shot 11_c11_settings.png  audioPeak=0.000000  cursorVisible=False
+[  16.09s] audio: sfx console_move
+[  16.09s] console: SETTING music 1.0 -> 0.9 (bus gain 0.42 -> 0.38); pause menu row now 'Music   ■■■■■■■■■□' - took effect
+[  16.20s] shot 12_c12_settings_music_lowered.png  audioPeak=0.000000  cursorVisible=False
+[  16.20s] audio: sfx console_select
+[  16.20s] console: SETTING button hints on -> off - took effect
+[  16.20s] audio: sfx console_select
+[  16.20s] audio: sfx console_move
+[  16.20s] console: settings restored - music 1.0 sfx 1.0 voice 1.0 hints on
+[  16.20s] audio: sfx console_move
+[  16.29s] audio: sfx console_select
+[  16.29s] console: left the console
+[  17.00s] console: left - state Off, camera held False, 7 frozen False, fov 50
+[  17.07s] shot 13_c13_after_leaving.png  audioPeak=0.000000  cursorVisible=False
+[  17.08s] cat speed vs clip (QF11): walk clip 123 frames, walking in place (speed < 0.06 m/s x scale for > 0.25 s, then switched to idle) 0x
+[  17.08s] CONSOLE CHECK (console): OK - log 9 entries, field guide 5, star map [venus, moon, mars, europa] (test saves removed)
+[  17.08s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

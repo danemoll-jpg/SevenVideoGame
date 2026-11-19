@@ -68,3 +68,44 @@ Preview text:
 ```
 They sent someone down at last. Look around you. Everything beneath this garden answers to me. The ground moves when I ask it to. Do you really think you can stop it?
 ```
+
+## The Keeper (Cetacean) — voice name `Keeper`
+**Status: created and saved by Dan in ElevenLabs (2026-11-19)** — Code uses it by name (`Keeper`) through the API.
+Europa's guardian (`Docs/CHAPTER_EUROPA.md`). Convention from the spec: Cetaceans are heard as an understandable voice
+**layered over their own calls** — the reason (translation, telepathy…) is still undecided, so don't explain it. In Unity:
+the voice line on top, a soft whale-call layer underneath (starts a beat before the words, trails after), underwater
+reverb on both. No mouth — the head/fins move slowly with the voice's loudness.
+Description (main pick):
+```
+An ancient, gentle, enormous sea creature with a deep, slow, resonant voice that sounds warm and wise, as if it carries across great distances underwater. Calm, patient and dignified, with long pauses and soft, rounded words, a faint hum or resonance under the voice. Gender-ambiguous, leaning low. No accent, studio-quality recording, no background noise.
+```
+Alternative (if the first sounds too human):
+```
+A vast, old whale-like being speaking slowly in a deep, breathy, echoing voice with a soft singing quality, words stretched gently like a long call through water. Serene, kind, unhurried. Studio-quality recording, no background noise.
+```
+Preview text:
+```
+You followed the old approach. Then someone still remembers the route. Our young travel through here. Our calls guide them. That is how much of our history travelled. One voice teaching another.
+```
+
+## Scree worker — premade voice (picked by Code)
+One freed worker in Europa (Tunneler's base). Tired, wary, slowly finding courage. Speaks aloud.
+**No saved voice needed (Dan, 2026-11-19):** Dan has limited voice slots and the Scree aren't one character, so Code
+picks a suitable **premade** ElevenLabs voice through the API (`Tools/Voice/generate_voices.py`, key from
+`ELEVENLABS_API_KEY`) — tired, hoarse, mid-pitched — and generates the Scree lines with it. Don't create or save a new
+voice. Small differences between workers are fine. In Unity: lay Dan's existing Scree noise (from scene 1) under / just
+before each line and pitch-shift slightly so it reads as Scree.
+Description:
+```
+A small, weary humanoid creature with a quiet, slightly hoarse mid-pitched voice, worn down by hard labor. Cautious and hesitant at first, speaking in short sentences, with a growing note of hope. Gender-neutral, a faint raspy texture, no accent, close to the microphone, studio-quality recording, no background noise.
+```
+Preview text:
+```
+Where are we being taken? All of us? These connections feed the drills. Break them, and he cannot restart them. This section will not survive.
+```
+
+## Cetacean calls (SFX, ElevenLabs Sound Effects)
+`europa_call_deep` — "deep slow whale song call, long low moan rising and falling, underwater, distant echo".
+`europa_call_answer` — "softer higher whale call answering in the distance, underwater, gentle".
+`europa_call_learning` — "young whale attempting a short three-note call, slightly wobbly, then an older deep whale repeating it clearly, underwater" (Europa vision).
+`europa_dolphin_chirp` — "friendly dolphin clicks and whistles, underwater" (the guide).

@@ -1012,39 +1012,117 @@ namespace Seven
             if (FridgeLight != null) FridgeLight.enabled = false;
         }
 
-        // ------------------------------------------------------------------------------------- set course (placeholder)
+        // ------------------------------------------------------------------------------------- set course
+        /// <summary>Round 13: the galley seat no longer sets course - near her seat a short hint points her to the ship's
+        /// console (its star map is the only place to choose a destination, <see cref="ShipConsole"/>). The player-style
+        /// drivers (QF6 PlaytestRun, Round 12 VenusPlaytest2, DemoBoot.PlayerSim) still press X at the seat: for them the
+        /// seat keeps the old "Set course" until they are taught to walk to the console. Without a console in the scene
+        /// (an older build) the seat works as before.</summary>
         IEnumerator SetCourseWatch()
         {
+            bool wasNear = false;
             while (true)
             {
+                bool legacy = ShipConsole.I == null || DemoBoot.PlayerSim;
                 bool near = Seven.Current == SaucerSeven.Mode.Free && !_settingCourse && Flat(Seven.transform.position - SeatStand).magnitude < 1.1f
-                            && (Director.Reveal == null || Director.Reveal.Progress <= 0f) && !PauseMenu.IsOpen;
-                Director.ExtraPrompt = near ? "Set course" : null;
-                if (near && !Auto && Director.Input.Sit.WasPressedThisFrame()) yield return SetCourse();
+                            && (Director.Reveal == null || Director.Reveal.Progress <= 0f) && !PauseMenu.IsOpen
+                            && (ShipConsole.I == null || !ShipConsole.I.Busy);
+                if (legacy)
+                {
+                    Director.ExtraPrompt = near ? "Set course" : null;
+                    if (near && !Auto && Director.Input.Sit.WasPressedThisFrame()) yield return SetCourseLegacy();
+                }
+                else
+                {
+                    if (near && !wasNear) { UI.Hint("Set course at the console", 3.5f); if (Auto) Cap.Log("galley seat: hint 'Set course at the console'"); }
+                    if (near && !Auto && Director.Input.Sit.WasPressedThisFrame()) UI.Hint("Set course at the console", 3.5f);
+                }
+                wasNear = near;
                 yield return null;
             }
         }
         bool _settingCourse;
+        /// <summary>Round 13: a set course / travel is running (the console stays closed meanwhile).</summary>
+        public bool SettingCourse => _settingCourse;
         public int CourseSetCount { get; private set; }
 
-        /// <summary>Honest placeholder: the Moon falls away behind the porthole, a "Chapter 2 — Venus (coming soon)" card,
-        /// then back to free exploration (Venus itself is not built yet).</summary>
+        /// <summary>Called by the exploration flows (check runs in Auto mode: Chapter 1 explore, Venus aboard). Round 13: the
+        /// check runs drive the console's star map like a person (walk up, X, Star map, Venus, A, A) - the same travel as
+        /// before; after Venus they look at the star map and finish as the destination screen did. In play the seat only
+        /// points to the console.</summary>
         IEnumerator SetCourse()
         {
-            // Round 12 (B9): once Venus is complete, setting course opens the destination screen (the worlds that exist)
+            if (!VenusMode) VenusState.UseOwnSave();
+            bool complete = VenusState.AtLeast(VenusState.Stage.Complete);
+            if (ShipConsole.I != null && Auto)
+            {
+                yield return ShipConsole.I.ScriptedSetCourse(complete ? null : "venus");
+                if (complete && DemoBoot.CaptureDir != null)
+                {
+                    Cap.Log($"STAR MAP (console): {ShipConsole.I.LastStarMapLog} - {VenusState.CurrentId}");
+                    VenusState.ClearTestSave();
+                    Cap.Finish($"VENUS CHAPTER DONE: {VenusState.CurrentId}, record awards {VenusState.RecordAwards}, devices {VenusState.DevicesDisabled.Count}, contained {VenusState.WormmasterContained}, star map shown on the console");
+                }
+                yield break;
+            }
+            if (ShipConsole.I != null && !DemoBoot.PlayerSim) { UI.Hint("Set course at the console", 3.5f); yield break; }
+            yield return SetCourseLegacy();
+        }
+
+        /// <summary>The pre-console behaviour of the galley seat (Round 12): the destination screen once Venus is complete,
+        /// otherwise the Chapter 1 travel to Venus.</summary>
+        IEnumerator SetCourseLegacy()
+        {
             if (!VenusMode) VenusState.UseOwnSave();
             if (VenusState.AtLeast(VenusState.Stage.Complete)) { yield return Destinations(); yield break; }
+            yield return MoonFallsAwayToVenus(false);
+        }
+
+        /// <summary>Round 13: "Set course" on the console's star map. The Moon = Chapter 1 from its start (as the Round 12
+        /// destination screen's "The Moon"); Venus = before Venus is complete the Chapter 1 travel (the Moon falls away behind
+        /// the porthole, then the Venus scene), afterwards a return visit to Venus as she left it. (Mars / Europa are the
+        /// console's "coming soon" cards and never reach here.) Check runs (Auto) never leave the scene except -venuschain.</summary>
+        public IEnumerator TravelFromConsole(string id)
+        {
+            if (!VenusMode) VenusState.UseOwnSave();
+            if (Auto) Cap.Log($"set course from the console's star map: {id} ({VenusState.CurrentId})");
+            bool stayForCheck = Auto && !DemoBoot.VenusChain;
+            if (id == "moon" || (id == "venus" && (VenusMode || VenusState.AtLeast(VenusState.Stage.Complete))))
+            {
+                _settingCourse = true; Director.ExtraPrompt = null; Seven.Frozen = true;
+                AudioKit.Play("course_set", null, 0.8f);
+                yield return UI.Fade(1f, 1.0f);
+                if (stayForCheck)
+                {
+                    Cap.Log(id == "moon" ? "set course: the Moon - Chapter 1 from its start loads here in play" : "set course: Venus (a return visit) - the Venus scene loads here in play");
+                    yield return UI.Title(id == "moon" ? "Chapter 1 — The Moon" : "Chapter 2 — Venus", 0.6f, 1.2f, 0.6f);
+                    Director.Cam.Hold = false;
+                    yield return UI.Fade(0f, 1.0f);
+                    Seven.Frozen = false; _settingCourse = false; CourseSetCount++;
+                    yield break;
+                }
+                if (id == "moon") { VenusState.UseOwnSave(); Chapter1State.StartAt(Chapter1State.CpCell); yield break; }
+                UnityEngine.SceneManagement.SceneManager.LoadScene("Venus");
+                yield break;
+            }
+            if (id == "venus") yield return MoonFallsAwayToVenus(true);
+        }
+
+        /// <summary>Round 11's travel to Venus from Chapter 1: the Moon falls away behind the porthole, a short transit, then
+        /// the Venus scene (check runs: the "Chapter 2 — Venus" card and back to exploring).</summary>
+        IEnumerator MoonFallsAwayToVenus(bool fromConsole)
+        {
             _settingCourse = true;
             Director.ExtraPrompt = null;
             Seven.Frozen = true;
-            yield return Turn(Seven.transform, Porthole.position, 0.5f);
+            if (!fromConsole) yield return Turn(Seven.transform, Porthole.position, 0.5f);
             CamTo(SeatStand - TableAlong * 0.2f - TableOut * 0.9f + Up * 1.55f, Porthole.position, 1.0f, 44f);
             yield return Wait(1.1f);
             yield return Shot("x03_set_course_porthole");
             AudioKit.Play("course_set", null, 0.8f);
-            var p0 = Moon.position; var s0 = Moon.localScale; var outw = (p0 - Porthole.position).normalized;
+            var p0 = Moon != null ? Moon.position : Porthole.position; var s0 = Moon != null ? Moon.localScale : Vector3.one; var outw = (p0 - Porthole.position).normalized;
             bool mid = false;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 4.2f)
+            for (float t = 0f; Moon != null && t < 1f; t += Time.deltaTime / 4.2f)
             {
                 float u = t * t * (3f - 2f * t);
                 Moon.position = p0 + outw * 14f * u + Vector3.down * 2.2f * u + TableAlong * 1.2f * u;
@@ -1060,7 +1138,7 @@ namespace Seven
             yield return Wait(1.6f);
             if (!Auto || DemoBoot.VenusChain) { UnityEngine.SceneManagement.SceneManager.LoadScene("Venus"); yield break; }
             yield return UI.Title("Chapter 2 — Venus", 0.8f, 1.6f, 0.8f);
-            Moon.position = _moonHome; Moon.localScale = _moonScale;
+            if (Moon != null) { Moon.position = _moonHome; Moon.localScale = _moonScale; }
             Director.Cam.Hold = false;
             yield return UI.Fade(0f, 1.0f);
             Seven.Frozen = false;
@@ -1108,6 +1186,7 @@ namespace Seven
             yield return Wait(6f);
             Objective(null);
             if (!Auto) yield break;
+            if (ConsoleCaptureRun.Active) yield break;      // Round 13: -r13 console / consolefresh drive the console instead
 
             // ---- check run: the set-course placeholder at her seat, then the chair (the cat comes to her lap), pause menu.
             Seven.ScriptDriven = true;

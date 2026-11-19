@@ -1,3 +1,5 @@
+> **Update (2026-11-19, later):** new scenes **VEN_C12** (the guardian's two locations, after C10) and **VEN_C13** (choosing Mars or Europa, after C11) — Dan.
+>
 > **Update (2026-11-19):** VEN_B01 name reveal rewritten (Dan); C02_02 = "I felt that from here."; obvious tremors; no ramp — the saucer uses its beam.
 >
 > **Update (2026-11-18):** VEN_C09 vision video + new lines (Dan). Hover bike added — section 6b, scenes VEN_B01–VEN_B07 (Dan). Round 11 builds VEN_B01–B05, Round 12 VEN_B06–B07. VEN_B01 now holds the cat's name reveal: **Panther** (Dan).
@@ -365,7 +367,7 @@ Allow the rest of the ride to breathe. At the temple, park again → VEN_C08, VE
 
 SCENE VEN_B07 — BACK TO THE SAUCER: LET THE MEMORY SETTLE
 
-Trigger: After VEN_C10 (record received). Keep it quiet: a direct route or a shortcut opened during the chapter, so it
+Trigger: After VEN_C12 (the two locations — VEN_C10 → VEN_C12 → leave the temple). Keep it quiet: a direct route or a shortcut opened during the chapter, so it
 is not repetitive travel.
 
 Near the ship:
@@ -481,6 +483,13 @@ VEN_C03_09 | 7
 
 VEN_C03_10 | Guardian  
 “Most of a life is small things.”
+
+He turns toward the temple doors and walks ahead. **(Dan, 2026-11-19.)**
+
+VEN_C03_11 | Guardian  
+“Follow me.”
+
+He leads her through the temple to the cube chamber (he walks ahead, waits for her if she falls behind).
 
 SCENE VEN_C04 — CUBE AND INTERRUPTION
 
@@ -712,6 +721,91 @@ Insert: 7 secures the small cube beside the dodecahedron.
 
 Return control.
 
+SCENE VEN_C12 — TWO LOCATIONS (Dan, 2026-11-19)
+
+Placement: right after VEN_C10 (the guardian gives 7 the cube) and before she leaves the temple — i.e. before VEN_B07.  
+Result: **Mars and Europa become available in the saucer's navigation** (the star map).
+
+7 secures the cube beside the dodecahedron, then pauses.
+
+VEN_C12_01 | 7  
+“These came from different worlds. Were your temples connected?”
+
+VEN_C12_02 | Guardian  
+“Yes. We exchanged records. Each temple kept something the others could not.”
+
+VEN_C12_03 | 7  
+“Do you know where any of the others are?”
+
+The guardian approaches an ancient display. Two locations appear.
+
+VEN_C12_04 | Guardian  
+“Two locations survive in our records. Mars—and Europa.”
+
+**Over 7’s shoulder — the display.** She studies Mars first.
+
+VEN_C12_05 | 7  
+“What will I find on Mars?”
+
+VEN_C12_06 | Guardian  
+“A temple among the divided kingdoms. It stood before their borders were drawn.”
+
+VEN_C12_07 | 7 — a quiet sigh  
+“And now it’s on someone’s side of a border.”
+
+VEN_C12_08 | Guardian — gently  
+“Almost certainly.”
+
+Her attention shifts to Europa.
+
+VEN_C12_09 | 7  
+“And this one?”
+
+VEN_C12_10 | Guardian  
+“Beneath Europa’s ice. The Cetaceans were its keepers.”
+
+VEN_C12_11 | 7  
+“Were?”
+
+The guardian pauses.
+
+VEN_C12_12 | Guardian  
+“We have not heard from either temple in a long time.”
+
+VEN_C12_13 | 7  
+“So we don’t know whether they’re still there.”
+
+VEN_C12_14 | Guardian  
+“No. Only where to begin looking.”
+
+7 considers the two locations.
+
+VEN_C12_15 | 7  
+“Can you send these to my ship?”
+
+VEN_C12_16 | Guardian  
+“Of course.”
+
+A soft tone confirms the transfer.
+
+VEN_C12_17 | Panther, telepathic (to 7)  
+“Received. Two destinations.”
+
+VEN_C12_18 | 7, telepathic (to Panther)  
+“We’ll look at them together when I get back.”
+
+She turns to the guardian.
+
+VEN_C12_19 | 7 — warmly  
+“Thank you. For trusting me with this.”
+
+Her hand rests briefly over the secured cube.
+
+VEN_C12_20 | Guardian  
+“Thank you for giving us the chance to keep it.”
+
+7 inclines her head and leaves. Gameplay: Mars and Europa become available in the saucer’s navigation.
+
 SCENE VEN_C11 — SAUCER DEBRIEF
 
 Trigger: Enter saucer after receiving record (after VEN_B07, the ride back).
@@ -765,7 +859,147 @@ VEN_C11_09 | 7
 VEN_C11_10 | Cat, telepathic
 “Then we have somewhere else to ask.”
 
-Open the existing navigation flow. Do not invent new destination lore to fill missing options.
+→ Continue straight into **VEN_C13** (choosing the next world). Do not invent new destination lore beyond what VEN_C12 / C13 say.
+
+SCENE VEN_C13 — CHOOSING THE NEXT WORLD (Dan, 2026-11-19)
+
+Placement: INT. SAUCER — NAVIGATION AREA, straight after VEN_C11 (their conversation about the planting vision).  
+Result: the player chooses Mars or Europa; course set; **the other destination remains available**.
+
+7 sits in the pilot’s chair with Panther curled in her lap. One hand rests on his back; the other operates the
+navigation controls. The two locations supplied by the Elarim appear ahead of them. Panther’s dialogue is telepathic.
+
+VEN_C13_01 | Panther, telepathic  
+“The guardian’s locations. Mars and Europa.”
+
+**Over 7’s shoulder — the display.** She brings Mars closer, absentmindedly stroking Panther.
+
+VEN_C13_02 | 7  
+“A temple between divided kingdoms.”
+
+VEN_C13_03 | Panther, telepathic — dryly  
+“Convenient. Everyone can argue over it without travelling far.”
+
+VEN_C13_04 | 7 — a small chuckle  
+“Perhaps we’ll arrive on a quiet day.”
+
+Panther lifts his head to look up at her.
+
+VEN_C13_05 | Panther, telepathic  
+“Mm.”
+
+VEN_C13_06 | 7  
+“Such confidence.”
+
+She shifts the display to Europa.
+
+VEN_C13_07 | 7  
+“The Cetaceans’ temple is beneath the ice.”
+
+VEN_C13_08 | Panther, telepathic  
+“Underwater.”
+
+VEN_C13_09 | 7  
+“Yes.”
+
+VEN_C13_10 | Panther, telepathic  
+“I thought that deserved saying separately.”
+
+VEN_C13_11 | 7 — teasing  
+“You’ll be perfectly dry in here.”
+
+He settles deeper into her lap.
+
+VEN_C13_12 | Panther, telepathic  
+“I intend to maintain that arrangement.”
+
+**Medium side shot — both in the chair.** 7 grows quiet, studying the destinations. Her hand comes to rest.
+
+VEN_C13_13 | 7  
+“The guardian doesn’t know whether either temple is still there.”
+
+VEN_C13_14 | Panther, telepathic — gently  
+“No.”
+
+VEN_C13_15 | 7  
+“We could go all that way and find nothing.”
+
+Panther nudges his head beneath her hand. She resumes stroking him.
+
+VEN_C13_16 | Panther, telepathic  
+“We found something here.”
+
+A quiet pause.
+
+VEN_C13_17 | 7  
+“More questions.”
+
+VEN_C13_18 | Panther, telepathic  
+“Those too.”
+
+She releases a soft breath and looks down at him.
+
+VEN_C13_19 | 7  
+“All right. Where would you go?”
+
+VEN_C13_20 | Panther, telepathic  
+“You’re asking a cat to choose between water and dry land.”
+
+VEN_C13_21 | 7 — laughing softly  
+“Fair point.”
+
+VEN_C13_22 | Panther, telepathic — warmer  
+“Either way, I’m coming with you.”
+
+Her hand pauses briefly against his fur, then continues.
+
+VEN_C13_23 | 7 — quietly  
+“Good.”
+
+Hold the two-shot before opening the choice.
+
+**PLAYER CHOICE**
+- **Mars** — Seek the temple among the divided kingdoms.
+- **Europa** — Find the Cetacean temple beneath the ice.
+
+If the player chooses **Mars**:
+
+VEN_C13_M1 | 7  
+“Mars. Let’s start there.”
+
+VEN_C13_M2 | Panther, telepathic  
+“Dry land. An excellent feature in a destination.”
+
+VEN_C13_M3 | 7 — amused  
+“I chose it for the temple.”
+
+VEN_C13_M4 | Panther, telepathic  
+“Naturally.”
+
+If the player chooses **Europa**:
+
+VEN_C13_E1 | 7  
+“Europa. I want to see what’s beneath that ice.”
+
+VEN_C13_E2 | Panther, telepathic — a small sigh  
+“Of course you do.”
+
+VEN_C13_E3 | 7  
+“You said either way.”
+
+VEN_C13_E4 | Panther, telepathic — affectionately dry  
+“I did. A reckless moment of generosity.”
+
+She chuckles and sets the course.
+
+**Close insert — Panther in her lap.** A quiet purr joins the ship’s hum.
+
+**Wide from behind the chair.** The chosen world fills the navigation display. 7 rests back in the chair, Panther
+comfortable in her lap, as the saucer begins its journey. The other destination remains available.
+
+*(Implementation note: Mars and Europa chapters don't exist yet — after the course is set and the journey begins, show
+a "Chapter 3 — Mars / Europa (coming soon)" card and return to free exploration aboard; both stay selectable on the
+star map.)*
 
 7. ENCOUNTER PROTOTYPE
 

@@ -260,43 +260,46 @@ def do_elarim():
     log(f"mesh aligned to the skeleton: x{s:.3f}")
     decimate(ob, TRIS["elarim"])
     gray_texture(ob, "elarim_v1", out)
-    # skin
+    # Round 13 (0e): the cause of the stiff, awkward limbs and the legs through the cape was the skinning, not the clips:
+    # Tripo's mesh is ~2000 loose pieces with the cape fused around them, so Blender's automatic weights failed on a third
+    # of the vertices and the whole body fell back to "two nearest bone segments" weights (no smooth falloff over the
+    # elbows / knees / shoulders), and the old cape selection ("everything behind the hips below the chest") also took the
+    # backs of the thighs and calves onto the cape bones. Now: weld the pieces, cut the cape off as its own part
+    # (split_cape: it separates from the body below ~75 % of the height), skin the body alone with automatic weights
+    # (heat diffusion, smooth joints), give only the cape the cape bones, then join them again.
+    bpy.ops.object.select_all(action='DESELECT'); ob.select_set(True); bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.remove_doubles(threshold=0.003 * (top.z - ground) / HEIGHT_ELARIM)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    Hh = top.z - ground
+    cape_mask, cut_z = split_cape(ob, Hh, face_y)
+    cp = separate(ob, cape_mask, "elarim_cape") if cape_mask.any() else None
+    # skin the body
     bpy.ops.object.select_all(action='DESELECT'); ob.select_set(True); arm.select_set(True); bpy.context.view_layer.objects.active = arm
     try:
         bpy.ops.object.parent_set(type='ARMATURE_AUTO')
     except Exception as e:
         log("automatic weights raised:", e)
-    unweighted = sum(1 for v in ob.data.vertices if not any(g.weight > 0.01 for g in v.groups))
-    log(f"automatic weights: {unweighted} of {len(ob.data.vertices)} vertices unweighted")
-    if unweighted > 0.02 * len(ob.data.vertices):
-        # fallback: nearest deforming bone segment (smooth over the two nearest)
-        if ob.parent is None: ob.parent = arm
-        if not any(m.type == 'ARMATURE' for m in ob.modifiers): ob.modifiers.new("arm", "ARMATURE").object = arm
-        for vg in list(ob.vertex_groups): ob.vertex_groups.remove(vg)
-        segs = [(b.name, np.array(arm.matrix_world @ b.head_local), np.array(arm.matrix_world @ b.tail_local)) for b in arm.data.bones if b.use_deform and not b.name.endswith("_End")]
-        P = co(ob); D = np.empty((len(P), len(segs)))
+    if ob.parent is None: ob.parent = arm
+    if not any(m.type == 'ARMATURE' for m in ob.modifiers): ob.modifiers.new("arm", "ARMATURE").object = arm
+    unw = [v.index for v in ob.data.vertices if not any(g.weight > 0.01 for g in v.groups)]
+    log(f"body automatic weights: {len(unw)} of {len(ob.data.vertices)} vertices unweighted")
+    if unw:
+        # only the leftovers get the nearest-bone weights (from the nearest WEIGHTED neighbour's bones would be nicer,
+        # but these are a few loose bits)
+        segs = [(b.name, np.array(arm.matrix_world @ b.head_local), np.array(arm.matrix_world @ b.tail_local)) for b in arm.data.bones if b.use_deform and not b.name.endswith("_End") and not b.name.startswith("Cape")]
+        P = co(ob)[unw]; D = np.empty((len(P), len(segs)))
         for j, (n, a, b) in enumerate(segs):
             ab = b - a; t = np.clip(((P - a) @ ab) / max(1e-9, ab @ ab), 0, 1)
             D[:, j] = np.linalg.norm(P - (a + t[:, None] * ab), axis=1)
-        idx = np.argsort(D, axis=1)[:, :2]
-        groups = {n: ob.vertex_groups.new(name=n) for n, _, _ in segs}
-        for i in range(len(P)):
-            d0, d1 = D[i, idx[i, 0]], D[i, idx[i, 1]]; w0 = d1 / max(1e-9, d0 + d1)
-            groups[segs[idx[i, 0]][0]].add([i], float(w0), 'REPLACE'); groups[segs[idx[i, 1]][0]].add([i], float(1 - w0), 'REPLACE')
-        log("weights: nearest-bone fallback used")
-    # QF10: the cape gets its own two bones (CapeA / CapeB, one per half, children of Spine2, pivot at the top of the
-    # cape region behind the shoulder blades). Everything well behind the body below Spine2 hangs from them (blended
-    # across the middle, and into Spine2 just under the pivot so nothing tears). In Unity, ElarimCape swings each half
-    # backward just enough that no leg (thigh / shin / foot capsules) and not the ground ever passes through it - walking,
-    # kneeling and standing. Never weighted to the legs (it would stretch between them when he walks).
-    Hh = top.z - ground; P = co(ob)
-    sh = bw("Spine2") or bw("Spine1")
-    back = -face_y
-    cape = (P[:, 1] * back > hips.y * back + 0.075 * Hh) & (P[:, 2] < sh.z)
-    if cape.any() and "mixamorig:Spine2" in ob.vertex_groups:
-        idx = np.nonzero(cape)[0]
-        yb = float(np.percentile(P[idx][P[idx, 2] > sh.z - 0.08 * Hh][:, 1], 50)) if (P[idx, 2] > sh.z - 0.08 * Hh).any() else hips.y + back * 0.09 * Hh
-        piv_z = sh.z
+        for k, i in enumerate(unw):
+            n = segs[int(np.argmin(D[k]))][0]
+            (ob.vertex_groups.get(n) or ob.vertex_groups.new(name=n)).add([i], 1.0, 'REPLACE')
+    # the cape: its own two bones (CapeA / CapeB, one per half, children of Spine2, pivot at the top of the cape part).
+    # ElarimCape (Unity) swings each half back just enough that no leg and not the ground passes through it.
+    if cp is not None:
+        Pc = co(cp)
+        yb = float(np.median(Pc[Pc[:, 2] > cut_z - 0.06 * Hh][:, 1])) if (Pc[:, 2] > cut_z - 0.06 * Hh).any() else float(np.median(Pc[:, 1]))
+        piv_z = float(Pc[:, 2].max())
         bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); bpy.context.view_layer.objects.active = arm
         bpy.ops.object.mode_set(mode='EDIT')
         eb_parent = arm.data.edit_bones["mixamorig:Spine2"]
@@ -306,22 +309,26 @@ def do_elarim():
             b.head = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z)); b.tail = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z - 0.3 * Hh))
             b.parent = eb_parent; b.use_connect = False; b.use_deform = True
         bpy.ops.object.mode_set(mode='OBJECT')
-        for vg in ob.vertex_groups: vg.remove(idx.tolist())
-        ga = ob.vertex_groups.get("CapeA") or ob.vertex_groups.new(name="CapeA")
-        gb = ob.vertex_groups.get("CapeB") or ob.vertex_groups.new(name="CapeB")
-        gs = ob.vertex_groups["mixamorig:Spine2"]
-        band = 0.06 * Hh
-        for i in idx.tolist():
-            x = P[i, 0] - hips.x; z = P[i, 2]
+        for vg in list(cp.vertex_groups): cp.vertex_groups.remove(vg)
+        ga = cp.vertex_groups.new(name="CapeA"); gb = cp.vertex_groups.new(name="CapeB"); gs = cp.vertex_groups.new(name="mixamorig:Spine2")
+        band = 0.05 * Hh
+        for i in range(len(Pc)):
+            x = Pc[i, 0] - hips.x; z = Pc[i, 2]
             wb = min(1.0, max(0.0, 0.5 + x / (0.10 * Hh)))          # across the middle: half and half
-            top_k = min(1.0, max(0.0, (z - (piv_z - band)) / band))   # just under the pivot: into Spine2
+            top_k = min(1.0, max(0.0, (z - (piv_z - band)) / band))   # the top edge meets the yoke: on Spine2
             c = 1.0 - top_k
             if c * (1 - wb) > 1e-4: ga.add([i], c * (1 - wb), 'REPLACE')
             if c * wb > 1e-4: gb.add([i], c * wb, 'REPLACE')
             if top_k > 1e-4: gs.add([i], top_k, 'REPLACE')
-        log(f"cape: {len(idx)} vertices on CapeA / CapeB (pivot z {piv_z:.3f}, back y {yb:.3f}), blended into Spine2 over the top {band:.3f}")
+        for m in list(cp.modifiers): cp.modifiers.remove(m)
+        bpy.ops.object.select_all(action='DESELECT'); cp.select_set(True); ob.select_set(True); bpy.context.view_layer.objects.active = ob
+        bpy.ops.object.join()
+        log(f"cape: {len(Pc)} vertices on CapeA / CapeB (pivot z {piv_z:.3f}, back y {yb:.3f}), top {band:.3f} on Spine2; no leg vertex on a cape bone")
     else:
-        log("WARNING: cape region not found - cape stays on the auto weights")
+        log("WARNING: cape not separable - no cape bones")
+    # weight check: every leg vertex on leg bones only (none on Cape*)
+    legw = sum(1 for v in ob.data.vertices for g in v.groups if ob.vertex_groups[g.group].name.startswith("Cape") and g.weight > 0.01 and v.co.y * (-face_y) < hips.y * (-face_y) + 0.0)
+    log(f"vertices in front of the hips plane weighted to the cape: {legw}")
     # scale the rig to 3.5 m (feet at 0)
     k = HEIGHT_ELARIM / (top.z - ground)
     arm.scale = (k, k, k); arm.location = (0, 0, -ground * k)
@@ -335,6 +342,20 @@ def do_elarim():
     log(f"elarim: height {Pw[:,2].max() - Pw[:,2].min():.2f} m (target {HEIGHT_ELARIM}), width {np.ptp(Pw[:,0]):.2f} m, tris {tris(ob)}, bones {len(arm.data.bones)}")
     previews("elarim", (0, 0, HEIGHT_ELARIM / 2), HEIGHT_ELARIM * 1.15)
     export([arm, ob], os.path.join(out, "elarim_v1_rigged.fbx"))
+    # Round 13: a bend test (not exported) - arms down and bent, one leg stepping, one knee bent - to see the joints
+    bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
+    test = {"LeftArm": (0, 0, 1.0), "RightArm": (0, 0, -1.0), "LeftForeArm": (0, 0, 1.2), "RightForeArm": (0, 0, -1.2),
+            "LeftUpLeg": (-0.9, 0, 0), "LeftLeg": (1.4, 0, 0), "RightUpLeg": (0.35, 0, 0), "Spine1": (0.15, 0, 0)}
+    for n, r in test.items():
+        pb = arm.pose.bones.get("mixamorig:" + n)
+        if pb: pb.rotation_mode = 'XYZ'; pb.rotation_euler = r
+    bpy.ops.object.mode_set(mode='OBJECT')
+    for vn, dv in (("front", (0, -1, 0.05)), ("side", (1, 0, 0.05)), ("q34", (0.7, -0.7, 0.35)), ("back", (0, 1, 0.05))):
+        shoot(os.path.join(PREVIEW, f"elarim_bendtest_{vn}.png"), (0, 0, HEIGHT_ELARIM / 2), dv, HEIGHT_ELARIM * 1.15)
+    bpy.context.view_layer.objects.active = arm; bpy.ops.object.mode_set(mode='POSE')
+    for pb in arm.pose.bones: pb.rotation_euler = (0, 0, 0)
+    bpy.ops.object.mode_set(mode='OBJECT')
     # the sword (a prop the guardian / workers can carry)
     clean(); sw = import_glb(os.path.join(ROOT, "Art", "Source", "elarim", "elarim_sword_v1.glb")); sw.name = "elarim_sword"
     P = co(sw); ln = np.ptp(P[:, 0]); s2 = 1.6 / ln
@@ -564,5 +585,97 @@ def do_wormmaster():
     write_metrics(out, "wormmaster")
 
 
-{"bike": do_bike, "elarim": do_elarim, "worm": do_worm, "wormmaster": do_wormmaster}[KIND]()
+# ======================================================================================================== elarim for Mixamo
+def split_cape(ob, H, face_y=-1.0):
+    """Round 13 (0e): the cape is the part of the mesh that comes apart from the body when the mesh is cut below the
+    shoulders. Sweep a horizontal cut from 85 % H down; at the highest cut where the part below falls into a large
+    component that lies behind the body (its front 2 % lies > 2 % H behind the hips, >= 15 % of the vertices), that component is the cape.
+    (Above the cut the cape is fused to the upper back and stays with the body as a yoke.) Small loose bits behind the
+    body join the cape. Returns (mask, cut height)."""
+    P = co(ob); back = -face_y; Y = P[:, 1] * back; Z = P[:, 2]; zmin = Z.min()
+    E = np.empty(len(ob.data.edges) * 2, dtype=np.int64); ob.data.edges.foreach_get("vertices", E); E = E.reshape(-1, 2)
+    def comps(keep):
+        par = np.arange(len(P))
+        def f(i):
+            r = i
+            while par[r] != r: r = par[r]
+            while par[i] != r: par[i], i = r, par[i]
+            return r
+        for a, b in E[keep[E[:, 0]] & keep[E[:, 1]]]:
+            ra, rb = f(a), f(b)
+            if ra != rb: par[ra] = rb
+        return np.array([f(i) for i in range(len(P))])
+    for frac in np.arange(0.85, 0.50, -0.01):
+        zc = zmin + frac * H; keep = Z < zc
+        roots = comps(keep); u, c = np.unique(roots[keep], return_counts=True)
+        best = None
+        for r, n in zip(u, c):
+            if n < 0.15 * len(P): continue
+            m = roots == r
+            if np.percentile(Y[m], 2) > 0.02 * H and (best is None or n > best[1]): best = (r, n)
+        if best is None: continue
+        cape = roots == best[0]
+        # small loose bits behind the body
+        u2, c2 = np.unique(roots, return_counts=True)
+        for r, n in zip(u2, c2):
+            if n < 200 and r != best[0]:
+                m = roots == r
+                if Y[m].mean() > 0.06 * H and Z[m].mean() < zc: cape |= m
+        log(f"cape split: cut at {frac*100:.0f} % H (z {zc:.2f} m): {cape.sum()} of {len(P)} vertices are cape")
+        return cape, zc
+    log("WARNING: cape split found no separable cape")
+    return np.zeros(len(P), bool), zmin + H
+
+
+def separate(ob, mask, name):
+    """Moves the faces whose vertices are all in mask into a new object."""
+    bpy.ops.object.select_all(action='DESELECT'); ob.select_set(True); bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='DESELECT'); bpy.ops.object.mode_set(mode='OBJECT')
+    sel = np.ascontiguousarray(mask.astype(bool)); ob.data.vertices.foreach_set("select", sel)
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_mode(type='VERT')
+    bpy.ops.mesh.separate(type='SELECTED'); bpy.ops.object.mode_set(mode='OBJECT')
+    new = next(o for o in bpy.context.selected_objects if o != ob); new.name = name
+    return new
+
+
+def do_elarim_mixamo():
+    """Round 13 (0e): the guardian's body WITHOUT the cape, for Mixamo's auto-rigger (Dan uploads
+    Art/Export/elarim/elarim_body_for_mixamo.fbx, downloads 'FBX for Unity, with skin' to
+    Art/Mixamo/elarim/elarim_body_mixamo.fbx). The cape is saved next to it (elarim_cape_part.fbx, same coordinates)
+    so it can be re-attached on its own bones."""
+    out = os.path.join(ROOT, "Art", "Export", "elarim"); os.makedirs(out, exist_ok=True)
+    clean()
+    ob = import_glb(os.path.join(ROOT, "Art", "Source", "elarim", "elarim_v1.glb")); ob.name = "elarim_body"
+    for o in list(bpy.context.scene.objects):
+        if o.type == 'EMPTY': bpy.data.objects.remove(o, do_unlink=True)
+    P = co(ob); zmin = P[:, 2].min(); s = HEIGHT_ELARIM / np.ptp(P[:, 2])
+    mid = P[(P[:, 2] > zmin + 0.5 * np.ptp(P[:, 2])) & (P[:, 2] < zmin + 0.6 * np.ptp(P[:, 2]))]
+    P = (P - np.array([np.median(mid[:, 0]), np.median(mid[:, 1]), zmin])) * s
+    set_co(ob, P)
+    decimate(ob, TRIS["elarim"])
+    gray_texture(ob, "elarim_v1", out)
+    bpy.ops.object.select_all(action='DESELECT'); ob.select_set(True); bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.mode_set(mode='EDIT'); bpy.ops.mesh.select_all(action='SELECT'); bpy.ops.mesh.remove_doubles(threshold=0.003)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    cape, cut_z = split_cape(ob, HEIGHT_ELARIM)
+    cp = separate(ob, cape, "elarim_cape")
+    log(f"body: {tris(ob)} tris, cape: {tris(cp)} tris")
+    # previews: body alone (front / side / back / q34), cape alone (side / back)
+    cp.hide_render = True
+    previews("elarim_body_mixamo", (0, 0, HEIGHT_ELARIM / 2), HEIGHT_ELARIM * 1.15)
+    cp.hide_render = False; ob.hide_render = True
+    shoot(os.path.join(PREVIEW, "elarim_cape_part_side.png"), (0, 0, HEIGHT_ELARIM / 2), (1, 0, 0.05), HEIGHT_ELARIM * 1.15)
+    shoot(os.path.join(PREVIEW, "elarim_cape_part_back.png"), (0, 0, HEIGHT_ELARIM / 2), (0, 1, 0.05), HEIGHT_ELARIM * 1.15)
+    ob.hide_render = False
+    # Mixamo wants the textures inside the FBX
+    bpy.ops.object.select_all(action='DESELECT'); ob.select_set(True); bpy.context.view_layer.objects.active = ob
+    bpy.ops.export_scene.fbx(filepath=os.path.join(out, "elarim_body_for_mixamo.fbx"), use_selection=True, object_types={"MESH"},
+                             apply_scale_options="FBX_SCALE_ALL", axis_forward="-Z", axis_up="Y", mesh_smooth_type="FACE",
+                             path_mode="COPY", embed_textures=True)
+    log("exported", os.path.join(out, "elarim_body_for_mixamo.fbx"))
+    export([cp], os.path.join(out, "elarim_cape_part.fbx"))
+    with open(os.path.join(out, "elarim_mixamo_metrics.txt"), "w") as f: f.write("\n".join(_m) + "\n")
+
+
+{"bike": do_bike, "elarim": do_elarim, "elarim_mixamo": do_elarim_mixamo, "worm": do_worm, "wormmaster": do_wormmaster}[KIND]()
 log("done", KIND)

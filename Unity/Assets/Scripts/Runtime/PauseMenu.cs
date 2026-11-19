@@ -95,15 +95,8 @@ namespace Seven
         {
             var items = Items();
             if (d != 0) { _sel = (_sel + d + items.Count) % items.Count; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
-            if (_page == Page.Settings && lr != 0 && _sel == 3) { ControlsLegend.HintsOn = !ControlsLegend.HintsOn; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
-            if (_page == Page.Settings && lr != 0 && _sel < 3)
-            {
-                float step = 0.1f * lr;
-                if (_sel == 0) AudioKit.MusicVolume = Mathf.Round((AudioKit.MusicVolume + step) * 10f) / 10f;
-                if (_sel == 1) { AudioKit.SfxVolume = Mathf.Round((AudioKit.SfxVolume + step) * 10f) / 10f; AudioKit.Play("menu_move", null, 1f); }
-                if (_sel == 2) AudioKit.VoiceVolume = Mathf.Round((AudioKit.VoiceVolume + step) * 10f) / 10f;
-                Refresh();
-            }
+            // Round 13: the settings rows are the shared GameSettings (the ship's console shows the same ones)
+            if (_page == Page.Settings && lr != 0 && _sel < GameSettings.Count) { GameSettings.Adjust(_sel, lr); Refresh(); }
             if (back)
             {
                 if (_page == Page.Select && _venusSel) { _venusSel = false; Show(Page.Select, VenusPageIndex); return; }
@@ -123,8 +116,8 @@ namespace Seven
                     else Show(Page.ConfirmQuit, 1);
                     break;
                 case Page.Settings:
-                    if (_sel == 3) { ControlsLegend.HintsOn = !ControlsLegend.HintsOn; Refresh(); }
-                    if (_sel == 4) Show(Page.Main, MainSettings);
+                    if (_sel < GameSettings.Count) { GameSettings.Activate(_sel); Refresh(); }
+                    if (_sel == GameSettings.Count) Show(Page.Main, MainSettings);
                     break;
                 case Page.Controls:
                     Show(Page.Main, MainControls);
@@ -166,8 +159,12 @@ namespace Seven
             switch (_page)
             {
                 case Page.Settings:
-                    return new List<string> { "Music   " + Bar(AudioKit.MusicVolume), "Sound effects   " + Bar(AudioKit.SfxVolume), "Voice   " + Bar(AudioKit.VoiceVolume),
-                                              "Button hints   " + (ControlsLegend.HintsOn ? "On" : "Off"), "Back" };
+                {
+                    var l = new List<string>();
+                    for (int i = 0; i < GameSettings.Count; i++) l.Add(GameSettings.Label(i));
+                    l.Add("Back");
+                    return l;
+                }
                 case Page.Controls: return new List<string> { "Back" };
                 case Page.Select: { var l = new List<string>(); foreach (var (label, _) in _venusSel ? DemoMenu.VenusSelectItems() : DemoMenu.SelectItems()) l.Add(label); return l; }
                 case Page.ConfirmMenu: return new List<string> { "Yes, main menu", "No" };
@@ -175,7 +172,6 @@ namespace Seven
                 default: return new List<string> { "Resume", "Settings", "Controls", "Scene select", "Main menu", "Quit game" };
             }
         }
-        static string Bar(float v) { int n = Mathf.RoundToInt(v * 10f); return new string('■', n) + new string('□', 10 - n); }
         string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.Select ? (_venusSel ? "SCENE SELECT  —  CHAPTER 2" : "SCENE SELECT") : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
 
         public void Open()
@@ -305,6 +301,41 @@ namespace Seven
         }
     }
 
+    /// <summary>Round 13: the one shared settings list - the pause menu's Settings page and the ship's console Settings
+    /// screen both show and change these rows (same state: AudioKit volumes, ControlsLegend.HintsOn; nothing duplicated).
+    /// ← → adjust a row; A / Enter toggles a switch row.</summary>
+    public static class GameSettings
+    {
+        public const int Music = 0, Sfx = 1, Voice = 2, Hints = 3;
+        public const int Count = 4;
+        public static string Name(int i) => i == Music ? "Music" : i == Sfx ? "Sound effects" : i == Voice ? "Voice" : i == Hints ? "Button hints" : "";
+        public static string Value(int i) => i == Music ? Bar(AudioKit.MusicVolume) : i == Sfx ? Bar(AudioKit.SfxVolume) : i == Voice ? Bar(AudioKit.VoiceVolume)
+                                           : i == Hints ? (ControlsLegend.HintsOn ? "On" : "Off") : "";
+        public static string Label(int i) => Name(i) + "   " + Value(i);
+        /// <summary>The raw value of a row (volumes 0-1, switches 0 / 1) - check runs log it before / after a change.</summary>
+        public static float Raw(int i) => i == Music ? AudioKit.MusicVolume : i == Sfx ? AudioKit.SfxVolume : i == Voice ? AudioKit.VoiceVolume : i == Hints ? (ControlsLegend.HintsOn ? 1f : 0f) : 0f;
+        public static string Bar(float v) { int n = Mathf.Clamp(Mathf.RoundToInt(v * 10f), 0, 10); return new string('■', n) + new string('□', 10 - n); }
+
+        /// <summary>← → on a row: volumes in steps of 10 %, switches flip.</summary>
+        public static void Adjust(int i, int lr)
+        {
+            if (lr == 0) return;
+            float step = 0.1f * lr;
+            if (i == Music) AudioKit.MusicVolume = Mathf.Round((AudioKit.MusicVolume + step) * 10f) / 10f;
+            else if (i == Sfx) { AudioKit.SfxVolume = Mathf.Round((AudioKit.SfxVolume + step) * 10f) / 10f; AudioKit.Play("menu_move", null, 1f); }
+            else if (i == Voice) AudioKit.VoiceVolume = Mathf.Round((AudioKit.VoiceVolume + step) * 10f) / 10f;
+            else if (i == Hints) { ControlsLegend.HintsOn = !ControlsLegend.HintsOn; AudioKit.Play("menu_move", null, 0.6f); }
+        }
+
+        /// <summary>A / Enter on a row: switches flip (volumes do nothing).</summary>
+        public static void Activate(int i)
+        {
+            if (i == Hints) ControlsLegend.HintsOn = !ControlsLegend.HintsOn;
+        }
+
+        public static string Describe() => $"music {AudioKit.MusicVolume:0.0} sfx {AudioKit.SfxVolume:0.0} voice {AudioKit.VoiceVolume:0.0} hints {(ControlsLegend.HintsOn ? "on" : "off")}";
+    }
+
     /// <summary>Round 7 (3d) "Continue" save. QF6: it remembers the furthest checkpoint reached in Chapter 1 (0-7 on the
     /// Moon, 8 aboard, 9 galley, 10 the chapter done = free exploration), so quitting never means replaying the chapter.
     /// Saves from 0.10.1 and earlier (only "aboard") load as 10, as before.</summary>
@@ -316,10 +347,25 @@ namespace Seven
         static string Key => Test ? "seven_test_ch1_progress" : "seven_ch1_progress";
         public static int Progress => PlayerPrefs.HasKey(Key) ? PlayerPrefs.GetInt(Key) : PlayerPrefs.GetInt(OldKey, 0) == 1 ? Chapter1State.CpExplore : -1;
         public static bool HasChapter1Save => Progress >= 0;
+        /// <summary>Round 13 (console Log / Field Guide): the furthest Chapter 1 checkpoint this playthrough has reached
+        /// (Continue's save follows the player back on a Scene Select start; this never goes back until a new game).</summary>
+        static string FurthestKey => Test ? "seven_test_ch1_furthest" : "seven_ch1_furthest";
+        public static int Furthest => Mathf.Max(PlayerPrefs.GetInt(FurthestKey, -1), Progress);
+        /// <summary>Round 13 (0c): a new game - Chapter 1 from the main menu - starts every chapter fresh: the Chapter 1
+        /// checkpoint, the Venus save and the console's progress are cleared (Continue then resumes the new playthrough).</summary>
+        public static bool AnyProgress => HasChapter1Save || VenusState.HasProgress;
+        public static void NewGame()
+        {
+            PlayerPrefs.DeleteKey(Key); PlayerPrefs.DeleteKey(OldKey); PlayerPrefs.DeleteKey(FurthestKey);
+            VenusState.ClearOwnSave();
+            PlayerPrefs.Save();
+            Debug.Log("[Seven] new game: Chapter 1 checkpoint, Venus save and console progress reset");
+        }
         /// <summary>Save the checkpoint just reached (a later Scene Select start may go back: the save follows the player).</summary>
         public static void SaveProgress(int cp)
         {
             PlayerPrefs.SetInt(Key, cp);
+            if (cp > Furthest) PlayerPrefs.SetInt(FurthestKey, cp);
             if (cp >= Chapter1State.CpAboard) PlayerPrefs.SetInt(OldKey, 1);
             PlayerPrefs.Save();
             Debug.Log($"[Seven] saved: chapter 1 checkpoint {cp} ({Chapter1State.CpName(cp)}) ({Key})");
@@ -327,7 +373,7 @@ namespace Seven
         public static void ClearTestSave()
         {
             if (!Test) return;
-            PlayerPrefs.DeleteKey("seven_test_ch1_aboard"); PlayerPrefs.DeleteKey("seven_test_ch1_progress"); PlayerPrefs.Save();
+            PlayerPrefs.DeleteKey("seven_test_ch1_aboard"); PlayerPrefs.DeleteKey("seven_test_ch1_progress"); PlayerPrefs.DeleteKey("seven_test_ch1_furthest"); PlayerPrefs.Save();
         }
 
         /// <summary>The main menu's Continue: back to the saved checkpoint (free exploration once the chapter is done).</summary>

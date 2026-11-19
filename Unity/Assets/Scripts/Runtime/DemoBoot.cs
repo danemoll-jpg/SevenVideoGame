@@ -99,6 +99,9 @@ namespace Seven
         /// <summary>Round 12 (2d): -openingshot = Chapter 1 with the opening shot, captured, stops in the cell.</summary>
         public static bool OpeningShot { get; private set; }
         public static bool VenusHintFast { get; private set; }
+        /// <summary>Round 13 check switches: -r13 bridge|tremor|encounter|debrief|console|consolefresh|reactions (each a short
+        /// focused run; see TODO.md "Round 13 - status"). Venus ones start at their Scene Select entry.</summary>
+        public static string R13 { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -138,6 +141,14 @@ namespace Seven
                 if (args[i] == "-novideo") NoVideo = true;
                 if (args[i] == "-venusstopatship") VenusStopAtShip = true;
                 if (args[i] == "-venusquick2") Quick2 = true;
+                if (args[i] == "-r13" && i + 1 < args.Length)
+                {
+                    R13 = args[i + 1];
+                    if (R13 == "bridge") { VenusSelect = "B03"; }
+                    if (R13 == "tremor") { VenusSelect = "B02"; }
+                    if (R13 == "temple") { VenusSelect = "C03"; }
+                    if (R13 == "encounter") { VenusSelect = "C06"; }
+                }
                 if (args[i] == "-venusplay2") { VenusPlay2 = true; VenusSelect = "C06"; }
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;

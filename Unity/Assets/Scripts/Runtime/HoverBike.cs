@@ -37,7 +37,10 @@ namespace Seven
         [System.NonSerialized] public bool ScriptDriven; [System.NonSerialized] public float ScriptSteer, ScriptThrottle;
         public int GiveWays { get; private set; }
         public int Recoveries { get; private set; }
-        AudioSource _hum;
+        AudioSource _hum, _whoosh;
+        /// <summary>Round 13 (0h): the hum's / whoosh's current base volume (check runs log it).</summary>
+        public float HumLevel { get; private set; }
+        public float WhooshLevel { get; private set; }
         float _lean, _bob, _stuckFor, _saveT, _safeT, _pitch;
         SevenTableIK _ik;
 
@@ -94,8 +97,22 @@ namespace Seven
         {
             MeasureBody();
             LastSafe = transform.position;
-            _hum = AudioKit.Loop("bike_hum", transform, null, 0.0f, AudioKit.Bus.Sfx);
+            EnsureAudio();
         }
+
+        /// <summary>Round 13 (0h): the Round 11 hum was never heard - the bike's Start can run before the director has loaded
+        /// the sound bank (AudioKit.Sfx), so the loop was never created. The loops are made as soon as the bank is there, and
+        /// their levels go through AudioKit (bus volume, mute).</summary>
+        void EnsureAudio()
+        {
+            if (_hum == null && AudioKit.Clip("bike_hum") != null) _hum = AudioKit.Loop("bike_hum", transform, null, 0.3f, AudioKit.Bus.Sfx, 3f, 40f);
+            if (_whoosh == null && AudioKit.Clip("bike_whoosh") != null) _whoosh = AudioKit.Loop("bike_whoosh", transform, null, 0f, AudioKit.Bus.Sfx, 3f, 40f);
+        }
+        public bool HasHum => _hum != null && _hum.isPlaying;
+        /// <summary>Round 13 (0d): frames the bike could not move at all (the bridge-angle test logs it).</summary>
+        public int Snags;
+        /// <summary>Round 13 (0k): tremor wobble, 0..1 (decays by itself).</summary>
+        [System.NonSerialized] public float Wobble;
 
         public bool CanMount(Vector3 p) => !Riding && Flat(p - transform.position).magnitude < 2.4f;
 
@@ -107,6 +124,8 @@ namespace Seven
             _ik = Rider.GetComponent<SevenTableIK>();
             if (_ik != null) { _ik.RightW = 0f; _ik.LeftW = 0f; _ik.LookW = 0f; _ik.enabled = false; }
             Rider.BeginRide(this);
+            AudioKit.Play("bike_mount", transform.position, 0.8f, 0.05f);
+            AudioKit.Play("bike_liftoff", transform.position, 0.75f, 0.03f);
             VenusState.SaveBike(transform.position, transform.eulerAngles.y, true);
         }
 
@@ -123,6 +142,8 @@ namespace Seven
             Riding = false; Speed = 0f;
             if (_ik != null) { _ik.RightW = 0f; _ik.LeftW = 0f; _ik.LookW = 0f; _ik.enabled = true; }
             Rider.EndRide(new Vector3(side.x, Ground.Height(side.x, side.z), side.z), transform.forward);
+            AudioKit.Play("bike_settle", transform.position, 0.7f, 0.03f);
+            AudioKit.Play("bike_dismount", side, 0.8f, 0.05f);
             VenusState.SaveBike(transform.position, transform.eulerAngles.y, false);
             return true;
         }
@@ -149,9 +170,20 @@ namespace Seven
         {
             if (!VenusLayout.BikeZone(p, 0.25f))
             {
-                // slide along the edge: try the two axis moves, else stay
-                var a = new Vector3(p.x, p.y, from.z); var b = new Vector3(from.x, p.y, p.z);
-                if (VenusLayout.BikeZone(a, 0.25f)) p = a; else if (VenusLayout.BikeZone(b, 0.25f)) p = b; else p = from;
+                // Round 13 (0d): glide along the edge instead of snagging - try the move turned a little either way (it keeps
+                // most of its length), then the two axis moves, else stay. At a ramp or bridge end met at an angle this
+                // steers it onto the surface rather than stopping it dead.
+                var mv = p - from; mv.y = 0f; bool ok = false;
+                foreach (var ang in new[] { 12f, -12f, 25f, -25f, 40f, -40f, 55f, -55f, 70f, -70f })
+                {
+                    var q = from + Quaternion.Euler(0f, ang, 0f) * mv * Mathf.Cos(ang * Mathf.Deg2Rad); q.y = p.y;
+                    if (VenusLayout.BikeZone(q, 0.25f)) { p = q; ok = true; Snags += 0; break; }
+                }
+                if (!ok)
+                {
+                    var a = new Vector3(p.x, p.y, from.z); var b = new Vector3(from.x, p.y, p.z);
+                    if (VenusLayout.BikeZone(a, 0.25f)) p = a; else if (VenusLayout.BikeZone(b, 0.25f)) p = b; else { p = from; Snags++; }
+                }
             }
             foreach (var c in Ground.Obstacles)
             {
@@ -214,12 +246,22 @@ namespace Seven
                 float ahead = Ground.Height(p0.x + fw.x * 1.3f, p0.z + fw.z * 1.3f), behind = Ground.Height(p0.x - fw.x * 1.3f, p0.z - fw.z * 1.3f);
                 float slope = float.IsNaN(GlideBottom) ? Mathf.Clamp(Mathf.Atan2(ahead - behind, 2.6f) * Mathf.Rad2Deg, -18f, 18f) : 0f;
                 _pitch = Mathf.Lerp(_pitch, slope, dt * 6f);
-                Visual.localRotation = Quaternion.Euler(-Speed * 0.25f - _pitch, 0f, _lean);
+                // Round 13 (0k): a tremor makes the bike wobble on its hover
+                Wobble = Mathf.MoveTowards(Wobble, 0f, dt * 0.35f);
+                float wob = Wobble * 9f;
+                Visual.localRotation = Quaternion.Euler(-Speed * 0.25f - _pitch + (Mathf.PerlinNoise(_bob * 7f, 1f) - 0.5f) * wob, 0f, _lean + (Mathf.PerlinNoise(2f, _bob * 6f) - 0.5f) * wob * 1.6f);
+                Visual.localPosition += Vector3.up * (Mathf.PerlinNoise(_bob * 9f, 3f) - 0.5f) * Wobble * 0.12f;
             }
             float glow = Riding ? 0.7f + 0.3f * Mathf.Clamp01(Speed / MaxSpeed) : 0.45f;
             if (VentLight != null) VentLight.intensity = 0.6f * glow;
             if (VentGlow != null) VentGlow.material.SetColor("_EmissionColor", Color.white * (0.8f + 1.2f * glow));
-            if (_hum != null) { _hum.volume = (Riding ? 0.35f + 0.4f * Mathf.Clamp01(Speed / MaxSpeed) : 0.18f); _hum.pitch = 0.9f + 0.35f * Mathf.Clamp01(Speed / MaxSpeed); }
+            EnsureAudio();
+            // Round 13 (0h): idle hum, rising in pitch and level with speed, plus a soft whoosh that comes in with speed
+            float sp = Mathf.Clamp01(Mathf.Abs(Speed) / MaxSpeed);
+            HumLevel = Riding ? 0.55f + 0.35f * sp : (gameObject.activeInHierarchy ? 0.32f : 0f);
+            WhooshLevel = Riding ? 0.75f * sp * sp : 0f;
+            if (_hum != null) { AudioKit.SetBaseVolume(_hum, HumLevel); _hum.pitch = 0.85f + 0.55f * sp; }
+            if (_whoosh != null) { AudioKit.SetBaseVolume(_whoosh, WhooshLevel); _whoosh.pitch = 0.9f + 0.3f * sp; }
             if (Riding && Rider != null) Rider.RideSeat(this);     // QF10: seated before the animator runs (hands / feet IK on the current grips)
         }
 

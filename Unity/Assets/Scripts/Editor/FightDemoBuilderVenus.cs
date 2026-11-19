@@ -383,6 +383,26 @@ namespace Seven.EditorTools
             for (int i = 0; i < 40; i++) { float x = 14f + (float)rnd.NextDouble() * 32f, z = V.CollapseZ0 + 1.5f + (float)rnd.NextDouble() * 7f; Lump(rv, rt, new Vector3(x, VenusTerrain.Height(x, z) + 0.2f, z), Vector3.one * (0.5f + (float)rnd.NextDouble() * 1.3f), 0.4f, rnd.Next(1000)); }
             for (int i = 0; i < 9; i++) Lump(rv, rt, new Vector3(25.5f + i * 1.1f, -0.25f, V.CollapseZ1 + 0.3f), new Vector3(0.6f, 0.35f, 0.45f), 0.5f, rnd.Next(1000));   // the broken far lip
             MeshObject("Collapse_Rubble", SaveMesh(SmoothFinish(rv, rt), "Venus_CollapseRubble"), m.stoneDark, world);
+            // Round 13 (0k): the walkway before the tremor - the path still spans the undercut (paving slabs on the crust over
+            // the gully). The tremor breaks it in front of her: the slabs crack and drop into the gully (VenusDirector.Collapse).
+            var walkway = new GameObject("WalkwayIntact").transform; walkway.SetParent(world, false);
+            {
+                var wr = new System.Random(31);
+                int n = 0;
+                for (float z = V.CollapseZ0 - 0.2f; z < V.CollapseZ1 + 0.2f; z += 2.1f)
+                    for (float x = 26.6f; x < 33.4f; x += 2.3f)
+                    {
+                        var piece = new GameObject($"Slab{n++}").transform; piece.SetParent(walkway, false);
+                        piece.position = new Vector3(x + 1.1f, -0.2f, z + 1.0f);
+                        var wpv = new List<Vector3>(); var wpt = new List<int>();
+                        AddBox(wpv, wpt, Vector3.zero, new Vector3(2.22f - (float)wr.NextDouble() * 0.12f, 0.4f, 2.04f - (float)wr.NextDouble() * 0.1f));
+                        MeshObject("Body", SaveMesh(Finish(wpv, wpt), $"Venus_WalkSlab{n}"), (n % 3 == 0) ? m.stoneMid : m.stone, piece);
+                    }
+                // the crust under it (falls with it)
+                var wcv = new List<Vector3>(); var wct = new List<int>();
+                for (int i = 0; i < 18; i++) { float x = 26f + (float)wr.NextDouble() * 8f, z = V.CollapseZ0 + (float)wr.NextDouble() * 10f; Lump(wcv, wct, new Vector3(x, -0.9f, z), new Vector3(1.4f, 0.8f, 1.2f), 0.4f, wr.Next(1000)); }
+                MeshObject("Crust", SaveMesh(SmoothFinish(wcv, wct), "Venus_WalkCrust"), m.stoneDark, walkway, false);
+            }
             // the garden-wall shelf beside the stopping area: a rock shelf (climbable anywhere along its face, for exploring)
             Block("Detour_Wall", new Vector3(15f, -0.8f, 104f), new Vector3(V.DetourMantle.FaceAt, 1.0f, 116f), m.stoneMid, world);
             Lamp("Detour_Lamp", new Vector3(19.2f, 2.6f, 110f), 7f, 1.0f, m.glow, world, new Vector3(0.18f, 0.18f, 0.18f));
@@ -404,10 +424,36 @@ namespace Seven.EditorTools
                 for (int i = 0; i < 6; i++) Lump(rv2, rt2, new Vector3((i % 2 == 0 ? -1 : 1) * hx * 0.6f, -hy * 0.2f, (i < 3 ? -hz : hz) + (i < 3 ? 0.2f : -0.2f)), new Vector3(0.5f, 0.35f, 0.4f), 0.5f, rr.Next(1000));
                 MeshObject("Chips", SaveMesh(SmoothFinish(rv2, rt2), "Venus_FallenSlabChips"), m.stoneMid, slab);
             }
+            // Round 13 (0d): the stone aprons at both ends of the laid slab - ramps from the ground up to its top (no lip);
+            // shown when the bridge is down
+            var ramps = new GameObject("BridgeRamps"); ramps.transform.SetParent(world, false);
+            {
+                float halfW = 3.8f, sEnd = V.SlabBridge.z - V.SlabSize.x * 0.5f, nEnd = V.SlabBridge.z + V.SlabSize.x * 0.5f;
+                void Apron(string n, float zFrom, float zTo)          // top from BridgeTop at zFrom down to the ground at zTo
+                {
+                    var rv = new List<Vector3>(); var rt = new List<int>();
+                    int N = 8;
+                    for (int i = 0; i < N; i++)
+                    {
+                        float z0 = Mathf.Lerp(zFrom, zTo, i / (float)N), z1 = Mathf.Lerp(zFrom, zTo, (i + 1) / (float)N);
+                        float y0 = Mathf.Lerp(V.BridgeTop, 0.01f, i / (float)N), y1 = Mathf.Lerp(V.BridgeTop, 0.01f, (i + 1) / (float)N);
+                        float g0 = Mathf.Min(0f, Seven.VenusTerrain.Height(V.SlabBridge.x, z0)), g1 = Mathf.Min(0f, Seven.VenusTerrain.Height(V.SlabBridge.x, z1));
+                        y0 = Mathf.Max(y0, g0 + 0.01f); y1 = Mathf.Max(y1, g1 + 0.01f);
+                        var a = new Vector3(V.SlabBridge.x - halfW, y0, z0); var b = new Vector3(V.SlabBridge.x + halfW, y0, z0);
+                        var c = new Vector3(V.SlabBridge.x + halfW, y1, z1); var d2 = new Vector3(V.SlabBridge.x - halfW, y1, z1);
+                        if (zTo > zFrom) Quad(rv, rt, a, d2, c, b); else Quad(rv, rt, a, b, c, d2);
+                        Quad(rv, rt, a + Vector3.down * 0.5f, a, d2, d2 + Vector3.down * 0.5f); Quad(rv, rt, b, b + Vector3.down * 0.5f, c + Vector3.down * 0.5f, c);
+                    }
+                    MeshObject(n, SaveMesh(Finish(rv, rt), "Venus_" + n), m.stone, ramps.transform);
+                }
+                Apron("BridgeRampS", sEnd + 0.3f, 112.4f);
+                Apron("BridgeRampN", nEnd - 0.3f, 132.6f);
+            }
+            ramps.SetActive(false);
             // dust for the landing thud
             var slabDust = new GameObject("SlabDust").AddComponent<ParticleSystem>(); slabDust.transform.position = V.SlabBridge + Vector3.up * 0.2f;
             { var mn = slabDust.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 1.2f; mn.startColor = new Color(0.75f, 0.75f, 0.75f, 0.45f); mn.startSize = new ParticleSystem.MinMaxCurve(1.2f, 2.6f); mn.startLifetime = new ParticleSystem.MinMaxCurve(1.6f, 2.8f); mn.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 2.2f); mn.gravityModifier = -0.02f;
-              var shp = slabDust.shape; shp.shapeType = ParticleSystemShapeType.Box; shp.scale = new Vector3(3.2f, 0.2f, 12f);
+              var shp = slabDust.shape; shp.shapeType = ParticleSystemShapeType.Box; shp.scale = new Vector3(4.8f, 0.2f, 12f);
               var em2 = slabDust.emission; em2.rateOverTime = 0f; em2.SetBursts(new[] { new ParticleSystem.Burst(0f, 90) });
               slabDust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f); slabDust.Stop(); }
             // telekinesis motes (her hand -> the slab)
@@ -475,7 +521,7 @@ namespace Seven.EditorTools
             var cloud = Block("CloudCeiling", new Vector3(-600f, 160f, -600f), new Vector3(700f, 162f, 900f), m.cloud, world, false);
             cloud.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
 
-            // ---- the saucer (landed), its ramp, the storage hatch
+            // ---- the saucer (hovering low), its tractor beam, the storage hatch
             // Round 12 (2f): the one shared saucer exterior (Chapter 1's look: the 12 m silver disc, rim glow, dome, belly
             // glow) with the storage hatch toward the bike's spot; its root on the ground, the underside SaucerHover above it
             var saucer = new GameObject("Saucer").transform; saucer.SetParent(world, false); saucer.position = V.SaucerAt;
@@ -484,9 +530,12 @@ namespace Seven.EditorTools
             var ext = BuildSaucerExterior(saucer, V.SaucerHover, m.hull, m.hullUnder, metalDark, rimMat);
             var hatch = ext.Panel;
             foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;   // its own probe never sees it
-            var ramp = new GameObject("Ramp").transform; ramp.SetParent(saucer, false);
-            SlopeSlab("Saucer_Ramp", -0.8f, V.RampTopZ - V.SaucerAt.z, 0.8f, V.RampFoot.z - V.SaucerAt.z, V.RampTopY, 0f, 1, m.hullUnder, ramp, 0.08f);
-            var pads = new List<Vector3> { new Vector3(V.SaucerAt.x, V.SaucerAt.z, V.SaucerRadius + 0.3f) };
+            // Round 13 (0b): no ramp, ever - the tractor beam (shared with Chapter 1). The saucer hovers (underside 3.35 m),
+            // so nothing under it blocks her: no ground obstacle for the hull.
+            var fieldMat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Moon_field.mat") ?? AdditiveMat("Moon_field", 0.8f);
+            var beamC = BuildSaucerBeam(saucer, V.SaucerHover, V.SaucerHover - 0.1f, Seven.MoonLayout.HatchRadius, Seven.MoonLayout.BeamFloorRadius, metalDark, rimMat, fieldMat);
+            foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;
+            var pads = new List<Vector3>();
 
             // ---- ground
             var wg = new GameObject("WorldGround").AddComponent<Seven.WorldGround>();
@@ -497,15 +546,15 @@ namespace Seven.EditorTools
             wg.ZoneObstacles = pads.ToArray();
 
             // ---- 7, Panther, the camera, the bike
-            var seven = Spawn(SevenDir + "/7_character.fbx", "7", V.RampFoot, Vector3.forward, sevenCtl);
-            var catRoot = SpawnCat("Cat", V.RampFoot + new Vector3(-1f, 0f, 0f), Vector3.forward, catCtl, catFur, catWhisker, out var catAnim);
+            var seven = Spawn(SevenDir + "/7_character.fbx", "7", V.StepOut, Vector3.forward, sevenCtl);
+            var catRoot = SpawnCat("Cat", V.StepOut + new Vector3(-1f, 0f, 0f), Vector3.forward, catCtl, catFur, catWhisker, out var catAnim);
             var camGo = new GameObject("ChapterCamera"); camGo.tag = "MainCamera";
             var cam = camGo.AddComponent<Camera>();
             cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(0.86f, 0.86f, 0.86f);
             cam.fieldOfView = 52f; cam.nearClipPlane = 0.08f; cam.farClipPlane = 3000f;
             camGo.AddComponent<AudioListener>();
             var camData = cam.GetUniversalAdditionalCameraData(); camData.renderPostProcessing = true; camData.requiresDepthTexture = true; camData.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
-            camGo.transform.position = V.RampFoot + new Vector3(0f, 1.8f, -2.5f);
+            camGo.transform.position = V.StepOut + new Vector3(0f, 1.8f, -2.5f);
             var dirGo = new GameObject("VenusDirector");
             var input = dirGo.AddComponent<Seven.ChapterInput>();
             var s7 = seven.AddComponent<Seven.ChapterSeven>(); s7.Input = input; s7.CameraTransform = camGo.transform;
@@ -615,11 +664,33 @@ namespace Seven.EditorTools
                 var fl = f.AddComponent<Seven.VenusFlyer>(); fl.Centre = new Vector3(0f, 0f, 30f); fl.Radius = 24f + i * 6f; fl.Height = 30f + i * 5f; fl.Phase = i * 1.3f; fl.Speed = 0.08f + i * 0.01f;
                 flyers.Add(f.transform);
             }
+            // Round 13 (0i): small birds over the gardens - lower, faster, flapping; a few loose flocks along the road
+            {
+                var br = new System.Random(77); int bi = 0;
+                foreach (var (cx, cz, n) in new[] { (8f, 40f, 4), (24f, 95f, 3), (36f, 150f, 4), (20f, 205f, 3), (-10f, 10f, 3) })
+                    for (int i = 0; i < n; i++)
+                    {
+                        var bdv = new List<Vector3> { new Vector3(0f, 0f, 0.18f), new Vector3(-0.32f, 0.02f, -0.12f), new Vector3(0.32f, 0.02f, -0.12f), new Vector3(0f, 0.01f, -0.22f) };
+                        var bdt = new List<int> { 0, 1, 3, 0, 3, 2, 0, 3, 1, 0, 2, 3 };
+                        var b = MeshObject($"Bird{bi}", SaveMesh(Finish(bdv, bdt), $"Venus_Bird{bi}"), m.tower, world, false); bi++;
+                        b.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
+                        var fl = b.AddComponent<Seven.VenusFlyer>(); fl.Centre = new Vector3(cx, 0f, cz); fl.Radius = 9f + (float)br.NextDouble() * 14f; fl.Height = 8f + (float)br.NextDouble() * 14f;
+                        fl.Phase = (float)br.NextDouble() * 6.28f; fl.Speed = (0.18f + (float)br.NextDouble() * 0.12f) * (br.Next(2) == 0 ? 1f : -1f); fl.Flap = 2.2f + (float)br.NextDouble() * 1.4f;
+                    }
+            }
             // C04: dust falling from the cube chamber ceiling
             var cdust = new GameObject("CeilingDust").AddComponent<ParticleSystem>(); cdust.transform.position = V.CubeAt + Vector3.up * 8.5f;
             { var mn = cdust.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 3f; mn.startColor = new Color(0.8f, 0.8f, 0.8f, 0.6f); mn.startSize = 0.08f; mn.startLifetime = 3f; mn.startSpeed = 0f; mn.gravityModifier = 0.25f;
               var sh2 = cdust.shape; sh2.shapeType = ParticleSystemShapeType.Box; sh2.scale = new Vector3(8f, 0.1f, 8f); var e2 = cdust.emission; e2.rateOverTime = 120f;
               cdust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f); cdust.Stop(); }
+            // Round 13 (0k): stones raining from the ceiling with the dust (C04 and later tremors), and outdoors a stone fall
+            var stones = new GameObject("TremorStones").AddComponent<ParticleSystem>(); stones.transform.position = V.CubeAt + Vector3.up * 8f;
+            { var mn = stones.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 2.6f; mn.startColor = new Color(0.32f, 0.32f, 0.32f, 1f); mn.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.16f); mn.startLifetime = 2.2f; mn.startSpeed = 0f; mn.gravityModifier = 1.0f; mn.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);
+              var sh3 = stones.shape; sh3.shapeType = ParticleSystemShapeType.Box; sh3.scale = new Vector3(9f, 0.1f, 10f); var e3 = stones.emission; e3.rateOverTime = 45f;
+              var col = stones.collision; col.enabled = true; col.type = ParticleSystemCollisionType.Planes; col.dampen = 0.6f; col.bounce = 0.25f;
+              var plane = new GameObject("StoneFloor").transform; plane.SetParent(stones.transform, false); plane.position = new Vector3(V.CubeAt.x, 0.02f, V.CubeAt.z); col.SetPlane(0, plane);
+              stones.GetComponent<ParticleSystemRenderer>().sharedMaterial = Dissolve("Venus_stone_bits", Gray(0.3f), 0.2f, false); stones.Stop(); }
+
             // the dodecahedron (in her pocket)
             var shape = BuildElarimShape("Dodecahedron", world, em, "Venus_Dodeca");
 
@@ -628,10 +699,10 @@ namespace Seven.EditorTools
             var legend = new GameObject("ControlsLegend").AddComponent<Seven.ControlsLegend>(); legend.Cam = cam; legend.Set = Seven.ControlsLegend.Layout.Chapter; legend.HidePanels = true;
             var d = dirGo.AddComponent<Seven.VenusDirector>();
             d.Seven = s7; d.Cat = cat; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend; d.Bike = hb;
-            d.Saucer = saucer; d.Hatch = hatch; d.Ramp = ramp; d.Vessel = vessel; d.VesselWater = water; d.Cube = cube; d.CubeCage = cage.transform;
+            d.Saucer = saucer; d.Hatch = hatch; d.SaucerBeam = beamC; d.Vessel = vessel; d.VesselWater = water; d.Cube = cube; d.CubeCage = cage.transform;
             d.Guardian = guardian; d.Attendant = attendant; d.Workers = workers.ToArray(); d.Worms = worms.ToArray(); d.CeilingDust = cdust;
             d.Flyers = flyers.ToArray(); d.Shape = shape; d.MaintGate = maintGate; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
-            d.Slab = slab; d.SlabDust = slabDust; d.TkMotes = tkMotes;                 // QF10: the telekinesis bridge
+            d.Slab = slab; d.BridgeRamps = ramps; d.WalkwayIntact = walkway; d.TremorStones = stones; d.SlabDust = slabDust; d.TkMotes = tkMotes;                 // QF10: the telekinesis bridge
             d.HatchSeam = saucer.Find("HatchSeam").GetComponent<Renderer>(); d.BayLight = saucer.Find("Bay/BayLight").GetComponent<Light>();
             d.BayBack = saucer.Find("Bay/BayBack").GetComponent<Renderer>();
             BuildVenusPart2(world, m, em, d, worm, wormCtl, (n, p, f, c) => MakeElarim(n, p, f, c), dlg);      // Round 12

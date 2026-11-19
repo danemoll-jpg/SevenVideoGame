@@ -134,3 +134,22 @@ seated riding pose (Mixamo "Motorcycle" / "Driving" style clip) when it is.
 - `Art/Source/hoverbike/hoverbike_v1.glb` — hover bike (Dan, Tripo from `hoverbike_ref.png`, 2026-11-18): textured,
   1.92 M tris (decimate), single mesh. Forked end = front. Scale so the saddle suits 7 (bike ≈ 2.4 m long); add empties
   for the seat point and the two fairing grips (hand IK targets); hover glow on the underside vents in Unity.
+
+## Terminator-type villain (no name yet) — concept in (2026-11-19)
+Kyle's sketch: `Art/Reference/kyle_terminator_villain.jpg` (see the reference README for the description). The asteroid's
+antagonist in `Docs/STORY.md`. Not scheduled; when needed: a clean grayscale A-pose reference in Kyle's style → Tripo →
+Humanoid rig (cape on its own bones like the Elarim). Name to be decided by Dan.
+
+## Cetaceans — Europa (2026-11-19)
+Prompts: claude.ai project doc `claude/7-cetacean-model-reference.md`. Spec: `Docs/CHAPTER_EUROPA.md`. Not scheduled in a round yet.
+- `Art/Source/cetacean/whale_v1.glb` — large Cetacean (the keeper + the huge one that passes under the bike). Dan, Tripo
+  from a side view (Tripo has no top-view slot), 2026-11-19: textured, 1.94 M tris (decimate), single mesh, 1 unit long
+  along X, head toward −X. **Tail flukes already came out flat (horizontal)** — checked 2026-11-19, no fix needed; just
+  confirm in a preview render. Scale huge (≈ 25–30 m) so its size reads as it passes beneath 7's bike.
+- `Art/Source/cetacean/dolphin_v1.glb` — small Cetacean (the guide; scaled down ≈ 0.6× for the young one in the Europa
+  vision). Same pipeline: textured, 1.95 M tris (decimate), head toward −X, flukes flat. Scale ≈ 2.5–3 m.
+- **No Mixamo** (not humanoid): rig each with a simple spine bone chain head→tail plus a bone per pectoral fin; drive the
+  swim procedurally in Unity (sine wave down the spine, up-and-down tail beat, slow fin sway). Keeper "talking" = a slow
+  head/fin movement synced to the voice clip's loudness — no mouth animation.
+- Not modelled (Dan, 2026-11-19): the bubble helmet (a simple transparent sphere/shader in Unity — glass domes break in
+  generation) and Europa's rune (icosahedron, generated in code like the cube and dodecahedron).

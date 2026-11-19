@@ -84,7 +84,16 @@ namespace Seven
 
         Vector3 LaunchPoint => Flat(ChairPivot.position + ChairPivot.right * 0.95f + ChairPivot.forward * 0.85f);
         Vector3 LapPoint => Seven.LapPoint(LapLift + _settle);
-        Quaternion LapRotation => Quaternion.LookRotation(-ChairPivot.right, ChairPivot.up);   // curled across her lap
+        Quaternion LapRotation => Quaternion.LookRotation(-LapFrameT.right, LapFrameT.up);   // curled across her lap
+        /// <summary>Round 13 (0j / VEN_C13): another chair (the pilot's chair at the console) can carry the lap pose.</summary>
+        [System.NonSerialized] public Transform LapFrame;
+        Transform LapFrameT => LapFrame != null ? LapFrame : ChairPivot;
+        /// <summary>Round 13: scripted - hop onto her lap now (she is seated), and down again to a spot.</summary>
+        public void HopOntoLap() { StartHop(LapPoint, LapScale, Mode.HopUp); }
+        public void HopOffLap(Vector3 to) { StartHop(to, RoamScale, Mode.HopDown); }
+        /// <summary>Round 13: small life on the lap (a head nudge into her hand, lifting to look up): a short tilt of the curled cat.</summary>
+        public void LapNudge(float deg) { _nudge = deg; }
+        float _nudge, _nudgeNow;
 
         /// <summary>Walk toward the target; returns true on arrival.</summary>
         bool MoveTo(Vector3 target, float speed)
@@ -200,7 +209,7 @@ namespace Seven
             _hopTo = to;
             PlayClip("jump", 0.1f, 0.8f / HopTime);
             _shimmer = 1f;
-            _motes.Emit(40);
+            _motes?.Emit(40);
         }
         Vector3 _hopTo;
 
@@ -219,7 +228,7 @@ namespace Seven
             if (face.sqrMagnitude > 1e-4f)
                 transform.rotation = Quaternion.Slerp(Quaternion.LookRotation(face), endRot, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.6f, 1f, _hopT)));
             transform.localScale = Vector3.one * Mathf.Lerp(_scaleFrom, _scaleTo, Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.3f, 0.9f, _hopT)));
-            if (_hopT > 0.25f && _hopT < 0.95f) _motes.Emit(Mathf.CeilToInt(90f * Time.deltaTime));
+            if (_hopT > 0.25f && _hopT < 0.95f) _motes?.Emit(Mathf.CeilToInt(90f * Time.deltaTime));
             if (_hopT >= 1f)
             {
                 transform.localScale = Vector3.one * _scaleTo;
@@ -229,7 +238,7 @@ namespace Seven
                     Current = Mode.OnLap; _lapSince = Time.time; _settled = false; _settle = 0f;
                     PlayClip("sleep", 0.1f);
                     ShowLapMesh(true);
-                    _motes.Emit(50);
+                    _motes?.Emit(50);
                 }
                 else { Current = Mode.Roam; transform.rotation = Quaternion.LookRotation(Flat(transform.forward)); Choose("sit", 3f); }
             }
@@ -267,8 +276,8 @@ namespace Seven
 
         public LapContact MeasureLap()
         {
-            var up = ChairPivot.up; var o = transform.position;
-            var right = ChairPivot.right; var fwd = ChairPivot.forward;
+            var up = LapFrameT.up; var o = transform.position;
+            var right = LapFrameT.right; var fwd = LapFrameT.forward;
             const float cell = 0.015f;
             var catLow = new System.Collections.Generic.Dictionary<long, float>();
             int nc = 0, nt = 0;
@@ -362,7 +371,8 @@ namespace Seven
             {
                 // Ride on her lap: follow her thighs (they move with her breathing and the chair's tilt).
                 transform.position = LapPoint;
-                transform.rotation = LapRotation;
+                _nudgeNow = Mathf.MoveTowards(_nudgeNow, _nudge, Time.deltaTime * 40f); if (Mathf.Abs(_nudgeNow - _nudge) < 0.01f) _nudge = Mathf.MoveTowards(_nudge, 0f, Time.deltaTime * 15f);
+                transform.rotation = LapRotation * Quaternion.Euler(-_nudgeNow, 0f, 0f);
                 // QF3: settle onto her thighs right after landing (measured once: no gap, no sinking in), then breathe.
                 if (!_settled) { _settled = true; _settle = SettleOffset(out _); transform.position = LapPoint; }
                 if (_lapMesh != null)

@@ -1,0 +1,73 @@
+{
+ "note": "Ship console Field guide: 7's short observations of the people and creatures she has met, only from what the story has shown. titleBefore/textBefore are used until nameUnlock is met (the cat is \"The cat\" until VEN_B01). portrait = image key (cat, scree, elarim_guardian, elarim_attendant, elarim, worm, wormmaster, tunneler, ratwing). Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), or \"never\". Mirror: Docs/FIELD-GUIDE.md.",
+ "entries": [
+  {
+   "id": "cat",
+   "title": "Panther",
+   "titleBefore": "The cat",
+   "textBefore": "A black cat who speaks in my head, only conversationally. His people sent him to get me out of the prison; they did not tell him why, and he came anyway. He has views on chicken: free-range only.",
+   "text": "His name is Panther. He can grow from house-cat size to something very large, smoothly, in the middle of a stretch. He doesn’t see what I see, so I tell him when I get back. He chose to stay.",
+   "nameUnlock": "scene:VEN_B01",
+   "unlock": "ch1>=0",
+   "portrait": "cat"
+  },
+  {
+   "id": "scree",
+   "title": "The Scree",
+   "text": "Tall, armored people who guard the Moon prison; some of them were working rather than watching. I got past them without hurting anyone. The two on the terrace went down and sat up again afterwards. I don’t know yet whether any of them chose this.",
+   "unlock": "ch1>=7",
+   "portrait": "scree"
+  },
+  {
+   "id": "elarim_guardian",
+   "title": "The guardian",
+   "text": "Keeper of the Elarim temple on Venus and its cube. Asked to see the shape before anything else, and listened to all of it. Asked me to remember that the creatures were being driven. Gave me a copy of their record; the original stays in the temple.",
+   "unlock": "venus>=GuardianMet",
+   "portrait": "elarim_guardian"
+  },
+  {
+   "id": "elarim_attendant",
+   "title": "The attendant",
+   "text": "Works at the temple with the guardian. Came into the cube chamber with the news that the lower channel had collapsed.",
+   "unlock": "venus>=HelpAccepted",
+   "portrait": "elarim_attendant"
+  },
+  {
+   "id": "elarim",
+   "title": "The Elarim",
+   "text": "The people of the Venus gardens. They tend the terraces and the water channels and keep repairing the ground. Their marking is on the shape I found on the Moon. “Our histories were not always kept apart,” the guardian said.",
+   "unlock": "scene:VEN_B03",
+   "portrait": "elarim"
+  },
+  {
+   "id": "worm",
+   "title": "The burrowing creatures",
+   "text": "Burrowers that live beneath the Venus gardens. They never attacked the people. They were following a signal through the foundations. When the devices stopped, they went home, all of them unharmed.",
+   "unlock": "venus>=ControlDiscovered",
+   "portrait": "worm"
+  },
+  {
+   "id": "wormmaster",
+   "title": "The Wormmaster",
+   "text": "He drove the burrowing creatures with machines from a chamber under the gardens, to force the Elarim to give up their temple. He told me I don’t know what I’m interfering with. He is contained now, not hurt.",
+   "unlock": "venus>=ThreatStopped",
+   "portrait": "wormmaster"
+  },
+  {
+   "id": "tunneler",
+   "title": "Tunneler",
+   "text": "(Not met yet.)",
+   "unlock": "never",
+   "portrait": "tunneler",
+   "note": "Not shown in the story so far: only his mining machinery is seen in the city reveal (6b), and no line names him. Write the entry and set an unlock when he appears."
+  },
+  {
+   "id": "ratwing",
+   "title": "Ratwing",
+   "text": "(Not met yet.)",
+   "unlock": "never",
+   "portrait": "ratwing",
+   "note": "Only in the Round 4 cave demo, not in a chapter. Write the entry and set an unlock when he appears in the story."
+  }
+ ]
+}

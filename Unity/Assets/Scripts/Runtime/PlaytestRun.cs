@@ -44,6 +44,7 @@ namespace Seven
         const GamepadButton A = GamepadButton.South, B = GamepadButton.East, X = GamepadButton.West, Y = GamepadButton.North,
             RT = GamepadButton.RightTrigger, StartBtn = GamepadButton.Start, Down = GamepadButton.DpadDown, Up = GamepadButton.DpadUp;
         void Press(GamepadButton b) => _presses.Enqueue(b);
+        int _fightBlows, _fightTakedowns;
         bool Idle => _phase == 0 && _presses.Count == 0;
         System.Random _rng = new System.Random(1);
         bool _hitches;
@@ -182,7 +183,7 @@ namespace Seven
                     if (_shots) yield return ShotNow($"pt{i + 1:00}_galley");
                 }
                 if (OnMoon && D.TakeFallbacks > 0 && !_fallbackShot) { _fallbackShot = true; yield return Wait(0.9f); yield return ShotNow("pt_take_fallback_telekinesis"); yield return Wait(0.8f); yield return ShotNow("pt_take_fallback_in_hand"); }
-                if (Aboard && Ab.CourseSetCount > 0) { if (_shots) yield return ShotNow($"pt{i + 1:00}_set_course_done"); break; }
+                if ((Aboard && Ab.CourseSetCount > 0) || SceneNow == "Venus") { if (_shots) yield return ShotNow($"pt{i + 1:00}_set_course_done"); if (SceneNow == "Venus") Log($"run {i + 1}: set course - the saucer flew on to Venus (Chapter 2 starts: the chapter is done)"); break; }   // Round 11+: Set course really travels to Venus
                 if (Time.realtimeSinceStartup - _sigAt > 240f) { fail = $"SOFT-LOCK at '{_phaseName}' (objective '{Obj}', step '{(OnMoon ? D.StepName : "-")}', 7 at {P}, {(OnMoon ? S7.Current + "/" + S7.State : "")})"; break; }
                 if (Time.realtimeSinceStartup - t0 > 1800f) { fail = $"TIMEOUT after 30 min at '{_phaseName}'"; break; }
                 // ---- the menu (after a quit): Continue
@@ -248,6 +249,9 @@ namespace Seven
             if (!_menuShot && (DemoMenu.I.SelectedLabel ?? "").StartsWith("Continue")) { _menuShot = true; yield return ShotNow("menu_continue_from_checkpoint"); }
             Log($"main menu: '{DemoMenu.I.SelectedLabel}' (A)");
             Press(A);
+            // Round 13 (0c): "Chapter 1" with a save asks "Start a new game?" - a player confirms with A
+            yield return WaitReal(0.5f);
+            if (DemoMenu.I != null && SceneNow == DemoMenu.SceneName && DemoMenu.I.ConfirmingNewGame) { Log("main menu: 'Start a new game? Your saved progress will be reset.' (A) - confirms the new game"); Press(A); }
             for (float t0 = Time.realtimeSinceStartup; SceneNow == DemoMenu.SceneName && Time.realtimeSinceStartup - t0 < 8f;) yield return null;
             yield return WaitReal(1.0f);
         }
@@ -265,8 +269,13 @@ namespace Seven
             _quits++;
             Log($"run {_run_i + 1}: quit to the main menu at checkpoint {cp} ({Chapter1State.CpName(cp)}), 7 at {P} -> Continue");
             _stick = Vector2.zero;
+            // Round 13: presses still queued (line skips) used to delay Start past the wait - it then opened the pause
+            // menu later, unseen, and the run stood still. Clear them first; wait a little longer.
+            if (_presses.Count > 0) Log($"pause: {_presses.Count} queued presses dropped before Start");
+            _presses.Clear();
+            for (float t0 = Time.realtimeSinceStartup; _phase != 0 && Time.realtimeSinceStartup - t0 < 1f;) yield return null;
             Press(StartBtn);
-            for (float t0 = Time.realtimeSinceStartup; !PauseMenu.IsOpen && Time.realtimeSinceStartup - t0 < 3f;) yield return null;
+            for (float t0 = Time.realtimeSinceStartup; !PauseMenu.IsOpen && Time.realtimeSinceStartup - t0 < 6f;) yield return null;
             if (!PauseMenu.IsOpen) { Log("pause menu did not open"); yield break; }
             yield return PausePick(l => l == "Main menu");
             yield return PausePick(l => l.StartsWith("Yes"));
@@ -281,7 +290,7 @@ namespace Seven
             for (float t0 = Time.time; DistF(P, to) > tol && Time.time - t0 < timeout;)
             {
                 if (!Controlling) break;
-                bool canMove = OnMoon ? S7.Current == ChapterSeven.Mode.Free || S7.Current == ChapterSeven.Mode.Look : Aboard;
+                bool canMove = OnMoon ? S7.Current == ChapterSeven.Mode.Free || S7.Current == ChapterSeven.Mode.Look || S7.Current == ChapterSeven.Mode.Fight : Aboard;
                 _stick = canMove ? StickFor((to - P).normalized * speed) : Vector2.zero;
                 yield return null;
             }
@@ -376,9 +385,28 @@ namespace Seven
                 if (Hanging(l)) { Press(B); yield return Wait(1.2f); }
                 yield break;
             }
-            if (!Free7) { _stick = Vector2.zero; yield break; }
+            if (!Free7 && S7.Current != ChapterSeven.Mode.Fight) { _stick = Vector2.zero; yield break; }
 
             int area = Chapter1Director.AreaOf(p);
+            // Round 13: the QF9 terrace fight (fighting tutorial) - the driver never learned it, so the release run stopped
+            // there. Like a player: walk up to the nearest Scree still standing, attack (X), dodge (B) his telegraphed
+            // punch, take him down (Y) when he is dazed.
+            if ((area == 5 || area == 6) && (obj.StartsWith("Get past the Scree") || S7.Current == ChapterSeven.Mode.Fight))
+            {
+                _phaseName = "the terrace fight";
+                ScreeGuard foe = null; float fd = 1e9f;
+                foreach (var f in FindObjectsByType<ScreeGuard>(FindObjectsInactive.Exclude))
+                    if (f != null && f.InFight && !f.IsOut) { float dd = DistF(f.transform.position, P); if (dd < fd) { fd = dd; foe = f; } }
+                if (foe == null) { yield return Idle0(0.3f); yield break; }
+                var dv = foe.transform.position - P; dv.y = 0f;
+                if (dv.magnitude > 1.6f) { yield return Go(foe.transform.position - dv.normalized * 1.25f, 0.4f, 2.5f); yield break; }
+                _stick = StickFor(dv.normalized * 0.2f);
+                if (foe.Dazed) { Press(Y); _fightTakedowns++; yield return Wait(1.4f); }
+                else if (foe.FightState == ScreeGuard.Fight.Windup) { Press(B); yield return Wait(0.6f); }
+                else { Press(X); _fightBlows++; yield return Wait(0.38f); }
+                _stick = Vector2.zero;
+                yield break;
+            }
             // ---- 0: the cell
             if (area == 0 || (area == 1 && p.z < 2.4f && Mathf.Abs(p.x) < 1f && (obj.StartsWith("Look") || obj.StartsWith("Go to") || obj.StartsWith("Stand") || obj.StartsWith("Step"))))
             {
@@ -638,7 +666,7 @@ namespace Seven
                     yield return null;
                     AttachCamera();
                     int now = OnMoon ? Chapter1State.Checkpoint : Aboard ? (Ab.Explored ? Chapter1State.CpExplore : Ab.InGalleyScene ? Chapter1State.CpGalley : Chapter1State.CpAboard) : -1;
-                    if (cp == Chapter1State.CpGalley ? Aboard && Ab.CourseSetCount > 0 : now > cp) { ok = true; break; }
+                    if (cp == Chapter1State.CpGalley ? (Aboard && Ab.CourseSetCount > 0) || SceneNow == "Venus" : now > cp) { ok = true; break; }
                     string sig = $"{SceneNow}|{Chapter1State.Checkpoint}|{Obj}|{Chapter1State.Played.Count}";
                     if (sig != _sig) { _sig = sig; _sigAt = Time.realtimeSinceStartup; }
                     if (Time.realtimeSinceStartup - _sigAt > 240f) break;

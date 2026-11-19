@@ -59,6 +59,7 @@ namespace Seven
         public static void Play(string track, float fade = 2.5f)
         {
             var m = I;
+            if (_suspended != null) { if (track == _suspended) { Resume(fade); return; } _suspended = null; }
             if (Current == track && (track == null || m._a.isPlaying)) return;
             var clip = track != null && AudioKit.Music != null ? AudioKit.Music.Get(track) : null;
             AudioKit.Log?.Invoke($"music -> {track ?? "(none)"}{(track != null && clip == null ? " (missing file: silence)" : "")}");
@@ -70,6 +71,41 @@ namespace Seven
             m.StartCoroutine(m.CrossFade(clip != null, fade));
         }
         public static void Stop(float fade = 2.5f) => Play(null, fade);
+
+        // ---- Round 13 (0g): the level's track came back after neither vision (Chapter 1's door vision, Venus C09). A vision
+        // now suspends the music (fades it out, keeps the track and its place) and resumes it afterwards: it fades back in
+        // from where it left off, every time. A watchdog resumes it if a vision path ever forgets to (60 s, unscaled).
+        static string _suspended; static float _suspendedAt, _suspendTime;
+        public static bool IsSuspended => _suspended != null;
+        public static string SuspendedTrack => _suspended;
+        public static void Suspend(float fade = 1.2f)
+        {
+            var m = I;
+            if (Current == null) { _suspended = null; return; }
+            _suspended = Current; _suspendedAt = m._a.time; _suspendTime = Time.unscaledTime;
+            AudioKit.Log?.Invoke($"music: suspended '{_suspended}' at {_suspendedAt:0.0} s (vision)");
+            m.StopAllCoroutines(); m.StartCoroutine(m.FadeA(0f, fade, true));
+        }
+        public static void Resume(float fade = 3f)
+        {
+            if (_suspended == null) return;
+            var m = I; var track = _suspended; _suspended = null;
+            var clip = AudioKit.Music != null ? AudioKit.Music.Get(track) : null;
+            if (clip == null) return;
+            m.StopAllCoroutines();
+            m._b.Stop(); m._bW = 0f;
+            m._a.clip = clip; m._a.time = Mathf.Clamp(_suspendedAt, 0f, Mathf.Max(0f, clip.length - 0.1f)); m._a.Play();
+            Current = track;
+            AudioKit.Log?.Invoke($"music: resumed '{track}' from {m._a.time:0.0} s after the vision (fade in {fade:0.0} s)");
+            m.StartCoroutine(m.FadeA(1f, fade, false));
+        }
+        IEnumerator FadeA(float to, float seconds, bool stopAtEnd)
+        {
+            float from = _aW;
+            for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime / Mathf.Max(0.01f, seconds)) { _aW = Mathf.Lerp(from, to, t); _bW = Mathf.MoveTowards(_bW, 0f, Time.unscaledDeltaTime); yield return null; }
+            _aW = to;
+            if (stopAtEnd) { _a.Pause(); }
+        }
 
         IEnumerator CrossFade(bool fadeIn, float seconds)
         {
@@ -87,6 +123,7 @@ namespace Seven
 
         void Update()
         {
+            if (_suspended != null && Time.unscaledTime - _suspendTime > 60f) Resume(3f);
             _duck = Mathf.MoveTowards(_duck, DialoguePlayer.AnyBusy ? DuckLevel : 1f, Time.unscaledDeltaTime * (DialoguePlayer.AnyBusy ? 2.5f : 0.8f));
             float g = AudioKit.Gain(AudioKit.Bus.Music) * _duck;
             _a.volume = _aW * g; _b.volume = _bW * g;

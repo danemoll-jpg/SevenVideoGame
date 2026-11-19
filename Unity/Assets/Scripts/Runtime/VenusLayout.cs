@@ -19,10 +19,14 @@ namespace Seven
 
         // ---- VEN_01
         public static readonly Vector3 SaucerAt = new Vector3(0f, 0f, -4.5f);
-        // Round 12 (2f): the shared saucer exterior (Chapter 1's 12 m disc): radius 6, underside 1.15 m above the ground
-        public const float SaucerRadius = 6f, SaucerHover = 1.15f;
-        public static readonly Vector3 RampFoot = new Vector3(0f, 0f, 4.3f);       // the ramp comes down on the north side
-        public const float RampTopZ = 0.9f, RampTopY = 1.48f;                        // it meets the hull's underside near the rim
+        // Round 12 (2f): the shared saucer exterior (Chapter 1's 12 m disc), radius 6.
+        // Round 13 (0b, the saucer's fixed design): no ramp - it hovers on Venus with its underside 3.35 m up (Chapter 1's
+        // beam height: 1.15 + HoverLift 2.2) and 7 comes down / goes up in the tractor beam under its centre.
+        public const float SaucerRadius = 6f, SaucerHover = 3.35f;
+        /// <summary>Where the beam sets her down (the ground under the hatch).</summary>
+        public static Vector3 BeamFoot => new Vector3(SaucerAt.x, 0f, SaucerAt.z);
+        /// <summary>Where she walks to after coming down (north, clear of the hull) - was the foot of the old ramp.</summary>
+        public static readonly Vector3 StepOut = new Vector3(0f, 0f, 4.3f);
         public static readonly Vector3 HatchAt = new Vector3(3.4f, 0f, -1.4f);       // the storage hatch (bike bay), north-east
         /// <summary>QF10: the seamless hull panel of the bike bay: centre angle (degrees from +x toward +z round the saucer's
         /// axis) and angular width; it spans the hull's lower band (local y -0.2 .. 1.0).</summary>
@@ -34,7 +38,7 @@ namespace Seven
         public static Vector3 BayInside => SaucerAt + HatchDir * 3.4f;
         public static Vector3 BayOutside => SaucerAt + HatchDir * 8.9f;
         public static readonly Vector3 BikeUnpacked = new Vector3(6.4f, 0f, 4.6f);   // the bike, out of the hatch, facing north
-        public static readonly Vector3 PantherLie = new Vector3(-3.4f, 0f, 3.6f);    // he lies beside the ramp, large
+        public static readonly Vector3 PantherLie = new Vector3(-3.4f, 0f, 3.6f);    // he lies beside the ship, under the rim, large
         public static readonly Vector3 VistaSpot = new Vector3(0f, 0f, 11.5f);       // over her shoulder toward the gardens
         // ---- VEN_02 road: (bike + walk)
         public const float BendZ = 50f;
@@ -46,7 +50,7 @@ namespace Seven
         // along the near edge of the hole (the right length: 12 m for a 10 m gap); she lifts it and lays it across as a
         // bridge (it stays for return trips), then rides over it. The "Bridge" zone opens when it is down.
         public static readonly Vector3 SlabLie = new Vector3(30.4f, 0.32f, 115.6f);    // centre, lying along x beside the gap
-        public static readonly Vector3 SlabSize = new Vector3(12.2f, 0.62f, 3.0f);    // length (x when lying), thickness, width
+        public static readonly Vector3 SlabSize = new Vector3(12.2f, 0.62f, 4.6f);    // length (x when lying), thickness, width (Round 13 0d: 3.0 -> 4.6 m)
         public const float SlabLieYaw = 90f;                                           // its length along x
         public static readonly Vector3 SlabBridge = new Vector3(30f, 0.0f, 123f);      // centre once laid across (length along z)
         public const float BridgeTop = 0.12f;                                          // its top surface (ends sunk into the broken lips)
@@ -112,7 +116,11 @@ namespace Seven
             // first, then "Valley" - the natural ground (VenusTerrain: the worn path, the valley floor, the gully).
             R("Platform", -10.5f, -10.5f, 10.5f, 10.5f, 0f),
             R("Detour1", 15f, 104f, 23.4f, 116f, 1.0f, false),                        // the garden-wall shelf (climb anywhere along it, explore)
-            R("Bridge", 28.4f, 113.3f, 31.6f, 128.8f, BridgeTop, true, float.NaN, 1, false),   // QF10: the slab laid across the gully (opens when it is down)
+            // Round 13 (0d): the slab bridge is wider (4.6 m) and has ramped ends meeting the ground on both sides (no lip);
+            // the wide ramps funnel any reasonable approach angle onto it
+            R("Bridge", 27.7f, 116.2f, 32.3f, 129.8f, BridgeTop, true, float.NaN, 1, false),   // QF10: the slab laid across the gully (opens when it is down)
+            R("BridgeRampS", 26.2f, 112.4f, 33.8f, 117.6f, 0f, true, BridgeTop, 1, false),          // overlaps the bridge 1.4 m (>= 0.6 m rule)
+            R("BridgeRampN", 26.2f, 128.4f, 33.8f, 132.6f, BridgeTop, true, 0f, 1, false),
             R("Court", 14f, 190f, 46f, 214f, 0f),
             R("TempleWalk", 25f, 212f, 35f, 237f, 0f, false),
             R("TempleHall", 22f, 236f, 38f, 262.6f, 0f, false),
@@ -131,7 +139,7 @@ namespace Seven
             R("Valley", -45f, -25f, 95f, 220f, 0f),                                    // natural ground (height field + walkable mask)
         };
         /// <summary>QF10 (6f): zones whose ground is the sculpted terrain itself (no floor block is built for them).</summary>
-        public static bool NaturalZone(string name) => name == "Valley" || name == "MaintA" || name == "MaintB" || name == "ObsArea" || name == "Detour1" || name == "Bridge" || name == "Platform";
+        public static bool NaturalZone(string name) => name == "Valley" || name == "MaintA" || name == "MaintB" || name == "ObsArea" || name == "Detour1" || name == "Bridge" || name == "BridgeRampS" || name == "BridgeRampN" || name == "Platform";
 
         // ---- QF10: the garden wall beside the stopping area: climbable anywhere along it (explore), jump down anywhere.
         // It is no longer the way round the collapse (the far terrace and the ramp beyond are gone: the slab bridge is).

@@ -26,6 +26,42 @@ SET = {
 }
 
 
+# Round 13 (Dan's B01 rewrite, VEN_B01_06-20): the delivery directions become Eleven v3 audio tags (the laughs / chuckle /
+# hum are part of the lines). Lines with a direction - and every Panther line in B01, so his takes match - use v3.
+TAGS = {
+    "VEN_B01_06": "[casually] What should I call you?",
+    "VEN_B01_08": "[a small, surprised laugh] Panther?",
+    "VEN_B01_09": "[dryly] Ahem. You could say it without looking down at me.",
+    "VEN_B01_10": "[teasing] I'd have to lie on the floor.",
+    "VEN_B01_11": "[perfectly composed] There. Saved you the trouble.",
+    "VEN_B01_12": "[breathless] You can do that? [disbelieving laugh]",
+    "VEN_B01_15": "[mildly] An excellent time to be small.",
+    "VEN_B01_16": "[reluctant little chuckle] Mm. Fair point.",
+    "VEN_B01_17": "[still amused] You're not getting a bigger bowl.",
+    "VEN_B01_18": "[thoughtful hum] Mmm. We can discuss that when you return.",
+    "VEN_B01_19": "[laughs softly] [warmly] Look after the ship, Panther.",
+    "VEN_B01_20": "[quietly assured] I intend to.",
+    # Round 13 (0m): VEN_C12 / VEN_C13 (Dan's directions)
+    "VEN_C12_07": "[a quiet sigh] And now it's on someone's side of a border.",
+    "VEN_C13_04": "[a small chuckle] Perhaps we'll arrive on a quiet day.",
+    "VEN_C13_21": "[laughing softly] Fair point.",
+    "VEN_C13_E2": "[a small sigh] Of course you do.",
+}
+V3_CAT = {"stability": 0.5, "similarity_boost": 0.8, "use_speaker_boost": True}
+
+
+def take(l):
+    """(model, settings, text) for a line."""
+    model, st = SET[l["speaker"]]
+    text = l["text"].replace("’", "'")
+    v3cat = l["speaker"] == "cat" and ((l["scene"] == "VEN_B01" and l["id"] >= "VEN_B01_06") or l["scene"] in ("VEN_C12", "VEN_C13"))
+    if l["id"] in TAGS or v3cat or (l.get("direction") and l["speaker"] == "seven"):
+        text = TAGS.get(l["id"], (f'[{l["direction"]}] ' if l.get("direction") else "") + text)
+        if l["speaker"] == "cat": model, st = "eleven_v3", V3_CAT
+        elif l["speaker"] == "seven": model = "eleven_v3"
+    return model, st, text
+
+
 def req(path, body=None, accept="application/json"):
     data = json.dumps(body).encode() if body is not None else None
     r = urllib.request.Request(API + path, data=data, method="POST" if body is not None else "GET",
@@ -34,8 +70,27 @@ def req(path, body=None, accept="application/json"):
         return resp.read()
 
 
+# Round 13 (0f): the Wormmaster's taunts during the encounter (not in the spec's scenes: short barks while he fights back;
+# Dan can edit or drop them here and in VenusDirectorPart2.Taunts). --taunts makes them.
+TAUNTS = [
+    ("VEN_ENC_T1", "They answer to me. Not to you."),
+    ("VEN_ENC_T2", "You cannot reach them all."),
+    ("VEN_ENC_T3", "Turn back, little traveller."),
+    ("VEN_ENC_T4", "Another one? I can wait."),
+]
+
+
 def main():
     force = "--force" in sys.argv
+    if "--taunts" in sys.argv:
+        voices = {v["name"].strip().lower(): v["voice_id"] for v in json.loads(req("/voices"))["voices"]}
+        model, st = SET["wormmaster"]
+        for i, t in TAUNTS:
+            path = os.path.join(OUT, i + ".mp3")
+            if os.path.exists(path) and not force: continue
+            audio = req(f"/text-to-speech/{voices['wormmaster']}?output_format=mp3_44100_128", {"text": t, "model_id": model, "voice_settings": st}, "audio/mpeg")
+            open(path, "wb").write(audio); print(i, len(audio) // 1024, "KB", t)
+        return
     rnd = int(sys.argv[sys.argv.index("--round") + 1]) if "--round" in sys.argv else 0
     only = sys.argv[sys.argv.index("--only") + 1:] if "--only" in sys.argv else None
     d = json.load(open(os.path.join(ROOT, "Unity/Assets/Resources/Venus/venus_dialogue.json"), encoding="utf-8"))
@@ -48,11 +103,11 @@ def main():
         if vname not in voices: waiting.append(f'{l["id"]} ({l["voice"]})'); continue
         path = os.path.join(OUT, l["id"] + ".mp3")
         if os.path.exists(path) and not force: skipped += 1; continue
-        model, st = SET[l["speaker"]]
-        body = {"text": l["text"], "model_id": model, "voice_settings": st}
+        model, st, text = take(l)
+        body = {"text": text, "model_id": model, "voice_settings": st}
         audio = req(f"/text-to-speech/{voices[vname]}?output_format=mp3_44100_128", body, "audio/mpeg")
         open(path, "wb").write(audio); made += 1
-        print(f'{l["id"]}  {l["label"]}  {model}  {len(audio)//1024} KB  {l["text"]}')
+        print(f'{l["id"]}  {l["label"]}  {model}  {len(audio)//1024} KB  {text}')
     print(f"done: {made} made, {skipped} kept; waiting for a voice: {len(waiting)} {waiting}")
 
 

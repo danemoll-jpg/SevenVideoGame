@@ -17,6 +17,15 @@ apply to every asset and scene:
   (component + volume profile + `SevenHeightFog` full-screen pass + lights + `Glow*` sources). Knobs, recipe and
   cost in `Docs/ATMOSPHERE.md`.
 
+## Saucer — fixed design (Dan, 2026-11-19; never let it drift)
+- **One shared exterior** on every world: `BuildSaucerExterior` (`Editor/FightDemoBuilderSaucerExt.cs`) — the ~12 m
+  polished silver disc, glowing rim band, low dome, belly glow. No per-world variants.
+- **No ramp, ever.** Getting in and out is **the tractor beam**: iris hatch in the belly + cone of light
+  (`BuildSaucerBeam` + runtime `SaucerBeam.cs`), the same on the Moon, on Venus and any later world. On a world it
+  hovers (underside 3.35 m) so 7 can walk under it to the beam.
+- **The bike hatch is seamless when closed** (hull panel + hair-thin seam that glows only while it opens); the bay
+  behind it is lit and pale (no dark bands).
+
 ## Tech Stack
 - Unity **6000.6.1f1**, **URP**, **Input System only** (same as Woodstock Rush / Chastain Rush, so systems can be ported).
 - Blender for model cleanup, scripted where possible (`Tools/Blender/*.py`). Find Blender on Dan's PC; record the path under Commands.
@@ -296,7 +305,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–12 + QF1–QF11 complete (2026-11-18), release 0.12.0.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–13 + QF1–QF11 complete (2026-11-19), release 0.13.0.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -392,6 +401,30 @@ scene (Round 10).
     the dive through the crust, the tunnels → the cell). Plays on "Chapter 1" from the menu and Scene Select's first
     entry (`Chapter1State.Intro`), never on Continue; skippable (A / Esc / Enter). Check: `-openingshot` (~25 s, captures
     `op01–op03` + `s01_cell_start`, then quits).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.12.0** (Round 12 status in `TODO.md`), then Round 13.
+- **Round 13 (release 0.13.0)** — Dan's 0.12.0 fixes + conversation reactions + the ship's console:
+  - Saucer: no ramp anywhere (see "Saucer — fixed design"); Venus hovers it (underside 3.35 m), `VenusDirector.BeamDown/BeamUp`.
+  - New game: "Chapter 1" from the menu asks once and clears Chapter 1 / Venus / console progress (`SaveGame.NewGame`);
+    `SaveGame.Furthest` = furthest Chapter 1 checkpoint (console Log / Field Guide).
+  - Guardian rig: `cleanup_r11.py elarim` welds the Tripo pieces, cuts the cape off (`split_cape`), skins the body alone
+    with automatic weights, cape on CapeA/B; bend test previews `elarim_bendtest_*`. `cleanup_r11.py ... elarim_mixamo` →
+    `Art/Export/elarim/elarim_body_for_mixamo.fbx` (cape-less body for Mixamo) + `elarim_cape_part.fbx`.
+  - Venus: wider slab bridge with ramped ends (`BridgeRampS/N` zones, `BridgeRamps` aprons), bike glides along edges
+    (`HoverBike.ClampBike`, `Snags`); bike sound fixed (`EnsureAudio`) + whoosh / lift-off / settle / mount / dismount;
+    `CameraShake.Quake` (real shake) + `VenusDirector.Tremor/TremorAndCollapse/Brace` (B03 walkway collapse, C04);
+    `VenusWildlife.cs` (birds, insects, distant calls, rustles) + flapping birds (`VenusFlyer.Flap`);
+    encounter fights back (`VenusDirectorPart2.Harass`, `WormCreature.Lunge/Stun`, taunts `VEN_ENC_T1-4`);
+    C03_11 "Follow me." (`GuardianLeads`); VEN_C12 (`C12()`, the locations display); C11 + C13 in the pilot's chair
+    (`Chapter1AboardVenus.VenusDebriefChair / C13`, Panther on her lap via `CatCompanion.HopOntoLap / LapFrame`).
+  - Music: `MusicSystem.Suspend/Resume` around both visions (resumes where it left off; 60 s watchdog).
+  - Venus dialogue: `make_venus_lines.py` keeps Dan's delivery directions ("7 — casually" → `direction`) and branch ids
+    (`VEN_C13_M1`, `_E1`; `VenusDialogue.LineNumber` = 901 / 951); `generate_venus_voices.py` turns directions into v3 tags
+    (`TAGS`), `--taunts` = the Wormmaster's encounter barks.
+  - Reactions: `Docs/REACTIONS.md`, data `Resources/Reactions/reactions.json`, bank `python Tools/Voice/generate_reactions.py`,
+    runtime `Reactions.cs` (hooked in `DialoguePlayer.PlayOne`; `-noreactions` = off).
+  - Console: `ShipConsole.cs` (+ star map; Log `Resources/Console/adventure_log.json` = `Docs/ADVENTURE-LOG.md`, Field Guide
+    `field_guide.json` = `Docs/FIELD-GUIDE.md`, portraits `Tools/Blender/render_portraits.py` → `Resources/Console/Portraits`).
+  - Round 13 check switches: `-r13 bridge|tremor|temple|encounter|console|consolefresh` (focused short runs).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.13.0** (Round 13 status in `TODO.md`), then Round 14.
+**Before: Dan plays 0.12.0** (Round 12 status in `TODO.md`), then Round 13.
 **Before:** Dan plays 0.10.2, then Round 11
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

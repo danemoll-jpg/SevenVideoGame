@@ -857,46 +857,9 @@ namespace Seven.EditorTools
             col.direction = 0; col.center = new Vector3(0f, b0 + 0.6f, 0f); col.radius = 0.9f; col.height = 11f;
             // Round 7: no ramp. An iris hatch in the belly (8 blades that slide out under the hull) over a white glow
             // disc, and a soft cone of light from the hatch to the floor (shown when the saucer hovers HoverLift up).
-            var hatch = new GameObject("Hatch").transform; hatch.SetParent(saucer, false); hatch.localPosition = new Vector3(0f, b0 - 0.105f, 0f);
-            for (int i = 0; i < 8; i++)
-            {
-                var blade = new GameObject("Blade" + i).transform; blade.SetParent(hatch, false);
-                blade.localRotation = Quaternion.Euler(0f, i * 45f, 0f);
-                var hv = new List<Vector3>(); var ht = new List<int>();
-                var c0 = Vector3.zero; var c1 = Polar(L.HatchRadius + 0.05f, -26f, 0f); var c2 = Polar(L.HatchRadius + 0.05f, 26f, 0f);
-                Quad(hv, ht, c0, c2, c1, c0); Quad(hv, ht, c0, c1, c2, c0);
-                MeshObject("BladeMesh", SaveMesh(Finish(hv, ht), "Saucer_HatchBlade" + i), m.metalDark, blade, false);
-            }
-            var hg = new List<Vector3>(); var hgt = new List<int>();
-            Ellipsoid(hg, hgt, Vector3.zero, new Vector3(L.HatchRadius, 0.04f, L.HatchRadius), 6, 24);
-            props.hatchGlow = MeshObject("HatchGlow", SaveMesh(SmoothFinish(hg, hgt), "Saucer_HatchGlow"), m.rim, saucer, false).GetComponent<Renderer>();
-            props.hatchGlow.transform.localPosition = new Vector3(0f, b0 - 0.02f, 0f);
-            props.hatch = hatch;
-            // Beam cone: pivot at the hatch, length = hover height of the belly above the floor; vertex alpha fades down.
-            float beamLen = b0 - 0.1f + L.HoverLift;
-            var beam = new GameObject("TractorBeam").transform; beam.SetParent(saucer, false); beam.localPosition = new Vector3(0f, b0 - 0.1f, 0f);
-            var cone = Lathe(new[] { new Vector2(L.HatchRadius * 0.95f, 0f), new Vector2(L.BeamFloorRadius, -beamLen) }, 0f, 360f, 48);
-            var cm = SaveMesh(Colored(cone, pp => Mathf.Lerp(0.42f, 0.1f, Mathf.Clamp01(-pp.y / beamLen))), "Saucer_BeamCone");
-            MeshObject("Cone", cm, m.field, beam, false);
-            var inner = Lathe(new[] { new Vector2(L.HatchRadius * 0.55f, 0f), new Vector2(L.BeamFloorRadius * 0.6f, -beamLen) }, 0f, 360f, 32);
-            MeshObject("ConeCore", SaveMesh(Colored(inner, pp => Mathf.Lerp(0.3f, 0.06f, Mathf.Clamp01(-pp.y / beamLen))), "Saucer_BeamCore"), m.field, beam, false);
-            var fv = new List<Vector3>(); var ft = new List<int>();
-            for (int k = 0; k < 48; k++)
-            {
-                var a = Polar(L.BeamFloorRadius * 1.25f, k * 7.5f, 0f); var b = Polar(L.BeamFloorRadius * 1.25f, (k + 1) * 7.5f, 0f);
-                Quad(fv, ft, Vector3.zero, b, a, Vector3.zero);
-            }
-            var floorMesh = Finish(fv, ft);
-            floorMesh.colors = floorMesh.vertices.Select(pp => new Color(1f, 1f, 1f, Mathf.Lerp(0.45f, 0f, pp.magnitude / (L.BeamFloorRadius * 1.25f)))).ToArray();
-            var floorGo = MeshObject("BeamFloor", SaveMesh(floorMesh, "Saucer_BeamFloor"), m.field, beam, false);
-            floorGo.transform.localPosition = new Vector3(0f, -beamLen + 0.03f, 0f);
-            props.beamFloor = floorGo.GetComponent<Renderer>();
-            var bl = new GameObject("BeamLight").AddComponent<Light>();
-            bl.transform.SetParent(beam, false); bl.transform.localPosition = new Vector3(0f, -0.2f, 0f); bl.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            bl.type = LightType.Spot; bl.spotAngle = 60f; bl.range = 9f; bl.intensity = 0f; bl.shadows = LightShadows.None;
-            props.beamLight = bl;
-            props.beam = beam;
-            beam.gameObject.SetActive(false);
+            // Round 13: the one shared beam (FightDemoBuilderSaucerExt.BuildSaucerBeam, also Venus's)
+            var sbeam = BuildSaucerBeam(saucer, b0, b0 - 0.1f + L.HoverLift, L.HatchRadius, L.BeamFloorRadius, m.metalDark, m.rim, m.field);
+            props.hatch = sbeam.Hatch; props.hatchGlow = sbeam.HatchGlow; props.beamFloor = sbeam.BeamFloor; props.beamLight = sbeam.BeamLight; props.beam = sbeam.Beam;
             props.saucer = saucer;
             foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;   // Round 10: its own probe never sees it
             // Cradle (stays when she lifts off) and clamps.

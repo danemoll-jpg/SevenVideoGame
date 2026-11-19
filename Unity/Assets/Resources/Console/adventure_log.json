@@ -1,0 +1,124 @@
+{
+ "note": "Ship console Log: one entry per completed chapter beat, in story order, shown once unlocked. Edit text/title freely; add an entry anywhere in the list (unique id); remove = delete it. Written only from what happens in the game. Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), or \"never\". Mirror: Docs/ADVENTURE-LOG.md.",
+ "entries": [
+  {
+   "id": "ch1_cell",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "The cat at the cell",
+   "text": "Held in a cell beneath the Moon, 7 met a black cat who spoke inside her head. His people had sent him to rescue her. He opened the cell door.",
+   "unlock": "ch1>=1"
+  },
+  {
+   "id": "ch1_escape",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "The older wall",
+   "text": "He did not know why she was being held, and his people had not told him why they wanted her out. The guarded way was closed to them, but one wall was older than the prison. They followed it.",
+   "unlock": "ch1>=2"
+  },
+  {
+   "id": "ch1_scree",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "Past the Scree guard",
+   "text": "A Scree guard stood in their way. 7 got them past without hurting anyone.",
+   "unlock": "ch1>=4"
+  },
+  {
+   "id": "ch1_vision",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "The door and the shape",
+   "text": "Touching a stone shape in the ruins, 7 saw the same doorway whole, long ago: two figures opened it and walked through. She took the shape with her. When she had uncovered the buried lock, she opened the door the way she had seen them do it.",
+   "unlock": "ch1>=6"
+  },
+  {
+   "id": "ch1_fight",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "The terrace",
+   "text": "Two Scree blocked the way out of the base. 7 knocked them down; they sat up again afterwards.",
+   "unlock": "ch1>=7"
+  },
+  {
+   "id": "ch1_city",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "The city inside the Moon",
+   "text": "Outside, a city filled the Moon’s inner surface, lit windows and traffic curving up overhead. Below the towers, mining machinery was cutting into much older buildings.",
+   "unlock": "ch1>=7"
+  },
+  {
+   "id": "ch1_saucer",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "The ship",
+   "text": "7 found her saucer in the impound below the terrace. They released it and went aboard. The cat found it was considerably more ship than he had expected.",
+   "unlock": "ch1>=9"
+  },
+  {
+   "id": "ch1_galley",
+   "chapter": "Chapter 1 — The Moon Prison",
+   "title": "Dinner in the galley",
+   "text": "Free-range chicken for the cat. 7 said the vision felt like remembering. The cat recognized an Elarim marking on the shape, and he chose to stay. Next: Venus.",
+   "unlock": "ch1>=10"
+  },
+  {
+   "id": "ven_landing",
+   "chapter": "Chapter 2 — Venus",
+   "title": "Landing, and a name",
+   "text": "The saucer set down on Venus, where people still live among the gardens. The cat gave his name, Panther, and then grew to the size of a large and powerful cat. He stayed to watch the ship while 7 rode her hover bike toward the temple.",
+   "unlock": "scene:VEN_B01"
+  },
+  {
+   "id": "ven_ride",
+   "chapter": "Chapter 2 — Venus",
+   "title": "The broken path",
+   "text": "The ride ran under hanging gardens and beside water channels. Then a strong tremor broke the path in front of her. 7 laid a fallen slab across the gap and rode on.",
+   "unlock": "scene:VEN_B03"
+  },
+  {
+   "id": "ven_guardian",
+   "chapter": "Chapter 2 — Venus",
+   "title": "The guardian",
+   "text": "At the temple, 7 showed the guardian the shape from the Moon and told the guardian about the door she had seen. The guardian listened.",
+   "unlock": "venus>=GuardianMet"
+  },
+  {
+   "id": "ven_cube",
+   "chapter": "Chapter 2 — Venus",
+   "title": "The cube chamber",
+   "text": "The temple’s cube bears the same marking; it holds the Elarim’s record. Before she could touch it, another tremor hit. Someone beneath the gardens was forcing the burrowing creatures through the foundations to make the Elarim give up the temple. 7 said she would find him.",
+   "unlock": "venus>=HelpAccepted"
+  },
+  {
+   "id": "ven_signal",
+   "chapter": "Chapter 2 — Venus",
+   "title": "Beneath the gardens",
+   "text": "7 rode the maintenance path to the lower gardens. The creatures were not attacking anyone. Every time a signal sounded, they moved.",
+   "unlock": "venus>=ControlDiscovered"
+  },
+  {
+   "id": "ven_wormmaster",
+   "chapter": "Chapter 2 — Venus",
+   "title": "The Wormmaster",
+   "text": "The signal came from a chamber full of machines below the gardens. The Wormmaster said the Elarim could leave; it was their home, she told him. Three devices were driving the creatures.",
+   "unlock": "venus>=EncounterActive"
+  },
+  {
+   "id": "ven_contained",
+   "chapter": "Chapter 2 — Venus",
+   "title": "The ground is quiet",
+   "text": "7 shut down the three devices and closed a barrier around the Wormmaster. The creatures went home unharmed. On the ride back, workers were on the paths again and water ran in a repaired channel.",
+   "unlock": "venus>=ThreatStopped"
+  },
+  {
+   "id": "ven_record",
+   "chapter": "Chapter 2 — Venus",
+   "title": "The record",
+   "text": "At the cube, 7 saw the first planting on Venus, and someone holding out a seed for her to take. The guardian said that moment is not in their record. He gave her a copy of the record to carry; the original stays in the temple.",
+   "unlock": "venus>=RecordReceived"
+  },
+  {
+   "id": "ven_aboard",
+   "chapter": "Chapter 2 — Venus",
+   "title": "Back aboard",
+   "text": "7 told Panther what she had seen. She wishes she could remember the face. There are other temples to ask.",
+   "unlock": "venus>=Complete"
+  }
+ ]
+}

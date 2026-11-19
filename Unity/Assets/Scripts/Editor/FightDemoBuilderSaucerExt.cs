@@ -24,6 +24,52 @@ namespace Seven.EditorTools
 
         class SaucerExt { public Transform Panel; public Renderer Seam, BayBack; public Light BayLight, UnderLight; public readonly List<Renderer> Glow = new List<Renderer>(); }
 
+        /// <summary>Round 13 (0b, the saucer's fixed design): the tractor beam is how 7 gets in and out of the saucer on
+        /// every world - an iris hatch in the belly (8 blades), its glow disc, a soft cone of light down to the ground, the
+        /// floor glow and a spot light. Shared by Chapter 1 and Venus; driven at runtime by <see cref="Seven.SaucerBeam"/>.
+        /// b0 = the hull underside (saucer-local), beamLen = from the hatch down to the ground.</summary>
+        static Seven.SaucerBeam BuildSaucerBeam(Transform saucer, float b0, float beamLen, float hatchRadius, float floorRadius, Material metalDark, Material rim, Material field)
+        {
+            var hatch = new GameObject("Hatch").transform; hatch.SetParent(saucer, false); hatch.localPosition = new Vector3(0f, b0 - 0.105f, 0f);
+            for (int i = 0; i < 8; i++)
+            {
+                var blade = new GameObject("Blade" + i).transform; blade.SetParent(hatch, false);
+                blade.localRotation = Quaternion.Euler(0f, i * 45f, 0f);
+                var hv = new List<Vector3>(); var ht = new List<int>();
+                var c0 = Vector3.zero; var c1 = Polar(hatchRadius + 0.05f, -26f, 0f); var c2 = Polar(hatchRadius + 0.05f, 26f, 0f);
+                Quad(hv, ht, c0, c2, c1, c0); Quad(hv, ht, c0, c1, c2, c0);
+                MeshObject("BladeMesh", SaveMesh(Finish(hv, ht), "Saucer_HatchBlade" + i), metalDark, blade, false);
+            }
+            var hg = new List<Vector3>(); var hgt = new List<int>();
+            Ellipsoid(hg, hgt, Vector3.zero, new Vector3(hatchRadius, 0.04f, hatchRadius), 6, 24);
+            var hatchGlow = MeshObject("HatchGlow", SaveMesh(SmoothFinish(hg, hgt), "Saucer_HatchGlow"), rim, saucer, false).GetComponent<Renderer>();
+            hatchGlow.transform.localPosition = new Vector3(0f, b0 - 0.02f, 0f);
+            var beam = new GameObject("TractorBeam").transform; beam.SetParent(saucer, false); beam.localPosition = new Vector3(0f, b0 - 0.1f, 0f);
+            string sfx = beamLen.ToString("0.00").Replace('.', '_');
+            var cone = Lathe(new[] { new Vector2(hatchRadius * 0.95f, 0f), new Vector2(floorRadius, -beamLen) }, 0f, 360f, 48);
+            MeshObject("Cone", SaveMesh(Colored(cone, pp => Mathf.Lerp(0.42f, 0.1f, Mathf.Clamp01(-pp.y / beamLen))), "Saucer_BeamCone_" + sfx), field, beam, false);
+            var inner = Lathe(new[] { new Vector2(hatchRadius * 0.55f, 0f), new Vector2(floorRadius * 0.6f, -beamLen) }, 0f, 360f, 32);
+            MeshObject("ConeCore", SaveMesh(Colored(inner, pp => Mathf.Lerp(0.3f, 0.06f, Mathf.Clamp01(-pp.y / beamLen))), "Saucer_BeamCore_" + sfx), field, beam, false);
+            var fv = new List<Vector3>(); var ft = new List<int>();
+            for (int k = 0; k < 48; k++)
+            {
+                var a = Polar(floorRadius * 1.25f, k * 7.5f, 0f); var b = Polar(floorRadius * 1.25f, (k + 1) * 7.5f, 0f);
+                Quad(fv, ft, Vector3.zero, b, a, Vector3.zero);
+            }
+            var floorMesh = Finish(fv, ft);
+            floorMesh.colors = floorMesh.vertices.Select(pp => new Color(1f, 1f, 1f, Mathf.Lerp(0.45f, 0f, pp.magnitude / (floorRadius * 1.25f)))).ToArray();
+            var floorGo = MeshObject("BeamFloor", SaveMesh(floorMesh, "Saucer_BeamFloor_" + sfx), field, beam, false);
+            floorGo.transform.localPosition = new Vector3(0f, -beamLen + 0.03f, 0f);
+            var bl = new GameObject("BeamLight").AddComponent<Light>();
+            bl.transform.SetParent(beam, false); bl.transform.localPosition = new Vector3(0f, -0.2f, 0f); bl.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            bl.type = LightType.Spot; bl.spotAngle = 60f; bl.range = beamLen + 6f; bl.intensity = 0f; bl.shadows = LightShadows.None;
+            beam.gameObject.SetActive(false);
+            var sb = saucer.gameObject.AddComponent<Seven.SaucerBeam>();
+            sb.Hatch = hatch; sb.Beam = beam; sb.BeamLight = bl; sb.BeamFloor = floorGo.GetComponent<Renderer>(); sb.HatchGlow = hatchGlow;
+            sb.HatchRadius = hatchRadius; sb.BellyY = b0;
+            return sb;
+        }
+
         static SaucerExt BuildSaucerExterior(Transform saucer, float b0, Material hull, Material hullUnder, Material metalDark, Material rim)
         {
             var ext = new SaucerExt();
@@ -107,7 +153,10 @@ namespace Seven.EditorTools
             }
             // the bay behind it: dark floor / ceiling / sides, a softly glowing back wall, a light that comes up as it opens
             {
-                var bayMat = Dissolve("Saucer_bay", Gray(0.2f), 0.3f, false); bayMat.SetFloat("_Cull", 0f); EditorUtility.SetDirty(bayMat);
+                // Round 13 (0b): the bay was dark gray (Gray 0.2) - seen through the opening as two black bands (its ceiling and
+                // floor). The opening is lit and clean now: pale walls with a soft white glow of their own.
+                var bayMat = Dissolve("Saucer_bay", Gray(0.82f), 0.3f, false); bayMat.SetFloat("_Cull", 0f);
+                bayMat.EnableKeyword("_EMISSION"); bayMat.SetColor("_EmissionColor", Color.white * 0.35f); EditorUtility.SetDirty(bayMat);
                 var bay = new GameObject("Bay").transform; bay.SetParent(saucer, false);
                 var fl = underOut.Select(p => new Vector2(p.x, p.y + 0.03f)).ToList(); var ce = upperOut.Select(p => new Vector2(p.x, p.y - 0.03f)).ToList();
                 MeshObject("BayFloor", SaveMesh(Lathe(fl, ha0, ha1, 8), "Saucer_Ext_BayFloor"), bayMat, bay, false);

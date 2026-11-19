@@ -53,9 +53,11 @@ def main():
                 if rest: cur["cues"].append(rest); in_cam = False
             elif in_cam and l.startswith("- "): cur["cues"].append(l[2:].strip())
             elif in_cam and l and not l.startswith("- "): in_cam = False
-        m = re.match(r"^(VEN_[BC]\d\d)_(\d\d) \| (.+?)\s*$", l)
+        m = re.match(r"^(VEN_[BC]\d\d)_([A-Z]?\d+) \| (.+?)\s*$", l)
         if m:
-            sid, n, who = m.group(1), int(m.group(2)), m.group(3)
+            # Round 13: VEN_C13 has branch lines (VEN_C13_M1.. / VEN_C13_E1..) after the player's choice
+            sid, suf, who = m.group(1), m.group(2), m.group(3)
+            n = int(suf) if suf.isdigit() else 900 + int(suf[1:])
             j = i + 1
             while j < len(lines) and not lines[j].strip(): j += 1
             t = lines[j].strip().strip("“”\"")
@@ -68,8 +70,11 @@ def main():
             else:
                 label = {"seven": "7", "guardian": "Guardian", "attendant": "Attendant", "wormmaster": "Wormmaster"}[spk]
             delivery = "telepathic" if tele else ("in-gameplay" if sc.get("delivery") == "in-gameplay" else "spoken")
-            out.append({"id": f"{sid}_{n:02d}", "scene": sid, "speaker": spk, "label": label, "text": t,
-                        "delivery": delivery, "voice": VOICE[spk], "cue": ""})
+            # Round 13 (Dan's B01 rewrite): "7 — casually" / "Panther, telepathic — dryly": the words after the dash are
+            # the delivery direction (used for the voice take: Eleven v3 audio tags)
+            direction = who.split("—", 1)[1].strip() if "—" in who else ""
+            out.append({"id": f"{sid}_{n:02d}" if suf.isdigit() else f"{sid}_{suf}", "scene": sid, "speaker": spk, "label": label, "text": t,
+                        "delivery": delivery, "voice": VOICE[spk], "cue": "", "direction": direction})
             i = j
         i += 1
     # C02's trigger moved into the ride (VEN_B03); C01 cues on its first lines (presentation only)
@@ -80,7 +85,7 @@ def main():
                  "VEN_C04_01": "over 7's shoulder toward cube", "VEN_C04_02": "matching inserts of related markings",
                  "VEN_C04_05": "brief eye close-up", "VEN_C04_07": "falling dust insert",
                  "VEN_B01_01": "wide - saucer and landscape", "VEN_B01_05": "low three-quarter on the bike",
-                 "VEN_B01_10": "side medium - 7 mounting"}
+                 "VEN_B01_19": "side medium - 7 mounting"}
     for o in out:
         o["cue"] = first_cue.get(o["id"], "")
     data = {"note": "Round 11 Venus dialogue - generated from Docs/CHAPTER2_VENUS.md by Tools/Voice/make_venus_lines.py; "

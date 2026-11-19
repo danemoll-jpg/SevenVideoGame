@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Round 13: conversation sounds + the ship's console (Dan, 2026-11-19)
+## Round 13: conversation sounds + the ship's console (Dan, 2026-11-19) — done, status below; release 0.13.0
 Commit first. All standing rules (monochrome, Kyle's fog/glow, non-sexual presentation, 20-minute testing rule, look at
 your own captures, no exact-spot triggers). One release at the end: **0.13.0**; per-item status in "Round 13 — status";
 "For Dan to check (Round 13)".
@@ -69,6 +69,25 @@ your own captures, no exact-spot triggers). One release at the end: **0.13.0**; 
     back as the bike rises. He lies down **beside the ship** (no ramp — 0b). Regenerate the dialogue data. These
     laughs / chuckles / hums are part of the lines themselves, not the reaction bank (item 1).
 
+0m. **Two new scenes give the leads to the next worlds (Dan, 2026-11-19 — final text in the spec):**
+    - **VEN_C12 "Two locations"** — right after C10, before she leaves the temple: the guardian shows an ancient
+      display with **Mars** and **Europa**, explains them, sends them to the ship (a soft tone; Panther:
+      "Received. Two destinations."). **Result: Mars and Europa become available on the star map.** (Spec order:
+      C10 → C12 → B07.) The guardian walks to the display; over-her-shoulder shot of it (two glowing locations).
+    - **VEN_C13 "Choosing the next world"** — straight after C11, in the saucer's **navigation area**: 7 in the
+      **pilot's chair with Panther curled in her lap**, one hand stroking him, the other on the navigation controls;
+      the star map display ahead (Mars, then Europa brought close); the medium side two-shot; then a **player choice**
+      (Mars — "Seek the temple among the divided kingdoms" / Europa — "Find the Cetacean temple beneath the ice") with
+      its own short exchange for each; she sets course; close insert of Panther purring; wide from behind the chair as
+      the journey begins. Mars / Europa chapters don't exist yet → after the journey starts, a "Chapter 3 — Mars /
+      Europa (coming soon)" card, back to free exploration; both stay selectable on the star map.
+    - **This changes 0j and the console (item 2):** C11 also happens in the **pilot's chair at the navigation console
+      with Panther on her lap** (not the galley), flowing straight into C13. The chrome console gets a **pilot's
+      chair** in front of its navigation display for these scenes (the player still uses the console standing).
+      Star map rule: only reachable places — the Moon and Venus, **plus Mars and Europa once C12 has happened**.
+    - Voice all new lines with their delivery directions (Seven v3, Guardian, Panther), including the stroking /
+      purring / head-nudge beats as animation on the lap pose.
+
 ### 1. Laughs, giggles, hmms — the sounds people make in conversation
 Dan: when one says something funny, the other laughs or giggles; and add "hmm", "mm-hmm" and the other little sounds
 people make while talking. Chapter 1 and Venus, every conversation.
@@ -121,6 +140,115 @@ chrome-and-glow style (readable text, the existing UI font):
 A quick run through one funny exchange in each chapter (reactions audible, nothing over a line), the console's screens
 with a save that has Venus finished (Log + Field Guide filled) and one that has only Chapter 1, Settings changes take
 effect. Publish **0.13.0**; docs; commit + push.
+
+## Round 13 — status (2026-11-19): done, exe-verified off-screen; release 0.13.0 (`game-1300`)
+Committed the checkpoint first (`1b86e8d`). Dan's 0m (C12 + C13) was added mid-round and is included.
+
+**Early: the guardian's cape-less body for Mixamo** — `Art/Export/elarim/elarim_body_for_mixamo.fbx` (texture embedded;
+cape cut off by `cleanup_r11.py ... elarim_mixamo`, the cape saved as `elarim_cape_part.fbx` in the same coordinates;
+sheet `Docs/Previews/r13/elarim_body_for_mixamo_sheet.png`). **Only needed if the rig fix below still looks stiff.**
+
+### 0. Dan's fixes
+- **0a City reveal camera — done.** The low two-shot of them looking up is now brief (~1.7 s); then their view up the
+  curve over her shoulder (traffic streams, towers into the clouds), a second POV pan following the traffic, then the
+  extreme wide and the lower districts as before (`Chapter1Director.Scene6bReveal`, shots `c02b` / `c02c`). Checked only
+  through the player-style run (no 6b captures this round).
+- **0b No ramp — done.** Ramp removed from Venus; the saucer hovers there (underside 3.35 m) and 7 + the cat come down /
+  go up in the tractor beam (`BuildSaucerBeam` shared with Chapter 1, runtime `SaucerBeam.cs`; `VenusDirector.BeamDown`,
+  `BeamUp` in B07 and return visits). "Saucer — fixed design" rule in `CLAUDE.md`. The bike bay's two black bands were its
+  dark floor + ceiling (gray 0.2) — now pale and softly lit (capture `v06c` checked: clean, lit).
+- **0c New game — done.** "Chapter 1" from the menu asks once ("Start a new game? Your saved progress will be reset.")
+  when any save exists and clears Chapter 1, Venus and the console's progress (`SaveGame.NewGame`), so "Set course" leads
+  to the start of Chapter 2. Continue still resumes. (Logic only; no menu capture this round.)
+- **0d Bike on the bridge — done.** Cause: the bridge zone met the road zones edge-to-edge and the bike's 0.25 m pad made a
+  0.5 m strip that counted as off-road (the ≥ 0.6 m overlap rule); plus a 3 m-wide slab and axis-only sliding. Now: slab
+  4.6 m wide, ramped stone aprons at both ends (zones `BridgeRampS/N`, overlapping 1.4 m), and the bike glides along
+  edges (tries the move turned up to ±70°). **`-r13 bridge`: 10/10 approaches across (±35°, ±20°, 0°, both ways), 0 frames
+  stuck.**
+- **0e The guardian — cause found and fixed; Mixamo export ready.** Cause: Tripo's mesh is ~2000 loose pieces with the cape
+  fused around them, so Blender's automatic weights failed on a third of the vertices and the WHOLE body fell back to
+  "two nearest bone segments" weights (no smooth joints = stiff, awkward), and the old cape selection ("everything behind
+  the hips below the chest") put the backs of his thighs and calves on the cape bones (= legs through the cape). Now
+  (`cleanup_r11.py elarim`): weld the pieces, cut the cape off as its own part, skin the body alone (automatic weights:
+  0 of 15268 vertices unweighted), only the cape on CapeA/CapeB, 0 leg vertices on cape bones. Bend test previews
+  `Docs/Previews/r13/elarim_bendtest.png` (elbows / knees / shoulders bend smoothly). Cape: 0.0 cm leg contact standing,
+  kneeling, walking. "Follow me." (VEN_C03_11) voiced + in the spec/data; he walks ahead to the cube chamber and waits if
+  she falls behind (`GuardianLeads`). **Still open: his kneel in C03 does not show** (the kneel state is active but the
+  pose stays standing — the Blender kneel clip's retarget; a Round 12 leftover) — please look; if the body still looks
+  stiff to you, do the Mixamo upload above.
+- **0f The encounter fights back — done.** The Wormmaster fires a signal pulse every 4.5–7.5 s (faster as devices fall):
+  the nearest creature lunges at her (surfaced, fast, dust + rumble), the device she is nearest is shielded for 3.5 s
+  ("Shielded by his signal — wait"), that device's creatures are pulled across her path, and he taunts (4 new short
+  lines, `VEN_ENC_T1–4`, his voice — not in the spec, edit/drop in `VenusDirectorPart2.Taunts`). RT on a creature pushes it
+  aside and stuns it (6 s, it recovers; never harmed). Contact = the existing knockback/retry; after 3 knockbacks the
+  pulses pause 20 s (fairness). On the way down a creature in the root chamber lunges at her too. Check run: pulses 6,
+  lunges 6, shields 4, taunts 3, stuns 3, knockbacks 2, creatures harmed 0; captures `enc_lunge_*`.
+- **0g Music after visions — done.** `MusicSystem.Suspend/Resume`: the level's track fades back in from where it left
+  off after both visions (log: "music after the vision (0g): 'venus_gardens' playing again"; Chapter 1: see the playtest).
+- **0h Bike sound — done.** Cause: the bike's `Start` ran before the sound bank was loaded, so the hum loop was never
+  created. Now made as soon as the bank exists; idle hum, pitch + level rise with speed, a whoosh that comes in with speed
+  (new), lift-off / settle / mount / dismount (new SFX). Verified only by the log (muted rule).
+- **0i Venus wildlife — done.** `VenusWildlife.cs`: songbirds from varied 3D positions, distant bird / animal calls, an
+  insect bed, rustles in the grass and birds taking off near her; fades out underground. 17 small flapping birds over the
+  gardens (`VenusFlyer.Flap`). New SFX: `bird_song_a/b`, `bird_call_far`, `animal_call_far`, `insects_loop`,
+  `grass_rustle`, `wing_flutter`. (48 sounds by C03 in the check run.)
+- **0j / 0m C11 in the pilot's chair with Panther on her lap — done**, flowing straight into **C13**: she walks to the
+  pilot's chair at the console, sits, Panther hops up and curls in her lap (the Chapter 1 lap cat), her left hand strokes
+  him; the dodecahedron and the cube on the chair's arm for the insert; C11's lines; then C13 (over-her-shoulder on the
+  star map, his head lifts / nudges, the side shot), the **player choice on the star map** (Mars / Europa with Dan's
+  labels), the branch lines, the purr insert (`cat_purr`), the wide from behind the chair, then **"Chapter 3 — Mars /
+  Europa (coming soon)"** and free exploration (both stay on the star map). All 51 C12/C13 lines voiced with Dan's
+  directions (v3 tags).
+- **0k Tremors — done.** `CameraShake` (a real shake: 23 cm / 2.5° peak measured; the old one was overwritten every frame).
+  B03: as she rides up a strong tremor (rumble, shake, bike wobble, workers stumble, water slops, grass shivers), a short
+  cut — she brakes hard and the walkway in front of her cracks and falls into the gully with dust — then C02 with Panther's
+  new "I felt that from here." C04: a bigger shake, stones + heavy dust from the ceiling, the cage rattles, 7 and the
+  guardian brace.
+- **0l B01 rewritten — done.** Dan's VEN_B01_06–20 with every delivery direction voiced into fresh takes (7 and Panther on
+  Eleven v3; the old takes replaced); new beats (her look down at him, step back + gaze rising, the chuckle, him on his
+  haunches, pointing, the head-shake laugh, one last look as the bike rises); he lies down beside the ship (no ramp).
+  Panther now stands 3 m from the bike (he was 9 m away: the two-shots were too wide).
+- **0m C12 — done** (see 0j for C13): right after C10 the guardian walks to an ancient display in the cube chamber, Mars
+  and Europa glow up, over-her-shoulder on Mars then Europa, the transfer tone, Panther "Received. Two destinations.",
+  her thanks. Mars and Europa then appear on the star map.
+
+### 1. Reactions — done
+`Docs/REACTIONS.md` + `Resources/Reactions/reactions.json` (49 placements: 26 Chapter 1, 23 Venus; sincere moments left
+alone; move/remove one by editing the json). Bank: 15 kinds × 3 takes (`Tools/Voice/generate_reactions.py`, 7 and the cat
+on v3; the cat's get his telepathy treatment). Runtime `Reactions.cs`, in `DialoguePlayer.PlayOne`: after the line, a quiet
+random take (never the same twice in a row), the next line waits for it; skipped lines skip their reaction; small body cue
+(head tilt / nod / shoulders for 7 where the table IK runs, ear twitch for the cat). In the check runs: 0 overlaps.
+**Not heard by anyone yet** (muted rule) — please listen; `seven_hmm_3` is the take most likely to need a redo.
+
+### 2. The console — done
+Chrome crescent desk with two curved glowing screens on the main deck (in front of the sofa, 296 degrees), a pilot's chair at the navigation
+display. X / E "Use console", she stands with her hands on it, the camera goes over her shoulder; B / Esc leaves. Menu: Log
+(17 entries, `Docs/ADVENTURE-LOG.md`), Field guide (portraits rendered in Blender, `Docs/FIELD-GUIDE.md`; "The cat" until
+B01, then "Panther"), Star map (only reachable places: the Moon + Venus; Mars + Europa after C12; Set course = the existing
+travel / "coming soon"), Settings (the pause menu's own settings — music / effects / voice / button hints; there are no
+subtitle / invert / display settings in the game yet), Upgrades slot hidden. The galley seat now says "Set course at the
+console". Checks: `-r13 console` OK (Venus finished: Log 17, Field guide 7, map Moon/Venus/Mars/Europa, Mars → coming-soon
+card, music setting lowered and restored, button hints off/on took effect); `-r13 consolefresh` OK (Chapter 1 only: Log 8,
+Field guide 2, map Moon/Venus).
+
+### 3. Checks — **over the 20-minute rule: about 57 game-minutes in total.** Most of it was 7 attempts of the one release run: each found an old gap in the player-style driver (it could not fight the QF9 terrace Scree, a queued button press delayed its pause, it did not know "Set course" now flies to Venus, it did not know the new-game confirm) or a real Round 13 problem (the console stood across her walk to the galley - moved from 236 to 296 degrees on the deck).
+- **Release run: `PLAYTEST: 1/1, soft-locks 0, story watchdog fallbacks 0`** (5.0 min at 2x, from the main menu with the new-game confirm, quit + Continue at checkpoints 5 and 10, the terrace fight, the galley, "Set course" → Venus). Reactions in it: 7 heard in full, 0 overlaps.
+- `-r13 bridge` 10/10 · `-r13 tremor` (B02 → C04) · `-chapter2 -quick` (beam down, B01) · `-r13 encounter` (C06 → C12 →
+  beam up → C11/C13 → star map: `VENUS CHAPTER DONE`) · `-r13 console` / `consolefresh` OK. Audio peak 0 in every run;
+  0 non-gray pixels in the console captures.
+- Found and fixed by the checks: the bridge gap, a crash when Panther hopped onto her lap, the guardian blocking the C12
+  display, two chair shots blocked by the console pods, black "chrome", her hair over the screen, and the player-style
+  driver not knowing the QF9 terrace fight (it now walks up, attacks, dodges the telegraphed punch, takes them down).
+
+## For Dan to check (Round 13)
+- Listen: B01 (the new takes and laughs), C12 / C13, the reactions, the bike hum + whoosh, Venus birds and insects, the
+  tremor + walkway collapse, the Wormmaster's taunts.
+- The guardian: do his arms / legs move naturally now? (If not: upload `Art/Export/elarim/elarim_body_for_mixamo.fbx` to
+  Mixamo's auto-rigger, download "FBX for Unity, with skin" to `Art/Mixamo/elarim/elarim_body_mixamo.fbx`.) His kneel in C03
+  still doesn't show.
+- The encounter's difficulty (pulse rate, lunges, shields) — tune in `VenusDirectorPart2.Harass`.
+- The console's look and camera, and the chair scene C11 → C13 → the Mars / Europa choice.
+- The new-game confirm in the main menu.
 
 ## Round 12: QF11 fixes + Venus part 2, all in one — done, status below (Dan, 2026-11-18: "fold everything together")
 Commit first. **The spec is `Docs/CHAPTER2_VENUS.md` — it wins.** All standing rules (monochrome, Kyle's fog/glow,

@@ -45,10 +45,29 @@ namespace Seven
         /// <summary>The threat is stopped: free of the signal, it wanders slowly (its route now leads away from the foundations).</summary>
         public void SetCalm(Vector3[] route) { Calm = true; _driven = null; if (route != null && route.Length > 0) { Route = route; _i = 0; } Speed *= 0.55f; Period *= 1.4f; }
 
+        // ---- Round 13 (0f): the Wormmaster sends them at her - a lunge (surfaced, fast, at her), and her telekinesis can
+        // push one aside and stun it (it sinks and lies still, then recovers and goes back to its route - never harmed).
+        float _lungeUntil = -1f, _stunUntil = -1f; Vector3 _stunPush;
+        public bool Lunging => Time.time < _lungeUntil;
+        public bool Stunned => Time.time < _stunUntil;
+        public int Lunges { get; private set; }
+        public int Stuns { get; private set; }
+        public void Lunge(Vector3 at, float seconds) { if (Calm || Withdrawn || _hole.HasValue || Stunned) return; _driven = at; _drivenUntil = Time.time + seconds; _lungeUntil = Time.time + seconds; Lunges++; Turns++; }
+        public void Stun(float seconds, Vector3 push) { if (Withdrawn || _hole.HasValue) return; _stunUntil = Time.time + seconds; _stunPush = new Vector3(push.x, 0f, push.z).normalized * 3f; _driven = null; _lungeUntil = -1f; Stuns++; }
+
         void Update()
         {
             if (Withdrawn || Route == null || Route.Length == 0) return;
             _t += Time.deltaTime;
+            if (Stunned)
+            {
+                // pushed aside, it slides back and sinks under the floor, still, until it recovers
+                var sp = transform.position + _stunPush * Time.deltaTime * 1.4f; _stunPush = Vector3.MoveTowards(_stunPush, Vector3.zero, Time.deltaTime * 3f);
+                sp.y = Mathf.MoveTowards(transform.position.y, GroundY - Depth, Time.deltaTime * 2.2f);
+                transform.position = sp;
+                if (Dust != null) { var e0 = Dust.emission; e0.enabled = false; }
+                return;
+            }
             Vector3 target;
             if (_hole.HasValue) target = _hole.Value;
             else target = _driven.HasValue && Time.time < _drivenUntil ? _driven.Value : Route[_i];
@@ -68,6 +87,7 @@ namespace Seven
             var p = transform.position + transform.forward * Speed * Time.deltaTime;
             float phase = Mathf.Sin(_t / Period * Mathf.PI * 2f);
             float y = GroundY + Mathf.Lerp(-Depth, Surface, (phase + 1f) * 0.5f);
+            if (Lunging) { y = Mathf.Lerp(transform.position.y, GroundY + Surface * 0.9f, Time.deltaTime * 4f); p = transform.position + transform.forward * Speed * 1.6f * Time.deltaTime; }
             if (_hole.HasValue)
             {
                 // going home: it surfaces once more, then sinks into the burrow and is gone

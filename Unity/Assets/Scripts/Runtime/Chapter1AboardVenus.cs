@@ -42,7 +42,7 @@ namespace Seven
                 Cap.Log($"aboard (Venus mode): {VenusState.Summary()}");
             }
             FindEnergyPoint();
-            StartCoroutine(VenusState.SceneDone("VEN_C11") ? ExploreVenus(true) : VenusDebrief());
+            StartCoroutine(VenusState.SceneDone("VEN_C11") ? ExploreVenus(true) : ShipConsole.I != null && ShipConsole.I.PilotSeat != null ? VenusDebriefChair() : VenusDebrief());   // Round 13: C11 + C13 in the pilot's chair
         }
 
         /// <summary>Landed on Venus: no Moon and no stars outside the porthole - the bright mist of the gardens.</summary>
@@ -243,6 +243,255 @@ namespace Seven
             if (c == "venus") { yield return UI.Fade(1f, 1f); UnityEngine.SceneManagement.SceneManager.LoadScene("Venus"); yield break; }
             if (c == "moon") { yield return UI.Fade(1f, 1f); VenusState.UseOwnSave(); Chapter1State.StartAt(Chapter1State.CpCell); yield break; }
             Director.Cam.Hold = false; Seven.Frozen = false; _settingCourse = false;
+        }
+
+        // ------------------------------------------------------------------------------------------ Round 13 (0j + 0m)
+        // VEN_C11 + VEN_C13 in the pilot's chair at the navigation console, Panther curled in her lap (Dan, 2026-11-19):
+        // the debrief no longer happens at the galley table. One hand rests on his back (stroking), the other on the
+        // navigation controls; the dodecahedron and the small cube lie on the chair's arm for the insert; then the
+        // star map brings Mars and Europa close and the player chooses. Mars / Europa chapters do not exist yet: after the
+        // journey begins, a "coming soon" card, then free exploration (both stay selectable on the star map).
+        bool _inPilotChair;
+        Vector3 PilotHips => ShipConsole.I.PilotSeat.position;
+        Vector3 PilotFwd => Flat(ShipConsole.I.PilotSeat.forward).normalized;
+        Vector3 PilotRight => Vector3.Cross(Vector3.up, PilotFwd);
+        Vector3 PilotHead => PilotHips + Up * 0.66f;
+        Vector3 ArmRest => PilotHips + PilotRight * 0.42f + Up * 0.12f + PilotFwd * 0.12f;
+
+        IEnumerator SitInPilotChair()
+        {
+            var seat = ShipConsole.I.PilotSeat;
+            Seven.transform.SetPositionAndRotation(Flat(seat.position) + PilotFwd * 0.1f, Quaternion.LookRotation(PilotFwd));
+            _seatClip = Seven.HasState("sit_idle") ? "sit_idle" : "sitting_idle";
+            Seven.PlayClip(_seatClip, 0.3f);
+            Seven.SeatHips = seat.position;
+            _seated = true; _inPilotChair = true;
+            yield return Wait(0.6f);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"pilot's chair (0j): seated ({_seatClip}), hips {Vector3.Distance(Seven.Hips.position, seat.position):0.000} m from the seat point");
+        }
+
+        IEnumerator StandFromPilotChair()
+        {
+            if (Cat.Current == CatCompanion.Mode.OnLap) { Cat.HopOffLap(Flat(PilotHips + PilotRight * 1.0f - PilotFwd * 0.3f)); yield return Wait(Cat.HopTime + 0.1f); }
+            Cat.LapFrame = null;
+            _seated = false; _inPilotChair = false;
+            Seven.SeatHips = null;
+            Seven.transform.SetPositionAndRotation(Flat(PilotHips - PilotFwd * 0.75f), Quaternion.LookRotation(-PilotFwd));
+            Seven.PlayClip("idle", 0.2f);
+            Seven.Cutscene = false; Seven.Frozen = false;
+            yield return null;
+        }
+
+        /// <summary>Her left hand on his back, stroking slowly (IK); 0 = hand off.</summary>
+        float _stroke; Coroutine _strokeRoutine;
+        IEnumerator Stroke()
+        {
+            for (float t = 0f; ; t += Time.deltaTime)
+            {
+                var lap = Seven.LapPoint(0.13f);
+                _ik.LeftPos = lap + PilotFwd * (0.04f + Mathf.Sin(t * 1.6f) * 0.07f) - PilotRight * 0.02f;
+                _ik.LeftW = Mathf.MoveTowards(_ik.LeftW, _stroke, Time.deltaTime * 2f);
+                yield return null;
+            }
+        }
+        void NavHand(bool on) { if (on && ShipConsole.I != null && ShipConsole.I.Display != null) { _ik.RightPos = PilotHips + PilotFwd * 0.55f + PilotRight * 0.28f + Up * 0.28f; _ik.RightW = 0.9f; } else _ik.RightW = 0f; }
+
+        void CutPilot(string kind)
+        {
+            var disp = ShipConsole.I.Display != null ? ShipConsole.I.Display.position : PilotHead + PilotFwd * 2f;
+            switch (kind)
+            {
+                case "ots": Cut(PilotHead - PilotFwd * 0.75f + PilotRight * 0.38f + Up * 0.18f, disp, 42f); break;
+                case "side": Cut(PilotHips - PilotFwd * 1.0f + PilotRight * 1.8f + Up * 0.75f, PilotHips + Up * 0.35f + PilotFwd * 0.2f, 46f); break;   // from the deck side (the desk pods block the front)
+                case "two": Cut(PilotHips + PilotFwd * 0.8f + PilotRight * 1.5f + Up * 1.45f, PilotHips + Up * 0.3f, 48f); break;   // high, over the desk
+                case "lap": { var lap = Seven.LapPoint(0.1f); Cut(lap + PilotRight * 0.55f + PilotFwd * 0.45f + Up * 0.25f, lap, 34f, null, 0.6f, 50f, 3f); break; }
+                case "objects": Cut(ArmRest + PilotRight * 0.35f + PilotFwd * 0.35f + Up * 0.3f, ArmRest, 32f, null, 0.5f, 50f, 3f); break;
+                case "wide": Cut(PilotHips - PilotFwd * 3.2f + Up * 1.3f + PilotRight * 0.3f, disp, 50f); break;
+            }
+        }
+
+        IEnumerator VenusDebriefChair()
+        {
+            ShipConsole.StoryLock = true;                                         // the console never opens during the scene
+            InGalleyScene = true;
+            MusicSystem.Play("aboard_saucer", 2.5f);
+            Seven.Frozen = true; Seven.Cutscene = true;
+            Director.Cam.Hold = true;
+            Cat.ForceTarget = null; Cat.enabled = false;
+            // she comes in; Panther at normal size near the entrance
+            Seven.transform.SetPositionAndRotation(new Vector3(-1.2f, 0f, -4.6f), Quaternion.LookRotation(new Vector3(0.2f, 0f, 1f)));
+            Cat.transform.SetPositionAndRotation(new Vector3(0.4f, 0f, -3.5f), Quaternion.LookRotation(Flat(Seven.transform.position - new Vector3(0.4f, 0f, -3.5f))));
+            CatClip("sit", 0.05f);
+            var mid = (Seven.transform.position + Cat.transform.position) * 0.5f;
+            CamTo(mid + new Vector3(2.6f, 1.35f, 2.6f), mid + Up * 0.7f, 0f, 44f);
+            yield return Wait(0.3f);
+            yield return UI.Fade(0f, 1.4f);
+            yield return ShotV("c11_01_panther_near_the_entrance");
+            yield return SayV("VEN_C11", 1);                                     // Did they know what it was?
+            // follow her to the pilot's chair at the navigation console; he pads along beside her
+            var stand = Flat(PilotHips - PilotFwd * 0.75f);
+            Seven.Frozen = false; bool sd = Seven.ScriptDriven; Seven.ScriptDriven = true;
+            StartCoroutine(CatWalkTo(Flat(PilotHips + PilotRight * 0.9f - PilotFwd * 0.5f), -PilotRight, 4.0f));
+            var walk = StartCoroutine(AutoWalk(stand));
+            for (float t = 0f; t < 8f && Flat(Seven.transform.position - stand).magnitude > 0.35f; t += Time.deltaTime)
+            {
+                var p = Seven.transform.position; Director.Cam.transform.position = Vector3.Lerp(Director.Cam.transform.position, p + Flat(Director.Cam.transform.position - p).normalized * 3.2f + Up * 1.5f, Time.deltaTime * 2f);
+                Director.Cam.transform.rotation = Quaternion.Slerp(Director.Cam.transform.rotation, Quaternion.LookRotation(p + Up * 1.1f - Director.Cam.transform.position), Time.deltaTime * 4f);
+                if (t > 1.5f && t - Time.deltaTime <= 1.5f) StartCoroutine(ShotV("c11_02_follow_her_to_the_pilot_chair"));
+                yield return null;
+            }
+            StopCoroutine(walk); Seven.ScriptMove = Vector2.zero; Seven.ScriptDriven = sd; Seven.Frozen = true;
+            yield return SayV("VEN_C11", 2);                                     // The Moon's record. Venus has its own.
+            yield return SitInPilotChair();
+            // he hops up and curls in her lap (the Chapter 1 lap moment)
+            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null; Cat.HopOntoLap();   // after its Start has run
+            yield return Wait(Cat.HopTime + 0.4f);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"Panther on her lap in the pilot's chair (0j): {Cat.Current == CatCompanion.Mode.OnLap}, lap mesh {Cat.LapMeshShown}");
+            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
+            CutPilot("two");
+            yield return Wait(0.8f);
+            yield return ShotV("c11_02b_pilot_chair_panther_in_her_lap");
+            // the dodecahedron and the small cube, set on the chair's arm
+            yield return SetBothOnArm();
+            CutPilot("objects");
+            yield return Wait(1.0f);
+            yield return ShotV("c11_03_insert_both_objects");
+            CutPilot("side");
+            yield return SayV("VEN_C11", 3, 5);                                  // And the people you saw? / ...
+            yield return ShotV("c11_04_side_two_shot");
+            yield return SayV("VEN_C11", 6, 7);                                  // What did you see? / Someone giving me a seed.
+            // open-hand insert: her right hand open, palm up on the chair's arm
+            _ik.RightPos = ArmRest - PilotRight * 0.08f + PilotFwd * 0.1f; _ik.RightW = 1f; _ik.LookPos = _ik.RightPos; _ik.LookW = 0.7f;
+            yield return Wait(0.7f);
+            var palm = Palm(true);
+            Cut(palm + PilotRight * 0.4f + Up * 0.3f + PilotFwd * 0.2f, palm, 34f, null, 0.55f, 50f, 3f);
+            yield return Wait(0.6f);
+            yield return ShotV("c11_05_open_hand_insert");
+            yield return Wait(0.8f);
+            CutPilot("two");
+            yield return SayV("VEN_C11", 8, 8, false);                           // I wish I could remember their face.
+            // Panther settles closer. Hold the silence.
+            _ik.RightW = 0f; _ik.LookW = 0f;
+            Cat.LapNudge(8f);
+            yield return Silence(2.6f, "VEN_C11_08");
+            yield return ShotV("c11_06_he_settles_closer_silence");
+            yield return SayV("VEN_C11", 9, 10);                                 // There are other temples. / Then we have somewhere else to ask.
+            bool first = VenusState.CompleteScene("VEN_C11", VenusState.Stage.Complete);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"scene VEN_C11 complete{(first ? "" : " (already)")} in the pilot's chair: {VenusState.CurrentId}");
+            // ---- VEN_C13: choosing the next world - straight on
+            yield return C13();
+            _stroke = 0f; yield return Wait(0.5f);
+            if (_strokeRoutine != null) StopCoroutine(_strokeRoutine);
+            _ik.LeftW = 0f; _ik.RightW = 0f; _ik.LookW = 0f;
+            yield return UI.Fade(1f, 1.2f);
+            if (ShipConsole.I != null) ShipConsole.I.HideMap();
+            yield return StandFromPilotChair();
+            ShipConsole.StoryLock = false;
+            yield return ExploreVenus(false);
+        }
+
+        Vector3 ShapeOnArm => ArmRest + PilotFwd * 0.06f;
+        Vector3 CubeOnArm => ArmRest - PilotFwd * 0.1f;
+        IEnumerator SetBothOnArm()
+        {
+            if (_carry != null && Shape != null)
+            {
+                _ik.RightPos = _carry.HipPoint + Up * 0.03f; _ik.RightW = 1f; _ik.LookPos = _carry.HipPoint; _ik.LookW = 0.55f;
+                yield return Wait(0.8f);
+                _carry.Set(CarriedShape.Where.Hand, 0.25f);
+                yield return Wait(0.3f);
+                _ik.RightPos = ShapeOnArm + Up * 0.12f; _ik.LookPos = ShapeOnArm; yield return Wait(0.7f);
+                var held = Shape.transform.position; var heldR = Shape.transform.rotation;
+                _carry.Set(CarriedShape.Where.Away, 0f);
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.25f) { Shape.transform.SetPositionAndRotation(Vector3.Lerp(held, ShapeOnArm, t), Quaternion.Slerp(heldR, MarkingUp(), t)); yield return null; }
+                PlaceShape(ShapeOnArm, MarkingUp());
+            }
+            _ik.RightPos = (_carry != null ? _carry.HipPoint : Seven.transform.position + Up) + Up * 0.03f; yield return Wait(0.7f);
+            if (_cubeCopy != null)
+            {
+                _cubeCopy.gameObject.SetActive(true);
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.8f) { _cubeCopy.position = Palm(true) + Up * 0.06f; _ik.RightPos = Vector3.Lerp(_ik.RightPos, CubeOnArm + Up * 0.1f, t); yield return null; }
+                _ik.RightPos = CubeOnArm + Up * 0.08f; yield return Wait(0.4f);
+                _cubeCopy.SetPositionAndRotation(CubeOnArm, Quaternion.LookRotation(PilotFwd));
+            }
+            _ik.RightW = 0f; _ik.LookW = 0f;
+        }
+
+        public string NextWorldChoice { get; private set; }
+        IEnumerator C13()
+        {
+            var con = ShipConsole.I;
+            CutPilot("two");
+            yield return SayV("VEN_C13", 1);                                     // The guardian's locations. Mars and Europa.
+            // over her shoulder - the display; she brings Mars closer, absentmindedly stroking him
+            NavHand(true);
+            CutPilot("ots");
+            yield return Wait(0.6f);
+            yield return ShotV("c13_01_over_her_shoulder_display");
+            yield return SayV("VEN_C13", 2, 4);                                  // A temple between divided kingdoms. / Convenient... / Perhaps...
+            // he lifts his head to look up at her
+            Cat.LapNudge(-14f);
+            CutPilot("lap");
+            yield return SayV("VEN_C13", 5, 6);                                  // Mm. / Such confidence.
+            yield return ShotV("c13_02_he_looks_up_at_her");
+            // she shifts the display to Europa
+            CutPilot("ots");
+            yield return SayV("VEN_C13", 7, 11);                                 // ... beneath the ice / Underwater. / Yes. / ... / You'll be perfectly dry in here.
+            // he settles deeper into her lap
+            Cat.LapNudge(10f);
+            yield return SayV("VEN_C13", 12);
+            // medium side shot - both in the chair; she grows quiet, her hand comes to rest
+            NavHand(false);
+            CutPilot("side");
+            _stroke = 0.6f;
+            yield return SayV("VEN_C13", 13, 15);
+            yield return ShotV("c13_03_side_shot_both_in_the_chair");
+            // he nudges his head beneath her hand; she resumes stroking him
+            Cat.LapNudge(12f); _stroke = 1f;
+            yield return SayV("VEN_C13", 16, 16);
+            yield return Wait(1.0f);                                             // a quiet pause
+            yield return SayV("VEN_C13", 17, 18);
+            // a soft breath, she looks down at him
+            _ik.LookPos = Seven.LapPoint(0.1f); _ik.LookW = 0.8f;
+            yield return SayV("VEN_C13", 19, 22);
+            _stroke = 0.7f; yield return Wait(0.4f); _stroke = 1f;               // her hand pauses against his fur, then continues
+            yield return SayV("VEN_C13", 23, 23, false);                         // Good.
+            _ik.LookW = 0f;
+            CutPilot("two");
+            yield return Wait(1.6f);                                             // hold the two-shot before the choice
+            yield return ShotV("c13_04_hold_before_the_choice");
+            // PLAYER CHOICE (on the star map, only the two new worlds)
+            string pick = null;
+            if (con != null)
+            {
+                if (Auto) con.ScriptPick = DemoBoot.R13 == "europa" ? "europa" : "mars";
+                CutPilot("ots");
+                NavHand(true);
+                yield return con.ChooseOnStarMap(new[] { "mars", "europa" },
+                    new[] { "Mars — Seek the temple among the divided kingdoms", "Europa — Find the Cetacean temple beneath the ice" }, p => pick = p);
+            }
+            if (pick == null) pick = "mars";
+            NextWorldChoice = pick;
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"VEN_C13 choice: {pick}");
+            CutPilot("two");
+            if (pick == "mars") yield return SayV("VEN_C13", 901, 904);          // VEN_C13_M1..M4
+            else yield return SayV("VEN_C13", 951, 954);                         // VEN_C13_E1..E4 (she chuckles and sets the course)
+            // she sets the course; close insert - Panther in her lap, a quiet purr joins the ship's hum
+            NavHand(true);
+            AudioKit.Play("course_set", null, 0.7f);
+            var purr = AudioKit.Loop("cat_purr", null, null, 0.5f, AudioKit.Bus.Sfx);
+            CutPilot("lap");
+            yield return Wait(1.6f);
+            yield return ShotV("c13_05_insert_panther_purring");
+            // wide from behind the chair: the chosen world fills the display; she rests back, the journey begins
+            NavHand(false);
+            CutPilot("wide");
+            yield return Wait(2.6f);
+            yield return ShotV("c13_06_wide_behind_the_chair_journey_begins");
+            if (purr != null) StartCoroutine(AudioKit.Fade(purr, 0f, 2f, true));
+            VenusState.CompleteScene("VEN_C13");
+            VenusState.CompleteScene("VEN_C13_" + pick);
+            if (con != null) yield return con.ComingSoon(pick == "mars" ? "Mars" : "Europa");
         }
     }
 }

@@ -29,3 +29,18 @@ further during spoken scenes if a whisper collides with a line). Dan may supply 
 present, prefer them during dialogue scenes.
 
 **Status:** both made by Dan and saved in `Unity/Assets/Audio/Music/` (2026-11-17).
+
+# Chapter — Europa
+
+Made by Dan in Suno (2026-11-19), both ~3:00, instrumental.
+
+| File | Title | Where it plays | Style prompt |
+| --- | --- | --- | --- |
+| `europa_underwater.mp3` | Europa | Under the ice: first descent, the Cetacean settlement, the race route, the temple, the calm after the escape | dreamy ambient underwater soundtrack, slow 70 bpm, warm analog synth pads, soft celesta and glass harmonica, gentle harp arpeggios, deep slow sub bass swells, distant whale-like synth calls, airy wordless female choir, long reverb, floating and weightless, sense of wonder and vast scale, seamless loop |
+| `europa_base.mp3` | Europa Base | Tunneler's underwater base: approach, inside the base, freeing the Scree (Suno **Cover** of the Europa track, 1960s spy-thriller style) | 1960s spy thriller soundtrack, brooding and stylish, twangy surf-noir electric guitar riff, punchy brass stabs and muted trumpets, lush dramatic strings, walking double bass, brushed drums, minor-key chromatic melody, tense and cool, secret villain lair, industrial clanks low in the mix, seamless loop |
+
+Because the base track is a cover of the underwater one, they share a melody: cross-fade between them at the base's
+pressure chamber. The escape and the debrief follow the spec's own cues (the moment after the escape is meant to be quiet
+before the Cetacean calls — fade the music out there and bring `europa_underwater` back in the temple).
+
+**Status:** both made by Dan and saved in `Unity/Assets/Audio/Music/` (2026-11-19).
