@@ -26,13 +26,17 @@ apply to every asset and scene:
   the prefab (meshes, materials, scales, overrides, beam + hold present) — build log `SAUCER CHECK (QF13 16)`.
 - **The bike always uses the bike hold; the beam is only for 7 (and the cat)** — on every world (QF13: Venus B01 / B07,
   Europa arrival / home). The hold opens with `SaucerHold.Open()` (seam lights, panel sinks into the hull and slides
-  round inside it, seam dark again) and its inside is one flat unlit tone (`Seven/HoldInterior`): an empty opening, no bars.
+  round inside it, seam dark again). **QF14: behind it is a real modelled room** (`FightDemoBuilderBikeBay.cs`, after
+  `Art/Reference/bike_bay_ref.png`: chrome frame on a bulkhead at r 3.45 m, curved steel walls + chrome ribs, three ceiling
+  lights, drawers, control panel, track + cradles) with the bike in its cradles; the panel covers only the hull in front of the
+  frame (a full-height slot once open). Never go back to a bay made of the hull sector itself (0.26 m thick at the rim: the
+  bike went through its ceiling).
 - The ~12 m polished silver disc, glowing rim band, low dome, belly glow. No per-world variants.
 - **No ramp, ever.** Getting in and out (for 7) is **the tractor beam**: iris hatch in the belly + cone of light
   (`BuildSaucerBeam` + runtime `SaucerBeam.cs`), the same on the Moon, on Venus and any later world. On a world it
   hovers (underside 3.35 m) so 7 can walk under it to the beam.
 - **The bike hatch is seamless when closed** (hull panel + hair-thin seam that glows only while it starts to open); the
-  hold behind it is one flat unlit tone (no bands of any kind - QF11 black, QF12 white).
+  bike bay behind it is the chrome room above (QF14), lit only while open.
 
 ## Tech Stack
 - Unity **6000.6.1f1**, **URP**, **Input System only** (same as Woodstock Rush / Chastain Rush, so systems can be ported).
@@ -233,8 +237,11 @@ apply to every asset and scene:
   `t_<lesson>_xbox|keys` shots, `traversal ok:` steps, `deliberate fall` resets (all must be ok), `hands on the ledge` gaps,
   `cat waits at <route> stop`, `traversal summary`, `LEGEND VISIBLE` (must never appear). The SFX sound check
   (`-soundcheck sfx`) now plays the 5 Round 9 traversal sounds.
-- Play: run the exe normally → main menu (Continue — the saved checkpoint, when a Chapter 1 save exists · Chapter 1 ·
-  Scene select · demos · Quit); Xbox controller or keyboard/mouse (the legend bottom-left switches automatically).
+- Play: run the exe normally → main menu (QF14: Continue (with a save) · Start new game · one entry per unlocked chapter
+  (`Runtime/ChapterList.cs` - add a chapter there) → its page: Play from the start + its sections · Settings · Controls ·
+  Quit; long lists scroll, `MenuScroll.cs`). The test demos are off the menu (`-fight` / `-saucer` / `-ratwing` still work).
+  Menu shots: `-capture <dir> -menupages` (every page, main + pause, run once per resolution). `-menupick` paths:
+  `"Venus|Venus: the debrief"`, `"Europa|Europa: Tunneler's base"`. Xbox controller or keyboard/mouse.
   Esc / Start = pause menu (Resume · Settings · Controls · Scene select · Main menu · Quit, with confirms); fight reset /
   checkpoint restart = Backspace / d-pad down.
 
@@ -313,7 +320,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–14 + QF1–QF13 complete (2026-11-19), release 0.14.1.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–14 + QF1–QF14 complete (2026-11-19), release 0.14.2.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -474,7 +481,17 @@ scene (Round 10).
     `EscapeBlast`, framings kept inside the tunnel, the burst-out); EUR_16_01..03 cut (`make_europa_lines.py` START).
   - Field guide entries grow: optional `more` paragraphs with their own unlock (`ShipConsole.GuideMore`).
   - Check tools: `ChapterCapture.ShotFrom` (a second angle of the same frame).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.1** (QF13 status in `TODO.md`).
+- **QF14 (release 0.14.2)** — Dan's 0.14.1 play (status + "For Dan to check (QF14)" in `TODO.md`):
+  - Menu: one chapter list (`ChapterList.cs`), chapter → sections pages in the main and pause menus, scrolling lists.
+  - The bike bay = a real chrome room (`FightDemoBuilderBikeBay.cs`; `SaucerHold.Sink` / `BayLights` / `BayProbe`).
+  - Europa race: "Race again" + the arch re-arms; best time (`EuropaState.RaceBestTime`); `ChapterCamera.RaceMode` (no swings
+    or cuts, turns toward the next ring). `-europacp 2 -europarace` runs two races.
+  - Base camera: `ChapterCamera.Cutaway` (walls cut away instead of moving the camera; the measure `CutawayJitter /
+    CutawayBounces`). Proof run: `-europaplay -europacp 4 -testspeed 2` → `BASE WALK: 1/1, bounces 0`,
+    `base_camera_frames.csv`, `qf14_06_walk_*` captures.
+  - Guardian walk = `elarim_walk_v2` (root motion not baked, playback matched; `ElarimNpc.CalmSway` damps the hips by a third).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.2** (QF14 status in `TODO.md`).
+**Before: Dan plays 0.14.1** (QF13 status in `TODO.md`).
 **Before: Dan plays 0.14.0** (QF12 + Round 14 status in `TODO.md`).
 **Before: Dan plays 0.13.1** (Round 13 status in `TODO.md`), then Round 14.
 **Before: Dan plays 0.12.0** (Round 12 status in `TODO.md`), then Round 13.

@@ -163,7 +163,7 @@ namespace Seven
             // back to the main menu (between runs only - the run itself starts there, as a player's does)
             SaveGame.ClearTestSave(); Chapter1State.Reset();
             if (SceneNow != DemoMenu.SceneName) { SceneManager.LoadScene(DemoMenu.SceneName); yield return null; yield return null; }
-            yield return MenuPick(l => l.StartsWith("Chapter 1"));
+            yield return MenuPick(l => l == DemoMenu.NewGameLabel);
             _sig = null; _sigAt = Time.realtimeSinceStartup;
             string fail = null; bool shapeAtGalley = false; bool inGalleySeen = false;
             while (true)
@@ -234,7 +234,7 @@ namespace Seven
         IEnumerator Idle0(float s) { _stick = Vector2.zero; yield return Wait(s); }
 
         // ------------------------------------------------------------------------------------------ menus
-        IEnumerator MenuPick(Func<string, bool> want)
+        IEnumerator MenuPick(Func<string, bool> want, bool leavesMenu = true)
         {
             for (float t0 = Time.realtimeSinceStartup; (DemoMenu.I == null || DemoMenu.I.SelectedLabel == null) && Time.realtimeSinceStartup - t0 < 10f;) yield return null;
             yield return WaitReal(0.6f);
@@ -243,8 +243,8 @@ namespace Seven
             if (DemoMenu.I == null) yield break;
             if (!want(DemoMenu.I.SelectedLabel ?? ""))
             {
-                Log($"main menu: the wanted entry is not there (no save?) - Chapter 1 instead");
-                for (int k = 0; k < 16 && DemoMenu.I != null && !(DemoMenu.I.SelectedLabel ?? "").StartsWith("Chapter 1"); k++) { yield return Tap(Down); }
+                Log($"main menu: the wanted entry is not there (no save?) - Start new game instead");
+                for (int k = 0; k < 16 && DemoMenu.I != null && (DemoMenu.I.SelectedLabel ?? "") != DemoMenu.NewGameLabel; k++) { yield return Tap(Down); }
             }
             if (!_menuShot && (DemoMenu.I.SelectedLabel ?? "").StartsWith("Continue")) { _menuShot = true; yield return ShotNow("menu_continue_from_checkpoint"); }
             Log($"main menu: '{DemoMenu.I.SelectedLabel}' (A)");
@@ -252,6 +252,7 @@ namespace Seven
             // Round 13 (0c): "Chapter 1" with a save asks "Start a new game?" - a player confirms with A
             yield return WaitReal(0.5f);
             if (DemoMenu.I != null && SceneNow == DemoMenu.SceneName && DemoMenu.I.ConfirmingNewGame) { Log("main menu: 'Start a new game? Your saved progress will be reset.' (A) - confirms the new game"); Press(A); }
+            if (!leavesMenu) { Log($"main menu: page '{DemoMenu.I?.PageTitle}'"); yield break; }
             for (float t0 = Time.realtimeSinceStartup; SceneNow == DemoMenu.SceneName && Time.realtimeSinceStartup - t0 < 8f;) yield return null;
             yield return WaitReal(1.0f);
         }
@@ -632,19 +633,20 @@ namespace Seven
                 {
                     // start the chapter from the main menu, then open the pause menu in the cell and pick the entry there
                     if (SceneNow != DemoMenu.SceneName) { SceneManager.LoadScene(DemoMenu.SceneName); yield return null; yield return null; }
-                    yield return MenuPick(l => l.StartsWith("Chapter 1"));
+                    yield return MenuPick(l => l == DemoMenu.NewGameLabel);
                     for (float t0 = Time.realtimeSinceStartup; !(OnMoon && Controlling) && Time.realtimeSinceStartup - t0 < 20f;) yield return null;
                     Press(StartBtn);
                     for (float t0 = Time.realtimeSinceStartup; !PauseMenu.IsOpen && Time.realtimeSinceStartup - t0 < 3f;) yield return null;
                     yield return PausePick(l => l == "Scene select");
                     if (cp == Chapter1State.CpCity) yield return ShotNow("ss_pause_menu_scene_select");
+                    yield return PausePick(l => l.StartsWith("Chapter 1"));
                     string want = Chapter1State.CpName(cp);
                     yield return PausePick(l => l == want);
                 }
                 else
                 {
                     if (SceneNow != DemoMenu.SceneName) { SceneManager.LoadScene(DemoMenu.SceneName); yield return null; yield return null; }
-                    yield return MenuPick(l => l == "Scene select");
+                    yield return MenuPick(l => l.StartsWith("Chapter 1"), false);
                     if (cp == 0) yield return ShotNow("ss_main_menu_scene_select_page");
                     string want = Chapter1State.CpName(cp);
                     for (int k = 0; k < 16 && DemoMenu.I != null && DemoMenu.I.SelectedLabel != want; k++) { yield return Tap(Down); }

@@ -8,7 +8,8 @@ namespace Seven
 {
     /// <summary>
     /// Round 14: the player-style run of the Europa chapter (-europaplay, with -capture; add -menupick
-    /// "Scene select|Chapter 2 — Venus|Venus: the debrief" to start in the real main menu, and -testspeed 2). A virtual
+    /// "Venus|Venus: the debrief" to start in the real main menu (QF14 menu: the Venus chapter page; the old
+    /// "Scene select|Chapter 2 — Venus|Venus: the debrief" still works), and -testspeed 2). A virtual
     /// gamepad on the real input actions - no autopilot, no teleports. It reads only what a player sees: the subtitles (Y
     /// skips a line like a fast reader), the star map (VEN_C13: d-pad to Europa, A to choose, A to confirm), the objective,
     /// the soft white guide light (EuropaDirector.NextMarker) and the context prompt (X). Riding: left stick steers toward
@@ -34,6 +35,7 @@ namespace Seven
         static EuropaDirector D => EuropaDirector.I != null && EuropaDirector.I.isActiveAndEnabled ? EuropaDirector.I : null;
         static Chapter1Aboard S => Chapter1Aboard.I != null && Chapter1Aboard.I.isActiveAndEnabled ? Chapter1Aboard.I : null;
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+        bool _inBase; float _nextWalkShot; int _walkShots, _sw0, _cu0;
         int _soft; float _t0; string _lastObj; float _objSince; int _skipsTaken;
 
         void Update()
@@ -80,6 +82,15 @@ namespace Seven
                 if (!string.IsNullOrEmpty(d.Prompt) && _phase == 0 && _presses.Count == 0) { Press(X); Log($"X at '{d.Prompt}'"); yield return WaitR(0.6f); continue; }
                 var m = d.NextMarker;
                 var seven = d.Seven.transform.position;
+                // QF14 (6): started in the base (-europacp 4 / 5): a capture every 1.5 s on foot inside, and the run ends once
+                // she is back on the bike for the escape - the per-frame camera log is base_camera_frames.csv
+                bool baseRun = DemoBoot.EuropaCp == EuropaLayout.CpBase || DemoBoot.EuropaCp == EuropaLayout.CpWorkers;
+                if (baseRun)
+                {
+                    var zn = EuropaLayout.ZoneAt(seven);
+                    if (!d.Riding && zn != "-" && zn != "Shelf") { if (!_inBase) { _sw0 = ChapterCamera.Swings; _cu0 = ChapterCamera.Cuts; } _inBase = true; if (Time.time >= _nextWalkShot) { _nextWalkShot = Time.time + 1.5f; StartCoroutine(Cap.Shot($"qf14_06_walk_{_walkShots++:000}_{zn}")); } }
+                    if (_inBase && d.Riding) break;
+                }
                 if (d.Riding)
                 {
                     var bike = d.Bike.transform;
@@ -105,6 +116,12 @@ namespace Seven
                 else if (Time.time - stuckSince > 240f) { _soft++; Log($"SOFT-LOCK: no story progress for 240 s ('{now}') at {seven}"); stuckSince = Time.time; }
             }
             var dd = EuropaDirector.I;
+            if (_inBase)
+            {
+                Log($"BASE WALK (QF14 6): {ChapterCamera.CutawayFrames} frames in cut-away mode, camera distance {ChapterCamera.CutawayMin:0.00}-{ChapterCamera.CutawayMax:0.00} m, jitter (reversals >= 5 cm within 0.5 s) {ChapterCamera.CutawayJitter}, bounces (>= 15 cm) {ChapterCamera.CutawayBounces}, swings {ChapterCamera.Swings - _sw0}, cuts {ChapterCamera.Cuts - _cu0} (in the base), captures {_walkShots}");
+                Cap.Finish($"BASE WALK: 1/1, bounces {ChapterCamera.CutawayBounces}, jitter {ChapterCamera.CutawayJitter}, soft-locks {_soft} ({(Time.time - _t0) / 60f:0.0} game-min)");
+                yield break;
+            }
             Cap.Finish($"EUROPA PLAYTEST: 1/1, soft-locks {_soft}, crashes {(dd != null ? dd.Crashes : -1)}, hints {(dd != null ? dd.Hints : -1)}, skips taken {_skipsTaken} ({(Time.time - _t0) / 60f:0.0} game-min) - {EuropaState.Summary()}");
         }
         IEnumerator WaitR(float s) { for (float t = 0f; t < s; t += Time.deltaTime) yield return null; }

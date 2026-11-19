@@ -19,6 +19,7 @@ namespace Seven
             public List<string> done = new List<string>();
             public bool recordAwarded; public int recordAwards;
             public bool raceEntered; public int raceBest = -1;        // finishing place (1 = won), -1 = never finished
+            public float raceBestTime = -1f;                           // QF14 (4): her best finishing time (s), -1 = none
             public List<string> devices = new List<string>();
         }
         static Data _d;
@@ -32,6 +33,16 @@ namespace Seven
         public static void ResetForTest() { if (!Test) return; PlayerPrefs.DeleteKey(Key); _d = new Data(); }
         public static void ClearTestSave() { if (Test) { PlayerPrefs.DeleteKey("seven_test_europa"); PlayerPrefs.DeleteKey("seven_test_europa_select"); } }
         public static void ClearOwnSave() { UseOwnSave(); PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); _d = new Data(); }
+        /// <summary>QF14 (the chapter list): the player's own save read WITHOUT switching slots (a running Scene Select
+        /// session keeps its slot).</summary>
+        static Data PeekOwn()
+        {
+            if (!SceneSelectRun && _d != null) return _d;
+            var j = PlayerPrefs.GetString(Test ? "seven_test_europa" : "seven_europa", "");
+            return string.IsNullOrEmpty(j) ? new Data() : JsonUtility.FromJson<Data>(j) ?? new Data();
+        }
+        public static bool OwnReached => PeekOwn().cp >= 0;
+        public static bool OwnHasProgress { get { var d = PeekOwn(); return d.cp > 0 || (d.done != null && d.done.Count > 0); } }
 
         public static bool Reached => D.cp >= 0;
         public static int Checkpoint => Mathf.Max(0, D.cp);
@@ -46,6 +57,9 @@ namespace Seven
         public static bool AwardRecord() { if (D.recordAwarded) return false; D.recordAwarded = true; D.recordAwards++; Save(); return true; }
         public static bool RaceEntered => D.raceEntered;
         public static int RaceBest => D.raceBest;
+        public static float RaceBestTime => D.raceBestTime;
+        /// <summary>QF14 (4): a finished race's time; true when it is a new best.</summary>
+        public static bool RaceTime(float s) { if (s <= 0f || (D.raceBestTime > 0f && s >= D.raceBestTime)) return false; D.raceBestTime = s; Save(); return true; }
         public static void RaceResult(int place) { D.raceEntered = true; if (place > 0 && (D.raceBest < 0 || place < D.raceBest)) D.raceBest = place; Save(); }
         public static IReadOnlyList<string> Devices => D.devices;
         public static bool HasDevice(string id) => D.devices.Contains(id);

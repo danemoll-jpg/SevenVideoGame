@@ -70,6 +70,17 @@ namespace Seven
         /// <summary>QF11: "Chapter 2 — Venus" always starts the chapter fresh (the descent, C01): the Venus save is cleared.</summary>
         /// <summary>Round 13 (0c): clear the player's own Venus save without loading anything (a new game).</summary>
         public static void ClearOwnSave() { UseOwnSave(); PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); _d = new Data(); }
+        /// <summary>QF14 (the chapter list): the player's own save read WITHOUT switching slots - the pause menu may ask
+        /// while a Scene Select session plays on its own slot, which must keep it.</summary>
+        static Data PeekOwn()
+        {
+            if (!SceneSelectRun && _d != null) return _d;
+            var json = PlayerPrefs.GetString(Test ? "seven_test_venus" : "seven_venus", "");
+            return string.IsNullOrEmpty(json) ? new Data() : JsonUtility.FromJson<Data>(json) ?? new Data();
+        }
+        public static bool OwnReached => PeekOwn().stage >= 0;
+        public static bool OwnHasProgress { get { var d = PeekOwn(); return d.stage > (int)Stage.Available || (d.conversationsDone != null && d.conversationsDone.Count > 0); } }
+        public static bool OwnSceneDone(string id) { var d = PeekOwn(); return d.conversationsDone != null && d.conversationsDone.Contains(id); }
         public static void StartFresh()
         {
             UseOwnSave(); PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); _d = new Data();

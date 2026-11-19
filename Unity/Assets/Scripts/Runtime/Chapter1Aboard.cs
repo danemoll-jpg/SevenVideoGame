@@ -1235,6 +1235,11 @@ namespace Seven
             PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);    // QF6: Scene select page
             yield return null;
             yield return Cap.Shot("qf6_pause_scene_select");
+            PauseMenu.I.Handle(0, 0, true, false);                                            // QF14: the chapter list -> Chapter 1's page
+            yield return null;
+            yield return Cap.Shot("qf14_pause_chapter_page");
+            Cap.Log($"pause menu page '{PauseMenu.I.PageTitle}': {PauseMenu.I.ItemCount} items, visible {PauseMenu.I.VisibleRows}, scroll bar shown {PauseMenu.I.ScrollBarShown}");
+            PauseMenu.I.Handle(0, 0, false, true);                                            // back to the chapter list
             PauseMenu.I.Handle(0, 0, false, true);                                            // back (Scene select selected)
             PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(1, 0, false, false); PauseMenu.I.Handle(0, 0, true, false);   // Quit game -> confirm
             yield return Cap.Shot("s12_pause_quit_confirm");

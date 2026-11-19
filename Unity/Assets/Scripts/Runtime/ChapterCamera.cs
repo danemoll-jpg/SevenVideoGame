@@ -17,6 +17,14 @@ namespace Seven
         public float StickYawSpeed = 150f, StickPitchSpeed = 85f, MouseDegPerPixel = 0.18f;
         public float Yaw, Pitch;
         [System.NonSerialized] public bool AutoBehind;      // check runs: keep the camera behind her walk direction
+        // QF14 (5) - Dan: "race camera keeps resetting". Cause: under water round the arches / pillars the follow camera's
+        // wall logic called the spot "tight" and swung or CUT round (and snapped in for any mesh), then AutoBehind eased it
+        // back - a reset every few seconds. In RaceMode there are no swings or cuts, pulling in is smoothed, and the camera
+        // stays behind the bike following her steering; for a moment at the start and after each ring it turns smoothly
+        // toward the next ring (RaceAim until RaceAimUntil).
+        [System.NonSerialized] public bool RaceMode;
+        [System.NonSerialized] public Vector3? RaceAim;
+        [System.NonSerialized] public float RaceAimUntil;
 
         bool _shot;
         Vector3 _shotPos, _shotLook, _shotPosVel, _shotLookVel, _look;
@@ -158,6 +166,9 @@ namespace Seven
             }
             _focus = Target != null ? Target.position + Vector3.up * LookHeight : _focus;
             _dist = Mathf.Max(0.5f, (transform.position - _focus).magnitude);
+            // QF14 (6): back from a cutscene in cut-away mode the camera starts at its boom length (no ease in / out after
+            // the cut) - and the bounce measure starts over: a cut is not a bounce
+            if (Cutaway != null) { _dist = Distance; _cwTarget = Distance; _cwVel = 0f; _cwLast = -1f; _cwSign = 0; }
         }
 
         public const int CamMaskPublic = CamMask;
@@ -216,11 +227,23 @@ namespace Seven
             if (Mathf.Abs(dYaw) + Mathf.Abs(dPitch) > 0.01f) { _recentering = false; _lastUserTurn = Time.time; _swinging = false; }
             if (Input != null && Input.Recenter.WasPressedThisFrame()) _recentering = true;
             Yaw += dYaw; Pitch = Mathf.Clamp(Pitch + dPitch, MinPitch, MaxPitch);
-            if ((_recentering || AutoBehind) && !_swinging && _occluded < 0.15f)
+            if ((_recentering || AutoBehind) && !_swinging && (_occluded < 0.15f || RaceMode))
             {
                 float target = Target.eulerAngles.y;
-                Yaw = Mathf.SmoothDampAngle(Yaw, target, ref _recYawVel, AutoBehind ? 0.6f : 0.25f);
-                Pitch = Mathf.SmoothDamp(Pitch, Lift > 0.05f ? 28f : DefaultPitch, ref _recPitchVel, 0.4f);
+                if (RaceMode && RaceAim.HasValue && Time.time < RaceAimUntil)
+                {
+                    var to = RaceAim.Value - Target.position; var fl = new Vector3(to.x, 0f, to.z);
+                    if (fl.sqrMagnitude > 4f)
+                    {
+                        // ease from her heading toward the ring and back as the moment ends
+                        float k = Mathf.Clamp01((RaceAimUntil - Time.time) / 0.6f);
+                        target = Mathf.LerpAngle(target, Quaternion.LookRotation(fl).eulerAngles.y, k);
+                        float pt = Mathf.Clamp(DefaultPitch + Mathf.Atan2(-to.y, fl.magnitude) * Mathf.Rad2Deg * 0.6f, -5f, 40f);
+                        Pitch = Mathf.SmoothDamp(Pitch, Mathf.Lerp(DefaultPitch, pt, k), ref _racePitchVel, 0.5f);
+                    }
+                }
+                Yaw = Mathf.SmoothDampAngle(Yaw, target, ref _recYawVel, AutoBehind ? (Cutaway != null ? 0.9f : RaceMode ? 0.45f : 0.6f) : 0.25f);
+                if (!(RaceMode && RaceAim.HasValue && Time.time < RaceAimUntil)) Pitch = Mathf.SmoothDamp(Pitch, Lift > 0.05f ? 28f : DefaultPitch, ref _recPitchVel, 0.4f);
                 if (_recentering && Mathf.Abs(Mathf.DeltaAngle(Yaw, target)) < 0.5f) _recentering = false;
             }
             _focus = Vector3.SmoothDamp(_focus, Target.position + Vector3.up * (LookHeight + Lift), ref _focusVel, 0.15f);
@@ -350,10 +373,73 @@ namespace Seven
             foreach (var r in _done) _fades.Remove(r);
         }
 
+        // ---------------------------------------------------------------------------------------------------------
+        // QF14 (6) - Dan: inside Tunneler's base "the camera bounces into 7 again and again, then resets, and repeats".
+        // Cause: QF13 (7) hid the base walls in the way (forceRenderingOff) but their colliders still drove the follow
+        // camera - it pulled in at once for a wall that was no longer drawn ("pull in fast"), its body check then called
+        // the spot "tight" and cut / swung round, and AutoBehind eased it straight back behind her into the same wall:
+        // two systems fighting, every second or so. Now, while Cutaway is set (inside the base), walls are cut away
+        // INSTEAD of moving the camera: they are left out of every cast, the camera keeps its distance (never closer than
+        // CutawayMinDist), only the floor / anything else can shorten it, every change is smoothed with a dead band, and
+        // there are no swings or cuts. Check runs measure the distance every frame (CutawayJitter / CutawayBounces).
+        /// <summary>Renderers (walls, doors) cut away instead of blocking the camera; null = the normal follow camera.</summary>
+        [System.NonSerialized] public System.Collections.Generic.HashSet<Renderer> Cutaway;
+        public float CutawayMinDist = 1.7f;
+        float _cwTarget = -1f, _cwVel;
+        public static int CutawayFrames, CutawayJitter, CutawayBounces; public static float CutawayMin = 99f, CutawayMax;
+        float _cwLast = -1f, _cwExtreme, _cwRevAt = -99f; int _cwSign;
+        void PlaceCutaway(float dt)
+        {
+            BodyPoints();
+            Pitch = Mathf.Clamp(Pitch, 4f, 40f);
+            // the focus is on her (no trailing lag): her distance from the camera is the boom length, steady while she
+            // starts, stops and turns (a lagging focus swung it +-0.2 m - a small bounce of its own)
+            _focus = Target.position + Vector3.up * (LookHeight + Lift);
+            var f = _focus;
+            var dir = Quaternion.Euler(Pitch, Yaw, 0f) * Vector3.back;
+            float want = Distance;
+            if (CameraOccluders.SphereIgnoring(f, 0.2f, dir, Distance, CamMask, Cutaway, out var hd)) want = Mathf.Max(CutawayMinDist, hd - 0.05f);
+            // dead band (hysteresis): small changes of the wanted distance are ignored
+            if (_cwTarget < 0f || Mathf.Abs(want - _cwTarget) > 0.25f || (want >= Distance - 1e-3f && _cwTarget < Distance)) _cwTarget = want;
+            _dist = Mathf.SmoothDamp(_dist, _cwTarget, ref _cwVel, 0.45f, 3f, Mathf.Max(dt, 1e-4f));
+            _dist = Mathf.Max(_dist, Mathf.Min(CutawayMinDist, _cwTarget));
+            _swinging = false; _occluded = 0f;
+            transform.position = f + dir * _dist;
+            transform.rotation = Quaternion.LookRotation(f - transform.position);
+            _look = f;
+            FollowFrames++;
+            if (DemoBoot.CaptureDir != null || DemoBoot.PlayerSim) SampleVisibility(transform.position);
+            // the measure: her distance from the camera every frame, and reversals of it (>= 5 cm swings) within 0.5 s
+            float dd = (transform.position - (Target.position + Vector3.up * LookHeight)).magnitude;
+            CutawayFrames++; CutawayMin = Mathf.Min(CutawayMin, dd); CutawayMax = Mathf.Max(CutawayMax, dd);
+            if (_cwLast >= 0f)
+            {
+                int sg = dd > _cwLast + 1e-4f ? 1 : dd < _cwLast - 1e-4f ? -1 : 0;
+                if (sg != 0)
+                {
+                    if (_cwSign == 0) { _cwSign = sg; _cwExtreme = _cwLast; }
+                    else if (sg != _cwSign)
+                    {
+                        if (Mathf.Abs(_cwLast - _cwExtreme) >= 0.05f)
+                        {
+                            if (Time.time - _cwRevAt < 0.5f) { CutawayJitter++; if (Mathf.Abs(_cwLast - _cwExtreme) >= 0.15f) CutawayBounces++; }
+                            _cwRevAt = Time.time;
+                        }
+                        _cwSign = sg; _cwExtreme = _cwLast;
+                    }
+                }
+            }
+            _cwLast = dd;
+            LastCutawayDist = dd;
+        }
+        [System.NonSerialized] public float LastCutawayDist;
+
         void Place(float dt)
         {
             if (!_thinReady) CollectThin();
             if (!CameraOccluders.Ready && Target != null) CameraOccluders.Build(Target, CatRoot);
+            if (Cutaway != null) { PlaceCutaway(dt); return; }
+            _cwTarget = -1f;
             BodyPoints();
             bool hanging = Lift > 0.05f;
             int mask = hanging ? CamMask & ~(1 << 21) : CamMask;
@@ -379,7 +465,7 @@ namespace Seven
             //    ... and swing round (and up) to the nearest open angle (not while the player is turning the camera).
             //    QF8: also when the pull-in had to come very close (a wall right behind her), sooner in tight spots.
             bool tight = want < Distance * 0.45f;
-            if (Time.time - _lastUserTurn > (hanging ? 0.15f : tight ? 0.4f : 0.8f) && !_swinging && (_occluded > 0.3f || tight && (hanging || _occluded > 0.05f || want < 1.0f)))
+            if (!RaceMode && Time.time - _lastUserTurn > (hanging ? 0.15f : tight ? 0.4f : 0.8f) && !_swinging && (_occluded > 0.3f || tight && (hanging || _occluded > 0.05f || want < 1.0f)))
             {
                 float best = 999f, bestP = Pitch;
                 // QF8: steeper views too (in a tight corner of a chamber only the view from above is open); first a view
@@ -416,7 +502,8 @@ namespace Seven
                 if (Mathf.Abs(Mathf.DeltaAngle(Yaw, _swingTo)) < 1f || Time.time - _lastUserTurn < 0.1f) _swinging = false;
             }
             // Pull in fast, ease back out slowly.
-            _dist = want < _dist ? want : Mathf.SmoothDamp(_dist, want, ref _distVel, 0.35f, Mathf.Infinity, Mathf.Max(dt, 1e-4f));
+            _dist = want < _dist ? (RaceMode ? Mathf.SmoothDamp(_dist, want, ref _distVel, 0.12f, Mathf.Infinity, Mathf.Max(dt, 1e-4f)) : want) : Mathf.SmoothDamp(_dist, want, ref _distVel, 0.35f, Mathf.Infinity, Mathf.Max(dt, 1e-4f));
+            if (RaceMode) _swinging = false;
             transform.position = f + dir * _dist;
             transform.rotation = Quaternion.LookRotation(f - transform.position);
             _look = f;
@@ -441,7 +528,7 @@ namespace Seven
                 }
             }
         }
-        float _swingPitch, _swingPitchVel;
+        float _swingPitch, _swingPitchVel, _racePitchVel;
         bool _inCut;
         /// <summary>The cat's root (excluded from the occluders); set by the chapter director.</summary>
         public static Transform CatRoot;

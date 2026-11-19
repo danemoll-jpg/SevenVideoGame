@@ -1057,7 +1057,7 @@ namespace Seven
         IEnumerator BikeIntoTheHatch()
         {
             var dir = VenusLayout.HatchDir; var tan = Vector3.Cross(Vector3.up, dir);
-            float bottomIn = VenusLayout.SaucerHover + 0.1f;
+            float bottomIn = VenusLayout.SaucerHover + SaucerHold.BottomUp;
             var inBay = VenusLayout.BayInside; var outAt = VenusLayout.BayOutside; float yawOut = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
             var mouth = VenusLayout.HatchMouth;
             var settle = Bike.transform.position; float settleBottom = Ground.Height(settle.x, settle.z) + Bike.HoverHeight - 0.12f;
@@ -1082,10 +1082,10 @@ namespace Seven
                 if (t > 0.5f && t - Time.deltaTime / 2.6f <= 0.5f) StartCoroutine(Shot("b07_03_bike_glides_in"));
                 yield return null;
             }
-            BikeShown(false);                                 // inside the bay: nothing of it may show through the hull
-            Bike.EndGlide();
+            // QF14 (3): it stays in its cradles in the lit room while the hatch closes; hidden once the hull is shut
             StartCoroutine(CloseHatch(seamM, backM));
             while (_hatchOpen) yield return null;
+            BikeShown(false); Bike.EndGlide();
             Bike.gameObject.SetActive(false);
             Shoot(mouth + dir * 5.5f - tan * 2.2f + Vector3.up * 0.2f, mouth, 40f, 0.01f);
             yield return Wait(0.2f);

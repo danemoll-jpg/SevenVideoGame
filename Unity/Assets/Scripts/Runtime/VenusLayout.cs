@@ -35,8 +35,8 @@ namespace Seven
         /// <summary>The middle of the opening on the hull (world).</summary>
         public static Vector3 HatchMouth => SaucerAt + HatchDir * SaucerRadius + Vector3.up * (SaucerHover + 0.68f);
         /// <summary>The bike inside the bay (radial, its middle here) and where it is clear of the hull outside.</summary>
-        public static Vector3 BayInside => SaucerAt + HatchDir * 3.4f;
-        public static Vector3 BayOutside => SaucerAt + HatchDir * 8.9f;
+        public static Vector3 BayInside => SaucerAt + HatchDir * SaucerHold.InsideR;       // QF14 (3): in its cradles in the room
+        public static Vector3 BayOutside => SaucerAt + HatchDir * SaucerHold.OutsideR;
         public static readonly Vector3 BikeUnpacked = new Vector3(6.4f, 0f, 4.6f);   // the bike, out of the hatch, facing north
         public static readonly Vector3 PantherLie = new Vector3(-3.4f, 0f, 3.6f);    // he lies beside the ship, under the rim, large
         public static readonly Vector3 VistaSpot = new Vector3(0f, 0f, 11.5f);       // over her shoulder toward the gardens

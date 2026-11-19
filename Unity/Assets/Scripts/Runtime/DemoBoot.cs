@@ -106,6 +106,10 @@ namespace Seven
         /// through the menu on a virtual gamepad (d-pad down to the item whose label starts with each part, then A; a
         /// confirm is answered with A). Combine with -venusplay2 (player-style) or alone (the arrival plays on autopilot).</summary>
         public static string MenuPick { get; private set; }
+        /// <summary>QF14: -menupages (with -capture, implies -menu) = every menu page captured off-screen: the main menu, each
+        /// chapter page, the longest one scrolled to the bottom, Settings, Controls, the new-game confirm and the pause menu's
+        /// Scene select pages (all chapters unlocked on test keys for this run only), then quit.</summary>
+        public static bool MenuPages { get; private set; }
         /// <summary>QF12: -stopafter &lt;seconds&gt; = end a check run after that many seconds of game time (the log is written).</summary>
         public static float StopAfter { get; private set; }
         /// <summary>Round 14: -europacp &lt;n&gt; = start the Europa scene at checkpoint n (EuropaLayout.Cp*; check runs: the state a
@@ -128,6 +132,7 @@ namespace Seven
                 if (args[i] == "-saucer") Saucer = true;
                 if (args[i] == "-ratwing") Ratwing = true;
                 if (args[i] == "-menu") MenuShot = true;
+                if (args[i] == "-menupages") { MenuPages = true; MenuShot = true; }
                 if (args[i] == "-chapter1") Chapter1 = true;
                 if (args[i] == "-ch1aboard") { Chapter1 = true; Chapter1Aboard = true; }
                 if (args[i] == "-soundcheck") { SoundCheck = true; if (i + 1 < args.Length && args[i + 1] == "sfx") SoundCheckSfx = true; if (i + 1 < args.Length && args[i + 1] == "galley") SoundCheckGalley = true; }

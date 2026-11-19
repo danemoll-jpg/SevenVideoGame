@@ -20,10 +20,10 @@ namespace Seven.EditorTools
     {
         public const float SaucerExtRadius = 6f;
         public const float SaucerHatchAngle = 41.25f, SaucerHatchSpan = 30f;     // edges on the 96-segment lathe (3.75 deg)
-        const float BayInner = 1.6f;                                              // the bay's back wall radius
+        const float BayInner = BayNotch;                                          // QF14 (3): the hatch panel covers r 3.45 .. rim only (the room is inside)
 
         static string ExtSfx = "";
-        class SaucerExt { public Transform Panel; public Renderer Seam, BayBack; public Light BayLight, UnderLight; public readonly List<Renderer> Glow = new List<Renderer>(); }
+        class SaucerExt { public Transform Panel, Sink; public Renderer Seam, BayBack; public Light BayLight, UnderLight; public Light[] BayLights; public ReflectionProbe BayProbe; public readonly List<Renderer> Glow = new List<Renderer>(); }
 
         /// <summary>Round 13 (0b, the saucer's fixed design): the tractor beam is how 7 gets in and out of the saucer on
         /// every world - an iris hatch in the belly (8 blades), its glow disc, a soft cone of light down to the ground, the
@@ -115,7 +115,7 @@ namespace Seven.EditorTools
             var bv = new List<Vector3>(); var bt = new List<int>();
             // QF13 (1): the belly ring's arc under the hold rides on the hatch panel (else it crossed the open hold's bottom
             // as a white line)
-            { var run = new List<Vector3>(); for (int i = 0; i <= 96; i++) { float a = i * 3.75f; if (InSector(a)) { if (run.Count > 1) Sweep(bv, bt, run, 0.04f, false, 6); run = new List<Vector3>(); continue; } run.Add(Polar(2.4f, a, b0 - 0.07f)); } if (run.Count > 1) Sweep(bv, bt, run, 0.04f, false, 6); }
+            Sweep(bv, bt, Enumerable.Range(0, 96).Select(i => Polar(2.4f, i * 3.75f, b0 - 0.07f)).ToList(), 0.04f, true, 6);      // QF14: r 2.4 is no longer on the panel
             Sweep(bv, bt, Enumerable.Range(0, 48).Select(i => Polar(1.2f, i * 7.5f, b0 + 1.97f)).ToList(), 0.025f, true, 6);
             ext.Glow.Add(MeshObject("BellyGlow", SaveMesh(SmoothFinish(bv, bt), "Saucer_Ext_BellyGlow" + ExtSfx), rim, saucer, false).GetComponent<Renderer>());
             var ul = new GameObject("UnderLight").AddComponent<Light>();
@@ -137,14 +137,15 @@ namespace Seven.EditorTools
             // QF13 (1): the panel's pivot is on the hull's mid-plane (rim height), so the sink (a uniform scale) draws every
             // surface INTO the hull - scaled about the ground it hung 5 cm below the neighbouring hull once slid round
             var panel = new GameObject("HatchPanel").transform; panel.SetParent(saucer, false); panel.localPosition = new Vector3(0f, b0 + 0.69f, 0f);
-            var pm = new GameObject("PanelMeshes").transform; pm.SetParent(panel, false); pm.localPosition = new Vector3(0f, -(b0 + 0.69f), 0f);
+            // QF14 (3): the sink scales about the panel's inner edge (r = BayInner on the hatch axis), so the panel never moves
+            // inward into the room's frame; it still goes ~8 cm inside the hull at the rim before it slides round
+            var sink = new GameObject("PanelSink").transform; sink.SetParent(panel, false); sink.localPosition = Polar(BayInner, SaucerHatchAngle, 0f);
+            var pm = new GameObject("PanelMeshes").transform; pm.SetParent(sink, false); pm.localPosition = -Polar(BayInner, SaucerHatchAngle, 0f) - new Vector3(0f, b0 + 0.69f, 0f);
             MeshObject("PanelUnder", SaveMesh(Lathe(underOut, ha0, ha1, 8), "Saucer_Ext_PanelUnder" + ExtSfx), hullUnder, pm);
             MeshObject("PanelUpper", SaveMesh(Lathe(upperOut, ha0, ha1, 8), "Saucer_Ext_PanelUpper" + ExtSfx), hull, pm);
             MeshObject("PanelRim", SaveMesh(Lathe(rimBand, ha0, ha1, 8), "Saucer_Ext_PanelRim" + ExtSfx), hullUnder, pm);
             MeshObject("PanelBand", SaveMesh(Lathe(bandV, ha0, ha1, 8), "Saucer_Ext_PanelBand" + ExtSfx), metalDark, pm);
-            { var pv = new List<Vector3>(); var ptt = new List<int>(); Sweep(pv, ptt, Enumerable.Range(0, 9).Select(i => Polar(2.4f, Mathf.Lerp(ha0 - 0.5f, ha1 + 0.5f, i / 8f), b0 - 0.07f)).ToList(), 0.04f, false, 6);
-              ext.Glow.Add(MeshObject("PanelBellyGlow", SaveMesh(SmoothFinish(pv, ptt), "Saucer_Ext_PanelBellyGlow" + ExtSfx), rim, pm, false).GetComponent<Renderer>()); }
-            ext.Panel = panel;
+            ext.Panel = panel; ext.Sink = sink;
             // the seam: hair-thin lines round the panel (white emission animated by the director; off when closed)
             var seamMat = Dissolve("Saucer_hatch_seam", Gray(0.85f), 0.6f, false); seamMat.EnableKeyword("_EMISSION"); seamMat.SetColor("_EmissionColor", Color.black); EditorUtility.SetDirty(seamMat);
             {
@@ -162,43 +163,32 @@ namespace Seven.EditorTools
                 var seam = MeshObject("HatchSeam", SaveMesh(SmoothFinish(sv, st), "Saucer_Ext_HatchSeam" + ExtSfx), seamMat, saucer, false);
                 ext.Seam = seam.GetComponent<Renderer>(); ext.Seam.enabled = false;
             }
-            // the bay behind it: dark floor / ceiling / sides, a softly glowing back wall, a light that comes up as it opens
+            // the bay behind it. History: R13 dark gray (two black bands), QF12 pale glow (white bands), QF13 flat unlit
+            // (Dan, 0.14.1: "that awful gray mush" - a flat slab the bike poked through: the old bay was the hull sector
+            // itself, 0.26 m thick at the rim). QF14 (3): a real room inside the hull's thick middle (FightDemoBuilderBikeBay),
+            // and in front of it a full-height slot through the hull (its two cut faces), open top and bottom once the panel
+            // has slid away, so the 0.95 m bike glides out without touching anything.
             {
-                // Round 13 (0b): the bay was dark gray (Gray 0.2) - seen through the opening as two black bands (its ceiling and
-                // floor). The opening is lit and clean now: pale walls with a soft white glow of their own.
-                // QF12 (3): the pale walls still read as two white bands (floor / ceiling lit brighter than the back). Now every
-                // surface of the hold is one flat, even glow (no albedo, no shine, the same emission everywhere): from outside
-                // the opening is just a softly lit hollow with the bike in it - no slab, edge or strip can be told apart.
-                // QF13 (1): Dan still saw white bars - the lit material (black albedo + emission) still caught the sky's
-                // reflection / fresnel on the floor and ceiling seen edge-on, and the seam stayed lit round the opening. The
-                // hold's inside is now one flat UNLIT tone (Seven/HoldInterior: no light, no reflection, both faces), so no
-                // surface of it can be told from another; the seam goes dark as the panel clears the opening (SaucerHold).
-                var bayMat = HoldInteriorMat();
                 var bay = new GameObject("Bay").transform; bay.SetParent(saucer, false);
-                var fl = underOut.Select(p => new Vector2(p.x, p.y + 0.03f)).ToList(); var ce = upperOut.Select(p => new Vector2(p.x, p.y - 0.03f)).ToList();
-                MeshObject("BayFloor", SaveMesh(Lathe(fl, ha0, ha1, 8), "Saucer_Ext_BayFloor" + ExtSfx), bayMat, bay, false);
-                MeshObject("BayCeiling", SaveMesh(Lathe(ce, ha0, ha1, 8), "Saucer_Ext_BayCeiling" + ExtSfx), bayMat, bay, false);
-                var backMat = bayMat;
-                var back = MeshObject("BayBack", SaveMesh(Lathe(new[] { new Vector2(BayInner, UpperY(BayInner) - 0.03f), new Vector2(BayInner, UnderY(BayInner) + 0.03f) }, ha0, ha1, 8), "Saucer_Ext_BayBack" + ExtSfx), backMat, bay, false);
-                ext.BayBack = back.GetComponent<Renderer>();
+                bay.localRotation = Quaternion.LookRotation(Polar(1f, SaucerHatchAngle, 0f), Vector3.up);
+                BuildBikeBay(bay, b0, UnderY, UpperY, SaucerHatchSpan * 0.5f, hull, metalDark, ext);
+                var slot = new GameObject("BaySlot").transform; slot.SetParent(saucer, false);
                 foreach (var a in new[] { ha0, ha1 })
                 {
                     var wv = new List<Vector3>(); var wt = new List<int>();
-                    for (float r = BayInner; r < 6.0f - 1e-3f; r += 0.2f)
+                    for (float r = BayInner; r < 6.0f - 1e-3f; r += 0.1f)
                     {
-                        float r2 = Mathf.Min(6.0f, r + 0.2f); int b = wv.Count;
-                        wv.Add(Polar(r, a, UnderY(r) + 0.03f)); wv.Add(Polar(r2, a, UnderY(r2) + 0.03f)); wv.Add(Polar(r2, a, UpperY(r2) - 0.03f)); wv.Add(Polar(r, a, UpperY(r) - 0.03f));
+                        float r2 = Mathf.Min(6.0f, r + 0.1f); int b = wv.Count;
+                        wv.Add(Polar(r, a, UnderY(r) + 0.002f)); wv.Add(Polar(r2, a, UnderY(r2) + 0.002f)); wv.Add(Polar(r2, a, UpperY(r2) - 0.002f)); wv.Add(Polar(r, a, UpperY(r) - 0.002f));
                         wt.AddRange(new[] { b, b + 1, b + 2, b, b + 2, b + 3 });
                     }
-                    MeshObject($"BaySide{a:0}", SaveMesh(Finish(wv, wt), $"Saucer_Ext_BaySide{a:0}" + ExtSfx), bayMat, bay, false);
+                    // the rim band's own thickness at the rim edge
+                    { int b = wv.Count; wv.Add(Polar(6.0f, a, b0 + 0.56f)); wv.Add(Polar(6.04f, a, b0 + 0.6f)); wv.Add(Polar(6.04f, a, b0 + 0.78f)); wv.Add(Polar(6.0f, a, b0 + 0.82f)); wt.AddRange(new[] { b, b + 1, b + 2, b, b + 2, b + 3 }); }
+                    MeshObject($"BaySide{a:0}", SaveMesh(Finish(wv, wt), $"Saucer_Ext_BaySide{a:0}" + ExtSfx), hullUnder, slot, false);
                 }
-                var bl = new GameObject("BayLight").AddComponent<Light>(); bl.transform.SetParent(bay, false);
-                bl.transform.localPosition = Polar(BayInner + 1.2f, SaucerHatchAngle, b0 + 0.7f);
-                bl.type = LightType.Point; bl.range = 7f; bl.intensity = 0f; bl.color = Color.white; bl.shadows = LightShadows.None;
-                ext.BayLight = bl;
             }
             var hold = saucer.gameObject.AddComponent<Seven.SaucerHold>();
-            hold.Panel = panel; hold.Seam = ext.Seam; hold.BayLight = ext.BayLight;
+            hold.Panel = panel; hold.Sink = ext.Sink; hold.Seam = ext.Seam; hold.BayLight = ext.BayLight; hold.BayLights = ext.BayLights; hold.BayProbe = ext.BayProbe;
             return ext;
         }
 

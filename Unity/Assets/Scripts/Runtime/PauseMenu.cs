@@ -13,6 +13,9 @@ namespace Seven
     /// Main menu and Quit. Time stops and audio pauses while it is open. Esc no longer leaves a scene directly.
     /// Pad: stick / d-pad, A = choose, B = back, Start = close. Keys: W/S or arrows, ←/→ to adjust, Enter / Space,
     /// Esc = back. Strictly monochrome uGUI drawn on the active camera (so check runs can capture it).
+    /// QF14: Scene select = the unlocked chapters (<see cref="ChapterList"/>, the same list as the main menu) → a chapter's
+    /// page (Play from the start (asks first when it resets progress), its sections, Back); long pages scroll
+    /// (<see cref="MenuScroll"/>, the mouse wheel too).
     /// </summary>
     public class PauseMenu : MonoBehaviour
     {
@@ -21,7 +24,7 @@ namespace Seven
         /// <summary>Another screen owns Esc right now (the gallery full view): Esc does not open the menu.</summary>
         public static System.Func<bool> EscapeOwned;
 
-        enum Page { Main, Settings, ConfirmMenu, ConfirmQuit, Controls, Select }
+        enum Page { Main, Settings, ConfirmMenu, ConfirmQuit, Controls, Select, Chapter, ConfirmStart }
         const int MainSettings = 1, MainControls = 2, MainSelect = 3, MainMenu = 4, MainQuit = 5;
         /// <summary>QF6 playtest: the highlighted entry (the driver reads the menu like a person).</summary>
         public string SelectedLabel { get { var it = Items(); return _sel >= 0 && _sel < it.Count ? it[_sel] : null; } }
@@ -84,6 +87,7 @@ namespace Seven
                     _stickReady = Time.unscaledTime + 0.3f;
                 }
             }
+            if (d == 0) d = MenuScroll.Wheel();          // QF14: the mouse wheel moves the selection (long lists scroll with it)
             bool ok = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame)) || (gp != null && gp.buttonSouth.wasPressedThisFrame);
             bool back = esc || (gp != null && gp.buttonEast.wasPressedThisFrame);
             Handle(d, lr, ok, back);
@@ -99,7 +103,9 @@ namespace Seven
             if (_page == Page.Settings && lr != 0 && _sel < GameSettings.Count) { GameSettings.Adjust(_sel, lr); Refresh(); }
             if (back)
             {
-                if (_page == Page.Select && _venusSel) { _venusSel = false; Show(Page.Select, VenusPageIndex); return; }
+                // QF14: chapter page -> the chapter list -> the pause menu
+                if (_page == Page.ConfirmStart) { Show(Page.Chapter, 0); return; }
+                if (_page == Page.Chapter) { Show(Page.Select, Mathf.Max(0, _unlocked.IndexOf(Current))); return; }
                 if (_page == Page.Main) Close(); else Show(Page.Main, _page == Page.Settings ? MainSettings : _page == Page.Controls ? MainControls : _page == Page.Select ? MainSelect : _page == Page.ConfirmMenu ? MainMenu : MainQuit);
                 return;
             }
@@ -123,15 +129,28 @@ namespace Seven
                     Show(Page.Main, MainControls);
                     break;
                 case Page.Select:
+                    // QF14: the chapter list (ChapterList, unlocked only) -> the chapter's page
+                    if (_sel >= _unlocked.Count) Show(Page.Main, MainSelect);
+                    else { _chapter = ChapterList.IndexOf(_unlocked[_sel]); Show(Page.Chapter, 0); }
+                    break;
+                case Page.Chapter:
                 {
-                    var sel = _venusSel ? DemoMenu.VenusSelectItems() : DemoMenu.SelectItems();
-                    var target = sel[Mathf.Clamp(_sel, 0, sel.Length - 1)].Item2;
-                    if (target == "@back" && _venusSel) { _venusSel = false; Show(Page.Select, VenusPageIndex); }
-                    else if (target == "@back") Show(Page.Main, MainSelect);
-                    else if (target == "@venuspage") { _venusSel = true; Show(Page.Select, 0); }
-                    else if (target.StartsWith("@eur:")) { Close(); _venusSel = false; Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); EuropaState.StartAt(int.Parse(target.Substring(5))); }
-                    else if (target.StartsWith("@ven:")) { Close(); _venusSel = false; Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); VenusState.StartAt(target.Substring(5)); }
-                    else if (target.StartsWith("@cp")) { Close(); Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); int cp0 = int.Parse(target.Substring(3)); Chapter1State.StartAt(cp0); Chapter1State.Intro = cp0 == Chapter1State.CpCell; }
+                    var ch = Current; if (ch == null) { Show(Page.Select, 0); break; }
+                    int n = ch.Sections().Length;
+                    if (_sel == 0)
+                    {
+                        if (ch.HasProgress != null && ch.HasProgress()) { Show(Page.ConfirmStart, 1); break; }
+                        Close(); ChapterList.StartFromBeginning(ch, " (pause menu)");
+                    }
+                    else if (_sel <= n) { Close(); ChapterList.StartSection(ch, _sel - 1, " (pause menu)"); }
+                    else Show(Page.Select, Mathf.Max(0, _unlocked.IndexOf(ch)));
+                    break;
+                }
+                case Page.ConfirmStart:
+                {
+                    var ch = Current;
+                    if (_sel == 0 && ch != null) { Close(); ChapterList.StartFromBeginning(ch, " (pause menu)"); }
+                    else Show(Page.Chapter, 0);
                     break;
                 }
                 case Page.ConfirmMenu:
@@ -167,13 +186,22 @@ namespace Seven
                     return l;
                 }
                 case Page.Controls: return new List<string> { "Back" };
-                case Page.Select: { var l = new List<string>(); foreach (var (label, _) in _venusSel ? DemoMenu.VenusSelectItems() : DemoMenu.SelectItems()) l.Add(label); return l; }
+                case Page.Select: { var l = new List<string>(); foreach (var c in _unlocked) l.Add(c.Name); l.Add("Back"); return l; }
+                case Page.Chapter:
+                {
+                    var l = new List<string> { ChapterList.PlayFromStartLabel };
+                    if (Current != null) foreach (var (label, _) in Current.Sections()) l.Add(label);
+                    l.Add("Back");
+                    return l;
+                }
+                case Page.ConfirmStart: return new List<string> { "Yes, start over", "No" };
                 case Page.ConfirmMenu: return new List<string> { "Yes, main menu", "No" };
                 case Page.ConfirmQuit: return new List<string> { "Yes, quit", "No" };
                 default: return new List<string> { "Resume", "Settings", "Controls", "Scene select", "Main menu", "Quit game" };
             }
         }
-        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.Select ? (_venusSel ? "SCENE SELECT  —  CHAPTER 2" : "SCENE SELECT") : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
+        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.Select ? "SCENE SELECT"
+                       : _page == Page.Chapter ? (Current != null ? Current.Name.ToUpperInvariant() : "SCENE SELECT") : _page == Page.ConfirmStart ? (Current != null ? Current.Confirm : "Start over?") : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
 
         public void Open()
         {
@@ -195,11 +223,37 @@ namespace Seven
             AudioListener.pause = DemoBoot.Muted;
             if (_canvasGo != null) Destroy(_canvasGo);
             _labels.Clear(); _bars.Clear(); _extra.Clear();
+            _scroll = null; _capCam = null;
         }
 
-        void Show(Page p, int sel) { _page = p; _sel = sel; Refresh(); }
-        bool _venusSel;   // QF11: the Scene Select page shows Chapter 2's entries
-        static int VenusPageIndex { get { var l = DemoMenu.SelectItems(); for (int i = 0; i < l.Length; i++) if (l[i].Item2 == "@venuspage") return i; return 0; } }
+        void Show(Page p, int sel)
+        {
+            if (p == Page.Select) _unlocked = ChapterList.Unlocked();
+            _page = p; _sel = sel; _scroll?.Home(); Refresh();
+        }
+        // QF14: Scene select = the chapter list (unlocked only) -> a chapter's page (Play from the start, its sections, Back)
+        List<ChapterDef> _unlocked = new List<ChapterDef>();
+        int _chapter = -1;
+        ChapterDef Current => _chapter >= 0 && _chapter < ChapterList.All.Length ? ChapterList.All[_chapter] : null;
+        MenuScroll _scroll;
+        const int ListRows = 10;            // rows shown on the Scene select pages (more scroll); see Refresh for the arithmetic
+        const float ListTop = 135f, ListPitch = 37f, ListBar = 32f;
+        Camera _capCam;
+
+        // ---- QF14 (-menupages): the capture run shows these pages on the main menu's camera (the menu scene never opens it)
+        public void OpenForCapture(Camera cam) { _capCam = cam; Open(); }
+        /// <summary>Capture: the chapter list (chapter &lt; 0) or a chapter's page, with row sel highlighted.</summary>
+        public void CaptureShow(int chapter, int sel)
+        {
+            if (!_open) return;
+            if (chapter < 0) { Show(Page.Select, 0); _sel = Mathf.Clamp(sel, 0, Items().Count - 1); Refresh(); return; }
+            _unlocked = ChapterList.Unlocked(); _chapter = chapter; Show(Page.Chapter, 0); _sel = Mathf.Clamp(sel, 0, Items().Count - 1); Refresh();
+        }
+        public string PageTitle => Title();
+        public int ItemCount => Items().Count;
+        public int VisibleRows => _scroll == null ? ItemCount : Mathf.Min(ItemCount, _scroll.Visible);
+        public bool ScrollBarShown => _scroll != null && _scroll.Shown;
+        public int ScrollTop => _scroll != null ? _scroll.Top : 0;
 
         void Build()
         {
@@ -208,7 +262,7 @@ namespace Seven
             _canvasGo = new GameObject("PauseCanvas");
             _canvasGo.transform.SetParent(transform, false);
             _canvas = _canvasGo.AddComponent<Canvas>();
-            var cam = Camera.main;
+            var cam = _capCam != null ? _capCam : Camera.main;
             if (cam != null) { _canvas.renderMode = RenderMode.ScreenSpaceCamera; _canvas.worldCamera = cam; _canvas.planeDistance = cam.nearClipPlane + 0.05f; }
             else _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             _canvas.sortingOrder = 500;
@@ -219,7 +273,11 @@ namespace Seven
             dim.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.62f);
             Logo.Add(_canvasGo.transform, new Vector2(0, 262), 210f, new Color(0.9f, 0.9f, 0.9f));     // Round 10: logo header
             _title = MakeText(_canvasGo.transform, "", new Vector2(0, 175), 34, new Color(0.95f, 0.95f, 0.95f));
-            MakeText(_canvasGo.transform, "stick / d-pad + A · B back    ·    W S / arrows, ← → adjust, Enter · Esc back", new Vector2(0, -290), 15, new Color(0.55f, 0.55f, 0.55f));
+            MakeText(_canvasGo.transform, "stick / d-pad + A · B back    ·    W S / arrows / wheel, ← → adjust, Enter · Esc back", new Vector2(0, -290), 15, new Color(0.55f, 0.55f, 0.55f));
+            // QF14: the Scene select pages scroll; the bar sits right of the 540-wide rows, from the first row's top edge
+            // (151) to the last visible row's bottom edge (-214) on the 720-high reference canvas
+            _scroll = new MenuScroll(ListRows);
+            _scroll.Make(_canvasGo.transform, 292f, ListTop + ListBar * 0.5f, (ListRows - 1) * ListPitch + ListBar);
         }
 
         Text MakeText(Transform parent, string s, Vector2 pos, int size, Color c)
@@ -240,7 +298,7 @@ namespace Seven
             ("Run (hold)", "LB", "Shift"),
             ("Jump · grab a ledge", "A", "Space"),
             ("Interact (doors, touch, sit)", "X", "E"),
-            ("Crouch-sneak (toggle) · climb down at an edge", "B", "C"),
+            ("Crouch-sneak · climb down at an edge", "B", "C"),
             ("Hanging: climb up · shimmy · let go", "Up · left/right · B", "W · A/D · Space"),
             ("Telekinesis (highlighted object)", "RT", "Right mouse"),
             ("Skip a line", "Y", "Enter"),
@@ -257,21 +315,32 @@ namespace Seven
             foreach (var g in _extra) if (g != null) Destroy(g);
             _extra.Clear();
             if (_page != Page.Controls) return;
+            _extra.AddRange(ControlsTable(_canvasGo.transform, _font));
+        }
+
+        /// <summary>Round 9 control map as a table (header at y 132, rows down to y -186; x from -270 to +540 on the
+        /// 1280x720 reference, so it also fits 16:10's 1152-wide canvas). QF14: shared by the pause menu and the main menu.</summary>
+        public static List<GameObject> ControlsTable(Transform parent, Font font)
+        {
+            var made = new List<GameObject>();
             var head = new Color(0.62f, 0.62f, 0.62f); var ink = new Color(0.92f, 0.92f, 0.92f);
-            Cell("", -150, 132, 16, head, 420, TextAnchor.MiddleLeft); Cell("XBOX", 170, 132, 16, head, 230, TextAnchor.MiddleLeft); Cell("KEYBOARD / MOUSE", 400, 132, 16, head, 260, TextAnchor.MiddleLeft);
+            Cell("", -150, 132, 16, head, 420); Cell("XBOX", 170, 132, 16, head, 230); Cell("KEYBOARD / MOUSE", 400, 132, 16, head, 260);
             for (int i = 0; i < ControlMap.Length; i++)
             {
                 float y = 108 - i * 21;
-                Cell(ControlMap[i].what, -150, y, 17, ink, 420, TextAnchor.MiddleLeft);
-                Cell(ControlMap[i].pad, 170, y, 17, ink, 230, TextAnchor.MiddleLeft);
-                Cell(ControlMap[i].keys, 400, y, 17, ink, 260, TextAnchor.MiddleLeft);
+                Cell(ControlMap[i].what, -150, y, 17, ink, 420);
+                Cell(ControlMap[i].pad, 170, y, 17, ink, 230);
+                Cell(ControlMap[i].keys, 400, y, 17, ink, 260);
             }
-            void Cell(string s, float x, float y, int size, Color c, float w, TextAnchor a)
+            return made;
+
+            void Cell(string s, float x, float y, int size, Color c, float w)
             {
-                var t = MakeText(_canvasGo.transform, s, new Vector2(x - 120f, y), size, c);
-                t.alignment = a; ((RectTransform)t.transform).sizeDelta = new Vector2(w, size * 1.6f);
-                ((RectTransform)t.transform).pivot = new Vector2(0f, 0.5f);
-                _extra.Add(t.gameObject);
+                var go = new GameObject("Text", typeof(RectTransform)); go.transform.SetParent(parent, false);
+                var rt = (RectTransform)go.transform; rt.anchoredPosition = new Vector2(x - 120f, y); rt.sizeDelta = new Vector2(w, size * 1.6f); rt.pivot = new Vector2(0f, 0.5f);
+                var t = go.AddComponent<Text>(); t.font = font; t.fontSize = size; t.text = s; t.color = c; t.alignment = TextAnchor.MiddleLeft;
+                t.horizontalOverflow = HorizontalWrapMode.Overflow; t.raycastTarget = false;
+                made.Add(go);
             }
         }
 
@@ -287,14 +356,19 @@ namespace Seven
                 _bars.Add(img);
                 _labels.Add(MakeText(bar.transform, "", Vector2.zero, 26, Color.white));
             }
+            // QF14: the Scene select pages show ListRows rows of the scroll window (centres 135 .. 135 - 9 x 37 = -198 on the
+            // 720-high reference canvas, the hint at -290) and scroll with the selection; the other pages always fit
+            bool list = _page == Page.Select || _page == Page.Chapter;
+            int top = 0;
+            if (_scroll != null) { _scroll.Visible = list ? ListRows : 99; top = _scroll.Follow(_sel, items.Count); }
             for (int i = 0; i < _labels.Count; i++)
             {
-                bool vis = i < items.Count;
+                bool vis = i < items.Count && (!list || (i >= top && i < top + ListRows));
                 _bars[i].gameObject.SetActive(vis);
                 if (!vis) continue;
                 var rt = (RectTransform)_bars[i].transform;
-                bool sel = _page == Page.Select;
-                rt.anchoredPosition = _page == Page.Controls ? new Vector2(0, -230) : sel ? new Vector2(0, 135 - i * 37) : new Vector2(0, 100 - i * 52);
+                bool sel = list;
+                rt.anchoredPosition = _page == Page.Controls ? new Vector2(0, -230) : sel ? new Vector2(0, ListTop - (i - top) * ListPitch) : new Vector2(0, 100 - i * 52);
                 rt.sizeDelta = sel ? new Vector2(540, 32) : new Vector2(440, 46);
                 _labels[i].fontSize = sel ? 19 : 26;
                 bool on = i == _sel;
@@ -360,7 +434,17 @@ namespace Seven
         public static int Furthest => Mathf.Max(PlayerPrefs.GetInt(FurthestKey, -1), Progress);
         /// <summary>Round 13 (0c): a new game - Chapter 1 from the main menu - starts every chapter fresh: the Chapter 1
         /// checkpoint, the Venus save and the console's progress are cleared (Continue then resumes the new playthrough).</summary>
-        public static bool AnyProgress => HasChapter1Save || VenusState.HasProgress;
+        public static bool AnyProgress => HasChapter1Save || VenusState.OwnHasProgress || EuropaState.OwnHasProgress;     // QF14: read without switching a Scene Select slot; Europa too (NewGame clears it)
+        /// <summary>QF14: chapters unlocked on this PC (ChapterList) - remembered, a new game keeps them.</summary>
+        static string UnlockKey(string id) => (Test ? "seven_test_unlocked_" : "seven_unlocked_") + id;
+        public static bool WasUnlocked(string id) => PlayerPrefs.GetInt(UnlockKey(id), 0) == 1;
+        public static void MarkUnlocked(string id) { PlayerPrefs.SetInt(UnlockKey(id), 1); PlayerPrefs.Save(); Debug.Log($"[Seven] chapter unlocked: {id} ({UnlockKey(id)})"); }
+        public static void ClearTestUnlocks()
+        {
+            if (!Test) return;
+            foreach (var c in ChapterList.All) PlayerPrefs.DeleteKey("seven_test_unlocked_" + c.Id);
+            PlayerPrefs.Save();
+        }
         public static void NewGame()
         {
             PlayerPrefs.DeleteKey(Key); PlayerPrefs.DeleteKey(OldKey); PlayerPrefs.DeleteKey(FurthestKey);
@@ -381,6 +465,7 @@ namespace Seven
         {
             if (!Test) return;
             PlayerPrefs.DeleteKey("seven_test_ch1_aboard"); PlayerPrefs.DeleteKey("seven_test_ch1_progress"); PlayerPrefs.DeleteKey("seven_test_ch1_furthest"); PlayerPrefs.Save();
+            ClearTestUnlocks();
         }
 
         /// <summary>The main menu's Continue: back to the saved checkpoint (free exploration once the chapter is done).</summary>

@@ -762,7 +762,7 @@ namespace Seven
         {
             Bike.gameObject.SetActive(true);
             var dir = VenusLayout.HatchDir; var tan = Vector3.Cross(Vector3.up, dir);
-            float bottomIn = VenusLayout.SaucerHover + 0.1f;
+            float bottomIn = VenusLayout.SaucerHover + SaucerHold.BottomUp;
             var inBay = VenusLayout.BayInside; float yawOut = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
             Bike.Glide(inBay, yawOut, bottomIn);
             // QF11 (Dan's screenshot: the 3 m bike poked out through the closed hull): nothing of the bike shows until
@@ -779,12 +779,19 @@ namespace Seven
             Material seamM = null, backM = null;
             yield return Hold.Open(() => StartCoroutine(Shot("v06b_b01_hatch_seam_glows")), slide =>
             {
-                if (slide > 0.97f && !_bikeShown) BikeShown(true);
+                if (slide > 0.02f && !_bikeShown) BikeShown(true);     // QF14 (3): the room behind the panel - the bike sits in its cradles
                 if (Shots && !_bikeShown && !_hullCheckLogged) { _hullCheckLogged = true; LogBikeThroughHull("hatch opening (panel " + (slide * 100f).ToString("0") + " % open)"); }
                 if (Shots && slide > 0.5f && !_holdMidShot) { _holdMidShot = true; StartCoroutine(Shot("qf13_01a_b01_hold_half_open_player_view")); }
             });
             BikeShown(true);
             yield return Shot("v06c_b01_hatch_open_light_inside");
+            // QF14 (3): the bay straight on (the reference's view) and close from the player's side, same instant
+            if (Shots && Cap != null)
+            {
+                var axis = VenusLayout.SaucerAt + Vector3.up * (VenusLayout.SaucerHover + 0.72f);
+                yield return Cap.ShotFrom("qf14_03_bay_straight_on", axis + dir * 7.2f, axis + dir * 2.0f, 30f);
+                yield return Cap.ShotFrom("qf14_03_bay_three_quarter", axis + dir * 6.8f + tan * 2.2f + Vector3.up * 0.15f, axis + dir * 1.8f, 34f);
+            }
             // the bike glides out on its hover glow, unhurried
             var outAt = VenusLayout.BayOutside;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
@@ -1494,10 +1501,10 @@ namespace Seven
             for (int i = 0; i < n; i++)
             {
                 var g = Guardian.transform; var cape = Guardian.GetComponent<ElarimCape>();
-                Log($"guardian (QF13 17) {beat} #{i}: state {(Guardian.Walking ? "walking" : "standing")}, clip ground speed {Guardian.ClipGroundSpeed:0.00} m/s, playback {Guardian.WalkAnimSpeed:0.00} for {Guardian.WalkSpeed:0.0} m/s, planted foot slide {Guardian.FootSlide:0.00} m/s, kneel hips {Guardian.KneelHipsRatio:0.00}"
+                Log($"guardian (QF13 17) {beat} #{i}: state {(Guardian.Walking ? "walking" : "standing")}, clip ground speed {Guardian.ClipGroundSpeed:0.00} m/s, playback {Guardian.WalkAnimSpeed:0.00} for {Guardian.WalkSpeed:0.0} m/s, planted foot slide {Guardian.FootSlide:0.00} m/s, kneel hips {Guardian.KneelHipsRatio:0.00}, hip sway {Guardian.SwayBefore:0.000} m -> {Guardian.SwayAfter:0.000} m (QF14 7)"
                     + (cape != null ? $"; cape top {cape.TopBelowShoulder:0.00} m below the shoulders (model {cape.RefTopBelowShoulder:0.00}), hem {cape.HemAboveGround:0.00} m above the ground (model {cape.RefHemAboveGround:0.00}), re-seat {cape.SeatShift * 100f:+0;-0} cm, leg contact {cape.WorstDepth * 100f:0.0} cm, swing {cape.MaxAngle:0} deg" : ""));
-                yield return Cap.Shot($"qf13_17_{beat}_{i}_player_camera");
-                yield return Cap.ShotFrom($"qf13_17_{beat}_{i}_side", g.position + g.right * 8f + g.forward * 1.0f + Vector3.up * 1.9f, g.position + Vector3.up * 1.8f, 38f);
+                yield return Cap.Shot($"qf14_07_{beat}_{i}_player_camera");
+                yield return Cap.ShotFrom($"qf14_07_{beat}_{i}_side", g.position + g.right * 8f + g.forward * 1.0f + Vector3.up * 1.9f, g.position + Vector3.up * 1.8f, 38f);
                 if (every > 0f) yield return Wait(every);
             }
         }

@@ -9,14 +9,19 @@ namespace Seven
     /// Assets/Saucer/Saucer.prefab). The bike always leaves and returns through it; the beam is only for 7 (and the cat).
     /// Opening: the hair-thin seam lights, the panel sinks into the hull (scaled about the hull's mid-plane, so it never
     /// pokes out under the neighbouring hull) and slides round inside it; the seam goes dark again as the panel clears the
-    /// opening - what is left is an empty opening (the hold's inside is one flat unlit tone, Seven/HoldInterior) with the bike.
+    /// opening. QF14 (3): behind it is a real room (FightDemoBuilderBikeBay - chrome frame, curved steel walls and ribs, three
+    /// round ceiling lights, drawers, a control panel, a track and two cradles) with the bike sitting in its cradles; the bay
+    /// lights come up as the panel slides and the room's own reflection probe is rendered once they are on.
     /// Closing is the reverse; closed, the hull is seamless.
     /// </summary>
     public class SaucerHold : MonoBehaviour
     {
-        public Transform Panel;
+        public Transform Panel, Sink;
         public Renderer Seam;
         public Light BayLight;
+        public Light[] BayLights;
+        public ReflectionProbe BayProbe;
+        public const float LightOn = 2.6f;
         public const float Angle = 41.25f, Span = 30f, Tuck = 0.97f;
         public bool IsOpen { get; private set; }
         public float Slide { get; private set; }
@@ -25,18 +30,25 @@ namespace Seven
         public Vector3 Dir => transform.TransformDirection(new Vector3(Mathf.Cos(Angle * Mathf.Deg2Rad), 0f, Mathf.Sin(Angle * Mathf.Deg2Rad)));
         /// <summary>The middle of the opening at the rim (world).</summary>
         public Vector3 Mouth => transform.position + Dir * 6f + transform.up * (SaucerBeam.ShipBelly + 0.68f);
-        /// <summary>Where the bike rests inside (ground point under it) and where it is clear of the hull outside.</summary>
-        public Vector3 Inside => transform.position + Dir * 3.4f;
-        public Vector3 Outside => transform.position + Dir * 8.9f;
-        /// <summary>The bike's underside height above the saucer's root while it is in the hold.</summary>
-        public float BottomIn => SaucerBeam.ShipBelly + 0.1f;
+        /// <summary>Where the bike rests inside (ground point under it: in its cradles, the room's middle) and where it is
+        /// clear of the hull outside.</summary>
+        public const float InsideR = 1.35f, OutsideR = 8.9f, BottomUp = 0.23f;
+        public Vector3 Inside => transform.position + Dir * InsideR;
+        public Vector3 Outside => transform.position + Dir * OutsideR;
+        /// <summary>The bike's underside height above the saucer's root while it is in the hold (just over its cradles).</summary>
+        public float BottomIn => SaucerBeam.ShipBelly + BottomUp;
+        void Lights(float k)
+        {
+            if (BayLights != null && BayLights.Length > 0) { foreach (var l in BayLights) if (l != null) l.intensity = LightOn * k; }
+            else if (BayLight != null) BayLight.intensity = 2.4f * k;
+        }
 
         Material SeamM() { if (_seamM == null && Seam != null) _seamM = Seam.material; return _seamM; }
         void SeamGlow(float v) { var m = SeamM(); if (m != null) m.SetColor("_EmissionColor", Color.white * v); }
         void Pose(float sink, float slide)
         {
             if (Panel == null) return;
-            Panel.localScale = Vector3.one * Mathf.Lerp(1f, Tuck, sink);
+            (Sink != null ? Sink : Panel).localScale = Vector3.one * Mathf.Lerp(1f, Tuck, sink);
             Panel.localRotation = Quaternion.Euler(0f, slide * (Span + 3f), 0f);
             Slide = slide;
         }
@@ -56,12 +68,13 @@ namespace Seven
             {
                 float slide = Mathf.SmoothStep(0f, 1f, t);
                 Pose(1f, slide);
-                if (BayLight != null) BayLight.intensity = 2.4f * slide;
+                Lights(slide);
                 onSlide?.Invoke(slide);
                 yield return null;
             }
             Pose(1f, 1f); SeamGlow(0f);
             if (Seam != null) Seam.enabled = false;
+            if (BayProbe != null) BayProbe.RenderProbe();      // the room's chrome reflects the lit room
             onSlide?.Invoke(1f);
             IsOpen = true;
         }
@@ -73,12 +86,11 @@ namespace Seven
             {
                 float slide = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.75f)), sink = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 0.7f) / 0.3f));
                 Pose(sink, slide);
-                if (BayLight != null) BayLight.intensity = 2.4f * slide;
+                Lights(slide);
                 yield return null;
             }
             Pose(0f, 0f);
-            if (Panel != null) { Panel.localScale = Vector3.one; Panel.localRotation = Quaternion.identity; }
-            if (BayLight != null) BayLight.intensity = 0f;
+            Lights(0f);
             SeamGlow(0f); if (Seam != null) Seam.enabled = false;
             IsOpen = false;
         }
@@ -86,8 +98,8 @@ namespace Seven
         /// <summary>Closed at once (scene start / reload).</summary>
         public void Shut()
         {
-            Pose(0f, 0f); if (Panel != null) { Panel.localScale = Vector3.one; Panel.localRotation = Quaternion.identity; }
-            if (BayLight != null) BayLight.intensity = 0f;
+            Pose(0f, 0f);
+            Lights(0f);
             SeamGlow(0f); if (Seam != null) Seam.enabled = false;
             IsOpen = false;
         }

@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF14: Dan's 0.14.1 play — Europa focus + the menu (Dan, 2026-11-19) — to do
+## Quick fix QF14: Dan's 0.14.1 play — Europa focus + the menu (Dan, 2026-11-19) — done, status below; release 0.14.2
 Commit first. All standing rules; the QF13 rule for repeat items (say why the last fix didn't hold, fix the cause, prove
 it from the player's camera in normal play, never "done" on a partial fix). 20-minute rule except where proving a repeat
 item needs more. Release **0.14.2**; "QF14 — status"; "For Dan to check (QF14)". Dan is concentrating on Europa now.
@@ -54,6 +54,91 @@ item needs more. Release **0.14.2**; "QF14 — status"; "For Dan to check (QF14)
 
 Checks + release: captures for each (menus at 16:9 + 16:10; the bay beside the reference; the race camera through 3
 rings; the guardian's new walk; the base walk sequence), publish **0.14.2**; docs; commit + push.
+
+
+## QF14 — status (2026-11-19): done, exe-verified off-screen; release 0.14.2 (`game-1402`, Latest, published)
+Captures + sheets: `Docs/Previews/qf14/` (`item<NN>_*`; menus at 16:9 and 16:10 in `menus_16x9/`, `menus_16x10/`; the base
+walk's 102 frames in `item06_base_walk/` + its per-frame log `item06_base_camera_frames.csv`).
+
+1. **Every unlocked chapter on the main menu — done.** One table, `Runtime/ChapterList.cs` (name, unlock rule, "play from the
+   start", its sections); a new chapter is one new row. Unlocks: Chapter 1 always; Venus once Chapter 1 reached the galley
+   (or Venus was reached); Europa once Europa was reached or VEN_C12 (the star map) was seen. **Decision (easy to change):**
+   once unlocked a chapter stays unlocked (`seven_unlocked_<id>`), a new game does not take it away.
+2. **Main menu cleaned up — done (layout decided by the chat).** Continue (with a save) · Start new game (the existing confirm)
+   · Chapter 1 — The Moon · Venus · Europa · Settings · Controls · Quit. The fight demo, saucer demo and Ratwing cave are off
+   the menu (their `-fight` / `-saucer` / `-ratwing` switches still work for checks). A chapter opens its page: "Play from
+   the start" (Venus / Europa ask before wiping that chapter's progress), its sections, Back. Lists that do not fit scroll
+   (stick / d-pad / keys / mouse wheel, the selected row always in view) with a gray / white scroll bar. The pause menu's
+   Scene select uses the same chapter → sections pages. Checked at 1280x720 and the Deck's 1280x800 (`-menupages`): 14 pages
+   each, monochrome 0; the long Continue row now shrinks to fit (it ran past its bar in the first capture).
+   `-menupick` paths: `"Venus|Venus: the debrief"`, `"Europa|Europa: Tunneler's base"`; the old `"Scene select|Chapter 2 —
+   Venus|…"` still works.
+3. **The bike bay — rebuilt as a real room (repeat, fourth try).** *Why the earlier fixes didn't hold:* every try (R13 dark,
+   QF12 glow, QF13 flat unlit) changed the **material** of the same "bay" — the hull's own hatch sector, a floor and ceiling
+   3 cm inside the skins from r 1.6 m to the rim. The hull is 0.26 m thick at the rim, so that bay was a thin flat wedge
+   (Dan's "gray slab"), and the 0.95 m bike passed **through its ceiling** as it glided out ("the bike's shapes poking
+   through it"). No material could fix that. *Now* (`Editor/FightDemoBuilderBikeBay.cs`, inside the one saucer prefab): a
+   modelled room set into the hull's thick middle, sized to the bike (3.6 x 2.1 x 1.26 m for the 3.0 x 1.23 x 0.95 m bike):
+   a thick rounded chrome frame on a bulkhead at r 3.45 m, curved brushed-steel walls with sweeping chrome ribs and arches,
+   panel seams, a recessed ceiling with three round lights (real lights, kept inside the room), three drawers low on each
+   wall, a control panel (round button + two small ones) on the right wall, a dark polished floor with a raised chrome track
+   from the back stop to the opening, a centre pad and two chrome cradles under the bike, a rounded back wall, the room's own
+   reflection probe. The hatch panel now covers only the hull in front of the frame; once it slides away that part is a
+   full-height slot, so the bike glides straight out through the frame (8 cm clear above, 18 cm each side). The bike is
+   shown sitting in the lit room as soon as the panel slides, and stays in its cradles until the hull is shut when it comes
+   home. *Captures:* `item03_bay_vs_reference.png` (Dan's reference beside the bay straight on), the B01 player-camera
+   sequence `item03_bay_player_view_sequence.png` (opening → room with the bike → gliding out), Europa
+   `item03_europa_bay_open.png`. First capture of this build: the frame and ribs read black (fully metallic, reflecting the
+   dark hull) and the room lights lit the slot walls outside — both fixed before release. *Differences from the reference
+   that remain:* the 3 m bike fills most of the 3.6 m room, so the back wall, the third light and the back stop are mostly
+   behind it; the room is lower than the reference's proportions (the hull is only ~1.4 m thick there); from the player's
+   B01 camera (rim height, ~9 m out) the room is small in frame.
+4. **The race can be run again — done.** After a finish "Race again" (X, 8 s) puts her back at the arch facing the first
+   ring; the arch also re-arms once she has ridden 12 m away. Best place and **best time** are saved (`raceBestTime`) and
+   shown after each race ("Place 1 of 4 - 9.5 s (best time)"). Check: two races in a row, `race 2 … place 1 … new best time`.
+5. **Race camera — done.** *Cause:* under water round the arches and pillars the follow camera called the spot "tight" and
+   swung or **cut** round, snapping in for every mesh, then eased back behind the bike — a reset every few seconds. In the
+   race (`ChapterCamera.RaceMode`) there are no swings or cuts, pulling in is smoothed, the camera follows her steering, and
+   at the start and after each ring it turns smoothly toward the next ring for ~2 s; the ring marker / arrow shows the whole
+   race. Logged: `camera swings / cuts during the race 0 / 0` in both races. `item05_race_camera_3_rings.png` (0.3 / 1.2 /
+   2.4 s after rings 1-3). *Left:* pillars sometimes stand between the camera and the bike for a moment (the bike stays in
+   view).
+6. **Base camera — fixed (repeat of QF13 7).** *Why QF13's fix didn't hold:* it hid the walls in the way but their colliders
+   still drove the follow camera: it snapped in for a wall that was no longer drawn, its body check then called the spot
+   "tight" and cut / swung round, and AutoBehind eased it back into the same wall — two systems fighting. QF13 measured only
+   "her head hidden" (fine) and never the camera's distance. *Now* (`ChapterCamera.Cutaway`): inside the base every part
+   except the floors is cut away **instead of** moving the camera (left out of every cast; kept cut 0.6 s, no flicker), the
+   camera keeps its boom (min 1.7 m), changes are smoothed with a dead band, no swings or cuts, the focus is locked to her,
+   and cut-away mode is on from the first frame after a cutscene. The measure found three more causes, all fixed: a focus
+   that trailed her (±0.2 m swings when she started / stopped), the window hall glass / screen not in the cut list (the
+   camera sat inside them: 5 black frames), one frame of the old logic after each cutscene. *Proof:* the player-style walk
+   (`-europaplay -europacp 4 -testspeed 2`: dock → pressure chamber → corridor → control room → holding area → transport
+   dock → machinery devices → window hall → back to the bike): `11382 frames in cut-away mode, camera distance 2.38-2.70 m,
+   jitter 1 (one 5 cm reversal), bounces 0, swings 0, cuts 0`; 102 captures, no dark frame after the fade-in. The first
+   walk on this build measured 6 bounces / 22 jitters, the second 1 / 3.
+7. **The guardian's new walk — in.** `elarim_walk_v2.fbx` (Catwalk Walk Forward) loops on his walk state; its forward travel
+   is taken out (root motion not baked into the pose and not applied), ElarimNpc moves him and matches the playback to his
+   speed (0.94-1.05). Measured in Blender: hip sway 3.0 % of his height (7's walk 2.4 %), hip roll 12 deg (7's 15) — a mild
+   runway walk; to keep it calm the side sway and hip roll are damped by a third at runtime (7.1 → 4.6 cm). Cape on his back
+   (top 0.25 m below the shoulders, as the model), leg contact 0.0 cm. `item07_guardian_walk_sheet.png` (player camera +
+   side). *Left:* his arms swing a little out from the body (the clip's style; RelaxArms trims it); the hem sometimes brushes
+   the ground (0.01 m vs the model's 0.14).
+
+**Checks.** 3 builds; the saucer check passes in all three scenes; audio peak 0 in every run; menus monochrome 0. **Testing
+time: about 24 game-minutes — over the 20-minute rule by ~4,** spent on the repeat items (three base walks to prove 0
+bounces; one guardian run that did not stop after the walk and ran on ~5 min). Not run: a full player-style run of each
+chapter.
+
+## For Dan to check (QF14)
+- Main menu: Continue / Start new game / one entry per chapter you've unlocked / Settings / Controls / Quit; no test demos.
+  Open Venus (the longest page): it scrolls with a scroll bar. Pause menu → Scene select works the same way. On the Deck too.
+- Venus B01 and Europa: the hatch slides and you look into a lit chrome room with the bike in its cradles; it glides out
+  through the frame without touching anything. Compare with your reference (`Docs/Previews/qf14/item03_bay_vs_reference.png`).
+- Europa race: "Race again" (X) after the finish, or ride back through the arch later; the best time shows. The camera stays
+  behind the bike and turns toward the next ring after each one — no resets.
+- Tunneler's base on foot, all the way through: the camera stays at the same distance; walls in the way just vanish.
+- The guardian's new walk in "Follow me": calm enough? (sway damped by a third — can be more or less.)
+- Decisions to confirm: chapters stay unlocked after a new game; Chapter 1's "Play from the start" is the full new game.
 
 
 ## Quick fix QF13: Dan's 0.14.0 play (Dan, 2026-11-19) — done, status below; release 0.14.1

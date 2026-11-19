@@ -209,6 +209,40 @@ namespace Seven
             return sb.ToString();
         }
 
+        static readonly RaycastHit[] _sbuf = new RaycastHit[32];
+        static readonly RaycastHit[] _lbuf = new RaycastHit[32];
+        /// <summary>QF14 (6): the nearest hit along a sphere cast - level colliders (mask) and solid visual meshes - that
+        /// is not one of the <paramref name="ignore"/> renderers (walls that are cut away instead of blocking the camera).</summary>
+        public static bool SphereIgnoring(Vector3 o, float r, Vector3 dir, float len, int mask, HashSet<Renderer> ignore, out float dist)
+        {
+            dist = len; bool h = false;
+            var d = dir.normalized;
+            int n = Physics.SphereCastNonAlloc(o, r, d, _lbuf, len, mask, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < n; i++)
+            {
+                var c = _lbuf[i].collider; if (c == null) continue;
+                var rr = c.GetComponent<Renderer>();
+                if (rr != null && ignore != null && ignore.Contains(rr)) continue;
+                if (_lbuf[i].distance <= 0f && _lbuf[i].point == Vector3.zero) continue;      // started inside: ignore
+                if (_lbuf[i].distance < dist) { dist = _lbuf[i].distance; h = true; }
+            }
+            if (Ready)
+            {
+                SyncAll();
+                bool bf = Physics.queriesHitBackfaces; Physics.queriesHitBackfaces = true;
+                int m = _ps.SphereCast(o, r, d, _sbuf, len, SolidMask, QueryTriggerInteraction.Ignore);
+                Physics.queriesHitBackfaces = bf;
+                for (int i = 0; i < m; i++)
+                {
+                    var rr = RendererOf(_sbuf[i].collider);
+                    if (rr != null && ignore != null && ignore.Contains(rr)) continue;
+                    if (_sbuf[i].distance <= 0f && _sbuf[i].point == Vector3.zero) continue;
+                    if (_sbuf[i].distance < dist) { dist = _sbuf[i].distance; h = true; }
+                }
+            }
+            return h;
+        }
+
         // ------------------------------------------------------------------- combined (level colliders + occluders)
         /// <summary>Level colliders (mask) or solid visual meshes on the ray.</summary>
         public static bool AnyRay(Vector3 o, Vector3 dir, float len, int mask, out float dist, int occMask = SolidMask)

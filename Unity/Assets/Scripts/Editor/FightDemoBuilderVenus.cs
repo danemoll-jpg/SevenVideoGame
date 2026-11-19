@@ -138,7 +138,7 @@ namespace Seven.EditorTools
             Log($"{path}: Elarim avatar human={avatar?.isHuman} valid={avatar?.isValid}");
             if (avatar == null || !avatar.isHuman) return null;
             var clipDir = ElarimDir + "/Clips"; Directory.CreateDirectory(Path.Combine(ProjectRoot, clipDir));
-            var loops = new[] { "idle", "talk", "walk", "sword_idle", "carry", "lift" };
+            var loops = new[] { "idle", "talk", "walk", "walk_v2", "sword_idle", "carry", "lift" };
             var states = new List<AnimationClip>();
             foreach (var f in Directory.GetFiles(Path.Combine(RepoRoot, "Art", "Mixamo", "elarim"), "elarim_*.fbx"))
             {
@@ -153,7 +153,9 @@ namespace Seven.EditorTools
                 ApplyMixamoHumanMap(ci, dst);
                 var state = Path.GetFileNameWithoutExtension(f).Substring("elarim_".Length);
                 var cl = ci.defaultClipAnimations;
-                foreach (var c in cl) { c.name = state; c.loopTime = loops.Contains(state); c.lockRootRotation = true; c.lockRootHeightY = true; c.lockRootPositionXZ = true; c.keepOriginalOrientation = true; c.keepOriginalPositionY = true; c.keepOriginalPositionXZ = true; }
+                // QF14 (7): Dan's walk_v2 is not "In Place": its forward travel is NOT baked into the pose (extracted as root motion,
+                // which the Animator does not apply) - he walks on the spot and ElarimNpc moves him, playback matched to his speed
+                foreach (var c in cl) { c.name = state; c.loopTime = loops.Contains(state); c.lockRootRotation = true; c.lockRootHeightY = true; c.lockRootPositionXZ = state != "walk_v2"; c.keepOriginalOrientation = true; c.keepOriginalPositionY = true; c.keepOriginalPositionXZ = true; }
                 ci.clipAnimations = cl; ci.SaveAndReimport();
                 var clip = AssetDatabase.LoadAllAssetsAtPath(dst).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
                 if (clip != null) { states.Add(clip); Log($"Elarim clip {clip.name} {clip.length:0.00}s humanMotion={clip.humanMotion}"); }

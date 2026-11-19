@@ -161,6 +161,8 @@ namespace Seven
             R("WindowHall", -183f, 492.4f, -179f, 504.5f, BaseY, false),          // section 11 (on her way back)
         };
         public static readonly string[] ZoneNames = System.Array.ConvertAll(Zones, z => z.Name);
+        /// <summary>QF14 (6): the name of the (first) dry-ground zone containing p, or "-".</summary>
+        public static string ZoneAt(Vector3 p) { foreach (var z in Zones) if (p.x >= z.X0 && p.x <= z.X1 && p.z >= z.Z0 && p.z <= z.Z1 && Mathf.Abs(p.y - z.Y) < 3f) return z.Name; return "-"; }
 
         // ---- the checkpoints (Continue / Scene Select)
         public const int CpArrival = 0, CpDescent = 1, CpSettlement = 2, CpApproach = 3, CpBase = 4, CpWorkers = 5, CpEscape = 6, CpTemple = 7, CpHome = 8, CpDone = 9;

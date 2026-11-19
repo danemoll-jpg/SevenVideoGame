@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -234,6 +235,9 @@ namespace Seven
             if (Bike.Riding) { Cam.Target = Bike.transform; Cam.Distance = 8.2f; Cam.LookHeight = 1.2f; Cam.AutoBehind = true; Cam.DefaultPitch = 12f; }
             else if (InBase(P7)) { Cam.Target = Seven.transform; Cam.Distance = 2.7f; Cam.LookHeight = 1.5f; Cam.AutoBehind = true; Cam.DefaultPitch = 24f; }   // stays behind her walking direction in the narrow rooms
             else { Cam.Target = Seven.transform; Cam.Distance = 3.8f; Cam.LookHeight = 1.45f; Cam.AutoBehind = Auto; Cam.DefaultPitch = 15f; }
+            // QF14 (6): cut-away mode is on from the very first follow frame after a cutscene (it used to come back one
+            // frame later, and that one frame of the old wall logic could cut the camera round)
+            Cam.Cutaway = !Bike.Riding && InBase(P7) ? _baseWallSet : null;
             Cam.Follow();
         }
         static bool InBase(Vector3 p) => p.y < EuropaLayout.BaseY + 3f && p.y > EuropaLayout.BaseY - 1f && p.x < -146f && p.x > -227f && p.z > 443f && p.z < 510f;
@@ -307,27 +311,49 @@ namespace Seven
         {
             var list = new List<Renderer>();
             var root = GameObject.Find("TunnelerBase");
-            if (root != null) foreach (var r in root.GetComponentsInChildren<Renderer>(true)) { var n = r.name; if (n.StartsWith("W_") || n.StartsWith("Door_") || n.StartsWith("Barrier_") || n == "Machinery" || n.StartsWith("Connection")) list.Add(r); }
-            _baseWalls = list.ToArray();
+            // QF14 (6): every part of the base except its floors (QF13 listed walls / doors / barriers only - the window hall's
+            // glass and frames, the screen and the lamps were left out, and the camera sat inside them, black, for a moment)
+            if (root != null) foreach (var r in root.GetComponentsInChildren<Renderer>(true)) { var n = r.name; if (n.StartsWith("Floor")) continue; list.Add(r); }
+            _baseWalls = list.ToArray(); _baseWallSet = new HashSet<Renderer>(list);
             Log($"base camera (QF13 7): {_baseWalls.Length} walls / doors can be cut away when they stand between the camera and her");
         }
+        // QF14 (6): the camera no longer pulls in for these walls (ChapterCamera.Cutaway) - they are cut away instead,
+        // checked on the lines to her head, chest and hips, and kept cut for 0.6 s after the last frame they were in the
+        // way (no on / off flicker as the line grazes a wall's edge)
+        HashSet<Renderer> _baseWallSet; readonly Dictionary<Renderer, float> _cutUntil = new Dictionary<Renderer, float>();
+        System.IO.StreamWriter _camCsv;
         void BaseCutaway()
         {
             if (_baseWalls == null) return;
             bool inside = !Bike.Riding && InBase(P7) && !_cut;
+            var want = inside ? _baseWallSet : null;
+            if (Cam.Cutaway != want) { Cam.Cutaway = want; if (inside) Log("base camera (QF14 6): cut-away mode on - walls never move the camera"); }
             var cam = Cam.transform.position; var head = P7 + Vector3.up * 1.45f; var seg = head - cam; float len = seg.magnitude;
-            bool any = false, blocked = false;
+            bool any = false, blocked = false; float now = Time.time;
             foreach (var r in _baseWalls)
             {
                 if (r == null) continue;
                 bool hide = false;
                 if (inside && len > 0.05f)
                 {
-                    var b = r.bounds; b.Expand(0.1f);
-                    hide = b.Contains(cam) || (b.IntersectRay(new Ray(cam, seg / len), out float d) && d < len - 0.25f);
+                    var b = r.bounds; b.Expand(0.15f);
+                    bool inWay = b.Contains(cam);
+                    foreach (var h in new[] { 1.45f, 1.1f, 0.6f })
+                    {
+                        if (inWay) break;
+                        var q = P7 + Vector3.up * h; var sq = q - cam; float lq = sq.magnitude;
+                        if (lq > 0.05f && b.IntersectRay(new Ray(cam, sq / lq), out float d) && d < lq - 0.25f) inWay = true;
+                    }
+                    if (inWay) _cutUntil[r] = now + 0.6f;
+                    hide = _cutUntil.TryGetValue(r, out var until) && now < until;
                 }
                 if (r.forceRenderingOff != hide) r.forceRenderingOff = hide;
                 any |= hide;
+            }
+            if (inside && DemoBoot.CaptureDir != null)
+            {
+                if (_camCsv == null) { _camCsv = new System.IO.StreamWriter(System.IO.Path.Combine(DemoBoot.CaptureDir, "base_camera_frames.csv")); _camCsv.WriteLine("frame,time,room,cam_dist,walls_cut,jitter,bounces"); }
+                _camCsv.WriteLine($"{Time.frameCount},{Time.time:0.000},{EuropaLayout.ZoneAt(P7)},{Cam.LastCutawayDist:0.000},{_cutUntil.Count(kv => now < kv.Value)},{ChapterCamera.CutawayJitter},{ChapterCamera.CutawayBounces}");
             }
             if (inside)
             {
@@ -726,11 +752,16 @@ namespace Seven
             yield return Shot("qf13_05a_europa_hull_seamless");
             yield return Hold.Open(null, s =>
             {
-                if (s > 0.97f) ShowBike(true);
+                if (s > 0.02f) ShowBike(true);     // QF14 (3): the room behind the panel - the bike sits in its cradles
                 if (!_holdShot && s > 0.5f) { _holdShot = true; StartCoroutine(Shot("qf13_05b_europa_hold_opening_player_view")); }
             });
             ShowBike(true);
             yield return Shot("qf13_05c_europa_hold_open_bike_inside");
+            if (Cap != null)          // QF14 (3): the bay straight on (the reference's view)
+            {
+                var axis = Hold.transform.position + Vector3.up * (SaucerBeam.ShipBelly + 0.72f);
+                yield return Cap.ShotFrom("qf14_03_europa_bay_straight_on", axis + dir * 7.2f, axis + dir * 2.0f, 30f);
+            }
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
             {
                 float u = Mathf.SmoothStep(0f, 1f, t);
@@ -777,8 +808,8 @@ namespace Seven
                 if (t > 0.5f && t - Time.deltaTime / 2.4f <= 0.5f) StartCoroutine(Shot("qf13_05g_europa_bike_rises_into_the_hold"));
                 yield return null;
             }
+            yield return Hold.Close();                         // QF14 (3): the bike stays in its cradles until the hull is shut
             ShowBike(false); Bike.EndGlide();
-            yield return Hold.Close();
             Bike.gameObject.SetActive(false);
             yield return Shot("qf13_05h_europa_hull_seamless_bike_aboard");
             Log("QF13 (5): going home the bike rose back into the bike hold; it closed seamlessly (7 boards in the beam)");
@@ -903,7 +934,10 @@ namespace Seven
         }
         IEnumerator GuideChirps() { for (int i = 0; i < 6 && Guide != null; i++) { yield return Wait(UnityEngine.Random.Range(5f, 9f)); Guide.Call("europa_dolphin_chirp", 0.6f, 60f); } }
 
-        bool _raceDone;
+        // QF14 (4): the race can be run again - "Race again" right after a finish (X), and the registration arch stays open
+        // for another race any time she is free in the settlement (it re-arms once she has ridden 12 m away from it). The
+        // best place and the best time are kept (EuropaState).
+        bool _racing, _raceArmed = true, _raceAgain, _raceIntroDone; int _races;
         IEnumerator ExploreAndRace()
         {
             Objective("Explore the settlement - the race arch is open - then return to the keeper");
@@ -915,49 +949,85 @@ namespace Seven
             {
                 while (!toKeeper)
                 {
+                    if (_racing) { yield return null; continue; }          // the race owns the prompt while it runs
                     bool nearK = Vector3.Distance(Bike.transform.position, EuropaLayout.KeeperAt) < 12f && Time.time - since > 3f;
                     SetPrompt(nearK ? "Talk to the keeper" : null);
                     if (nearK && (Input.Interact.WasPressedThisFrame())) toKeeper = true;
-                    if (!_raceDone && RaceRegistration != null && Vector3.Distance(Bike.transform.position, EuropaLayout.RaceRegistration) < 6f) raceNow = true;
+                    float dArch = Vector3.Distance(Bike.transform.position, EuropaLayout.RaceRegistration);
+                    if (dArch > 12f) _raceArmed = true;
+                    if (_raceArmed && RaceRegistration != null && dArch < 6f) { raceNow = true; _raceArmed = false; }
                     yield return null;
                 }
                 SetPrompt(null);
             }
             StartCoroutine(Watch());
+            int autoRaces = DemoBoot.EuropaRace ? 2 : 0;
             if (Auto && DemoBoot.EuropaRace) { StartCoroutine(AutoSwim(new[] { EuropaLayout.RaceRegistration }, 3f)); }
             else if (Auto) toKeeper = true;
             while (!toKeeper)
             {
-                if (raceNow && !_raceDone) { raceNow = false; yield return Race(); if (Auto) toKeeper = true; }
+                if (raceNow)
+                {
+                    raceNow = false;
+                    do { _raceAgain = false; yield return Race(); } while (_raceAgain);
+                    since = Time.time;
+                    if (Auto && _races >= autoRaces) toKeeper = true;
+                }
                 if (!Auto && Time.time - since > SkipAfter * 2f) { Log("explore: long enough - the keeper calls her back"); toKeeper = true; }
                 yield return null;
             }
             HideGuide();
-            Log($"settlement: back to the keeper (race {(EuropaState.RaceEntered ? "entered, best " + EuropaState.RaceBest : "not entered - optional")})");
+            Log($"settlement: back to the keeper (race {(EuropaState.RaceEntered ? "entered " + _races + "x, best place " + EuropaState.RaceBest + ", best time " + EuropaState.RaceBestTime.ToString("0.0") + " s" : "not entered - optional")})");
         }
 
         // ---- the optional race (section 5): rings through carved arches, under ice shelves, round the pillars; three rivals
         IEnumerator Race()
         {
-            _raceDone = true;
+            _racing = true; _races++;
             yield return StopBike(1f);
-            yield return Cutscene(true);
-            Shoot(EuropaLayout.RaceRegistration + new Vector3(8f, 3f, -6f), EuropaLayout.RaceRegistration + Vector3.up * 1f, 48f, 0.01f);
-            yield return Say("EUR_05R");
-            yield return Shot("e09_race_registration");
-            yield return Cutscene(false);
-            Objective("Race: through the rings");
             var start = EuropaLayout.RaceRegistration;
+            var g0 = EuropaLayout.RaceGates[0];
+            var sf = Flat(g0 - start);
+            float startYaw = Quaternion.LookRotation(sf.sqrMagnitude > 0.01f ? sf : Vector3.forward).eulerAngles.y;
+            if (!_raceIntroDone)
+            {
+                _raceIntroDone = true;
+                yield return Cutscene(true);
+                Shoot(EuropaLayout.RaceRegistration + new Vector3(8f, 3f, -6f), EuropaLayout.RaceRegistration + Vector3.up * 1f, 48f, 0.01f);
+                yield return Say("EUR_05R");
+                yield return Shot("e09_race_registration");
+                yield return Cutscene(false);
+            }
+            else
+            {
+                // another race: a quick white fade back to the arch, facing the first ring
+                yield return UI.Fade(1f, 0.35f, 1f);
+                Bike.Place(start, startYaw); Cam.SnapBehind();
+                yield return null;
+                yield return UI.Fade(0f, 0.45f, 1f);
+            }
+            Objective("Race: through the rings");
             var rp = new Vector3[Rivals != null ? Rivals.Length : 0]; var rk = new int[rp.Length]; var rs = new float[] { 19f, 21.5f, 23.5f };   // QF13 (13): retuned for the 25 m/s bike (a close race, beatable flat out)
-            for (int i = 0; i < rp.Length; i++) { rp[i] = start + new Vector3(2f + i * 2f, 0.5f * i, -2f); if (Rivals[i] != null) Rivals[i].gameObject.SetActive(true); }
-            int gate = 0; float t0 = Time.time; bool overtook = false; int behind0 = -1;
+            for (int i = 0; i < rp.Length; i++) { rp[i] = start + new Vector3(2f + i * 2f, 0.5f * i, -2f); if (Rivals[i] != null) { Rivals[i].gameObject.SetActive(true); Rivals[i].position = rp[i]; } }
+            int gate = 0; bool overtook = false; int behind0 = -1;
+            // QF14 (5): the race camera - behind the bike, it follows her steering and never swings or cuts on its own; at
+            // the start and after every ring it turns smoothly toward the next ring for a moment
+            Cam.RaceMode = true; Cam.RaceAim = g0; Cam.RaceAimUntil = Time.time + 3.5f;
             if (Auto) StartCoroutine(AutoSwim(EuropaLayout.RaceGates, 5f));
             UI.Hint("3 . 2 . 1", 1.5f); yield return Wait(1.5f);
+            float t0 = Time.time;
+            if (_races == 1) StartCoroutine(RaceCameraShots());
+            int swings0 = ChapterCamera.Swings, cuts0 = ChapterCamera.Cuts;
             while (gate < EuropaLayout.RaceGates.Length && Time.time - t0 < 150f)
             {
                 var g = EuropaLayout.RaceGates[gate];
                 ShowGuide(g);
-                if (Vector3.Distance(Bike.transform.position, g) < 6f) { gate++; AudioKit.Play("energy_point", g, 0.5f); continue; }
+                if (Vector3.Distance(Bike.transform.position, g) < 6f)
+                {
+                    gate++; AudioKit.Play("energy_point", g, 0.5f);
+                    if (gate < EuropaLayout.RaceGates.Length) { Cam.RaceAim = EuropaLayout.RaceGates[gate]; Cam.RaceAimUntil = Time.time + 2.2f; RaceRingPassed?.Invoke(gate); }
+                    continue;
+                }
                 // the rivals fly the same line at their own pace
                 int ahead = 0;
                 for (int i = 0; i < rp.Length; i++)
@@ -974,17 +1044,49 @@ namespace Seven
                 if (gate == 3 && Shots && !_raceShot) { _raceShot = true; StartCoroutine(Shot("e10b_race_round_the_pillars")); }
                 yield return null;
             }
+            Cam.RaceMode = false; Cam.RaceAim = null;
             HideGuide();
+            float time = Time.time - t0;
             int place = 1; for (int i = 0; i < rk.Length; i++) if (rk[i] >= EuropaLayout.RaceGates.Length) place++;
-            if (gate < EuropaLayout.RaceGates.Length) place = rp.Length + 1;
+            bool finished = gate >= EuropaLayout.RaceGates.Length;
+            if (!finished) place = rp.Length + 1;
             EuropaState.RaceResult(place);
-            Log($"race (optional): finished place {place} of {rp.Length + 1} in {Time.time - t0:0.0}s, gates {gate}/{EuropaLayout.RaceGates.Length}, overtake {(overtook ? "yes" : "no")} (no history reward - optional)");
+            bool best = finished && EuropaState.RaceTime(time);
+            Log($"race {_races} (optional): finished place {place} of {rp.Length + 1} in {time:0.0}s{(best ? " (new best time)" : "")}, gates {gate}/{EuropaLayout.RaceGates.Length}, overtake {(overtook ? "yes" : "no")}, camera swings / cuts during the race {ChapterCamera.Swings - swings0} / {ChapterCamera.Cuts - cuts0} (QF14 5: must be 0 / 0)");
             yield return StopBike(1.5f);
-            yield return Say(place == 1 ? "EUR_05W" : "EUR_05L");
+            UI.Hint(finished ? $"Place {place} of {rp.Length + 1}  -  {time:0.0} s" + (best ? "  (best time)" : $"  (best {EuropaState.RaceBestTime:0.0} s)") : "Out of time", 5f);
+            if (_races == 1) yield return Say(place == 1 ? "EUR_05W" : "EUR_05L");
             AudioKit.Play("europa_extraction_pulse", null, 0.8f);                // a distant extraction pulse again; the mood settles
-            yield return Wait(1.2f);
             for (int i = 0; i < rp.Length; i++) if (Rivals[i] != null) Rivals[i].gameObject.SetActive(false);
-            Objective("Return to the keeper");
+            Objective("Return to the keeper - or race again at the arch");
+            // "Race again" right here: X within 8 s (or until she rides 20 m on)
+            var at = Bike.transform.position;
+            SetPrompt("Race again");
+            if (Shots && _races == 1) StartCoroutine(Shot("qf14_04_race_again_offer"));
+            for (float t = 0f; t < 8f && Vector3.Distance(Bike.transform.position, at) < 20f; t += Time.deltaTime)
+            {
+                if (Input.Interact.WasPressedThisFrame() || (Auto && DemoBoot.EuropaRace && _races == 1 && t > 1.5f)) { _raceAgain = true; break; }
+                yield return null;
+            }
+            SetPrompt(null);
+            if (_raceAgain) Log("race: Race again (X)");
+            _racing = false;
+        }
+        /// <summary>QF14 (5) check: called with the next ring's index each time she passes one.</summary>
+        public event Action<int> RaceRingPassed;
+        IEnumerator RaceCameraShots()
+        {
+            // the race camera through 3 rings: captures 0.3, 1.2 and 2.4 s after each of the first three rings
+            if (!Shots) yield break;
+            void On(int g) { if (g <= 3) StartCoroutine(Seq(g)); }
+            IEnumerator Seq(int g)
+            {
+                float last = 0f;
+                foreach (var at in new[] { 0.3f, 1.2f, 2.4f }) { yield return Wait(at - last); last = at; yield return Shot($"qf14_05_race_ring{g}_{at:0.0}s".Replace('.', '_')); }
+            }
+            RaceRingPassed += On;
+            while (_racing) yield return null;
+            RaceRingPassed -= On;
         }
         bool _raceShot;
     }

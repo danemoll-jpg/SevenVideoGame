@@ -93,6 +93,32 @@ namespace Seven
             if (_standHips > 0f) KneelHipsRatio = (hips.position.y - gy) / _standHips;
             WalkMatch();
             RelaxArms();
+            CalmSway(hips);
+        }
+
+        // ---- QF14 (7): Dan's walk_v2 is Mixamo's "Catwalk Walk Forward". Measured in Blender: hip sway 3.0 % of his height
+        // (7's walk 2.4 %), hip roll 12.4 deg (7's 14.8) - a model's runway walk, mild on him. To keep it calm and dignified
+        // (not a strut) the side-to-side hip sway and the hip roll are damped by a third while he walks; the playback is
+        // matched to his speed (WalkMatch: the planted foot stays put).
+        public const float SwayDamp = 0.35f;
+        Vector3 _latMean; bool _latInit; public float SwayBefore { get; private set; } public float SwayAfter { get; private set; }
+        float _swMin = 9f, _swMax = -9f, _swT;
+        void CalmSway(Transform hips)
+        {
+            if (!(_state == "walk" && _walkTo.HasValue)) { _latInit = false; return; }
+            var local = transform.InverseTransformPoint(hips.position);
+            if (!_latInit) { _latMean = local; _latInit = true; }
+            _latMean = Vector3.Lerp(_latMean, local, Time.deltaTime * 1.2f);
+            float lat = local.x - _latMean.x;
+            hips.position -= transform.right * lat * SwayDamp * transform.lossyScale.x;
+            // the roll about his walking direction, damped the same
+            var fwd = transform.forward;
+            var up = hips.rotation * Vector3.up;
+            float roll = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.up, fwd), Vector3.ProjectOnPlane(up, fwd), fwd);
+            if (Mathf.Abs(roll) < 30f) hips.rotation = Quaternion.AngleAxis(-roll * SwayDamp, fwd) * hips.rotation;
+            // measure (check runs): the sway range over the last 2 s, before and after
+            _swMin = Mathf.Min(_swMin, lat); _swMax = Mathf.Max(_swMax, lat);
+            if ((_swT += Time.deltaTime) > 2f) { SwayBefore = (_swMax - _swMin) * transform.lossyScale.x; SwayAfter = SwayBefore * (1f - SwayDamp); _swMin = 9f; _swMax = -9f; _swT = 0f; }
         }
 
         // ---- QF13 (3): Dan - "he still uses the awful walk". Why the earlier fixes didn't hold: the rig and the cape were
