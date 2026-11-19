@@ -112,7 +112,7 @@ Dan finished Venus, then picked "Chapter 2 — Venus" to replay it and was dropp
 3. **Check + release:** after finishing Venus, "Chapter 2 — Venus" starts at the descent; Continue still resumes; each
    Scene Select entry starts where it says (one capture each). (Released with Part B as 0.12.0.)
 
-## Round 12 — status (2026-11-18): done, exe-verified off-screen; release 0.12.0 (`game-1200`)
+## Round 12 — status (2026-11-18): done, exe-verified off-screen; release 0.12.0 (`game-1200`, Latest, published)
 **Testing went over the 20-minute rule: about 22 min of game time** (Scene Select test 1.2 min; one autopilot Part 2
 run 2.9 min; four player-style Part 2 runs ≈ 13 min — the first three stopped on real bugs (crystal prompt) or on my test
 driver (scene change); 2 opening runs, 3 short B01 runs, 4 short 6b runs ≈ 5 min). Muted, off-screen, Below Normal.
