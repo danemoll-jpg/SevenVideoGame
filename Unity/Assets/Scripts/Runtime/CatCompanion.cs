@@ -90,6 +90,15 @@ namespace Seven
         Transform LapFrameT => LapFrame != null ? LapFrame : ChairPivot;
         /// <summary>Round 13: scripted - hop onto her lap now (she is seated), and down again to a spot.</summary>
         public void HopOntoLap() { StartHop(LapPoint, LapScale, Mode.HopUp); }
+        /// <summary>QF12 (11): already curled in her lap when the scene opens (no hop): placed, settled, the lap mesh shown.</summary>
+        public void PlaceOnLap()
+        {
+            transform.localScale = Vector3.one * LapScale;
+            transform.SetPositionAndRotation(LapPoint, LapRotation);
+            Current = Mode.OnLap; _lapSince = Time.time; _settled = false; _settle = 0f;
+            PlayClip("sleep", 0f);
+            ShowLapMesh(true);
+        }
         public void HopOffLap(Vector3 to) { StartHop(to, RoamScale, Mode.HopDown); }
         /// <summary>Round 13: small life on the lap (a head nudge into her hand, lifting to look up): a short tilt of the curled cat.</summary>
         public void LapNudge(float deg) { _nudge = deg; }
@@ -249,6 +258,26 @@ namespace Seven
         Transform _lapMesh;
         SkinnedMeshRenderer[] _skinned;
         public bool LapMeshShown => _lapMesh != null && _lapMesh.gameObject.activeSelf;
+        /// <summary>QF12 (10): the top of his back, measured from what is drawn (the curled lap mesh on her lap, else his
+        /// body): the centre of his outline at its highest point. <paramref name="along"/> moves along his length (the
+        /// stroke). Petting puts her palm here, never on her own knee.</summary>
+        public Vector3 BackTop(float along, Vector3 lengthDir)
+        {
+            Bounds b = default; bool any = false;
+            var from = LapMeshShown ? _lapMesh : transform;
+            foreach (var r in from.GetComponentsInChildren<Renderer>())
+            {
+                if (!r.enabled || !r.gameObject.activeInHierarchy || r is ParticleSystemRenderer) continue;
+                if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds);
+            }
+            if (!any) return transform.position + Vector3.up * 0.25f;
+            var d = new Vector3(lengthDir.x, 0f, lengthDir.z).normalized;
+            float half = Mathf.Abs(Vector3.Dot(b.extents, new Vector3(Mathf.Abs(d.x), 0f, Mathf.Abs(d.z))));
+            var c = new Vector3(b.center.x, b.max.y, b.center.z) + d * Mathf.Clamp(along, -0.6f, 0.6f) * half;
+            // the back curves down toward his ends: lower the point a little away from the middle
+            c.y -= 0.35f * b.extents.y * along * along;
+            return c;
+        }
 
         /// <summary>QF3: the static curled cat (child "CatLap") replaces the rigged cat while it lies on her lap.</summary>
         void ShowLapMesh(bool on)

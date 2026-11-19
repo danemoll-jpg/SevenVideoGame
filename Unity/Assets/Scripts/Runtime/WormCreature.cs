@@ -53,6 +53,19 @@ namespace Seven
         public int Lunges { get; private set; }
         public int Stuns { get; private set; }
         public void Lunge(Vector3 at, float seconds) { if (Calm || Withdrawn || _hole.HasValue || Stunned) return; _driven = at; _drivenUntil = Time.time + seconds; _lungeUntil = Time.time + seconds; Lunges++; Turns++; }
+        /// <summary>QF12 (8): a soft white light rides with it for a while (the control chamber is dark - a lunging creature
+        /// must be readable).</summary>
+        public void Highlight(float seconds)
+        {
+            if (_hl == null)
+            {
+                _hl = new GameObject("ThreatLight").AddComponent<Light>(); _hl.transform.SetParent(transform, false);
+                _hl.transform.localPosition = new Vector3(0f, 2.2f, 0f); _hl.type = LightType.Point; _hl.color = Color.white; _hl.range = 7f; _hl.shadows = LightShadows.None;
+            }
+            _hlUntil = Time.time + seconds;
+        }
+        Light _hl; float _hlUntil;
+        void LateUpdate() { if (_hl != null) _hl.intensity = Mathf.MoveTowards(_hl.intensity, Time.time < _hlUntil && !Withdrawn ? 3.5f : 0f, Time.deltaTime * 6f); }
         public void Stun(float seconds, Vector3 push) { if (Withdrawn || _hole.HasValue) return; _stunUntil = Time.time + seconds; _stunPush = new Vector3(push.x, 0f, push.z).normalized * 3f; _driven = null; _lungeUntil = -1f; Stuns++; }
 
         void Update()

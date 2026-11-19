@@ -58,6 +58,10 @@ namespace Seven
         /// <summary>The state of part 2's world for the stage reached (reload, Continue, Scene Select, return visits).</summary>
         void RestorePart2(ref Vector3 at, ref Vector3 face)
         {
+            // QF12 (8): the chamber creatures' ground is the control chamber's floor. BaseY is not serialized, so the builder's
+            // scene never carried it: they used the basin's height (-12) and swam 18 m above the chamber, inside the rock -
+            // invisible to the player while they still "lunged" and knocked her back.
+            if (ChamberWorms != null) foreach (var w in ChamberWorms) if (w != null) { w.BaseY = VenusLayout.ControlY; var p = w.transform.position; p.y = VenusLayout.ControlY - w.Depth; w.transform.position = p; }
             bool c05 = VenusState.SceneDone("VEN_C05");
             SetZone("RootLanding", c05); SetZone("RootPit", c05);
             if (RootGate != null) RootGate.SetActive(!c05);
@@ -171,6 +175,7 @@ namespace Seven
         {
             Objective(VenusState.Objectives[(int)VenusState.Stage.ControlDiscovered]);
             yield return OpenRootGate(true);
+            if (Shots) { var wb = CameraOccluders.WalkBlockers(out int nb); Log($"walk blockers (QF12 7) after the root gate opened: {nb} blocked samples in the walkable ground - {wb}"); }
             if (Shots) { Shoot(VenusLayout.RootGateIn + new Vector3(-4.5f, 4.2f, 9f), VenusLayout.RootGateIn + new Vector3(0f, -3f, -5f), 50f, 0.01f); yield return Wait(0.3f); yield return Shot("w01_root_gate_open"); FollowCamera(); }
             if (Auto) StartCoroutine(AutoWalkPath(new[] { new Vector3(69f, -6f, 137f), new Vector3(69f, -6f, 132.5f), new Vector3(69f, -14f, 117.4f), new Vector3(69f, -18f, 107f), new Vector3(69f, -22f, 95f), new Vector3(71f, -22f, 89f), new Vector3(80f, -22f, 89f), new Vector3(96f, -27.4f, 89f), VenusLayout.ControlEntry }));
             if (Shots) StartCoroutine(WayDownShots());
@@ -284,6 +289,7 @@ namespace Seven
             if (_machineHum == null) _machineHum = AudioKit.Loop("machinery_hum", null, VenusLayout.DaisAt + Vector3.up * 3f, 0.6f, AudioKit.Bus.Sfx, 4f, 60f);
             _encSafe = P7.x > 103.4f ? P7 : VenusLayout.ControlEntry;
             foreach (var d in Devices) if (d != null) d.Pulsed += OnDevicePulse;
+            yield return EncounterIntro();                               // QF12 (8): the boss is on screen first
             _encounterOn = true;
             StartCoroutine(EncounterWatch());
             StartCoroutine(Harass());                                    // Round 13 (0f): they try to stop her
@@ -398,11 +404,11 @@ namespace Seven
 
         IEnumerator Harass()
         {
-            int ti = 0; float nextTaunt = Time.time + 5f;
-            yield return Wait(3.5f);
+            int ti = 1; float nextTaunt = Time.time + 9f;
+            yield return Wait(1.5f);
             while (_encounterOn && !AllOff)
             {
-                float gap = Mathf.Lerp(7.5f, 4.5f, OffCount / 2f) * (Auto ? 1.5f : 1f);
+                float gap = Mathf.Lerp(6f, 4f, OffCount / 2f) * (Auto ? 1.5f : 1f);
                 yield return Wait(gap);
                 if (!_encounterOn || AllOff) break;
                 if (_cut || PauseMenu.IsOpen || _knocking || Time.time < _harassPause) continue;
@@ -422,9 +428,15 @@ namespace Seven
                 }
                 if (best != null && Mathf.Abs(P7.y - VenusLayout.ControlY) < 1.5f)
                 {
+                    if (bd > 10f) { BringNear(best); bd = Flat(best.transform.position - P7).magnitude; }
                     var lead = P7 + Flat(Seven.transform.forward) * 1.2f;
-                    best.Lunge(lead, 2.8f); _lunges++;
-                    if (Shots && _lunges <= 2) StartCoroutine(LungeShot(best, _lunges));
+                    best.Lunge(lead, 3.2f); _lunges++;
+                    if (Shots && Auto && _lunges <= 2) StartCoroutine(LungeShot(best, _lunges));
+                    if (Shots && !Auto) StartCoroutine(PlayerViewLunge(best, _lunges));
+                    // QF12 (8): the player must SEE it come: the camera frames her and the creature for the lunge (a short
+                    // assist, then the follow camera again), and a white light rides with the creature (the chamber is dark)
+                    if (!_cut && !_knocking) StartCoroutine(TurnToThreat(best));
+                    best.Highlight(3.2f);
                     Log($"encounter (0f): pulse {_pulses} - {best.name} sent lunging at her ({bd:0.0} m away)");
                 }
                 // he shields the device she is nearest and pulls its creatures across her path
@@ -445,6 +457,79 @@ namespace Seven
                 }
             }
             Log($"ENCOUNTER (0f): pulses {_pulses}, lunges {_lunges}, device shields {_shields}, taunts {_taunts}, stuns by telekinesis {_stuns}, knockbacks {Knockdowns}");
+        }
+
+        /// <summary>QF12 (8): Dan saw no boss and no creatures in a normal play. The encounter now opens on him: the camera
+        /// finds the Wormmaster on his dais, his head tip flares, the signal pulse rolls out and every creature still under
+        /// his control breaks the surface of its trough at once; he taunts her. Then the follow camera, and the fight.</summary>
+        IEnumerator EncounterIntro()
+        {
+            yield return Cutscene(true);
+            Seven.Lock(true);
+            var toWm = Flat(VenusLayout.DaisAt - P7).normalized; var r = Vector3.Cross(Vector3.up, toWm);
+            Shoot(P7 - toWm * 3.2f + r * 1.6f + Vector3.up * 2.4f, WmHead - Vector3.up * 1.2f, 50f, 0.01f);
+            yield return Wait(0.6f);
+            if (Wormmaster != null) Wormmaster.PulseGesture();
+            AudioKit.Play("signal_pulse", WmHead, 1f, 0f, AudioKit.Bus.Sfx, 120f);
+            int up = 0;
+            foreach (var w in ChamberWorms)
+                if (w != null && w.gameObject.activeSelf && !w.Withdrawn && !VenusState.IsDisabled(w.Group)) { w.Lunge(w.transform.position + w.transform.forward * 6f, 2.4f); up++; }
+            StartCoroutine(Dlg.PlayLines(new List<VoiceBank.Line> { new VoiceBank.Line { Id = "VEN_ENC_T1", Speaker = "wormmaster", Text = "They answer to me. Not to you.", Scene = 200, PauseAfter = 0.2f, Clip = Resources.Load<AudioClip>("VenusVoice/VEN_ENC_T1"), Label = "Wormmaster" } }, false));
+            // the wide view: the dais, him, and the troughs with the creatures breaking the surface
+            yield return Wait(0.9f);
+            Shoot(P7 + toWm * 2.5f + r * 3f + Vector3.up * 5.5f, Vector3.Lerp(P7, VenusLayout.DaisAt, 0.6f), 58f, 1.2f);
+            yield return Wait(1.3f);
+            yield return Shot("enc_00_intro_he_sends_them");
+            int seen = 0; var camC = Cam.GetComponent<Camera>();
+            foreach (var w in ChamberWorms) if (w != null && w.gameObject.activeSelf) { var v = camC.WorldToViewportPoint(w.transform.position + Vector3.up * 0.3f); if (v.z > 0f && v.x > 0f && v.x < 1f && v.y > 0f && v.y < 1f) seen++; }
+            Log($"encounter intro (QF12 8): {seen} creatures in the frame; the Wormmaster on screen ({(Wormmaster != null && Wormmaster.gameObject.activeInHierarchy ? "visible" : "MISSING")}), his pulse, {up} creatures surfaced at once, taunt");
+            yield return Wait(1.0f);
+            FollowCamera(); Cam.SnapBehind();
+            Seven.Release();
+            yield return Cutscene(false);
+        }
+
+        /// <summary>QF12 (8): a creature far from her travels under the floor along its trough to the point nearest her
+        /// (unseen, below the surface) before it lunges - every lunge comes at her from close by, in front of her.</summary>
+        void BringNear(WormCreature w)
+        {
+            if (w == null || w.Surfaced || w.Route == null || w.Route.Length < 2) return;
+            Vector3 a = w.Route[0], b = w.Route[w.Route.Length - 1];
+            var ab = b - a; float t = Mathf.Clamp01(Vector3.Dot(P7 - a, ab) / Mathf.Max(1e-3f, ab.sqrMagnitude));
+            var near = a + ab * t; var dir = ab.normalized;
+            // start 7 m along the trough, on the side she is facing away from less (so it comes into view)
+            var s1 = near - dir * 7f; var s2 = near + dir * 7f;
+            var f = Flat(Cam.transform.forward);                      // QF12: from where the player is looking
+            var start = Vector3.Dot(Flat(s1 - P7), f) > Vector3.Dot(Flat(s2 - P7), f) ? s1 : s2;
+            float gy = float.IsNaN(w.BaseY) ? VenusLayout.ControlY : w.BaseY;
+            w.transform.position = new Vector3(start.x, gy - w.Depth, start.z);
+            w.transform.rotation = Quaternion.LookRotation(Flat(near - start).normalized);
+        }
+
+        /// <summary>QF12 (8): the follow camera swings (0.6 s) to look past her at the creature coming at her - the player
+        /// sees the threat and has time to push it aside (RT) or step out of its way.</summary>
+        IEnumerator TurnToThreat(WormCreature w)
+        {
+            float y0 = Cam.Yaw;
+            for (float t = 0f; t < 1f && w != null && !_cut && !_knocking; t += Time.deltaTime / 0.6f)
+            {
+                var d = Flat(Vector3.Lerp(w.transform.position, P7, 0.25f) - P7); if (d.sqrMagnitude < 0.25f) yield break;
+                Cam.Yaw = Mathf.LerpAngle(y0, Quaternion.LookRotation(d).eulerAngles.y, Mathf.SmoothStep(0f, 1f, t));
+                yield return null;
+            }
+        }
+
+        /// <summary>QF12 (8): what the player sees - the follow camera untouched: is the lunging creature in the frame, and
+        /// the Wormmaster? Logged per lunge; the first three are captured.</summary>
+        IEnumerator PlayerViewLunge(WormCreature w, int k)
+        {
+            yield return Wait(1.0f);
+            if (w == null) yield break;
+            var cam = Cam.GetComponent<Camera>();
+            bool In(Vector3 p) { var v = cam.WorldToViewportPoint(p); return v.z > 0f && v.x > 0.02f && v.x < 0.98f && v.y > 0.02f && v.y < 0.98f; }
+            bool wIn = In(w.transform.position + Vector3.up * 0.3f), mIn = In(Wormmaster != null ? Wormmaster.transform.position + Vector3.up * 1.6f : WmHead);
+            Log($"lunge {k} (player view, QF12 8): {w.name} surfaced {w.Surfaced}, {Flat(w.transform.position - P7).magnitude:0.0} m from her, in the frame {(wIn ? "yes" : "NO")}; the Wormmaster in the frame {(mIn ? "yes" : "no")}");
+            if (k <= 3 && Cap != null) yield return Cap.Shot($"enc_player_view_lunge_{k}");
         }
 
         IEnumerator LungeShot(WormCreature w, int k)
@@ -718,7 +803,7 @@ namespace Seven
             var touch = VenusLayout.CubeAt + Flat(P7 - VenusLayout.CubeAt).normalized * 1.3f + Vector3.down * 0.05f;
             ik.RightPos = touch; ik.RightW = 1f; ik.LookPos = VenusLayout.CubeAt; ik.LookW = 0.9f;
             yield return Wait(1.0f);
-            yield return Shot("c09_01_over_her_shoulder_toward_cube");
+            yield return Shot("c09_01_over_her_shoulder_toward_cube"); LogCube("C09");
             { var hb = Seven.Bone(HumanBodyBones.RightHand); var h = hb != null ? Vector3.Lerp(hb.position, touch, 0.4f) : touch; var side = Vector3.Cross(Vector3.up, Flat(VenusLayout.CubeAt - P7).normalized); Shoot(h + side * 1.0f + Vector3.up * 0.3f + Flat(VenusLayout.CubeAt - P7).normalized * 0.2f, h, 34f, 0.01f); }
             yield return Wait(0.8f);
             yield return Shot("c09_02_hand_touches");
@@ -745,12 +830,14 @@ namespace Seven
             yield return Shot("c09_04_eye_close_up_gaze_lowered");
             ik.RightW = 0f;
             _coverage = true; _lastSpeaker = null;
+            var probe = Shots ? BodyProbe.Begin(Seven.gameObject, "Venus, after the second vision (C09 1-5)") : null;
             yield return Say("VEN_C09", 1, 4);
             // the unanswered question: a medium two-shot; hold briefly (no frightened reaction)
             if (Guardian != null) TwoShot(Guardian, _side, 5.6f);
             yield return Say("VEN_C09", 5, 5, false);
             yield return Wait(1.6f);
             yield return Shot("c09_05_two_shot_i_think_i_knew_them");
+            if (probe != null) Log(probe.Report());
             Complete("VEN_C09");
             // C10: the guardian offers the small cube; the original stays in its protected structure
             if (Guardian != null && RecordCopy != null)
@@ -970,7 +1057,7 @@ namespace Seven
             yield return Shot("b07_01_parked_hull_seamless");
             // the seam glows, the panel sinks and slides round
             if (HatchSeam != null) HatchSeam.enabled = true;
-            var seamM = HatchSeam != null ? HatchSeam.material : null; var backM = BayBack != null ? BayBack.material : null;
+            var seamM = HatchSeam != null ? HatchSeam.material : null; var backM = BayBack != null ? BayBack.sharedMaterial : null;
             AudioKit.Play("hatch_iris", mouth, 0.7f);
             for (float t = 0f; t < 1f; t += Time.deltaTime / 0.9f) { if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.SmoothStep(0f, 3.2f, t)); yield return null; }
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
@@ -978,7 +1065,7 @@ namespace Seven
                 float sink = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.3f)), slide = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 0.25f) / 0.75f));
                 if (Hatch != null) { Hatch.localScale = Vector3.one * Mathf.Lerp(1f, 0.984f, sink); Hatch.localRotation = Quaternion.Euler(0f, slide * (VenusLayout.HatchSpan + 3f), 0f); }
                 if (BayLight != null) BayLight.intensity = 2.4f * slide;
-                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 1.1f, slide));
+                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 0.55f, slide));
                 yield return null;
             }
             yield return Shot("b07_02_hatch_open");

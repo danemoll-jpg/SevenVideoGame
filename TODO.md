@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF12: Dan's 0.13.0 play (Dan, 2026-11-19) — to do
+## Quick fix QF12: Dan's 0.13.0 play (Dan, 2026-11-19) — done, status below; release 0.13.1
 Commit first. All standing rules (monochrome, Kyle's fog/glow, non-sexual presentation, no exact-spot triggers, look at
 your own captures). **20-minute rule, strictly** — Round 13 ran ~57 game-minutes; use targeted switches and captures,
 one release run at the end. Release **0.13.1**; per-item status in "QF12 — status"; "For Dan to check (QF12)".
@@ -53,6 +53,76 @@ capture from a normal play (not only a test switch) before calling it done.
 
 Checks + release: targeted captures for each item (a normal-play capture for 1, 4, 8, 9), the release run, publish
 **0.13.1**; docs; commit + push.
+
+
+## QF12 — status (2026-11-19): done, exe-verified off-screen; release 0.13.1 (`game-1301`, Latest, published)
+Captures + logs: `Docs/Previews/qf12/` (`qf12_items_sheet.png` = one frame per item). New check tools:
+`-menupick "Label|Label|..."` (a run that starts in the real main menu: `MenuPilot` presses through it on a virtual
+gamepad), `-stopafter <s>` (ends a check run after that much game time), `BodyProbe` (per-frame "body still" line),
+`CameraOccluders.WalkBlockers` ("walk blockers" line: geometry standing in walkable ground).
+
+1. **7 shook after the first vision — fixed.** Cause: the QF8 wall push-out treated the hand she holds the shape with
+   (scene IK, pinned in the world) like a hand in the wall: pushing her body away never freed the hand, and a push that
+   turned round snapped back to zero in one frame (up to 25 cm). Hands on a scene-IK target no longer push; a reversing
+   push eases through zero (`ChapterSevenWalls.cs`). Measured from the menu → Scene select → "Vision": `body still
+   (QF12) … 631 frames, jerks 0, worst 0.3 cm`; after the Venus vision (C09): `840 frames, jerks 0`. Capture
+   `qf12_01_after_vision_talking`.
+2. **Moon beam hatch far below the ship — fixed.** Cause: the Moon and Venus saucers saved their hull meshes under the
+   same asset names, so the Venus build (hull at 3.35 m) replaced the Moon hull (1.15 m): the Moon hull floated 2.2 m
+   above its beam. Hull meshes now carry the world's height in their names, and (root fix) the builder never reuses a
+   mesh name in a build (`SaveMesh`: a repeat gets `_2`, logged "mesh name reused"). Log: `beam hatch (QF12 2): … gap
+   -0.5 cm`; captures `s07_saucer_released_beam_on`, `s08_at_the_edge_of_the_light` (Moon), `v02a_beam_down` (Venus).
+3. **Bike hold bands — removed.** Every surface of the hold is one flat even glow (no albedo, no shine; the hatch
+   animation fades the shared material): from outside it reads as a softly lit hollow with the bike. `item3_hold_open.png`.
+4. **The guardian on Dan's Mixamo rig — done.** `cleanup_r11.py … elarim_rig` (new, ~1 min): Dan's
+   `elarim_body_mixamo.fbx` (Mixamo auto-rig + skin, 0 unweighted vertices) + the cape part aligned by the reference
+   body's bounds (exact: 3.500 m both), cape on CapeA/B under Spine2 as before → `elarim_v1_rigged.fbx` (the Round 13
+   rig kept as `elarim_v1_rigged_r13.fbx`); all clips retarget (avatar valid). Bend test `elarim_mixamo_bendtest_*`: knees
+   bend forward, cape stays behind. **The kneel now shows:** the Blender kneel clip still did not lower his hips through
+   the Humanoid retarget, so `ElarimNpc` makes the kneel itself when the clip leaves the hips high (left knee down, right
+   foot forward, head bowed; eased in/out): `guardian kneel (QF12): hips at 0.45 of standing height`. Cape vs legs
+   kneeling / walking / standing: `worst leg contact 0.0 cm` (captures `v16_c03…kneels`, `v17b…walks_cape`).
+5. **The bridge slab comes from the quake.** No slab exists before the collapse; the walkway's middle strip breaks away
+   as one long piece, falls with the paving into the gully and lies there tilted and dusty; she lifts THAT piece
+   (`VenusDirector.SlabFalls`, `SlabRest`). The old "slab bed" beside the road is ground again.
+6. **The temple cube is back.** Cause: the small record copy was built with the same mesh names → the original cube's
+   meshes were deleted (empty pedestal). Fixed by the `SaveMesh` rule (item 2). The same bug had also emptied **two of
+   the three control-device pylons** in the encounter. `cube (QF12 6) at C09: … renderers on 3/3, 0.00 m from its pedestal`.
+7. **The stray "wall" on the way down — most likely found.** The walk-path scan finds no geometry standing in any walkable
+   ground (only props on their obstacle circles). What a capture on the way down did show: the burrowing creature's dust
+   was drawn as large flat grey squares (no particle texture) — a translucent stacked "wall" right beside her, with the
+   glowing cube-shaped tunnel lamp behind. All Venus dust / telekinesis motes now use the soft dot texture. *Dan: if the
+   wall you saw was something else, a screenshot will pin it down.*
+8. **The boss fight — visible and fighting back.** Cause: the chamber creatures' ground height (`WormCreature.BaseY`) is not
+   serialized, so the scene never had it: they swam 18 m above the chamber, inside the rock — invisible, while lunges
+   and knockbacks still ran. Now set at load; plus an intro beat (the camera finds the Wormmaster on his dais, his pulse,
+   every creature breaks the surface, his taunt), lunges start close in front of the camera, the camera swings to the
+   threat, and a white light rides with a lunging creature. From the menu, player-style: `encounter intro: 4 creatures in
+   the frame; the Wormmaster on screen`, `lunge 1 (player view): … in the frame yes; the Wormmaster in the frame yes`,
+   knockbacks, device shields, fairness pause (`item8_*.png`).
+9. **Venus arrival — the first frame is black, 7 not there** (`first frame 1-3: fade 1.00, 7 not there`, from the menu's
+   "Chapter 2 — Venus"; `item9_first_frame.png`).
+10. **Petting on top of his back.** Her palm target = the top of his drawn body (`CatCompanion.BackTop`), stroking along
+    it: `petting (QF12 10): her left palm +0.01..+0.02 m vs the top of his back (palm on his back)` (was her knee).
+11. **C11 opens already in the pilot's chair** with Panther curled in her lap (`CatCompanion.PlaceOnLap`; no walk, no hop):
+    `C11 opens in the pilot's chair: seated True, hips 0.000 m from the seat point, Panther on her lap True`.
+
+**Checks.** Every item seen in a capture from a run started in the real main menu (items 1, 2 via Chapter 1 Scene select;
+4–6 via Venus Scene select "first ride"; 8 player-style from Scene select; 9 via "Chapter 2 — Venus"; 10–11 via Scene
+select "debrief"). Monochrome: 245 captures, 0 coloured pixels. Audio muted (peak 0) in every run.
+**Testing time: about 25 min of game time — over the 20-minute rule by ~5 min** (two baseline runs on the old build to
+find causes ~4.5 min; the encounter needed three tries). **Decision:** the full Chapter 1 player-style release run was
+NOT repeated this quick fix (it alone is ~10 game-min); Chapter 1's changes are the wall push, two log/capture lines and
+the saucer mesh names, each checked by its own menu-started run.
+
+## For Dan to check (QF12)
+- Chapter 1 vision: she stands calm, holding the shape, through "There were people here…".
+- Moon bay: the beam's iris sits in the saucer's belly (not below it).
+- Venus B01 hold: just a soft-lit opening and the bike; B03: the slab only exists after the quake, and you lift it out of the gully.
+- The guardian: kneeling in C03, walking ahead in "Follow me", standing — legs never through the cape, knees bending naturally.
+- The temple cube on its pedestal (C04, C09); the way down (anything still in your way? a screenshot helps).
+- The encounter: the Wormmaster on his dais, creatures surfacing and lunging at you, shields, knockbacks.
+- Arriving on Venus from the menu: black + title card first. Aboard after Venus: already in the chair, hand on his back.
 
 
 ## Round 14: Chapter "Europa — Beneath the Ice", first playable pass (Dan, 2026-11-19) — to do, AFTER QF12

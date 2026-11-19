@@ -102,6 +102,12 @@ namespace Seven
         /// <summary>Round 13 check switches: -r13 bridge|tremor|encounter|debrief|console|consolefresh|reactions (each a short
         /// focused run; see TODO.md "Round 13 - status"). Venus ones start at their Scene Select entry.</summary>
         public static string R13 { get; private set; }
+        /// <summary>QF12: -menupick "Label|Label|..." = a check run that starts from the real main menu: MenuPilot presses
+        /// through the menu on a virtual gamepad (d-pad down to the item whose label starts with each part, then A; a
+        /// confirm is answered with A). Combine with -venusplay2 (player-style) or alone (the arrival plays on autopilot).</summary>
+        public static string MenuPick { get; private set; }
+        /// <summary>QF12: -stopafter &lt;seconds&gt; = end a check run after that many seconds of game time (the log is written).</summary>
+        public static float StopAfter { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -150,6 +156,8 @@ namespace Seven
                     if (R13 == "encounter") { VenusSelect = "C06"; }
                 }
                 if (args[i] == "-venusplay2") { VenusPlay2 = true; VenusSelect = "C06"; }
+                if (args[i] == "-menupick" && i + 1 < args.Length) MenuPick = args[i + 1];
+                if (args[i] == "-stopafter" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sa)) StopAfter = sa;
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;
                 if (args[i] == "-venusskip") { VenusSkip = true; Chapter2 = true; }

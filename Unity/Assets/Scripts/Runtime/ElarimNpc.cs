@@ -62,6 +62,63 @@ namespace Seven
         public void Face(Vector3 p) => _faceTo = p;
         public void Stop() { _walkTo = null; Play(PostClip); }
 
+        // ---- QF12 (4): the kneel must show. If the "kneel" clip leaves his hips near standing height (the Round 12 / 13
+        // problem: the Blender-made pose did not come through the Humanoid retarget), the pose is made here on top of the
+        // animation: hips down to one thigh length above the ground, the left knee on the ground (thigh down, shin back),
+        // the right foot planted forward (thigh level, shin down), the torso upright leaning a little, the head bowed.
+        // Eased in / out over 0.8 s. Check runs read KneelHipsRatio (hips height / standing hips height: ~0.5 = kneeling).
+        float _kneelW, _standHips = -1f; bool _kneelProc;
+        public float KneelHipsRatio { get; private set; } = 1f;
+        public bool KneelProcedural => _kneelProc;
+
+        void LateUpdate()
+        {
+            if (_anim == null || !_anim.isHuman) return;
+            var hips = _anim.GetBoneTransform(HumanBodyBones.Hips); if (hips == null) return;
+            float gy = transform.position.y;
+            float h = hips.position.y - gy;
+            if (_standHips < 0f && _state != "kneel" && h > 0.3f) _standHips = h;
+            bool want = _state == "kneel";
+            _kneelW = Mathf.MoveTowards(_kneelW, want ? 1f : 0f, Time.deltaTime / 0.8f);
+            if (want && _standHips > 0f && _kneelW > 0.99f && !_kneelProc && h > 0.75f * _standHips) { _kneelProc = true; Debug.Log($"[Seven] {name}: kneel clip keeps the hips at {h / _standHips:0.00} of standing - procedural kneel"); }
+            if (!want && _kneelW <= 0f) _kneelProc = false;
+            if (_kneelProc && _kneelW > 0f) ProceduralKneel(hips, gy, Mathf.SmoothStep(0f, 1f, _kneelW));
+            if (_standHips > 0f) KneelHipsRatio = (hips.position.y - gy) / _standHips;
+        }
+
+        void ProceduralKneel(Transform hips, float gy, float w)
+        {
+            Vector3 F = transform.forward, U = Vector3.up, R = transform.right;
+            Transform B(HumanBodyBones b) => _anim.GetBoneTransform(b);
+            var lUp = B(HumanBodyBones.LeftUpperLeg); var lLo = B(HumanBodyBones.LeftLowerLeg); var lFt = B(HumanBodyBones.LeftFoot); var lTo = B(HumanBodyBones.LeftToes);
+            var rUp = B(HumanBodyBones.RightUpperLeg); var rLo = B(HumanBodyBones.RightLowerLeg); var rFt = B(HumanBodyBones.RightFoot); var rTo = B(HumanBodyBones.RightToes);
+            if (lUp == null || lLo == null || lFt == null || rUp == null || rLo == null || rFt == null) return;
+            float thigh = Vector3.Distance(lUp.position, lLo.position), shin = Vector3.Distance(lLo.position, lFt.position);
+            // hips down: the left thigh straight down onto the knee on the ground (knee cap ~ 0.06 of the shin)
+            float target = gy + thigh * 0.98f + shin * 0.08f;
+            float drop = Mathf.Max(0f, hips.position.y - target);
+            hips.position += Vector3.down * drop * w;
+            hips.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.AngleAxis(4f, R), w) * hips.rotation;
+            void Aim(Transform bone, Transform child, Vector3 dir)
+            {
+                if (bone == null || child == null) return;
+                var cur = child.position - bone.position; if (cur.sqrMagnitude < 1e-6f) return;
+                var q = Quaternion.FromToRotation(cur, dir.normalized) * bone.rotation;
+                bone.rotation = Quaternion.Slerp(bone.rotation, q, w);
+            }
+            Aim(rUp, rLo, F * 1.0f + U * 0.04f + R * 0.12f);
+            Aim(rLo, rFt, F * 0.04f - U * 1.0f + R * 0.02f);
+            if (rTo != null) Aim(rFt, rTo, F * 0.75f - U * 0.45f);
+            Aim(lUp, lLo, F * 0.18f - U * 1.0f - R * 0.10f);
+            Aim(lLo, lFt, -F * 1.0f - U * 0.06f - R * 0.04f);
+            if (lTo != null) Aim(lFt, lTo, -F * 0.45f - U * 0.85f);
+            // torso upright with a small lean, the head bowed toward what she holds out
+            var spine = B(HumanBodyBones.Spine); var chest = B(HumanBodyBones.Chest); var neck = B(HumanBodyBones.Neck); var head = B(HumanBodyBones.Head);
+            if (spine != null && chest != null) Aim(spine, chest, U + F * 0.12f);
+            if (chest != null && neck != null) Aim(chest, neck, U + F * 0.2f);
+            if (head != null) head.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.AngleAxis(26f, R), w) * head.rotation;
+        }
+
         float _check;
         void Update()
         {

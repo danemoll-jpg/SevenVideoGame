@@ -677,5 +677,113 @@ def do_elarim_mixamo():
     with open(os.path.join(out, "elarim_mixamo_metrics.txt"), "w") as f: f.write("\n".join(_m) + "\n")
 
 
-{"bike": do_bike, "elarim": do_elarim, "elarim_mixamo": do_elarim_mixamo, "worm": do_worm, "wormmaster": do_wormmaster}[KIND]()
+def do_elarim_rig():
+    """QF12 (4): the guardian on Dan's Mixamo auto-rig. Art/Mixamo/elarim/elarim_body_mixamo.fbx is the cape-less body
+    (elarim_body_for_mixamo.fbx) rigged and skinned by Mixamo's auto-rigger - real joint weights, so knees and elbows
+    bend cleanly and the legs no longer drag cape vertices. The cape part (elarim_cape_part.fbx, saved in the body's
+    coordinates) is aligned to the Mixamo body by matching the reference body's bounds, given its own two bones (CapeA /
+    CapeB under Spine2, as before - ElarimCape swings them clear of the legs in Unity) and joined. Writes
+    elarim_v1_rigged.fbx (the Round 13 automatic-weights rig is kept as elarim_v1_rigged_r13.fbx)."""
+    import shutil
+    out = os.path.join(ROOT, "Art", "Export", "elarim")
+    src = os.path.join(ROOT, "Art", "Mixamo", "elarim", "elarim_body_mixamo.fbx")
+    old = os.path.join(out, "elarim_v1_rigged.fbx"); bak = os.path.join(out, "elarim_v1_rigged_r13.fbx")
+    if os.path.exists(old) and not os.path.exists(bak): shutil.copyfile(old, bak)
+    clean()
+    bpy.ops.import_scene.fbx(filepath=src, automatic_bone_orientation=False)
+    arm = next(o for o in bpy.context.scene.objects if o.type == 'ARMATURE')
+    body = [o for o in bpy.context.scene.objects if o.type == 'MESH']
+    arm.animation_data_clear()
+    for pb in arm.pose.bones:
+        pb.location = (0, 0, 0); pb.rotation_quaternion = (1, 0, 0, 0); pb.rotation_euler = (0, 0, 0); pb.scale = (1, 1, 1)
+    if len(body) > 1:
+        bpy.ops.object.select_all(action='DESELECT')
+        for o in body: o.select_set(True)
+        bpy.context.view_layer.objects.active = body[0]; bpy.ops.object.join()
+    ob = body[0]; ob.name = "elarim"
+    bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); ob.select_set(True); bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    bones = {b.name: b for b in arm.data.bones}
+    def bw(n, tail=False):
+        b = bones.get("mixamorig:" + n) or bones.get(n)
+        return (arm.matrix_world @ (b.tail_local if tail else b.head_local)) if b else None
+    hips = bw("Hips"); toe = bw("LeftToeBase"); foot = bw("LeftFoot")
+    face_y = -1.0 if (toe is not None and foot is not None and toe.y < foot.y) else 1.0
+    Pb = np.array([ob.matrix_world @ v.co for v in ob.data.vertices])
+    log(f"Mixamo body: {len(Pb)} vertices, {tris(ob)} tris, {len(bones)} bones, faces {'-Y' if face_y < 0 else '+Y'}, bounds {Pb.min(0).round(3)} .. {Pb.max(0).round(3)}, hips {tuple(round(c, 3) for c in hips)}")
+    # the reference body (what Dan uploaded) and the cape part, both in the reference coordinates
+    before = set(bpy.context.scene.objects)
+    bpy.ops.import_scene.fbx(filepath=os.path.join(out, "elarim_body_for_mixamo.fbx"))
+    ref = [o for o in bpy.context.scene.objects if o not in before and o.type == 'MESH'][0]
+    Pr = np.array([ref.matrix_world @ v.co for v in ref.data.vertices])
+    before = set(bpy.context.scene.objects)
+    bpy.ops.import_scene.fbx(filepath=os.path.join(out, "elarim_cape_part.fbx"))
+    cp = [o for o in bpy.context.scene.objects if o not in before and o.type == 'MESH'][0]; cp.name = "elarim_cape"
+    for o in [o for o in bpy.context.scene.objects if o not in before and o.type != 'MESH']: bpy.data.objects.remove(o, do_unlink=True)
+    bpy.ops.object.select_all(action='DESELECT'); cp.select_set(True); bpy.context.view_layer.objects.active = cp
+    bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM'); bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    Pc = co(cp)
+    # map: reference bounds -> Mixamo body bounds (uniform scale from the height, bounding-box centres matched)
+    sr = np.ptp(Pb[:, 2]) / max(1e-6, np.ptp(Pr[:, 2]))
+    cr = (Pr.min(0) + Pr.max(0)) / 2; cb = (Pb.min(0) + Pb.max(0)) / 2
+    Pc = (Pc - cr) * sr + cb
+    set_co(cp, Pc)
+    log(f"cape aligned: reference body height {np.ptp(Pr[:, 2]):.3f} -> Mixamo body {np.ptp(Pb[:, 2]):.3f} (x{sr:.4f}); reference width {np.ptp(Pr[:, 0]):.3f} vs {np.ptp(Pb[:, 0]) / sr:.3f}, depth {np.ptp(Pr[:, 1]):.3f} vs {np.ptp(Pb[:, 1]) / sr:.3f}")
+    bpy.data.objects.remove(ref, do_unlink=True)
+    back = -face_y
+    log(f"cape centre {(Pc.mean(0) - np.array(hips)).round(3)} from the hips: {'behind the body' if (Pc[:, 1].mean() - hips.y) * back > 0 else 'NOT BEHIND - check the facing'}")
+    zmin = min(Pb[:, 2].min(), Pc[:, 2].min()); Hh = Pb[:, 2].max() - zmin
+    # cape bones + weights (as do_elarim)
+    yb = float(np.median(Pc[Pc[:, 2] > Pc[:, 2].max() - 0.12 * Hh][:, 1]))
+    piv_z = float(Pc[:, 2].max())
+    bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='EDIT')
+    eb_parent = arm.data.edit_bones["mixamorig:Spine2"]
+    inv = arm.matrix_world.inverted()
+    for nm, sx in (("CapeA", -1.0), ("CapeB", 1.0)):
+        b = arm.data.edit_bones.new(nm)
+        b.head = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z)); b.tail = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z - 0.3 * Hh))
+        b.parent = eb_parent; b.use_connect = False; b.use_deform = True
+    bpy.ops.object.mode_set(mode='OBJECT')
+    for vg in list(cp.vertex_groups): cp.vertex_groups.remove(vg)
+    ga = cp.vertex_groups.new(name="CapeA"); gb = cp.vertex_groups.new(name="CapeB"); gs = cp.vertex_groups.new(name="mixamorig:Spine2")
+    band = 0.05 * Hh
+    for i in range(len(Pc)):
+        x = Pc[i, 0] - hips.x; z = Pc[i, 2]
+        wb = min(1.0, max(0.0, 0.5 + x / (0.10 * Hh)))
+        top_k = min(1.0, max(0.0, (z - (piv_z - band)) / band))
+        c = 1.0 - top_k
+        if c * (1 - wb) > 1e-4: ga.add([i], c * (1 - wb), 'REPLACE')
+        if c * wb > 1e-4: gb.add([i], c * wb, 'REPLACE')
+        if top_k > 1e-4: gs.add([i], top_k, 'REPLACE')
+    for m in list(cp.modifiers): cp.modifiers.remove(m)
+    bpy.ops.object.select_all(action='DESELECT'); cp.select_set(True); ob.select_set(True); bpy.context.view_layer.objects.active = ob
+    bpy.ops.object.join()
+    log(f"cape: {len(Pc)} vertices on CapeA / CapeB (pivot z {piv_z:.3f}, back y {yb:.3f}), top band {band:.3f} on Spine2")
+    k = HEIGHT_ELARIM / Hh
+    arm.scale = (k, k, k); arm.location = (0, 0, -zmin * k)
+    bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); ob.select_set(True); bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
+    if ob.parent != arm: ob.parent = arm
+    if not any(m.type == 'ARMATURE' for m in ob.modifiers): ob.modifiers.new("arm", "ARMATURE").object = arm
+    Pw = np.array([ob.matrix_world @ v.co for v in ob.data.vertices])
+    unw = sum(1 for v in ob.data.vertices if not any(g.weight > 0.01 for g in v.groups))
+    log(f"elarim (Mixamo rig): height {np.ptp(Pw[:, 2]):.2f} m, width {np.ptp(Pw[:, 0]):.2f} m, tris {tris(ob)}, bones {len(arm.data.bones)}, unweighted vertices {unw}")
+    previews("elarim_mixamo_rig", (0, 0, HEIGHT_ELARIM / 2), HEIGHT_ELARIM * 1.15)
+    export([arm, ob], os.path.join(out, "elarim_v1_rigged.fbx"))
+    # bend test (a stride + a bent knee) to look at the knees and the cape against the legs
+    bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); bpy.context.view_layer.objects.active = arm
+    bpy.ops.object.mode_set(mode='POSE')
+    test = {"LeftArm": (0, 0, 1.0), "RightArm": (0, 0, -1.0), "LeftForeArm": (0, 0, 1.2), "RightForeArm": (0, 0, -1.2),
+            "LeftUpLeg": (-0.9, 0, 0), "LeftLeg": (1.4, 0, 0), "RightUpLeg": (0.35, 0, 0), "Spine1": (0.15, 0, 0)}
+    for n, r in test.items():
+        pb = arm.pose.bones.get("mixamorig:" + n)
+        if pb: pb.rotation_mode = 'XYZ'; pb.rotation_euler = r
+    bpy.ops.object.mode_set(mode='OBJECT')
+    for vn, dv in (("front", (0, -1, 0.05)), ("side", (1, 0, 0.05)), ("q34", (0.7, -0.7, 0.35)), ("back", (0, 1, 0.05))):
+        shoot(os.path.join(PREVIEW, f"elarim_mixamo_bendtest_{vn}.png"), (0, 0, HEIGHT_ELARIM / 2), dv, HEIGHT_ELARIM * 1.15)
+    with open(os.path.join(out, "elarim_rig_metrics.txt"), "w") as f: f.write("\n".join(_m) + "\n")
+
+
+{"bike": do_bike, "elarim_rig": do_elarim_rig, "elarim": do_elarim, "elarim_mixamo": do_elarim_mixamo, "worm": do_worm, "wormmaster": do_wormmaster}[KIND]()
 log("done", KIND)

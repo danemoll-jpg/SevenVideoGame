@@ -58,6 +58,7 @@ namespace Seven
         string _objective, _hintLine;
         bool _cut;
         CarriedShape _carry;
+        bool _firstFrameCovered;
         static readonly HashSet<string> _taught = new HashSet<string>();
         public static int Reloads;        // check run: reloads done (each committed scene once)
         static bool _playReset;
@@ -67,12 +68,22 @@ namespace Seven
         void Start()
         {
             I = this;
+            // QF12 (9): arriving on Venus, the very first frame is already black (the title card fades in over it) and 7
+            // is not there yet - she appears only when the arrival scene brings her out of the saucer
+            if (!VenusState.SceneDone("VEN_C01") && !DemoBoot.VenusSelectTest)
+            {
+                UI.SetFade(1f);
+                if (Seven != null) Seven.gameObject.SetActive(false);
+                if (Cat != null) Cat.gameObject.SetActive(false);
+                _firstFrameCovered = true;
+            }
             VenusLayout.UseTraversal();
             Legend.SetLayout(ControlsLegend.Layout.Chapter);
             Legend.HidePanels = true;
             if (Auto && Reloads == 0 && !DemoBoot.Continue && !VenusState.SceneSelectRun) VenusState.ResetForTest();
             if (DemoBoot.VenusPlay && !_playReset && !DemoBoot.Continue && !VenusState.SceneSelectRun) { _playReset = true; VenusState.ResetForTest(); }
             if (DemoBoot.CaptureDir != null) { ChapterCapture.Ensure(); Cap.Attach(Cam.GetComponent<Camera>()); }
+            if (DemoBoot.CaptureDir != null && _firstFrameCovered) StartCoroutine(FirstFrames());
             if (Auto)
             {
                 Seven.ScriptDriven = true; Dlg.AutoSkipAfter = DemoBoot.VenusSkip ? 0f : 0.9f;
@@ -93,6 +104,17 @@ namespace Seven
             StartCoroutine(Watchdog());
             StartCoroutine(UndergroundLook());                         // Round 12: below ground - the underground music, cave light
             if (VenusState.AtLeast(VenusState.Stage.ControlDiscovered) && !VenusState.AtLeast(VenusState.Stage.ThreatStopped)) StartCoroutine(AmbientPulses());
+        }
+
+        /// <summary>QF12 (9): the first frames of the chapter - black, 7 not there (captured, logged).</summary>
+        IEnumerator FirstFrames()
+        {
+            for (int f = 1; f <= 3; f++)
+            {
+                bool seen = Seven != null && Seven.gameObject.activeInHierarchy;
+                Cap.Log($"first frame {f} (QF12 9): fade {UI.FadeAlpha:0.00} (1 = black), 7 {(seen ? "IN THE SCENE" : "not there")}");
+                if (f == 1) yield return Cap.Shot("v00_first_frame"); else yield return null;
+            }
         }
 
         // ------------------------------------------------------------------------------------------ helpers
@@ -324,7 +346,14 @@ namespace Seven
             bool bridged = VenusState.SceneDone("VEN_B03_bridge");
             SetBridge(bridged);
             if (WalkwayIntact != null) WalkwayIntact.gameObject.SetActive(!VenusState.SceneDone("VEN_B03"));
-            if (Slab != null) { if (bridged) Slab.SetPositionAndRotation(BridgePos, Quaternion.identity); else Slab.SetPositionAndRotation(VenusLayout.SlabLie, Quaternion.Euler(1.5f, VenusLayout.SlabLieYaw, -2f)); }
+            // QF12 (5): the slab is a piece of the walkway - it exists only once the tremor has broken the walkway (B03)
+            if (Slab != null)
+            {
+                bool fallen = VenusState.SceneDone("VEN_B03");
+                Slab.gameObject.SetActive(bridged || fallen);
+                if (bridged) Slab.SetPositionAndRotation(BridgePos, Quaternion.identity); else Slab.SetPositionAndRotation(SlabRest, SlabRestRot);
+            }
+            if (WalkwayIntact != null) foreach (Transform c in WalkwayIntact) c.gameObject.SetActive(true);
             // the bike: in the bay until B01, then where it was left
             if (!b01) Bike.Place(VenusLayout.BikeUnpacked, 0f);
             else if (VenusState.BikeKnown) Bike.Place(VenusState.BikeAt, VenusState.BikeYaw);
@@ -750,13 +779,13 @@ namespace Seven
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.0f) { if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.SmoothStep(0f, 3.2f, t)); yield return null; }
             yield return Shot("v06b_b01_hatch_seam_glows");
             // the panel sinks a few centimetres and slides round under the hull; soft light from inside
-            var backM = BayBack != null ? BayBack.material : null;
+            var backM = BayBack != null ? BayBack.sharedMaterial : null;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
             {
                 float sink = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.3f)), slide = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 0.25f) / 0.75f));
                 if (Hatch != null) { Hatch.localScale = Vector3.one * Mathf.Lerp(1f, 0.984f, sink); Hatch.localRotation = Quaternion.Euler(0f, slide * (VenusLayout.HatchSpan + 3f), 0f); }
                 if (BayLight != null) BayLight.intensity = 2.4f * slide;
-                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 1.1f, slide));
+                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 0.55f, slide));
                 if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(3.2f, 1.2f, slide));
                 if (slide > 0.97f && !_bikeShown) BikeShown(true);
                 if (Shots && !_bikeShown && !_hullCheckLogged) { _hullCheckLogged = true; LogBikeThroughHull("hatch opening (panel " + (slide * 100f).ToString("0") + " % open)"); }
@@ -818,7 +847,7 @@ namespace Seven
                 float slide = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 0.75f)), sink = 1f - Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((t - 0.7f) / 0.3f));
                 if (Hatch != null) { Hatch.localScale = Vector3.one * Mathf.Lerp(1f, 0.984f, sink); Hatch.localRotation = Quaternion.Euler(0f, slide * (VenusLayout.HatchSpan + 3f), 0f); }
                 if (BayLight != null) BayLight.intensity = 2.4f * slide;
-                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 1.1f, slide));
+                if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 0.55f, slide));
                 if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * (1.2f + 1.0f * Mathf.Sin(t * Mathf.PI)));
                 yield return null;
             }
@@ -1002,14 +1031,19 @@ namespace Seven
         // ---- QF10: the telekinesis bridge
         Renderer _slabEdges;
         bool _slabReady, _slabHit;
+        /// <summary>QF12 (5): where the broken walkway piece lies after the collapse - at the bottom of the gully, tilted on
+        /// the rubble, dusty (the same piece she lifts and lays across).</summary>
+        static Vector3 SlabRest => new Vector3(30.4f, VenusTerrain.Height(30.4f, 122.8f) + 0.55f, 122.8f);
+        static Quaternion SlabRestRot => Quaternion.Euler(4f, 97f, 9f);
+        static Vector3 SlabLookAt => SlabRest + Vector3.up * 0.3f;
         static Vector3 BridgePos => new Vector3(VenusLayout.SlabBridge.x, VenusLayout.BridgeTop - VenusLayout.SlabSize.y * 0.5f, VenusLayout.SlabBridge.z);
         bool SlabInView()
         {
             if (Slab == null) return false;
-            var to = Flat(VenusLayout.SlabLookAt - P7);
+            var to = Flat(SlabLookAt - P7);
             if (to.magnitude > VenusLayout.SlabTkRange) return false;
             // she (or the camera) looks at it: the slab is long, so aim at its nearest point along its length
-            var a = VenusLayout.SlabLie - Vector3.right * VenusLayout.SlabSize.x * 0.5f; var b = VenusLayout.SlabLie + Vector3.right * VenusLayout.SlabSize.x * 0.5f;
+            var a = SlabRest - Vector3.right * VenusLayout.SlabSize.x * 0.5f; var b = SlabRest + Vector3.right * VenusLayout.SlabSize.x * 0.5f;
             var near = a + Vector3.right * Mathf.Clamp(P7.x - a.x, 0f, VenusLayout.SlabSize.x);
             var fwdCam = Flat(Cam.transform.forward).normalized;
             return Vector3.Angle(fwdCam, Flat(near - P7)) < 55f || Vector3.Angle(Flat(Seven.transform.forward), Flat(near - P7)) < 55f || Flat(near - P7).magnitude < 3.2f;
@@ -1040,7 +1074,7 @@ namespace Seven
             }
             else StartCoroutine(TeachWhen(() => SlabInView() && !Bike.Riding, "tk", (ControlsLegend.Btn.Tk, "Telekinesis")));
             yield return Until(() => _slabHit, "lay the fallen slab across the gap (telekinesis)", 60f,
-                "Look at the long fallen slab beside the hole and use telekinesis (RT)", VenusLayout.SlabLie, () => { _slabHit = true; _skipBridge = true; });
+                "Look at the long fallen slab beside the hole and use telekinesis (RT)", SlabRest, () => { _slabHit = true; _skipBridge = true; });
             _slabReady = false; pulsing = false;
             yield return LayTheSlab(_skipBridge);
             Objective("Ride across");
@@ -1074,7 +1108,7 @@ namespace Seven
             if (!skipped)
             {
                 yield return Cutscene(true);
-                Seven.Gesture(VenusLayout.SlabLookAt);
+                Seven.Gesture(SlabLookAt);
                 Seven.SetEnergyPoint(1.9f, 0.25f);
                 // the beat from the side: her, the slab and the hole in one frame
                 Shoot(new Vector3(25.2f, 3.4f, 104.2f), new Vector3(31f, 0.6f, 119f), 52f, 0.8f);
@@ -1091,7 +1125,7 @@ namespace Seven
             }
             Slab.SetPositionAndRotation(to, r1);
             // it settles with dust and a heavy thud
-            if (SlabDust != null) SlabDust.Play();
+            if (SlabDust != null) { SlabDust.transform.position = VenusLayout.SlabBridge + Vector3.up * 0.2f; SlabDust.Play(); }
             AudioKit.Play("stone_fall", to, 1f, 0.03f, AudioKit.Bus.Sfx, 60f);
             AudioKit.Play("tremor_rumble", to, 0.35f, 0.05f, AudioKit.Bus.Sfx, 40f);
             if (!skipped) for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Cam.transform.position += UnityEngine.Random.insideUnitSphere * 0.06f * (1f - t / 0.5f); yield return null; }
@@ -1172,6 +1206,15 @@ namespace Seven
 
         /// <summary>Round 13 (0k, VEN_B03): as she rides toward the damaged stretch a strong tremor hits; a short in-engine cut:
         /// she brakes hard and in front of her the walkway cracks and collapses into the gully (dust, falling stone).</summary>
+        /// <summary>QF12 (6): the original cube on its pedestal - active, rendered, where it belongs.</summary>
+        void LogCube(string when)
+        {
+            if (!Shots) return;
+            if (Cube == null) { Log($"cube (QF12 6) at {when}: NO CUBE OBJECT"); return; }
+            int on = 0, all = 0; foreach (var r in Cube.GetComponentsInChildren<Renderer>(true)) { all++; if (r.enabled && r.gameObject.activeInHierarchy) on++; }
+            Log($"cube (QF12 6) at {when}: active {Cube.gameObject.activeInHierarchy}, renderers on {on}/{all}, at {Cube.position} ({Vector3.Distance(Cube.position, VenusLayout.CubeAt):0.00} m from its pedestal), scale {Cube.lossyScale.x:0.00}");
+        }
+
         IEnumerator TremorAndCollapse()
         {
             StartCoroutine(Tremor(5.0f, 1.1f));
@@ -1189,21 +1232,53 @@ namespace Seven
             yield return Cutscene(false);
         }
 
+        /// <summary>QF12 (5): the walkway's middle strip drops into the gully, tips onto the rubble, a dust burst rises.</summary>
+        IEnumerator SlabFalls(Vector3 sp0)
+        {
+            var to = SlabRest; var r1 = SlabRestRot; float v = 0f;
+            yield return Wait(0.25f);
+            for (float t = 0f; t < 3f && Slab.position.y > to.y + 0.01f; t += Time.deltaTime)
+            {
+                v += 9.8f * Time.deltaTime;
+                var p = Slab.position; p.y = Mathf.Max(to.y, p.y - v * Time.deltaTime);
+                float k = Mathf.InverseLerp(sp0.y, to.y, p.y);
+                p.x = Mathf.Lerp(sp0.x, to.x, k); p.z = Mathf.Lerp(sp0.z, to.z, k);
+                Slab.SetPositionAndRotation(p, Quaternion.Slerp(Quaternion.identity, r1, Mathf.SmoothStep(0f, 1f, k)));
+                yield return null;
+            }
+            Slab.SetPositionAndRotation(to, r1);
+            if (SlabDust != null) { SlabDust.transform.position = to + Vector3.up * 0.4f; SlabDust.Play(); }
+            AudioKit.Play("stone_rain", to, 0.8f, 0.05f, AudioKit.Bus.Sfx, 60f);
+            Log($"collapse (QF12 5): the walkway's middle strip fell into the gully as one broken slab - it lies at {to} (no slab existed before the collapse)");
+        }
+
         IEnumerator Collapse()
         {
             if (WalkwayIntact == null || !WalkwayIntact.gameObject.activeInHierarchy) { Log("collapse: walkway already gone"); yield break; }
             AudioKit.Play("path_collapse", new Vector3(30f, 0f, 122f), 1f, 0f, AudioKit.Bus.Sfx, 90f);
             var pieces = new List<(Transform t, Vector3 p, Quaternion r, float delay, Vector3 spin)>();
             var rnd = new System.Random(7);
+            // QF12 (5): the long middle strip of the walkway breaks away as ONE piece - the slab she will lift. Before the
+            // collapse it is not anywhere in the world; it shows here in the walkway (the small paving pieces it replaces are
+            // hidden) and falls with the rest, then lies broken and dusty at the bottom of the gully.
+            bool slabFalls = Slab != null && !VenusState.SceneDone("VEN_B03_bridge");
+            Vector3 sp0 = new Vector3(VenusLayout.SlabBridge.x, -VenusLayout.SlabSize.y * 0.5f, VenusLayout.SlabBridge.z);
+            if (slabFalls)
+            {
+                foreach (Transform c in WalkwayIntact) if (Mathf.Abs(c.position.x - VenusLayout.SlabBridge.x) < VenusLayout.SlabSize.z * 0.5f + 0.4f) c.gameObject.SetActive(false);
+                Slab.gameObject.SetActive(true); Slab.SetPositionAndRotation(sp0, Quaternion.identity);
+            }
             foreach (Transform c in WalkwayIntact)
             {
+                if (!c.gameObject.activeSelf) continue;
                 float zN = Mathf.InverseLerp(VenusLayout.CollapseZ0, VenusLayout.CollapseZ1, c.position.z);
                 float centre = 1f - Mathf.Abs(zN - 0.5f) * 2f;                 // the middle goes first
                 pieces.Add((c, c.position, c.rotation, (1f - centre) * 0.9f + (float)rnd.NextDouble() * 0.3f, new Vector3((float)rnd.NextDouble() - 0.5f, (float)rnd.NextDouble() - 0.5f, (float)rnd.NextDouble() - 0.5f) * 140f));
             }
             // it cracks: a shudder first
-            for (float t = 0f; t < 0.6f; t += Time.deltaTime) { foreach (var x in pieces) x.t.position = x.p + new Vector3(0f, Mathf.Sin(t * 60f + x.p.x) * 0.03f, 0f); yield return null; }
-            if (SlabDust != null) SlabDust.Play();
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) { foreach (var x in pieces) x.t.position = x.p + new Vector3(0f, Mathf.Sin(t * 60f + x.p.x) * 0.03f, 0f); if (slabFalls) Slab.position = sp0 + new Vector3(0f, Mathf.Sin(t * 55f) * 0.03f, 0f); yield return null; }
+            if (slabFalls) StartCoroutine(SlabFalls(sp0));
+            if (SlabDust != null) { SlabDust.transform.position = VenusLayout.SlabBridge + Vector3.up * 0.2f; SlabDust.Play(); }
             bool shot = false;
             for (float t = 0f; t < 3.2f; t += Time.deltaTime)
             {
@@ -1358,6 +1433,8 @@ namespace Seven
             if (Guardian != null) TwoShot(Guardian, -_side, 5.2f);
             yield return Wait(0.3f);
             yield return Shot("v16_c03_guardian_kneels_examines_it");
+            if (Shots) { var wb = CameraOccluders.WalkBlockers(out int nb); Log($"walk blockers (QF12 7) at C03: {nb} blocked samples in the walkable ground - {wb}"); }
+            if (Guardian != null) Log($"guardian kneel (QF12): hips at {Guardian.KneelHipsRatio:0.00} of standing height ({(Guardian.KneelProcedural ? "procedural kneel - the clip did not lower him" : "the kneel clip")}; must be < 0.7)");
             if (Guardian != null) Log($"cape (QF10) kneeling: worst leg contact {Guardian.GetComponent<ElarimCape>()?.WorstDepth * 100f:0.0} cm, swing {Guardian.GetComponent<ElarimCape>()?.MaxAngle:0} deg");
             yield return Say("VEN_C03", 4, 8);
             yield return Wait(0.9f);
@@ -1419,6 +1496,7 @@ namespace Seven
             if (Guardian != null) { Guardian.Stop(); Guardian.transform.position = VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f); Guardian.Face(VenusLayout.CubeAt); }
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(VenusLayout.CubeAt - P7)), 400f * Time.deltaTime); yield return null; }
             Shoot(VenusLayout.CubeAt + new Vector3(-4.2f, 3.2f, -8.2f), (VenusLayout.CubeAt + P7) * 0.5f + Vector3.up * 1.0f, 55f);   // wide chamber: both of them and the cube
+            LogCube("C04");
             yield return Wait(1.0f);
             yield return Shot("v18_c04_wide_chamber");
             yield return Say("VEN_C04", 1, 6);

@@ -654,8 +654,15 @@ namespace Seven.EditorTools
         const string GenDir = "Assets/Art/World/Generated";
         static readonly Vector3 ViewOrigin = new Vector3(-1.8f, 1.6f, -6.2f);   // default camera spot on the hill
 
+        // QF12 (6, 2): a mesh name saved twice in one build deleted the first asset - every object already holding it lost
+        // its mesh (the original Venus cube vanished when the small record copy was built with the same names). Each name
+        // is now used once per build; a repeat gets _2, _3 ... and is logged.
+        static readonly System.Collections.Generic.Dictionary<string, int> _meshNames = new System.Collections.Generic.Dictionary<string, int>();
+        public static int MeshNameRepeats;
         static Mesh SaveMesh(Mesh m, string name)
         {
+            if (_meshNames.TryGetValue(name, out int used)) { _meshNames[name] = used + 1; var n2 = name + "_" + (used + 1); MeshNameRepeats++; Log($"QF12 mesh name reused in this build: '{name}' -> '{n2}' (the first one keeps its mesh)"); name = n2; }
+            else _meshNames[name] = 1;
             Directory.CreateDirectory(Path.Combine(ProjectRoot, GenDir));
             var path = GenDir + "/" + name + ".asset";
             AssetDatabase.DeleteAsset(path);

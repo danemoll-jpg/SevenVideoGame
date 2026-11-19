@@ -391,9 +391,11 @@ namespace Seven
             yield return null;
         }
 
+        IEnumerator ShotWhileTalking(string name, float after) { yield return Wait(after); yield return Shot(name); }
+
         IEnumerator Shot(string name)
         {
-            if (!Auto && !(DemoBoot.PlayerSim && name.StartsWith("qf7_") && Cap != null)) yield break;
+            if (!Auto && !(DemoBoot.PlayerSim && (name.StartsWith("qf7_") || name.StartsWith("qf12_")) && Cap != null)) yield break;
             ShotFrameCheck(name);
             if (Dlg.Busy && Cat != null && Cat.gameObject.activeInHierarchy && Cam.InShot)
             {
@@ -1127,7 +1129,10 @@ namespace Seven
             yield return Wait(0.5f);
             yield return Shot("qf7_02_after_the_vision_holding_it");
             yield return ReadyToTalk(2f);
+            var probe = DemoBoot.CaptureDir != null && Cap != null ? BodyProbe.Begin(Seven.gameObject, "Chapter 1, after the first vision (lines 6.3-6.7)") : null;
+            if (probe != null) StartCoroutine(ShotWhileTalking("qf12_01_after_vision_talking", 2.5f));
             yield return Dlg.PlayScene(6, 3, 7);             // lines 3-7 (DIALOGUE.md scene 6)
+            if (probe != null) Cap.Log(probe.Report());
             // she looks at it once more, then puts it away in a pocket of her suit: out of sight, no glow on her at all
             ik.LookPos = Shape.position; ik.LookW = 1f;
             FrameHer("into her pocket", null, 2.2f, 46f, 0.9f);
@@ -2252,6 +2257,13 @@ namespace Seven
             yield return Iris(true);
             yield return BeamOn(true);
             yield return Shot("s07_saucer_released_beam_on");
+            // QF12 (2): the beam's iris hatch sits flush on the hull's underside (measured), also in a normal play
+            if (DemoBoot.CaptureDir != null && Cap != null)
+            {
+                float hullY = Saucer.position.y + MoonLayout.SaucerBaseY - 0.1f; float gap = Hatch.position.y - hullY;
+                Cap.Log($"beam hatch (QF12 2): iris at y {Hatch.position.y:0.00}, hull underside at y {hullY:0.00} - gap {gap * 100f:0.0} cm (flush = within 2 cm)");
+                if (!Auto) yield return Shot("qf12_02_beam_on_player_view");
+            }
             if (Auto) Cap.Log("saucer released: clamps open, rim glow up, hovering, iris open, tractor beam on (no ramp)");
         }
 

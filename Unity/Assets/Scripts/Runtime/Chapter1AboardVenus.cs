@@ -283,13 +283,21 @@ namespace Seven
         }
 
         /// <summary>Her left hand on his back, stroking slowly (IK); 0 = hand off.</summary>
-        float _stroke; Coroutine _strokeRoutine;
+        float _stroke; Coroutine _strokeRoutine; int _strokeLogN;
         IEnumerator Stroke()
         {
             for (float t = 0f; ; t += Time.deltaTime)
             {
-                var lap = Seven.LapPoint(0.13f);
-                _ik.LeftPos = lap + PilotFwd * (0.04f + Mathf.Sin(t * 1.6f) * 0.07f) - PilotRight * 0.02f;
+                // QF12 (10): her palm on the TOP of his back (measured from his drawn body), stroking along it - not her knee
+                float along = Mathf.Sin(t * 1.6f) * 0.45f;
+                var back = Cat != null ? Cat.BackTop(along, PilotFwd) : Seven.LapPoint(0.13f);
+                _ik.LeftPos = back - Up * 0.025f;          // the wrist a little below the top: the palm (measured ~4.5 cm above the wrist here) lies on his fur
+                if (DemoBoot.CaptureDir != null && _ik.LeftW > 0.95f && (_strokeLogN++ % 90) == 0)
+                {
+                    var palm = Palm(false);
+                    var top = Cat != null ? Cat.BackTop(0f, PilotFwd) : back;
+                    Cap?.Log($"petting (QF12 10): her left palm {palm.y - top.y:+0.00;-0.00} m vs the top of his back, {Flat(palm - top).magnitude:0.00} m from its middle; her lap {Seven.LapPoint(0f).y - top.y:+0.00;-0.00} m (palm {(Mathf.Abs(palm.y - top.y) < 0.07f && Flat(palm - top).magnitude < 0.2f ? "on his back" : "OFF his back")})");
+                }
                 _ik.LeftW = Mathf.MoveTowards(_ik.LeftW, _stroke, Time.deltaTime * 2f);
                 yield return null;
             }
@@ -318,35 +326,18 @@ namespace Seven
             Seven.Frozen = true; Seven.Cutscene = true;
             Director.Cam.Hold = true;
             Cat.ForceTarget = null; Cat.enabled = false;
-            // she comes in; Panther at normal size near the entrance
-            Seven.transform.SetPositionAndRotation(new Vector3(-1.2f, 0f, -4.6f), Quaternion.LookRotation(new Vector3(0.2f, 0f, 1f)));
-            Cat.transform.SetPositionAndRotation(new Vector3(0.4f, 0f, -3.5f), Quaternion.LookRotation(Flat(Seven.transform.position - new Vector3(0.4f, 0f, -3.5f))));
-            CatClip("sit", 0.05f);
-            var mid = (Seven.transform.position + Cat.transform.position) * 0.5f;
-            CamTo(mid + new Vector3(2.6f, 1.35f, 2.6f), mid + Up * 0.7f, 0f, 44f);
-            yield return Wait(0.3f);
-            yield return UI.Fade(0f, 1.4f);
-            yield return ShotV("c11_01_panther_near_the_entrance");
-            yield return SayV("VEN_C11", 1);                                     // Did they know what it was?
-            // follow her to the pilot's chair at the navigation console; he pads along beside her
-            var stand = Flat(PilotHips - PilotFwd * 0.75f);
-            Seven.Frozen = false; bool sd = Seven.ScriptDriven; Seven.ScriptDriven = true;
-            StartCoroutine(CatWalkTo(Flat(PilotHips + PilotRight * 0.9f - PilotFwd * 0.5f), -PilotRight, 4.0f));
-            var walk = StartCoroutine(AutoWalk(stand));
-            for (float t = 0f; t < 8f && Flat(Seven.transform.position - stand).magnitude > 0.35f; t += Time.deltaTime)
-            {
-                var p = Seven.transform.position; Director.Cam.transform.position = Vector3.Lerp(Director.Cam.transform.position, p + Flat(Director.Cam.transform.position - p).normalized * 3.2f + Up * 1.5f, Time.deltaTime * 2f);
-                Director.Cam.transform.rotation = Quaternion.Slerp(Director.Cam.transform.rotation, Quaternion.LookRotation(p + Up * 1.1f - Director.Cam.transform.position), Time.deltaTime * 4f);
-                if (t > 1.5f && t - Time.deltaTime <= 1.5f) StartCoroutine(ShotV("c11_02_follow_her_to_the_pilot_chair"));
-                yield return null;
-            }
-            StopCoroutine(walk); Seven.ScriptMove = Vector2.zero; Seven.ScriptDriven = sd; Seven.Frozen = true;
-            yield return SayV("VEN_C11", 2);                                     // The Moon's record. Venus has its own.
+            // QF12 (11, Dan): back on the ship after Venus they are ALREADY in the pilot's chair - 7 seated, Panther curled
+            // in her lap - when the picture comes up (no walk to the chair, no hop). C11's first two lines play there.
             yield return SitInPilotChair();
-            // he hops up and curls in her lap (the Chapter 1 lap moment)
-            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null; Cat.HopOntoLap();   // after its Start has run
-            yield return Wait(Cat.HopTime + 0.4f);
-            if (DemoBoot.CaptureDir != null) Cap?.Log($"Panther on her lap in the pilot's chair (0j): {Cat.Current == CatCompanion.Mode.OnLap}, lap mesh {Cat.LapMeshShown}");
+            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;   // after its Start has run
+            Cat.PlaceOnLap();
+            yield return null;
+            CutPilot("two");
+            yield return UI.Fade(0f, 1.4f);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"C11 opens in the pilot's chair (QF12 11): seated {_seated}, hips {Vector3.Distance(Seven.Hips.position, ShipConsole.I.PilotSeat.position):0.000} m from the seat point, Panther on her lap {Cat.Current == CatCompanion.Mode.OnLap} (lap mesh {Cat.LapMeshShown}) from the first frame");
+            yield return ShotV("c11_01_opens_in_the_chair_panther_on_her_lap");
+            yield return SayV("VEN_C11", 1);                                     // Did they know what it was?
+            yield return SayV("VEN_C11", 2);                                     // The Moon's record. Venus has its own.
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
             CutPilot("two");
             yield return Wait(0.8f);

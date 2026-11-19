@@ -305,7 +305,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–13 + QF1–QF11 complete (2026-11-19), release 0.13.0.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–13 + QF1–QF12 complete (2026-11-19), release 0.13.1.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -424,7 +424,15 @@ scene (Round 10).
   - Console: `ShipConsole.cs` (+ star map; Log `Resources/Console/adventure_log.json` = `Docs/ADVENTURE-LOG.md`, Field Guide
     `field_guide.json` = `Docs/FIELD-GUIDE.md`, portraits `Tools/Blender/render_portraits.py` → `Resources/Console/Portraits`).
   - Round 13 check switches: `-r13 bridge|tremor|temple|encounter|console|consolefresh` (focused short runs).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.13.0** (Round 13 status in `TODO.md`), then Round 14.
+- **QF12 (release 0.13.1)** — Dan's 0.13.0 play (status + "For Dan to check (QF12)" in `TODO.md`):
+  - **Builder rule: a mesh name is saved once per build** (`SaveMesh`: repeats get `_2`, logged "mesh name reused") —
+    reused names had deleted earlier meshes (empty cube pedestal, two device pylons) and swapped the Moon hull for Venus's.
+  - Guardian = Dan's Mixamo rig: `F:lenderlender.exe --background --factory-startup --python Tools/Blender/cleanup_r11.py -- <repo> elarim_rig`
+    (Art/Mixamo/elarim/elarim_body_mixamo.fbx + elarim_cape_part.fbx → elarim_v1_rigged.fbx); procedural kneel fallback in `ElarimNpc`.
+  - `WormCreature.BaseY` is not serialized — set it at runtime (`RestorePart2`). Particle materials: `AdditiveMatTex` (soft dot), never `AdditiveMat` (squares).
+  - Check tools: `-menupick "Label|Label"` (`MenuPilot`: a run starting in the real main menu), `-stopafter <s>`,
+    `BodyProbe` ("body still" line), `CameraOccluders.WalkBlockers` ("walk blockers" line).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.13.1** (Round 13 status in `TODO.md`), then Round 14.
 **Before: Dan plays 0.12.0** (Round 12 status in `TODO.md`), then Round 13.
 **Before:** Dan plays 0.10.2, then Round 11
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

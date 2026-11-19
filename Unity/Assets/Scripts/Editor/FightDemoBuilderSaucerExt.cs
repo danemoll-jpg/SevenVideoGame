@@ -22,6 +22,7 @@ namespace Seven.EditorTools
         public const float SaucerHatchAngle = 41.25f, SaucerHatchSpan = 30f;     // edges on the 96-segment lathe (3.75 deg)
         const float BayInner = 1.6f;                                              // the bay's back wall radius
 
+        static string ExtSfx = "";
         class SaucerExt { public Transform Panel; public Renderer Seam, BayBack; public Light BayLight, UnderLight; public readonly List<Renderer> Glow = new List<Renderer>(); }
 
         /// <summary>Round 13 (0b, the saucer's fixed design): the tractor beam is how 7 gets in and out of the saucer on
@@ -72,6 +73,9 @@ namespace Seven.EditorTools
 
         static SaucerExt BuildSaucerExterior(Transform saucer, float b0, Material hull, Material hullUnder, Material metalDark, Material rim)
         {
+            // QF12 (2): the hull meshes are built at this world's b0 (Moon 1.15, Venus 3.35) - their assets need their own
+            // names, or the last world built overwrites the others' (the Moon hull floated 2.2 m above its beam hatch)
+            ExtSfx = "_" + b0.ToString("0.00", System.Globalization.CultureInfo.InvariantCulture).Replace('.', '_');
             var ext = new SaucerExt();
             float ha0 = SaucerHatchAngle - SaucerHatchSpan * 0.5f, ha1 = SaucerHatchAngle + SaucerHatchSpan * 0.5f;
             bool InHatch(float a, float y) { a = Mathf.Repeat(a, 360f); return a > ha0 + 0.01f && a < ha1 - 0.01f; }
@@ -89,13 +93,13 @@ namespace Seven.EditorTools
             if (underOut.Count < 2 || underOut[0].x > BayInner) underOut.Insert(0, new Vector2(BayInner, UnderY(BayInner)));
             if (upperIn.Count < 2 || upperIn[0].x < BayInner) upperIn.Insert(0, new Vector2(BayInner, UpperY(BayInner)));
             if (upperOut.Count < 2 || upperOut[upperOut.Count - 1].x > BayInner) upperOut.Add(new Vector2(BayInner, UpperY(BayInner)));
-            MeshObject("Hull_Under", SaveMesh(Lathe(underIn, 0f, 360f, 96), "Saucer_Ext_UnderIn"), hullUnder, saucer);
-            MeshObject("Hull_UnderOut", SaveMesh(Lathe(underOut, 0f, 360f, 96, InHatch), "Saucer_Ext_Under"), hullUnder, saucer);
-            MeshObject("Hull_Upper", SaveMesh(Lathe(upperOut, 0f, 360f, 96, InHatch), "Saucer_Ext_Upper"), hull, saucer);
-            MeshObject("Hull_UpperIn", SaveMesh(Lathe(upperIn, 0f, 360f, 96), "Saucer_Ext_UpperIn"), hull, saucer);
-            MeshObject("Hull_RimBand", SaveMesh(Lathe(rimBand, 0f, 360f, 96, InHatch), "Saucer_Ext_RimBand"), hullUnder, saucer);
+            MeshObject("Hull_Under", SaveMesh(Lathe(underIn, 0f, 360f, 96), "Saucer_Ext_UnderIn" + ExtSfx), hullUnder, saucer);
+            MeshObject("Hull_UnderOut", SaveMesh(Lathe(underOut, 0f, 360f, 96, InHatch), "Saucer_Ext_Under" + ExtSfx), hullUnder, saucer);
+            MeshObject("Hull_Upper", SaveMesh(Lathe(upperOut, 0f, 360f, 96, InHatch), "Saucer_Ext_Upper" + ExtSfx), hull, saucer);
+            MeshObject("Hull_UpperIn", SaveMesh(Lathe(upperIn, 0f, 360f, 96), "Saucer_Ext_UpperIn" + ExtSfx), hull, saucer);
+            MeshObject("Hull_RimBand", SaveMesh(Lathe(rimBand, 0f, 360f, 96, InHatch), "Saucer_Ext_RimBand" + ExtSfx), hullUnder, saucer);
             var bandV = new List<Vector2>(); for (float r = 4.75f; r <= 5.98f; r += 0.08f) bandV.Add(new Vector2(r, UnderY(r) - 0.012f));
-            MeshObject("Hull_UnderBand", SaveMesh(Lathe(bandV, 0f, 360f, 96, InHatch), "Saucer_Ext_UnderBand"), metalDark, saucer);
+            MeshObject("Hull_UnderBand", SaveMesh(Lathe(bandV, 0f, 360f, 96, InHatch), "Saucer_Ext_UnderBand" + ExtSfx), metalDark, saucer);
             // seams (concentric rings + radial panel seams under, two fine rings over) - broken where the hatch panel is
             {
                 var sv = new List<Vector3>(); var st = new List<int>();
@@ -103,15 +107,15 @@ namespace Seven.EditorTools
                 foreach (var rr in new[] { 1.65f, 2.9f, 3.9f, 4.7f }) Ring(rr, UnderY(rr) - 0.014f, 0.016f);
                 for (int k = 0; k < 16; k++) { float a = k * 22.5f; if (InSector(a)) continue; Sweep(sv, st, Enumerable.Range(0, 9).Select(i => { float rr = Mathf.Lerp(1.65f, 4.7f, i / 8f); return Polar(rr, a, UnderY(rr) - 0.014f); }).ToList(), 0.012f, false, 5); }
                 foreach (var rr in new[] { 2.4f, 4.9f }) Ring(rr, UpperY(rr) + 0.006f, 0.008f);
-                MeshObject("Hull_Seams", SaveMesh(SmoothFinish(sv, st), "Saucer_Ext_Seams"), metalDark, saucer, false);
+                MeshObject("Hull_Seams", SaveMesh(SmoothFinish(sv, st), "Saucer_Ext_Seams" + ExtSfx), metalDark, saucer, false);
             }
             var gv = new List<Vector3>(); var gt = new List<int>();
             { var run = new List<Vector3>(); for (int i = 0; i <= 120; i++) { float a = i * 3f; if (InSector(a)) { if (run.Count > 1) Sweep(gv, gt, run, 0.05f, false, 8); run = new List<Vector3>(); continue; } run.Add(Polar(6.07f, a, b0 + 0.69f)); } if (run.Count > 1) Sweep(gv, gt, run, 0.05f, false, 8); }
-            ext.Glow.Add(MeshObject("RimGlow", SaveMesh(SmoothFinish(gv, gt), "Saucer_Ext_RimGlow"), rim, saucer, false).GetComponent<Renderer>());
+            ext.Glow.Add(MeshObject("RimGlow", SaveMesh(SmoothFinish(gv, gt), "Saucer_Ext_RimGlow" + ExtSfx), rim, saucer, false).GetComponent<Renderer>());
             var bv = new List<Vector3>(); var bt = new List<int>();
             Sweep(bv, bt, Enumerable.Range(0, 72).Select(i => Polar(2.4f, i * 5f, b0 - 0.07f)).ToList(), 0.04f, true, 6);
             Sweep(bv, bt, Enumerable.Range(0, 48).Select(i => Polar(1.2f, i * 7.5f, b0 + 1.97f)).ToList(), 0.025f, true, 6);
-            ext.Glow.Add(MeshObject("BellyGlow", SaveMesh(SmoothFinish(bv, bt), "Saucer_Ext_BellyGlow"), rim, saucer, false).GetComponent<Renderer>());
+            ext.Glow.Add(MeshObject("BellyGlow", SaveMesh(SmoothFinish(bv, bt), "Saucer_Ext_BellyGlow" + ExtSfx), rim, saucer, false).GetComponent<Renderer>());
             var ul = new GameObject("UnderLight").AddComponent<Light>();
             ul.transform.SetParent(saucer, false); ul.transform.localPosition = new Vector3(0f, b0 - 0.3f, 0f); ul.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             ul.type = LightType.Spot; ul.spotAngle = 120f; ul.range = 8f; ul.intensity = 0.8f; ul.shadows = LightShadows.None;
@@ -129,10 +133,10 @@ namespace Seven.EditorTools
 
             // ---- the storage hatch panel (the same surfaces over the hatch sector; it slides round under the hull to open)
             var panel = new GameObject("HatchPanel").transform; panel.SetParent(saucer, false); panel.localPosition = Vector3.zero;
-            MeshObject("PanelUnder", SaveMesh(Lathe(underOut, ha0, ha1, 8), "Saucer_Ext_PanelUnder"), hullUnder, panel);
-            MeshObject("PanelUpper", SaveMesh(Lathe(upperOut, ha0, ha1, 8), "Saucer_Ext_PanelUpper"), hull, panel);
-            MeshObject("PanelRim", SaveMesh(Lathe(rimBand, ha0, ha1, 8), "Saucer_Ext_PanelRim"), hullUnder, panel);
-            MeshObject("PanelBand", SaveMesh(Lathe(bandV, ha0, ha1, 8), "Saucer_Ext_PanelBand"), metalDark, panel);
+            MeshObject("PanelUnder", SaveMesh(Lathe(underOut, ha0, ha1, 8), "Saucer_Ext_PanelUnder" + ExtSfx), hullUnder, panel);
+            MeshObject("PanelUpper", SaveMesh(Lathe(upperOut, ha0, ha1, 8), "Saucer_Ext_PanelUpper" + ExtSfx), hull, panel);
+            MeshObject("PanelRim", SaveMesh(Lathe(rimBand, ha0, ha1, 8), "Saucer_Ext_PanelRim" + ExtSfx), hullUnder, panel);
+            MeshObject("PanelBand", SaveMesh(Lathe(bandV, ha0, ha1, 8), "Saucer_Ext_PanelBand" + ExtSfx), metalDark, panel);
             ext.Panel = panel;
             // the seam: hair-thin lines round the panel (white emission animated by the director; off when closed)
             var seamMat = Dissolve("Saucer_hatch_seam", Gray(0.85f), 0.6f, false); seamMat.EnableKeyword("_EMISSION"); seamMat.SetColor("_EmissionColor", Color.black); EditorUtility.SetDirty(seamMat);
@@ -148,21 +152,24 @@ namespace Seven.EditorTools
                 }
                 Sweep(sv, st, Enumerable.Range(0, 9).Select(i => Polar(BayInner, Mathf.Lerp(ha0, ha1, i / 8f), UpperY(BayInner) + 0.006f)).ToList(), 0.012f, false, 5);
                 Sweep(sv, st, Enumerable.Range(0, 9).Select(i => Polar(BayInner, Mathf.Lerp(ha0, ha1, i / 8f), UnderY(BayInner) - 0.006f)).ToList(), 0.012f, false, 5);
-                var seam = MeshObject("HatchSeam", SaveMesh(SmoothFinish(sv, st), "Saucer_Ext_HatchSeam"), seamMat, saucer, false);
+                var seam = MeshObject("HatchSeam", SaveMesh(SmoothFinish(sv, st), "Saucer_Ext_HatchSeam" + ExtSfx), seamMat, saucer, false);
                 ext.Seam = seam.GetComponent<Renderer>(); ext.Seam.enabled = false;
             }
             // the bay behind it: dark floor / ceiling / sides, a softly glowing back wall, a light that comes up as it opens
             {
                 // Round 13 (0b): the bay was dark gray (Gray 0.2) - seen through the opening as two black bands (its ceiling and
                 // floor). The opening is lit and clean now: pale walls with a soft white glow of their own.
-                var bayMat = Dissolve("Saucer_bay", Gray(0.82f), 0.3f, false); bayMat.SetFloat("_Cull", 0f);
-                bayMat.EnableKeyword("_EMISSION"); bayMat.SetColor("_EmissionColor", Color.white * 0.35f); EditorUtility.SetDirty(bayMat);
+                // QF12 (3): the pale walls still read as two white bands (floor / ceiling lit brighter than the back). Now every
+                // surface of the hold is one flat, even glow (no albedo, no shine, the same emission everywhere): from outside
+                // the opening is just a softly lit hollow with the bike in it - no slab, edge or strip can be told apart.
+                var bayMat = Dissolve("Saucer_bay", Color.black, 0f, false); bayMat.SetFloat("_Cull", 0f);
+                bayMat.EnableKeyword("_EMISSION"); bayMat.SetColor("_EmissionColor", Color.white * 0.55f); EditorUtility.SetDirty(bayMat);
                 var bay = new GameObject("Bay").transform; bay.SetParent(saucer, false);
                 var fl = underOut.Select(p => new Vector2(p.x, p.y + 0.03f)).ToList(); var ce = upperOut.Select(p => new Vector2(p.x, p.y - 0.03f)).ToList();
-                MeshObject("BayFloor", SaveMesh(Lathe(fl, ha0, ha1, 8), "Saucer_Ext_BayFloor"), bayMat, bay, false);
-                MeshObject("BayCeiling", SaveMesh(Lathe(ce, ha0, ha1, 8), "Saucer_Ext_BayCeiling"), bayMat, bay, false);
-                var backMat = Dissolve("Saucer_bay_back", Gray(0.9f), 0.2f, false); backMat.EnableKeyword("_EMISSION"); backMat.SetColor("_EmissionColor", Color.white * 0.05f); EditorUtility.SetDirty(backMat);
-                var back = MeshObject("BayBack", SaveMesh(Lathe(new[] { new Vector2(BayInner, UpperY(BayInner) - 0.03f), new Vector2(BayInner, UnderY(BayInner) + 0.03f) }, ha0, ha1, 8), "Saucer_Ext_BayBack"), backMat, bay, false);
+                MeshObject("BayFloor", SaveMesh(Lathe(fl, ha0, ha1, 8), "Saucer_Ext_BayFloor" + ExtSfx), bayMat, bay, false);
+                MeshObject("BayCeiling", SaveMesh(Lathe(ce, ha0, ha1, 8), "Saucer_Ext_BayCeiling" + ExtSfx), bayMat, bay, false);
+                var backMat = bayMat;
+                var back = MeshObject("BayBack", SaveMesh(Lathe(new[] { new Vector2(BayInner, UpperY(BayInner) - 0.03f), new Vector2(BayInner, UnderY(BayInner) + 0.03f) }, ha0, ha1, 8), "Saucer_Ext_BayBack" + ExtSfx), backMat, bay, false);
                 ext.BayBack = back.GetComponent<Renderer>();
                 foreach (var a in new[] { ha0, ha1 })
                 {
@@ -173,7 +180,7 @@ namespace Seven.EditorTools
                         wv.Add(Polar(r, a, UnderY(r) + 0.03f)); wv.Add(Polar(r2, a, UnderY(r2) + 0.03f)); wv.Add(Polar(r2, a, UpperY(r2) - 0.03f)); wv.Add(Polar(r, a, UpperY(r) - 0.03f));
                         wt.AddRange(new[] { b, b + 1, b + 2, b, b + 2, b + 3 });
                     }
-                    MeshObject($"BaySide{a:0}", SaveMesh(Finish(wv, wt), $"Saucer_Ext_BaySide{a:0}"), bayMat, bay, false);
+                    MeshObject($"BaySide{a:0}", SaveMesh(Finish(wv, wt), $"Saucer_Ext_BaySide{a:0}" + ExtSfx), bayMat, bay, false);
                 }
                 var bl = new GameObject("BayLight").AddComponent<Light>(); bl.transform.SetParent(bay, false);
                 bl.transform.localPosition = Polar(BayInner + 1.2f, SaucerHatchAngle, b0 + 0.7f);

@@ -1,0 +1,46 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   1.31s] menu pilot (QF12): from the main menu -> Scene select > Chapter 2 — Venus > Venus: the way down
+[   5.27s] menu pilot: 'Scene select' highlighted - A
+[  11.22s] menu pilot: 'Chapter 2 — Venus  >' highlighted - A
+[  12.64s] menu pilot: 'Venus: the way down + the control chamber (C06)' highlighted - A
+[  16.48s] objective: Find the source of the signal
+[  16.48s] restore: Venus state: VEN_S04_CONTROL_DISCOVERED, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike (74.00, -6.00, 148.00) riding False -> 7 at (78.00, -6.00, 143.00), the slab bridge is down
+[  16.60s] venus playtest 2: virtual gamepad on the real input actions; muted=True listenerVolume=0; started from the main menu: Scene select|Chapter 2 — Venus|Venus: the way down
+[  16.71s] objective: Find the source of the signal
+[  16.71s] venus playtest 2: objective: 'Find the source of the signal' at (78.0, -6.0, 143.0)
+[  16.85s] walk blockers (QF12 7) after the root gate opened: 379 blocked samples in the walkable ground - Court_Trees (Venus) x109 at (14.6, 1.3, 210.9); Machinery (VEN_05_Underground) x60 at (108.2, -29.5, 70.4); Court_Fountain (Venus) x25 at (19.5, 0.5, 198.3); Ctrl_Ribs (VEN_05_Underground) x24 at (103.1, -29.2, 88.0); Temple_GrownRibs (Venus) x22 at (22.6, 0.5, 238.7); Dais (VEN_05_Underground) x22 at (130.6, -29.5, 87.2); Pylon (Device_dev_ledge) x8 at (107.0, -28.5, 66.9); Channel_6 (Venus) x7 at (22.1, 0.8, 74.3); Channel_9 (Venus) x7 at (22.8, 1.2, 80.6); Channel_10 (Venus) x7 at (22.8, 1.2, 82.7); Channel_12 (Venus) x7 at (22.8, 0.7, 88.3); Court_FountainWater (Venus) x6 at (20.9, 0.5, 197.6); Cube_ProtectedStructure (Venus) x5 at (29.1, 0.5, 268.9); Display_Panel (LocationsDisplay) x5 at (34.0, 1.3, 266.1); 
+[  16.99s] shot 01_w01_root_gate_open.png  audioPeak=0.000000  cursorVisible=False
+[  23.40s] shot 02_w02_root_pit_steps.png  audioPeak=0.000000  cursorVisible=False
+[  25.23s] music: below ground -> venus_underground (crossfade 3 s at (69.0, -12.4, 120.0))
+[  29.08s] shot 03_w03_root_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  31.81s] shot 04_enc_lunge_0_creature_comes_at_her.png  audioPeak=0.000000  cursorVisible=False
+[  31.81s] lunge 0: TunnelWorm surfaced True, 5.0 m from her
+[  33.60s] shot 05_w04_root_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  34.90s] KNOCKED BACK by a creature (TunnelWorm) at (72.6, -22.0, 89.7) -> white fade, back on the walkway at (70.5, -22.0, 90.8) (nobody hurt; knockdowns 1)
+[  38.03s] KNOCKED BACK by a creature (TunnelWorm) at (79.7, -22.0, 89.2) -> white fade, back on the walkway at (76.2, -22.0, 89.8) (nobody hurt; knockdowns 2)
+[  41.75s] shot 06_w05_deep_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  46.56s] way down (0f): the root-chamber creature lunged at her 3x, knocked her back 2x, stunned 0x; it stays behind (alive)
+[  46.56s] ok: the control chamber (C06) (59.3s)
+[  49.11s] shot 07_c06_01_wide_the_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  49.41s] shot 08_c06_02_low_angle_above_his_machinery.png  audioPeak=0.000000  cursorVisible=False
+[  51.87s] shot 09_c06_03_he_activates_a_signal_pulse.png  audioPeak=0.000000  cursorVisible=False
+[  52.55s] shot 10_c06_04_come_and_do_it_yourself.png  audioPeak=0.000000  cursorVisible=False
+[  52.55s] scene VEN_C06 complete; VEN_S05_ENCOUNTER_ACTIVE
+[  52.55s] objective: Disable the control devices
+[  52.56s] objective: Disable the control devices
+[  52.63s] venus playtest 2: objective: 'Disable the control devices' at (109.7, -30.0, 89.0)
+[  52.95s] coverage VEN_C06_07 (wormmaster): speaker head at (0.50, 0.54) in frame, camera -5.2 m vs his / her head (low angle), wormmaster tip x1.27
+[  52.99s] shot 11_cov_C06_07_wormmaster.png  audioPeak=0.000000  cursorVisible=False
+[  54.00s] shot 12_enc_00_intro_he_sends_them.png  audioPeak=0.000000  cursorVisible=False
+[  54.00s] encounter intro (QF12 8): 4 creatures in the frame; the Wormmaster on screen (visible), his pulse, 6 creatures surfaced at once, taunt
+[  58.22s] encounter (0f): pulse 1 - ChamberCreature_0_0 sent lunging at her (4.2 m away)
+[  58.72s] lunge 1 (player view, QF12 8): ChamberCreature_0_0 surfaced True, 6.4 m from her, in the frame yes; the Wormmaster in the frame yes
+[  58.77s] shot 13_enc_player_view_lunge_1.png  audioPeak=0.000000  cursorVisible=False
+[  59.56s] KNOCKED BACK by a creature (ChamberCreature_0_0) at (114.6, -30.0, 103.0) -> white fade, back on the walkway at (114.6, -30.0, 103.0) (nobody hurt; knockdowns 3)
+[  61.22s] encounter (0f): three knockbacks - the pulses pause for 20 s (fairness)
+[  61.49s] device dev_north disabled: 2 creatures of its trough withdraw (alive); saved - devices [dev_north] (1/3)
+[  61.49s] ok: disable the control devices (0/3) (14.0s)
+[  61.53s] shot 14_enc_dev_north_off.png  audioPeak=0.000000  cursorVisible=False
+[  67.68s] cat speed vs clip (QF11): walk clip 0 frames, walking in place (speed < 0.06 m/s x scale for > 0.25 s, then switched to idle) 0x
+[  67.68s] stopped after 125 s of game time (-stopafter)
+[  67.68s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

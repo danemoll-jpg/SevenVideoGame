@@ -49,8 +49,10 @@ namespace Seven
             Debug.Log("[Seven] " + line);
         }
 
+        bool _stopped;
         void Update()
         {
+            if (!_stopped && DemoBoot.StopAfter > 0f && Time.time > DemoBoot.StopAfter) { _stopped = true; Finish($"stopped after {DemoBoot.StopAfter:0} s of game time (-stopafter)"); }
             AudioListener.GetOutputData(_buf, 0);
             foreach (var v in _buf) _peak = Mathf.Max(_peak, Mathf.Abs(v));
         }

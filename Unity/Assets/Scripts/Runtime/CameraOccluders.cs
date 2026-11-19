@@ -168,6 +168,47 @@ namespace Seven
             return added;
         }
 
+        /// <summary>QF12 (7): stray geometry standing in the walkable ground - every enabled ground zone is sampled
+        /// (0.7 m grid, 0.6 m in from its edges); at 0.5 and 1.3 m above the floor four short horizontal rays (0.3 m) look
+        /// for any visual mesh. Returns "N blocked samples: name xK, ..." (walls along the edges are excluded by the inset;
+        /// what is left stands in the middle of a walk path).</summary>
+        public static string WalkBlockers(out int blocked, System.Func<Ground.Zone, bool> which = null)
+        {
+            blocked = 0;
+            if (!Ready) return "occluders not ready";
+            SyncAll();
+            var count = new Dictionary<string, int>(); var at = new Dictionary<string, Vector3>();
+            bool bf = Physics.queriesHitBackfaces; Physics.queriesHitBackfaces = true;
+            var dirs = new[] { Vector3.forward, Vector3.back, Vector3.left, Vector3.right };
+            foreach (var z in Ground.Zones)
+            {
+                if (!z.Usable || (which != null && !which(z))) continue;
+                for (float x = z.Min.x + 0.6f; x <= z.Max.x - 0.6f; x += 0.7f)
+                    for (float zz = z.Min.y + 0.6f; zz <= z.Max.y - 0.6f; zz += 0.7f)
+                    {
+                        if (!z.Contains(x, zz, 0.6f)) continue;
+                        float y = z.HeightAt(x, zz);
+                        string hitName = null; Vector3 hp = default;
+                        foreach (var h in new[] { 0.5f, 1.3f })
+                        {
+                            var o = new Vector3(x, y + h, zz);
+                            foreach (var d in dirs)
+                                if (_ps.Raycast(o, d, out var hit, 0.3f, AllMask, QueryTriggerInteraction.Ignore))
+                                { var r = RendererOf(hit.collider); if (r != null && r.name.Contains("Grass")) continue; hitName = r != null ? r.name + " (" + (r.transform.parent != null ? r.transform.parent.name : "-") + ")" : hit.collider.name; hp = o; break; }
+                            if (hitName != null) break;
+                        }
+                        if (hitName == null) continue;
+                        blocked++;
+                        count[hitName] = count.TryGetValue(hitName, out int c) ? c + 1 : 1;
+                        if (!at.ContainsKey(hitName)) at[hitName] = hp;
+                    }
+            }
+            Physics.queriesHitBackfaces = bf;
+            var sb = new System.Text.StringBuilder();
+            foreach (var kv in System.Linq.Enumerable.Take(System.Linq.Enumerable.OrderByDescending(count, k => k.Value), 14)) sb.Append($"{kv.Key} x{kv.Value} at {at[kv.Key]:0.0}; ");
+            return sb.ToString();
+        }
+
         // ------------------------------------------------------------------- combined (level colliders + occluders)
         /// <summary>Level colliders (mask) or solid visual meshes on the ray.</summary>
         public static bool AnyRay(Vector3 o, Vector3 dir, float len, int mask, out float dist, int occMask = SolidMask)

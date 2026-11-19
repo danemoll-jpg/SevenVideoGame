@@ -409,7 +409,7 @@ namespace Seven.EditorTools
             // QF10: the ground the fallen slab rests on (not walkable: the slab fills it), and the slab itself - a long broken
             // paving slab, the right length for the gap, its edges catching the light (telekinesis lays it across)
             var slab = new GameObject("FallenSlab").transform; slab.SetParent(world, false);
-            slab.SetPositionAndRotation(V.SlabLie, Quaternion.Euler(1.5f, V.SlabLieYaw, -2f));
+            slab.SetPositionAndRotation(new Vector3(30.4f, VenusTerrain.Height(30.4f, 122.8f) + 0.55f, 122.8f), Quaternion.Euler(4f, 97f, 9f));   // QF12 (5): in the gully (VenusDirector.SlabRest); hidden until the quake breaks it off the walkway
             {
                 var sv = new List<Vector3>(); var st = new List<int>();
                 AddBox(sv, st, Vector3.zero, new Vector3(V.SlabSize.z, V.SlabSize.y, V.SlabSize.x));          // local: length along z
@@ -424,6 +424,7 @@ namespace Seven.EditorTools
                 for (int i = 0; i < 6; i++) Lump(rv2, rt2, new Vector3((i % 2 == 0 ? -1 : 1) * hx * 0.6f, -hy * 0.2f, (i < 3 ? -hz : hz) + (i < 3 ? 0.2f : -0.2f)), new Vector3(0.5f, 0.35f, 0.4f), 0.5f, rr.Next(1000));
                 MeshObject("Chips", SaveMesh(SmoothFinish(rv2, rt2), "Venus_FallenSlabChips"), m.stoneMid, slab);
             }
+            slab.gameObject.SetActive(false);
             // Round 13 (0d): the stone aprons at both ends of the laid slab - ramps from the ground up to its top (no lip);
             // shown when the bridge is down
             var ramps = new GameObject("BridgeRamps"); ramps.transform.SetParent(world, false);
@@ -455,12 +456,12 @@ namespace Seven.EditorTools
             { var mn = slabDust.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 1.2f; mn.startColor = new Color(0.75f, 0.75f, 0.75f, 0.45f); mn.startSize = new ParticleSystem.MinMaxCurve(1.2f, 2.6f); mn.startLifetime = new ParticleSystem.MinMaxCurve(1.6f, 2.8f); mn.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 2.2f); mn.gravityModifier = -0.02f;
               var shp = slabDust.shape; shp.shapeType = ParticleSystemShapeType.Box; shp.scale = new Vector3(4.8f, 0.2f, 12f);
               var em2 = slabDust.emission; em2.rateOverTime = 0f; em2.SetBursts(new[] { new ParticleSystem.Burst(0f, 90) });
-              slabDust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f); slabDust.Stop(); }
+              slabDust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMatTex("Venus_dust", 0.35f); slabDust.Stop(); }
             // telekinesis motes (her hand -> the slab)
             var tkMotes = new GameObject("TkMotes").AddComponent<ParticleSystem>();
             { var mn = tkMotes.main; mn.playOnAwake = false; mn.loop = true; mn.startColor = new Color(1f, 1f, 1f, 0.8f); mn.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.08f); mn.startLifetime = 0.5f; mn.startSpeed = 0f; mn.simulationSpace = ParticleSystemSimulationSpace.World;
               var em3 = tkMotes.emission; em3.rateOverTime = 0f; var sh3 = tkMotes.shape; sh3.shapeType = ParticleSystemShapeType.Sphere; sh3.radius = 0.08f;
-              tkMotes.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_tk", 1.2f); tkMotes.Stop(); }
+              tkMotes.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMatTex("Venus_tk", 1.2f); tkMotes.Stop(); }
 
             // ---- VEN_03: the temple - grown rather than built; everything at 3.5 m-Elarim scale
             float tz = V.DoorZ;
@@ -651,7 +652,7 @@ namespace Seven.EditorTools
                 var dust = new GameObject("Dust").AddComponent<ParticleSystem>(); dust.transform.SetParent(root.transform, false);
                 var main = dust.main; main.startColor = new Color(0.55f, 0.55f, 0.55f, 0.5f); main.startSize = 2.5f; main.startLifetime = 2.5f; main.startSpeed = 1.2f;
                 var emi = dust.emission; emi.rateOverTime = 14f;
-                dust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f);
+                dust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMatTex("Venus_dust", 0.35f);
                 w.Dust = dust;
                 worms.Add(w);
             }
@@ -682,7 +683,7 @@ namespace Seven.EditorTools
             var cdust = new GameObject("CeilingDust").AddComponent<ParticleSystem>(); cdust.transform.position = V.CubeAt + Vector3.up * 8.5f;
             { var mn = cdust.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 3f; mn.startColor = new Color(0.8f, 0.8f, 0.8f, 0.6f); mn.startSize = 0.08f; mn.startLifetime = 3f; mn.startSpeed = 0f; mn.gravityModifier = 0.25f;
               var sh2 = cdust.shape; sh2.shapeType = ParticleSystemShapeType.Box; sh2.scale = new Vector3(8f, 0.1f, 8f); var e2 = cdust.emission; e2.rateOverTime = 120f;
-              cdust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f); cdust.Stop(); }
+              cdust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMatTex("Venus_dust", 0.35f); cdust.Stop(); }
             // Round 13 (0k): stones raining from the ceiling with the dust (C04 and later tremors), and outdoors a stone fall
             var stones = new GameObject("TremorStones").AddComponent<ParticleSystem>(); stones.transform.position = V.CubeAt + Vector3.up * 8f;
             { var mn = stones.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 2.6f; mn.startColor = new Color(0.32f, 0.32f, 0.32f, 1f); mn.startSize = new ParticleSystem.MinMaxCurve(0.05f, 0.16f); mn.startLifetime = 2.2f; mn.startSpeed = 0f; mn.gravityModifier = 1.0f; mn.startRotation = new ParticleSystem.MinMaxCurve(0f, 6.28f);

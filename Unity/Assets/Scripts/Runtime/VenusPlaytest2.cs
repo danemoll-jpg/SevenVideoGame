@@ -90,9 +90,11 @@ namespace Seven
         IEnumerator Start()
         {
             ChapterCapture.Ensure();
-            _pad = InputSystem.AddDevice<Gamepad>("VenusPlayPad2"); _pad.MakeCurrent();
-            Log($"virtual gamepad on the real input actions; muted={DemoBoot.Muted} listenerVolume={AudioListener.volume}; starts at the Scene Select entry 'the way down + the control chamber'");
+            // QF12: with -menupick the run starts in the real main menu (MenuPilot presses through Scene select); this
+            // driver's pad is made only once Venus has loaded, so the menu reads the pilot's pad
             while (D == null) yield return null;
+            _pad = InputSystem.AddDevice<Gamepad>("VenusPlayPad2"); _pad.MakeCurrent();
+            Log($"virtual gamepad on the real input actions; muted={DemoBoot.Muted} listenerVolume={AudioListener.volume}; started {(DemoBoot.MenuPick != null ? "from the main menu: " + DemoBoot.MenuPick : "at the Scene Select entry 'the way down + the control chamber'")}");
             yield return null;
             float t0 = Time.time; _t0 = t0;
             bool skippedVision = false;

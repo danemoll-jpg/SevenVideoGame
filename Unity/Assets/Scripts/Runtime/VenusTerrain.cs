@@ -172,7 +172,7 @@ namespace Seven
         {
             OnRoute(x, z, out float dP, out _, out float lat, out float rz);
             if (dP > Floor + 0.3f) return false;
-            if (z > 113.9f && z < GullyZ1 + 0.25f) return false;                       // the slab's bed + the gully
+            if (z > 117.0f && z < GullyZ1 + 0.25f) return false;                       // the gully (QF12: no slab bed any more - the slab falls in the quake)
             if (Win(rz, 22f, 30f, 108f, 117.5f) > 0.3f && Mathf.Abs(lat - StreamLat) < 1.0f) return false;   // the stream
             if (x >= 15f && x <= 23.4f && z >= 104f && z <= 116f) return false;      // the shelf (its own zone, a step up)
             return true;

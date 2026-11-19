@@ -220,7 +220,7 @@ namespace Seven.EditorTools
                     var dust = new GameObject("Dust").AddComponent<ParticleSystem>(); dust.transform.SetParent(go.transform, false);
                     var main = dust.main; main.startColor = new Color(0.6f, 0.6f, 0.6f, 0.5f); main.startSize = 1.3f; main.startLifetime = 1.6f; main.startSpeed = 0.9f;
                     var emi = dust.emission; emi.rateOverTime = 18f;
-                    dust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f);
+                    dust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMatTex("Venus_dust", 0.35f);
                     w.Dust = dust;
                     worms.Add(w);
                 }

@@ -59,15 +59,21 @@ namespace Seven
             var root = transform.position;
             var need = Vector3.zero; string by = null;
             foreach (var bb in Core) NeedOf(bb, root, ref need, ref by);
-            bool handsBusy = Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Hang || Current == Mode.Climb || _ikW > 0.05f;
+            // QF12 (1): a hand held out by the scene's IK (SevenTableIK: holding the shape, touching the cube) is pinned in the
+            // world - pushing her body away from it only stretches the arm, the hand stays in the wall and the push grows
+            // and snaps back: her whole body shook through the lines after the first vision. Hands on a target never push.
+            if (_tableIK == null) _tableIK = GetComponent<SevenTableIK>();
+            bool tableHands = _tableIK != null && _tableIK.isActiveAndEnabled && (_tableIK.RightW > 0.01f || _tableIK.LeftW > 0.01f);
+            bool handsBusy = tableHands || Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Hang || Current == Mode.Climb || _ikW > 0.05f;
             if (!handsBusy) foreach (var bb in Hands) NeedOf(bb, root, ref need, ref by);
             bool offFloor = Current == Mode.Hang || Current == Mode.Climb || Current == Mode.Air;
             if (offFloor) foreach (var bb in Feet) NeedOf(bb, root, ref need, ref by);
             need.y = 0f;
             if (need.magnitude > MaxPush) need = need.normalized * MaxPush;
             // walls on two sides (a narrow gap, flying rubble): the pushes cancel - then none at all instead of see-sawing
-            if (Vector3.Dot(need, _wallPush) < 0f) _wallPush = Vector3.zero;
-            float rate = need.magnitude > _wallPush.magnitude ? 3f : 0.8f;          // out fast, back slowly
+            // QF12 (1): a push that turns round no longer snaps to zero in one frame (up to 25 cm: a visible jerk); it
+            // eases through zero like any other change
+            float rate = Vector3.Dot(need, _wallPush) < 0f ? 1.2f : need.magnitude > _wallPush.magnitude ? 3f : 0.8f;          // out fast, back slowly
             _wallPush = Vector3.MoveTowards(_wallPush, need, rate * Time.deltaTime);
             WallFrames++;
             if (need.sqrMagnitude > 1e-6f) WallPushFrames++;

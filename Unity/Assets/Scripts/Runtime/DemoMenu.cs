@@ -22,6 +22,9 @@ namespace Seven
         // QF6: Continue resumes at the saved checkpoint; "Scene select" jumps to any part of Chapter 1.
         const string ContinueVenus = "@continuevenus", NewVenus = "@newvenus", ContinueScene = "@continue", QuitScene = "@quit", SelectScene = "@select", BackScene = "@back", LaterScene = "@later";
         (string label, string scene)[] Items;
+        /// <summary>QF12 (MenuPilot): the menu as the player sees it - item labels and the highlighted row.</summary>
+        public string[] Labels => Items == null ? new string[0] : System.Array.ConvertAll(Items, x => x.label);
+        public int Selected => _sel;
         bool _selectPage;
         static (string, string)[] BuildItems()
         {
@@ -70,6 +73,7 @@ namespace Seven
         void Start()
         {
             I = this;
+            if (DemoBoot.MenuPick != null && DemoBoot.CaptureDir != null) { Build(); gameObject.AddComponent<MenuPilot>(); return; }   // QF12: a run that starts in the real menu
             if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay && !DemoBoot.VenusPlay2) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot && DemoBoot.MenuVenusConfirm) { _confirmVenus = true; Build(); _sel = System.Array.FindIndex(Items, x => x.scene == NewVenus); Refresh(); StartCoroutine(Shot()); return; }
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
@@ -157,7 +161,7 @@ namespace Seven
 
         void Update()
         {
-            if (_labels == null || (DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim)) return;
+            if (_labels == null || (DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim && DemoBoot.MenuPick == null)) return;
             int d = 0;
             var kb = Keyboard.current; var gp = Gamepad.current;
             if (kb != null && (kb.wKey.wasPressedThisFrame || kb.upArrowKey.wasPressedThisFrame)) d = -1;
