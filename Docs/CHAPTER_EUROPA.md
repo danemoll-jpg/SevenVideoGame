@@ -48,7 +48,7 @@ Panther looks up at her.
 
 The saucer hovers above a sheltered shelf beside an opening in the ice.
 
-Its underside beam lowers the hover bike into position. 7 descends through the beam wearing her bubble helmet.
+The bike hold opens and the hover bike lowers out of it into position, as on Venus (Dan, 2026-11-19: the bike always uses the bike hold, never the beam). 7 descends through the beam wearing her bubble helmet.
 
 Panther watches from within the ship.
 
@@ -616,7 +616,7 @@ This connects Europa to passing on history without resolving the larger mystery.
 
 **WIDE — SAUCER ABOVE THE ICE**
 
-The bike returns to the boarding position and is recovered through the underside beam.
+The bike returns to the boarding position and rises back into the bike hold, which closes seamlessly behind it.
 
 7 boards through the beam. No ramp.
 
@@ -628,15 +628,11 @@ Panther is waiting near the boarding area, rather than in his usual comfortable 
 
 She notices.
 
-**7 — gently teasing:** Were you waiting for the bike?
-
-**PANTHER:** Someone had to inspect the damage.
-
 She kneels beside him.
 
-**7:** No damage.
-
 He presses his head against her hand.
+
+*(Dan, 2026-11-19: the bike lines here are cut — the bike isn't visible aboard.)*
 
 A quiet pause.
 

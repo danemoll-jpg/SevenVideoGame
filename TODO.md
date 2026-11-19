@@ -1,5 +1,145 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF13: Dan's 0.14.0 play (Dan, 2026-11-19) — to do
+Commit first. All standing rules. **20-minute rule.** Release **0.14.1**; "QF13 — status"; "For Dan to check (QF13)".
+**Second time for items 1 and 3:** QF12's captures said "clean" / "fixed" and Dan still sees the problem in the release
+build. Take the capture **from the gameplay camera the player actually has at that moment** (and one from the angle Dan
+would see it), compare it with what Dan describes, and say in the status exactly what was changed and what the capture
+shows.
+
+**Dan (2026-11-19): several of these have been asked for over several rounds and still aren't right — the Elarim
+guardian for at least four rounds (cape, legs, walk), the bike hold bars for three, the encounter, the arms/IK. This round
+they get resolved, not "fixed in the log":** for each repeat item (1, 3, 15, 16, 17, 19) first write in the status why the
+previous fix didn't hold (what the earlier check measured vs what Dan saw), then fix the cause, then prove it with
+captures / short capture sequences from the player's camera in normal play. If something genuinely can't be solved this
+round, say so plainly with what's left and the options — never mark it done on a partial fix.
+
+1. **Bike hold: still white bars when it opens.** Dan wants **an empty opening, no bars of any kind** — black (QF11) or
+   white (QF12). Find which objects draw as horizontal bands across the opening from the player's view (the hold's floor
+   / ceiling / back wall, the hatch leaves, a lit strip, the glow material) and remove or hide them so the opening shows
+   only the bike coming out of the hull. On Venus (B01) and Europa.
+2. **Venus B03: the walkway breaks too late.** It waits until she's on top of it and can't move forward. It must break
+   **ahead of her, while she's still approaching** (trigger when she's well short of it — e.g. ~25–30 m out — on any
+   approach line, never with her on it), so she watches it fall and brakes before the gap. She must never be left standing
+   on or stuck at the broken edge.
+3. **The guardian: the cape hangs too low, and he still uses the awful walk.** (a) Re-seat the cape on the Mixamo body at
+   the height it had on the original model (top at the shoulders, hem where Kyle's / the reference model has it — compare
+   with `Art/Source/elarim/elarim_v1.glb`); it shouldn't drag or sit low on his back. (b) The walk: find out whether the
+   clip itself is bad or the retarget breaks it. **If Dan has added `Art/Mixamo/elarim/elarim_walk_v2.fbx`** (a new Mixamo
+   walk downloaded on his rigged body), use it; otherwise fix the retarget / pick the best walk available and say so.
+   He should walk with dignity: upright, steady, natural steps, arms relaxed.
+4. **Field Guide: Europa shows up under the Scree before you've been there.** Entries need text that grows with the
+   story: add optional `more` paragraphs to an entry, each with its own `unlock`, shown after the main text only once
+   unlocked. Scree: the Moon text from `ch1>=7`; the Europa sentence as a `more` part at `europa>=5`. **Tunneler:** unlock
+   with Moon-only text after Chapter 1 (she was his prisoner — when the story has shown him; `ch1>=N` of the first time he's
+   seen / named), and his Europa part as a `more` at `europa>=4`. Check every entry for the same mistake (nothing mentions a
+   place or event the player hasn't reached). Mirror in `Docs/FIELD-GUIDE.md`.
+5. **Europa: the bike must come out of the bike hold, not the beam** (spec corrected, `Docs/CHAPTER_EUROPA.md` sections
+   2 and 16): the hold opens and lowers the bike out (like Venus B01), 7 comes down in the beam; going home, the bike rises
+   back into the hold and it closes seamlessly; 7 boards in the beam. Rule for every world — add it to the "Saucer — fixed
+   design" rule in `CLAUDE.md`: **the bike always uses the bike hold; the beam is only for 7 (and the cat).**
+6. **The bubble helmet can't be seen** under water (only against a dark background). Make it read clearly in the bright
+   misty water while staying monochrome: a bright rim / fresnel edge on the glass, soft highlights and a reflection streak,
+   a slight tint or distortion of what's behind it, and a solid collar ring at her neck where it seals. Check captures in
+   the bright chamber, the settlement and the base.
+7. **Tunneler's base entrance is hard to get through — walls block the view.** Make the access bay → pressure chamber →
+   first corridors readable: the camera never ends up behind a wall (use / extend `CameraOccluders` — fade or hide what's
+   between camera and 7, or pull the camera in), doorways wide enough, the way through obvious. Capture the whole walk in.
+8. **Objectives must say where to go.** "Explore beneath the ice" says nothing (Dan: "what exactly?"). Go through every
+   Europa objective (and check Venus too) — each tells the player **what to do and where**: e.g. "Ride down into the great
+   chamber" with the guide marker on, then "Follow the lights down toward the settlement", etc. Check the objective text
+   fits on screen without being cut off.
+
+9. **The guide light can't be seen — Dan got lost in the first descent** (rode away from the entrance, saw no light at
+   all, the hint text didn't help). In every Europa riding section: the next point is **always findable** — an on-screen
+   marker / arrow at the screen edge pointing to it when it's off-screen or hidden in fog (with distance or an up / down
+   cue, since she swims in 3D), a much brighter, bigger guide light that cuts through the fog, and the guide shown from
+   the start of each section (not only after the 45 s hint). If she's far off course, the hint says which way ("Turn
+   around — the light is behind you and below"). Shorten the skip offer (now 120 s without progress) to ~60 s in riding
+   sections.
+
+10. **Europa clean-up — lots of wall clipping.** Go through the whole chapter (descent, settlement, race, approach, base on
+    foot, escape, temple, way home) and fix every place where the bike, 7, the camera, the Cetaceans or vehicles pass through
+    walls, ice, pillars or structures: real collision for the bike under water (it slides along surfaces, never through),
+    the camera kept out of geometry (`CameraOccluders`), swim paths for the Cetaceans and the settlement vehicles that stay in
+    open water. **The Scree escape transports and Tunneler's escape craft** must leave through proper openings / docking
+    passages without going through walls, and look like believable vessels (if they're plain boxes, give them a real
+    hull shape — rounded, a cockpit / lights, a visible thruster glow — built from simple shapes in Kyle's style). Use the
+    walk-blockers / overlap scan from QF12 plus captures along every route.
+11. **Tunneler's drill head must spin like a drill when he talks** — continuous rotation around its own axis, faster on
+    louder syllables, spinning down when he stops (see the Tunneler note in `Docs/MODELS-NEEDED.md`), not a
+    twist back and forth. Same everywhere he appears.
+12. **Bike controls under water: up / down on the stick, like left / right.** Left stick X = turn, **left stick Y = pitch
+    up / down** (nose up = climb, nose down = dive — like flying), RT = throttle, LT = brake. Remove A / B for ascend /
+    descend. (Keyboard: W/S pitch, A/D turn, the existing throttle / brake keys.) Update the tutorial prompts and the
+    Controls screen. Default: **push forward = dive, pull back = climb** (like flying), with an "Invert up / down" option in Settings.
+13. **The bike is way too slow — make it fast EVERYWHERE (Dan: "faster everywhere" — Venus on land too, and any later
+    world)** so getting around never feels like a slog. On land (Venus): much faster top speed and acceleration, tuned so
+    the paths, the bridge and the turns still work at speed. Under water: top speed about
+    **3× today's** (8.5 → ~25 m/s), quick acceleration, responsive turning, with a sense of speed (stronger bubble trail,
+    streaking particles, a little camera FOV push / pull back at speed, the hum rising). Retune the chapter around it: the
+    race, the routes, the escape (item 14), and where lines play during rides (don't let her outrun her own dialogue —
+    trigger lines by progress). Keep the 2.4–3 m bike readable at speed (the camera a bit further back and lower).
+14. **Rebuild the escape ride as a proper movie chase** — Dan: "her escaping on her bike with the explosion behind her
+    and her driving away, just like in the movies; the way it happened you couldn't even tell what happened." Make it
+    unmistakable:
+    - **The detonation is shown:** she triggers it, a wide shot of the base — the first blast erupts (huge white flash, a
+      rolling boil of bubbles and debris, the structure buckling), the shockwave hits the camera — then cut to her.
+    - **The chase:** she rides flat out down the tunnel with **a wall of explosion visibly racing up behind her** —
+      white-hot glow, churning bubbles, debris tumbling, chunks of tunnel collapsing in its wake — always in the frame
+      behind her. Use real chase framing the player can still steer in: a low camera in front of her looking back (her
+      face-on, the blast filling the tunnel behind), side tracking shots, the normal chase camera for the steering
+      stretches; short cuts between them, never confusing about where she's going.
+    - **Readable obstacles** (falling supports, a narrowing gap) lit by the blast, with Panther's calls; she dodges them at
+      full speed (the new fast bike).
+    - **The money shot:** she bursts out of the tunnel mouth into open water a split second ahead of the blast; the
+      fireball / shockwave erupts out of the opening behind her (slow motion for a moment is fine), the pressure wave
+      catches and spins the bike, she wrestles it back under control — the player sees her recover (spec section 12).
+    - Then the stillness of section 13. Keep it fair: a hit means retry from the start of the chase, but the chase should
+      feel dangerous, not punishing. Sound: a deep boom, the roar chasing her, the bike screaming, silence after.
+
+15. **Arms stuck in IK poses (Venus start + after the Europa debrief).** (a) At the beginning of the Venus chapter 7
+    stands with one arm bent behind her as if already gripping the bike. (b) After the Europa debrief, when she gets up
+    from the chair, her arms keep reaching to pet the cat no matter how far she walks — the same odd arm pose. **Fix the
+    cause for all of them at once:** every hand / arm IK (bike grips, petting, holding a shape, table, console) must have an
+    owner and be **released when its moment ends** (dismount, stand up, scene end, checkpoint load, Scene Select start), and
+    a safety net: any hand IK whose target is out of natural reach, or whose condition (seated / riding / holding) is no
+    longer true, blends to zero within a fraction of a second. Check every start point (each chapter start, Continue, every
+    Scene Select entry) and every stand-up / dismount: arms hang naturally.
+16. **One saucer, everywhere — stop changing it per world.** Dan sees different saucer models on different planets even
+    though `CLAUDE.md` says "one shared exterior". Make the saucer **one prefab asset** (exterior, belly beam with its iris
+    hatch, the bike hold + its seamless hatch, the interior link) built once and **instanced unchanged** in the Moon, Venus,
+    Europa and every future scene — no per-scene building, sizes, hover tweaks to the model or materials (only where it
+    hovers may differ). **Always the beam, always the bike hold.** Add an automatic check to the build that fails if any
+    scene's saucer differs from the prefab (meshes, scale, materials, beam + hold present). Update the "Saucer — fixed
+    design" rule to say this.
+17. **The guardian — finish it this round** (with item 3: cape height + walk). He has been wrong for four rounds. Besides
+    item 3: capture a short sequence of him **standing, talking, walking ahead ("Follow me"), kneeling, getting up**, from
+    the player's camera and from the side, and look at it frame by frame: no leg through the cape, cape at the right height,
+    natural dignified walk, knees and arms bending naturally. If the cape still can't be made to behave on the Mixamo body,
+    make it simpler rather than wrong (e.g. shorter, stiffer, or a separate cloth piece hanging from the shoulders that
+    can't reach the legs) and say so.
+18. **Cut the bike talk aboard the saucer after Europa** (the bike isn't visible there): remove `EUR_16_01`–`EUR_16_03`
+    ("Were you waiting for the bike?" / "Someone had to inspect the damage." / "No damage."). The reunion stays: Panther
+    waiting near the boarding area, she kneels beside him, he presses his head against her hand, a quiet pause, then
+    Panther's **"Good."** (`EUR_16_04`), then hold. Spec + `Docs/EUROPA-LINES.md` + the dialogue data updated (done in the
+    spec by the chat).
+
+19. **The wall and the cube on the way down (Venus) are STILL there — Dan's screenshot:
+    `Docs/Previews/qf13/dan_wall_and_cube.png`.** QF12 guessed it was dust particles; it isn't. In the screenshot (objective
+    "Find the source of the signal", 7 going down the stairs): a big dark curved wall fills the view ahead and to the left
+    of the stairs, and **a glowing white cube floats in mid-air** in front of it. (QF12 called that cube "the tunnel lamp".)
+    Fix: (a) find what that curved surface is (a tunnel wall segment / a misplaced or oversized tunnel piece / the camera
+    inside the tunnel wall) and make the way down an open, readable tunnel — the stairs lead somewhere you can see; (b) the
+    floating cube reads as a mystery object (and looks like the Venus record cube): replace it with a lamp that reads as a
+    lamp — fixed to the wall or ceiling, an Elarim-style lantern / crystal, not a floating cube — or remove it. Reproduce
+    Dan's exact view (same spot, same camera) and compare your capture with his screenshot. (Also visible in it: her arm
+    bent behind her back — item 15.)
+
+Checks + release (20-minute rule): targeted captures per item (gameplay-camera angle for 1, 2, 3, 6, 7, 9, 10, 14, 15, 17, 19; a short capture sequence / GIF of the whole escape), publish
+**0.14.1**; docs; commit + push.
+
+
 ## Quick fix QF12: Dan's 0.13.0 play (Dan, 2026-11-19) — done, status below; release 0.13.1
 Commit first. All standing rules (monochrome, Kyle's fog/glow, non-sexual presentation, no exact-spot triggers, look at
 your own captures). **20-minute rule, strictly** — Round 13 ran ~57 game-minutes; use targeted switches and captures,
