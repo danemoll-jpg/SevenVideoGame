@@ -57,7 +57,13 @@ namespace Seven
             Ground.IgnoreObstacle = -1;
             if (Shape == Ground.Shape.Zones)
             {
-                foreach (var z in Zones) Ground.Zones.Add(new Ground.Zone { Name = z.Name, Min = z.Min, Max = z.Max, Y0 = z.Y0, Y1 = z.Y1, SlopeAxis = z.Axis, Enabled = z.Enabled, Low = z.Low });
+                foreach (var z in Zones)
+                {
+                    var zone = new Ground.Zone { Name = z.Name, Min = z.Min, Max = z.Max, Y0 = z.Y0, Y1 = z.Y1, SlopeAxis = z.Axis, Enabled = z.Enabled, Low = z.Low };
+                    // QF10 (6f): Venus's valley is natural ground - a height field with a walkable mask (VenusTerrain)
+                    if (z.Name == "Valley") { VenusTerrain.Build(); zone.Field = VenusTerrain.Height; zone.Mask = VenusTerrain.Walkable; }
+                    Ground.Zones.Add(zone);
+                }
                 foreach (var o in ZoneObstacles) Ground.Obstacles.Add(new Ground.Circle(new Vector2(o.x, o.y), o.z));
             }
             if (Shape == Ground.Shape.Deck)

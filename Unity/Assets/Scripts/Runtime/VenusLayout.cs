@@ -5,7 +5,8 @@ namespace Seven
     /// <summary>
     /// Round 11 — Venus layout in metres (shared by the scene builder and the runtime), like <see cref="MoonLayout"/>.
     /// Y up, Z = north (the way to the temple). VEN_01 landing platform at the origin; VEN_02 the broad garden road north
-    /// with its long open bend (B02) and the collapsed walkway (B03 / C02) plus the on-foot detour; VEN_03 the temple
+    /// with its long open bend (B02) and the collapsed walkway (B03 / C02), crossed on the bike over a slab she lays
+    /// across it with telekinesis (QF10); VEN_03 the temple
     /// court (bike parking), pedestrian garden, guardian area, hall and cube chamber; VEN_04 the maintenance path east and
     /// down to the creature observation area above the basin (the root-chamber gate toward VEN_05 stays shut this round).
     /// Built for 3.5 m Elarim: doorways 6 m high, steps and walkways wide - 7 looks small beside them.
@@ -21,15 +22,31 @@ namespace Seven
         public const float SaucerRadius = 4.3f, SaucerHover = 1.15f;
         public static readonly Vector3 RampFoot = new Vector3(0f, 0f, 1.6f);       // the ramp comes down on the north side
         public static readonly Vector3 HatchAt = new Vector3(3.4f, 0f, -1.4f);       // the storage hatch (bike bay), north-east
+        /// <summary>QF10: the seamless hull panel of the bike bay: centre angle (degrees from +x toward +z round the saucer's
+        /// axis) and angular width; it spans the hull's lower band (local y -0.2 .. 1.0).</summary>
+        public const float HatchAngle = 42.5f, HatchSpan = 30f;    // edges on the hull lathe's 2.5-degree segments (no gap)
+        public static Vector3 HatchDir => new Vector3(Mathf.Cos(HatchAngle * Mathf.Deg2Rad), 0f, Mathf.Sin(HatchAngle * Mathf.Deg2Rad));
+        /// <summary>The middle of the opening on the hull (world).</summary>
+        public static Vector3 HatchMouth => SaucerAt + HatchDir * SaucerRadius + Vector3.up * (SaucerHover + 0.35f);
         public static readonly Vector3 BikeUnpacked = new Vector3(4.6f, 0f, 2.4f);   // the bike, out of the hatch, facing north
         public static readonly Vector3 PantherLie = new Vector3(-2.6f, 0f, 1.2f);    // he lies beside the ramp, large
         public static readonly Vector3 VistaSpot = new Vector3(0f, 0f, 9.5f);       // over her shoulder toward the gardens
         // ---- VEN_02 road: (bike + walk)
         public const float BendZ = 50f;
-        public static readonly Vector3 BendSpot = new Vector3(14f, 0f, 50f);        // B02: the long open bend
+        public static readonly Vector3 BendSpot = new Vector3(16f, -1.5f, 52f);        // B02: the long open bend
         public const float TremorZ = 96f;                                              // B03 / C02 at or past this (on RoadB)
-        public static readonly Vector3 StopSpot = new Vector3(30f, 0f, 112f);        // the clear stopping area before the collapse
+        public static readonly Vector3 StopSpot = new Vector3(30f, 0f, 108f);        // the clear stopping area before the collapse
         public const float CollapseZ0 = 118f, CollapseZ1 = 128f;                     // the road is gone between these
+        // ---- QF10 (VEN_B03 changed by Dan): the collapse is crossed with telekinesis, on the bike. A long fallen slab lies
+        // along the near edge of the hole (the right length: 12 m for a 10 m gap); she lifts it and lays it across as a
+        // bridge (it stays for return trips), then rides over it. The "Bridge" zone opens when it is down.
+        public static readonly Vector3 SlabLie = new Vector3(30.4f, 0.32f, 115.6f);    // centre, lying along x beside the gap
+        public static readonly Vector3 SlabSize = new Vector3(12.2f, 0.62f, 3.0f);    // length (x when lying), thickness, width
+        public const float SlabLieYaw = 90f;                                           // its length along x
+        public static readonly Vector3 SlabBridge = new Vector3(30f, 0.0f, 123f);      // centre once laid across (length along z)
+        public const float BridgeTop = 0.12f;                                          // its top surface (ends sunk into the broken lips)
+        public const float SlabTkRange = 14f;
+        public static readonly Vector3 SlabLookAt = SlabLie + Vector3.up * 0.3f;
         public static readonly Vector3 VesselAt = new Vector3(37.2f, 0.9f, 106f);    // C02: water shakes in a vessel; a worker steadies it
         public static readonly Vector3 BikeBeyond = new Vector3(30f, 0f, 133f);      // the bike is brought round past the collapse
         // ---- VEN_03
@@ -51,15 +68,11 @@ namespace Seven
 
         public static readonly Z[] Zones =
         {
-            R("Platform", -12f, -12f, 12f, 12f, 0f),
-            R("RoadA", -4f, 11.4f, 4f, 52f, 0f),
-            R("Bend", -4f, 44f, 34f, 56f, 0f),
-            R("RoadB", 26f, 50f, 34f, 112f, 0f),
-            R("Stop", 23.8f, 100f, 40f, 118f, 0f),
-            R("Detour1", 15f, 104f, 23.4f, 126f, 1.0f, false),
-            R("Detour2", 15f, 128.6f, 23.4f, 136f, 1.0f, false),
-            R("DetourRamp", 22.6f, 130.5f, 27.0f, 135.5f, 1.18f, false, 0f, 0),   // 1.0 at x 23.4 (the terrace edge), 0 at x 27
-            R("RoadC", 26f, 128f, 34f, 196f, 0f),
+            // QF10 (6f): order matters (the first zone containing a point gives its height): the paved / special ones
+            // first, then "Valley" - the natural ground (VenusTerrain: the worn path, the valley floor, the gully).
+            R("Platform", -10.5f, -10.5f, 10.5f, 10.5f, 0f),
+            R("Detour1", 15f, 104f, 23.4f, 116f, 1.0f, false),                        // the garden-wall shelf (climb anywhere along it, explore)
+            R("Bridge", 28.4f, 113.3f, 31.6f, 128.8f, BridgeTop, true, float.NaN, 1, false),   // QF10: the slab laid across the gully (opens when it is down)
             R("Court", 14f, 190f, 46f, 214f, 0f),
             R("TempleWalk", 25f, 212f, 35f, 237f, 0f, false),
             R("TempleHall", 22f, 236f, 38f, 262.6f, 0f, false),
@@ -67,13 +80,16 @@ namespace Seven
             R("MaintA", 44f, 195f, 80f, 203f, 0f, true, float.NaN, 1, false),          // opens after C04 (VEN_S03)
             R("MaintB", 73f, 150f, 80f, 197f, -6f, true, 0f, 1, false),
             R("ObsArea", 64f, 134f, 88f, 152f, -6f, true, float.NaN, 1, false),
+            R("Valley", -45f, -25f, 95f, 220f, 0f),                                    // natural ground (height field + walkable mask)
         };
+        /// <summary>QF10 (6f): zones whose ground is the sculpted terrain itself (no floor block is built for them).</summary>
+        public static bool NaturalZone(string name) => name == "Valley" || name == "MaintA" || name == "MaintB" || name == "ObsArea" || name == "Detour1" || name == "Bridge" || name == "Platform";
 
-        // ---- the on-foot detour round the collapsed walkway (existing moves: mantle up, assisted jump, walk down)
-        public static readonly MoonTraversal.Mantle DetourMantle = new MoonTraversal.Mantle { Name = "garden wall (detour)", From = new Vector3(24.25f, 0f, 112f), FaceAt = 23.4f, Fwd = Vector3.left, TopY = 1.0f };
-        public static readonly MoonTraversal.JumpLink DetourJump = new MoonTraversal.JumpLink { Name = "broken channel (detour)", From = new Vector3(19.2f, 1.0f, 125.4f), To = new Vector3(19.2f, 1.0f, 129.3f), Radius = 1.1f, LateralClamp = new Vector2(15.6f, 22.8f) };
+        // ---- QF10: the garden wall beside the stopping area: climbable anywhere along it (explore), jump down anywhere.
+        // It is no longer the way round the collapse (the far terrace and the ramp beyond are gone: the slab bridge is).
+        public static readonly MoonTraversal.Mantle DetourMantle = new MoonTraversal.Mantle { Name = "garden wall", From = new Vector3(24.25f, 0f, 108f), FaceAt = 23.4f, Fwd = Vector3.left, TopY = 1.0f, Along0 = 104f, Along1 = 113.9f };
 
-        public static void UseTraversal() => MoonTraversal.Use(null, new[] { DetourJump }, null, null, new[] { DetourMantle }, null);
+        public static void UseTraversal() => MoonTraversal.Use(null, null, null, null, new[] { DetourMantle }, null);
 
         /// <summary>Is a point on one of the zones the bike may use?</summary>
         public static bool BikeZone(Vector3 p, float pad = 0.6f)

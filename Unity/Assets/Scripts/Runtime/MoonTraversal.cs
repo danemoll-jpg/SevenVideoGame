@@ -47,8 +47,77 @@ namespace Seven
         public class JumpLink { public string Name; public Vector3 From, To; public float Radius = 0.9f; public bool KeepLateral = true; public Vector2 LateralClamp; }
         public class JumpGrab { public string Name; public Vector3 From; public float Radius = 0.9f; public Ledge Ledge; }
         public class WallClimb { public string Name; public Vector3 Base; public float Radius = 0.8f; public Ledge Ledge; public int Cycles = 1; }
-        public class Mantle { public string Name; public Vector3 From; public float Radius = 0.9f; public float FaceAt; public Vector3 Fwd; public float TopY; }
+        /// <summary>QF10: a waist-high wall she can climb up ANYWHERE along it (not one point): the face is the line
+        /// FaceAt (x if Fwd is along x, else z), Fwd points from the base toward the top. It works wherever a walkable zone
+        /// at the base height (From.y) lies in front of the face and one at TopY behind it, optionally limited to the
+        /// range Along0..Along1 (the other axis). Radius = how far from the face she may stand. From = a reference point
+        /// on the base (its height is the base height; check runs and the autopilot use it). From the top she can also
+        /// jump back down anywhere along it (no point of no return).</summary>
+        public class Mantle
+        {
+            public string Name; public Vector3 From; public float Radius = 0.9f; public float FaceAt; public Vector3 Fwd; public float TopY;
+            public float Along0 = float.NegativeInfinity, Along1 = float.PositiveInfinity;
+            public bool AlongX => Mathf.Abs(Fwd.x) > 0.5f;
+            public float Sign => AlongX ? Mathf.Sign(Fwd.x) : Mathf.Sign(Fwd.z);
+            /// <summary>Distance in front of the face (base side positive).</summary>
+            public float Front(Vector3 p) => (FaceAt - (AlongX ? p.x : p.z)) * Sign;
+            public float Along(Vector3 p) => AlongX ? p.z : p.x;
+            public Vector3 OnFace(float along, float y, float outward) { var q = AlongX ? new Vector3(FaceAt, y, along) : new Vector3(along, y, FaceAt); return q - Fwd * outward; }
+        }
+        /// <summary>QF10: climb down into a hang anywhere along the ledge's climbable range (not one spot). Spot = a reference
+        /// point on the top; its distance behind the lip is where she stands; Radius = the tolerance around that.</summary>
         public class HangDown { public string Name; public Vector3 Spot; public float Radius = 0.75f; public Ledge Ledge; }
+
+        /// <summary>QF10: is there a walkable zone at this height (+-0.12) at the point (enabled zones only)?</summary>
+        public static bool ZoneAt(float x, float z, float y)
+        {
+            foreach (var zn in Ground.Zones)
+                if (zn.Enabled && !zn.Low && zn.Contains(x, z) && Mathf.Abs(zn.HeightAt(x, z) - y) < 0.12f) return true;
+            return false;
+        }
+
+        /// <summary>QF10: can she climb this wall from where she stands (anywhere along it)? Out: the along coordinate.</summary>
+        public static bool MantleHere(Mantle m, Vector3 p, out float along)
+        {
+            along = m.Along(p);
+            if (Mathf.Abs(p.y - m.From.y) > 0.6f) return false;
+            float f = m.Front(p);
+            if (f < 0.05f || f > m.Radius + 0.25f) return false;
+            if (along < m.Along0 + 0.25f || along > m.Along1 - 0.25f) return false;
+            var baseP = m.OnFace(along, m.From.y, 0.35f); var topP = m.OnFace(along, m.TopY, -(ClimbUpAdvance + 0.05f));
+            return ZoneAt(baseP.x, baseP.z, m.From.y) && ZoneAt(topP.x, topP.z, m.TopY);
+        }
+
+        /// <summary>QF10: standing on top of a mantle wall near its edge: where a jump down would land (or false).</summary>
+        public static bool MantleDownHere(Mantle m, Vector3 p, out Vector3 land)
+        {
+            land = Vector3.zero;
+            float along = m.Along(p);
+            if (Mathf.Abs(p.y - m.TopY) > 0.3f) return false;
+            float f = m.Front(p);                     // negative on the top side
+            if (f > -0.05f || f < -1.0f) return false;
+            if (along < m.Along0 + 0.25f || along > m.Along1 - 0.25f) return false;
+            land = m.OnFace(along, m.From.y, 0.75f);
+            return ZoneAt(land.x, land.z, m.From.y);
+        }
+
+        /// <summary>QF10: can she climb down into a hang here (anywhere along the ledge's climbable range)? Out: u on the ledge.</summary>
+        public static bool HangDownHere(HangDown h, Vector3 p, out float u)
+        {
+            var L = h.Ledge; u = 0f;
+            if (L == null) return false;
+            var lip = L.At(L.U(h.Spot));
+            float off = Vector3.Dot(h.Spot - lip, L.Fwd); off = Mathf.Max(0.15f, off);
+            if (Mathf.Abs(p.y - lip.y) > 0.6f) return false;
+            float raw = Vector3.Dot(p - L.A, L.Dir);
+            float lo = Mathf.Max(0.3f, L.ClimbFrom), hi = Mathf.Min(L.Length - 0.3f, L.ClimbTo);
+            if (raw < lo - 0.1f || raw > hi + 0.1f) return false;
+            u = Mathf.Clamp(raw, lo, hi);
+            var d = p - L.At(u); d.y = 0f;
+            float perp = Vector3.Dot(d, L.Fwd);
+            if (perp < 0.05f || Mathf.Abs(perp - off) > h.Radius) return false;
+            return true;
+        }
 
         // ------------------------------------------------------------------------------------------ ledges
         public static readonly Ledge Bulkhead = new Ledge { Name = "bulkhead", A = new Vector3(14.0f, 2.4f, 2.25f), B = new Vector3(14.0f, 2.4f, 4.35f), Fwd = Vector3.right };

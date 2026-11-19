@@ -1,4 +1,4 @@
-> **Update (2026-11-18):** hover bike added — section 6b, scenes VEN_B01–VEN_B07 (Dan). Round 11 builds VEN_B01–B05, Round 12 VEN_B06–B07. VEN_B01 now holds the cat's name reveal: **Panther** (Dan).
+> **Update (2026-11-18):** VEN_C09 vision video + new lines (Dan). Hover bike added — section 6b, scenes VEN_B01–VEN_B07 (Dan). Round 11 builds VEN_B01–B05, Round 12 VEN_B06–B07. VEN_B01 now holds the cat's name reveal: **Panther** (Dan).
 >
 > **Status (2026-11-17):** complete spec from Dan (sent in two parts, joined here). Build it in two rounds (Round 11: VEN_01–04, progression, C01–C05; Round 12: encounter, C06–C11). Wormmaster on Venus is provisional for the prototype.
 
@@ -630,41 +630,31 @@ Camera:
 - Eye close-up, gaze lowered.
 - Medium two-shot for the unanswered question.
 
-Vision content:
-1. Water entering a newly completed channel.
-2. Hands supporting a young tree.
-3. People gathering beneath branches.
-4. An Elarim hand placing a seed into an open palm.
+Vision content **(Dan's video, 2026-11-18: `Art/Video/vision_02_venus.mp4`, 12 s, grayscale, no audio)**: the first
+planting, seen through 7's eyes in a bright fog. A robed figure kneels beside a newly planted sapling in fresh earth and
+holds out an open palm with a seed in it — toward 7, waiting for her to take it. Behind, another figure walks past
+carrying a water jar; grown arches of Elarim architecture (still being built) stand in the haze. The spec's match cut
+(the vision's open palm → 7's empty palm) uses the kneeling figure's offered palm. No interactive prompts during the
+vision.
 
-Use a replaceable video asset. Until available, use clearly labeled development placeholders or stills. Keep all imagery within the past. No interactive prompts during the vision.
+**Dialogue after the vision (updated by Dan, 2026-11-18 — replaces the old C09 lines):**
 
-VEN_C09_01 | Guardian  
-“What did you see?”
+VEN_C09_01 | 7  
+“That tree… it was barely up to my knee.”
 
-VEN_C09_02 | 7  
-“The gardens. Before the towers were finished.”
+VEN_C09_02 | Guardian  
+“You saw the first planting.”
 
 VEN_C09_03 | 7  
-“And someone gave me something.”
+“Someone was holding a seed. They were waiting for me to take it.”
+
+A pause.
 
 VEN_C09_04 | Guardian  
-“What?”
+“The planting is in our record. That moment is not.”
 
 VEN_C09_05 | 7  
-“A seed.”
-
-Pause on her open hand.
-
-VEN_C09_06 | Guardian  
-“That is not part of the record I opened.”
-
-7 raises her gaze.
-
-VEN_C09_07 | 7  
-“Then where did it come from?”
-
-VEN_C09_08 | Guardian  
-“I don’t know.”
+“I think I knew them.”
 
 Hold briefly. Avoid a frightened reaction.
 

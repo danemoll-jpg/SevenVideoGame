@@ -32,13 +32,39 @@ namespace Seven
             /// <summary>Round 9: low clearance (the pipe run) - 7 may only be here crouched (see <see cref="BlockLow"/>).</summary>
             public bool Low;
             public bool Usable => Enabled && !(Low && BlockLow);
+            /// <summary>QF10 (Venus's natural ground): a height field and a walkable mask instead of a flat / sloped rectangle.</summary>
+            public System.Func<float, float, float> Field;
+            public System.Func<float, float, bool> Mask;
             public float HeightAt(float x, float z)
             {
+                if (Field != null) return Field(x, z);
                 if (Mathf.Approximately(Y0, Y1)) return Y0;
                 float u = SlopeAxis == 0 ? Mathf.InverseLerp(Min.x, Max.x, x) : Mathf.InverseLerp(Min.y, Max.y, z);
                 return Mathf.Lerp(Y0, Y1, u);
             }
-            public bool Contains(float x, float z, float pad = 0f) => x >= Min.x + pad && x <= Max.x - pad && z >= Min.y + pad && z <= Max.y - pad;
+            public bool Contains(float x, float z, float pad = 0f)
+            {
+                if (!(x >= Min.x + pad && x <= Max.x - pad && z >= Min.y + pad && z <= Max.y - pad)) return false;
+                if (Mask == null) return true;
+                if (!Mask(x, z)) return false;
+                return pad <= 0f || Mask(x + pad, z) && Mask(x - pad, z) && Mask(x, z + pad) && Mask(x, z - pad);
+            }
+            /// <summary>QF10: nearest point of a masked zone (ring search), or null.</summary>
+            public Vector2? Nearest(Vector2 q, float pad)
+            {
+                for (float r = 0.05f; r <= 3f; r += 0.05f)
+                {
+                    float best = float.MaxValue; Vector2 bq = q; bool any = false;
+                    for (int k = 0; k < 24; k++)
+                    {
+                        float a = k * Mathf.PI * 2f / 24f; var c = q + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * r;
+                        if (!Contains(c.x, c.y, pad)) continue;
+                        float d = (c - q).sqrMagnitude; if (d < best) { best = d; bq = c; any = true; }
+                    }
+                    if (any) return bq;
+                }
+                return null;
+            }
         }
         public static readonly List<Zone> Zones = new List<Zone>();
         public static Zone FindZone(string name) => Zones.Find(z => z.Name == name);
@@ -61,7 +87,7 @@ namespace Seven
             if (Current == Shape.Zones)
             {
                 var zn = ZoneAt(x, z);
-                if (zn == null) { float best = float.MaxValue; foreach (var q in Zones) { if (!q.Enabled) continue; var c = new Vector2(Mathf.Clamp(x, q.Min.x, q.Max.x), Mathf.Clamp(z, q.Min.y, q.Max.y)); float d = (c - new Vector2(x, z)).sqrMagnitude; if (d < best) { best = d; zn = q; } } }
+                if (zn == null) { float best = float.MaxValue; foreach (var q in Zones) { if (!q.Enabled) continue; if (q.Field != null && x >= q.Min.x && x <= q.Max.x && z >= q.Min.y && z <= q.Max.y) return q.Field(x, z); var c = new Vector2(Mathf.Clamp(x, q.Min.x, q.Max.x), Mathf.Clamp(z, q.Min.y, q.Max.y)); float d = (c - new Vector2(x, z)).sqrMagnitude; if (d < best) { best = d; zn = q; } } }
                 return zn != null ? zn.HeightAt(Mathf.Clamp(x, zn.Min.x, zn.Max.x), Mathf.Clamp(z, zn.Min.y, zn.Max.y)) : 0f;
             }
             return 0f;
@@ -112,6 +138,12 @@ namespace Seven
                     foreach (var zn in Zones)
                     {
                         if (!zn.Usable) continue;
+                        if (zn.Mask != null)
+                        {
+                            if (q.x < zn.Min.x - 3f || q.x > zn.Max.x + 3f || q.y < zn.Min.y - 3f || q.y > zn.Max.y + 3f) continue;
+                            var nq = zn.Nearest(q, bodyRadius); if (nq.HasValue && (nq.Value - q).sqrMagnitude < best) { best = (nq.Value - q).sqrMagnitude; bq = nq.Value; }
+                            continue;
+                        }
                         float pad = Mathf.Min(bodyRadius, (zn.Max.x - zn.Min.x) * 0.45f, (zn.Max.y - zn.Min.y) * 0.45f);
                         var c = new Vector2(Mathf.Clamp(q.x, zn.Min.x + pad, zn.Max.x - pad), Mathf.Clamp(q.y, zn.Min.y + pad, zn.Max.y - pad));
                         float d = (c - q).sqrMagnitude;

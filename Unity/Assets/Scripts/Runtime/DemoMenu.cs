@@ -58,7 +58,7 @@ namespace Seven
         void Start()
         {
             I = this;
-            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1) { Build(); return; }     // QF6 playtest: the driver uses the menu
+            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
             if (DemoBoot.Gallery) GalleryTV.Preload();      // the gallery check run exercises the preload path
             if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }

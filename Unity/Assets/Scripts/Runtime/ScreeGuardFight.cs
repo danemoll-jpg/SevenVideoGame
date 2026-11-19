@@ -68,8 +68,9 @@ namespace Seven
                 FightEvent?.Invoke(this, "taken_down");
                 return true;
             }
-            if (FightState == Fight.Dazed) { _until = Mathf.Max(_until, Time.time + 1.5f); Play("hit_body", 0.03f); Slide(dir, 0.15f, 0.2f); return true; }
+            if (FightState == Fight.Dazed) { _until = Mathf.Max(_until, Time.time + 1.5f); Play("hit_body", 0.03f); Slide(dir, 0.15f, 0.2f); FightEvent?.Invoke(this, "hit"); return true; }
             _blows++;
+            FightEvent?.Invoke(this, "hit");
             Freeze(false);
             Play(_blows % 2 == 1 ? "hit_head" : "hit_body", 0.03f);
             Slide(dir, 0.35f, 0.25f);

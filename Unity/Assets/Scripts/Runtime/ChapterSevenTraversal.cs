@@ -44,6 +44,7 @@ namespace Seven
         float _ikW; T.Ledge _ikLedge;
 
         bool Consume(ref bool b) { bool v = b; b = false; return v; }
+        static Vector3 Flat3(Vector3 v) { v.y = 0f; return v; }
         bool PressedJump() => ScriptDriven ? Consume(ref ScriptJump) : Input != null && Input.Jump.WasPressedThisFrame();
         bool PressedCrouch() => ScriptDriven ? Consume(ref ScriptCrouch) : Input != null && Input.Crouch.WasPressedThisFrame();
         bool PressedLetGo() => ScriptDriven ? Consume(ref ScriptLetGo) : Input != null && Input.LetGo.WasPressedThisFrame();
@@ -99,7 +100,21 @@ namespace Seven
 
         T.HangDown FindHangDown()
         {
-            foreach (var h in T.HangDowns) if (h.Ledge != null && T.Near(transform.position, h.Spot, h.Radius)) return h;
+            foreach (var h in T.HangDowns) if (h.Ledge != null && T.HangDownHere(h, transform.position, out _)) return h;
+            return null;
+        }
+
+        /// <summary>QF10: a wall low enough to climb, anywhere along it, that she faces (within 80 degrees).</summary>
+        T.Mantle FindMantle()
+        {
+            foreach (var m in T.Mantles) if (T.MantleHere(m, transform.position, out _) && T.Facing(transform, m.Fwd, 80f) || T.Near(transform.position, m.From, m.Radius)) return m;   // the old spot still works facing any way
+            return null;
+        }
+        /// <summary>QF10: on top of such a wall at its edge, facing out: jump back down anywhere along it.</summary>
+        T.Mantle FindMantleDown(out Vector3 land)
+        {
+            land = Vector3.zero;
+            foreach (var m in T.Mantles) if (T.MantleDownHere(m, transform.position, out land) && T.Facing(transform, -m.Fwd, 65f)) return m;
             return null;
         }
 
@@ -108,7 +123,8 @@ namespace Seven
             var p = transform.position;
             if (FindHangDown() != null) return "crouch:Climb down";
             foreach (var w in T.Climbs) if (T.Near(p, w.Base, w.Radius)) return "jump:Climb";
-            foreach (var m in T.Mantles) if (T.Near(p, m.From, m.Radius)) return "jump:Climb up";
+            if (FindMantle() != null) return "jump:Climb up";
+            if (FindMantleDown(out _) != null) return "jump:Jump down";
             foreach (var g in T.Grabs) if (T.Near(p, g.From, g.Radius)) return "jump:Grab the ledge";
             foreach (var j in T.Jumps) if (T.Near(p, j.From, j.Radius)) return "jump:Jump";
             return null;
@@ -146,7 +162,8 @@ namespace Seven
         {
             var p = transform.position;
             foreach (var w in T.Climbs) if (T.Near(p, w.Base, w.Radius)) { BeginTraversal(WallClimbRoutine(w)); return true; }
-            foreach (var m in T.Mantles) if (T.Near(p, m.From, m.Radius)) { BeginTraversal(MantleRoutine(m)); return true; }
+            var mt = FindMantle(); if (mt != null) { BeginTraversal(MantleRoutine(mt)); return true; }
+            if (FindMantleDown(out var down) != null) { ArcJump(down, 0.5f, Flat3(down - p)); Emit("jump"); return true; }
             foreach (var g in T.Grabs) if (T.Near(p, g.From, g.Radius)) { BeginTraversal(JumpGrabRoutine(g)); return true; }
             if (!NoAssist)
                 foreach (var j in T.Jumps) if (T.Near(p, j.From, j.Radius)) { LinkJump(j); return true; }
@@ -477,7 +494,7 @@ namespace Seven
         {
             Crouched = false;
             var L = h.Ledge;
-            float u = Mathf.Clamp(L.U(transform.position), 0.3f, L.Length - 0.3f);
+            if (!T.HangDownHere(h, transform.position, out float u)) u = Mathf.Clamp(L.U(transform.position), 0.3f, L.Length - 0.3f);
             var P = L.At(u); var F = L.Fwd;
             Play(HasState("crouch_idle") ? "crouch_idle" : "idle", 0.25f);
             yield return MoveTurn(P + F * 0.32f, F, 0.4f);
@@ -525,7 +542,8 @@ namespace Seven
         void OnAnimatorIK(int layer)
         {
             if (Anim == null) return;
-            RideLeanIK();                                  // Round 11: the bike lean, before the hand IK
+            RideLeanIK();                                  // Round 11 / QF10: riding owns the hands, feet and gaze
+            if (Current == Mode.Ride) return;
             if (_ikW <= 0.001f || _ikLedge == null)
             {
                 // QF8: leave the hands to SevenTableIK when it is on her (the touch / hold / pocket beats) - this pass used

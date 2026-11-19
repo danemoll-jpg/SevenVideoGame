@@ -77,7 +77,12 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay;
+        /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
+        /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
+        /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
+        public static bool VenusPlay { get; private set; }
+        public static bool VenusHintFast { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -109,6 +114,8 @@ namespace Seven
                 if (args[i] == "-venusstatetest") VenusStateTest = true;
                 if (args[i] == "-noqf9fix") CameraOccluders.QF9Fix = false;
                 if (args[i] == "-chapter2") Chapter2 = true;
+                if (args[i] == "-venusplay") { VenusPlay = true; Chapter2 = true; }
+                if (args[i] == "-venushintfast") VenusHintFast = true;
                 if (args[i] == "-venuschain") VenusChain = true;
                 if (args[i] == "-venusskip") { VenusSkip = true; Chapter2 = true; }
                 if (args[i] == "-venusreload") { VenusReload = true; Chapter2 = true; }

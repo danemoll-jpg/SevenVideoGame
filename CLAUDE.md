@@ -296,7 +296,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–11 + QF1–QF9 complete (2026-11-18), release 0.11.0.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–11 + QF1–QF10 complete (2026-11-18), release 0.11.1.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -347,5 +347,28 @@ scene (Round 10).
     - `-venusstatetest`: check the progression / persistence rules.
     - `-chapter2 -quick`: stop after B01.
   - Check-run lines: `scene VEN_… complete`, `RELOAD after …`, `VENUS PART 1 DONE: …`.
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.10.2, then Round 11**
+- **QF10 (Dan's 0.11.0 play), release 0.11.1:**
+  - Venus ground:
+    - Natural sculpted ground: `Runtime/VenusTerrain.cs` is one height function for the builder and the game. The
+      `Valley` ground zone uses `Ground.Zone.Field / Mask`; the mesh is built by `Editor/FightDemoBuilderTerrain.cs`.
+    - The collapse is a gully, crossed on the bike over the slab she lays with RT (`VenusDirector.Bridge`, saved as
+      `VEN_B03_bridge`).
+    - Grass: `Seven/Grass` shader, baked chunks (`Editor/FightDemoBuilderGrass.cs`).
+  - B01: hull hatch + Panther framing (`FrameAll`, logs "Panther N % off screen").
+  - Riding:
+    - Bike: 3 m; points in `Art/Export/hoverbike/hoverbike_points.json`, re-measured by raycast in `HoverBike.MeasureBody`.
+    - Riding pose = Blender-made racing tuck:
+      `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/make_ride_pose.py -- <repo>`
+      → `Art/Export/anim/7_ride.fbx` (state `ride`, own avatar), plus IK in `ChapterSevenRide`.
+  - Elarim cape: on its own bones (`cleanup_r11.py elarim`), driven by `ElarimCape.cs`.
+  - Traversal: mantles and hang-downs work anywhere along their edge (`MoonTraversal.MantleHere` etc.).
+  - Fighting feel: `ChapterSevenFight` (numbers + `CameraKick`); fight demo `SevenFighter.AttackSpeed`.
+  - Scree voice: `ScreeVoice.cs`, knobs in `ScreeVoiceSettings`.
+  - Venus waits: every wait has a hint (45 s) and a skip (2 min).
+  - Checks:
+    - `-venusplay [-venushintfast] -testspeed 2` = the player-style Venus run, `VenusPlaytest.cs`; must end
+      `VENUS PLAYTEST: 1/1`.
+    - The C03–C05 "coverage" lines (speaker in frame).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.11.1** (QF10 status in `TODO.md`), then Round 12.
+**Before:** Dan plays 0.10.2, then Round 11
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

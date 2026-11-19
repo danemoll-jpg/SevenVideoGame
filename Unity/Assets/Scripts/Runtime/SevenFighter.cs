@@ -78,6 +78,8 @@ namespace Seven
         [Header("Feel (Round 8)")]
         [Tooltip("A press during a move is kept this long and fires at the first moment it may (input buffer).")]
         public float BufferTime = 0.2f;
+        [Tooltip("QF10: strike clips play this much faster (snappy starts, same hit frames).")]
+        public float AttackSpeed = 1.35f;
         [Tooltip("After a blow lands (or whiffs), this many seconds later a different move may cancel the rest of it.")]
         public float CancelDelay = 0.07f;
         public float AttackFade = 0.08f, ChainFade = 0.1f, ReturnFade = 0.12f;
@@ -129,7 +131,13 @@ namespace Seven
                 if (!_atk.Push && d > _atk.Range * 0.72f && d < _atk.Range * 1.8f)
                     Slide(Bot.transform.position - transform.position, Mathf.Min(d - _atk.Range * 0.72f, 0.45f), 0.2f);
             }
-            Play(state, chained ? ChainFade : AttackFade);
+            // QF10 (shared feel with the chapter fights): strikes play faster and turn her to the bot at once (soft lock)
+            if (Bot != null && !_atk.Push)
+            {
+                var to = Bot.transform.position - transform.position; to.y = 0f;
+                if (to.sqrMagnitude > 0.01f && Vector3.Angle(transform.forward, to) < 75f) transform.rotation = Quaternion.LookRotation(to);
+            }
+            Play(state, chained ? ChainFade : AttackFade, _atk.Push || _atk.Finisher ? 1f : AttackSpeed);
             MoveStarted?.Invoke(state, Time.time);
             if (_atk.Push) { _tkLetGo = false; SetTk(TkPhase.Charging); }
         }        void SetTk(TkPhase p) { Tk = p; TkPhaseTime = 0f; }

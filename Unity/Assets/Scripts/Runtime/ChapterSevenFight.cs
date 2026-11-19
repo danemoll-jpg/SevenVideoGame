@@ -1,19 +1,30 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Seven
 {
     /// <summary>
-    /// QF9: 7's side of the fighting tutorial on the terrace (the two Scree before the city reveal). Reuses the fight demo's
-    /// moves on her own controller - jab → cross → hook as a combo on Attack, hold Block, Dodge (a quick step back),
-    /// and the finisher clip as a nonlethal takedown on a dazed Scree. She walks (camera-relative) facing her target.
-    /// Three unblocked blows put her down (<see cref="FightDown"/>); the director then resets the fight. No combat
-    /// anywhere else in the chapter: <see cref="BeginFight"/> / <see cref="EndFight"/> switch it on and off.
+    /// QF9 / QF10: 7's side of the chapter fighting (the terrace tutorial with the two Scree, and anything later). Reuses
+    /// the fight demo's moves on her own controller - jab → cross → hook as a combo on Attack, hold Block, Dodge, and the
+    /// finisher clip as a nonlethal takedown on a dazed Scree. Three unblocked blows put her down (<see cref="FightDown"/>);
+    /// the director then resets the fight. <see cref="BeginFight"/> / <see cref="EndFight"/> switch it on and off.
+    /// QF10 (Dan: "still clunky" - fast, light, easy to control):
+    ///  - snappy starts: each strike's wind-up is trimmed so its first active frame comes <see cref="ActiveAfter"/> s after
+    ///    the button (clips at <see cref="AttackSpeed"/>x);
+    ///  - cancels + buffering: once a blow has landed (or whiffed) its recovery cancels into the next attack, a dodge or a
+    ///    block at once; a press up to <see cref="Buffer"/> s early is kept and fires at the first moment it may;
+    ///  - light movement: quick acceleration / deceleration, fast turning, a short fast dodge with a brief invulnerability;
+    ///  - gentle aim assist: an attack turns her toward the nearest opponent in front of her (soft lock);
+    ///  - hit feedback: a 2-3 frame hit-pause and a small camera nudge on contact.
+    /// Still nonlethal: takedowns leave the Scree down, stunned, alive.
     /// </summary>
     public partial class ChapterSeven
     {
         public enum FightAct { Idle, Attack, Block, Dodge, Flinch, Down }
         public FightAct Act { get; private set; }
         public System.Func<ScreeGuard> FightTarget;
+        /// <summary>QF10: everyone she may fight (the soft lock picks the nearest in front of her).</summary>
+        public System.Func<IEnumerable<ScreeGuard>> FightTargets;
         public bool InFight => Current == Mode.Fight;
         public bool FightDown => Act == FightAct.Down;
         public int HitsTaken { get; private set; }
@@ -24,17 +35,33 @@ namespace Seven
         [System.NonSerialized] public bool AutoAttack, AutoBlockHeld, AutoDodge, AutoTakedown;
         public event System.Action<string> FightEvent;
 
+        // ---- feel (QF10)
+        public const float AttackSpeed = 1.45f;     // strike clips play this much faster
+        public const float ActiveAfter = 0.13f;     // button -> first active frame (s)
+        public const float Buffer = 0.2f;           // a press this early is kept, never dropped
+        public const float ChainAfter = 0.05f;      // after the active frame, the next blow / dodge / block may cancel the rest
+        public const float FightMoveSpeed = 2.3f, FightAccel = 16f, FightTurn = 900f;
+        public const float DodgeDistance = 1.15f, DodgeTime = 0.22f, DodgeInvuln = 0.30f, DodgeRecover = 0.26f;
+        public const float HitPauseFrames = 3f;     // at 60 fps: 0.05 s
+        public const float AssistRange = 3.4f, AssistCone = 70f;
+
         static readonly string[] Combo = { "jab", "cross", "hook" };
         static readonly float[] ComboHit = { 0.32f, 0.36f, 0.42f };
-        int _combo; bool _hitDone, _queued; float _flinchUntil;
+        const float FinisherHit = 0.45f;
+        int _combo; bool _hitDone; float _flinchUntil;
         ScreeGuard _target;
+        Vector3 _fightVel;
+        float _atkPressedAt = -9f, _dodgePressedAt = -9f, _dodgeStart = -9f, _blowStart, _blowPressed, _hitAtTn, _activeAt;
+        string _bufAtk;                              // buffered: "attack" / "takedown"
+        /// <summary>Check runs: (move, button -> active frame s, recovery -> next action s) as measured in play.</summary>
+        public readonly List<string> FightTimings = new List<string>();
 
         public void BeginFight()
         {
             StopTraversal(); Release();
-            Current = Mode.Fight; Act = FightAct.Idle; HitsTaken = 0; _combo = 0;
+            Current = Mode.Fight; Act = FightAct.Idle; HitsTaken = 0; _combo = 0; _fightVel = Vector3.zero; _bufAtk = null;
             Crouched = false; Ground.BlockLow = true;
-            Play("fight_idle", 0.25f);
+            Play("fight_idle", 0.2f);
         }
         public void EndFight()
         {
@@ -44,21 +71,48 @@ namespace Seven
             Play("idle", 0.4f);
         }
         /// <summary>Back on her feet at the start of the fight (after being knocked down).</summary>
-        public void ResetFight() { Freeze(false); Act = FightAct.Idle; HitsTaken = 0; _combo = 0; Play("fight_idle", 0.2f); }
+        public void ResetFight() { Freeze(false); Act = FightAct.Idle; HitsTaken = 0; _combo = 0; _fightVel = Vector3.zero; _bufAtk = null; Play("fight_idle", 0.2f); }
 
         bool AttackPressed => AutoAttack || !ScriptDriven && Input != null && Input.Attack.WasPressedThisFrame();
         bool BlockHeld => AutoBlockHeld || !ScriptDriven && Input != null && Input.Block.IsPressed();
         bool DodgePressed => AutoDodge || !ScriptDriven && Input != null && Input.Dodge.WasPressedThisFrame();
         bool TakedownPressed => AutoTakedown || !ScriptDriven && Input != null && Input.Takedown.WasPressedThisFrame();
 
-        public bool IsDefending => Act == FightAct.Block || Act == FightAct.Dodge && Tn > 0.04f && Tn < 0.75f;
+        public bool IsDefending => Act == FightAct.Block || Act == FightAct.Dodge && Time.time - _dodgeStart < DodgeInvuln;
+
+        /// <summary>Where the trimmed wind-up starts (normalized) so the active frame comes ActiveAfter s after the press.</summary>
+        float StartTn(string state, float hitTn) => Mathf.Clamp(hitTn - ActiveAfter * AttackSpeed / Length(state), 0f, hitTn - 0.03f);
+
+        /// <summary>QF10 report: per move, button -> active frame and recovery -> next action, before (QF9) and after.</summary>
+        public string FightFeelTable()
+        {
+            var sb = new System.Text.StringBuilder("fight feel (QF10), seconds - move: button->active before / after; recovery->next attack before / after; recovery->dodge or block before / after\n");
+            for (int i = 0; i < 3; i++)
+            {
+                string st = Combo[i]; float L = Length(st), h = ComboHit[i];
+                float bBefore = h * L, bAfter = (h - StartTn(st, h)) * L / AttackSpeed;
+                float cBefore = Mathf.Max(0f, 0.62f - h) * L, cAfter = ChainAfter;
+                float dBefore = Mathf.Max(0f, 0.80f - h) * L, dAfter = ChainAfter;
+                sb.AppendLine($"  {st,-8} {bBefore:0.00} / {bAfter:0.00};  {cBefore:0.00} / {cAfter:0.00};  {dBefore:0.00} / {dAfter:0.00}  (clip {L:0.00}s)");
+            }
+            { float L = Length("finisher"); sb.AppendLine($"  takedown {FinisherHit * L:0.00} / {(FinisherHit - StartTn("finisher", FinisherHit)) * L / AttackSpeed:0.00}"); }
+            { float L = Length("dodge"); sb.AppendLine($"  dodge    move 0.35 s for 0.90 m / {DodgeTime:0.00} s for {DodgeDistance:0.00} m; invulnerable ~{0.71f * L:0.00} / {DodgeInvuln:0.00} s; act again after {0.85f * L:0.00} / {DodgeRecover:0.00} s"); }
+            sb.AppendLine($"  input buffer: none (QF9 queued only during an attack) / {Buffer:0.00} s for every move; movement in stance {WalkSpeed * 0.8f:0.0} m/s instant / {FightMoveSpeed:0.0} m/s with {FightAccel:0} m/s2; aim assist none / {AssistCone:0} deg cone, {AssistRange:0.0} m");
+            return sb.ToString();
+        }
 
         void UpdateFight()
         {
             Speed = 0f; Context = null;
-            _target = FightTarget != null ? FightTarget() : null;
+            _target = PickTarget();
             bool atk = AttackPressed, dodge = DodgePressed, takedown = TakedownPressed, block = BlockHeld;
             AutoAttack = AutoDodge = AutoTakedown = false;
+            if (atk) { _atkPressedAt = Time.time; _bufAtk = "attack"; }
+            if (takedown) { _atkPressedAt = Time.time; _bufAtk = "takedown"; }
+            if (dodge) _dodgePressedAt = Time.time;
+            bool wantAtk = _bufAtk != null && Time.time - _atkPressedAt <= Buffer;
+            bool wantDodge = Time.time - _dodgePressedAt <= Buffer;
+            if (!wantAtk) _bufAtk = null;
             // a dazed Scree in reach: the quiet context prompt (the teaching prompt shows the first time only)
             if (_target != null && _target.Dazed && Dist(_target) < 2.4f) Context = "takedown:Takedown";
             switch (Act)
@@ -66,78 +120,138 @@ namespace Seven
                 case FightAct.Down:
                     return;                                              // the director resets the fight
                 case FightAct.Flinch:
-                    if (Time.time >= _flinchUntil) ToFightIdle();
-                    return;
+                    if (Time.time >= _flinchUntil) ToFightIdle(); else return;
+                    break;
                 case FightAct.Attack:
                 {
-                    FaceTarget(540f);
+                    FaceTarget(FightTurn);
                     bool fin = State == "finisher";
-                    float hitAt = fin ? 0.45f : ComboHit[Mathf.Clamp(_combo, 0, 2)];
-                    if (!_hitDone && Tn >= hitAt) { _hitDone = true; LandBlow(fin); }
-                    if (atk && !fin) _queued = true;
-                    if (Tn >= (fin ? 0.92f : 0.62f))
+                    float hitAt = fin ? FinisherHit : ComboHit[Mathf.Clamp(_combo, 0, 2)];
+                    if (!_hitDone && Tn >= hitAt) { _hitDone = true; _activeAt = Time.time; LandBlow(fin); }
+                    bool recovering = _hitDone && Time.time - _activeAt >= ChainAfter / AttackSpeed * 1.0f;
+                    if (recovering && !fin)
                     {
-                        if (_queued && !fin && _combo < 2) { _combo++; StartBlow(Combo[_combo]); }
-                        else if (Tn >= (fin ? 0.97f : 0.8f)) { _combo = 0; ToFightIdle(); }
+                        // cancel the rest of the blow: dodge / block first (defence wins), else the next attack in the chain
+                        if (wantDodge) { Timing("recovery->dodge"); StartDodge(); return; }
+                        if (block) { Timing("recovery->block"); StartBlock(); return; }
+                        if (wantAtk && _bufAtk == "attack" && _combo < 2) { Timing("recovery->next"); _combo++; StartBlow(Combo[_combo]); return; }
+                        if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
                     }
+                    if (Tn >= (fin ? 0.92f : 0.72f)) { _combo = wantAtk && !fin ? _combo : 0; ToFightIdle(); break; }
                     return;
                 }
                 case FightAct.Block:
-                    FaceTarget(360f);
+                    FaceTarget(FightTurn);
                     if (Tn >= 0.45f) Freeze(true);
-                    if (!block) { Freeze(false); ToFightIdle(); }
+                    if (!block) { Freeze(false); ToFightIdle(); break; }
+                    if (wantDodge) { StartDodge(); return; }
                     return;
                 case FightAct.Dodge:
-                    if (Tn >= 0.85f) ToFightIdle();
-                    return;
+                    if (Time.time - _dodgeStart < DodgeRecover) return;
+                    ToFightIdle();
+                    break;
             }
-            // idle / moving
-            if (block) { Act = FightAct.Block; Play("block", 0.08f); Blocks++; FightEvent?.Invoke("block"); return; }
-            if (dodge)
-            {
-                Act = FightAct.Dodge; Play("dodge", 0.06f); Dodges++; FightEvent?.Invoke("dodge");
-                var away = _target != null ? Flat(transform.position - _target.transform.position).normalized : -transform.forward;
-                Slide(away.sqrMagnitude > 0.1f ? away : -transform.forward, 0.9f, 0.35f);
-                return;
-            }
-            if (takedown && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
-            if (atk) { _combo = 0; StartBlow(Combo[0]); return; }
+            // idle / moving (also the frame a cancel or a recovery ends: buffered presses fire here)
+            if (block) { StartBlock(); return; }
+            if (wantDodge) { StartDodge(); return; }
+            if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
+            if (wantAtk && _bufAtk == "attack") { _combo = Act == FightAct.Idle && Time.time - _activeAt < 0.6f && _combo < 2 ? _combo + 1 : 0; StartBlow(Combo[_combo]); return; }
             var v = MoveInput(out _);
-            if (v.sqrMagnitude > 0.04f)
+            // light movement: quick to start and stop, turns fast, no slide
+            var want = v.sqrMagnitude > 0.04f ? v * FightMoveSpeed : Vector3.zero;
+            _fightVel = Vector3.MoveTowards(_fightVel, want, FightAccel * Time.deltaTime);
+            if (_fightVel.sqrMagnitude > 0.0004f)
             {
-                var step = v * WalkSpeed * 0.8f * Time.deltaTime;
+                var step = _fightVel * Time.deltaTime;
                 int n = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / 0.15f));
                 for (int i = 0; i < n; i++) { transform.position += step / n; ClampToArena(); }
-                if (State != "walk") Play("walk", 0.15f, 1f, false);
-                if (_target != null) FaceTarget(400f); else FaceTowards(transform.position + v, 540f);
+                if (State != "walk") Play("walk", 0.1f, 1.25f, false);
+                if (_target != null) FaceTarget(FightTurn); else FaceTowards(transform.position + v, FightTurn);
             }
             else
             {
-                if (State != "fight_idle") Play("fight_idle", 0.2f, 1f, false);
-                FaceTarget(300f);
+                if (State != "fight_idle") Play("fight_idle", 0.15f, 1f, false);
+                FaceTarget(500f);
             }
+        }
+
+        void Timing(string what) { FightTimings.Add($"{what} {Time.time - _activeAt:0.000}s"); }
+
+        /// <summary>Soft lock: the nearest opponent in front of her (within the cone and range), else the director's target.</summary>
+        ScreeGuard PickTarget()
+        {
+            ScreeGuard best = null; float bestD = AssistRange;
+            if (FightTargets != null)
+                foreach (var s in FightTargets())
+                {
+                    if (s == null || s.IsOut) continue;
+                    var to = Flat(s.transform.position - transform.position); float d = to.magnitude;
+                    float ang = Vector3.Angle(Flat(transform.forward), to);
+                    var mv = MoveInput(out _);
+                    if (mv.sqrMagnitude > 0.1f) ang = Mathf.Min(ang, Vector3.Angle(mv, to));    // or where she is steering
+                    if (d < bestD && ang < AssistCone) { best = s; bestD = d; }
+                }
+            return best ?? (FightTarget != null ? FightTarget() : null);
         }
 
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
         float Dist(ScreeGuard s) => Flat(s.transform.position - transform.position).magnitude;
         void FaceTarget(float deg) { if (_target != null) FaceTowards(_target.transform.position, deg); }
-        void ToFightIdle() { Freeze(false); Act = FightAct.Idle; Play("fight_idle", 0.15f); }
+        void ToFightIdle() { Freeze(false); Act = FightAct.Idle; Play("fight_idle", 0.12f); }
+
+        void StartBlock() { Freeze(false); Act = FightAct.Block; Play("block", 0.06f, 1.3f); Blocks++; FightEvent?.Invoke("block"); _dodgePressedAt = -9f; }
+
+        void StartDodge()
+        {
+            Freeze(false);
+            Act = FightAct.Dodge; Play("dodge", 0.05f, 1.6f); Dodges++; FightEvent?.Invoke("dodge");
+            _dodgeStart = Time.time; _dodgePressedAt = -9f;
+            // away from the attacker, or along the stick (sidestep) - short and fast
+            var mv = MoveInput(out _);
+            var away = _target != null ? Flat(transform.position - _target.transform.position).normalized : -transform.forward;
+            var dir = mv.sqrMagnitude > 0.1f && Vector3.Dot(mv.normalized, -away) < 0.5f ? mv.normalized : away;
+            Slide(dir.sqrMagnitude > 0.1f ? dir : -transform.forward, DodgeDistance, DodgeTime);
+        }
 
         void StartBlow(string state)
         {
-            Act = FightAct.Attack; _hitDone = false; _queued = false;
-            // close the gap a little so the blow can land (forgiving: it is a tutorial)
-            if (_target != null) { float d = Dist(_target); if (d > 1.15f && d < 2.4f) Slide(Flat(_target.transform.position - transform.position).normalized, d - 1.05f, 0.18f); }
-            Play(state, 0.08f);
+            _blowPressed = _atkPressedAt; _bufAtk = null;
+            Freeze(false);
+            Act = FightAct.Attack; _hitDone = false;
+            // soft lock: turn toward the target at once (up to 70 deg), and close the gap a little so the blow lands
+            if (_target != null)
+            {
+                var to = Flat(_target.transform.position - transform.position);
+                float ang = Vector3.SignedAngle(Flat(transform.forward), to, Vector3.up);
+                transform.rotation = Quaternion.AngleAxis(Mathf.Clamp(ang, -AssistCone, AssistCone), Vector3.up) * transform.rotation;
+                float d = to.magnitude; if (d > 1.15f && d < AssistRange) Slide(to.normalized, Mathf.Min(d - 1.05f, 1.2f), 0.12f);
+            }
+            float hit = state == "finisher" ? FinisherHit : ComboHit[Mathf.Clamp(_combo, 0, 2)];
+            Play(state, 0.05f, AttackSpeed, true, StartTn(state, hit));
+            _blowStart = Time.time;
             FightEvent?.Invoke(state);
         }
 
         void LandBlow(bool takedown)
         {
+            FightTimings.Add($"{(takedown ? "takedown" : Combo[Mathf.Clamp(_combo, 0, 2)])} button->active {Time.time - _blowPressed:0.000}s");
             if (_target == null) return;
             var to = Flat(_target.transform.position - transform.position);
             if (to.magnitude > 1.9f) return;                             // whiffed - out of reach
-            if (_target.TakeBlow(to.normalized, takedown)) { HitsLanded++; FightEvent?.Invoke(takedown ? "takedown_landed" : "hit"); }
+            if (_target.TakeBlow(to.normalized, takedown))
+            {
+                HitsLanded++; FightEvent?.Invoke(takedown ? "takedown_landed" : "hit");
+                StartCoroutine(HitPause(takedown ? HitPauseFrames + 1f : HitPauseFrames));
+                CameraKick.Nudge(to.normalized * (takedown ? 0.06f : 0.035f));
+            }
+        }
+
+        System.Collections.IEnumerator HitPause(float frames)
+        {
+            float prev = Time.timeScale; if (prev < 0.2f) yield break;
+            Time.timeScale = prev * 0.06f;
+            yield return new WaitForSecondsRealtime(frames / 60f);
+            if (!PauseMenu.IsOpen) Time.timeScale = prev;
         }
 
         /// <summary>A Scree's punch reaches her (already checked: in range, she is not defending).</summary>
@@ -147,6 +261,7 @@ namespace Seven
             HitsTaken++;
             Freeze(false);
             FightEvent?.Invoke("hit_taken");
+            CameraKick.Nudge(dir * 0.05f);
             if (HitsTaken >= 3)
             {
                 Act = FightAct.Down;
@@ -155,9 +270,33 @@ namespace Seven
                 FightEvent?.Invoke("down");
                 return;
             }
-            Act = FightAct.Flinch; _flinchUntil = Time.time + 0.45f;
+            Act = FightAct.Flinch; _flinchUntil = Time.time + 0.32f;
             Play("fight_idle", 0.05f);
-            Slide(dir, 0.45f, 0.25f);
+            Slide(dir, 0.4f, 0.2f);
+        }
+    }
+
+    /// <summary>QF10: a small camera nudge on contact (decays in ~0.12 s). Added to whatever camera renders after it has
+    /// placed itself (runs late), and taken off again before the camera places itself the next frame.</summary>
+    [DefaultExecutionOrder(1000)]
+    public class CameraKick : MonoBehaviour
+    {
+        static Vector3 _kick; static float _t;
+        Vector3 _applied;
+        public static void Nudge(Vector3 v)
+        {
+            _kick = v; _t = 0f;
+            var cam = Camera.main; if (cam != null && cam.GetComponent<CameraKick>() == null) cam.gameObject.AddComponent<CameraKick>();
+        }
+        void Update() { transform.position -= _applied; _applied = Vector3.zero; }
+        void LateUpdate()
+        {
+            if (_kick == Vector3.zero) return;
+            _t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(1f - _t / 0.12f);
+            _applied = _kick * k * Mathf.Sin(Mathf.Min(1f, _t / 0.03f) * Mathf.PI * 0.5f);
+            transform.position += _applied;
+            if (k <= 0f) _kick = Vector3.zero;
         }
     }
 }

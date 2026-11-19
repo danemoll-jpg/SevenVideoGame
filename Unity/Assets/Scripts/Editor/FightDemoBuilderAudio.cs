@@ -16,7 +16,7 @@ namespace Seven.EditorTools
         {
             Directory.CreateDirectory(Path.Combine(ProjectRoot, "Assets/Resources/Audio"));
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
-            Bank("Assets/Audio/SFX", "*.wav", "Assets/Resources/Audio/SfxBank.asset", false);
+            Bank("Assets/Audio/SFX", "*.wav|*.mp3", "Assets/Resources/Audio/SfxBank.asset", false);
             Bank("Assets/Audio/Music", "*.mp3", "Assets/Resources/Audio/MusicBank.asset", true);
         }
 
@@ -25,7 +25,7 @@ namespace Seven.EditorTools
             var full = Path.Combine(ProjectRoot, dir);
             var bank = ScriptableObject.CreateInstance<Seven.AudioBank>();
             if (Directory.Exists(full))
-                foreach (var f in Directory.GetFiles(full, pattern).OrderBy(x => x))
+                foreach (var f in pattern.Split('|').SelectMany(pt => Directory.GetFiles(full, pt)).OrderBy(x => x))
                 {
                     var p = dir + "/" + Path.GetFileName(f);
                     var imp = AssetImporter.GetAtPath(p) as AudioImporter;
@@ -36,7 +36,7 @@ namespace Seven.EditorTools
                         s.loadType = music ? AudioClipLoadType.Streaming : loop ? AudioClipLoadType.CompressedInMemory : AudioClipLoadType.DecompressOnLoad;
                         s.compressionFormat = AudioCompressionFormat.Vorbis; s.quality = music ? 0.7f : 0.6f;
                         imp.defaultSampleSettings = s;
-                        imp.forceToMono = !music && !loop;     // one-shots are placed in 3D: mono
+                        imp.forceToMono = !music && !loop;     // one-shots are placed in 3D: mono (QF10: Dan's 48 kHz stereo scree_chirp.mp3 too)
                         imp.loadInBackground = music;
                         imp.SaveAndReimport();
                     }

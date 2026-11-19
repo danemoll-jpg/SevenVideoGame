@@ -15,9 +15,14 @@ Camera: Wide — saucer and landscape: 7 walks down the ramp and looks toward th
 - `VEN_B01_06` **7** (spoken): What should I call you?
 - `VEN_B01_07` **Panther** (telepathic): Panther.
 - `VEN_B01_08` **7** (spoken): Panther.
-- `VEN_B01_09` **Panther** (telepathic): You can say it without looking me up and down.
-- `VEN_B01_10` **7** (spoken): Look after the ship, Panther. — *cue: side medium - 7 mounting*
-- `VEN_B01_11` **Panther** (telepathic): Try not to rearrange the bike.
+- `VEN_B01_09` **7** (spoken): You can do that?
+- `VEN_B01_10` **Panther** (telepathic): Apparently. — *cue: side medium - 7 mounting*
+- `VEN_B01_11` **7** (spoken): We crawled through a prison drain.
+- `VEN_B01_12` **Panther** (telepathic): An excellent time to be small.
+- `VEN_B01_13` **7** (spoken): You’re not getting a bigger bowl.
+- `VEN_B01_14` **Panther** (telepathic): We can discuss that when you return.
+- `VEN_B01_15` **7** (spoken): Look after the ship, Panther.
+- `VEN_B01_16` **Panther** (telepathic): I intend to.
 
 ## VEN_B02 — FIRST RIDE: LET VENUS BE BEAUTIFUL (R11, in-gameplay)
 

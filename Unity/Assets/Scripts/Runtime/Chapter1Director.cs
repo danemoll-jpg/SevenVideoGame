@@ -1820,12 +1820,15 @@ namespace Seven
             yield return Cutscene(false);
             Objective("Get past the Scree");
             Seven.FightTarget = EngagedScree;
+            Seven.FightTargets = () => _fighters;            // QF10: soft lock on the nearest in front of her
             Seven.BeginFight();
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log(Seven.FightFeelTable());
             Seven.FightEvent -= OnSevenFight; Seven.FightEvent += OnSevenFight;
             _fighting = true; _fightProgress = Time.time; StartCoroutine(ArenaClamp());
             float t0 = Time.time;
             float ta = Time.time;
             StartTeach("fight_attack", () => Seven.HitsLanded >= 2 || Time.time - ta > 10f, (ControlsLegend.Btn.Attack, "Attack"));
+            if (Auto) yield return FeelDemo();
             if (Auto) StartCoroutine(AutoFight());
             while (true)
             {
@@ -1857,6 +1860,7 @@ namespace Seven
                 yield return null;
             }
             if (Auto || DemoBoot.PlayerSim) Cap?.Log($"fight won in {Time.time - t0:0.0}s: blows landed {Seven.HitsLanded}, blocks {Seven.Blocks}, dodges {Seven.Dodges}, blows taken {Seven.HitsTaken}, resets {_fightResets}; both Scree down and alive (nonlethal)");
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log("fight timings measured in play (QF10): " + string.Join("; ", Seven.FightTimings) + $" | Scree voice: idle calls {ScreeVoice.Calls}, alert calls {ScreeVoice.Alerts}, fight chirps {ScreeVoice.FightChirps}");
             yield return Wait(1.8f);
             if (Auto) yield return Shot("qf9_both_scree_down");
             _fighting = false;
@@ -1865,6 +1869,28 @@ namespace Seven
             Objective(null);
             Cat.Follow();
             _fightWon = true;
+        }
+
+        /// <summary>QF10 check run: a deliberate combo (three chained blows), a dodge-cancel out of the last blow's recovery
+        /// and a block, each captured as a short burst of consecutive frames.</summary>
+        IEnumerator FeelDemo()
+        {
+            var s = EngagedScree(); if (s == null) yield break;
+            for (float t = 0f; t < 4f && Flat(s.transform.position - Seven.transform.position).magnitude > 1.7f; t += Time.deltaTime) { Seven.ScriptMove = Flat(s.transform.position - Seven.transform.position).normalized; yield return null; }
+            Seven.ScriptMove = Vector3.zero;
+            Cam.Shot(Seven.transform.position + Vector3.Cross(Vector3.up, Flat(s.transform.position - Seven.transform.position).normalized) * 3.6f + Vector3.up * 1.6f, (Seven.transform.position + s.transform.position) * 0.5f + Vector3.up * 1.1f, 0.01f, true, 50f);
+            Seven.AutoAttack = true; StartCoroutine(Burst("qf10_combo", 8, 0.07f));
+            yield return Wait(0.17f); Seven.AutoAttack = true;          // pressed early: buffered, chains at the first moment it may
+            yield return Wait(0.2f); Seven.AutoAttack = true;
+            yield return Wait(0.24f); Seven.AutoDodge = true; StartCoroutine(Burst("qf10_dodge_cancel", 5, 0.06f));
+            yield return Wait(0.5f); Seven.AutoBlockHeld = true; StartCoroutine(Burst("qf10_block", 4, 0.08f));
+            yield return Wait(0.7f); Seven.AutoBlockHeld = false;
+            Cam.Follow();
+            Cap?.Log("fight feel demo (QF10): " + string.Join("; ", Seven.FightTimings));
+        }
+        IEnumerator Burst(string name, int n, float every)
+        {
+            for (int i = 0; i < n; i++) { yield return Shot($"{name}_{i}"); yield return new WaitForSecondsRealtime(every); }
         }
 
         void OnSevenFight(string what)

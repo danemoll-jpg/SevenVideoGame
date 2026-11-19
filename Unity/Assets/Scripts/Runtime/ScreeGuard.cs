@@ -39,6 +39,7 @@ namespace Seven
         {
             base.Awake();
             _rig = GetComponent<ScreeRig>();
+            if (GetComponent<ScreeVoice>() == null) gameObject.AddComponent<ScreeVoice>();     // QF10: every Scree has a voice
             Play(PostClip, 0f, 1f, true, Random.value);
         }
 

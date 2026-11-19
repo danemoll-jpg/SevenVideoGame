@@ -19,6 +19,12 @@ namespace Seven
         public ChapterSeven Rider;
         public ChapterInput Input;
         public Transform Seat, GripL, GripR, Visual;
+        /// <summary>QF10: foot points on the side panels (her feet, IK), the fairing point her hand catches in B01.</summary>
+        public Transform FootL, FootR, Fairing;
+        public float Length = 3f;
+        /// <summary>QF10: a scripted glide (B01: out of the hull bay) - the bike floats at this height above the ground
+        /// instead of its riding hover (NaN = normal).</summary>
+        [System.NonSerialized] public float GlideBottom = float.NaN;
         public Light VentLight;
         public Renderer VentGlow;
         public float MaxSpeed = 11f, Accel = 5.5f, Brake = 9f, Drag = 1.6f, TurnRate = 95f, HoverHeight = 0.5f;
@@ -32,11 +38,61 @@ namespace Seven
         public int GiveWays { get; private set; }
         public int Recoveries { get; private set; }
         AudioSource _hum;
-        float _lean, _bob, _stuckFor, _saveT, _safeT;
+        float _lean, _bob, _stuckFor, _saveT, _safeT, _pitch;
         SevenTableIK _ik;
+
+        /// <summary>QF10: measured from the model itself at start (raycasts on its mesh): the saddle top under her hips, and
+        /// the body's half-width where her knees and feet go (so they sit outside it, never through it).</summary>
+        public float SaddleTop { get; private set; } = float.NaN;
+        public float KneeWidth { get; private set; }
+
+        void MeasureBody()
+        {
+            if (Visual == null || Seat == null) return;
+            var cols = new System.Collections.Generic.List<MeshCollider>();
+            foreach (var mf in Visual.GetComponentsInChildren<MeshFilter>())
+            {
+                if (mf.sharedMesh == null || !mf.sharedMesh.isReadable || mf.name == "VentGlow") continue;
+                var mc = mf.gameObject.AddComponent<MeshCollider>(); mc.sharedMesh = mf.sharedMesh; cols.Add(mc);
+            }
+            if (cols.Count == 0) return;
+            Physics.SyncTransforms();
+            bool Ray(Vector3 fromLocal, Vector3 dirLocal, out Vector3 hitLocal)
+            {
+                var o = Visual.TransformPoint(fromLocal); var d = Visual.TransformDirection(dirLocal);
+                float best = float.MaxValue; hitLocal = Vector3.zero; bool any = false;
+                foreach (var c in cols) if (c.Raycast(new UnityEngine.Ray(o, d), out var h, 5f) && h.distance < best) { best = h.distance; hitLocal = Visual.InverseTransformPoint(h.point); any = true; }
+                return any;
+            }
+            // the saddle top along the centre line where her hips go (a little forward of the measured saddle)
+            var sp = Seat.localPosition; sp.z += SeatForward;
+            if (Ray(new Vector3(0f, 3f, sp.z), Vector3.down, out var top)) { SaddleTop = top.y; Seat.localPosition = new Vector3(0f, top.y, sp.z); }
+            // the body's half-width at the knees (ahead of the hips, just under the saddle) and at the feet (the side panels)
+            float W(float z, float y) { float w = 0f; foreach (var sx in new[] { -1f, 1f }) if (Ray(new Vector3(sx * 2f, y, z), new Vector3(-sx, 0f, 0f), out var h)) w = Mathf.Max(w, Mathf.Abs(h.x)); return w; }
+            // the grips: the two recessed hollows in the cowl's sides - on each side, the deepest point of the side surface
+            // (smallest half-width) between the cowl's lower and upper edge, a little ahead of the saddle
+            // (measured on the right side, outside the forks' gap, and mirrored: the design is symmetric)
+            if (GripR != null && GripL != null)
+            {
+                float bestX = 9f; Vector3 best = GripR.localPosition;
+                for (float z = 0.42f; z <= 0.72f; z += 0.05f)
+                    for (float y = 0.45f; y <= 0.90f; y += 0.03f)
+                        if (Ray(new Vector3(2f, y, z), Vector3.left, out var h) && h.x > 0.25f && h.x < bestX) { bestX = h.x; best = h; }
+                if (bestX < 9f) { GripR.localPosition = best; GripL.localPosition = new Vector3(-best.x, best.y, best.z); }
+            }
+            float st = Seat.localPosition.y;
+            KneeWidth = W(Seat.localPosition.z + 0.32f, st - 0.15f);
+            float fz = Seat.localPosition.z - 0.22f, fy = st - 0.28f, fw = W(fz, fy);     // feet back on the rear sides
+            if (FootL != null) FootL.localPosition = new Vector3(-(fw + 0.06f), fy, fz);
+            if (FootR != null) FootR.localPosition = new Vector3(fw + 0.06f, fy, fz);
+            foreach (var c in cols) Destroy(c);
+            Debug.Log($"[Seven] bike body measured: grips {(GripL != null ? GripL.localPosition.ToString("0.00") : "-")}, saddle top {SaddleTop:0.00} at z {Seat.localPosition.z:0.00}, knees half-width {KneeWidth:0.00}, side panels half-width {fw:0.00} at y {fy:0.00}");
+        }
+        public const float SeatForward = -0.36f;          // QF10 (Dan): hips at the BACK of the saddle (racing tuck)
 
         void Start()
         {
+            MeasureBody();
             LastSafe = transform.position;
             _hum = AudioKit.Loop("bike_hum", transform, null, 0.0f, AudioKit.Bus.Sfx);
         }
@@ -47,9 +103,10 @@ namespace Seven
         {
             if (Riding || Rider == null) return;
             Riding = true;
-            Rider.BeginRide(Seat);
-            _ik = Rider.GetComponent<SevenTableIK>() ?? Rider.gameObject.AddComponent<SevenTableIK>();
-            _ik.Alive = false; _ik.Ease = 4f; _ik.RightW = 1f; _ik.LeftW = 1f; _ik.LookW = 0.4f;
+            // QF10: the riding pose owns her hands (grips), feet (side panels) and gaze; the table IK rests meanwhile
+            _ik = Rider.GetComponent<SevenTableIK>();
+            if (_ik != null) { _ik.RightW = 0f; _ik.LeftW = 0f; _ik.LookW = 0f; _ik.enabled = false; }
+            Rider.BeginRide(this);
             VenusState.SaveBike(transform.position, transform.eulerAngles.y, true);
         }
 
@@ -64,7 +121,7 @@ namespace Seven
                 if (Flat(Ground.ClampToArena(side, 0.25f) - side).magnitude > 0.05f) return false;
             }
             Riding = false; Speed = 0f;
-            if (_ik != null) { _ik.RightW = 0f; _ik.LeftW = 0f; _ik.LookW = 0f; }
+            if (_ik != null) { _ik.RightW = 0f; _ik.LeftW = 0f; _ik.LookW = 0f; _ik.enabled = true; }
             Rider.EndRide(new Vector3(side.x, Ground.Height(side.x, side.z), side.z), transform.forward);
             VenusState.SaveBike(transform.position, transform.eulerAngles.y, false);
             return true;
@@ -98,7 +155,7 @@ namespace Seven
             }
             foreach (var c in Ground.Obstacles)
             {
-                var d = new Vector2(p.x - c.C.x, p.z - c.C.y); float r = c.R + 0.9f;
+                var d = new Vector2(p.x - c.C.x, p.z - c.C.y); float r = c.R + Length * 0.42f;   // QF10: 3 m bike
                 if (d.sqrMagnitude < r * r && d.sqrMagnitude > 1e-6f) { d = d.normalized * r; p.x = c.C.x + d.x; p.z = c.C.y + d.y; }
             }
             return p;
@@ -150,24 +207,35 @@ namespace Seven
             if (Visual != null)
             {
                 float h = HoverHeight + 0.05f * Mathf.Sin(_bob * 1.7f) + (Riding ? 0f : -0.12f);     // parked: a lower idle hover
+                if (!float.IsNaN(GlideBottom)) h = GlideBottom - transform.position.y + 0.03f * Mathf.Sin(_bob * 1.7f);
                 Visual.localPosition = new Vector3(0f, h, 0f);
-                Visual.localRotation = Quaternion.Euler(-Speed * 0.25f, 0f, _lean);
+                // QF10 (6f): it follows the land - pitched to the slope under it (smoothed), so it never snags on a rise
+                var fw = transform.forward; var p0 = transform.position;
+                float ahead = Ground.Height(p0.x + fw.x * 1.3f, p0.z + fw.z * 1.3f), behind = Ground.Height(p0.x - fw.x * 1.3f, p0.z - fw.z * 1.3f);
+                float slope = float.IsNaN(GlideBottom) ? Mathf.Clamp(Mathf.Atan2(ahead - behind, 2.6f) * Mathf.Rad2Deg, -18f, 18f) : 0f;
+                _pitch = Mathf.Lerp(_pitch, slope, dt * 6f);
+                Visual.localRotation = Quaternion.Euler(-Speed * 0.25f - _pitch, 0f, _lean);
             }
             float glow = Riding ? 0.7f + 0.3f * Mathf.Clamp01(Speed / MaxSpeed) : 0.45f;
             if (VentLight != null) VentLight.intensity = 0.6f * glow;
             if (VentGlow != null) VentGlow.material.SetColor("_EmissionColor", Color.white * (0.8f + 1.2f * glow));
             if (_hum != null) { _hum.volume = (Riding ? 0.35f + 0.4f * Mathf.Clamp01(Speed / MaxSpeed) : 0.18f); _hum.pitch = 0.9f + 0.35f * Mathf.Clamp01(Speed / MaxSpeed); }
+            if (Riding && Rider != null) Rider.RideSeat(this);     // QF10: seated before the animator runs (hands / feet IK on the current grips)
         }
+
+        /// <summary>QF10: B01 - put the bike anywhere (in the bay, gliding out) without the ground clamp.</summary>
+        public void Glide(Vector3 at, float yaw, float bottom)
+        {
+            transform.SetPositionAndRotation(new Vector3(at.x, Ground.Height(at.x, at.z), at.z), Quaternion.Euler(0f, yaw, 0f));
+            GlideBottom = bottom; Speed = 0f;
+        }
+        public void EndGlide() { GlideBottom = float.NaN; LastSafe = transform.position; }
+        public float Turn => _lean;
 
         void LateUpdate()
         {
             if (!Riding || Rider == null) return;
-            Rider.RideSeat(Seat);
-            if (_ik != null && GripL != null && GripR != null)
-            {
-                _ik.LeftPos = GripL.position; _ik.RightPos = GripR.position;
-                _ik.LookPos = transform.position + transform.forward * 12f + Vector3.up * 1.2f;
-            }
+            Rider.RideSeat(this);
         }
     }
 }

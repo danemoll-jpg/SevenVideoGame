@@ -31,6 +31,7 @@ namespace Seven.EditorTools
 
         static void BuildRound11(AnimatorController sevenCtl, GameObject atmoPrefab, Seven.VoiceBank bank)
         {
+            AddRideClip(sevenCtl);                                     // QF10: the riding pose (Blender-made, no Mixamo clip exists)
             var catCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/Cat.controller");
             var catFur = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_fur.mat");
             var catWhisker = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_whisker.mat");
@@ -271,64 +272,129 @@ namespace Seven.EditorTools
             var world = new GameObject("Venus").transform;
             var rnd = new System.Random(11);
 
-            // ---- floors (every zone; sloped ones as slabs) + parapets with gaps along the road edges
+            // ---- QF10 (6f, Docs/VENUS-TERRAIN.md): natural ground. Built floors only where there is architecture (the
+            // court, the temple); everything else is one sculpted terrain (VenusTerrain: the worn path, the valley, the hills
+            // with their garden shelves, the stream, the gully, the basin) out to the fog.
             foreach (var z in V.Zones)
             {
-                var mat = z.Name.StartsWith("Road") || z.Name == "Bend" || z.Name.StartsWith("Maint") ? m.path : z.Name.StartsWith("Temple") || z.Name == "CubeRoom" ? m.stone : z.Name.StartsWith("Detour") ? m.stoneMid : m.stoneMid;
+                if (V.NaturalZone(z.Name)) continue;
+                var mat = z.Name.StartsWith("Temple") || z.Name == "CubeRoom" ? m.stone : m.path;
                 if (Mathf.Approximately(z.Y0, z.Y1)) Block($"Floor_{z.Name}", new Vector3(z.X0, z.Y0 - 0.6f, z.Z0), new Vector3(z.X1, z.Y0, z.Z1), mat, world);
                 else SlopeSlab($"Floor_{z.Name}", z.X0, z.Z0, z.X1, z.Z1, z.Y0, z.Y1, z.Axis, mat, world);
             }
-            // the platform: a broad round deck (the square zone is its walkable core) with a pale rim
+            // the platform: a broad round deck on its natural rise, with a pale rim
             MeshObject("PlatformDisc", SaveMesh(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(15f, 0.01f), new Vector2(15.4f, -0.2f), new Vector2(14.5f, -2.5f), new Vector2(0f, -2.5f) }, 0f, 360f, 64), "Venus_PlatformDisc"), m.stone, world);
-            // terraces stepping down on both sides of the road (inhabited gardens), with shrubs, trees, hanging gardens
+            BuildVenusTerrain(world, m);
             var gv = new List<Vector3>(); var gt = new List<int>(); var dv = new List<Vector3>(); var dt = new List<int>(); var pv = new List<Vector3>(); var pt = new List<int>(); var trv = new List<Vector3>(); var trt = new List<int>();
-            for (float zz = 16f; zz < 190f; zz += 9f)
+            bool Built(float x, float z) { foreach (var zz2 in V.Zones) if (!V.NaturalZone(zz2.Name) && x > zz2.X0 - 0.5f && x < zz2.X1 + 0.5f && z > zz2.Z0 - 0.5f && z < zz2.Z1 + 0.5f) return true; return x * x + z * z < 15.8f * 15.8f; }
+            bool InGully(float z) => z > VenusTerrain.GullyZ0 - 0.8f && z < VenusTerrain.GullyZ1 + 0.8f;
+            // trees and shrubs on the hillsides and their shelves (never on the path or the valley floor's middle)
+            for (int i = 0; i < 520; i++)
             {
-                foreach (var side in new[] { -1f, 1f })
+                float x = VenusTerrain.GridArea.xMin + (float)rnd.NextDouble() * VenusTerrain.GridArea.width, z = VenusTerrain.GridArea.yMin + (float)rnd.NextDouble() * VenusTerrain.GridArea.height;
+                VenusTerrain.OnRoute(x, z, out float dP, out _, out _, out _);
+                if (Built(x, z) || InGully(z) || dP < VenusTerrain.Floor + 1.5f) continue;
+                var at = new Vector3(x, VenusTerrain.Height(x, z) - 0.15f, z);
+                if (dP < 45f && rnd.NextDouble() < 0.28) Tree(trv, trt, rnd, at, 4.5f + (float)rnd.NextDouble() * 5.5f);
+                else if (dP < 30f) Shrub(gv, gt, rnd, at, 0.9f + (float)rnd.NextDouble() * 1.6f);
+            }
+            // a few shrubs at the valley floor's edges (plants border the path, no kerbs)
+            {
+                float L = VenusTerrain.RouteLength;
+                for (float sP = 18f; sP < L - 6f; sP += 4.2f)
                 {
-                    float roadX = zz < 52f ? 0f : 30f, edge = roadX + side * (zz is > 44f and < 56f ? 14f : 4.5f);
-                    if (zz > V.CollapseZ0 - 16f && zz < V.CollapseZ1 + 10f && side < 0) continue;     // the detour terraces live here
-                    for (int step = 0; step < 3; step++)
+                    var c = VenusTerrain.AtS(sP); var dd = VenusTerrain.DirAtS(sP); var rgt = new Vector3(dd.z, 0f, -dd.x);
+                    if (InGully(c.z) || c.z > 98f && c.z < 132f) continue;
+                    foreach (var side in new[] { -1f, 1f })
                     {
-                        float x0 = edge + side * (1.5f + step * 5f), x1 = x0 + side * 5f, top = -1.2f - step * 1.6f + (float)rnd.NextDouble() * 0.4f;
-                        Block($"Terrace_{zz}_{side}_{step}", new Vector3(Mathf.Min(x0, x1), top - 3f, zz - 4.4f), new Vector3(Mathf.Max(x0, x1), top, zz + 4.4f), step % 2 == 0 ? m.stoneMid : m.stone, world, false);
-                        for (int k = 0; k < 3; k++) Shrub(gv, gt, rnd, new Vector3(Mathf.Lerp(x0, x1, 0.2f + 0.3f * k), top, zz - 3f + (float)rnd.NextDouble() * 6f), 0.8f + (float)rnd.NextDouble() * 1.2f);
-                        if (rnd.NextDouble() < 0.45) Tree(trv, trt, rnd, new Vector3(Mathf.Lerp(x0, x1, 0.6f), top, zz + (float)rnd.NextDouble() * 3f), 6f + (float)rnd.NextDouble() * 6f);
+                        if (rnd.NextDouble() < 0.45) continue;
+                        float lat = side * (VenusTerrain.Floor - 0.2f + (float)rnd.NextDouble() * 1.6f);
+                        var q = c + rgt * lat; q.y = VenusTerrain.Height(q.x, q.z) - 0.1f;
+                        if (!Built(q.x, q.z)) Shrub(gv, gt, rnd, q, 0.7f + (float)rnd.NextDouble() * 1.1f);
                     }
-                    // a water channel along the road edge (pale, smooth) - broken and spilling at the damaged section
-                    if (!(zz > V.TremorZ - 4f && zz < V.CollapseZ1))
-                        Block($"Channel_{zz}_{side}", new Vector3(edge + side * 0.2f - 0.5f, -0.25f, zz - 4.5f), new Vector3(edge + side * 0.2f + 0.5f, -0.08f, zz + 4.5f), m.water, world, false);
-                    // a low parapet with gaps
-                    if (rnd.NextDouble() < 0.7) Block($"Parapet_{zz}_{side}", new Vector3(edge + side * 0.9f - 0.2f, 0f, zz - 3f), new Vector3(edge + side * 0.9f + 0.2f, 0.7f, zz + 3f), m.stone, world);
                 }
-                // hanging gardens: arches over the road with drooping plants
-                if (((int)zz) % 27 == 7)
+                // lamps and marker stones along the path (the way to go), and grown arches with hanging gardens over it
+                int li = 0;
+                for (float sP = 26f; sP < L - 10f; sP += 27f)
                 {
-                    float rx = zz < 52f ? 0f : 30f;
-                    var arc = new List<Vector3>(); for (int i = 0; i <= 16; i++) { float a = i / 16f * Mathf.PI; arc.Add(new Vector3(rx - Mathf.Cos(a) * 7f, 1f + Mathf.Sin(a) * 9f, zz)); }
+                    var c = VenusTerrain.AtS(sP); var dd = VenusTerrain.DirAtS(sP); var rgt = new Vector3(dd.z, 0f, -dd.x);
+                    if (InGully(c.z)) continue;
+                    var q = c - rgt * (VenusTerrain.PathHalf + 1.1f); q.y = VenusTerrain.Height(q.x, q.z);
+                    Lump(dv, dt, q + Vector3.up * 0.55f, new Vector3(0.35f, 1.2f, 0.35f), 0.25f, rnd.Next(1000));              // a grown post
+                    Lamp($"PathLamp_{li++}", q + Vector3.up * 1.45f, 7f, 0.9f, m.glow, world, new Vector3(0.18f, 0.18f, 0.18f));
+                    var st2 = c + rgt * (VenusTerrain.PathHalf + 0.6f) + dd * 6f; st2.y = VenusTerrain.Height(st2.x, st2.z);
+                    Lump(gv, gt, st2 + Vector3.up * 0.15f, new Vector3(0.55f, 0.35f, 0.45f), 0.5f, rnd.Next(1000));
+                }
+                foreach (var sA in new[] { 46f, 98f, 160f })
+                {
+                    var c = VenusTerrain.AtS(sA); var dd = VenusTerrain.DirAtS(sA); var rgt = new Vector3(dd.z, 0f, -dd.x);
+                    var arc = new List<Vector3>();
+                    for (int i = 0; i <= 16; i++) { float an = i / 16f * Mathf.PI; var q = c + rgt * (-Mathf.Cos(an) * 7.4f); q.y = VenusTerrain.Height(q.x, q.z) - 0.3f + Mathf.Sin(an) * 9.3f + (i == 0 || i == 16 ? 0f : 0.3f); arc.Add(q); }
                     Sweep(pv, pt, arc, 0.55f, false, 8);
-                    for (int i = 2; i < 15; i += 2) for (int k = 0; k < 3; k++) Lump(dv, dt, arc[i] + new Vector3(0f, -0.9f - k * 0.9f, (float)rnd.NextDouble() - 0.5f), new Vector3(0.6f, 0.8f, 0.6f), 0.4f, rnd.Next(1000));
+                    for (int i = 2; i < 15; i += 2) for (int k = 0; k < 3; k++) Lump(dv, dt, arc[i] + new Vector3(0f, -0.9f - k * 0.9f, 0f) + dd * ((float)rnd.NextDouble() - 0.5f), new Vector3(0.6f, 0.8f, 0.6f), 0.4f, rnd.Next(1000));
                 }
             }
-            // the platform's gardens (seen in C01) and the vista
-            for (int i = 0; i < 40; i++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, r = 18f + (float)rnd.NextDouble() * 26f; Shrub(gv, gt, rnd, new Vector3(Mathf.Cos(a) * r, -3f - (float)rnd.NextDouble() * 4f, Mathf.Sin(a) * r), 1.5f + (float)rnd.NextDouble() * 2.5f); }
             MeshObject("Gardens_Shrubs", SaveMesh(SmoothFinish(gv, gt), "Venus_Shrubs"), m.leaf, world);
             MeshObject("Gardens_Trees", SaveMesh(SmoothFinish(trv, trt), "Venus_Trees"), m.leafDark, world);
             MeshObject("Gardens_HangingArches", SaveMesh(SmoothFinish(pv, pt), "Venus_Arches"), m.stone, world);
             MeshObject("Gardens_HangingPlants", SaveMesh(SmoothFinish(dv, dt), "Venus_Hanging"), m.leafPale, world);
+            // the grass (item 3) on the new ground: dense along the valley floor's verges and the shelves near the path,
+            // thinner up the hills, round the landing rise - never on the worn path, the paving, the water or the gully
+            var grass = new List<GrassPatch>();
+            float PathEdge(float x, float z) => VenusTerrain.PathHalf + 0.5f * VenusTerrain.Noise(x * 0.7f, z * 0.7f);
+            float GrassAt(float x, float z, float dMin, float dMax)
+            {
+                if (Built(x, z) || InGully(z)) return float.NaN;
+                VenusTerrain.OnRoute(x, z, out float dP, out _, out float lat, out float rz);
+                if (dP < PathEdge(x, z) || dP < dMin || dP > dMax) return float.NaN;
+                if (rz > 22f && rz < 117f && Mathf.Abs(lat - VenusTerrain.StreamLat) < 1.1f) return float.NaN;     // the stream
+                if (x >= 14.8f && x <= 23.6f && z >= 103.8f && z <= 116.2f) return 1.0f;                            // the shelf top
+                return VenusTerrain.Height(x, z);
+            }
+            var ga = VenusTerrain.GridArea;
+            grass.Add(new GrassPatch { Name = "valley verges", Area = ga, Density = 7.5f, MinH = 0.35f, MaxH = 0.9f, Height = (x, z) => GrassAt(x, z, 0f, 17f) });
+            grass.Add(new GrassPatch { Name = "hillsides", Area = ga, Density = 2.2f, MinH = 0.45f, MaxH = 1.1f, Height = (x, z) => GrassAt(x, z, 17f, 58f) });
+            grass.Add(new GrassPatch { Name = "landing rise", Area = new Rect(-55f, -55f, 110f, 80f), Density = 2.4f, MinH = 0.45f, MaxH = 1.05f,
+                Height = (x, z) => { float r = Mathf.Sqrt(x * x + z * z); return r > 15.8f && r < 55f && z < 25f ? GrassAt(x, z, 0f, 999f) : float.NaN; } });
+            BuildGrass(world, grass);
 
-            // ---- the damaged route: the collapse (broken edges + rubble far below), the stopping area, the detour
+            // ---- the gully (VEN_B03): the stream has undercut the path and the ground has fallen in - rubble at the bottom
             var rv = new List<Vector3>(); var rt = new List<int>();
-            for (int i = 0; i < 26; i++) Lump(rv, rt, new Vector3(26f + (float)rnd.NextDouble() * 8f, -7f + (float)rnd.NextDouble() * 2f, V.CollapseZ0 + (float)rnd.NextDouble() * 10f), Vector3.one * (0.5f + (float)rnd.NextDouble() * 1.2f), 0.4f, rnd.Next(1000));
-            for (int i = 0; i < 8; i++) Lump(rv, rt, new Vector3(26f + i, -0.2f, V.CollapseZ0 + 0.2f), new Vector3(0.6f, 0.35f, 0.4f), 0.5f, rnd.Next(1000));
+            for (int i = 0; i < 40; i++) { float x = 14f + (float)rnd.NextDouble() * 32f, z = V.CollapseZ0 + 1.5f + (float)rnd.NextDouble() * 7f; Lump(rv, rt, new Vector3(x, VenusTerrain.Height(x, z) + 0.2f, z), Vector3.one * (0.5f + (float)rnd.NextDouble() * 1.3f), 0.4f, rnd.Next(1000)); }
+            for (int i = 0; i < 9; i++) Lump(rv, rt, new Vector3(25.5f + i * 1.1f, -0.25f, V.CollapseZ1 + 0.3f), new Vector3(0.6f, 0.35f, 0.45f), 0.5f, rnd.Next(1000));   // the broken far lip
             MeshObject("Collapse_Rubble", SaveMesh(SmoothFinish(rv, rt), "Venus_CollapseRubble"), m.stoneDark, world);
-            Block("Collapse_Pit", new Vector3(24f, -9f, V.CollapseZ0), new Vector3(36f, -8f, V.CollapseZ1), m.stoneDark, world, false);
-            Block("Collapse_SpillWater", new Vector3(28f, -0.02f, 108f), new Vector3(33f, 0.0f, V.CollapseZ0), m.water, world, false);
-            // the detour: the garden wall (mantle face), its terrace, the broken channel gap, the far terrace, the ramp down
-            Block("Detour_Wall", new Vector3(15f, -0.6f, 104f), new Vector3(V.DetourMantle.FaceAt, 1.0f, 126f), m.stoneMid, world);
-            Block("Detour_FarWall", new Vector3(15f, -0.6f, 128.6f), new Vector3(23.4f, 1.0f, 136f), m.stoneMid, world);
-            Block("Detour_ChannelWater", new Vector3(15f, -1.4f, 126f), new Vector3(23.4f, -1.2f, 128.6f), m.water, world, false);
-            Lamp("Detour_Lamp", new Vector3(19.2f, 2.8f, 127.3f), 7f, 1.4f, m.glow, world);
+            // the garden-wall shelf beside the stopping area: a rock shelf (climbable anywhere along its face, for exploring)
+            Block("Detour_Wall", new Vector3(15f, -0.8f, 104f), new Vector3(V.DetourMantle.FaceAt, 1.0f, 116f), m.stoneMid, world);
+            Lamp("Detour_Lamp", new Vector3(19.2f, 2.6f, 110f), 7f, 1.0f, m.glow, world, new Vector3(0.18f, 0.18f, 0.18f));
+            // QF10: the ground the fallen slab rests on (not walkable: the slab fills it), and the slab itself - a long broken
+            // paving slab, the right length for the gap, its edges catching the light (telekinesis lays it across)
+            var slab = new GameObject("FallenSlab").transform; slab.SetParent(world, false);
+            slab.SetPositionAndRotation(V.SlabLie, Quaternion.Euler(1.5f, V.SlabLieYaw, -2f));
+            {
+                var sv = new List<Vector3>(); var st = new List<int>();
+                AddBox(sv, st, Vector3.zero, new Vector3(V.SlabSize.z, V.SlabSize.y, V.SlabSize.x));          // local: length along z
+                MeshObject("Body", SaveMesh(Finish(sv, st), "Venus_FallenSlab"), m.stone, slab);
+                // broken ends: a few chipped lumps; a thin pale lip along the top edges (the telekinesis highlight glows here)
+                var ev = new List<Vector3>(); var et = new List<int>();
+                float hx = V.SlabSize.z * 0.5f, hy = V.SlabSize.y * 0.5f, hz = V.SlabSize.x * 0.5f;
+                foreach (var sx in new[] { -hx, hx }) Sweep(ev, et, new[] { new Vector3(sx, hy, -hz), new Vector3(sx, hy, hz) }, 0.03f, false, 6);
+                foreach (var sz in new[] { -hz, hz }) Sweep(ev, et, new[] { new Vector3(-hx, hy, sz), new Vector3(hx, hy, sz) }, 0.03f, false, 6);
+                var edge = MeshObject("Edges", SaveMesh(SmoothFinish(ev, et), "Venus_FallenSlabEdges"), m.stone, slab, false);
+                var rv2 = new List<Vector3>(); var rt2 = new List<int>(); var rr = new System.Random(5);
+                for (int i = 0; i < 6; i++) Lump(rv2, rt2, new Vector3((i % 2 == 0 ? -1 : 1) * hx * 0.6f, -hy * 0.2f, (i < 3 ? -hz : hz) + (i < 3 ? 0.2f : -0.2f)), new Vector3(0.5f, 0.35f, 0.4f), 0.5f, rr.Next(1000));
+                MeshObject("Chips", SaveMesh(SmoothFinish(rv2, rt2), "Venus_FallenSlabChips"), m.stoneMid, slab);
+            }
+            // dust for the landing thud
+            var slabDust = new GameObject("SlabDust").AddComponent<ParticleSystem>(); slabDust.transform.position = V.SlabBridge + Vector3.up * 0.2f;
+            { var mn = slabDust.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 1.2f; mn.startColor = new Color(0.75f, 0.75f, 0.75f, 0.45f); mn.startSize = new ParticleSystem.MinMaxCurve(1.2f, 2.6f); mn.startLifetime = new ParticleSystem.MinMaxCurve(1.6f, 2.8f); mn.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 2.2f); mn.gravityModifier = -0.02f;
+              var shp = slabDust.shape; shp.shapeType = ParticleSystemShapeType.Box; shp.scale = new Vector3(3.2f, 0.2f, 12f);
+              var em2 = slabDust.emission; em2.rateOverTime = 0f; em2.SetBursts(new[] { new ParticleSystem.Burst(0f, 90) });
+              slabDust.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_dust", 0.35f); slabDust.Stop(); }
+            // telekinesis motes (her hand -> the slab)
+            var tkMotes = new GameObject("TkMotes").AddComponent<ParticleSystem>();
+            { var mn = tkMotes.main; mn.playOnAwake = false; mn.loop = true; mn.startColor = new Color(1f, 1f, 1f, 0.8f); mn.startSize = new ParticleSystem.MinMaxCurve(0.03f, 0.08f); mn.startLifetime = 0.5f; mn.startSpeed = 0f; mn.simulationSpace = ParticleSystemSimulationSpace.World;
+              var em3 = tkMotes.emission; em3.rateOverTime = 0f; var sh3 = tkMotes.shape; sh3.shapeType = ParticleSystemShapeType.Sphere; sh3.radius = 0.08f;
+              tkMotes.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMat("Venus_tk", 1.2f); tkMotes.Stop(); }
 
             // ---- VEN_03: the temple - grown rather than built; everything at 3.5 m-Elarim scale
             float tz = V.DoorZ;
@@ -367,7 +433,7 @@ namespace Seven.EditorTools
             var cube = BuildVenusCube(world, m, em);
             // VEN_03 court + garden: planters, trees, a fountain basin
             var fv = new List<Vector3>(); var ft = new List<int>();
-            for (int i = 0; i < 14; i++) Tree(fv, ft, rnd, new Vector3(16f + (float)rnd.NextDouble() * 28f, 0f, 205f + (float)rnd.NextDouble() * 8f + (i % 2) * 18f), 7f + (float)rnd.NextDouble() * 5f);
+            for (int i = 0; i < 14; i++) Tree(fv, ft, rnd, new Vector3((i % 4 < 2 ? 15f : 39.5f) + (float)rnd.NextDouble() * 6f, 0f, 205f + (float)rnd.NextDouble() * 8f + (i % 2) * 18f), 7f + (float)rnd.NextDouble() * 5f);   // QF10: clear of the meeting line
             MeshObject("Court_Trees", SaveMesh(SmoothFinish(fv, ft), "Venus_CourtTrees"), m.leafDark, world);
             MeshObject("Court_Fountain", SaveMesh(Lathe(new[] { new Vector2(0f, 0.4f), new Vector2(2.6f, 0.4f), new Vector2(2.8f, 0.7f), new Vector2(3.0f, 0f), new Vector2(0f, 0f) }, 0f, 360f, 32, null, new Vector3(22f, 0f, 200f)), "Venus_Fountain"), m.stone, world);
             Block("Court_FountainWater", new Vector3(19.8f, 0.42f, 197.8f), new Vector3(24.2f, 0.5f, 202.2f), m.water, world, false);
@@ -376,7 +442,6 @@ namespace Seven.EditorTools
             var maintGate = Block("Maint_Gate", new Vector3(44.2f, 0f, 195f), new Vector3(44.8f, 2.4f, 203f), m.stoneDark, world);
             Block("Obs_Rail", new Vector3(87.6f, -6f, 134f), new Vector3(88f, -5f, 152f), m.stone, world);
             Block("Obs_RailS", new Vector3(64f, -6f, 133.6f), new Vector3(88f, -5f, 134f), m.stone, world);
-            Block("Basin_Floor", new Vector3(88f, V.BasinCentre.y - 1f, 100f), new Vector3(150f, V.BasinCentre.y, 185f), m.dust, world, false);
             Block("RootGate_Door", new Vector3(V.RootGate.x - 2f, -6f, V.RootGate.z - 0.4f), new Vector3(V.RootGate.x + 2f, -1f, V.RootGate.z), m.stoneDark, world);
             var bv = new List<Vector3>(); var bt = new List<int>();
             for (int i = 0; i < 30; i++) Lump(bv, bt, new Vector3(92f + (float)rnd.NextDouble() * 50f, V.BasinCentre.y, 105f + (float)rnd.NextDouble() * 70f), new Vector3(1.5f, 0.6f, 1.5f) * (0.6f + (float)rnd.NextDouble()), 0.5f, rnd.Next(1000));
@@ -394,12 +459,57 @@ namespace Seven.EditorTools
 
             // ---- the saucer (landed), its ramp, the storage hatch
             var saucer = new GameObject("Saucer").transform; saucer.SetParent(world, false); saucer.position = V.SaucerAt + Vector3.up * V.SaucerHover;
-            MeshObject("Saucer_Top", SaveMesh(Lathe(new[] { new Vector2(0f, 1.9f), new Vector2(1.8f, 1.75f), new Vector2(3.4f, 1.0f), new Vector2(V.SaucerRadius, 0.35f), new Vector2(V.SaucerRadius, 0.2f) }, 0f, 360f, 48), "Venus_SaucerTop"), m.hull, saucer);
-            MeshObject("Saucer_Under", SaveMesh(Lathe(new[] { new Vector2(V.SaucerRadius, 0.2f), new Vector2(3.2f, -0.2f), new Vector2(1.5f, -0.45f), new Vector2(0f, -0.5f) }, 0f, 360f, 48), "Venus_SaucerUnder"), m.hullUnder, saucer);
+            // QF10: the hull has a seamless storage panel (the bike bay) in its lower band, toward the bike's spot: the
+            // lathes skip that span and the panel is the same surface, so closed it is invisible. In B01 its seam glows
+            // white, the panel sinks a few centimetres and slides round under the hull, light spills from the bay, the bike
+            // glides out; then it slides back and the hull is seamless again.
+            float ha0 = V.HatchAngle - V.HatchSpan * 0.5f, ha1 = V.HatchAngle + V.HatchSpan * 0.5f;
+            bool InHatch(float a, float y) { a = Mathf.Repeat(a, 360f); return a > ha0 && a < ha1 && y > -0.21f && y < 1.01f; }
+            var topProf = new[] { new Vector2(0f, 1.9f), new Vector2(1.8f, 1.75f), new Vector2(3.4f, 1.0f), new Vector2(V.SaucerRadius, 0.35f), new Vector2(V.SaucerRadius, 0.2f) };
+            var underProf = new[] { new Vector2(V.SaucerRadius, 0.2f), new Vector2(3.2f, -0.2f), new Vector2(1.5f, -0.45f), new Vector2(0f, -0.5f) };
+            MeshObject("Saucer_Top", SaveMesh(Lathe(topProf, 0f, 360f, 144, InHatch), "Venus_SaucerTop"), m.hull, saucer);
+            MeshObject("Saucer_Under", SaveMesh(Lathe(underProf, 0f, 360f, 144, InHatch), "Venus_SaucerUnder"), m.hullUnder, saucer);
+            var hatch = new GameObject("HatchPanel").transform; hatch.SetParent(saucer, false);
+            hatch.localPosition = Vector3.zero;
+            var panelProf = new[] { new Vector2(3.4f, 1.0f), new Vector2(V.SaucerRadius, 0.35f), new Vector2(V.SaucerRadius, 0.2f), new Vector2(3.2f, -0.2f) };
+            MeshObject("Panel", SaveMesh(Lathe(new[] { panelProf[0], panelProf[1], panelProf[2] }, ha0, ha1, 12), "Venus_HatchPanel"), m.hull, hatch);
+            MeshObject("PanelUnder", SaveMesh(Lathe(new[] { panelProf[2], panelProf[3] }, ha0, ha1, 12), "Venus_HatchPanelUnder"), m.hullUnder, hatch);
+            // the seam: a hair-thin line round the panel (white emission animated by the director; dark when closed)
+            var seamMat = Dissolve("Venus_hatch_seam", Gray(0.85f), 0.6f, false); seamMat.EnableKeyword("_EMISSION"); seamMat.SetColor("_EmissionColor", Color.black); EditorUtility.SetDirty(seamMat);
+            {
+                var sv = new List<Vector3>(); var st = new List<int>();
+                Vector3 Pt(float r, float a, float y) => new Vector3(Mathf.Cos(a * Mathf.Deg2Rad) * r, y, Mathf.Sin(a * Mathf.Deg2Rad) * r) * 1.004f;
+                var loop = new List<Vector3>();
+                foreach (var pr in panelProf) loop.Add(Pt(pr.x, ha0, pr.y));
+                for (int i = 1; i <= 12; i++) loop.Add(Pt(panelProf[panelProf.Length - 1].x, Mathf.Lerp(ha0, ha1, i / 12f), panelProf[panelProf.Length - 1].y));
+                for (int k = panelProf.Length - 2; k >= 0; k--) loop.Add(Pt(panelProf[k].x, ha1, panelProf[k].y));
+                for (int i = 11; i >= 1; i--) loop.Add(Pt(panelProf[0].x, Mathf.Lerp(ha0, ha1, i / 12f), panelProf[0].y));
+                Sweep(sv, st, loop, 0.012f, true, 6);
+                MeshObject("HatchSeam", SaveMesh(SmoothFinish(sv, st), "Venus_HatchSeam"), seamMat, saucer, false);
+            }
+            // the bay behind it: dark sides, a softly glowing back wall and a light that comes up as it opens
+            {
+                var bayMat = Dissolve("Venus_bay", Gray(0.2f), 0.3f, false); bayMat.SetFloat("_Cull", 0f); EditorUtility.SetDirty(bayMat);
+                var bay = new GameObject("Bay").transform; bay.SetParent(saucer, false);
+                var floorProf = new[] { new Vector2(2.2f, -0.2f), new Vector2(3.2f, -0.2f) };
+                MeshObject("BayFloor", SaveMesh(Lathe(floorProf, ha0, ha1, 8), "Venus_BayFloor"), bayMat, bay, false);
+                MeshObject("BayCeiling", SaveMesh(Lathe(new[] { new Vector2(3.4f, 1.0f), new Vector2(2.2f, 1.0f) }, ha0, ha1, 8), "Venus_BayCeiling"), bayMat, bay, false);
+                var backMat = Dissolve("Venus_bay_back", Gray(0.9f), 0.2f, false); backMat.EnableKeyword("_EMISSION"); backMat.SetColor("_EmissionColor", Color.white * 0.05f); EditorUtility.SetDirty(backMat);
+                MeshObject("BayBack", SaveMesh(Lathe(new[] { new Vector2(2.2f, 1.0f), new Vector2(2.2f, -0.2f) }, ha0, ha1, 8), "Venus_BayBack"), backMat, bay, false);
+                foreach (var a in new[] { ha0, ha1 })
+                {
+                    var bwv = new List<Vector3>(); var bwt = new List<int>();
+                    Vector3 Q(float r, float y) => new Vector3(Mathf.Cos(a * Mathf.Deg2Rad) * r, y, Mathf.Sin(a * Mathf.Deg2Rad) * r);
+                    bwv.AddRange(new[] { Q(2.2f, -0.2f), Q(3.2f, -0.2f), Q(V.SaucerRadius, 0.2f), Q(V.SaucerRadius, 0.35f), Q(3.4f, 1.0f), Q(2.2f, 1.0f) });
+                    bwt.AddRange(new[] { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 });
+                    MeshObject($"BaySide{a:0}", SaveMesh(Finish(bwv, bwt), $"Venus_BaySide{a:0}"), bayMat, bay, false);
+                }
+                var bl = new GameObject("BayLight").AddComponent<Light>(); bl.transform.SetParent(bay, false);
+                bl.transform.localPosition = new Vector3(Mathf.Cos(V.HatchAngle * Mathf.Deg2Rad) * 3.0f, 0.5f, Mathf.Sin(V.HatchAngle * Mathf.Deg2Rad) * 3.0f);
+                bl.type = LightType.Point; bl.range = 7f; bl.intensity = 0f; bl.color = Color.white; bl.shadows = LightShadows.None;
+            }
             var ramp = new GameObject("Ramp").transform; ramp.SetParent(saucer, false);
             SlopeSlab("Saucer_Ramp", -0.8f, V.RampFoot.z - 3.4f, 0.8f, V.RampFoot.z, V.SaucerHover, 0f, 1, m.hullUnder, ramp, 0.08f);
-            var hatch = new GameObject("StorageHatch").transform; hatch.SetParent(saucer, false); hatch.position = V.HatchAt + Vector3.up * (V.SaucerHover + 0.1f);
-            Block("Hatch_Door", V.HatchAt + new Vector3(-0.8f, V.SaucerHover, -0.05f), V.HatchAt + new Vector3(0.8f, V.SaucerHover + 0.1f, 1.2f), m.hullUnder, hatch, false);
             var pads = new List<Vector3> { new Vector3(V.SaucerAt.x, V.SaucerAt.z, V.SaucerRadius + 0.3f) };
 
             // ---- ground
@@ -435,14 +545,21 @@ namespace Seven.EditorTools
                 foreach (var r in bm.GetComponentsInChildren<Renderer>()) r.sharedMaterial = bmat;
             }
             else Block("BikePlaceholder", new Vector3(-0.45f, 0f, -1.15f), new Vector3(0.45f, 0.7f, 1.15f), m.hull, visual, false);
-            var seat = new GameObject("Seat").transform; seat.SetParent(visual, false); seat.localPosition = new Vector3(0f, -0.08f, -0.1f);     // hips on the low saddle (between the two tested heights)
-            var gl = new GameObject("GripL").transform; gl.SetParent(visual, false); gl.localPosition = new Vector3(-0.24f, 0.5f, 0.42f);
-            var gr = new GameObject("GripR").transform; gr.SetParent(visual, false); gr.localPosition = new Vector3(0.24f, 0.5f, 0.42f);
-            var vent = MeshObject("VentGlow", SaveMesh(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(0.28f, 0.01f), new Vector2(0f, 0.012f) }, 0f, 360f, 20), "Venus_BikeVent"), m.bikeVent, visual, false);
+            // QF10: the bike is 3 m long now; the saddle top, the two grips and a foot point on each side panel come from the
+            // Blender export (Art/Export/hoverbike/hoverbike_points.json); 7's hips sit on the saddle (ChapterSevenRide calibrates)
+            var bp = LoadBikePoints();
+            var seat = new GameObject("Seat").transform; seat.SetParent(visual, false); seat.localPosition = bp.saddle;
+            var gl = new GameObject("GripL").transform; gl.SetParent(visual, false); gl.localPosition = bp.gripL;
+            var gr = new GameObject("GripR").transform; gr.SetParent(visual, false); gr.localPosition = bp.gripR;
+            var footL = new GameObject("FootL").transform; footL.SetParent(visual, false); footL.localPosition = bp.footL;
+            var footR = new GameObject("FootR").transform; footR.SetParent(visual, false); footR.localPosition = bp.footR;
+            var fair = new GameObject("FairingL").transform; fair.SetParent(visual, false); fair.localPosition = new Vector3(bp.gripL.x - 0.05f, bp.gripL.y + 0.04f, bp.gripL.z - 0.25f);   // B01: where her hand catches it
+            var vent = MeshObject("VentGlow", SaveMesh(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(0.36f, 0.01f), new Vector2(0f, 0.012f) }, 0f, 360f, 20), "Venus_BikeVent"), m.bikeVent, visual, false);
             var vl = new GameObject("VentLight").AddComponent<Light>(); vl.transform.SetParent(visual, false); vl.transform.localPosition = new Vector3(0f, -0.15f, 0f);
             vl.type = LightType.Point; vl.range = 2.2f; vl.intensity = 0.4f; vl.color = Color.white; vl.shadows = LightShadows.None;
             var hb = bikeRoot.gameObject.AddComponent<Seven.HoverBike>();
-            hb.Seat = seat; hb.GripL = gl; hb.GripR = gr; hb.Visual = visual; hb.VentLight = vl; hb.VentGlow = vent.GetComponent<Renderer>();
+            hb.Seat = seat; hb.GripL = gl; hb.GripR = gr; hb.FootL = footL; hb.FootR = footR; hb.Fairing = fair; hb.Visual = visual; hb.VentLight = vl; hb.VentGlow = vent.GetComponent<Renderer>();
+            hb.Length = bp.length;
 
             // ---- the Elarim: the guardian (at the temple entrance garden), the attendant (comes in C04), workers
             Seven.ElarimNpc MakeElarim(string name, Vector3 at, Vector3 facing, string post, bool withSword = false)
@@ -456,6 +573,7 @@ namespace Seven.EditorTools
                     anim.runtimeAnimatorController = elarimCtl; anim.applyRootMotion = false; anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
                     var mat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Elarim_armour.mat");
                     foreach (var smr in model.GetComponentsInChildren<SkinnedMeshRenderer>()) { smr.sharedMaterial = mat; smr.updateWhenOffscreen = true; }
+                    go.AddComponent<Seven.ElarimCape>();          // QF10: the legs never pass through the cape
                     if (withSword && sword != null)
                     {
                         var hand = anim.isHuman ? anim.GetBoneTransform(HumanBodyBones.RightHand) : null;
@@ -475,14 +593,15 @@ namespace Seven.EditorTools
                 var npc = go.AddComponent<Seven.ElarimNpc>(); npc.PostClip = post; npc.EyeMaterial = m.glow;
                 return npc;
             }
+            Vector3 OnGround(float x, float z) => new Vector3(x, VenusTerrain.Height(x, z), z);
             var guardian = MakeElarim("Elarim_Guardian", V.GuardianSpot, Vector3.back, "idle");
             var attendant = MakeElarim("Elarim_Attendant", new Vector3(30f, 0f, 250f), Vector3.back, "idle"); attendant.gameObject.SetActive(false);
             var workers = new List<Seven.ElarimNpc>
             {
-                MakeElarim("Elarim_Worker_Vessel", new Vector3(37.6f, 0f, 104.5f), Vector3.left, "carry"),
-                MakeElarim("Elarim_Worker_Road", new Vector3(32.8f, 0f, 84f), Vector3.left, "lift"),
+                MakeElarim("Elarim_Worker_Vessel", OnGround(37.6f, 104.5f), Vector3.left, "carry"),
+                MakeElarim("Elarim_Worker_Road", OnGround(32.4f, 84f), Vector3.left, "lift"),
                 MakeElarim("Elarim_Worker_Court", new Vector3(17f, 0f, 196f), Vector3.right, "sword_idle", true),
-                MakeElarim("Elarim_Worker_Channel", new Vector3(-6.5f, -1.2f, 30f), Vector3.right, "lift"),
+                MakeElarim("Elarim_Worker_Channel", OnGround(9.9f, 32f), Vector3.left, "lift"),
             };
             // C02's vessel (water shakes in it; the worker steadies it)
             var vessel = MeshObject("Vessel", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.35f, 0f), new Vector2(0.45f, 0.45f), new Vector2(0.38f, 0.8f), new Vector2(0.34f, 0.8f), new Vector2(0.4f, 0.45f), new Vector2(0.3f, 0.05f), new Vector2(0f, 0.05f) }, 0f, 360f, 24, null, V.VesselAt - Vector3.up * 0.9f), "Venus_Vessel"), m.stone, world).transform;
@@ -536,11 +655,60 @@ namespace Seven.EditorTools
             d.Saucer = saucer; d.Hatch = hatch; d.Ramp = ramp; d.Vessel = vessel; d.VesselWater = water; d.Cube = cube; d.CubeCage = cage.transform;
             d.Guardian = guardian; d.Attendant = attendant; d.Workers = workers.ToArray(); d.Worms = worms.ToArray(); d.CeilingDust = cdust;
             d.Flyers = flyers.ToArray(); d.Shape = shape; d.MaintGate = maintGate; d.Atmo = atmo.GetComponent<Seven.Atmosphere>();
+            d.Slab = slab; d.SlabDust = slabDust; d.TkMotes = tkMotes;                 // QF10: the telekinesis bridge
+            d.HatchSeam = saucer.Find("HatchSeam").GetComponent<Renderer>(); d.BayLight = saucer.Find("Bay/BayLight").GetComponent<Light>();
+            d.BayBack = saucer.Find("Bay/BayBack").GetComponent<Renderer>();
             AddProbe(new Vector3(0f, 3f, 20f), new Vector3(60f, 20f, 60f), Vector3.zero);
             AddProbe(new Vector3(30f, 5f, 250f), new Vector3(30f, 16f, 50f), Vector3.zero);
             ZFightFix("Venus");
             EditorSceneManager.SaveScene(scene, VenusScenePath);
             Log("scene saved " + VenusScenePath);
+        }
+
+        [System.Serializable] class BikePointsJson { public float length = 3f; public float[] saddle, grip_l, grip_r, foot_l, foot_r; }
+        struct BikePoints { public float length; public Vector3 saddle, gripL, gripR, footL, footR; }
+        static BikePoints LoadBikePoints()
+        {
+            Vector3 V3(float[] a, Vector3 def) => a != null && a.Length == 3 ? new Vector3(a[0], a[1], a[2]) : def;
+            var path = Path.Combine(RepoRoot, "Art", "Export", "hoverbike", "hoverbike_points.json");
+            var j = File.Exists(path) ? JsonUtility.FromJson<BikePointsJson>(File.ReadAllText(path)) : new BikePointsJson();
+            var b = new BikePoints
+            {
+                length = j.length, saddle = V3(j.saddle, new Vector3(0f, 0.48f, 0f)), gripL = V3(j.grip_l, new Vector3(-0.37f, 0.44f, 0.7f)),
+                gripR = V3(j.grip_r, new Vector3(0.37f, 0.44f, 0.7f)), footL = V3(j.foot_l, new Vector3(-0.26f, 0.25f, -0.12f)), footR = V3(j.foot_r, new Vector3(0.26f, 0.25f, -0.12f)),
+            };
+            // the grips are symmetric in the design: average the two measurements
+            float gx = (Mathf.Abs(b.gripL.x) + Mathf.Abs(b.gripR.x)) * 0.5f, gy = (b.gripL.y + b.gripR.y) * 0.5f, gz = (b.gripL.z + b.gripR.z) * 0.5f;
+            b.gripL = new Vector3(-gx, gy, gz); b.gripR = new Vector3(gx, gy, gz);
+            Log($"bike points ({(File.Exists(path) ? "hoverbike_points.json" : "defaults")}): length {b.length:0.00}, saddle {b.saddle}, grips {b.gripL} / {b.gripR}, feet {b.footL} / {b.footR}");
+            return b;
+        }
+
+        /// <summary>QF10: 7's riding pose (Tools/Blender/make_ride_pose.py -> Art/Export/anim/7_ride.fbx): imported Humanoid with
+        /// its own avatar (explicit Mixamo map; the Blender export has an extra root node, so 7's avatar can't be copied onto
+        /// it) and retargeted to 7 as the state "ride".</summary>
+        static void AddRideClip(AnimatorController sevenCtl)
+        {
+            var src = Path.Combine(RepoRoot, "Art", "Export", "anim", "7_ride.fbx");
+            if (!File.Exists(src)) { Log("WARNING: Art/Export/anim/7_ride.fbx missing (run Tools/Blender/make_ride_pose.py) - riding uses the seated clip"); return; }
+            var dir = SevenDir + "/Ride"; Directory.CreateDirectory(Path.Combine(ProjectRoot, dir));
+            var dst = dir + "/7_ride.fbx";
+            File.Copy(src, Path.Combine(ProjectRoot, dst), true);
+            AssetDatabase.ImportAsset(dst, ImportAssetOptions.ForceSynchronousImport);
+            var ci = (ModelImporter)AssetImporter.GetAtPath(dst);
+            ci.animationType = ModelImporterAnimationType.Human; ci.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+            ci.materialImportMode = ModelImporterMaterialImportMode.None; ci.importAnimation = true; ci.SaveAndReimport();
+            ApplyMixamoHumanMap(ci, dst);
+            var cl = ci.defaultClipAnimations;
+            foreach (var c in cl) { c.name = "ride"; c.loopTime = true; c.lockRootRotation = true; c.lockRootHeightY = true; c.lockRootPositionXZ = true; c.keepOriginalOrientation = true; c.keepOriginalPositionY = true; c.keepOriginalPositionXZ = true; }
+            ci.clipAnimations = cl; ci.SaveAndReimport();
+            var clip = AssetDatabase.LoadAllAssetsAtPath(dst).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+            if (clip == null) { Log("WARNING: 7_ride.fbx has no clip"); return; }
+            var sm = sevenCtl.layers[0].stateMachine;
+            foreach (var st0 in sm.states) if (st0.state.name == "ride") sm.RemoveState(st0.state);
+            var st = sm.AddState("ride"); st.motion = clip; st.writeDefaultValues = true;
+            EditorUtility.SetDirty(sevenCtl);
+            Log($"ride clip: {clip.length:0.00}s humanMotion={clip.humanMotion} -> state 'ride' on {AssetDatabase.GetAssetPath(sevenCtl)}");
         }
 
         /// <summary>The original Venus cube: pale stone, glowing edges, the same Elarim marking (placeholder glyph) on one face.</summary>

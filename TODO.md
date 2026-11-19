@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Quick fix QF10: Venus fixes from Dan's 0.11.0 play (Dan, 2026-11-18)
+## Quick fix QF10: Venus fixes from Dan's 0.11.0 play (Dan, 2026-11-18) — done, status below
 Commit first. Standing rules + 20-minute testing rule; look at your own captures before reporting. Spec changes are
 already in `Docs/CHAPTER2_VENUS.md` (VEN_B01, VEN_B03) — it wins.
 
@@ -71,6 +71,13 @@ autopilot — a real player waits forever.
    when they notice 7, and short, sharper chirps for effort / getting hit / going down in the fight tutorial. Keep it
    under the dialogue (duck during lines). Dan wants to "see how it goes" — easy to tune: put volume, interval and
    pitch range in one place and list them in the status.
+6f. **Natural ground, not an elevated path (Dan, 2026-11-18 — `Docs/VENUS-TERRAIN.md`, it wins).** Replace the raised
+   road / walkway blocks with continuous sculpted ground out to the fog: the route is a path worn into rolling grassy
+   land following the contours; terraces are natural shelves of the hillside, channels are streams, the temple grows
+   from a hill, the platform sits on a natural rise; boundaries are natural (steep slopes, rock, water, fog); the
+   collapse becomes a gully a stream has cut through the path, and the slab bridges it. Keep everything Round 11 placed,
+   moved onto the new ground; the grass (item 3) goes on the new terrain. Check: riding-camera captures along the whole
+   route + high wide shots, no platform edges / undersides / void, the bike rides smoothly (no snagging).
 7. **Player fallback for every Venus wait** (as Chapter 1's QF6): no progress for ~45 s → re-show the objective with a
    hint and briefly highlight the next step; after ~2 min → offer a skip (fade, the step is done). Audit every `Until`
    in `VenusDirector`; no wait that only the autopilot can escape.
@@ -78,6 +85,153 @@ autopilot — a real player waits forever.
    bridge; captures of the hatch opening / bike gliding out / hatch closed, the grass, the bridge beat, the guardian
    kneeling and walking (cape), every C03–C05 shot, the hint and the skip; publish **0.11.1**; docs; commit + push;
    per-item status in "QF10 — status"; "For Dan to check (QF10)".
+
+### Dan's change during QF10 (2026-11-18)
+- **Riding pose = a low racing tuck** (Dan: `Docs/Previews/qf10/dan_riding_pose.png` = before, `Art/Reference/ref_riding_posture.png`
+  = posture wanted): hips at the back of the saddle, torso laid forward, arms forward to the grips, knees tucked against
+  the sides, feet back on the rear sides. Same checks + a side capture next to the reference.
+
+## QF10 — status (2026-11-18): done except the last few cm of the hand grip (6c); release 0.11.1 (`game-1101`, Latest)
+**Testing went over the 20-minute rule:** about 31 min of game time, plus one dead run (10 min idle on the main menu).
+- 3 short B01 checks (about 70 s each).
+- 1 full autopilot Venus run (8.4 min; 3.3 min of it was the autopilot stuck behind the bike-in-the-temple bug, found and
+  fixed).
+- 4 player-style runs at `-testspeed 2`, about 18 min of game time:
+  - the first never left the main menu (a menu bug for the new switch, fixed);
+  - the second stopped at the slab (the skip prompt hid telekinesis: a real bug, fixed);
+  - the third stopped after C03 (my test driver walked 7 back to her bike: a driver bug, fixed);
+  - the fourth passed.
+- 1 `-fightonly` run (46 s).
+
+Captures: `Docs/Previews/qf10/` (`venus_run/`, `venus_playtest/`, `b01_quick/`, `fight/`, model / pose previews,
+`riding_pose_vs_reference.png`). Monochrome: 0 over 248 game captures (only the Blender workbench previews carry a tint).
+Audio peak 0 in every run. No exceptions.
+Final player run: **`VENUS PLAYTEST: 1/1, soft-locks 0, hints 3, skips 1, bridge laid, coverage 27 line shots, 0 misses,
+VEN_S04`**.
+
+1. **Climb anywhere: done.** Mantles are now wall faces, and hang-downs work anywhere along the ledge's climbable range,
+   in both Venus and Chapter 1 (`MoonTraversal.MantleHere / MantleDownHere / HangDownHere`). From the top of a mantle
+   wall she can jump back down anywhere along it.
+   - Player run: "Climb up" showed 2.5 m from the old spot; up ok, then "Jump down", back on the road ok.
+   - Chapter 1's terrace B step uses the same code, but no Chapter 1 run exercised it this round.
+2. **The collapse is crossed with telekinesis, on the bike: done.**
+   - A 12 m fallen slab lies along the gully's near lip; its edges glow when she looks at it.
+   - RT: she gestures, the slab lifts, swings round over the gully and comes down across it with dust, a thud and a camera
+     shake. The `Bridge` zone opens and is saved for return trips.
+   - Objectives: "Stop before the collapse" → "Lay something across the gap" → "Ride across".
+   - Both runs crossed it riding.
+   - The garden wall stays climbable for exploring. The old on-foot detour is gone (the gully cuts the whole valley).
+3. **Grass: done.** 93,268 blades in 76 chunks (Seven/Grass: wind in the vertex shader, catching the light toward the tip,
+   back-light glow, receives shadows, casts none). On the new terrain's verges, hillsides and the landing rise; never on
+   the path, the paving, the water or the gully.
+4. **Elegant bike reveal: done.**
+   - A seamless hull panel: its seam glows white, the panel sinks and slides round under the hull, and soft light comes
+     from the bay.
+   - The bike glides out on its hover glow, turns slowly and settles beside her.
+   - The hatch closes and the hull is seamless again: no seam line, panel offset 0.000, bay light 0.
+   - Captures `v06a`–`v06g`.
+5. **Cape: done.** The cape is on its own two bones (CapeA / CapeB under the upper chest). `ElarimCape` swings each half
+   just enough that no thigh, shin or foot capsule (and not the ground) is inside it, then settles back softly.
+   - Worst leg contact: 0.0 cm standing, kneeling and walking (both runs).
+   - Bug found on the way: the extra bones aren't driven by the humanoid animation, so the swing piled up (the cape stuck
+     out sideways). It now resets to rest every frame.
+   - **Open:** the "kneels" capture (`v16`) still shows the guardian standing at that moment.
+6. **C03–C05 coverage: done.** Every line is framed on its speaker:
+   - over 7's shoulder, low on the guardian (he towers);
+   - medium on her at eye level;
+   - two-shots;
+   - a group shot when the attendant speaks to the guardian;
+   - inserts that cut to the speaker after a moment;
+   - cut on speaker change;
+   - the attendant's arrival over her shoulder, and the falling-dust insert.
+
+   Every line is captured and measured (speaker's head in frame and unblocked):
+   - autopilot: 34 shots, 1 miss after an eye close-up (fixed);
+   - player run: 27 shots, 0 misses.
+
+6b. **B01 rewritten: done.** New lines B01_09–16 (Seven / Cat voices, old 09–11 takes dropped). Beats:
+   - her hand catching the fairing;
+   - the look from his paws to the saucer;
+   - the head shake;
+   - she settles into the saddle;
+   - he lies down large.
+
+   Panther is framed for his full grown size: **0.0 % off screen in all 11 shots after the growth.**
+6c. **Bigger bike + riding pose: mostly done.**
+   - Bike: 3.0 m (was 2.3); saddle, grips and foot points come from the model and are re-measured in game by raycast.
+   - Pose: Blender-made (`Tools/Blender/make_ride_pose.py`, looping breath) and, per Dan, a low racing tuck. Hips are
+     held on the back of the saddle, the body is laid forward 42° (+ up to 22° more for reach), she leans into turns, and
+     the feet are on the rear side panels (IK).
+   - Measured: hips to saddle 0 cm, feet 0 cm, **legs through the bike 0 of 28 points**.
+   - **Hands: 4.3 / 4.7 cm from the grips: not ≤ 2 cm yet.** The grips are the hollows on the cowl's sides and she is at
+     the limit of her reach.
+   - `riding_pose_vs_reference.png` is the side capture beside the reference.
+6d. **Fighting: done** (chapter fights + the fight demo). Measured in play, before → after:
+
+   | Move | Button → active frame (s) | Recovery → next attack (s) | Recovery → dodge / block (s) |
+   |---|---|---|---|
+   | jab | 0.58 → 0.13 | 0.54 → 0.04 | 0.86 → 0.05 |
+   | cross | 0.77 → 0.13–0.16 | 0.55 → 0.04 | 0.94 → 0.05 |
+   | hook | 0.55 → 0.13 | 0.26 → (end of combo) | 0.49 → 0.14 (measured) |
+   | takedown | 0.68 → 0.13 | — | — |
+
+   - Dodge: 0.90 m in 0.35 s → 1.15 m in 0.22 s; invulnerable 0.30 s; can act again after 0.26 s (was 1.90 s).
+   - 0.2 s input buffer on every move; quick acceleration in stance.
+   - Soft lock: 70° cone, 3.4 m.
+   - Hit-pause: 3 frames (4 for a takedown), plus a camera nudge.
+   - Clips at 1.45× (fight demo 1.35×).
+   - Bursts captured: `qf10_combo_*`, `qf10_dodge_cancel_*`, `qf10_block_*`. Still nonlethal: both Scree down and alive.
+6e. **Scree voice: done.** `scree_chirp.mp3` (the SFX bank now takes .mp3 too), 3D on every Scree:
+   - idle calls at random intervals with pitch variation and short cuts;
+   - an alert call when startled, when one sees her, or when the fight starts;
+   - effort / hit / dazed / down chirps;
+   - ducked under dialogue.
+
+   Fight run: 19 idle calls, 2 alert calls, 18 fight chirps. **Knobs** (`ScreeVoiceSettings` in `Runtime/ScreeVoice.cs`):
+
+   | Knob | Value |
+   |---|---|
+   | Volume | 0.8 (idle calls 0.75 of that) |
+   | Distance | 2–26 m |
+   | Idle interval | 8–20 s |
+   | Pitch | ±10 % |
+   | Short cuts | 60 %, 0.5–1.4 s |
+   | Alert | 1.6 s at ×1.12, 6 s cooldown |
+   | Effort | 0.30 s at ×1.25 |
+   | Hit | 0.22 s at ×1.35 |
+   | Down | 0.55 s at ×0.85 |
+   | Under dialogue | ×0.3 |
+6f. **Natural ground: done** (`Runtime/VenusTerrain.cs`, `Editor/FightDemoBuilderTerrain.cs`).
+   - One height function for the builder and the game (the `Valley` ground zone = height field + walkable mask):
+     - a 197 m path worn along a curved centreline that dips off the landing rise and rolls;
+     - rolling hills with soft garden shelves either side, dark rock where steep;
+     - the platform on a rise; the basin as lowland to the east;
+     - a stream beside the path that has undercut it into the gully.
+   - A 0.8 m mesh over the playable valley and the hills seen from it, and a coarse mesh out to the fog.
+   - Lamps, marker stones and grown arches along the path.
+   - Natural boundaries: steep hills, the gully, the water, the fog.
+   - Everything Round 11 placed is on the new ground (workers re-seated on it). The bike pitches to the slope (no
+     snagging).
+   - Captures: `high_wide_0–3` and `route_ride_00–08` (the riding camera along the whole route). No edges, undersides or
+     void.
+7. **Player fallback: done.** Every Venus wait now has a hint, a step beacon and a skip action (no wait only the autopilot
+   can escape).
+   - After 45 s without getting closer, the objective comes back with a hint and the step is lit briefly.
+   - After 2 min, "Skip this step" (Y / Enter) is offered: a white fade and the step is done.
+   - `-venushintfast` = 12 s / 30 s for checks. Player run: 3 hints, 1 skip taken.
+   - The skip offer no longer hides the step's own action.
+   - Also fixed: the bike was "summoned" into the temple when she was in the cube chamber; it now only comes where it can
+     go.
+8. **Checks + release: done.** 0.11.1 published.
+
+## For Dan to check (QF10)
+- The hatch and the bike gliding out; B01's new exchange with Panther large (always fully in frame).
+- The riding tuck (`Docs/Previews/qf10/riding_pose_vs_reference.png`): hands are 4–5 cm off the grips; say if the posture
+  is right before I chase the last centimetres.
+- The ride through the new valley: the worn path, the grass, the stream, the gully and the slab bridge (RT).
+- Climbing the low garden wall anywhere; the hint after 45 s and the skip after 2 min if you wait.
+- C03 / C04 cameras; the cape when the guardian walks and kneels (the kneel itself may not show — tell me).
+- Fighting feel on the terrace (and the fight demo); the Scree voice (volume / interval knobs above).
 
 ## QF9 (Dan, 2026-11-18) — done, status below
 Round 11 is paused after stage 1 (committed). Do QF9 first, release it, then resume Round 11 at stage 2 (below) —

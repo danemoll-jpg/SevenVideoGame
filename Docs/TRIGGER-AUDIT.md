@@ -111,6 +111,9 @@ mantles go up, which is forward on this route.
 | 11 | Terrace → ramp → broken ramp end hang-down → scaffold gap → scaffold edge hang-down → bay | one-way down | The 6b city reveal. It fires at z < −43.4, before the ramp end at z −55, and also plays if she is somehow past it. The lever, scene 8 and the beam are all ahead, in the bay | (a) |
 | 12 | Bay → saucer (the beam) | story | Nothing left on the Moon (lever and scene 8 come first) | (a) |
 | 13 | Saucer deck, galley nook, art TV nook | one deck, all walkable both ways; no traversal moves | — | (b) |
+| V1 | Venus (QF10): low walls with a mantle face (the garden-wall shelf beside the stopping area; Moon: terrace B step) — climbable **anywhere** along the face | climb up / jump down anywhere along it | Nothing (exploring). Jump down works anywhere along the same face | (b) |
+| V2 | Venus (QF10, 6f): the gully at the collapse (z 118–128) | the slab bridge, both ways once laid | VEN_B03: the bridge only exists after the telekinesis beat; the gully is a natural boundary across the whole valley (no way round on foot); falling in = back to the last safe spot; the bridge stays for return trips (saved `VEN_B03_bridge`) | (b) |
+| V3 | Venus: the maintenance gate | walk / ride, opens after C04 | Its zones open only after C04 (VEN_S03) | (b) |
 
 Skips are tolerated. For example, a jump off terrace C that misses the stair: the slab is treated as done at the hall
 entrance.

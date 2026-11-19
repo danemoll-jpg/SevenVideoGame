@@ -13,7 +13,7 @@ bike:   the Tripo model lies along X. The forked end is found from the geometry 
 elarim: rigged to Dan's Mixamo skeleton: the armature of Art/Mixamo/elarim/elarim_idle.fbx is the skeleton Mixamo fitted
         to this very model, so the decimated mesh is aligned to it (height to HeadTop_End, centred on the hips) and
         skinned with automatic weights (nearest-bone fallback), then everything is scaled to HEIGHT_ELARIM (3.5 m).
-        The cape stays skinned to the spine (rigid with the back; no cloth in this pass). Exports a Humanoid-ready FBX
+        QF10: the cape hangs from its own two bones (CapeA / CapeB under Spine2), swung clear of the legs by ElarimCape in Unity. Exports a Humanoid-ready FBX
         with no clips (the eight Mixamo clips are imported separately and retargeted). The sword is exported as a prop.
 worm:   lies along X; turned to face -Y, scaled to LENGTH_WORM, an 8-bone chain from tail to head with smooth weights
         along the body, and the keyed clips rise / wriggle / dive / idle_under.
@@ -26,7 +26,7 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 ROOT = os.path.abspath(argv[0]) if argv else os.getcwd()
 KIND = argv[1] if len(argv) > 1 else "bike"
 PREVIEW = os.path.abspath(argv[2]) if len(argv) > 2 else os.path.join(ROOT, "Docs", "Previews", "r11")
-LENGTH_BIKE = 2.3
+LENGTH_BIKE = 3.0          # QF10: 2.3 -> 3.0 m (Dan: it felt small; Kyle's sketch = a rider small against a long bike)
 HEIGHT_ELARIM = 3.5
 LENGTH_WORM = 9.0
 TRIS = {"bike": 40000, "elarim": 60000, "worm": 30000, "sword": 6000}
@@ -180,9 +180,32 @@ def do_bike():
             Q = P[sel]; k = np.argmin(Q[:, 2] - 0.0 * Q[:, 1])
             g = Q[np.argsort(Q[:, 2])[:max(1, len(Q) // 20)]].mean(axis=0)
             log(f"bike: grip {'right' if side > 0 else 'left'} at (x {g[0]:.3f}, y {g[1]:.3f}, z {g[2]:.3f}) -> Unity ({-g[0]:.3f}, {g[2]:.3f}, {-g[1]:.3f})")
+    # QF10: machine-readable points for Unity (Unity frame: x = -Blender x, y = Blender z, z = -Blender y):
+    # saddle top (her hips rest on it), the two grips, and a foot point on each side of the body (the widest point of the
+    # side panel at mid height, a little behind the saddle) for the foot IK.
+    import json
+    pts = {"length": float(np.ptp(P[:, 1])), "width": float(np.ptp(P[:, 0])), "height": float(np.ptp(P[:, 2])),
+           "saddle": [0.0, float(seat_z), float(-seat_y)]}
+    grips = {}
+    for side in (-1, 1):
+        sel = (P[:, 1] < seat_y - 0.15 * LENGTH_BIKE / 2.3) & (P[:, 1] > seat_y - 0.75 * LENGTH_BIKE / 2.3) & (P[:, 0] * side > 0.10 * LENGTH_BIKE / 2.3) & (P[:, 0] * side < 0.45 * LENGTH_BIKE / 2.3) & (P[:, 2] > seat_z - 0.05)
+        if sel.any():
+            Q = P[sel]; g = Q[np.argsort(Q[:, 2])[:max(1, len(Q) // 20)]].mean(axis=0)
+            grips[side] = [float(-g[0]), float(g[2]), float(-g[1])]
+    pts["grip_l"] = grips.get(1, [-0.3, seat_z, 0.6]); pts["grip_r"] = grips.get(-1, [0.3, seat_z, 0.6])
+    if pts["grip_l"][0] > 0: pts["grip_l"], pts["grip_r"] = pts["grip_r"], pts["grip_l"]     # left = -x in Unity
+    fy = seat_y + 0.10 * LENGTH_BIKE / 2.3
+    sl = (np.abs(P[:, 1] - fy) < 0.07) & (P[:, 2] > 0.2 * np.ptp(P[:, 2])) & (P[:, 2] < 0.75 * seat_z + 0.05)
+    if sl.any():
+        k = np.argmax(np.abs(P[sl, 0])); w = float(np.abs(P[sl, 0]).max()); fz = float(P[sl, 2][k])
+    else:
+        w, fz = float(np.ptp(P[:, 0]) / 2), float(seat_z * 0.5)
+    pts["foot_l"] = [-(w + 0.03), fz, float(-fy)]; pts["foot_r"] = [w + 0.03, fz, float(-fy)]
+    json.dump(pts, open(os.path.join(out, "hoverbike_points.json"), "w"), indent=1)
+    log(f"bike points (Unity, metres): {json.dumps(pts)}")
     log(f"bike: vents (underside) lowest z {P[:,2].min():.3f}, tris {tris(ob)}")
     gray_texture(ob, "hoverbike_v1", out)
-    previews("bike", (0, 0, P[:, 2].ptp() / 2), 2.7)
+    previews("bike", (0, 0, P[:, 2].ptp() / 2), LENGTH_BIKE * 1.2)
     export([ob], os.path.join(out, "hoverbike_v1.fbx"))
     write_metrics(out, "hoverbike")
 
@@ -256,24 +279,44 @@ def do_elarim():
             d0, d1 = D[i, idx[i, 0]], D[i, idx[i, 1]]; w0 = d1 / max(1e-9, d0 + d1)
             groups[segs[idx[i, 0]][0]].add([i], float(w0), 'REPLACE'); groups[segs[idx[i, 1]][0]].add([i], float(1 - w0), 'REPLACE')
         log("weights: nearest-bone fallback used")
-    # the cape: everything well behind the body below the shoulders hangs from the back (hips -> spine by height),
-    # never from the legs (it would stretch between them when he walks)
+    # QF10: the cape gets its own two bones (CapeA / CapeB, one per half, children of Spine2, pivot at the top of the
+    # cape region behind the shoulder blades). Everything well behind the body below Spine2 hangs from them (blended
+    # across the middle, and into Spine2 just under the pivot so nothing tears). In Unity, ElarimCape swings each half
+    # backward just enough that no leg (thigh / shin / foot capsules) and not the ground ever passes through it - walking,
+    # kneeling and standing. Never weighted to the legs (it would stretch between them when he walks).
     Hh = top.z - ground; P = co(ob)
     sh = bw("Spine2") or bw("Spine1")
-    cape = (P[:, 1] * (-face_y) > hips.y * (-face_y) + 0.075 * Hh) & (P[:, 2] < sh.z)
-    names = [n for n in ("mixamorig:Hips", "mixamorig:Spine", "mixamorig:Spine1", "mixamorig:Spine2") if n in ob.vertex_groups]
-    if cape.any() and len(names) == 4:
-        idx = np.nonzero(cape)[0].tolist()
-        for vg in ob.vertex_groups: vg.remove(idx)
-        zs = [bw("Hips").z, bw("Spine").z, bw("Spine1").z, bw("Spine2").z]
-        for i in idx:
-            z = P[i, 2]
-            if z <= zs[0]: ob.vertex_groups[names[0]].add([i], 1.0, 'REPLACE'); continue
-            for k in range(3):
-                if z <= zs[k + 1] or k == 2:
-                    t = min(1.0, max(0.0, (z - zs[k]) / max(1e-6, zs[k + 1] - zs[k])))
-                    ob.vertex_groups[names[k]].add([i], 1 - t, 'REPLACE'); ob.vertex_groups[names[k + 1]].add([i], t, 'REPLACE'); break
-        log(f"cape: {len(idx)} vertices behind the body hang from hips / spine (not the legs)")
+    back = -face_y
+    cape = (P[:, 1] * back > hips.y * back + 0.075 * Hh) & (P[:, 2] < sh.z)
+    if cape.any() and "mixamorig:Spine2" in ob.vertex_groups:
+        idx = np.nonzero(cape)[0]
+        yb = float(np.percentile(P[idx][P[idx, 2] > sh.z - 0.08 * Hh][:, 1], 50)) if (P[idx, 2] > sh.z - 0.08 * Hh).any() else hips.y + back * 0.09 * Hh
+        piv_z = sh.z
+        bpy.ops.object.select_all(action='DESELECT'); arm.select_set(True); bpy.context.view_layer.objects.active = arm
+        bpy.ops.object.mode_set(mode='EDIT')
+        eb_parent = arm.data.edit_bones["mixamorig:Spine2"]
+        inv = arm.matrix_world.inverted()
+        for nm, sx in (("CapeA", -1.0), ("CapeB", 1.0)):
+            b = arm.data.edit_bones.new(nm)
+            b.head = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z)); b.tail = inv @ Vector((hips.x + sx * 0.07 * Hh, yb, piv_z - 0.3 * Hh))
+            b.parent = eb_parent; b.use_connect = False; b.use_deform = True
+        bpy.ops.object.mode_set(mode='OBJECT')
+        for vg in ob.vertex_groups: vg.remove(idx.tolist())
+        ga = ob.vertex_groups.get("CapeA") or ob.vertex_groups.new(name="CapeA")
+        gb = ob.vertex_groups.get("CapeB") or ob.vertex_groups.new(name="CapeB")
+        gs = ob.vertex_groups["mixamorig:Spine2"]
+        band = 0.06 * Hh
+        for i in idx.tolist():
+            x = P[i, 0] - hips.x; z = P[i, 2]
+            wb = min(1.0, max(0.0, 0.5 + x / (0.10 * Hh)))          # across the middle: half and half
+            top_k = min(1.0, max(0.0, (z - (piv_z - band)) / band))   # just under the pivot: into Spine2
+            c = 1.0 - top_k
+            if c * (1 - wb) > 1e-4: ga.add([i], c * (1 - wb), 'REPLACE')
+            if c * wb > 1e-4: gb.add([i], c * wb, 'REPLACE')
+            if top_k > 1e-4: gs.add([i], top_k, 'REPLACE')
+        log(f"cape: {len(idx)} vertices on CapeA / CapeB (pivot z {piv_z:.3f}, back y {yb:.3f}), blended into Spine2 over the top {band:.3f}")
+    else:
+        log("WARNING: cape region not found - cape stays on the auto weights")
     # scale the rig to 3.5 m (feet at 0)
     k = HEIGHT_ELARIM / (top.z - ground)
     arm.scale = (k, k, k); arm.location = (0, 0, -ground * k)

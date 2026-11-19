@@ -1,0 +1,185 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.03s] atmosphere: city look applied
+[   0.11s] line of sight cell -> hidden release panel: 1452 rays from a grid inside the cell, 0 unobstructed (must be 0)
+[   0.11s] flow starts at checkpoint 6 (City reveal (6b-7))
+[   0.12s] story step: the city reveal (out onto the terrace) (fires in area 6 'terrace + ramp' or later)
+[   0.12s] objective: Find the way out
+[   0.12s] cat leads the mining cut route (5 stops)
+[   0.12s] auto walk done at (16.50, -2.40, -38.85)
+[   0.12s] story step: get past the two Scree at the terrace exit (fighting tutorial) (fires in area 6 'terrace + ramp' or later)
+[   0.62s] cat waits at mining cut stop 1 (17.1, -2.4, -39.0); 7 at (16.5, -2.4, -38.9), 0.6 m away
+[   0.90s] audio: sfx climb_scuff @(16.5, -1.2, -39.1)
+[   0.90s] move: climbdown at (16.50, -2.40, -39.08), ledge ''
+[   1.45s] traversal ok: climb down into the mining cut (1.0s)
+[   1.50s] hands on the ledge 'vision exit lip': wrist height vs lip 0.230 m, along the wall normal 0.116 m (state hang_idle)
+[   1.85s] teach: 'move' shown (Move Move · Camera Camera)
+[   1.95s] prompts in shot 'tr13_hanging_into_the_cut': teach [Move:Move|Camera:Camera|] context [ClimbUp:Climb up|]
+[   2.00s] shot 01_tr13_hanging_into_the_cut.png  audioPeak=0.000000  cursorVisible=False
+[   2.00s] move: letgo at (16.50, -4.40, -39.68)
+[   2.18s] prompts in shot 't_move_xbox': teach [Move:Move|Camera:Camera|] context []
+[   2.22s] shot 02_t_move_xbox.png  audioPeak=0.000000  cursorVisible=False
+[   2.23s] cat waits at mining cut stop 2 (17.0, -6.4, -40.1); 7 at (16.5, -4.7, -40.0), 0.5 m away
+[   2.50s] prompts in shot 't_move_keys': teach [Move:Move|Camera:Camera|] context []
+[   2.55s] shot 03_t_move_keys.png  audioPeak=0.000000  cursorVisible=False
+[   2.55s] audio: sfx land_soft @(16.5, -6.4, -40.0)
+[   2.55s] move: land at (16.50, -6.40, -39.95), fall 2.00 m
+[   2.97s] traversal ok: let go into the cut (1.0s)
+[   3.27s] auto walk done at (16.50, -6.40, -40.46)
+[   3.57s] audio: sfx climb_scuff @(16.5, -5.2, -41.0)
+[   3.57s] move: wallclimb at (16.50, -6.40, -40.95)
+[   4.33s] cat waits at mining cut stop 3 (17.2, -4.5, -41.0); 7 at (16.4, -6.4, -40.8), 0.8 m away
+[   4.70s] teach: 'move' cleared after 2.8s (done)
+[   5.08s] cat waits at mining cut stop 4 (17.0, -2.4, -41.9); 7 at (16.5, -6.4, -40.8), 1.1 m away
+[   5.59s] shot 04_tr14_climbing_out.png  audioPeak=0.000000  cursorVisible=False
+[   8.42s] audio: sfx climb_scuff @(16.5, -1.2, -41.5)
+[   8.42s] move: climb at (16.50, -2.40, -41.48)
+[   8.42s] ok: out of the mining cut onto the terrace (8.0s)
+[  11.07s] shot 05_qf9_scree_block_the_way.png  audioPeak=0.000000  cursorVisible=False
+[  11.07s] traversal ok: climb out of the cut (two climbs) (7.8s)
+[  11.07s] objective: Get past the Scree
+[  11.08s] fight feel (QF10), seconds - move: button->active before / after; recovery->next attack before / after; recovery->dodge or block before / after
+  jab      0.58 / 0.13;  0.54 / 0.05;  0.86 / 0.05  (clip 1.80s)
+  cross    0.77 / 0.13;  0.55 / 0.05;  0.94 / 0.05  (clip 2.13s)
+  hook     0.55 / 0.13;  0.26 / 0.05;  0.49 / 0.05  (clip 1.30s)
+  takedown 0.68 / 0.13
+  dodge    move 0.35 s for 0.90 m / 0.22 s for 1.15 m; invulnerable ~1.59 / 0.30 s; act again after 1.90 / 0.26 s
+  input buffer: none (QF9 queued only during an attack) / 0.20 s for every move; movement in stance 1.4 m/s instant / 2.3 m/s with 16 m/s2; aim assist none / 70 deg cone, 3.4 m
+
+[  11.08s] teach: 'fight_attack' shown (Attack Attack)
+[  11.12s] shot 06_tr15_out_onto_the_terrace_passage.png  audioPeak=0.000000  cursorVisible=False
+[  11.40s] prompts in shot 't_fight_attack_xbox': teach [Attack:Attack|] context []
+[  11.45s] shot 07_t_fight_attack_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  11.73s] prompts in shot 't_fight_attack_keys': teach [Attack:Attack|] context []
+[  11.78s] shot 08_t_fight_attack_keys.png  audioPeak=0.000000  cursorVisible=False
+[  11.78s] prompts in shot 'qf10_combo_0': teach [Attack:Attack|] context []
+[  11.81s] shot 09_qf10_combo_0.png  audioPeak=0.000000  cursorVisible=False
+[  11.81s] audio: sfx fight_swing @(16.0, -1.4, -42.9)
+[  11.88s] prompts in shot 'qf10_combo_1': teach [Attack:Attack|] context []
+[  11.92s] shot 10_qf10_combo_1.png  audioPeak=0.000000  cursorVisible=False
+[  11.95s] fight: Scree_Worker5 hit
+[  11.95s] audio: sfx fight_hit @(15.8, -1.4, -43.5)
+[  11.99s] prompts in shot 'qf10_combo_2': teach [Attack:Attack|] context []
+[  12.02s] shot 11_qf10_combo_2.png  audioPeak=0.000000  cursorVisible=False
+[  12.05s] audio: sfx fight_swing @(15.8, -1.4, -43.5)
+[  12.09s] prompts in shot 'qf10_combo_3': teach [Attack:Attack|] context []
+[  12.13s] shot 12_qf10_combo_3.png  audioPeak=0.000000  cursorVisible=False
+[  12.18s] fight: Scree_Worker5 hit
+[  12.18s] audio: sfx fight_hit @(15.7, -1.4, -43.6)
+[  12.20s] prompts in shot 'qf10_combo_4': teach [Attack:Attack|] context []
+[  12.23s] shot 13_qf10_combo_4.png  audioPeak=0.000000  cursorVisible=False
+[  12.27s] audio: sfx fight_swing @(15.7, -1.4, -43.6)
+[  12.30s] prompts in shot 'qf10_combo_5': teach [Attack:Attack|] context []
+[  12.34s] shot 14_qf10_combo_5.png  audioPeak=0.000000  cursorVisible=False
+[  12.40s] fight: Scree_Worker5 hit
+[  12.40s] fight: Scree_Worker5 dazed
+[  12.40s] audio: sfx scree_grunt @(15.2, -1.4, -45.1)
+[  12.40s] audio: sfx fight_hit @(15.6, -1.4, -44.0)
+[  12.41s] prompts in shot 'qf10_combo_6': teach [Attack:Attack|] context []
+[  12.45s] shot 15_qf10_combo_6.png  audioPeak=0.000000  cursorVisible=False
+[  12.52s] prompts in shot 'qf10_combo_7': teach [Attack:Attack|] context []
+[  12.55s] shot 16_qf10_combo_7.png  audioPeak=0.000000  cursorVisible=False
+[  12.56s] prompts in shot 'qf10_dodge_cancel_0': teach [Attack:Attack|] context []
+[  12.59s] shot 17_qf10_dodge_cancel_0.png  audioPeak=0.000000  cursorVisible=False
+[  12.65s] prompts in shot 'qf10_dodge_cancel_1': teach [Attack:Attack|] context []
+[  12.68s] shot 18_qf10_dodge_cancel_1.png  audioPeak=0.000000  cursorVisible=False
+[  12.75s] prompts in shot 'qf10_dodge_cancel_2': teach [Attack:Attack|] context []
+[  12.79s] shot 19_qf10_dodge_cancel_2.png  audioPeak=0.000000  cursorVisible=False
+[  12.86s] prompts in shot 'qf10_dodge_cancel_3': teach [Attack:Attack|] context []
+[  12.89s] shot 20_qf10_dodge_cancel_3.png  audioPeak=0.000000  cursorVisible=False
+[  12.95s] prompts in shot 'qf10_dodge_cancel_4': teach [Attack:Attack|] context []
+[  12.98s] shot 21_qf10_dodge_cancel_4.png  audioPeak=0.000000  cursorVisible=False
+[  13.06s] prompts in shot 'qf10_block_0': teach [Attack:Attack|] context []
+[  13.09s] shot 22_qf10_block_0.png  audioPeak=0.000000  cursorVisible=False
+[  13.18s] prompts in shot 'qf10_block_1': teach [Attack:Attack|] context []
+[  13.21s] shot 23_qf10_block_1.png  audioPeak=0.000000  cursorVisible=False
+[  13.30s] prompts in shot 'qf10_block_2': teach [Attack:Attack|] context []
+[  13.34s] shot 24_qf10_block_2.png  audioPeak=0.000000  cursorVisible=False
+[  13.42s] prompts in shot 'qf10_block_3': teach [Attack:Attack|] context []
+[  13.45s] shot 25_qf10_block_3.png  audioPeak=0.000000  cursorVisible=False
+[  13.45s] teach: 'fight_attack' cleared after 2.2s (done)
+[  13.76s] fight feel demo (QF10): jab button->active 0.131s; recovery->next 0.036s; cross button->active 0.163s; recovery->next 0.039s; hook button->active 0.131s; recovery->dodge 0.144s
+[  13.76s] fight (check run): first attempt - standing still on purpose to be knocked down
+[  14.26s] fight: Scree_Worker4 windup
+[  14.26s] teach: 'fight_block' shown (Block Block)
+[  14.26s] audio: sfx scree_grunt @(17.1, -1.4, -44.4)
+[  14.58s] prompts in shot 't_fight_block_xbox': teach [Block:Block|] context []
+[  14.63s] shot 26_t_fight_block_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  14.91s] prompts in shot 't_fight_block_keys': teach [Block:Block|] context []
+[  14.96s] shot 27_t_fight_block_keys.png  audioPeak=0.000000  cursorVisible=False
+[  15.34s] fight: Scree_Worker4 missed
+[  17.45s] fight: Scree_Worker5 recovered
+[  24.27s] teach: 'fight_block' cleared after 10.0s (done)
+[  24.27s] fight: Scree_Worker4 windup
+[  24.27s] teach: 'fight_dodge' shown (Dodge Dodge)
+[  24.27s] audio: sfx scree_grunt @(17.0, -1.4, -44.3)
+[  25.07s] prompts in shot 't_fight_dodge_xbox': teach [Dodge:Dodge|] context []
+[  25.11s] shot 28_t_fight_dodge_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  25.39s] prompts in shot 't_fight_dodge_keys': teach [Dodge:Dodge|] context []
+[  25.45s] shot 29_t_fight_dodge_keys.png  audioPeak=0.000000  cursorVisible=False
+[  25.90s] audio: sfx fight_hit @(16.0, -1.4, -43.0)
+[  25.90s] fight: Scree_Worker4 landed
+[  30.42s] fight: Scree_Worker4 windup
+[  30.42s] audio: sfx scree_grunt @(16.7, -1.4, -43.9)
+[  31.84s] audio: sfx fight_hit @(15.7, -1.4, -42.7)
+[  31.84s] fight: Scree_Worker4 landed
+[  34.28s] teach: 'fight_dodge' cleared after 10.0s (done)
+[  36.35s] fight: Scree_Worker4 windup
+[  36.35s] audio: sfx scree_grunt @(16.5, -1.4, -43.6)
+[  37.43s] audio: sfx fight_hit @(15.4, -1.4, -42.4)
+[  37.43s] audio: sfx body_fall @(15.4, -1.4, -42.4)
+[  37.43s] fight: Scree_Worker4 landed
+[  37.43s] fight: 7 knocked down (3 blows) - reset #1 to the start of the fight
+[  37.48s] shot 30_qf9_seven_knocked_down.png  audioPeak=0.000000  cursorVisible=False
+[  37.48s] fight (check run): second attempt - fighting
+[  39.32s] audio: sfx fight_swing @(16.1, -1.4, -43.1)
+[  39.45s] fight: Scree_Worker5 hit
+[  39.45s] audio: sfx fight_hit @(16.0, -1.4, -43.5)
+[  39.67s] audio: sfx fight_swing @(16.0, -1.4, -43.5)
+[  39.80s] fight: Scree_Worker5 hit
+[  39.80s] audio: sfx fight_hit @(15.8, -1.4, -43.8)
+[  40.02s] audio: sfx fight_swing @(15.8, -1.4, -43.8)
+[  40.16s] fight: Scree_Worker5 hit
+[  40.16s] fight: Scree_Worker5 dazed
+[  40.16s] teach: 'fight_takedown' shown (Takedown Takedown)
+[  40.16s] audio: sfx scree_grunt @(15.3, -1.4, -45.1)
+[  40.16s] audio: sfx fight_hit @(15.7, -1.4, -44.1)
+[  40.24s] audio: sfx fight_swing @(15.7, -1.4, -44.1)
+[  40.37s] fight: Scree_Worker5 taken_down
+[  40.37s] audio: sfx fight_hit @(15.6, -1.4, -44.3)
+[  40.48s] prompts in shot 't_fight_takedown_xbox': teach [Takedown:Takedown|] context []
+[  40.54s] shot 31_t_fight_takedown_xbox.png  audioPeak=0.000000  cursorVisible=False
+[  40.81s] prompts in shot 't_fight_takedown_keys': teach [Takedown:Takedown|] context []
+[  40.87s] shot 32_t_fight_takedown_keys.png  audioPeak=0.000000  cursorVisible=False
+[  40.89s] prompts in shot 'qf9_takedown': teach [Takedown:Takedown|] context []
+[  40.94s] shot 33_qf9_takedown.png  audioPeak=0.000000  cursorVisible=False
+[  40.99s] audio: sfx body_fall @(15.2, -1.4, -45.4)
+[  41.05s] audio: sfx fight_swing @(16.0, -1.4, -44.6)
+[  41.18s] fight: Scree_Worker4 hit
+[  41.18s] audio: sfx fight_hit @(16.4, -1.4, -44.5)
+[  41.40s] audio: sfx fight_swing @(16.4, -1.4, -44.5)
+[  41.54s] fight: Scree_Worker4 hit
+[  41.54s] audio: sfx fight_hit @(16.7, -1.4, -44.5)
+[  41.75s] audio: sfx fight_swing @(16.7, -1.4, -44.5)
+[  41.89s] fight: Scree_Worker4 hit
+[  41.89s] fight: Scree_Worker4 dazed
+[  41.89s] audio: sfx scree_grunt @(18.2, -1.4, -44.5)
+[  41.89s] audio: sfx fight_hit @(17.1, -1.4, -44.5)
+[  41.97s] audio: sfx fight_swing @(17.1, -1.4, -44.5)
+[  42.10s] fight: Scree_Worker4 taken_down
+[  42.10s] audio: sfx fight_hit @(17.3, -1.4, -44.5)
+[  42.10s] fight won in 30.5s: blows landed 11, blocks 1, dodges 1, blows taken 0, resets 1; both Scree down and alive (nonlethal)
+[  42.10s] fight timings measured in play (QF10): jab button->active 0.131s; recovery->next 0.036s; cross button->active 0.163s; recovery->next 0.039s; hook button->active 0.131s; recovery->dodge 0.144s; jab button->active 0.131s; recovery->next 0.172s; cross button->active 0.130s; recovery->next 0.172s; hook button->active 0.132s; takedown button->active 0.131s; jab button->active 0.131s; recovery->next 0.173s; cross button->active 0.132s; recovery->next 0.167s; hook button->active 0.132s; takedown button->active 0.132s | Scree voice: idle calls 19, alert calls 2, fight chirps 18
+[  42.62s] prompts in shot 'qf9_takedown': teach [Takedown:Takedown|] context []
+[  42.66s] shot 34_qf9_takedown.png  audioPeak=0.000000  cursorVisible=False
+[  42.68s] teach: 'fight_takedown' cleared after 2.2s (done)
+[  42.72s] audio: sfx body_fall @(18.5, -1.4, -44.5)
+[  42.85s] fight: Scree_Worker5 sitting
+[  44.01s] shot 35_qf9_both_scree_down.png  audioPeak=0.000000  cursorVisible=False
+[  44.01s] objective: 
+[  44.01s] story step: the city reveal (out onto the terrace) (fires in area 6 'terrace + ramp' or later)
+[  44.01s] ok: out onto the terrace (0.0s)
+[  44.37s] fight: Scree_Worker4 sitting
+[  46.56s] shot 36_qf9_reveal_start.png  audioPeak=0.000000  cursorVisible=False
+[  46.56s] follow camera (QF7): 7's body hidden in 96 of 8534 follow frames (1.12 %; by area: mining cut 96, ), swings to an open angle 458 (cuts 53), props faded 0; last hidden: mining cut: 7 at (16.50, -4.55, -39.68), camera (16.36, -2.60, -39.31), by VisionExit_Floor
+[  46.56s] fight check (QF9): stopped at the start of the city reveal
+[  46.56s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)
