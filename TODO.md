@@ -1,5 +1,78 @@
 # Active Development Plan — 7: The Observer
 
+## Current Objective — Round 12: QF11 fixes + Venus part 2, all in one (Dan, 2026-11-18: "fold everything together")
+Commit first. **The spec is `Docs/CHAPTER2_VENUS.md` — it wins.** All standing rules (monochrome, Kyle's fog/glow,
+non-sexual presentation, 7 never kills, the 20-minute testing rule, look at your own captures, fire-at-or-past triggers +
+player fallbacks on every wait, no points of no return). Order: **Part A (QF11, below) first**, then Part B. One release
+at the end: **0.12.0**; per-item status in "Round 12 — status"; "For Dan to check (Round 12)".
+
+### Part B — Venus part 2 (after Part A's items 1–2c)
+B1. **Leftovers from earlier rounds:** the guardian's kneel in C03 (QF10 open: the `v16` capture still shows him standing);
+    QF8's two open camera spots (the climb-down into the mining cut, one spot right of the lunar door).
+B2. **The way down (VEN_04 → VEN_05):** from the parked bike at the observation area, on foot through the root chambers
+    into the underground (existing traversal, readable route, no exact-spot triggers). Music `venus_underground.mp3`
+    below ground (crossfade at the threshold); its whispers ducked under dialogue.
+B3. **Wormmaster** (`Art/Source/wormmaster/wormmaster_v1.glb`; reference `Art/Reference/kyle_wormmaster.jpg`): Blender
+    cleanup + a Humanoid-compatible rig with extra bones along the arms so they can curl, and a head-tip bone that
+    pulses / swells with his voice (no mouth, no lip-sync). Voice: ElevenLabs voice **`Wormmaster`** if Dan has made it
+    (description in `Docs/VOICES.md`); if not, subtitles only and say so. Small worms reuse `worm_v1`.
+B4. **VEN_05 control chamber + the encounter (spec section 7):** Wormmaster above his machinery (low angles, grayscale
+    underlighting); three control devices emitting signals; creatures on clearly visible routes per device; safe
+    observation and traversal spaces; disable each device with existing abilities (interaction / telekinesis —
+    no new power); creatures withdraw when all three are off; a final interaction closes a containment barrier
+    around him — only containment completes it. Nonlethal everywhere: no creature or Wormmaster death possible.
+    Existing failure / retry. Save after each device and after containment. Scenes **C06** (introduction) and
+    **C07** (threat stopped — level camera angles, his dominance gone).
+B5. **B06 return ride** with the world changed (spec section 9: pulses stop, creatures move freely, workers back on
+    the paths, water in a repaired channel, damage still visible) and its lines.
+B6. **C08 → C09 → C10 at the temple:** C09 plays Dan's vision video **`Art/Video/vision_02_venus.mp4`** full screen
+    (skippable; a still fallback if the video can't play), then the **match cut** from the kneeling figure's offered
+    palm to 7's empty palm, and **the new C09 lines** in the spec (VEN_C09_01–05 — "That tree… it was barely up to my
+    knee." … "I think I knew them."). C10: the guardian gives her the small cube copy, awarded **exactly once**; the
+    original stays in its protected structure.
+B7. **B07 ride back + parking:** the bike glides back in through the hatch (the elegant open, reverse of B01; nothing of
+    the bike visible through the hull) and the hull is seamless again.
+B8. **C11 debrief in the galley:** Panther at normal size near the entrance, follow 7 to the table, **the dodecahedron
+    and the cube set together on the table**, the table-height two-shot, open-hand insert, the final wide pause.
+    Over-the-shoulder shots must show Panther (QF8 rule).
+B9. **Destination selection** (spec: "open the existing navigation flow"): after C11, a simple destination screen on
+    the saucer with the worlds that exist (the Moon, Venus) — nothing invented for worlds that don't exist yet.
+    Sets `VEN_S08_COMPLETE`. Return visits (section 9) keep their changed states; the reward never duplicates.
+B10. **Voices + SFX:** all new lines voiced (Seven v3, Cat as "Panther", Guardian, Attendant, Wormmaster if present);
+    SFX for the devices, the containment barrier, creature withdrawal, the hatch.
+B11. **Checks (20-minute rule) + the spec's acceptance checks (section 11)**, quickly: one player-style run from the
+    observation area to the destination screen; skip-equals-watch for C06–C11; save / reload after a device and after
+    the record; captures of every new scene's main shots. Publish **0.12.0**.
+
+### Part A — QF11: Chapter 2 can't be replayed from the start + small fixes (Dan, 2026-11-18)
+
+Dan finished Venus, then picked "Chapter 2 — Venus" to replay it and was dropped at the end. Cause (`DemoMenu.cs`):
+"Chapter 2 — Venus", Continue and the Scene Select "Venus" entry all just load the `Venus` scene, which resumes the
+`VenusState` save.
+
+1. **"Chapter 2 — Venus" always starts the chapter fresh** from the descent / C01: clear the Venus save first; if a save
+   exists, ask "Start Chapter 2 over? Your Venus progress will be reset." (Yes / No). **Continue** is the only thing that
+   resumes a save.
+2. **Scene Select gets real Venus entries**, each starting with the story state, the bike (parked / riding, the bridge
+   laid or not) and Panther exactly as in a real playthrough, without touching the player's own save: arrival (C01) ·
+   the bike + Panther (B01) · first ride (B02) · the collapse / telekinesis bridge (B03) · temple arrival + guardian
+   (B04 / C03) · cube + tremor (C04) · lower gardens + signal (B05 / C05) · and, once built in Part B: the control
+   chamber (C06) · the return ride (B06) · the record (C09 / C10) · the debrief (C11).
+2b. **Panther walks in place in the opening cutscene** (Dan, playing Chapter 2 from the start: the arrival, C01 — and
+   check Chapter 1's opening too). When he isn't moving he must stand, sit or idle, never play the walk cycle on the
+   spot. Fix it at the root, in the cat's animator for every scene: the walk / trot blend is driven by his real ground
+   speed (0 → idle, with a short blend), and any scripted "stand here" / "look at the flyers" beat puts him in idle or
+   sit. Check: log his speed vs the playing clip through C01, B01 and the Chapter 1 opening — no walk clip while his
+   speed is ~0; one capture of each.
+2c. **The hover bike sticks out through the saucer's hull before the hatch opens** (Dan's screenshot
+   `Docs/Previews/qf11/dan_bike_through_hull.png`: the hatch outline glowing, and parts of the bike poking out through
+   the hull / visible in it). Nothing of the bike may show until the hatch is open: keep it hidden (or fully inside an
+   interior bay that doesn't intersect the hull — it's now ~3 m long, so check it still fits) until the panel has
+   opened, then it glides out. Same when it goes back in (B07). Check with captures from outside the ship before,
+   during and after the hatch opens.
+3. **Check + release:** after finishing Venus, "Chapter 2 — Venus" starts at the descent; Continue still resumes; each
+   Scene Select entry starts where it says (one capture each). (Released with Part B as 0.12.0.)
+
 ## Quick fix QF10: Venus fixes from Dan's 0.11.0 play (Dan, 2026-11-18) — done, status below
 Commit first. Standing rules + 20-minute testing rule; look at your own captures before reporting. Spec changes are
 already in `Docs/CHAPTER2_VENUS.md` (VEN_B01, VEN_B03) — it wins.
