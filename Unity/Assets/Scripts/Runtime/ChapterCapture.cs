@@ -76,6 +76,7 @@ namespace Seven
 
         public void Finish(string summary)
         {
+            Log(ChapterCat.SpeedReport());              // QF11: never the walk cycle on the spot
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");
             File.WriteAllText(Path.Combine(DemoBoot.CaptureDir, "capture_log.txt"), _log.ToString());

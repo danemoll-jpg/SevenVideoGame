@@ -8,7 +8,7 @@ alternative, ids `s06b_aNN_*`); both live in `s06b_city_reveal/` and sit between
 Delivery = performance note for 7's lines from `Tools/Voice/seven_delivery.json` (sent to Eleven v3 as audio tags,
 never shown in subtitles); cat lines have none.
 
-105 lines.
+102 lines.
 
 | id | scene | speaker | text | delivery | pause |
 |---|---|---|---|---|---|
@@ -59,15 +59,12 @@ never shown in subtitles); cat lines have none.
 | `s06_09_cat` | 6 | CAT | We should talk about that. |  | 0.45 |
 | `s06_10_7` | 6 | 7 | When we're out. | focused | 0.45 |
 | `s06_11_cat` | 6 | CAT | Agreed. |  | 0.45 |
-| `s06b_01_7` | 65 | 7 | All this was above us? | awed, quiet | 0.45 |
-| `s06b_02_cat` | 65 | CAT | Most of it. |  | 2.5 |
-| `s06b_03_7` | 65 | 7 | Someone built this. | wonder | 0.45 |
-| `s06b_04_cat` | 65 | CAT | Yes. |  | 3.0 |
-| `s06b_05_7` | 65 | 7 | And they're taking it apart. | sad | 0.45 |
-| `s06b_a01_7` | 66 | 7 | I didn't know all this was here. | awed | 0.45 |
-| `s06b_a02_cat` | 66 | CAT | You couldn't see much from where they put you. |  | 2.0 |
-| `s06b_a03_7` | 66 | 7 | How old is it? | curious | 0.45 |
-| `s06b_a04_cat` | 66 | CAT | I don't know. |  | 2.5 |
+| `s06b_01_7` | 65 | 7 | I've never seen the inside of a moon before. | awed, quiet | 0.45 |
+| `s06b_02_cat` | 65 | CAT | Most people insist on looking at the outside. |  | 0.45 |
+| `s06b_03_7` | 65 | 7 | Are those cars? | wonder, a little amused | 0.45 |
+| `s06b_04_cat` | 65 | CAT | Apparently we escaped just in time for traffic. |  | 0.45 |
+| `s06b_05_7` | 65 | 7 | There are people living all the way up there. | quiet wonder, almost to herself | 0.45 |
+| `s06b_06_cat` | 65 | CAT | Come on. Let's find your ship. |  | 0.45 |
 | `s07_01_7` | 7 | 7 | There. That's my ship. | relieved | 0.45 |
 | `s07_02_cat` | 7 | CAT | The saucer? |  | 0.45 |
 | `s07_03_7` | 7 | 7 | Yes. | wry | 0.45 |

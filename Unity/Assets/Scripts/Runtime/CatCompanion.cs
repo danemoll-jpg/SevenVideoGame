@@ -119,9 +119,14 @@ namespace Seven
             transform.position = p;
             if (moved.sqrMagnitude > 1e-6f)
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moved), 400f * Time.deltaTime);
-            PlayClip("walk", 0.2f, Mathf.Clamp(speed / (StrideSpeed * s), 0.6f, 4f));
+            // QF11: the walk clip follows his real ground speed (blocked by furniture = idle, never walking on the spot)
+            float dt = Mathf.Max(1e-4f, Time.deltaTime);
+            _gs = Mathf.Lerp(_gs, moved.magnitude / dt, 1f - Mathf.Exp(-12f * dt));
+            if (_gs > ChapterCat.WalkMin * s) { PlayClip("walk", 0.2f, Mathf.Clamp(_gs / (StrideSpeed * s), 0.6f, 4f)); ChapterCat.WalkFrames++; }
+            else PlayClip("idle", 0.2f);
             return false;
         }
+        float _gs;
 
         void Choose(string action, float seconds)
         {

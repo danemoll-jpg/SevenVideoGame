@@ -160,14 +160,11 @@ Trigger: Interact with guardian after VEN_S06.
 Trigger: Interact with cube after VEN_C08.  
 Camera: Over shoulder toward cube.; Hand approaches and touches.; Full-screen vision.; Match cut from the vision’s open palm to 7’s empty palm.; Eye close-up, gaze lowered.; Medium two-shot for the unanswered question.
 
-- `VEN_C09_01` **Guardian** (spoken): What did you see?
-- `VEN_C09_02` **7** (spoken): The gardens. Before the towers were finished.
-- `VEN_C09_03` **7** (spoken): And someone gave me something.
-- `VEN_C09_04` **Guardian** (spoken): What?
-- `VEN_C09_05` **7** (spoken): A seed.
-- `VEN_C09_06` **Guardian** (spoken): That is not part of the record I opened.
-- `VEN_C09_07` **7** (spoken): Then where did it come from?
-- `VEN_C09_08` **Guardian** (spoken): I don’t know.
+- `VEN_C09_01` **7** (spoken): That tree… it was barely up to my knee.
+- `VEN_C09_02` **Guardian** (spoken): You saw the first planting.
+- `VEN_C09_03` **7** (spoken): Someone was holding a seed. They were waiting for me to take it.
+- `VEN_C09_04` **Guardian** (spoken): The planting is in our record. That moment is not.
+- `VEN_C09_05` **7** (spoken): I think I knew them.
 
 ## VEN_C10 — RECEIVE THE RECORD (R12, cutscene)
 Trigger: Immediately after VEN_C09.  

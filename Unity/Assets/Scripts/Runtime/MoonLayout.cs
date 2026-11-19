@@ -140,6 +140,9 @@ namespace Seven
         public static bool Aboard;             // saucer scene runs scenes 9-10
         public static bool Explore;            // Continue: skip scenes 9-10, straight into free exploration
         public static bool GalleyStart;        // QF6 Scene Select / Continue: start aboard at scene 10 (the galley)
+        /// <summary>Round 12 (2d): play the opening shot (the Moon -> the dive -> her cell) - "Chapter 1" from the menu and
+        /// Scene Select's first entry only, never Continue or a restart.</summary>
+        public static bool Intro;
         public static float StartedAt = -1f;
         public static readonly System.Collections.Generic.List<string> Played = new System.Collections.Generic.List<string>();
         public static readonly System.Text.StringBuilder CaptureLog = new System.Text.StringBuilder();
@@ -160,7 +163,7 @@ namespace Seven
         /// <summary>Round 9: teaching prompts already shown this playthrough (each appears once; kept across checkpoint restarts).</summary>
         public static readonly System.Collections.Generic.HashSet<string> Taught = new System.Collections.Generic.HashSet<string>();
 
-        public static void Reset() { Checkpoint = 0; Aboard = false; Explore = false; GalleyStart = false; StartedAt = -1f; Played.Clear(); Taught.Clear(); }
+        public static void Reset() { Intro = false; Checkpoint = 0; Aboard = false; Explore = false; GalleyStart = false; StartedAt = -1f; Played.Clear(); Taught.Clear(); }
 
         /// <summary>QF6: start at a checkpoint with the story state a real playthrough has there (Scene Select, Continue):
         /// the doors / wall / slab / shape / cat are set by the director's SetupCheckpoint; the controls taught before it

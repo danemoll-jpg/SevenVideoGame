@@ -76,6 +76,18 @@ starts there too; **during another scene**: no trigger is armed during a cutscen
 walk-and-talks never block movement; **while carrying the shape**: nothing waits on it except the take itself (17).
 Teaching prompts never block (they clear on done or when a cutscene takes over).
 
+## Venus part 2 (`VenusDirectorPart2`, Round 12) — every wait is an `Until` with a hint (45 s) and a skip (2 min)
+| Step | Waits for | Fires at or past | Skip |
+|---|---|---|---|
+| The way down | 7 in the control chamber (x > 104.5, below y −28) | anywhere past the entrance | placed at the chamber entrance |
+| Each device (3) | the device count goes up | the device is off however it was done | the next device is disabled for her |
+| Containment | the console (X) | — | the barrier closes |
+| B06 | on the bike; then the temple court (x < 46, z > 190) | anywhere in the court | mounted / placed riding in the court |
+| C08 | X at the guardian (within 4 m) | — | the talk starts |
+| C09 | the cube chamber (z > 258), then X at the cube | anywhere in the chamber | placed / the touch starts |
+| B07 | on the bike, near the ship (z < 40), at the ship (z < 12) | anywhere past each line | placed riding near the ship |
+| Return visit | X at the ramp foot ("Board the saucer") | — | — |
+
 ## Saucer (`Chapter1Aboard`)
 
 | # | Trigger | Condition | How a player could miss it | Fallback |
@@ -114,6 +126,11 @@ mantles go up, which is forward on this route.
 | V1 | Venus (QF10): low walls with a mantle face (the garden-wall shelf beside the stopping area; Moon: terrace B step) — climbable **anywhere** along the face | climb up / jump down anywhere along it | Nothing (exploring). Jump down works anywhere along the same face | (b) |
 | V2 | Venus (QF10, 6f): the gully at the collapse (z 118–128) | the slab bridge, both ways once laid | VEN_B03: the bridge only exists after the telekinesis beat; the gully is a natural boundary across the whole valley (no way round on foot); falling in = back to the last safe spot; the bridge stays for return trips (saved `VEN_B03_bridge`) | (b) |
 | V3 | Venus: the maintenance gate | walk / ride, opens after C04 | Its zones open only after C04 (VEN_S03) | (b) |
+| V4 | Venus (Round 12): the root gate → the root pit (steps) → the root tunnel → the root chamber → the deep tunnel → the control chamber | walk, both ways (slopes and steps, no drops) | The gate opens only after C05 (VEN_S04); every step is walkable back up | (b) |
+| V5 | VEN_05: the raised ledge in the south-west corner (1 m wall, `LedgeMantle`) | climb up / jump down anywhere along its face | The ledge device is up there; jumping down works anywhere along the same face | (b) |
+| V6 | VEN_05: the creature troughs | walk, both ways | A creature that reaches her knocks her back (white fade, back on the last walkway spot) - never a fall, never a dead end | (b) |
+| V7 | C07 → B06: after containment she is back beside her bike at the lookout (a cut) | story | Nothing is left below: the devices, the barrier and the creatures are done (saved); the tunnels stay open | (a) |
+| V8 | B07: the ride back to the saucer, then aboard (C11) | story | The record is in her pocket (awarded once, saved); Venus can be revisited from the destination screen with its changed state | (a) |
 
 Skips are tolerated. For example, a jump off terrace C that misses the stair: the slab is treated as done at the hall
 entrance.

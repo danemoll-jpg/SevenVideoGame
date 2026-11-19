@@ -296,7 +296,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–11 + QF1–QF10 complete (2026-11-18), release 0.11.2.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–12 + QF1–QF11 complete (2026-11-18), release 0.12.0.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -369,6 +369,29 @@ scene (Round 10).
     - `-venusplay [-venushintfast] -testspeed 2` = the player-style Venus run, `VenusPlaytest.cs`; must end
       `VENUS PLAYTEST: 1/1`.
     - The C03–C05 "coverage" lines (speaker in frame).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.11.2** (QF10 status in `TODO.md`), then Round 12.
+- **Round 12 — QF11 + Venus part 2 (release 0.12.0):**
+  - Menu: "Chapter 2 — Venus" always starts fresh (confirm "Start Chapter 2 over?" when a Venus save exists); Continue
+    resumes. Scene Select → "Chapter 2 — Venus >" page: 11 entries (`VenusState.SelectEntries`), each on its own save
+    slot (`seven_venus_select`; the player's `seven_venus` is never touched).
+  - The cat's walk follows his real ground speed (`ChapterCat` / `CatCompanion`; `cat speed vs clip (QF11)` line in every
+    check run). The bike is hidden until the hull hatch has opened (`bike vs the hull (QF11)` lines).
+  - Part 2 flow: `VenusDirectorPart2.cs` (way down → C06 → encounter → C07 → B06 → C08 → C09/C10 → B07 → aboard);
+    debrief + destination screen: `Chapter1AboardVenus.cs` + `DestinationScreen.cs` (the Moon, Venus, Stay aboard).
+    Layout: `VenusLayout` (RootPit / tunnels / `Control` zones, devices, troughs); builder `FightDemoBuilderVenus2.cs`;
+    `ControlDevice.cs`, `WormmasterRig.cs` (procedural, head tip swells with his voice), `WormCreature` (troughs, telegraph,
+    withdraw, calm).
+  - Models: `cleanup_r11.py ... wormmaster` (Humanoid-compatible rig + `WmArm*` curl bones + `HeadTip`, ~4 min);
+    `F:lenderlender.exe --background --factory-startup --python Tools/Blender/make_kneel_pose.py -- <repo>` (the
+    guardian's real kneel; Dan's Mixamo "kneel" never kneels). Both before the Unity build.
+  - Vision 2: `Art/Video/vision_02_venus.mp4` (copied by Build everything); still fallback `Resources/Venus/vision_02_still.jpg`.
+  - Switches: `-venusselect <id>` (start like a Scene Select entry), `-venusselecttest` (every entry, one capture each),
+    `-venusplay2` (player-style run, observation area → destination screen), `-novideo` (still fallback),
+    `-venusstopatship`, `-venusquick2` (stop after C05), `-menu -menuvenusconfirm` (menu shot with the confirm).
+  - Voices: `generate_venus_voices.py --round 12` (Wormmaster = Dan's voice "wormmaster").
+  - Chapter 1 opening shot (2d): `MoonOpening.cs` (procedural screen-space: the Moon + stars + glow, the logo, push-in,
+    the dive through the crust, the tunnels → the cell). Plays on "Chapter 1" from the menu and Scene Select's first
+    entry (`Chapter1State.Intro`), never on Continue; skippable (A / Esc / Enter). Check: `-openingshot` (~25 s, captures
+    `op01–op03` + `s01_cell_start`, then quits).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.12.0** (Round 12 status in `TODO.md`), then Round 13.
 **Before:** Dan plays 0.10.2, then Round 11
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

@@ -367,7 +367,7 @@ namespace Seven
             //    ... and swing round (and up) to the nearest open angle (not while the player is turning the camera).
             //    QF8: also when the pull-in had to come very close (a wall right behind her), sooner in tight spots.
             bool tight = want < Distance * 0.45f;
-            if (Time.time - _lastUserTurn > (tight ? 0.4f : 0.8f) && !_swinging && (_occluded > 0.3f || tight && (hanging || _occluded > 0.05f || want < 1.0f)))
+            if (Time.time - _lastUserTurn > (hanging ? 0.15f : tight ? 0.4f : 0.8f) && !_swinging && (_occluded > 0.3f || tight && (hanging || _occluded > 0.05f || want < 1.0f)))
             {
                 float best = 999f, bestP = Pitch;
                 // QF8: steeper views too (in a tight corner of a chamber only the view from above is open); first a view

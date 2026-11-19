@@ -444,6 +444,7 @@ namespace Seven.EditorTools
             // here became URP's main light and lit the interiors through their ceilings.)
 
             motion.Conveyors = conveyors.ToArray(); motion.Lifts = lifts.ToArray(); motion.Arms = arms.ToArray();
+            BuildLivingCity(root);                                  // Round 12 (2e): the city is alive
             foreach (var tr in root.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = CityLayer;
             Log($"city: {root.GetComponentsInChildren<MeshFilter>().Sum(f => f.sharedMesh.triangles.Length / 3)} triangles, {conveyors.Count} conveyors, {lifts.Count} lifts, {arms.Count} excavator arms (QF3: none)");
             return motion;

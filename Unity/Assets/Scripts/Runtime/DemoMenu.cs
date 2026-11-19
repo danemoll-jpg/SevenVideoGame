@@ -20,17 +20,18 @@ namespace Seven
 
         // Round 7: "Continue" on top when a Chapter 1 save exists; "Quit" at the bottom (with a confirm).
         // QF6: Continue resumes at the saved checkpoint; "Scene select" jumps to any part of Chapter 1.
-        const string ContinueScene = "@continue", QuitScene = "@quit", SelectScene = "@select", BackScene = "@back", LaterScene = "@later";
+        const string ContinueVenus = "@continuevenus", NewVenus = "@newvenus", ContinueScene = "@continue", QuitScene = "@quit", SelectScene = "@select", BackScene = "@back", LaterScene = "@later";
         (string label, string scene)[] Items;
         bool _selectPage;
         static (string, string)[] BuildItems()
         {
             var l = new System.Collections.Generic.List<(string, string)>();
+            VenusState.UseOwnSave();
             if (VenusState.Reached)
-                l.Add(("Continue  —  Venus: " + (VenusState.Objective ?? "the gardens"), "Venus"));
+                l.Add(("Continue  —  Venus: " + (VenusState.Objective ?? "the saucer"), ContinueVenus));
             else if (SaveGame.HasChapter1Save)
                 l.Add((SaveGame.Progress >= Chapter1State.CpExplore ? "Continue  —  explore the saucer" : "Continue  —  " + Chapter1State.CpName(SaveGame.Progress), ContinueScene));
-            l.Add(("Chapter 1 — The Moon Prison", "Chapter1")); l.Add(("Chapter 2 — Venus", "Venus")); l.Add(("Scene select", SelectScene)); l.Add(("Fight demo", "FightDemo")); l.Add(("Saucer demo", "Saucer"));
+            l.Add(("Chapter 1 — The Moon Prison", "Chapter1")); l.Add(("Chapter 2 — Venus", NewVenus)); l.Add(("Scene select", SelectScene)); l.Add(("Fight demo", "FightDemo")); l.Add(("Saucer demo", "Saucer"));
             l.Add(("Ratwing", "Ratwing")); l.Add(("Quit", QuitScene));
             return l.ToArray();
         }
@@ -39,7 +40,16 @@ namespace Seven
         {
             var l = new System.Collections.Generic.List<(string, string)>();
             for (int cp = Chapter1State.CpCell; cp <= Chapter1State.CpGalley; cp++) l.Add((Chapter1State.CpName(cp), "@cp" + cp));
-            l.Add(("Venus  —  the gardens (Chapter 2)", "Venus")); l.Add(("Back", BackScene));
+            l.Add(("Chapter 2 — Venus  >", "@venuspage")); l.Add(("Back", BackScene));
+            return l.ToArray();
+        }
+        /// <summary>QF11: Chapter 2's Scene Select page - each entry starts with the state a real playthrough has there,
+        /// on its own save slot (the player's Venus save is never touched).</summary>
+        public static (string, string)[] VenusSelectItems()
+        {
+            var l = new System.Collections.Generic.List<(string, string)>();
+            foreach (var (label, id) in VenusState.SelectEntries) l.Add((label, "@ven:" + id));
+            l.Add(("Back", BackScene));
             return l.ToArray();
         }
         public static DemoMenu I { get; private set; }
@@ -47,7 +57,7 @@ namespace Seven
         public string SelectedLabel => Items != null && _sel >= 0 && _sel < Items.Length ? Items[_sel].label : null;
         public bool OnSelectPage => _selectPage;
         GameObject _canvasGo;
-        bool _confirmQuit;
+        bool _confirmQuit, _confirmVenus, _venusPage;
         Text _hint;
         int _sel;
         Text[] _labels;
@@ -58,12 +68,14 @@ namespace Seven
         void Start()
         {
             I = this;
-            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
+            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay && !DemoBoot.VenusPlay2) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
+            if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot && DemoBoot.MenuVenusConfirm) { _confirmVenus = true; Build(); _sel = System.Array.FindIndex(Items, x => x.scene == NewVenus); Refresh(); StartCoroutine(Shot()); return; }
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
             if (DemoBoot.Gallery) GalleryTV.Preload();      // the gallery check run exercises the preload path
             if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }
             if (DemoBoot.Continue) { SaveGame.Continue(); return; }
             if (DemoBoot.Chapter1Aboard) { Chapter1State.StartAboard(); return; }
+            if (DemoBoot.VenusSelect != null) { VenusState.StartAt(DemoBoot.VenusSelect); return; }
             if (DemoBoot.Chapter2) { SceneManager.LoadScene("Venus"); return; }
             if (DemoBoot.Chapter1) { SceneManager.LoadScene("Chapter1"); return; }
             if (DemoBoot.Saucer) { SceneManager.LoadScene("Saucer"); return; }
@@ -74,7 +86,7 @@ namespace Seven
 
         void Build()
         {
-            Items = _selectPage ? SelectItems() : BuildItems();
+            Items = _selectPage ? (_venusPage ? VenusSelectItems() : SelectItems()) : BuildItems();
             if (_canvasGo == null) { MusicSystem.Play("main_theme", 1.5f); GalleryTV.Preload(); }   // Round 8: decode the gallery while the menu is idle
             else Destroy(_canvasGo);
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
@@ -91,7 +103,7 @@ namespace Seven
 
             // Round 10 (Dan): the logo image ("7" + THE OBSERVER, Arial Bold typeset by Tools/make_logo.py; no font shipped)
             if (_selectPage)
-                Text(canvasGo.transform, "SCENE SELECT  —  CHAPTER 1", new Vector2(0, 300), 30, new Color(0.95f, 0.95f, 0.95f));
+                Text(canvasGo.transform, _venusPage ? "SCENE SELECT  —  CHAPTER 2" : "SCENE SELECT  —  CHAPTER 1", new Vector2(0, 300), 30, new Color(0.95f, 0.95f, 0.95f));
             else if (Logo.Add(canvasGo.transform, new Vector2(0, 215), 360f, new Color(0.95f, 0.95f, 0.95f)) == null)
             {
                 Text(canvasGo.transform, "7", new Vector2(0, 240), 110, new Color(0.95f, 0.95f, 0.95f));
@@ -127,11 +139,13 @@ namespace Seven
 
         void Refresh()
         {
-            if (_hint != null) _hint.text = _confirmQuit ? "Quit the game?   A / Enter = yes   ·   B / Esc = no" : "stick / d-pad + A    ·    W S / arrows + Enter";
+            if (_hint != null) _hint.text = _confirmQuit ? "Quit the game?   A / Enter = yes   ·   B / Esc = no"
+                : _confirmVenus ? "Start Chapter 2 over? Your Venus progress will be reset.   A / Enter = yes   ·   B / Esc = no" : "stick / d-pad + A    ·    W S / arrows + Enter";
             for (int i = 0; i < Items.Length; i++)
             {
                 bool on = i == _sel;
                 if (Items[i].scene == QuitScene) _labels[i].text = _confirmQuit ? "Quit?  Yes (A / Enter)" : "Quit";
+                if (Items[i].scene == NewVenus) _labels[i].text = _confirmVenus ? "Start Chapter 2 over?  Yes (A / Enter)" : Items[i].label;
                 _marks[i].color = on ? new Color(0.92f, 0.92f, 0.92f, 1f) : new Color(1f, 1f, 1f, 0.06f);
                 _labels[i].color = on ? new Color(0.05f, 0.05f, 0.05f) : Items[i].scene == LaterScene ? new Color(0.45f, 0.45f, 0.45f) : new Color(0.85f, 0.85f, 0.85f);
             }
@@ -152,19 +166,30 @@ namespace Seven
                 if (Mathf.Abs(y) < 0.3f) _stickReady = 0f;
                 else if (Time.time > _stickReady) { d = y > 0 ? -1 : 1; _stickReady = Time.time + 0.35f; }
             }
-            if (d != 0) { _sel = (_sel + d + Items.Length) % Items.Length; _confirmQuit = false; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
+            if (d != 0) { _sel = (_sel + d + Items.Length) % Items.Length; _confirmQuit = false; _confirmVenus = false; AudioKit.Play("menu_move", null, 0.6f); Refresh(); }
             bool go = (kb != null && (kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.numpadEnterKey.wasPressedThisFrame))
                       || (gp != null && gp.buttonSouth.wasPressedThisFrame);
             bool back = (kb != null && kb.escapeKey.wasPressedThisFrame) || (gp != null && gp.buttonEast.wasPressedThisFrame);
-            if (back && _confirmQuit) { _confirmQuit = false; Refresh(); return; }
+            if (back && (_confirmQuit || _confirmVenus)) { _confirmQuit = false; _confirmVenus = false; Refresh(); return; }
+            if (back && _selectPage && _venusPage) { _venusPage = false; _sel = System.Array.FindIndex(SelectItems(), x => x.Item2 == "@venuspage"); Build(); return; }
             if (back && _selectPage) { _selectPage = false; _sel = 0; Build(); return; }
             if (!go) return;
             AudioKit.Play("menu_confirm", null, 0.7f);
             var scene = Items[_sel].scene;
             if (scene == SelectScene) { _selectPage = true; _sel = 0; Build(); return; }
+            if (scene == BackScene && _venusPage) { _venusPage = false; _sel = System.Array.FindIndex(SelectItems(), x => x.Item2 == "@venuspage"); Build(); return; }
             if (scene == BackScene) { _selectPage = false; _sel = 0; Build(); return; }
+            if (scene == "@venuspage") { _venusPage = true; _sel = 0; Build(); return; }
+            if (scene.StartsWith("@ven:")) { Debug.Log($"[Seven] scene select: {Items[_sel].label}"); Chapter1State.Reset(); VenusState.StartAt(scene.Substring(5)); return; }
+            // QF11: "Chapter 2 — Venus" always starts the chapter fresh; with Venus progress saved, confirm first
+            if (scene == NewVenus)
+            {
+                if (VenusState.HasProgress && !_confirmVenus) { _confirmVenus = true; Refresh(); return; }
+                _confirmVenus = false; Chapter1State.Reset(); VenusState.StartFresh(); return;
+            }
+            if (scene == ContinueVenus) { Chapter1State.Reset(); VenusState.ContinueOwn(); return; }
             if (scene == LaterScene) return;
-            if (scene.StartsWith("@cp")) { Debug.Log($"[Seven] scene select: {Items[_sel].label}"); Chapter1State.StartAt(int.Parse(scene.Substring(3))); return; }
+            if (scene.StartsWith("@cp")) { Debug.Log($"[Seven] scene select: {Items[_sel].label}"); int cp = int.Parse(scene.Substring(3)); Chapter1State.StartAt(cp); Chapter1State.Intro = cp == Chapter1State.CpCell; return; }
             if (scene == QuitScene)
             {
                 if (!_confirmQuit) { _confirmQuit = true; Refresh(); return; }
@@ -173,6 +198,7 @@ namespace Seven
             }
             if (scene == ContinueScene) { SaveGame.Continue(); return; }
             Chapter1State.Reset();
+            Chapter1State.Intro = scene == "Chapter1";                   // Round 12 (2d): the opening shot plays from the menu
             SceneManager.LoadScene(scene);
         }
 

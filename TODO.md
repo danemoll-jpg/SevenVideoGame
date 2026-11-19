@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Current Objective — Round 12: QF11 fixes + Venus part 2, all in one (Dan, 2026-11-18: "fold everything together")
+## Round 12: QF11 fixes + Venus part 2, all in one — done, status below (Dan, 2026-11-18: "fold everything together")
 Commit first. **The spec is `Docs/CHAPTER2_VENUS.md` — it wins.** All standing rules (monochrome, Kyle's fog/glow,
 non-sexual presentation, 7 never kills, the 20-minute testing rule, look at your own captures, fire-at-or-past triggers +
 player fallbacks on every wait, no points of no return). Order: **Part A (QF11, below) first**, then Part B. One release
@@ -70,8 +70,142 @@ Dan finished Venus, then picked "Chapter 2 — Venus" to replay it and was dropp
    interior bay that doesn't intersect the hull — it's now ~3 m long, so check it still fits) until the panel has
    opened, then it glides out. Same when it goes back in (B07). Check with captures from outside the ship before,
    during and after the hatch opens.
+2d. **Opening shot of Chapter 1: the Moon, then through the crust to 7** (Dan, 2026-11-18 — establishes that they're
+   on the Moon). Before the cell scene starts: open on the Moon hanging in space (grayscale, stars, Kyle's glow — the
+   same Moon look as the galley porthole), a slow push-in that accelerates toward the surface, the camera **dives
+   through the crust** (rock strata, dust and darkness rushing past, a few seconds), then into the mine tunnels / the
+   prison block, and settles on **7 in her dark cell** (energy point dark) — straight into the existing opening.
+   ~15–20 s, no dialogue, skippable (A / Esc), plays on "Chapter 1" from the menu and Scene Select's first entry, not
+   on Continue. **Don't reveal the hollow interior or the city** — that stays the scene 6b surprise; the dive goes
+   from the surface straight into the tunnels. Sound: a low rumble through the crust, then the cell's ambience;
+   `moon_prison.mp3` fades in as she appears. **Title card (Dan, yes):** over the Moon at the start, the
+   logo (`Art/Logo/logo_7_observer.png` — "7" + THE OBSERVER, the existing Arial Bold image) fades in, holds ~3 s,
+   fades out before the push-in speeds up; soft glow, centred, not covering the Moon awkwardly. Captures: the title, the Moon, mid-dive, arriving at the cell.
+2e. **The city reveal (scene 6b) is rewritten by Dan** — `Docs/DIALOGUE.md` → "6b The city reveal — rewritten by Dan,
+   2026-11-18" is the script; it replaces both old 6b line sets (drop their voice takes). It plays right after the
+   Scree fight. What changes:
+   - **The city is alive:** nearby buildings with layered balconies, recessed windows, bridges and smooth towers built
+     around much older structures; **thousands of tiny white lights** in rooms and streets; the city **curves upward**
+     along the inner surface; **cloud banks** drifting between districts hiding tower bases; **streams of vehicle
+     lights** on elevated roads and airborne traffic lanes, and headlights moving far overhead across what looks like
+     the sky. Near buildings show individual windows; far ones dissolve into clusters of light along the curve.
+     Grayscale only — the lights are white points / streaks; animate the traffic (moving light streams) cheaply.
+   - **Shots, in order:** over 7's shoulder — the reveal (hold before anyone speaks) · low two-shot, 7 and the cat
+     looking up (she tilts her head back, he follows her gaze) · extreme wide, their small figures at the exit (hold;
+     the city's distant hum — traffic, wind, faint activity — replaces the prison sounds) · the cat watches her, not
+     the skyline · she starts after him, looks back once more · **her view: the lower districts** — mining
+     structures cutting into the ancient city, excavation lights on broken foundations, vast machinery disappearing
+     beneath inhabited terraces; beauty and damage in one frame. Then control returns.
+   - **New lines (6 — voice them: Seven v3, Cat v2):** "I've never seen the inside of a moon before." / "Most people
+     insist on looking at the outside." / "Are those cars?" / "Apparently we escaped just in time for traffic." /
+     "There are people living all the way up there." / "Come on. Let's find your ship."
+   - New SFX: the city's distant hum (traffic, wind, faint activity) as a bed under the scene and the terrace after.
+   - Captures of each shot; Panther / the cat fully in frame in the two-shot.
+2f. **The saucer looks different in Chapter 1 and Chapter 2** (Dan). Cause: Venus builds its own saucer
+   (`FightDemoBuilderVenus.cs`, its own lathe profile / materials / size) instead of Chapter 1's (`BuildBay` in the
+   Chapter 1 builder: the ~12 m disc, glowing rim band, low dome, belly glow ring + iris, ramp, silver hull from Round
+   10). Make **one shared saucer exterior** (one builder method / prefab) used everywhere the ship is seen from outside —
+   Chapter 1's impound bay and liftoff, the Venus landing, and any later world. Chapter 1's look is the reference
+   (silver, rim glow, dome, belly iris + beam, ramp); add Venus's storage hatch to it (seamless when closed, as QF10),
+   same size in both. Check: the same camera angle of the ship in Chapter 1's bay and on the Venus platform, side by
+   side — they must match.
 3. **Check + release:** after finishing Venus, "Chapter 2 — Venus" starts at the descent; Continue still resumes; each
    Scene Select entry starts where it says (one capture each). (Released with Part B as 0.12.0.)
+
+## Round 12 — status (2026-11-18): done, exe-verified off-screen; release 0.12.0 (`game-1200`)
+**Testing went over the 20-minute rule: about 22 min of game time** (Scene Select test 1.2 min; one autopilot Part 2
+run 2.9 min; four player-style Part 2 runs ≈ 13 min — the first three stopped on real bugs (crystal prompt) or on my test
+driver (scene change); 2 opening runs, 3 short B01 runs, 4 short 6b runs ≈ 5 min). Muted, off-screen, Below Normal.
+Captures: `Docs/Previews/r12/` (`selecttest/`, `part2_auto/`, `part2_player/`, `opening/`, `city_6b/`, `b01_quick/`,
+`menu/`, Wormmaster + kneel previews). Monochrome: 0 non-gray pixels in every game capture checked. Audio peak 0 in every run.
+
+**Part A (QF11)**
+1. **"Chapter 2 — Venus" starts fresh: done.** It clears the Venus save; with progress saved it first asks "Start Chapter 2
+   over? Your Venus progress will be reset." (`menu/00_menu.png`). Continue alone resumes (aboard once she rode back).
+2. **Scene Select Venus entries: done** — a "Chapter 2 — Venus >" page in the main and pause menus with 11 entries (C01 · B01
+   · B02 · B03 bridge · B04/C03 · C04 · B05/C05 · the way down + C06 · B06 · C08–C10 · C11). Each starts on its own save
+   slot (`seven_venus_select`; the player's save is never touched) with the stage, bike (parked / riding), bridge and
+   Panther as a real playthrough has them. `-venusselecttest`: all 11 started and captured (`selecttest/`).
+2b. **Panther walking in place: done, root cause fixed.** The walk clip now follows his measured ground speed (idle under
+   0.06 m/s × scale; the clip rate follows the speed) in `ChapterCat` and the saucer's `CatCompanion`, with a safety net.
+   The real cause in C01/B01: his start spot was inside the landed saucer's ground obstacle, so every step was rejected and
+   he trod on the spot; steps leading out of an obstacle are allowed now and his C01 spot moved. Logged in every run:
+   B01 run 531 walk frames / C01 143, 6b run 815, Part 2 run 466 — **walking in place 0×** everywhere.
+2c. **The bike through the hull: done.** The bike is hidden in the bay until the panel has fully opened, then glides out;
+   B07 reverses it and hides it inside before the panel closes. Logged: 0 of 2 bike renderers shown while the hull is
+   closed (before, during and after) — captures `b01_quick/06–12`, `part2_*/b07_*`.
+2d. **Chapter 1 opening shot: done** (`MoonOpening.cs`, ~16 s, skippable A / Esc / Enter). The Moon in space (stars, soft
+   glow), the logo fading in, holding ~3 s and out before the push-in speeds up, the surface filling the screen, the dive
+   through rock strata, dark tunnels, then the existing title + fade-in on 7 in her cell; `moon_prison` fades in as she
+   appears, a rumble through the crust. Plays on "Chapter 1" and Scene Select's first entry, never on Continue. No
+   interior / city shown. Captures `opening/01–04`. Drawn in screen space (procedural grayscale textures).
+2e. **Dan's rewritten 6b: done.** Old 6b lines and takes dropped; six new lines voiced (Seven v3 / Cat v2; 7's deliveries
+   in `seven_delivery.json`). The city is alive (`FightDemoBuilderCity2.cs`): 30 nearby towers with balconies, bridges and
+   lit window grids, 10,882 tiny white lights clustered along the curve, 19 animated traffic lanes (elevated roads,
+   airborne lanes, headlights far overhead), drifting cloud banks, excavation light clusters. Shots in Dan's order: over
+   her shoulder (hold) · low two-shot looking up (she tilts her head back, he follows her gaze) · extreme wide · the cat
+   watches her · she looks back once more · her view of the lower districts. Cat in frame: 0.0 % off screen in both cat
+   shots. New ambience `amb_city_life` under the scene and the terrace after. Captures `city_6b/37–42`.
+   *Weakest shot:* the extreme wide looks down on them from above the host face (prison side), not against the city.
+2f. **One shared saucer: done** (`FightDemoBuilderSaucerExt.cs`): Chapter 1's 12 m silver disc, rim glow, dome, under-band,
+   seams, belly glow, probe and fill — now also on Venus, with the seamless storage hatch cut into it in both chapters.
+   Venus re-placed round the bigger ship (ramp, bay, bike spot, Panther's spots). Side by side, same camera offset:
+   `city_6b/43_saucer_side_by_side_moon.png` and `b01_quick/13_saucer_side_by_side_venus.png` — the same ship.
+3. **Checks: done** (above).
+
+**Part B (Venus part 2)**
+B1. **Leftovers.** *The guardian's kneel: fixed at the cause* — Dan's Mixamo "kneel" never kneels (hips and head at standing
+   height in all 141 frames, measured); a real one-knee kneel is made in Blender (`Tools/Blender/make_kneel_pose.py`) and
+   replaces the state. *QF8's two camera spots:* the slot right of the lunar door (where the sweep measured 0 %) is closed
+   off (nothing needs her there); the follow camera now swings 0.15 s after occlusion while she hangs (was 0.4–0.8 s) for
+   the mining-cut climb-down. **Not re-measured** (no `-camsweep` / Chapter 1 run this round — time).
+B2. **The way down: done.** Root gate (sinks after C05) → an open root pit with steps cut into the hillside → root tunnel →
+   root chamber (hanging roots, glowing root bulbs) → deep tunnel → the control chamber. Walkable both ways, no exact-spot
+   triggers (hint + skip). Below ground: `venus_underground` cross-fades in (logged at the threshold), cave ambience, the
+   light and fog blend to a cave look; ducked under dialogue by the music system.
+B3. **Wormmaster: done.** `cleanup_r11.py wormmaster`: 45k tris, 3.8 m, Humanoid-compatible Mixamo-named skeleton (Unity:
+   avatar valid) + two curl bones at the end of each tentacle arm + `HeadTip`. `WormmasterRig.cs`: sways above his
+   machinery, arms raised and slowly curling, a sweep-up gesture for the signal pulse, the head tip swells and glows with
+   his voice (no mouth); contained = arms lowered and curled, body bowed. Voice: Dan's ElevenLabs voice "wormmaster" (9
+   lines). Small worms reuse `worm_v1`. Previews `wormmaster_sheet.png` (incl. a curl test).
+B4. **VEN_05 + the encounter: done.** Wormmaster on a dais above his machinery, grayscale underlighting; three devices with
+   cables to the dais, each pulsing (ring + sound) and driving the creatures of its trough; troughs telegraphed by dust and
+   a rumble before a creature surfaces; walkways safe. North device = X; ledge device = climb the 1 m wall (anywhere) + X;
+   crystal device = telekinesis from the walkway. A creature that reaches her knocks her back (white fade, back on the
+   walkway, nobody hurt). Each device saves; when all three are off the creatures withdraw (alive) and the console closes
+   the containment barrier (saved); only containment completes it. C06 (low angles, over his shoulder, level on her) and
+   C07 (level angles, machinery silent). Runs: autopilot 1 knock-back, player run 0 / 2; creatures harmed 0.
+B5. **B06: done.** Pulses stop, basin creatures calm (routes away from the foundations), three workers back on the paths,
+   water runs in the repaired channel, the gully / rubble / broken channel pieces stay; the five lines, the calm creature.
+B6. **C08 → C09 → C10: done.** C09 plays `vision_02_venus.mp4` full screen (skippable; still fallback
+   `Resources/Venus/vision_02_still.jpg`, `-novideo`), then the match cut to her empty palm (framed from above on the hand
+   only), the eye close-up, the new C09 lines, the two-shot. C10: the small cube from the guardian, awarded once (log:
+   awards 1), the original stays in its structure; the insert shows both shapes in her hands (from above).
+B7. **B07: done** — the ride back over the slab bridge, the lines near the ship, the hatch opens, the bike glides in, the
+   hull seamless again (captures `b07_01–04`).
+B8. **C11: done** — Panther (normal size) near the entrance, follows her to the table, the dodecahedron and the cube set
+   together, insert of both, table-height two-shot, open-hand insert, he settles closer in the silence, the final wide.
+   Seat check 0 bad frames. (Panther is on the table, not over her shoulder: no over-the-shoulder shots in C11.)
+B9. **Destination screen: done** — after C11, "Set course" at her galley seat opens: The Moon (Chapter 1 from its start) ·
+   Venus (a return visit with its changed state; "Board the saucer" at the ramp) · Stay aboard. Nothing invented,
+   nothing forced. `VEN_S08_COMPLETE`.
+B10. **Voices + SFX: done** — 42 new Venus lines (Seven v3, Panther, Guardian, Wormmaster), 6 new 6b lines; SFX
+   `amb_underground`, `machinery_hum`, `creature_rumble`, `device_off`, `barrier_close`, `creatures_withdraw`,
+   `amb_city_life` (the hatch reuses `hatch_iris`).
+B11. **Checks: done.** Player-style run (virtual gamepad): **`VENUS PLAYTEST 2: 1/1, soft-locks 0`**, observation area →
+   destination screen. Autopilot (every line skipped) with a reload after every committed scene **and after the first
+   device**: all restored (devices, containment, record); **skip = watch** (the same stage and scene list, `VEN_S08`);
+   record awards 1. Bugs found and fixed on the way: the crystal's telekinesis prompt needed her to face it within 40°
+   (a player on the walkway stood there; now generous), B06 left her mounted, the hint named the wrong device.
+
+## For Dan to check (Round 12)
+- Menu: "Chapter 2 — Venus" with a save → the confirm; Scene select → "Chapter 2 — Venus >" (each entry).
+- Chapter 1 from the menu: the new opening shot (skip with A); 6b with the living city (traffic, lights) and its new lines.
+- The saucer: the same ship on the Moon and on Venus; the hatch / bike in and out (nothing through the hull).
+- Venus part 2 start to finish: the way down, Wormmaster, the three devices (cross the troughs after the dust passes),
+  the barrier, the ride back, the vision + match cut, the cube, the debrief, Set course.
+- The guardian's kneel in C03. Panther's walking in C01 / B01.
+- Open / not verified: QF8's mining-cut camera (not re-measured); the 6b extreme wide is the weakest frame.
 
 ## Quick fix QF10: Venus fixes from Dan's 0.11.0 play (Dan, 2026-11-18) — done, status below
 Commit first. Standing rules + 20-minute testing rule; look at your own captures before reporting. Spec changes are

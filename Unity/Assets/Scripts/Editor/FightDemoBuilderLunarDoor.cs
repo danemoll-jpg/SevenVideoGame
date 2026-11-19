@@ -244,6 +244,9 @@ namespace Seven.EditorTools
                 }
                 props.lockRubble = pile;
                 props.extraObstacles.Add(new Vector3(13.7f, -37.45f, 0.75f));       // removed at runtime once the pile is cleared
+                // Round 12 (QF8 open spot): the tight slot between the door's right jamb and the moved ruin column - the follow
+                // camera had no room there (sweep: 0 % from the sides). Nothing needs her there: it is closed off.
+                props.extraObstacles.Add(new Vector3(18.0f, -37.55f, 0.8f));
             }
 
             // ---- floor engravings: concentric circles, a line of small circles leading to the door

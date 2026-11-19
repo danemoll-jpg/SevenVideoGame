@@ -16,7 +16,7 @@ namespace Seven
     /// Venus (coming soon)" card, back to exploring. Only active when <see cref="Chapter1State.Aboard"/> is set.
     /// The cat stays house-cat size here (scale 1).
     /// </summary>
-    public class Chapter1Aboard : MonoBehaviour
+    public partial class Chapter1Aboard : MonoBehaviour
     {
         public SaucerDirector Director;
         public DialoguePlayer Dlg;
@@ -65,6 +65,7 @@ namespace Seven
 
         void Start()
         {
+            if (VenusState.VenusAboardStart) { VenusState.VenusAboardStart = false; StartVenus(); return; }   // Round 12: the Venus debrief / destinations
             if (!Chapter1State.Aboard) { enabled = false; return; }
             I = this;
             Active = true;
@@ -1030,6 +1031,9 @@ namespace Seven
         /// then back to free exploration (Venus itself is not built yet).</summary>
         IEnumerator SetCourse()
         {
+            // Round 12 (B9): once Venus is complete, setting course opens the destination screen (the worlds that exist)
+            if (!VenusMode) VenusState.UseOwnSave();
+            if (VenusState.AtLeast(VenusState.Stage.Complete)) { yield return Destinations(); yield break; }
             _settingCourse = true;
             Director.ExtraPrompt = null;
             Seven.Frozen = true;

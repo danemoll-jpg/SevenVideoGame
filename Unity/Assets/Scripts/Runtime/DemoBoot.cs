@@ -77,11 +77,27 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
         public static bool VenusPlay { get; private set; }
+        /// <summary>QF11: -venusselect &lt;id&gt; = start like the Scene Select entry (C01 B01 B02 B03 C03 C04 C05 C06 B06 C09 C11);
+        /// -venusselecttest = every Venus entry in turn, a capture of each where it starts; -menuvenusconfirm (with -menu) = the
+        /// "Start Chapter 2 over?" confirm on the menu shot.</summary>
+        public static string VenusSelect { get; set; }
+        public static bool VenusSelectTest { get; private set; }
+        public static bool MenuVenusConfirm { get; private set; }
+        /// <summary>Round 12: -novideo = the vision videos count as unavailable (the still fallback); -venusstopatship = the
+        /// Venus check run ends at the saucer (no debrief); -venusquick2 = stop after C05 as Round 11 did.</summary>
+        public static bool NoVideo { get; private set; }
+        public static bool VenusStopAtShip { get; private set; }
+        public static bool Quick2 { get; private set; }
+        /// <summary>Round 12: -venusplay2 = the player-style run of Venus part 2 (VenusPlaytest2), from the observation area to
+        /// the destination screen.</summary>
+        public static bool VenusPlay2 { get; private set; }
+        /// <summary>Round 12 (2d): -openingshot = Chapter 1 with the opening shot, captured, stops in the cell.</summary>
+        public static bool OpeningShot { get; private set; }
         public static bool VenusHintFast { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -116,6 +132,14 @@ namespace Seven
                 if (args[i] == "-chapter2") Chapter2 = true;
                 if (args[i] == "-venusplay") { VenusPlay = true; Chapter2 = true; }
                 if (args[i] == "-venushintfast") VenusHintFast = true;
+                if (args[i] == "-venusselect" && i + 1 < args.Length) VenusSelect = args[i + 1];
+                if (args[i] == "-venusselecttest") { VenusSelectTest = true; VenusSelect = "C01"; }
+                if (args[i] == "-menuvenusconfirm") MenuVenusConfirm = true;
+                if (args[i] == "-novideo") NoVideo = true;
+                if (args[i] == "-venusstopatship") VenusStopAtShip = true;
+                if (args[i] == "-venusquick2") Quick2 = true;
+                if (args[i] == "-venusplay2") { VenusPlay2 = true; VenusSelect = "C06"; }
+                if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;
                 if (args[i] == "-venusskip") { VenusSkip = true; Chapter2 = true; }
                 if (args[i] == "-venusreload") { VenusReload = true; Chapter2 = true; }

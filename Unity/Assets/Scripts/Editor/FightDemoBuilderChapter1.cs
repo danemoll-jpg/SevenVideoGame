@@ -849,54 +849,10 @@ namespace Seven.EditorTools
             // 7's saucer: wide flat disc, glowing rim, polished silver hull (Round 10; was dark glossy); on a cradle, held by four clamps.
             var saucer = new GameObject("Saucer").transform; saucer.SetParent(root, false); saucer.position = L.SaucerCentre;
             float b0 = L.SaucerBaseY;
-            var under = new[] { new Vector2(0f, b0 - 0.1f), new Vector2(1.6f, b0 - 0.08f), new Vector2(3.4f, b0 + 0.02f), new Vector2(5.0f, b0 + 0.22f), new Vector2(5.75f, b0 + 0.42f), new Vector2(6.0f, b0 + 0.56f) };
-            var upper = new[] { new Vector2(6.0f, b0 + 0.82f), new Vector2(5.6f, b0 + 0.98f), new Vector2(4.4f, b0 + 1.22f), new Vector2(3.0f, b0 + 1.45f), new Vector2(1.9f, b0 + 1.75f), new Vector2(1.1f, b0 + 1.93f), new Vector2(0f, b0 + 2.0f) };
-            MeshObject("Hull_Under", SaveMesh(Lathe(Resample(under, 0.25f), 0f, 360f, 96), "Saucer_Ext_Under"), m.hullUnder, saucer);
-            MeshObject("Hull_Upper", SaveMesh(Lathe(Resample(upper, 0.2f), 0f, 360f, 96), "Saucer_Ext_Upper"), m.hull, saucer);
-            MeshObject("Hull_RimBand", SaveMesh(Lathe(new[] { new Vector2(6.0f, b0 + 0.56f), new Vector2(6.04f, b0 + 0.6f), new Vector2(6.04f, b0 + 0.78f), new Vector2(6.0f, b0 + 0.82f) }, 0f, 360f, 96), "Saucer_Ext_RimBand"), m.hullUnder, saucer);
-            // Round 10: shape against the bright fog - a darker band under the rim and seam lines on the underside
-            // (concentric rings + radial panel seams), a fine seam ring on the upper curve.
-            {
-                float UnderY(float r) { for (int i = 0; i < under.Length - 1; i++) if (r <= under[i + 1].x) return Mathf.Lerp(under[i].y, under[i + 1].y, Mathf.InverseLerp(under[i].x, under[i + 1].x, r)); return under[under.Length - 1].y; }
-                float UpperY(float r) { for (int i = 0; i < upper.Length - 1; i++) if (r >= upper[i + 1].x) return Mathf.Lerp(upper[i].y, upper[i + 1].y, Mathf.InverseLerp(upper[i].x, upper[i + 1].x, r)); return upper[upper.Length - 1].y; }
-                var bandV = new List<Vector2>(); for (float r = 4.75f; r <= 5.98f; r += 0.08f) bandV.Add(new Vector2(r, UnderY(r) - 0.012f));
-                MeshObject("Hull_UnderBand", SaveMesh(Lathe(bandV, 0f, 360f, 96), "Saucer_Ext_UnderBand"), m.metalDark, saucer);
-                var sv = new List<Vector3>(); var st = new List<int>();
-                foreach (var rr in new[] { 1.65f, 2.9f, 3.9f, 4.7f })
-                    Sweep(sv, st, Enumerable.Range(0, 97).Select(i => Polar(rr, i * 3.75f, UnderY(rr) - 0.014f)).ToList(), 0.016f, false, 5);
-                for (int k = 0; k < 16; k++)
-                    Sweep(sv, st, Enumerable.Range(0, 9).Select(i => { float rr = Mathf.Lerp(1.65f, 4.7f, i / 8f); return Polar(rr, k * 22.5f, UnderY(rr) - 0.014f); }).ToList(), 0.012f, false, 5);
-                foreach (var rr in new[] { 2.4f, 4.9f })
-                    Sweep(sv, st, Enumerable.Range(0, 97).Select(i => Polar(rr, i * 3.75f, UpperY(rr) + 0.006f)).ToList(), 0.008f, false, 5);
-                MeshObject("Hull_Seams", SaveMesh(SmoothFinish(sv, st), "Saucer_Ext_Seams"), m.metalDark, saucer, false);
-            }
-            var gv = new List<Vector3>(); var gt = new List<int>();
-            Sweep(gv, gt, Enumerable.Range(0, 120).Select(i => Polar(6.07f, i * 3f, b0 + 0.69f)).ToList(), 0.05f, true, 8);
-            props.rimGlow.Add(MeshObject("RimGlow", SaveMesh(SmoothFinish(gv, gt), "Saucer_Ext_RimGlow"), m.rim, saucer, false).GetComponent<Renderer>());
-            var bv = new List<Vector3>(); var bt = new List<int>();
-            Sweep(bv, bt, Enumerable.Range(0, 72).Select(i => Polar(2.4f, i * 5f, b0 - 0.07f)).ToList(), 0.04f, true, 6);
-            Sweep(bv, bt, Enumerable.Range(0, 48).Select(i => Polar(1.2f, i * 7.5f, b0 + 1.97f)).ToList(), 0.025f, true, 6);
-            props.rimGlow.Add(MeshObject("BellyGlow", SaveMesh(SmoothFinish(bv, bt), "Saucer_Ext_BellyGlow"), m.rim, saucer, false).GetComponent<Renderer>());
-            var ul = new GameObject("UnderLight").AddComponent<Light>();
-            ul.transform.SetParent(saucer, false); ul.transform.localPosition = new Vector3(0f, b0 - 0.3f, 0f); ul.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
-            ul.type = LightType.Spot; ul.spotAngle = 120f; ul.range = 8f; ul.intensity = 0.8f; ul.shadows = LightShadows.None;
-            props.underLight = ul;
-            // Round 10: a realtime reflection probe rides with the saucer (SaucerProbe re-renders it as the ship moves)
-            var probeGo = new GameObject("SaucerReflections"); probeGo.transform.SetParent(saucer, false);
-            probeGo.transform.localPosition = new Vector3(0f, b0 + 1.0f, 0f);
-            var rp = probeGo.AddComponent<ReflectionProbe>();
-            rp.mode = ReflectionProbeMode.Realtime; rp.refreshMode = ReflectionProbeRefreshMode.ViaScripting;
-            rp.timeSlicingMode = ReflectionProbeTimeSlicingMode.AllFacesAtOnce;
-            rp.size = new Vector3(16f, 8f, 16f); rp.resolution = 128; rp.hdr = true; rp.importance = 2;
-            // The probe camera has no fog pass: far geometry is clipped and replaced by a bright fog-grey background,
-            // so the silver reflects the glowing haze (Kyle's look) instead of the dark rock behind it.
-            rp.nearClipPlane = 0.3f; rp.farClipPlane = 45f; rp.intensity = 1.35f;
-            rp.clearFlags = ReflectionProbeClearFlags.SolidColor; rp.backgroundColor = Gray(0.82f);
-            rp.cullingMask = ~((1 << 20) | (1 << Seven.SaucerProbe.Layer));
-            probeGo.AddComponent<Seven.SaucerProbe>();
-            // a soft fill under the disc so the silver underside isn't a flat dark silhouette against the fog
-            var fill = new GameObject("HullFill").AddComponent<Light>(); fill.transform.SetParent(saucer, false);
-            fill.transform.localPosition = new Vector3(0f, b0 - 2.2f, 0f); fill.type = LightType.Point; fill.range = 9f; fill.intensity = 1.1f; fill.shadows = LightShadows.None;
+            // Round 12 (2f): the one shared saucer exterior (also Venus's), with the storage hatch closed (seamless)
+            var ext = BuildSaucerExterior(saucer, b0, m.hull, m.hullUnder, m.metalDark, m.rim);
+            props.rimGlow.AddRange(ext.Glow);
+            props.underLight = ext.UnderLight;
             var col = saucer.gameObject.AddComponent<CapsuleCollider>();
             col.direction = 0; col.center = new Vector3(0f, b0 + 0.6f, 0f); col.radius = 0.9f; col.height = 11f;
             // Round 7: no ramp. An iris hatch in the belly (8 blades that slide out under the hull) over a white glow

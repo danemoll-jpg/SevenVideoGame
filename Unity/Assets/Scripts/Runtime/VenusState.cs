@@ -44,7 +44,9 @@ namespace Seven
 
         static Data _d;
         static bool Test => DemoBoot.CaptureDir != null;
-        static string Key => Test ? "seven_test_venus" : "seven_venus";
+        /// <summary>QF11: a Scene Select start plays on its own save slot, so the player's own Venus save is never touched.</summary>
+        public static bool SceneSelectRun { get; private set; }
+        static string Key => Test ? (SceneSelectRun ? "seven_test_venus_select" : "seven_test_venus") : SceneSelectRun ? "seven_venus_select" : "seven_venus";
         static Data D { get { if (_d == null) Load(); return _d; } }
 
         public static void Load()
@@ -58,7 +60,68 @@ namespace Seven
         }
         /// <summary>Check runs: start from nothing, and leave nothing behind.</summary>
         public static void ResetForTest() { if (!Test) return; PlayerPrefs.DeleteKey(Key); _d = new Data(); }
-        public static void ClearTestSave() { if (Test) PlayerPrefs.DeleteKey(Key); }
+        public static void ClearTestSave() { if (Test) { PlayerPrefs.DeleteKey("seven_test_venus"); PlayerPrefs.DeleteKey("seven_test_venus_select"); } }
+
+        /// <summary>The player's own save (Continue, "Chapter 2 — Venus", the saucer's set course) - leaves Scene Select mode.</summary>
+        public static void UseOwnSave() { if (SceneSelectRun) { SceneSelectRun = false; _d = null; } }
+        /// <summary>QF11: does the player's own save hold Venus progress? (the main menu's confirm before starting over)</summary>
+        public static bool HasProgress { get { UseOwnSave(); return D.stage > (int)Stage.Available || D.conversationsDone.Count > 0; } }
+        /// <summary>QF11: "Chapter 2 — Venus" always starts the chapter fresh (the descent, C01): the Venus save is cleared.</summary>
+        public static void StartFresh()
+        {
+            UseOwnSave(); PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); _d = new Data();
+            Debug.Log("[Seven] Chapter 2 started fresh: the Venus save was reset");
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Venus");
+        }
+
+        // ---- QF11: Scene Select entries. Each starts with the story state, the bike and Panther exactly as a real
+        // playthrough has them there - on the Scene Select slot (the player's own save is never touched).
+        public static readonly (string label, string id)[] SelectEntries =
+        {
+            ("Venus: arrival (C01)", "C01"), ("Venus: the bike + Panther (B01)", "B01"), ("Venus: first ride (B02)", "B02"),
+            ("Venus: the collapse - telekinesis bridge (B03)", "B03"), ("Venus: temple arrival + the guardian (B04 / C03)", "C03"),
+            ("Venus: the cube + the tremor (C04)", "C04"), ("Venus: lower gardens + the signal (B05 / C05)", "C05"),
+            ("Venus: the way down + the control chamber (C06)", "C06"), ("Venus: the return ride (B06)", "B06"),
+            ("Venus: the record (C08 - C10)", "C09"), ("Venus: the debrief aboard (C11)", "C11"),
+        };
+        static readonly string[] Order = { "C01", "B01", "B02", "B03", "C03", "C04", "C05", "C06", "B06", "C09", "C11" };
+        public static void StartAt(string entry)
+        {
+            SceneSelectRun = true; _d = BuildEntry(entry); Save();
+            Debug.Log($"[Seven] scene select: Venus {entry} - {Summary()}");
+            if (entry == "C11") { Chapter1State.Reset(); VenusAboardStart = true; Chapter1State.Aboard = true; UnityEngine.SceneManagement.SceneManager.LoadScene("Saucer"); return; }
+            UnityEngine.SceneManagement.SceneManager.LoadScene("Venus");
+        }
+        /// <summary>Set when the Saucer scene should play the Venus debrief (C11) / the destination screen.</summary>
+        public static bool VenusAboardStart;
+        /// <summary>The main menu's Continue for Venus: the player's own save, where it left off (aboard once she has
+        /// ridden back with the record).</summary>
+        public static void ContinueOwn()
+        {
+            UseOwnSave();
+            Debug.Log("[Seven] continue Venus: " + Summary());
+            if (SceneDone("VEN_B07")) { VenusAboardStart = true; Chapter1State.Aboard = true; UnityEngine.SceneManagement.SceneManager.LoadScene("Saucer"); }
+            else UnityEngine.SceneManagement.SceneManager.LoadScene("Venus");
+        }
+        static Data BuildEntry(string e)
+        {
+            int k = System.Array.IndexOf(Order, e); if (k < 0) k = 0;
+            var d = new Data { stage = 0 };
+            void Done(Stage? st, params string[] ids) { foreach (var i in ids) if (!d.conversationsDone.Contains(i)) d.conversationsDone.Add(i); if (st.HasValue) d.stage = Mathf.Max(d.stage, (int)st.Value); }
+            void Bike(Vector3 at, float yaw, bool riding) { d.bikeAt = at; d.bikeYaw = yaw; d.bikeKnown = true; d.riding = riding; }
+            if (k > 0) Done(Stage.Landed, "VEN_C01");
+            if (k > 1) { Done(Stage.Landed, "VEN_B01"); Bike(VenusLayout.BikeUnpacked, 0f, true); }
+            if (k > 2) { Done(null, "VEN_B02"); Bike(new Vector3(30f, 0f, 86f), 0f, true); }
+            if (k > 3) { Done(null, "VEN_C02", "VEN_B03", "VEN_B03_bridge"); Bike(new Vector3(30f, 0f, 176f), 0f, true); }
+            if (k == 3) { d.conversationsDone.Remove("VEN_B03_bridge"); Done(null, "VEN_C02", "VEN_B03"); Bike(VenusLayout.StopSpot, 0f, true); }
+            if (k > 4) { Done(Stage.GuardianMet, "VEN_B04", "VEN_C03"); Bike(VenusLayout.ParkSpot, 180f, false); }
+            if (k > 5) Done(Stage.HelpAccepted, "VEN_C04", "VEN_B05_lines");
+            if (k > 6) { Done(Stage.ControlDiscovered, "VEN_C05"); Bike(VenusLayout.ObsPark, 180f, false); }
+            if (k > 7) { Done(Stage.ThreatStopped, "VEN_WAYDOWN", "VEN_C06", "VEN_C07"); d.stage = (int)Stage.ThreatStopped; foreach (var id in VenusLayout.DeviceIds) d.devicesDisabled.Add(id); d.wormmasterContained = true; }
+            if (k > 8) { Done(null, "VEN_B06"); Bike(VenusLayout.ParkSpot, 180f, false); }
+            if (k > 9) { Done(Stage.RecordReceived, "VEN_C08", "VEN_C09", "VEN_C10", "VEN_B07"); d.recordAwarded = true; d.recordAwards = 1; Bike(VenusLayout.BikeUnpacked, 0f, false); }
+            return d;
+        }
 
         public static bool Reached => D.stage >= 0;
         public static Stage Current => (Stage)Mathf.Max(0, D.stage);
@@ -90,6 +153,7 @@ namespace Seven
 
         // ---- encounter (Round 12) + record
         public static IReadOnlyList<string> DevicesDisabled => D.devicesDisabled;
+        public static bool IsDisabled(string id) => D.devicesDisabled.Contains(id);
         public static bool DisableDevice(string id) { if (D.devicesDisabled.Contains(id)) return false; D.devicesDisabled.Add(id); Save(); return true; }
         public static bool WormmasterContained { get => D.wormmasterContained; set { D.wormmasterContained = value; Save(); } }
         public static bool RecordAwarded => D.recordAwarded;
@@ -166,5 +230,17 @@ namespace Seven
         public static List<Line> SceneLines(string sceneId) => F.lines.FindAll(l => l.scene == sceneId);
         public static Scene SceneInfo(string sceneId) => F.scenes.Find(s => s.id == sceneId);
         public static Line Get(string id) => F.lines.Find(l => l.id == id);
+        /// <summary>A scene's lines n..m as playable voice lines (labels, telepathy, the voice file if there is one).</summary>
+        public static List<VoiceBank.Line> AsVoiceLines(string scene, int from = 1, int to = 99)
+        {
+            var l = new List<VoiceBank.Line>();
+            foreach (var x in SceneLines(scene))
+            {
+                int n = int.Parse(x.id.Substring(x.id.Length - 2));
+                if (n < from || n > to) continue;
+                l.Add(new VoiceBank.Line { Id = x.id, Speaker = x.speaker, Text = x.text, Scene = 200, PauseAfter = 0.45f, Clip = Resources.Load<AudioClip>("VenusVoice/" + x.id), Label = x.label });
+            }
+            return l;
+        }
     }
 }

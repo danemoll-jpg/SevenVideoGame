@@ -159,6 +159,26 @@ namespace Seven.EditorTools
             ctl = AnimatorController.CreateAnimatorControllerAtPath(cpath);
             var sm = ctl.layers[0].stateMachine;
             foreach (var c in states) { var st = sm.AddState(c.name); st.motion = c; if (c.name == "idle") sm.defaultState = st; }
+            // Round 12 (B1): Dan's Mixamo "kneel" never kneels (hips at standing height in every frame) - the Blender-made
+            // kneel (Tools/Blender/make_kneel_pose.py) replaces the state's motion
+            var kp = Path.Combine(RepoRoot, "Art", "Export", "anim", "elarim_kneel_pose.fbx");
+            if (File.Exists(kp))
+            {
+                var dst = clipDir + "/elarim_kneel_pose.fbx";
+                File.Copy(kp, Path.Combine(ProjectRoot, dst), true);
+                AssetDatabase.ImportAsset(dst, ImportAssetOptions.ForceSynchronousImport);
+                var ci = (ModelImporter)AssetImporter.GetAtPath(dst);
+                ci.animationType = ModelImporterAnimationType.Human; ci.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
+                ci.materialImportMode = ModelImporterMaterialImportMode.None; ci.importAnimation = true; ci.SaveAndReimport();
+                ApplyMixamoHumanMap(ci, dst);
+                var cl = ci.defaultClipAnimations;
+                foreach (var c in cl) { c.name = "kneel"; c.loopTime = true; c.lockRootRotation = true; c.lockRootHeightY = true; c.lockRootPositionXZ = true; c.keepOriginalOrientation = true; c.keepOriginalPositionY = true; c.keepOriginalPositionXZ = true; }
+                ci.clipAnimations = cl; ci.SaveAndReimport();
+                var clip = AssetDatabase.LoadAllAssetsAtPath(dst).OfType<AnimationClip>().FirstOrDefault(c => !c.name.StartsWith("__preview__"));
+                var kst = sm.states.Select(x => x.state).FirstOrDefault(x => x.name == "kneel") ?? sm.AddState("kneel");
+                if (clip != null) { kst.motion = clip; Log($"Elarim kneel: the Blender-made kneel pose ({clip.length:0.00}s, humanMotion={clip.humanMotion}) replaces Dan's kneel clip"); }
+            }
+            else Log("WARNING: Art/Export/anim/elarim_kneel_pose.fbx missing (run Tools/Blender/make_kneel_pose.py) - the guardian's kneel stays the Mixamo clip");
             return AssetDatabase.LoadAssetAtPath<GameObject>(path);
         }
 
@@ -278,7 +298,7 @@ namespace Seven.EditorTools
             foreach (var z in V.Zones)
             {
                 if (V.NaturalZone(z.Name)) continue;
-                var mat = z.Name.StartsWith("Temple") || z.Name == "CubeRoom" ? m.stone : m.path;
+                var mat = z.Name.StartsWith("Temple") || z.Name == "CubeRoom" ? m.stone : z.Name.StartsWith("Root") || z.Name == "DeepTunnel" || z.Name.StartsWith("Ctrl") || z.Name == "Control" ? m.stoneDark : m.path;
                 if (Mathf.Approximately(z.Y0, z.Y1)) Block($"Floor_{z.Name}", new Vector3(z.X0, z.Y0 - 0.6f, z.Z0), new Vector3(z.X1, z.Y0, z.Z1), mat, world);
                 else SlopeSlab($"Floor_{z.Name}", z.X0, z.Z0, z.X1, z.Z1, z.Y0, z.Y1, z.Axis, mat, world);
             }
@@ -441,8 +461,6 @@ namespace Seven.EditorTools
             // ---- VEN_04: the maintenance path gate (shut until C04), observation railing, the basin, the root gate
             var maintGate = Block("Maint_Gate", new Vector3(44.2f, 0f, 195f), new Vector3(44.8f, 2.4f, 203f), m.stoneDark, world);
             Block("Obs_Rail", new Vector3(87.6f, -6f, 134f), new Vector3(88f, -5f, 152f), m.stone, world);
-            Block("Obs_RailS", new Vector3(64f, -6f, 133.6f), new Vector3(88f, -5f, 134f), m.stone, world);
-            Block("RootGate_Door", new Vector3(V.RootGate.x - 2f, -6f, V.RootGate.z - 0.4f), new Vector3(V.RootGate.x + 2f, -1f, V.RootGate.z), m.stoneDark, world);
             var bv = new List<Vector3>(); var bt = new List<int>();
             for (int i = 0; i < 30; i++) Lump(bv, bt, new Vector3(92f + (float)rnd.NextDouble() * 50f, V.BasinCentre.y, 105f + (float)rnd.NextDouble() * 70f), new Vector3(1.5f, 0.6f, 1.5f) * (0.6f + (float)rnd.NextDouble()), 0.5f, rnd.Next(1000));
             MeshObject("Basin_Mounds", SaveMesh(SmoothFinish(bv, bt), "Venus_BasinMounds"), m.stoneDark, world);
@@ -458,58 +476,16 @@ namespace Seven.EditorTools
             cloud.GetComponent<Renderer>().shadowCastingMode = ShadowCastingMode.Off;
 
             // ---- the saucer (landed), its ramp, the storage hatch
-            var saucer = new GameObject("Saucer").transform; saucer.SetParent(world, false); saucer.position = V.SaucerAt + Vector3.up * V.SaucerHover;
-            // QF10: the hull has a seamless storage panel (the bike bay) in its lower band, toward the bike's spot: the
-            // lathes skip that span and the panel is the same surface, so closed it is invisible. In B01 its seam glows
-            // white, the panel sinks a few centimetres and slides round under the hull, light spills from the bay, the bike
-            // glides out; then it slides back and the hull is seamless again.
-            float ha0 = V.HatchAngle - V.HatchSpan * 0.5f, ha1 = V.HatchAngle + V.HatchSpan * 0.5f;
-            bool InHatch(float a, float y) { a = Mathf.Repeat(a, 360f); return a > ha0 && a < ha1 && y > -0.21f && y < 1.01f; }
-            var topProf = new[] { new Vector2(0f, 1.9f), new Vector2(1.8f, 1.75f), new Vector2(3.4f, 1.0f), new Vector2(V.SaucerRadius, 0.35f), new Vector2(V.SaucerRadius, 0.2f) };
-            var underProf = new[] { new Vector2(V.SaucerRadius, 0.2f), new Vector2(3.2f, -0.2f), new Vector2(1.5f, -0.45f), new Vector2(0f, -0.5f) };
-            MeshObject("Saucer_Top", SaveMesh(Lathe(topProf, 0f, 360f, 144, InHatch), "Venus_SaucerTop"), m.hull, saucer);
-            MeshObject("Saucer_Under", SaveMesh(Lathe(underProf, 0f, 360f, 144, InHatch), "Venus_SaucerUnder"), m.hullUnder, saucer);
-            var hatch = new GameObject("HatchPanel").transform; hatch.SetParent(saucer, false);
-            hatch.localPosition = Vector3.zero;
-            var panelProf = new[] { new Vector2(3.4f, 1.0f), new Vector2(V.SaucerRadius, 0.35f), new Vector2(V.SaucerRadius, 0.2f), new Vector2(3.2f, -0.2f) };
-            MeshObject("Panel", SaveMesh(Lathe(new[] { panelProf[0], panelProf[1], panelProf[2] }, ha0, ha1, 12), "Venus_HatchPanel"), m.hull, hatch);
-            MeshObject("PanelUnder", SaveMesh(Lathe(new[] { panelProf[2], panelProf[3] }, ha0, ha1, 12), "Venus_HatchPanelUnder"), m.hullUnder, hatch);
-            // the seam: a hair-thin line round the panel (white emission animated by the director; dark when closed)
-            var seamMat = Dissolve("Venus_hatch_seam", Gray(0.85f), 0.6f, false); seamMat.EnableKeyword("_EMISSION"); seamMat.SetColor("_EmissionColor", Color.black); EditorUtility.SetDirty(seamMat);
-            {
-                var sv = new List<Vector3>(); var st = new List<int>();
-                Vector3 Pt(float r, float a, float y) => new Vector3(Mathf.Cos(a * Mathf.Deg2Rad) * r, y, Mathf.Sin(a * Mathf.Deg2Rad) * r) * 1.004f;
-                var loop = new List<Vector3>();
-                foreach (var pr in panelProf) loop.Add(Pt(pr.x, ha0, pr.y));
-                for (int i = 1; i <= 12; i++) loop.Add(Pt(panelProf[panelProf.Length - 1].x, Mathf.Lerp(ha0, ha1, i / 12f), panelProf[panelProf.Length - 1].y));
-                for (int k = panelProf.Length - 2; k >= 0; k--) loop.Add(Pt(panelProf[k].x, ha1, panelProf[k].y));
-                for (int i = 11; i >= 1; i--) loop.Add(Pt(panelProf[0].x, Mathf.Lerp(ha0, ha1, i / 12f), panelProf[0].y));
-                Sweep(sv, st, loop, 0.012f, true, 6);
-                MeshObject("HatchSeam", SaveMesh(SmoothFinish(sv, st), "Venus_HatchSeam"), seamMat, saucer, false);
-            }
-            // the bay behind it: dark sides, a softly glowing back wall and a light that comes up as it opens
-            {
-                var bayMat = Dissolve("Venus_bay", Gray(0.2f), 0.3f, false); bayMat.SetFloat("_Cull", 0f); EditorUtility.SetDirty(bayMat);
-                var bay = new GameObject("Bay").transform; bay.SetParent(saucer, false);
-                var floorProf = new[] { new Vector2(2.2f, -0.2f), new Vector2(3.2f, -0.2f) };
-                MeshObject("BayFloor", SaveMesh(Lathe(floorProf, ha0, ha1, 8), "Venus_BayFloor"), bayMat, bay, false);
-                MeshObject("BayCeiling", SaveMesh(Lathe(new[] { new Vector2(3.4f, 1.0f), new Vector2(2.2f, 1.0f) }, ha0, ha1, 8), "Venus_BayCeiling"), bayMat, bay, false);
-                var backMat = Dissolve("Venus_bay_back", Gray(0.9f), 0.2f, false); backMat.EnableKeyword("_EMISSION"); backMat.SetColor("_EmissionColor", Color.white * 0.05f); EditorUtility.SetDirty(backMat);
-                MeshObject("BayBack", SaveMesh(Lathe(new[] { new Vector2(2.2f, 1.0f), new Vector2(2.2f, -0.2f) }, ha0, ha1, 8), "Venus_BayBack"), backMat, bay, false);
-                foreach (var a in new[] { ha0, ha1 })
-                {
-                    var bwv = new List<Vector3>(); var bwt = new List<int>();
-                    Vector3 Q(float r, float y) => new Vector3(Mathf.Cos(a * Mathf.Deg2Rad) * r, y, Mathf.Sin(a * Mathf.Deg2Rad) * r);
-                    bwv.AddRange(new[] { Q(2.2f, -0.2f), Q(3.2f, -0.2f), Q(V.SaucerRadius, 0.2f), Q(V.SaucerRadius, 0.35f), Q(3.4f, 1.0f), Q(2.2f, 1.0f) });
-                    bwt.AddRange(new[] { 0, 1, 2, 0, 2, 3, 0, 3, 4, 0, 4, 5 });
-                    MeshObject($"BaySide{a:0}", SaveMesh(Finish(bwv, bwt), $"Venus_BaySide{a:0}"), bayMat, bay, false);
-                }
-                var bl = new GameObject("BayLight").AddComponent<Light>(); bl.transform.SetParent(bay, false);
-                bl.transform.localPosition = new Vector3(Mathf.Cos(V.HatchAngle * Mathf.Deg2Rad) * 3.0f, 0.5f, Mathf.Sin(V.HatchAngle * Mathf.Deg2Rad) * 3.0f);
-                bl.type = LightType.Point; bl.range = 7f; bl.intensity = 0f; bl.color = Color.white; bl.shadows = LightShadows.None;
-            }
+            // Round 12 (2f): the one shared saucer exterior (Chapter 1's look: the 12 m silver disc, rim glow, dome, belly
+            // glow) with the storage hatch toward the bike's spot; its root on the ground, the underside SaucerHover above it
+            var saucer = new GameObject("Saucer").transform; saucer.SetParent(world, false); saucer.position = V.SaucerAt;
+            var rimMat = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Saucer_rim.mat") ?? Dissolve("Saucer_rim", Color.white, 0.6f, false);
+            var metalDark = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Moon_metal_dark.mat") ?? Dissolve("Moon_metal_dark", Gray(0.16f), 0.5f, false, 0.4f);
+            var ext = BuildSaucerExterior(saucer, V.SaucerHover, m.hull, m.hullUnder, metalDark, rimMat);
+            var hatch = ext.Panel;
+            foreach (var tr in saucer.GetComponentsInChildren<Transform>(true)) tr.gameObject.layer = Seven.SaucerProbe.Layer;   // its own probe never sees it
             var ramp = new GameObject("Ramp").transform; ramp.SetParent(saucer, false);
-            SlopeSlab("Saucer_Ramp", -0.8f, V.RampFoot.z - 3.4f, 0.8f, V.RampFoot.z, V.SaucerHover, 0f, 1, m.hullUnder, ramp, 0.08f);
+            SlopeSlab("Saucer_Ramp", -0.8f, V.RampTopZ - V.SaucerAt.z, 0.8f, V.RampFoot.z - V.SaucerAt.z, V.RampTopY, 0f, 1, m.hullUnder, ramp, 0.08f);
             var pads = new List<Vector3> { new Vector3(V.SaucerAt.x, V.SaucerAt.z, V.SaucerRadius + 0.3f) };
 
             // ---- ground
@@ -658,6 +634,7 @@ namespace Seven.EditorTools
             d.Slab = slab; d.SlabDust = slabDust; d.TkMotes = tkMotes;                 // QF10: the telekinesis bridge
             d.HatchSeam = saucer.Find("HatchSeam").GetComponent<Renderer>(); d.BayLight = saucer.Find("Bay/BayLight").GetComponent<Light>();
             d.BayBack = saucer.Find("Bay/BayBack").GetComponent<Renderer>();
+            BuildVenusPart2(world, m, em, d, worm, wormCtl, (n, p, f, c) => MakeElarim(n, p, f, c), dlg);      // Round 12
             AddProbe(new Vector3(0f, 3f, 20f), new Vector3(60f, 20f, 60f), Vector3.zero);
             AddProbe(new Vector3(30f, 5f, 250f), new Vector3(30f, 16f, 50f), Vector3.zero);
             ZFightFix("Venus");

@@ -19,18 +19,23 @@ namespace Seven
 
         // ---- VEN_01
         public static readonly Vector3 SaucerAt = new Vector3(0f, 0f, -4.5f);
-        public const float SaucerRadius = 4.3f, SaucerHover = 1.15f;
-        public static readonly Vector3 RampFoot = new Vector3(0f, 0f, 1.6f);       // the ramp comes down on the north side
+        // Round 12 (2f): the shared saucer exterior (Chapter 1's 12 m disc): radius 6, underside 1.15 m above the ground
+        public const float SaucerRadius = 6f, SaucerHover = 1.15f;
+        public static readonly Vector3 RampFoot = new Vector3(0f, 0f, 4.3f);       // the ramp comes down on the north side
+        public const float RampTopZ = 0.9f, RampTopY = 1.48f;                        // it meets the hull's underside near the rim
         public static readonly Vector3 HatchAt = new Vector3(3.4f, 0f, -1.4f);       // the storage hatch (bike bay), north-east
         /// <summary>QF10: the seamless hull panel of the bike bay: centre angle (degrees from +x toward +z round the saucer's
         /// axis) and angular width; it spans the hull's lower band (local y -0.2 .. 1.0).</summary>
-        public const float HatchAngle = 42.5f, HatchSpan = 30f;    // edges on the hull lathe's 2.5-degree segments (no gap)
+        public const float HatchAngle = 41.25f, HatchSpan = 30f;   // = FightDemoBuilder.SaucerHatch* (edges on the 3.75-degree lathe segments)
         public static Vector3 HatchDir => new Vector3(Mathf.Cos(HatchAngle * Mathf.Deg2Rad), 0f, Mathf.Sin(HatchAngle * Mathf.Deg2Rad));
         /// <summary>The middle of the opening on the hull (world).</summary>
-        public static Vector3 HatchMouth => SaucerAt + HatchDir * SaucerRadius + Vector3.up * (SaucerHover + 0.35f);
-        public static readonly Vector3 BikeUnpacked = new Vector3(4.6f, 0f, 2.4f);   // the bike, out of the hatch, facing north
-        public static readonly Vector3 PantherLie = new Vector3(-2.6f, 0f, 1.2f);    // he lies beside the ramp, large
-        public static readonly Vector3 VistaSpot = new Vector3(0f, 0f, 9.5f);       // over her shoulder toward the gardens
+        public static Vector3 HatchMouth => SaucerAt + HatchDir * SaucerRadius + Vector3.up * (SaucerHover + 0.68f);
+        /// <summary>The bike inside the bay (radial, its middle here) and where it is clear of the hull outside.</summary>
+        public static Vector3 BayInside => SaucerAt + HatchDir * 3.4f;
+        public static Vector3 BayOutside => SaucerAt + HatchDir * 8.9f;
+        public static readonly Vector3 BikeUnpacked = new Vector3(6.4f, 0f, 4.6f);   // the bike, out of the hatch, facing north
+        public static readonly Vector3 PantherLie = new Vector3(-3.4f, 0f, 3.6f);    // he lies beside the ramp, large
+        public static readonly Vector3 VistaSpot = new Vector3(0f, 0f, 11.5f);       // over her shoulder toward the gardens
         // ---- VEN_02 road: (bike + walk)
         public const float BendZ = 50f;
         public static readonly Vector3 BendSpot = new Vector3(16f, -1.5f, 52f);        // B02: the long open bend
@@ -66,6 +71,41 @@ namespace Seven
         public static readonly Vector3 BasinCentre = new Vector3(106f, -12f, 142f);  // the creatures move down here
         public static readonly Vector3 Foundations = new Vector3(40f, -14f, 228f);   // under the temple: where the signal drives them
 
+        // ---- Round 12: VEN_04 -> VEN_05, the way down (on foot): through the root gate (it opens after C05) down an open
+        // root pit into the hillside, a root tunnel, the root chamber, a deep tunnel east under the basin, the control chamber.
+        public static readonly Vector3 RootGateIn = new Vector3(69f, -6f, 134.4f);
+        public const float RootLandZ = 131f, RootPitTopZ = 134.6f, RootPitBotZ = 117f, RootPitTopY = -6f, RootPitBotY = -14f;
+        public const float TunnelBotZ = 96f, ChamberY = -22f, ControlY = -30f;
+        /// <summary>Below ground from here on (the music and the cave light blend in past this line).</summary>
+        /// <summary>The root pit's floor (a slot cut into the hillside; the terrain takes this height exactly inside it).</summary>
+        public static bool InRootPit(float x, float z) => x >= 66.5f && x <= 71.5f && z >= RootPitBotZ && z <= RootPitTopZ;
+        public static float RootPitHeight(float z) => z >= RootLandZ + 0.6f ? RootPitTopY : Mathf.Lerp(RootPitBotY, RootPitTopY, Mathf.InverseLerp(RootPitBotZ, RootLandZ + 0.6f, z));
+        public static bool Underground(Vector3 p) => p.y < -11f && p.x > 59f && p.x < 142f && p.z < 120f && p.z > 60f;
+        public static readonly Vector3 RootChamberAt = new Vector3(70f, ChamberY, 90f);
+        // ---- VEN_05: the control chamber (floor y -30). Wormmaster above his machinery on the east dais; three control
+        // devices; three creature troughs (each driven by one device); the containment console in front of the dais.
+        public static readonly Vector3 ControlEntry = new Vector3(105.5f, ControlY, 89f);
+        public static readonly Vector3 ControlCentre = new Vector3(121f, ControlY, 88f);
+        public static readonly Vector3 DaisAt = new Vector3(135f, ControlY, 88f);
+        public const float DaisRadius = 4.2f, DaisHeight = 4.2f, BarrierRadius = 5.6f;
+        public static Vector3 WormmasterAt => DaisAt + Vector3.up * DaisHeight;
+        public static readonly Vector3 ConsoleAt = new Vector3(127.2f, ControlY, 88f);     // close the containment barrier (X)
+        public static readonly string[] DeviceIds = { "dev_north", "dev_ledge", "dev_crystal" };
+        /// <summary>The devices: north (X, at the north walkway), the ledge (climb up to it, X), the crystal (RT: pull its
+        /// signal crystal out from the safe walkway - it stands in the south trough).</summary>
+        public static readonly Vector3[] DeviceAt = { new Vector3(117f, ControlY, 107.6f), new Vector3(107.4f, LedgeY, 67.2f), new Vector3(122f, ControlY, 74.5f) };
+        public static readonly Vector3[] DeviceUse = { new Vector3(117f, ControlY, 105.8f), new Vector3(108.2f, LedgeY, 68.6f), new Vector3(116.2f, ControlY, 70f) };
+        public const float LedgeY = -29.0f;          // the raised ledge in the south-west corner (a 1 m wall, climb anywhere along it)
+        /// <summary>The creature troughs (start, end): north z 97 (dev_north), south z 79.5 (dev_crystal), east x 128.5 in
+        /// front of the dais (dev_ledge). The walkways beside the walls are safe.</summary>
+        public static readonly Vector3[,] Trough =
+        {
+            { new Vector3(106.5f, ControlY, 97f), new Vector3(133f, ControlY, 97f) },
+            { new Vector3(128.6f, ControlY, 66f), new Vector3(128.6f, ControlY, 110f) },
+            { new Vector3(106.5f, ControlY, 79.5f), new Vector3(133f, ControlY, 79.5f) },
+        };
+        public static readonly MoonTraversal.Mantle LedgeMantle = new MoonTraversal.Mantle { Name = "control chamber ledge", From = new Vector3(110f, ControlY, 72.2f), FaceAt = 71.4f, Fwd = Vector3.back, TopY = LedgeY, Along0 = 104.2f, Along1 = 111.6f };
+
         public static readonly Z[] Zones =
         {
             // QF10 (6f): order matters (the first zone containing a point gives its height): the paved / special ones
@@ -80,6 +120,14 @@ namespace Seven
             R("MaintA", 44f, 195f, 80f, 203f, 0f, true, float.NaN, 1, false),          // opens after C04 (VEN_S03)
             R("MaintB", 73f, 150f, 80f, 197f, -6f, true, 0f, 1, false),
             R("ObsArea", 64f, 134f, 88f, 152f, -6f, true, float.NaN, 1, false),
+            // Round 12: the way down (on foot, opens after C05) and VEN_05 - listed before "Valley", they win where they lie
+            R("RootLanding", 66.5f, RootLandZ, 71.5f, RootPitTopZ, RootPitTopY, false, float.NaN, 1, false),
+            R("RootPit", 66.5f, RootPitBotZ, 71.5f, RootLandZ + 0.6f, RootPitBotY, false, RootPitTopY, 1, false),
+            R("RootTunnel", 66.5f, TunnelBotZ, 71.5f, RootPitBotZ + 0.6f, ChamberY, false, RootPitBotY, 1),
+            R("RootChamber", 60f, 84f, 80f, TunnelBotZ + 0.6f, ChamberY, false),
+            R("DeepTunnel", 79.4f, 86f, 104f, 92f, ChamberY, false, ControlY, 0),
+            R("CtrlLedge", 103.6f, 64.2f, 111.8f, 71.4f, LedgeY, false),
+            R("Control", 103.4f, 64.2f, 140.6f, 111.8f, ControlY, false),
             R("Valley", -45f, -25f, 95f, 220f, 0f),                                    // natural ground (height field + walkable mask)
         };
         /// <summary>QF10 (6f): zones whose ground is the sculpted terrain itself (no floor block is built for them).</summary>
@@ -89,7 +137,7 @@ namespace Seven
         // It is no longer the way round the collapse (the far terrace and the ramp beyond are gone: the slab bridge is).
         public static readonly MoonTraversal.Mantle DetourMantle = new MoonTraversal.Mantle { Name = "garden wall", From = new Vector3(24.25f, 0f, 108f), FaceAt = 23.4f, Fwd = Vector3.left, TopY = 1.0f, Along0 = 104f, Along1 = 113.9f };
 
-        public static void UseTraversal() => MoonTraversal.Use(null, null, null, null, new[] { DetourMantle }, null);
+        public static void UseTraversal() => MoonTraversal.Use(null, null, null, null, new[] { DetourMantle, LedgeMantle }, null);
 
         /// <summary>Is a point on one of the zones the bike may use?</summary>
         public static bool BikeZone(Vector3 p, float pad = 0.6f)

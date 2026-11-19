@@ -117,7 +117,7 @@ namespace Seven
         public void Follow() { Current = Mode.Follow; _perchY = float.NaN; Arrived = false; _routePaused = false; CancelLeash(); }
         public void GoTo(Vector3 p, float speed = -1f, Vector3? lookAt = null, string holdClip = "sit")
         {
-            _target = p; _speed = speed > 0f ? speed : TrotSpeed; _look = lookAt ?? Seven.position; _holdClip = holdClip;
+            _target = p; _speed = speed > 0f ? speed : TrotSpeed; _look = lookAt ?? Seven.position; _holdClip = holdClip; _stuckT = 0f;
             Current = Mode.GoTo; Arrived = false; _perchY = float.NaN; _routePaused = false; CancelLeash();
         }
         public void Lead(List<Vector3> path, float waitFor7 = 4.5f)
@@ -194,6 +194,9 @@ namespace Seven
             float len = total / steps;
             var start = transform.position;
             Vector3 p = transform.position;
+            // QF11 (the real cause of Dan's "walks in place"): standing inside a ground obstacle (the landed saucer's pad),
+            // every step was clamped out of it and rejected as a jump - he trod on the spot. Steps that lead him out are fine.
+            bool inside = Flat(Ground.ClampToArena(p, BodyRadius) - p).magnitude > 0.02f;
             for (int s = 0; s < steps; s++)
             {
                 var to = Flat(target - p);
@@ -204,7 +207,7 @@ namespace Seven
                     var dir = Quaternion.Euler(0f, turn + _detour, 0f) * to.normalized;
                     var q = Ground.ClampToArena(p + dir * Mathf.Min(len, to.magnitude), BodyRadius);
                     // never accept a step the clamp turned into a jump (snapping across a wall into another walkable zone)
-                    if (Flat(q - p).magnitude > len + 0.05f) continue;
+                    if (Flat(q - p).magnitude > len + (inside ? 0.6f : 0.05f)) continue;
                     if (InNoCat(q, BodyRadius)) continue;
                     if (Vector3.Dot(Flat(q - p), dir) > Mathf.Min(len, to.magnitude) * 0.6f)
                     {
@@ -221,8 +224,38 @@ namespace Seven
             transform.position = p;
             if (moved.sqrMagnitude > 1e-7f)
                 transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(moved), 420f * Time.deltaTime);
-            PlayClip("walk", 0.2f, Mathf.Clamp(speed / StrideSpeed * 0.25f, 0.8f, 4f));
+            // QF11 (Dan: he walked in place in C01): the walk clip follows his REAL ground speed - blocked or barely moving
+            // = idle (short blend), never the walk cycle on the spot; the clip's rate matches the speed he actually covers
+            float dt = Mathf.Max(1e-4f, Time.deltaTime), sc = Mathf.Max(0.1f, transform.lossyScale.x);
+            _gs = Mathf.Lerp(_gs, moved.magnitude / dt, 1f - Mathf.Exp(-12f * dt));
+            if (_gs > WalkMin * sc) { PlayClip("walk", 0.2f, Mathf.Clamp(_gs / sc / StrideSpeed * 0.25f, 0.6f, 4f)); _stuckT = 0f; }
+            else { PlayClip("idle", 0.2f); _stuckT += dt; }
             return false;
+        }
+        /// <summary>QF11: below this ground speed (m/s at scale 1) he is standing, not walking.</summary>
+        public const float WalkMin = 0.06f;
+        float _gs, _stuckT, _measured; Vector3 _lastPos; bool _havePos; float _stillT;
+        /// <summary>QF11 check: his measured ground speed (m/s, smoothed), frames with the walk clip, and of those frames
+        /// the ones with him (nearly) not moving - must stay 0.</summary>
+        public float MeasuredSpeed => _measured;
+        public static int WalkFrames, WalkInPlaceFrames;
+        public static float WorstInPlace;
+        public static string SpeedReport() => $"cat speed vs clip (QF11): walk clip {WalkFrames} frames, walking in place (speed < {WalkMin:0.00} m/s x scale for > 0.25 s, then switched to idle) {WalkInPlaceFrames}x";
+
+        void LateUpdate()
+        {
+            float dt = Mathf.Max(1e-4f, Time.deltaTime), sc = Mathf.Max(0.1f, transform.lossyScale.x);
+            var p = transform.position;
+            if (_havePos) _measured = Mathf.Lerp(_measured, Flat(p - _lastPos).magnitude / dt, 1f - Mathf.Exp(-10f * dt));
+            _lastPos = p; _havePos = true;
+            if (_clip == "walk" && Time.timeScale > 0f)
+            {
+                WalkFrames++;
+                // a safety net for every caller (scripted moves included): the walk clip with no ground speed -> idle
+                if (_measured < WalkMin * sc) { _stillT += dt; if (_stillT > 0.25f) { WalkInPlaceFrames++; PlayClip("idle", 0.2f); } }
+                else _stillT = 0f;
+            }
+            else _stillT = 0f;
         }
 
         void Face(Vector3 p)
@@ -251,7 +284,8 @@ namespace Seven
                     break;
                 }
                 case Mode.GoTo:
-                    if (MoveTo(_target, _speed)) { Arrived = true; Current = Mode.Hold; }
+                    // QF11: blocked short of the mark (a hull, a rail) for 1.5 s -> he stops there and holds, never treads on the spot
+                    if (MoveTo(_target, _speed) || _stuckT > 1.5f) { if (_stuckT > 1.5f) Debug.Log($"[Seven] cat: blocked {Flat(_target - transform.position).magnitude:0.00} m short of his mark - holds there"); _stuckT = 0f; Arrived = true; Current = Mode.Hold; }
                     break;
                 case Mode.Hold:
                     PlayClip(_holdClip, 0.3f); Face(_look);

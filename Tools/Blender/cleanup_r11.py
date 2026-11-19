@@ -15,6 +15,10 @@ elarim: rigged to Dan's Mixamo skeleton: the armature of Art/Mixamo/elarim/elari
         skinned with automatic weights (nearest-bone fallback), then everything is scaled to HEIGHT_ELARIM (3.5 m).
         QF10: the cape hangs from its own two bones (CapeA / CapeB under Spine2), swung clear of the legs by ElarimCape in Unity. Exports a Humanoid-ready FBX
         with no clips (the eight Mixamo clips are imported separately and retargeted). The sword is exported as a prop.
+wormmaster (Round 12): upright A-pose, turned to face -Y (the side his head leans to), scaled to HEIGHT_WM; a scripted
+        Humanoid-compatible skeleton (Mixamo names) measured from the mesh slices + two extra bones at the end of each tentacle
+        arm (WmArmL1/L2, WmArmR1/R2) so the arms curl along their length + HeadTip (swells with his voice in Unity; no mouth).
+        Region-limited nearest-segment weights. No clips (procedural, WormmasterRig.cs). Previews include a curl test pose.
 worm:   lies along X; turned to face -Y, scaled to LENGTH_WORM, an 8-bone chain from tail to head with smooth weights
         along the body, and the keyed clips rise / wriggle / dive / idle_under.
 """
@@ -29,7 +33,8 @@ PREVIEW = os.path.abspath(argv[2]) if len(argv) > 2 else os.path.join(ROOT, "Doc
 LENGTH_BIKE = 3.0          # QF10: 2.3 -> 3.0 m (Dan: it felt small; Kyle's sketch = a rider small against a long bike)
 HEIGHT_ELARIM = 3.5
 LENGTH_WORM = 9.0
-TRIS = {"bike": 40000, "elarim": 60000, "worm": 30000, "sword": 6000}
+TRIS = {"bike": 40000, "elarim": 60000, "worm": 30000, "sword": 6000, "wormmaster": 45000}
+HEIGHT_WM = 3.8          # Round 12: he towers over 7 (1.7 m) and the 3.5 m Elarim
 FPS = 30
 _m = []
 
@@ -405,5 +410,159 @@ def do_worm():
     write_metrics(out, "worm")
 
 
-{"bike": do_bike, "elarim": do_elarim, "worm": do_worm}[KIND]()
+
+# ======================================================================================================== wormmaster
+def do_wormmaster():
+    out = os.path.join(ROOT, "Art", "Export", "wormmaster"); os.makedirs(out, exist_ok=True)
+    clean(); ob = import_glb(os.path.join(ROOT, "Art", "Source", "wormmaster", "wormmaster_v1.glb")); ob.name = "wormmaster"
+    decimate(ob, TRIS["wormmaster"])
+    P = co(ob); H0 = np.ptp(P[:, 2]); z00 = P[:, 2].min()
+    # facing: the head tip leans forward; the side it leans to is the front -> turn it to -Y
+    top = P[P[:, 2] > z00 + 0.9 * H0]
+    mid = P[(P[:, 2] > z00 + 0.5 * H0) & (P[:, 2] < z00 + 0.75 * H0) & (np.abs(P[:, 0]) < 0.1 * H0)]
+    lean = top[:, 1].mean() - mid[:, 1].mean()
+    if lean > 0: P[:, 0] *= -1; P[:, 1] *= -1                     # rotate 180 about Z
+    log(f"wormmaster: head leans {lean:+.3f} along +Y in the source -> {'turned 180' if lean > 0 else 'kept'} (front = -Y)")
+    s = HEIGHT_WM / H0; P = (P - np.array([0, 0, P[:, 2].min()])) * s
+    P[:, 0] -= np.median(P[:, 0])
+    yc = float(np.median(P[(P[:, 2] > 0.5 * HEIGHT_WM) & (P[:, 2] < 0.7 * HEIGHT_WM), 1])); P[:, 1] -= yc
+    set_co(ob, P); H = HEIGHT_WM
+    gray_texture(ob, "wormmaster_v1", out)
+
+    def segs_at(z, band=0.012):
+        sl = P[np.abs(P[:, 2] - z) < band * H]
+        if len(sl) == 0: return [], sl
+        xs = np.sort(sl[:, 0]); g = np.nonzero(np.diff(xs) > 0.03 * H)[0]; res, a = [], 0
+        for b in g: res.append((xs[a], xs[b])); a = b + 1
+        res.append((xs[a], xs[-1])); return res, sl
+
+    crotch = None; armtip = None; shoulder = None
+    for f in np.arange(0.30, 0.95, 0.005):
+        sg, _ = segs_at(f * H)
+        cen = [x for x in sg if x[0] < 0 < x[1]]
+        if crotch is None and cen: crotch = f * H
+        if len(sg) >= 3 and armtip is None: armtip = f * H
+        if len(sg) >= 3: shoulder = f * H
+    crotch = crotch or 0.48 * H; armtip = armtip or 0.48 * H; shoulder = (shoulder or 0.74 * H) + 0.02 * H
+    torsoW = 0.0
+    for z in (0.58, 0.64):
+        for a, b in segs_at(z * H)[0]:
+            if a < 0 < b: torsoW = max(torsoW, -a, b)
+    torsoW = torsoW or 0.08 * H
+    log(f"wormmaster: crotch {crotch:.2f} m, arm tips down to {armtip:.2f} m, arms leave the body at {shoulder:.2f} m, torso half-width {torsoW:.2f} m")
+
+    def arm_line(side):
+        pts = []
+        for z in np.linspace(armtip + 0.005 * H, shoulder, 14):
+            sg, sl = segs_at(z)
+            for a, b in sg:
+                if side * (a + b) / 2 > torsoW * 0.9 and not (a < 0 < b):
+                    q = sl[(sl[:, 0] >= a) & (sl[:, 0] <= b)]; pts.append(q.mean(axis=0))
+        pts = sorted(pts, key=lambda p: -p[2])          # shoulder first
+        return np.array(pts)
+
+    def leg_line(side):
+        pts = []
+        for z in np.linspace(0.02 * H, crotch - 0.01 * H, 10):
+            sl = P[(np.abs(P[:, 2] - z) < 0.012 * H) & (P[:, 0] * side > 0)]
+            if len(sl): pts.append(sl.mean(axis=0))
+        return np.array(pts[::-1])                      # hip first
+
+    ad = bpy.data.armatures.new("wm_rig"); arm = bpy.data.objects.new("wm_rig", ad); bpy.context.scene.collection.objects.link(arm)
+    bpy.context.view_layer.objects.active = arm; bpy.ops.object.mode_set(mode='EDIT')
+    E = {}
+
+    def bone(n, h, t, parent=None, connect=False):
+        b = ad.edit_bones.new(n); b.head = Vector(h); b.tail = Vector(t)
+        if parent: b.parent = E[parent]; b.use_connect = connect
+        E[n] = b; return b
+
+    yb = 0.0
+    bone("mixamorig:Hips", (0, yb, crotch + 0.02 * H), (0, yb, crotch + 0.08 * H))
+    bone("mixamorig:Spine", (0, yb, crotch + 0.08 * H), (0, yb, crotch + 0.15 * H), "mixamorig:Hips", True)
+    bone("mixamorig:Spine1", (0, yb, crotch + 0.15 * H), (0, yb, shoulder - 0.07 * H), "mixamorig:Spine", True)
+    bone("mixamorig:Spine2", (0, yb, shoulder - 0.07 * H), (0, yb, shoulder + 0.01 * H), "mixamorig:Spine1", True)
+    hz = P[P[:, 2] > 0.86 * H]; hy = float(hz[:, 1].mean()) if len(hz) else 0.0
+    bone("mixamorig:Neck", (0, yb, shoulder + 0.01 * H), (0, hy * 0.4, 0.86 * H), "mixamorig:Spine2", True)
+    bone("mixamorig:Head", (0, hy * 0.4, 0.86 * H), (0, hy * 0.8, 0.93 * H), "mixamorig:Neck", True)
+    bone("HeadTip", (0, hy * 0.8, 0.93 * H), (0, hy, 1.0 * H), "mixamorig:Head", True)
+    for side, sn in ((1, "Left"), (-1, "Right")):
+        L = arm_line(side)
+        if len(L) < 4: L = np.array([(side * torsoW, 0, shoulder), (side * 0.3 * H, 0, armtip)])
+        d = np.concatenate([[0], np.cumsum(np.linalg.norm(np.diff(L, axis=0), axis=1))]); tot = d[-1]
+
+        def at(u, L=L, d=d, tot=tot):
+            k = int(np.searchsorted(d, u * tot)); k = min(max(k, 1), len(L) - 1)
+            w = (u * tot - d[k - 1]) / max(1e-6, d[k] - d[k - 1]); return tuple(L[k - 1] + (L[k] - L[k - 1]) * w)
+
+        tipP = tuple(L[-1] + (L[-1] - L[-2]) / max(1e-6, np.linalg.norm(L[-1] - L[-2])) * 0.02 * H)
+        sh0 = (side * torsoW * 0.35, yb, shoulder - 0.01 * H)
+        bone(f"mixamorig:{sn}Shoulder", sh0, at(0.0), "mixamorig:Spine2")
+        bone(f"mixamorig:{sn}Arm", at(0.0), at(0.33), f"mixamorig:{sn}Shoulder", True)
+        bone(f"mixamorig:{sn}ForeArm", at(0.33), at(0.62), f"mixamorig:{sn}Arm", True)
+        bone(f"mixamorig:{sn}Hand", at(0.62), at(0.78), f"mixamorig:{sn}ForeArm", True)
+        bone(f"WmArm{sn[0]}1", at(0.78), at(0.9), f"mixamorig:{sn}Hand", True)
+        bone(f"WmArm{sn[0]}2", at(0.9), tipP, f"WmArm{sn[0]}1", True)
+        G = leg_line(side)
+        hipP = (side * 0.045 * H, yb, crotch)
+        knee = tuple(G[len(G) // 2]) if len(G) > 2 else (side * 0.07 * H, 0, 0.25 * H)
+        ank = tuple(G[-2]) if len(G) > 2 else (side * 0.09 * H, 0, 0.05 * H)
+        toe0 = (ank[0], ank[1] - 0.04 * H, 0.01 * H)
+        bone(f"mixamorig:{sn}UpLeg", hipP, knee, "mixamorig:Hips")
+        bone(f"mixamorig:{sn}Leg", knee, ank, f"mixamorig:{sn}UpLeg", True)
+        bone(f"mixamorig:{sn}Foot", ank, toe0, f"mixamorig:{sn}Leg", True)
+        bone(f"mixamorig:{sn}ToeBase", toe0, (ank[0], ank[1] - 0.07 * H, 0.005 * H), f"mixamorig:{sn}Foot", True)
+        log(f"wormmaster {sn} arm: shoulder {np.round(at(0.0), 2)}, elbow {np.round(at(0.33), 2)}, wrist {np.round(at(0.62), 2)}, tip {np.round(tipP, 2)}; knee {np.round(knee, 2)}")
+    bpy.ops.object.mode_set(mode='OBJECT')
+
+    ob.parent = arm; ob.modifiers.new("arm", "ARMATURE").object = arm
+    segs = [(b.name, np.array(b.head_local), np.array(b.tail_local)) for b in ad.bones]
+    names = [n for n, _, _ in segs]
+
+    def region(n):
+        if "Arm" in n or "Hand" in n or "Shoulder" in n: return "L" if ("Left" in n or "WmArmL" in n) else "R"
+        if "Leg" in n or "Foot" in n or "Toe" in n: return "lL" if "Left" in n else "lR"
+        return "T"
+
+    reg = np.array([region(n) for n in names])
+    D = np.empty((len(P), len(segs)))
+    for j, (n, a, b) in enumerate(segs):
+        ab = b - a; t = np.clip(((P - a) @ ab) / max(1e-9, ab @ ab), 0, 1); D[:, j] = np.linalg.norm(P - (a + t[:, None] * ab), axis=1)
+    # each vertex's region = the region of its nearest bone overall, but an arm vertex must lie outside the torso and a
+    # leg vertex below the crotch (the wide hips at arm-tip height stay on the body)
+    vr = reg[np.argmin(D, axis=1)].astype(object)
+    bad_arm = ((vr == "L") | (vr == "R")) & (np.abs(P[:, 0]) < torsoW * 0.95)
+    vr[bad_arm] = "T"
+    bad_leg = ((vr == "lL") | (vr == "lR")) & (P[:, 2] > crotch + 0.03 * H)
+    vr[bad_leg] = "T"
+    groups = {n: ob.vertex_groups.new(name=n) for n in names}
+    for i in range(len(P)):
+        near_joint = abs(P[i, 2] - (crotch if str(vr[i]).startswith("l") else shoulder)) < 0.04 * H
+        allowed = (reg == vr[i]) | ((reg == "T") & (vr[i] != "T") & near_joint)
+        idx = np.nonzero(allowed)[0]
+        if len(idx) == 0: idx = np.arange(len(segs))
+        o = idx[np.argsort(D[i, idx])[:2]]
+        d0, d1 = D[i, o[0]], D[i, o[-1]]
+        w0 = 1.0 if len(o) == 1 else d1 / max(1e-9, d0 + d1)
+        groups[names[o[0]]].add([i], float(w0), 'REPLACE')
+        if len(o) > 1 and 1 - w0 > 1e-3: groups[names[o[1]]].add([i], float(1 - w0), 'REPLACE')
+    log(f"wormmaster: {len(names)} bones ({', '.join(n.replace('mixamorig:', '') for n in names)}), tris {tris(ob)}, height {np.ptp(P[:, 2]):.2f} m, width {np.ptp(P[:, 0]):.2f} m")
+    previews("wormmaster", (0, 0, H / 2), H * 1.15)
+    # curl test pose (arms curled, head tip swollen): a weights check, not exported
+    bpy.context.view_layer.objects.active = arm; bpy.ops.object.mode_set(mode='POSE')
+    for sn in ("Left", "Right"):
+        for n in (f"mixamorig:{sn}ForeArm", f"mixamorig:{sn}Hand", f"WmArm{sn[0]}1", f"WmArm{sn[0]}2"):
+            pb = arm.pose.bones[n]; pb.rotation_mode = 'XYZ'; pb.rotation_euler = (0.6, 0, 0)
+    arm.pose.bones["HeadTip"].scale = (1.35, 1.35, 1.35)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    shoot(os.path.join(PREVIEW, "wormmaster_curl_test_front.png"), (0, 0, H / 2), (0, -1, 0.05), H * 1.15)
+    shoot(os.path.join(PREVIEW, "wormmaster_curl_test_q34.png"), (0, 0, H / 2), (0.7, -0.7, 0.35), H * 1.15)
+    bpy.context.view_layer.objects.active = arm; bpy.ops.object.mode_set(mode='POSE')
+    for pb in arm.pose.bones: pb.rotation_euler = (0, 0, 0); pb.scale = (1, 1, 1)
+    bpy.ops.object.mode_set(mode='OBJECT')
+    export([arm, ob], os.path.join(out, "wormmaster_v1_rigged.fbx"))
+    write_metrics(out, "wormmaster")
+
+
+{"bike": do_bike, "elarim": do_elarim, "worm": do_worm, "wormmaster": do_wormmaster}[KIND]()
 log("done", KIND)

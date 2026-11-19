@@ -127,6 +127,7 @@ namespace Seven
         /// <summary>The ground height (analytic). Inside a built feature it lies 5 cm under that floor (the floor mesh shows).</summary>
         public static float RawHeight(float x, float z)
         {
+            if (VenusLayout.InRootPit(x, z)) return VenusLayout.RootPitHeight(z) - 0.05f;   // Round 12: the root pit, a slot cut into the hill
             OnRoute(x, z, out float dP, out float s, out float lat, out float rz);
             float hp = PathHeight(rz, s);
             // exact inside a feature (built floors: just under them)

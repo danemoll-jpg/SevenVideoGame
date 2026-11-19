@@ -106,6 +106,7 @@ namespace Seven
             }
             if (back)
             {
+                if (_page == Page.Select && _venusSel) { _venusSel = false; Show(Page.Select, VenusPageIndex); return; }
                 if (_page == Page.Main) Close(); else Show(Page.Main, _page == Page.Settings ? MainSettings : _page == Page.Controls ? MainControls : _page == Page.Select ? MainSelect : _page == Page.ConfirmMenu ? MainMenu : MainQuit);
                 return;
             }
@@ -130,10 +131,13 @@ namespace Seven
                     break;
                 case Page.Select:
                 {
-                    var sel = DemoMenu.SelectItems();
+                    var sel = _venusSel ? DemoMenu.VenusSelectItems() : DemoMenu.SelectItems();
                     var target = sel[Mathf.Clamp(_sel, 0, sel.Length - 1)].Item2;
-                    if (target == "@back") Show(Page.Main, MainSelect);
-                    else if (target.StartsWith("@cp")) { Close(); Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); Chapter1State.StartAt(int.Parse(target.Substring(3))); }
+                    if (target == "@back" && _venusSel) { _venusSel = false; Show(Page.Select, VenusPageIndex); }
+                    else if (target == "@back") Show(Page.Main, MainSelect);
+                    else if (target == "@venuspage") { _venusSel = true; Show(Page.Select, 0); }
+                    else if (target.StartsWith("@ven:")) { Close(); _venusSel = false; Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); VenusState.StartAt(target.Substring(5)); }
+                    else if (target.StartsWith("@cp")) { Close(); Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); int cp0 = int.Parse(target.Substring(3)); Chapter1State.StartAt(cp0); Chapter1State.Intro = cp0 == Chapter1State.CpCell; }
                     break;
                 }
                 case Page.ConfirmMenu:
@@ -165,14 +169,14 @@ namespace Seven
                     return new List<string> { "Music   " + Bar(AudioKit.MusicVolume), "Sound effects   " + Bar(AudioKit.SfxVolume), "Voice   " + Bar(AudioKit.VoiceVolume),
                                               "Button hints   " + (ControlsLegend.HintsOn ? "On" : "Off"), "Back" };
                 case Page.Controls: return new List<string> { "Back" };
-                case Page.Select: { var l = new List<string>(); foreach (var (label, _) in DemoMenu.SelectItems()) l.Add(label); return l; }
+                case Page.Select: { var l = new List<string>(); foreach (var (label, _) in _venusSel ? DemoMenu.VenusSelectItems() : DemoMenu.SelectItems()) l.Add(label); return l; }
                 case Page.ConfirmMenu: return new List<string> { "Yes, main menu", "No" };
                 case Page.ConfirmQuit: return new List<string> { "Yes, quit", "No" };
                 default: return new List<string> { "Resume", "Settings", "Controls", "Scene select", "Main menu", "Quit game" };
             }
         }
         static string Bar(float v) { int n = Mathf.RoundToInt(v * 10f); return new string('■', n) + new string('□', 10 - n); }
-        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.Select ? "SCENE SELECT" : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
+        string Title() => _page == Page.Settings ? "SETTINGS" : _page == Page.Controls ? "CONTROLS" : _page == Page.Select ? (_venusSel ? "SCENE SELECT  —  CHAPTER 2" : "SCENE SELECT") : _page == Page.ConfirmMenu ? "Return to the main menu?" : _page == Page.ConfirmQuit ? "Quit the game?" : "PAUSED";
 
         public void Open()
         {
@@ -197,6 +201,8 @@ namespace Seven
         }
 
         void Show(Page p, int sel) { _page = p; _sel = sel; Refresh(); }
+        bool _venusSel;   // QF11: the Scene Select page shows Chapter 2's entries
+        static int VenusPageIndex { get { var l = DemoMenu.SelectItems(); for (int i = 0; i < l.Length; i++) if (l[i].Item2 == "@venuspage") return i; return 0; } }
 
         void Build()
         {

@@ -81,6 +81,15 @@ SFX = [
     ("signal_pulse", "A distinct, slightly unsettling low pulsing tone with a faint metallic ring, rising then fading, synthetic, not loud.", 2.5, False, "C05: the signal pulse"),
     ("worm_surface", "A large creature breaking through soft earth and sliding back under, deep earth crumble and slide.", 2.5, False, "burrowing creatures surfacing / diving"),
     ("climb_scuff", "Boots scuffing and scraping on a rough stone wall while someone climbs, two or three soft scrapes.", 1.2, False, "wall climb / climbing up a ledge"),
+    # Round 12 (2e): the city's distant hum for Dan's rewritten 6b (replaces the prison sounds; the terrace after)
+    ("amb_city_life", "A vast inhabited underground city heard from a high terrace far away: distant flowing traffic hum, soft wind across an enormous space, faint indistinct activity, calm and huge.", 20, True, "Chapter 1 6b city reveal + the terrace after (Round 12)"),
+    # Round 12: Venus part 2 (the way down, the control chamber, the encounter, the return)
+    ("amb_underground", "Deep underground root chambers: very low steady drone, slow water drips, faint creak of huge roots, distant hollow wind.", 20, True, "Venus: the root chambers + control chamber"),
+    ("machinery_hum", "Large organic machine humming in a cave, low throbbing pulse with soft wet mechanical clicks, steady.", 8, True, "VEN_05: Wormmaster's machinery (silent after C07)"),
+    ("creature_rumble", "Something large moving through soft earth just under the floor, low continuous rumble and crumbling, close.", 6, True, "VEN_05: telegraph of a creature about to surface"),
+    ("device_off", "A strange humming device powering down: the pulse winds down in pitch, a soft hollow clunk, then quiet.", 2.5, False, "VEN_05: a control device disabled"),
+    ("barrier_close", "Living stone stems growing up out of the ground and closing into a ring, deep grinding creak, ending in a soft resonant hum.", 4, False, "VEN_05: the containment barrier closes"),
+    ("creatures_withdraw", "Several large burrowing creatures sliding away deep into the earth, rumble receding into the distance, calm.", 4, False, "VEN_05 / C07: the creatures withdraw safely"),
     ("slab_lift", "A heavy stone slab grinding as it lifts off a stone floor, low scrape fading into a soft hum.", 1.2, False, "telekinesis lifts the fallen slab (ruins)"),
     # Round 10: the galley scene (ship's hum + eating sounds only during the silences)
     ("fork_clink", "A fork lightly touching a ceramic dinner plate, one soft clink, quiet table sound.", 0.8, False, "Chapter 1 galley: 7 eats"),

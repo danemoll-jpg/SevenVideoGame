@@ -19,6 +19,7 @@ namespace Seven
         Animator _anim; string _state; Vector3? _walkTo; Vector3? _faceTo; float _stopAt;
         int _obstacle = -1;
         public bool Walking => _walkTo.HasValue;
+        public static int Reasserts;
         public Animator Anim => _anim;
 
         void Awake()
@@ -61,8 +62,14 @@ namespace Seven
         public void Face(Vector3 p) => _faceTo = p;
         public void Stop() { _walkTo = null; Play(PostClip); }
 
+        float _check;
         void Update()
         {
+            if (_anim != null && _state != null && (_check += Time.deltaTime) > 0.5f)
+            {
+                _check = 0f;
+                if (!_anim.IsInTransition(0) && !_anim.GetCurrentAnimatorStateInfo(0).IsName(_state)) { Debug.Log($"[Seven] {name}: animator not in '{_state}' - re-asserted"); Reasserts++; _anim.CrossFadeInFixedTime(_state, 0.2f); }
+            }
             if (_walkTo.HasValue)
             {
                 var d = _walkTo.Value - transform.position; d.y = 0f;

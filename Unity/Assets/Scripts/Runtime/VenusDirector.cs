@@ -22,7 +22,7 @@ namespace Seven
     /// QF10 camera coverage in C03-C05: wide, over-the-shoulder both ways (low on the guardian, level on her), medium
     /// two-shots, inserts, the attendant's arrival, cut on speaker change - always framed on who speaks or reacts.
     /// </summary>
-    public class VenusDirector : MonoBehaviour
+    public partial class VenusDirector : MonoBehaviour
     {
         public ChapterSeven Seven;
         public ChapterCat Cat;
@@ -66,8 +66,8 @@ namespace Seven
             VenusLayout.UseTraversal();
             Legend.SetLayout(ControlsLegend.Layout.Chapter);
             Legend.HidePanels = true;
-            if (Auto && Reloads == 0 && !DemoBoot.Continue) VenusState.ResetForTest();
-            if (DemoBoot.VenusPlay && !_playReset && !DemoBoot.Continue) { _playReset = true; VenusState.ResetForTest(); }
+            if (Auto && Reloads == 0 && !DemoBoot.Continue && !VenusState.SceneSelectRun) VenusState.ResetForTest();
+            if (DemoBoot.VenusPlay && !_playReset && !DemoBoot.Continue && !VenusState.SceneSelectRun) { _playReset = true; VenusState.ResetForTest(); }
             if (DemoBoot.CaptureDir != null) { ChapterCapture.Ensure(); Cap.Attach(Cam.GetComponent<Camera>()); }
             if (Auto)
             {
@@ -82,13 +82,30 @@ namespace Seven
             if (Slab != null) _slabEdges = Slab.Find("Edges")?.GetComponent<Renderer>();
             if (HatchSeam != null) HatchSeam.enabled = false;            // QF10: closed, the hull is seamless (no line at all)
             MusicSystem.Play("venus_gardens", 3f);
-            AudioKit.Loop("amb_venus_gardens", null, null, 1f, AudioKit.Bus.Ambience);
+            _ambGardens = AudioKit.Loop("amb_venus_gardens", null, null, 1f, AudioKit.Bus.Ambience);
+            if (DemoBoot.VenusSelectTest) { StartCoroutine(SelectTestStep()); StartCoroutine(UndergroundLook()); return; }
             StartCoroutine(Flow());
             StartCoroutine(Watchdog());
+            StartCoroutine(UndergroundLook());                         // Round 12: below ground - the underground music, cave light
+            if (VenusState.AtLeast(VenusState.Stage.ControlDiscovered) && !VenusState.AtLeast(VenusState.Stage.ThreatStopped)) StartCoroutine(AmbientPulses());
         }
 
         // ------------------------------------------------------------------------------------------ helpers
         IEnumerator Wait(float s) { for (float t = 0f; t < s; t += Time.deltaTime) yield return null; }
+        AudioSource _ambGardens;
+        /// <summary>QF11 check (-venusselecttest): each Scene Select entry in turn - where 7, the bike and Panther are, a capture.</summary>
+        IEnumerator SelectTestStep()
+        {
+            Restore();
+            yield return Wait(2.5f);
+            var id = DemoBoot.VenusSelect;
+            Log($"SCENE SELECT '{id}': {VenusState.Summary()}; 7 at {P7:0.0} ({(Bike.Riding ? "riding" : "on foot")}), bike {(Bike.gameObject.activeSelf ? Bike.transform.position.ToString("0.0") : "in the bay")}, Panther {(Cat != null && Cat.gameObject.activeSelf ? $"x{Cat.transform.localScale.x:0.0} at {Cat.transform.position:0.0}" : "aboard (not shown)")}, bridge {(VenusState.SceneDone("VEN_B03_bridge") ? "laid" : "not laid")}, objective '{_objective}'");
+            yield return Shot("sel_" + id);
+            int k = System.Array.FindIndex(VenusState.SelectEntries, e => e.id == id);
+            if (k < 0 || k + 1 >= VenusState.SelectEntries.Length) { Cap.Finish("SCENE SELECT TEST (Venus) done"); yield break; }
+            DemoBoot.VenusSelect = VenusState.SelectEntries[k + 1].id;
+            VenusState.StartAt(DemoBoot.VenusSelect);
+        }
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
         float Dist7(Vector3 p) => Flat(Seven.transform.position - p).magnitude;
         Vector3 P7 => Seven.transform.position;
@@ -283,7 +300,10 @@ namespace Seven
             if (!VenusState.SceneDone("VEN_C03")) { yield return RideToTemple(); yield return C03(); if (ReloadCheck("VEN_C03")) yield break; }
             if (!VenusState.SceneDone("VEN_C04")) { yield return C04(); if (ReloadCheck("VEN_C04")) yield break; }
             if (!VenusState.SceneDone("VEN_C05")) { yield return RideToObservation(); if (ReloadCheck("VEN_C05")) yield break; }
-            yield return EndOfPart1();
+            PartOneDone = true;
+            if (Auto && DemoBoot.Quick2) { yield return EndOfPart1(); yield break; }
+            if (!VenusState.AtLeast(VenusState.Stage.ThreatStopped)) StartCoroutine(AmbientPulses());
+            yield return Part2();                                       // Round 12
         }
 
         /// <summary>Put everything where the save says (a reload / Continue restores the place for the stage reached).</summary>
@@ -292,7 +312,7 @@ namespace Seven
             bool c01 = VenusState.SceneDone("VEN_C01"), b01 = VenusState.SceneDone("VEN_B01");
             SetZone("MaintA", VenusState.AtLeast(VenusState.Stage.HelpAccepted)); SetZone("MaintB", VenusState.AtLeast(VenusState.Stage.HelpAccepted)); SetZone("ObsArea", VenusState.AtLeast(VenusState.Stage.HelpAccepted));
             if (MaintGate != null) MaintGate.SetActive(!VenusState.AtLeast(VenusState.Stage.HelpAccepted));
-            if (Saucer != null) Saucer.position = VenusLayout.SaucerAt + Vector3.up * (c01 ? VenusLayout.SaucerHover : 60f);
+            if (Saucer != null) Saucer.position = VenusLayout.SaucerAt + Vector3.up * (c01 ? 0f : 60f);
             // QF10: the bridge stays for return trips
             bool bridged = VenusState.SceneDone("VEN_B03_bridge");
             SetZone("Bridge", bridged);
@@ -315,8 +335,9 @@ namespace Seven
             else if (!VenusState.SceneDone("VEN_C04")) { at = VenusLayout.MeetSpot + Vector3.forward * 4f; }
             else if (!VenusState.SceneDone("VEN_C05")) { at = VenusLayout.ParkSpot - Vector3.right * 1.7f; }
             else { at = VenusLayout.ObsSpot; face = Vector3.right; }
+            RestorePart2(ref at, ref face);                              // Round 12
             Seven.Place(at, face);
-            if (b01 && VenusState.Riding && !VenusState.SceneDone("VEN_C03")) { Bike.Mount(); }
+            if (b01 && VenusState.Riding && !VenusState.SceneDone("VEN_C03")) { Bike.Place(VenusState.BikeAt, VenusState.BikeYaw); Bike.Mount(); }
             FollowCamera(); Cam.SnapBehind();
             if (VenusState.Objective != null && c01) Objective(VenusState.Objective);
             if (VenusState.SceneDone("VEN_C03") && Guardian != null) { Guardian.transform.position = VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f); }
@@ -332,7 +353,7 @@ namespace Seven
             Seven.gameObject.SetActive(false); if (Cat != null) Cat.gameObject.SetActive(false);
             UI.SetFade(1f);
             StartCoroutine(UI.Title("CHAPTER 2  —  VENUS", 1.0f, 2.2f, 1.0f));
-            var top = VenusLayout.SaucerAt + Vector3.up * 70f; var land = VenusLayout.SaucerAt + Vector3.up * VenusLayout.SaucerHover;
+            var top = VenusLayout.SaucerAt + Vector3.up * 70f; var land = VenusLayout.SaucerAt;
             Saucer.position = top;
             // extreme wide: the saucer emerging beneath the clouds, the gardens below
             Shoot(VenusLayout.SaucerAt + new Vector3(-55f, 22f, -60f), top + Vector3.down * 10f, 52f, 0.01f);
@@ -352,7 +373,7 @@ namespace Seven
             Seven.gameObject.SetActive(true); if (Cat != null) Cat.gameObject.SetActive(true);
             Seven.Place(VenusLayout.RampFoot + Vector3.back * 2.2f, Vector3.forward);
             Seven.Lock(true);
-            if (Cat != null) { Cat.Place(VenusLayout.RampFoot + new Vector3(-0.8f, 0f, -1.8f), Vector3.forward); Cat.GoTo(VenusLayout.RampFoot + new Vector3(-1.0f, 0f, 0.4f), Cat.StrollSpeed, VenusLayout.VistaSpot + Vector3.forward * 20f); }
+            if (Cat != null) { Cat.Place(VenusLayout.RampFoot + new Vector3(-1.1f, 0f, -0.9f), Vector3.forward); Cat.GoTo(VenusLayout.RampFoot + new Vector3(-1.0f, 0f, 0.4f), Cat.StrollSpeed, VenusLayout.VistaSpot + Vector3.forward * 20f); }
             Shoot(VenusLayout.RampFoot + new Vector3(3.5f, 1.6f, 4.5f), VenusLayout.RampFoot + new Vector3(0f, 1.2f, -1f), 50f, 0.01f);
             yield return WalkSeven(VenusLayout.RampFoot + Vector3.forward * 1.2f, 4f);
             Seven.Lock(true);
@@ -365,6 +386,7 @@ namespace Seven
             StartCoroutine(CatTracksFlyers(8f));
             yield return Say("VEN_C01", 5, 7);
             yield return Shot("v05_c01_cat_tracks_flyers");
+            Log("after C01: " + ChapterCat.SpeedReport());
             Complete("VEN_C01", VenusState.Stage.Landed);
             yield return Cutscene(false);
         }
@@ -399,7 +421,7 @@ namespace Seven
 
         // ------------------------------------------------------------------------------------------ B01: the bike, Panther
         public const float PantherScale = 2.7f;
-        static readonly Vector3 PantherStand = new Vector3(-2.3f, 0f, 2.9f);       // in front of the ramp, room to grow
+        static readonly Vector3 PantherStand = new Vector3(-3.0f, 0f, 5.4f);       // in front of the ramp, room to grow
         bool _measurePanther;
 
         IEnumerator B01()
@@ -501,6 +523,7 @@ namespace Seven
             _measurePanther = false;
             var rg = Seven.RideGaps;
             Log($"bike grips (QF10, palm centre to grip): left {rg.x:0.000} m, right {rg.y:0.000} m; feet to the side panels: left {rg.z:0.000} m, right {rg.w:0.000} m; hips to the saddle {Seven.RideHipsGap:0.000} m; ride state '{(Seven.State ?? "-")}'");
+            Log("after B01: " + ChapterCat.SpeedReport());
             Complete("VEN_B01", VenusState.Stage.Landed);
             if (Shots) yield return RidePoseShots();
             if (Auto && DemoBoot.Quick) { Cap.Finish("Venus quick check: up to B01 (mounted)"); yield break; }
@@ -612,13 +635,17 @@ namespace Seven
         {
             Bike.gameObject.SetActive(true);
             var dir = VenusLayout.HatchDir; var tan = Vector3.Cross(Vector3.up, dir);
-            float bottomIn = VenusLayout.SaucerHover - 0.2f + 0.06f;
-            var inBay = VenusLayout.SaucerAt + dir * 2.9f; float yawOut = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
+            float bottomIn = VenusLayout.SaucerHover + 0.1f;
+            var inBay = VenusLayout.BayInside; float yawOut = Mathf.Atan2(dir.x, dir.z) * Mathf.Rad2Deg;
             Bike.Glide(inBay, yawOut, bottomIn);
+            // QF11 (Dan's screenshot: the 3 m bike poked out through the closed hull): nothing of the bike shows until
+            // the panel has opened - it is hidden in the bay and appears only once the opening is clear
+            BikeShown(false);
             var mouth = VenusLayout.HatchMouth;
             // the camera: outside the hatch, a little to the side, near hull height
             Shoot(mouth + dir * 6.2f + tan * 2.6f - Vector3.up * 0.3f, mouth - Vector3.up * 0.1f, 42f, 1.2f);
             yield return Wait(1.3f);
+            LogBikeThroughHull("hull closed, before the hatch opens");
             yield return Shot("v06a_b01_seamless_hull");
             // the seam glows, running round the panel
             if (HatchSeam != null) HatchSeam.enabled = true;
@@ -635,11 +662,14 @@ namespace Seven
                 if (BayLight != null) BayLight.intensity = 2.4f * slide;
                 if (backM != null) backM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(0.05f, 1.1f, slide));
                 if (seamM != null) seamM.SetColor("_EmissionColor", Color.white * Mathf.Lerp(3.2f, 1.2f, slide));
+                if (slide > 0.97f && !_bikeShown) BikeShown(true);
+                if (Shots && !_bikeShown && !_hullCheckLogged) { _hullCheckLogged = true; LogBikeThroughHull("hatch opening (panel " + (slide * 100f).ToString("0") + " % open)"); }
                 yield return null;
             }
+            BikeShown(true);
             yield return Shot("v06c_b01_hatch_open_light_inside");
             // the bike glides out on its hover glow, unhurried
-            var outAt = VenusLayout.SaucerAt + dir * 7.4f;
+            var outAt = VenusLayout.BayOutside;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
             {
                 float u = Mathf.SmoothStep(0f, 1f, t);
@@ -667,9 +697,22 @@ namespace Seven
             Shoot(mouth + dir * 5.5f - tan * 2.2f + Vector3.up * 0.2f, mouth, 40f, 0.01f);
             yield return Wait(0.2f);
             yield return Shot("v06g_b01_hull_seamless_again");
+            if (Shots) { Shoot(VenusLayout.SaucerAt + Chapter1Director.SaucerCheckOffset, VenusLayout.SaucerAt + Vector3.up * 1.6f, 45f, 0.01f); yield return Wait(0.3f); yield return Shot("saucer_side_by_side_venus"); }
             Log($"hatch (QF10): opened along the seam, the bike glided out and settled at riding height; closed again - panel offset {(Hatch != null ? Hatch.localRotation.eulerAngles.y : 0f):0.000} deg, scale {(Hatch != null ? Hatch.localScale.x : 1f):0.000}, seam emission {(seamM != null ? seamM.GetColor("_EmissionColor").r : 0f):0.000}, bay light {(BayLight != null ? BayLight.intensity : 0f):0.00}");
         }
-        bool _hatchOpen = true;
+        bool _hatchOpen = true, _bikeShown = true, _hullCheckLogged;
+        void BikeShown(bool on)
+        {
+            _bikeShown = on;
+            foreach (var r in Bike.GetComponentsInChildren<Renderer>(true)) r.enabled = on;
+            foreach (var l in Bike.GetComponentsInChildren<Light>(true)) l.enabled = on;
+        }
+        /// <summary>QF11 check: bike renderers that are on (visible) while the hatch is not open - must be 0.</summary>
+        void LogBikeThroughHull(string when)
+        {
+            int on = 0, n = 0; foreach (var r in Bike.GetComponentsInChildren<Renderer>(true)) { n++; if (r.enabled && r.gameObject.activeInHierarchy) on++; }
+            Log($"bike vs the hull (QF11) {when}: {on} of {n} bike renderers shown (must be 0 while the hull is closed)");
+        }
         IEnumerator CloseHatch(Material seamM, Material backM)
         {
             _hatchOpen = true;
@@ -724,6 +767,7 @@ namespace Seven
             // the skip offer is a teaching line, so the step's own action (e.g. telekinesis) still works meanwhile
             if (SkipOffered != _skipShown) { _skipShown = SkipOffered; if (SkipOffered) Legend.Teach((ControlsLegend.Btn.Skip, "Skip this step")); else Legend.Teach(); }
             if (!VenusState.SceneDone("VEN_B01")) { Legend.Context(ControlsLegend.Btn.Interact, null); return; }
+            if (Part2Prompt()) return;                                     // Round 12: devices, console, guardian, record, boarding
             bool canRide = !_noRide;
             bool atWall = Seven.Context != null && (Seven.Context.StartsWith("jump:Climb") || Seven.Context.StartsWith("jump:Jump down"));   // the climb prompt wins at the wall
             if (_slabReady && !Bike.Riding && Seven.Current == ChapterSeven.Mode.Free && SlabInView() && !atWall)
@@ -1042,7 +1086,7 @@ namespace Seven
         {
             if (!Shots) yield break;
             yield return Wait(Auto ? 0.75f : 1.8f);
-            if (serial != _lineSerial) yield break;
+            if (serial != _lineSerial || !Dlg.Busy) yield break;           // Round 12: measured only while the line is still playing
             var cam = Cam.GetComponent<Camera>();
             Vector3? head = line.Speaker == "seven" || line.Speaker == "7" ? Head7 : NpcOf(line.Speaker) != null ? HeadOf(NpcOf(line.Speaker)) : (Vector3?)null;
             string frame = "telepathic (from the ship): framed on her";
@@ -1241,7 +1285,7 @@ namespace Seven
                 if (_objective != null && UI.Objective != ObjectiveText) UI.SetObjective(ObjectiveText);
                 if (Bike.Riding && Bike.Stuck && !Auto) { Bike.Recover(); Log("WATCHDOG: the bike was stuck - recovered to the last safe spot"); }
                 // fell somewhere with no ground (never expected): back to the last safe spot
-                if (P7.y < -30f) { Seven.Place(Seven.LastSafe, Vector3.forward); Log("WATCHDOG: 7 below the world - back to safety"); }
+                if (P7.y < -45f) { Seven.Place(Seven.LastSafe, Vector3.forward); Log("WATCHDOG: 7 below the world - back to safety"); }
             }
         }
 
@@ -1258,7 +1302,7 @@ namespace Seven
         {
             Bike.ScriptDriven = true;
             int i = 0;
-            while (i < pts.Length && !until())
+            while (i < pts.Length && !until() && !_autoRideStop)
             {
                 if (!Bike.Riding) { yield return null; continue; }
                 var to = Flat(pts[i] - Bike.transform.position);

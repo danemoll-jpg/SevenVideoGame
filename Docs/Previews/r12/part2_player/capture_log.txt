@@ -1,0 +1,122 @@
+[   0.01s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.06s] venus playtest 2: virtual gamepad on the real input actions; muted=True listenerVolume=0; starts at the Scene Select entry 'the way down + the control chamber'
+[   5.42s] objective: Find the source of the signal
+[   5.42s] restore: Venus state: VEN_S04_CONTROL_DISCOVERED, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike (74.00, -6.00, 148.00) riding False -> 7 at (78.00, -6.00, 143.00), the slab bridge is down
+[   5.78s] objective: Find the source of the signal
+[   5.78s] venus playtest 2: objective: 'Find the source of the signal' at (78.0, -6.0, 143.0)
+[   6.01s] shot 01_w01_root_gate_open.png  audioPeak=0.000000  cursorVisible=False
+[  12.40s] shot 02_w02_root_pit_steps.png  audioPeak=0.000000  cursorVisible=False
+[  14.18s] music: below ground -> venus_underground (crossfade 3 s at (69.0, -12.4, 120.0))
+[  17.79s] shot 03_w03_root_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  22.55s] shot 04_w04_root_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  28.28s] shot 05_w05_deep_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  33.10s] ok: the control chamber (C06) (54.3s)
+[  35.66s] shot 06_c06_01_wide_the_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  35.96s] shot 07_c06_02_low_angle_above_his_machinery.png  audioPeak=0.000000  cursorVisible=False
+[  38.44s] shot 08_c06_03_he_activates_a_signal_pulse.png  audioPeak=0.000000  cursorVisible=False
+[  39.12s] shot 09_c06_04_come_and_do_it_yourself.png  audioPeak=0.000000  cursorVisible=False
+[  39.12s] scene VEN_C06 complete; VEN_S05_ENCOUNTER_ACTIVE
+[  39.12s] objective: Disable the control devices
+[  39.12s] objective: Disable the control devices
+[  39.21s] venus playtest 2: objective: 'Disable the control devices' at (109.7, -30.0, 89.0)
+[  45.50s] device dev_north disabled: 2 creatures of its trough withdraw (alive); saved - devices [dev_north] (1/3)
+[  45.50s] ok: disable the control devices (0/3) (12.8s)
+[  45.54s] shot 10_enc_dev_north_off.png  audioPeak=0.000000  cursorVisible=False
+[  61.70s] device dev_crystal disabled: 2 creatures of its trough withdraw (alive); saved - devices [dev_north, dev_crystal] (2/3)
+[  61.70s] ok: disable the control devices (1/3) (32.4s)
+[  61.74s] shot 11_enc_dev_crystal_off.png  audioPeak=0.000000  cursorVisible=False
+[  65.66s] venus playtest 2: climb to the ledge: prompt 'Jump:Climb up|', up: ok ((109.71, -29.00, 71.16))
+[  67.18s] device dev_ledge disabled: 2 creatures of its trough withdraw (alive); saved - devices [dev_north, dev_crystal, dev_ledge] (3/3)
+[  67.18s] ok: disable the control devices (2/3) (11.0s)
+[  67.22s] shot 12_enc_dev_ledge_off.png  audioPeak=0.000000  cursorVisible=False
+[  67.26s] shot 13_enc_all_three_devices_off.png  audioPeak=0.000000  cursorVisible=False
+[  67.26s] objective: Close the containment barrier
+[  69.43s] venus playtest 2: jump down from the ledge: prompt 'Jump:Jump down|', down: ok
+[  73.84s] venus playtest 2: objective: 'Close the containment barrier' at (116.0, -30.0, 83.5)
+[  76.91s] ok: close the containment barrier (the console) (19.5s)
+[  78.30s] shot 14_enc_barrier_closing.png  audioPeak=0.000000  cursorVisible=False
+[  78.98s] containment: the barrier closed round the dais - Wormmaster contained (saved); devices [dev_north, dev_crystal, dev_ledge]; knockdowns during the encounter 0; creatures harmed 0
+[  82.54s] shot 15_c07_level_wide_machinery_silent.png  audioPeak=0.000000  cursorVisible=False
+[  82.54s] scene VEN_C07 complete; VEN_S06_THREAT_STOPPED
+[  82.54s] the world after the threat (section 9): signal pulses stopped, 4 basin creatures calm (routes away from the foundations), repaired channel with water on, 3 workers back on the paths, damage still there (gully, rubble, broken channel pieces)
+[  82.54s] objective: Return to the guardian
+[  82.55s] venus playtest 2: objective: 'Return to the guardian' at (126.7, -30.0, 90.5)
+[  83.01s] music: above ground -> venus_gardens (crossfade 3 s at (72.6, -6.0, 149.5))
+[  83.81s] objective: Return to the guardian
+[  83.83s] ok: back on the bike (B06) (0.0s)
+[  86.10s] shot 16_b06_return_ride_calm_basin.png  audioPeak=0.000000  cursorVisible=False
+[  86.10s] ok: a calm creature beside the path (0.0s)
+[  89.88s] ok: the temple court (B06) (7.1s)
+[  90.89s] B06: parked at the temple court, on foot: True
+[  90.94s] shot 17_b06_parked_at_the_temple_workers_back.png  audioPeak=0.000000  cursorVisible=False
+[  90.94s] scene VEN_B06 complete; VEN_S06_THREAT_STOPPED
+[  90.94s] objective: Speak with the guardian
+[  90.94s] venus playtest 2: objective: 'Speak with the guardian' at (35.4, 0.0, 199.9)
+[  95.76s] ok: speak with the guardian (C08) (9.7s)
+[  97.60s] shot 18_c08_you_came_with_a_question.png  audioPeak=0.000000  cursorVisible=False
+[  97.61s] scene VEN_C08 complete; VEN_S06_THREAT_STOPPED
+[  97.61s] objective: Follow the guardian to the cube
+[  97.61s] objective: Follow the guardian to the cube
+[  97.67s] venus playtest 2: objective: 'Follow the guardian to the cube' at (30.3, 0.0, 215.4)
+[ 110.21s] ok: the cube chamber (C09) (25.2s)
+[ 112.96s] ok: touch the record (C09) (5.5s)
+[ 113.87s] shot 19_c09_01_over_her_shoulder_toward_cube.png  audioPeak=0.000000  cursorVisible=False
+[ 114.27s] shot 20_c09_02_hand_touches.png  audioPeak=0.000000  cursorVisible=False
+[ 114.99s] C09 vision: video vision_02_venus (12.1s, 1920x1044) full-screen, skippable (Y / Enter)
+[ 118.40s] shot 21_c09_vision_video_frame.png  audioPeak=0.000000  cursorVisible=False
+[ 121.07s] shot 22_c09_vision_last_frame_offered_palm.png  audioPeak=0.000000  cursorVisible=False
+[ 121.12s] shot 23_c09_03_match_cut_her_empty_palm.png  audioPeak=0.000000  cursorVisible=False
+[ 121.12s] C09 match cut: the vision's offered palm (its last frame) -> a close shot of 7's empty palm, cut straight (no fade)
+[ 122.24s] shot 24_c09_04_eye_close_up_gaze_lowered.png  audioPeak=0.000000  cursorVisible=False
+[ 124.76s] shot 25_c09_05_two_shot_i_think_i_knew_them.png  audioPeak=0.000000  cursorVisible=False
+[ 124.76s] scene VEN_C09 complete; VEN_S06_THREAT_STOPPED
+[ 126.15s] shot 26_c10_01_take_this_record.png  audioPeak=0.000000  cursorVisible=False
+[ 126.85s] shot 27_c10_02_he_looks_toward_the_gardens.png  audioPeak=0.000000  cursorVisible=False
+[ 128.26s] shot 28_c10_03_insert_secures_it_beside_the_dodecahedron.png  audioPeak=0.000000  cursorVisible=False
+[ 128.26s] C10: the record copy awarded now (first time) - awards 1 (must be 1); the original cube still in its protected structure: yes
+[ 128.26s] scene VEN_C10 complete; VEN_S07_RECORD_RECEIVED
+[ 128.26s] objective: Return to the saucer
+[ 128.26s] objective: Return to the saucer
+[ 130.94s] venus playtest 2: objective: 'Return to the saucer' at (30.0, 0.0, 267.3)
+[ 151.30s] ok: back on the bike (B07) (46.1s)
+[ 160.95s] ok: near the ship (B07) (19.3s)
+[ 162.76s] ok: park at the ship (B07) (0.4s)
+[ 164.33s] shot 29_b07_01_parked_hull_seamless.png  audioPeak=0.000000  cursorVisible=False
+[ 165.58s] shot 30_b07_02_hatch_open.png  audioPeak=0.000000  cursorVisible=False
+[ 167.54s] shot 31_b07_03_bike_glides_in.png  audioPeak=0.000000  cursorVisible=False
+[ 170.09s] bike vs the hull (QF11) after B07 (hatch closed again): 0 of 2 bike renderers shown (must be 0 while the hull is closed)
+[ 170.14s] shot 32_b07_04_hull_seamless_again.png  audioPeak=0.000000  cursorVisible=False
+[ 170.14s] B07: the bike glided in through the hatch; closed again - panel offset 0.000 deg, bay light 0.00
+[ 170.14s] scene VEN_B07 complete; VEN_S07_RECORD_RECEIVED
+[ 171.73s] aboard: the Saucer scene plays the debrief (C11) - Venus state: VEN_S07_RECORD_RECEIVED, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05, VEN_C06, VEN_C07, VEN_B06, VEN_C08, VEN_C09, VEN_C10, VEN_B07], devices [dev_north, dev_crystal, dev_ledge], Wormmaster contained True, record awarded True (awards 1), garden help [], bike (4.60, 0.00, 2.40) riding False
+[ 171.79s] venus playtest 2: the Saucer scene loaded - the debrief (C11), then Set course
+[ 172.12s] aboard (Venus mode): Venus state: VEN_S07_RECORD_RECEIVED, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05, VEN_C06, VEN_C07, VEN_B06, VEN_C08, VEN_C09, VEN_C10, VEN_B07], devices [dev_north, dev_crystal, dev_ledge], Wormmaster contained True, record awarded True (awards 1), garden help [], bike (4.60, 0.00, 2.40) riding False
+[ 174.24s] shot 33_c11_01_panther_near_the_entrance.png  audioPeak=0.000000  cursorVisible=False
+[ 175.03s] line VEN_C11_01 (Panther) played 1.76s of 1.59s: 'Did they know what it was?'
+[ 176.42s] shot 34_c11_02_follow_her_to_the_table.png  audioPeak=0.000000  cursorVisible=False
+[ 180.62s] line VEN_C11_02 (7) played 3.71s of 3.58s: 'The Moon’s record. Venus has its own.'
+[ 184.70s] shot 35_c11_03_insert_both_objects.png  audioPeak=0.000000  cursorVisible=False
+[ 185.44s] line VEN_C11_03 (Panther) played 1.59s of 1.59s: 'And the people you saw?'
+[ 186.55s] line VEN_C11_04 (7) played 1.75s of 1.75s: 'They’re less certain about that.'
+[ 189.49s] line VEN_C11_05 (7) played 5.44s of 5.43s: 'There was something else. Something the guardian said wasn’t in their record.'
+[ 189.78s] shot 36_c11_04_table_height_two_shot.png  audioPeak=0.000000  cursorVisible=False
+[ 190.29s] line VEN_C11_06 (Panther) played 1.13s of 1.12s: 'What did you see?'
+[ 191.27s] line VEN_C11_07 (7) played 1.52s of 1.52s: 'Someone giving me a seed.'
+[ 192.21s] shot 37_c11_05_open_hand_insert.png  audioPeak=0.000000  cursorVisible=False
+[ 193.64s] line VEN_C11_08 (7) played 2.16s of 2.14s: 'I wish I could remember their face.'
+[ 196.09s] shot 38_c11_06_he_settles_closer_silence.png  audioPeak=0.000000  cursorVisible=False
+[ 196.79s] line VEN_C11_09 (7) played 1.53s of 1.52s: 'There are other temples.'
+[ 198.60s] line VEN_C11_10 (Panther) played 3.02s of 2.43s: 'Then we have somewhere else to ask.'
+[ 200.49s] shot 39_c11_07_wide_final_pause.png  audioPeak=0.000000  cursorVisible=False
+[ 200.49s] scene VEN_C11 complete: VEN_S08_COMPLETE; on the table: the dodecahedron at (-7.86, 0.80, -2.68), the cube at (-7.91, 0.80, -2.50)
+[ 201.14s] SEAT CHECK (QF7): hips vs the seat point over 3805 seated frames: worst 0.0 cm, mean 0.0 cm; frames off the cushion or > 5 cm: 0 (must be 0); clips: sit_idle + 
+[ 201.26s] venus playtest 2: aboard: free exploration - walking to her galley seat for Set course
+[ 201.56s] venus playtest 2: at the seat: prompt '' - pressing X
+[ 201.85s] aboard after Venus: free exploration; 'Set course' at her galley seat opens the destination screen (VEN_S08_COMPLETE)
+[ 203.84s] DESTINATION SCREEN: The Moon / Venus / Stay aboard (only the worlds that exist; nothing forced) - VEN_S08_COMPLETE
+[ 203.89s] shot 40_c11_08_destination_screen.png  audioPeak=0.000000  cursorVisible=False
+[ 204.57s] venus playtest 2: route done in 395 s game time; destination screen shown: True
+[ 205.08s] destination chosen: stay
+[ 206.07s] cat speed vs clip (QF11): walk clip 466 frames, walking in place (speed < 0.06 m/s x scale for > 0.25 s, then switched to idle) 0x
+[ 206.07s] VENUS PLAYTEST 2: 1/1, soft-locks 0, knockdowns 0, hints 0, skips 0, Venus state: VEN_S08_COMPLETE, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05, VEN_C06, VEN_C07, VEN_B06, VEN_C08, VEN_C09, VEN_C10, VEN_B07, VEN_C11], devices [dev_north, dev_crystal, dev_ledge], Wormmaster contained True, record awarded True (awards 1), garden help [], bike (4.60, 0.00, 2.40) riding False
+[ 206.07s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

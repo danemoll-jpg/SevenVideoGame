@@ -156,46 +156,65 @@ She touches the mechanism the way she saw them do it. The doors part.
 
 *(Earlier version of the middle, replaced 2026-11-17: “This place was different.” / “Different how?” / “Whole. There were people here.” / “I didn’t see them.” / “I know.” / “I think I know how to get through.” / “From what you saw?” / “Let me try.”)*
 
-## 6b  The city reveal
+## 6b  The city reveal — rewritten by Dan, 2026-11-18
 
-**Situation:** After the prison escape and before boarding the saucer, 7 and the cat emerge from a rough mining passage onto a narrow stone terrace. She walks a few steps, then turns back to see where they escaped.
+**Situation:** right after 7 and the cat exit the base and the two Scree are down (the fighting tutorial, QF9), they
+step out and see the city for the first time.
 
-For the first time, she sees the city in its full majesty: an ancient city built across the inside of the Moon, so enormous that 7 initially mistakes part of it for the landscape. The prison is embedded in the base of a colossal structure; its machinery, fences and pipes look like recent additions attached to something much older. As she looks upward, she realizes the structure is only one of many.
+**OVER 7’S SHOULDER — THE REVEAL**
 
-Beyond it, the city stretches across the inner curve of the Moon. Broad terraces descend into a basin, then rise again in the distance. Farther away, buildings climb the curved horizon until they almost seem to hang overhead. Pale towers and bridges emerge from layers of gray atmospheric distance.
+An immense city stretches across the Moon’s inner surface.
 
-*Proposed visual features:*
-- **Ancient lunar architecture:** immense stepped buildings, slender observation towers and circular structures aligned with one another. Their purpose feels astronomical, fitting the Moon’s Astronomical Age. Smooth pale surfaces contrast with deep black openings.
-- **A quiet center:** several monumental pyramids surround a dark circular depression. From this distance, 7 cannot tell whether it is a courtyard, an opening or something buried. It gives the player a landmark to remember without explaining the final chamber.
-- **Tunneler’s operation cutting through it:** conveyors cross old avenues, excavators bite into terraces, and freight lifts move along the walls. The Scree and their machinery are tiny against the buildings. Some districts are occupied; others stand silent. The mining looks productive and relentless — the player can see that he is dismantling parts of a civilization to reach what lies beneath them before anyone explains it.
+Nearby buildings have layered balconies, recessed windows, bridges, and smooth towers built around much older
+structures. Thousands of tiny white lights reveal occupied rooms and streets.
 
-*Proposed lighting:* a broad, diffuse source somewhere above the visible city, still unexplained. It catches the pale upper surfaces while the streets remain dark. Everything stays grayscale; the scale comes from layers, silhouettes and tiny moving lights or vehicles — not colored glows.
+Beyond them, the city curves upward.
 
-The camera gives the city room to fill the frame. Music and environmental sound carry the moment. There is no immediate objective announcement or joke. **The player gets several seconds to look before either character speaks**, hearing distant machinery, wind through the terrace and the faint life of the city below. The cat notices that she has stopped and waits beside her.
+Cloud banks drift between districts, hiding the bases of distant towers. Through breaks in the clouds, streams of
+vehicle lights trace elevated roads and airborne traffic lanes. Far overhead, headlights move across what first
+appears to be the sky.
 
-*Possible exchange — proposed (primary):*
+Some buildings are close enough to distinguish individual windows. Others dissolve into clusters of light along the
+vast interior curve.
 
-**7:** All this was above us?
+**LOW TWO-SHOT — 7 AND CAT LOOKING UP**
 
-**CAT:** Most of it.
+7 slowly tilts her head back. Cat follows her gaze.
 
-She follows the rising curve of the city with her eyes.
+**7:** I’ve never seen the inside of a moon before.
 
-**7:** Someone built this.
+**CAT:** Most people insist on looking at the outside.
 
-**CAT:** Yes.
+She barely hears him. Her attention follows a stream of traffic overhead.
 
-A distant section of machinery starts moving. Stone falls from an ancient terrace.
+**7:** Are those cars?
 
-**7:** And they’re taking it apart.
+**CAT:** Apparently we escaped just in time for traffic.
 
-Then she spots — or the cat points out — the impound area holding her saucer (scene 7). The ship becomes a small, recognizable destination within this enormous place, and the player starts moving again.
+**EXTREME WIDE — THEIR SMALL FIGURES AT THE EXIT**
 
-*Earlier proposed alternative:* **7:** I didn’t know all this was here. / **CAT:** You couldn’t see much from where they put you. / She continues looking. / **7:** How old is it? / **CAT:** I don’t know. / A quiet pause.
+Hold the view. Let the city’s distant hum replace the prison sounds: moving vehicles, wind, and faint activity carried
+across the enormous space.
 
-The reveal does three jobs at once: the first great sense of wonder, showing the damage Tunneler causes, and making the player want to explore the history beneath his operation. All visual specifics here are proposals.
+**7:** There are people living all the way up there.
 
-The opening order should preserve this explicitly: first meeting → cell rescue → escape through the ruins and first vision → emergence and city reveal → saucer recovery and boarding → first meal and conversation.
+Cat watches her rather than the skyline.
+
+**CAT:** Come on. Let’s find your ship.
+
+She starts after him, then looks back once more.
+
+**HER VIEW — THE CITY’S LOWER DISTRICTS**
+
+Below the luminous towers, mining structures cut into the ancient city. Excavation lights expose broken foundations.
+Vast machinery disappears beneath inhabited terraces.
+
+The beauty and the damage occupy the same frame.
+
+Return control to the player.
+
+The opening order: first meeting → cell rescue → escape through the ruins and first vision → the exit and the Scree
+fight → the city reveal → saucer recovery and boarding → the galley.
 
 ## 7  Seeing the saucer
 
@@ -376,6 +395,49 @@ END SCENE
 ---
 
 ## Replaced versions (kept for reference — not used)
+
+### (old) 6b  The city reveal — before Dan's rewrite of 2026-11-18
+
+**Situation:** After the prison escape and before boarding the saucer, 7 and the cat emerge from a rough mining passage onto a narrow stone terrace. She walks a few steps, then turns back to see where they escaped.
+
+For the first time, she sees the city in its full majesty: an ancient city built across the inside of the Moon, so enormous that 7 initially mistakes part of it for the landscape. The prison is embedded in the base of a colossal structure; its machinery, fences and pipes look like recent additions attached to something much older. As she looks upward, she realizes the structure is only one of many.
+
+Beyond it, the city stretches across the inner curve of the Moon. Broad terraces descend into a basin, then rise again in the distance. Farther away, buildings climb the curved horizon until they almost seem to hang overhead. Pale towers and bridges emerge from layers of gray atmospheric distance.
+
+*Proposed visual features:*
+- **Ancient lunar architecture:** immense stepped buildings, slender observation towers and circular structures aligned with one another. Their purpose feels astronomical, fitting the Moon’s Astronomical Age. Smooth pale surfaces contrast with deep black openings.
+- **A quiet center:** several monumental pyramids surround a dark circular depression. From this distance, 7 cannot tell whether it is a courtyard, an opening or something buried. It gives the player a landmark to remember without explaining the final chamber.
+- **Tunneler’s operation cutting through it:** conveyors cross old avenues, excavators bite into terraces, and freight lifts move along the walls. The Scree and their machinery are tiny against the buildings. Some districts are occupied; others stand silent. The mining looks productive and relentless — the player can see that he is dismantling parts of a civilization to reach what lies beneath them before anyone explains it.
+
+*Proposed lighting:* a broad, diffuse source somewhere above the visible city, still unexplained. It catches the pale upper surfaces while the streets remain dark. Everything stays grayscale; the scale comes from layers, silhouettes and tiny moving lights or vehicles — not colored glows.
+
+The camera gives the city room to fill the frame. Music and environmental sound carry the moment. There is no immediate objective announcement or joke. **The player gets several seconds to look before either character speaks**, hearing distant machinery, wind through the terrace and the faint life of the city below. The cat notices that she has stopped and waits beside her.
+
+*Possible exchange — proposed (primary):*
+
+**7:** All this was above us?
+
+**CAT:** Most of it.
+
+She follows the rising curve of the city with her eyes.
+
+**7:** Someone built this.
+
+**CAT:** Yes.
+
+A distant section of machinery starts moving. Stone falls from an ancient terrace.
+
+**7:** And they’re taking it apart.
+
+Then she spots — or the cat points out — the impound area holding her saucer (scene 7). The ship becomes a small, recognizable destination within this enormous place, and the player starts moving again.
+
+*Earlier proposed alternative:* **7:** I didn’t know all this was here. / **CAT:** You couldn’t see much from where they put you. / She continues looking. / **7:** How old is it? / **CAT:** I don’t know. / A quiet pause.
+
+The reveal does three jobs at once: the first great sense of wonder, showing the damage Tunneler causes, and making the player want to explore the history beneath his operation. All visual specifics here are proposals.
+
+The opening order should preserve this explicitly: first meeting → cell rescue → escape through the ruins and first vision → emergence and city reveal → saucer recovery and boarding → first meal and conversation.
+
+
 
 ### (old) 10  The galley — middle section before Dan's edit of 2026-11-17 21:47
 

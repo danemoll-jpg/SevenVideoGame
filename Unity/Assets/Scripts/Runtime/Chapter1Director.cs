@@ -546,11 +546,21 @@ namespace Seven
             bool test = DemoBoot.OpeningTest > 0;
             UI.SetFade(1f);
             Seven.Lock(true);
+            // Round 12 (2d): the opening shot - the Moon in space with the title, the dive through the crust, then her cell
+            if (!test && (Chapter1State.Intro || DemoBoot.OpeningShot))
+            {
+                Chapter1State.Intro = false;
+                float amb0 = _amb != null ? _amb.volume : 1f; if (_amb != null) _amb.volume = 0f;
+                yield return MoonOpening.Play(this, Cam.GetComponent<Camera>(), n => Shot(n), s => { if (Auto || DemoBoot.PlayerSim) Cap?.Log(s); });
+                if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, amb0, 2.5f));
+                MusicSystem.Play("moon_prison", 3f);                       // fades in as she appears
+            }
             StartCoroutine(UI.Title("CHAPTER 1  —  THE MOON PRISON", 1.0f, 2.0f, 1.0f));
             yield return Wait(0.8f);
             yield return UI.Fade(0f, 1.8f);
             Seven.Lock(false);
             if (!test) yield return Shot("s01_cell_start");
+            if (Auto && DemoBoot.OpeningShot) { Cap.Finish("opening shot check (2d): " + (MoonOpening.Skipped ? "skipped" : "watched") + ", then the cell"); yield break; }
             if (Auto && !test) yield return LaserCollisionCheck();
             // The cat slips out of the small opening and sits outside the cell, watching her.
             yield return Wait(1.5f);
@@ -1976,53 +1986,99 @@ namespace Seven
                 Cam.SnapBehind();
                 StartCoroutine(UI.Fade(0f, 0.6f));
             }
+            // Round 12 (2e): Dan's rewritten 6b - they step out and see the city for the first time. The city is alive
+            // (FightDemoBuilderCity2: lights, traffic, clouds); its distant hum replaces the prison sounds.
             MusicSystem.Play("main_theme", 4f);
-            StartCoroutine(SwapAmbience("amb_city", 3f));
+            StartCoroutine(SwapAmbience("amb_city_life", 3f));
             Seven.ScriptDriven = true;
-            Cat.GoTo(MoonLayout.RevealSpot + new Vector3(1.1f, 0f, 0.6f), Cat.StrollSpeed, MoonLayout.RevealSpot);
-            Cam.Shot(new Vector3(18.2f, MoonLayout.Lower + 1.5f, -48.6f), new Vector3(16.4f, MoonLayout.Lower + 1.2f, -43f), 1.6f);
+            Cat.GoTo(MoonLayout.RevealSpot + new Vector3(0.95f, 0f, -0.2f), Cat.StrollSpeed, MoonLayout.RevealSpot + Vector3.back * 20f);
             Seven.Lock(false);
             for (float t0 = Time.time; Dist7(MoonLayout.RevealSpot) > 0.2f && Time.time - t0 < 6f;)
             { Seven.ScriptMove = Flat(MoonLayout.RevealSpot - Seven.transform.position).normalized * 0.7f; yield return null; }
             Seven.ScriptMove = Vector3.zero;
             Seven.Lock(true);
             Seven.ScriptDriven = Auto;
-            // turns back toward the colossal structure the prison is bolted into
-            var back = Vector3.forward;
-            for (float t = 0f; t < 1.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(back), 160f * Time.deltaTime); yield return null; }
-            Seven.LookAround(0.8f);
-            // Shot A: wide from out over the bay - 7 tiny on the terrace, the host rising above, the city around.
-            var aPos = new Vector3(-46f, -4f, -150f);
-            Cam.Shot(aPos, new Vector3(14f, 40f, -40f), 0.01f, true, 54f);
-            StartCoroutine(LookAlong(aPos, new Vector3(14f, 40f, -40f), new Vector3(10f, 110f, -20f), 8f, 54f));
-            yield return Wait(3.0f);
-            yield return Shot("c01_terrace_wide_before_dialogue");
-            yield return Wait(2.8f);                                 // several seconds of only sound and the theme
-            // "All this was above us?" / "Most of it." - looking up the host: only one of many.
-            var bPos = new Vector3(14.2f, MoonLayout.Lower + 0.8f, -47.3f);
-            StartCoroutine(LookAlong(bPos, Seven.transform.position + new Vector3(0f, 1.6f, 0f), new Vector3(-340f, 520f, -40f), 6.5f, 62f));
-            yield return RevealLines(1, 2, 1, 2);
-            yield return Shot("c02_looking_up_one_of_many");
-            // She follows the rising curve of the city: she turns to the open side and the camera tilts up along it.
-            for (float t = 0f; t < 1.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(new Vector3(-0.15f, 0f, -1f)), 150f * Time.deltaTime); yield return null; }
-            var cPos = new Vector3(17.6f, 5.5f, -42.5f);           // above and behind her, clear of the railing
-            yield return LookAlong(cPos, new Vector3(16f, -170f, -800f), new Vector3(-200f, 1900f, -4300f), 7.5f, 62f);
-            yield return Shot("c03_up_the_curve");
-            yield return RevealLines(3, 4, 3, 4);                     // "Someone built this." / "Yes."
-            // The quiet centre: pyramids around the dark depression.
-            Cam.Shot(new Vector3(16f, 30f, -62f), MoonLayout.BasinCenter + new Vector3(-60f, -10f, 0f), 0.01f, true, 30f);
-            yield return Wait(2.2f);
-            yield return Shot("c04_pyramids_and_depression");
-            // A distant section of machinery starts moving; stone falls from an ancient terrace.
-            if (City != null) City.StartMachinery();
-            Cam.Shot(new Vector3(16f, 30f, -62f), MoonLayout.FallingStoneAt + new Vector3(0f, -70f, 12f), 0.01f, true, 30f);
-            yield return Wait(1.6f);
-            if (City != null) StartCoroutine(City.DropStone());
+            var cityDir = new Vector3(-0.05f, 0f, -1f).normalized;
+            for (float t = 0f; t < 0.8f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(cityDir), 200f * Time.deltaTime); yield return null; }
+            var p7 = Seven.transform.position; var side = Vector3.Cross(Vector3.up, cityDir);
+            var ik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
+            ik.enabled = true; ik.Alive = true; ik.Ease = 1.6f; ik.LeftW = 0f; ik.RightW = 0f; ik.LookW = 0f;
+            // OVER 7'S SHOULDER - THE REVEAL (hold before anyone speaks)
+            Cam.Shot(p7 - cityDir * 1.7f - side * 0.75f + Vector3.up * 1.75f, p7 + cityDir * 420f + Vector3.up * 70f, 0.01f, true, 56f);
+            Coroutine pan = StartCoroutine(LookAlong(p7 - cityDir * 1.7f - side * 0.75f + Vector3.up * 1.75f, p7 + cityDir * 420f + Vector3.up * 70f, p7 + cityDir * 420f + Vector3.up * 260f, 9f, 56f));
+            void Cut6b() { if (pan != null) StopCoroutine(pan); pan = null; }
             yield return Wait(2.6f);
-            yield return Shot("c05_stone_falls");
+            yield return Shot("c01_over_her_shoulder_the_reveal");
+            yield return Wait(2.2f);
+            // LOW TWO-SHOT - 7 AND CAT LOOKING UP: she slowly tilts her head back, he follows her gaze
+            Cut6b();
+            if (Flat(Cat.transform.position - (p7 + side * 0.95f)).magnitude > 0.6f) Cat.Place(p7 + side * 0.95f, cityDir);   // beside her for the two-shot
+            Cat.Hold(p7 + cityDir * 20f, "sit");
+            var mid = (p7 + Cat.transform.position) * 0.5f;
+            Cam.Shot(mid + cityDir * 2.9f + side * 0.9f + Vector3.up * 0.35f, mid + Vector3.up * 0.95f, 0.01f, true, 52f);
+            var sky = p7 + cityDir * 60f + Vector3.up * 140f;
+            ik.LookPos = p7 + cityDir * 8f + Vector3.up * 1.8f; ik.LookW = 1f;
+            yield return Wait(0.5f);
+            ik.LookPos = sky;
+            StartCoroutine(CatLooksAt(() => sky, 9f));
+            yield return Wait(1.2f);
+            yield return Shot("c02_low_two_shot_looking_up");
+            LogCatInFrame("6b low two-shot");
+            yield return Dlg.PlayScene(65, 1, 2);            // I've never seen the inside of a moon before. / Most people insist on looking at the outside.
+            // she barely hears him: her attention follows a stream of traffic overhead
+            for (float t = 0f; t < 1.4f; t += Time.deltaTime) { ik.LookPos = sky + side * Mathf.Lerp(-40f, 60f, t / 1.4f); yield return null; }
+            yield return Dlg.PlayScene(65, 3, 4);            // Are those cars? / Apparently we escaped just in time for traffic.
+            ik.LookPos = p7 + cityDir * 30f + Vector3.up * 6f; ik.LookW = 0.6f;
+            // EXTREME WIDE - THEIR SMALL FIGURES AT THE EXIT (hold; the city's distant hum)
+            Cut6b();
+            var wPos = new Vector3(26f, 42f, -74f);                          // high out over the city edge, looking back at the terrace
+            Cam.Shot(wPos, p7 + Vector3.up * 1.5f, 0.01f, true, 40f);
+            pan = StartCoroutine(LookAlong(wPos, p7 + Vector3.up * 1.5f, p7 + Vector3.up * 12f, 7f, 40f));
+            yield return Wait(2.4f);
+            yield return Shot("c03_extreme_wide_small_figures");
             yield return Wait(1.0f);
-            if (RevealSet == "primary") yield return Dlg.PlayScene(65, 5, 5);      // "And they're taking it apart."
-            else yield return Wait(1.5f);
+            yield return Dlg.PlayScene(65, 5, 5);            // There are people living all the way up there.
+            // the cat watches her rather than the skyline
+            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { var d = Flat(Seven.transform.position - Cat.transform.position); if (d.sqrMagnitude > 1e-4f) Cat.transform.rotation = Quaternion.RotateTowards(Cat.transform.rotation, Quaternion.LookRotation(d), 300f * Time.deltaTime); yield return null; }
+            StartCoroutine(CatLooksAt(() => SevenHead, 4f));
+            Cut6b();
+            var cp = Cat.transform.position;
+            // low in front of him, the city side: he fills the lower frame, looking up at her
+            Cam.Shot(cp + cityDir * 1.9f - side * 0.35f + Vector3.up * 0.45f, cp + Vector3.up * 0.25f + (SevenHead - cp) * 0.18f, 0.01f, true, 52f);
+            yield return Wait(0.6f);
+            yield return Shot("c04_the_cat_watches_her");
+            LogCatInFrame("6b the cat watches her");
+            yield return Dlg.PlayScene(65, 6, 6);            // Come on. Let's find your ship.
+            // she starts after him, then looks back once more
+            Cat.GoTo(p7 + side * 2.6f + Vector3.forward * -0.5f, Cat.StrollSpeed, MoonLayout.SaucerCentre);
+            ik.LookW = 0f;
+            Seven.Lock(false); Seven.ScriptDriven = true;
+            var after = p7 + side * 1.4f;
+            for (float t0 = Time.time; Dist7(after) > 0.25f && Time.time - t0 < 3f;) { Seven.ScriptMove = Flat(after - Seven.transform.position).normalized * 0.6f; yield return null; }
+            Seven.ScriptMove = Vector3.zero; Seven.Lock(true); Seven.ScriptDriven = Auto;
+            Cam.Shot(Seven.transform.position - cityDir * 1.9f - side * 0.6f + Vector3.up * 1.65f, Seven.transform.position + cityDir * 40f + Vector3.up * 10f, 0.01f, true, 50f);
+            for (float t = 0f; t < 1.0f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(cityDir + side * -0.3f), 180f * Time.deltaTime); yield return null; }
+            yield return Shot("c05_she_looks_back_once_more");
+            // HER VIEW - THE CITY'S LOWER DISTRICTS: mining structures cutting into the ancient city, excavation lights on
+            // broken foundations, vast machinery beneath inhabited terraces - the beauty and the damage in one frame
+            if (City != null) City.StartMachinery();
+            Cut6b();
+            var eye = new Vector3(16f, 30f, -62f);                            // her line of sight, from just above the terrace edge
+            Cam.Shot(eye, MoonLayout.BasinCenter + new Vector3(-60f, -10f, 0f), 0.01f, true, 34f);
+            pan = StartCoroutine(LookAlong(eye, MoonLayout.BasinCenter + new Vector3(-90f, -10f, 0f), MoonLayout.BasinCenter + new Vector3(40f, 10f, 60f), 5f, 34f));
+            yield return Wait(2.6f);
+            yield return Shot("c06_her_view_the_lower_districts");
+            yield return Wait(1.0f);
+            Cut6b();
+            if (Auto && DemoBoot.Quick)
+            {
+                // 2f check: the saucer from the same offset as on the Venus platform (side by side)
+                Cam.Shot(MoonLayout.SaucerCentre + SaucerCheckOffset, MoonLayout.SaucerCentre + Vector3.up * 1.6f, 0.01f, true, 45f);
+                yield return Wait(0.5f);
+                yield return Shot("saucer_side_by_side_moon");
+                Cap.Finish("6b check (2e): the city reveal, then the saucer side-by-side shot"); yield break;
+            }
+            ik.LookW = 0f;
             // Scene 7: she spots the impound bay holding her saucer, small but recognisable by its rim glow.
             for (float t = 0f; t < 0.8f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(MoonLayout.SaucerCentre - Seven.transform.position)), 200f * Time.deltaTime); yield return null; }
             // QF4: over her shoulder with the cat beside her and the saucer far below (was a tight 34 deg shot that lost them)
@@ -2049,6 +2105,34 @@ namespace Seven
             Checkpoint(Chapter1State.CpBay);
         }
 
+        /// <summary>2e: the cat's head follows a point (after the animation each frame).</summary>
+        IEnumerator CatLooksAt(Func<Vector3> at, float seconds)
+        {
+            Transform head = null;
+            foreach (var t in Cat.GetComponentsInChildren<Transform>()) if (t.name == "head") { head = t; break; }
+            if (head == null) yield break;
+            for (float t = 0f; t < seconds; t += Time.deltaTime)
+            {
+                var d = (at() - head.position).normalized;
+                head.rotation = Quaternion.Slerp(head.rotation, Quaternion.LookRotation(d), 0.4f);
+                yield return new WaitForEndOfFrame();
+            }
+        }
+        Vector3 SevenHead { get { var a = Seven.GetComponent<Animator>(); var h = a != null && a.isHuman ? a.GetBoneTransform(HumanBodyBones.Head) : null; return h != null ? h.position : Seven.transform.position + Vector3.up * 1.55f; } }
+        /// <summary>2e check: the cat fully in frame (his renderers' screen rectangle inside the frame).</summary>
+        void LogCatInFrame(string what)
+        {
+            if (!(Auto || DemoBoot.PlayerSim) || Cap == null) return;
+            var cam = Cam.GetComponent<Camera>(); Bounds b = default; bool any = false;
+            foreach (var r in Cat.GetComponentsInChildren<Renderer>()) { if (!r.enabled || r is ParticleSystemRenderer) continue; if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
+            if (!any) return;
+            float x0 = 9f, y0 = 9f, x1 = -9f, y1 = -9f;
+            for (int i = 0; i < 8; i++) { var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1)); var v = cam.WorldToViewportPoint(c); x0 = Mathf.Min(x0, v.x); y0 = Mathf.Min(y0, v.y); x1 = Mathf.Max(x1, v.x); y1 = Mathf.Max(y1, v.y); }
+            float area = Mathf.Max(1e-6f, (x1 - x0) * (y1 - y0)), ix = Mathf.Max(0f, Mathf.Min(1f, x1) - Mathf.Max(0f, x0)), iy = Mathf.Max(0f, Mathf.Min(1f, y1) - Mathf.Max(0f, y0));
+            Cap.Log($"{what}: the cat {(1f - ix * iy / area) * 100f:0.0} % off screen (must be 0)");
+        }
+
+        public static readonly Vector3 SaucerCheckOffset = new Vector3(9f, 3.2f, 9f);
         IEnumerator WatchCityBlend()
         {
             while (!_cityLook)
