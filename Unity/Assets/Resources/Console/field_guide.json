@@ -1,5 +1,5 @@
 {
- "note": "Ship console Field guide: 7's short observations of the people and creatures she has met, only from what the story has shown. titleBefore/textBefore are used until nameUnlock is met (the cat is \"The cat\" until VEN_B01). portrait = image key (cat, scree, elarim_guardian, elarim_attendant, elarim, worm, wormmaster, tunneler, ratwing). Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), or \"never\". Mirror: Docs/FIELD-GUIDE.md.",
+ "note": "Ship console Field guide: 7's short observations of the people and creatures she has met, only from what the story has shown. titleBefore/textBefore are used until nameUnlock is met (the cat is \"The cat\" until VEN_B01). portrait = image key (cat, scree, elarim_guardian, elarim_attendant, elarim, worm, wormmaster, tunneler, ratwing). Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), \"europa>=N\" (Europa checkpoint N), or \"never\". Mirror: Docs/FIELD-GUIDE.md.",
  "entries": [
   {
    "id": "cat",
@@ -14,7 +14,7 @@
   {
    "id": "scree",
    "title": "The Scree",
-   "text": "Tall, armored people who guard the Moon prison; some of them were working rather than watching. I got past them without hurting anyone. The two on the terrace went down and sat up again afterwards. I don’t know yet whether any of them chose this.",
+   "text": "Tall, armored people who guard the Moon prison; some of them were working rather than watching. I got past them without hurting anyone. The two on the terrace went down and sat up again afterwards. I don’t know yet whether any of them chose this. On Europa they laboured in Tunneler's underwater base until the doors were open - then they opened doors themselves and showed me the safe routes.",
    "unlock": "ch1>=7",
    "portrait": "scree"
   },
@@ -56,10 +56,9 @@
   {
    "id": "tunneler",
    "title": "Tunneler",
-   "text": "(Not met yet.)",
-   "unlock": "never",
-   "portrait": "tunneler",
-   "note": "Not shown in the story so far: only his mining machinery is seen in the city reveal (6b), and no line names him. Write the entry and set an unlock when he appears."
+   "text": "Ring-segmented, with a spiral drill for a head that turns when he speaks. He kept me in the Moon prison; on Europa his machinery silenced the Cetaceans' calls and he worked Scree who could not leave. He promised to take only what nobody would miss. He escaped in his own craft - and he will remember.",
+   "unlock": "europa>=4",
+   "portrait": "tunneler"
   },
   {
    "id": "ratwing",
@@ -68,6 +67,20 @@
    "unlock": "never",
    "portrait": "ratwing",
    "note": "Only in the Round 4 cave demo, not in a chapter. Write the entry and set an unlock when he appears in the story."
+  },
+  {
+   "id": "cetaceans",
+   "title": "The Cetaceans",
+   "text": "Europa's people live in the ocean under the ice: vast, slow, and they speak - an understandable voice carried on their calls. They teach their history through sound, one voice to another.",
+   "unlock": "europa>=2",
+   "portrait": "cetacean"
+  },
+  {
+   "id": "keeper",
+   "title": "The keeper",
+   "text": "An ancient Cetacean who keeps the settlement and the old routes. Calm, patient; becomes very still when something does not belong. Gave me Europa's record and asked me to carry it somewhere it can be heard.",
+   "unlock": "europa>=3",
+   "portrait": "keeper"
   }
  ]
 }

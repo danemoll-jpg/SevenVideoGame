@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -108,6 +108,13 @@ namespace Seven
         public static string MenuPick { get; private set; }
         /// <summary>QF12: -stopafter &lt;seconds&gt; = end a check run after that many seconds of game time (the log is written).</summary>
         public static float StopAfter { get; private set; }
+        /// <summary>Round 14: -europacp &lt;n&gt; = start the Europa scene at checkpoint n (EuropaLayout.Cp*; check runs: the state a
+        /// real playthrough has there); -europa = start the chapter as from the star map (the chair scene aboard, then the dive);
+        /// -europarace = the check run rides the optional race; -europaplay = the player-style run (EuropaPlaytest).</summary>
+        public static int EuropaCp { get; private set; } = -1;
+        public static bool Europa { get; private set; }
+        public static bool EuropaRace { get; private set; }
+        public static bool EuropaPlay { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -157,6 +164,10 @@ namespace Seven
                 }
                 if (args[i] == "-venusplay2") { VenusPlay2 = true; VenusSelect = "C06"; }
                 if (args[i] == "-menupick" && i + 1 < args.Length) MenuPick = args[i + 1];
+                if (args[i] == "-europacp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var ecp)) EuropaCp = ecp;
+                if (args[i] == "-europa") Europa = true;
+                if (args[i] == "-europarace") EuropaRace = true;
+                if (args[i] == "-europaplay") { EuropaPlay = true; Europa = true; }
                 if (args[i] == "-stopafter" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sa)) StopAfter = sa;
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;

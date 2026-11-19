@@ -139,6 +139,7 @@ namespace Seven.EditorTools
             var states = new List<AnimationClip>();
             foreach (var f in Directory.GetFiles(Path.Combine(RepoRoot, "Art", "Mixamo", "elarim"), "elarim_*.fbx"))
             {
+                if (Path.GetFileName(f).Contains("body")) continue;          // QF12: Dan's rigged body (elarim_body_mixamo.fbx) is the model source, not a clip
                 var dst = clipDir + "/" + Path.GetFileName(f);
                 File.Copy(f, Path.Combine(ProjectRoot, dst), true);
                 AssetDatabase.ImportAsset(dst, ImportAssetOptions.ForceSynchronousImport);

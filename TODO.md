@@ -125,7 +125,7 @@ the saucer mesh names, each checked by its own menu-started run.
 - Arriving on Venus from the menu: black + title card first. Aboard after Venus: already in the chair, hand on his back.
 
 
-## Round 14: Chapter "Europa — Beneath the Ice", first playable pass (Dan, 2026-11-19) — to do, AFTER QF12
+## Round 14: Chapter "Europa — Beneath the Ice", first playable pass (Dan, 2026-11-19) — done, status below; release 0.14.0
 **Runs unattended overnight, straight after QF12 (Dan is asleep): never stop to ask.** Make the most reasonable call,
 note it under "Round 14 — decisions made" in the status, and keep going. Commit a checkpoint first. All standing rules
 (monochrome, Kyle's fog/glow, non-sexual, 7 never kills, no exact-spot triggers, look at your own captures, the
@@ -205,6 +205,96 @@ the spec are to be built as written for the prototype (they stay easy to replace
 race, the base, the escape ride, the temple + vision, the debrief), one player-style run from VEN_C13's Europa choice to
 the debrief, Scene Select entries start correctly. Publish **0.14.0**; docs (`CLAUDE.md` "Where things stand", the status
 and "For Dan to check"); commit + push.
+
+## Round 14 — status (2026-11-19): first playable pass done, exe-verified off-screen; release 0.14.0 (`game-1400`, Latest, published)
+The whole chapter plays from VEN_C13's star-map choice to the debrief. Captures + logs: `Docs/Previews/r14/`
+(`europa_playtest_sheet.png` = the player-style run, `r14_models_sheet.png` = the Cetacean / Tunneler previews).
+
+1. **Getting there — done.** Europa is playable on the star map (Mars stays "coming soon"); choosing it in VEN_C13 or
+   later from the console starts the chapter (`EuropaState.StartFresh`; in progress = Continue; done = "visited" card).
+   The title card "EUROPA — BENEATH THE ICE" plays over black from the first frame (logged `fade 1.00`).
+2. **Arrival + the dive — done.** Pilot's chair with Panther already curled in her lap, hand on top of his back (QF12),
+   the navigation-display insert, EUR_01 lines (Saucer scene, `Chapter1AboardEuropa.cs`); then the Europa scene: the
+   saucer crosses the ice field and hovers over the shelf, the beam lowers the bike, then 7 in her bubble helmet
+   (`BubbleHelmet.cs`: a glass sphere, URP Lit transparent), the seal-check insert + tone, hands into the grips, EUR_02.
+   Panther stays aboard (telepathic) all chapter.
+3. **The bike underwater — done.** `HoverBike.Swim`: steer, RT forward, A ascend / B descend, LT brake; floaty, bubbles
+   trail, muffled hum (`europa_bike_hum`); kept inside the swim space (`EuropaLayout.SwimClamp`). Taught once on the
+   gentle ice passage (prompts Steer/Forward, Ascend/Descend, Brake).
+4. **First descent — done.** The great chamber: ceiling cracks with light, light shafts, bubble curtains, ancient
+   structures with small white lights, spires below; the huge Cetacean (30 m) passes under the bike with the deep call;
+   EUR_03; a quiet stretch after "Tell me." (no lines).
+5. **Settlement + keeper — done.** The dolphin guide escorts her (chirps, swims alongside), platforms round open swimming
+   rings, small vehicles shuttling, the receiving platform, the keeper (16 m whale; head / fins move with his voice, a
+   whale call under every Keeper line), the extraction pulse.
+6. **Optional race — done (placeholder).** Registration arch → 8 rings through arches, under ice shelves, round pillars,
+   3 rival craft; registration / overtake / loss / win lines; result saved, never required (no reward). Free time in
+   the settlement until X at the keeper.
+7. **Machinery + the way in — done.** The damaged migration route (shattered supports, debris, sealed passage, a Cetacean
+   turning away), the pulse over a call, Tunneler named, objective "Investigate Tunneler's underwater base"; pipes /
+   intakes / an industrial tunnel; Scree labouring outside; park in the access bay (X), the pressure chamber (music
+   crossfades to `europa_base`).
+8. **Tunneler's base — done.** On foot, helmet on. Tunneler on the control-room screen (his model filmed in a lit "studio",
+   light from below; the drill head turns with his voice's loudness), EUR_08, barriers close; reach the holding area
+   (override panel); the threshold moment (EUR_09); workers with agency (one opens the transport access, one opens the
+   machinery section, one shows the schematic); evacuation-lift power; three demolition devices (X); Panther tracks the
+   transports; detonation only after every worker is out (no timer). Nobody is harmed.
+9. **Tunneler escapes + the escape ride — done.** Across the observation glass he boards his craft and leaves (not a boss
+   fight); hands into the grips; she triggers the demolition (white flashes, lights fail); the chase: ruptures follow her
+   along the tunnel, broken supports to steer round, Panther's calls at the junction, the low tracking shot, burst into
+   open water, entrance collapses, the pressure wave throws the bike and she recovers on camera. Caught or crashed =
+   white flash, retry from the ride's start.
+10. **After the noise + temple + vision — done.** EUR_13 (helmet close-up, the calls answering), the keeper leads to the
+    temple (broad arches, a great hall), the rune = icosahedron built in code (`Icosahedron`), the vision video
+    (`vision_03_europa.mp4`, `europa_call_learning` carries it, music suspended / resumed, still fallback), EUR_15, the
+    record awarded once (`awards 1`), the insert of the small icosahedron.
+11. **Home — done.** The bike rises into the beam, 7 boards in the beam (no ramp); aboard: helmet off, Panther waiting by
+    the boarding area, she kneels, his head against her hand (EUR_16); the debrief in the chair already seated with
+    Panther in her lap, the three records on the chair arm, the purr, the held two-shot (EUR_17); then free exploration.
+12. **Progression + saves — done.** `EuropaState` (PlayerPrefs `seven_europa`, Scene Select slot `seven_europa_select`):
+    10 checkpoints for Continue (main menu "Continue — Europa: …"), Scene Select entries (arrival, settlement, base, escape,
+    temple, debrief — on the Venus page of both menus), new game clears it; the console's Log (7 Europa entries) and Field
+    Guide (Cetaceans, the keeper, Tunneler unlocked, the Scree extended) — mirrored in `Docs/ADVENTURE-LOG.md` /
+    `Docs/FIELD-GUIDE.md`; the icosahedron sits with the other records on the chair arm.
+
+**Assets made this round:** Cetaceans `Tools/Blender/cleanup_cetacean.py` (whale 30 k / dolphin 16 k tris, 8-bone spine +
+2 fin bones, procedural swim `Cetacean.cs`); Tunneler `Tools/Blender/cleanup_tunneler.py` (36 k tris, separate DrillHead,
+untextured stone); 131 voice lines (`Tools/Voice/make_europa_lines.py` → `Docs/EUROPA-LINES.md`,
+`generate_europa_voices.py` → `Resources/EuropaVoice/`); 16 SFX (`generate_sfx.py`, `Docs/SFX-LIST.md`).
+
+**Checks.** Autopilot runs (`-europacp <n>`) over every section, the one player-style run (`-europaplay`, virtual
+gamepad, started in the main menu: Scene select → the Venus debrief → C13 star map → Europa → … → the Europa debrief;
+it reached the debrief's records insert at its 12-minute cap; 2 skips taken where the machinery doorway's zones
+overlapped only 0.4 m — fixed and re-checked: all three devices placed and the way back walked with no stall), the
+debrief from Scene Select to `EUROPA CHAPTER DONE` + free exploration. Monochrome 0 coloured pixels in every capture,
+audio peak 0. **Testing time: about 28 min of game time — over the 20-minute rule** (the first fog was unusable and the
+base needed door-to-door routing; each fix needed a short re-run).
+
+## Round 14 — decisions made (Dan asleep; easy to change)
+- Section 1 order: the title card and the chair scene play aboard first, then the extreme wide over the ice in the
+  Europa scene (the saucer interior lives in the Saucer scene).
+- Panther speaks with the near telepathic treatment all chapter (clearer than the "far" filter under water).
+- Scree worker voice: premade ElevenLabs "Callum – Husky Trickster" (first hoarse/raspy premade found; no voice created),
+  with `scree_grunt` under each line.
+- Keeper = the whale model at 0.62 (≈ 16 m); the huge one = 1.15 (≈ 30 m); the guide = the dolphin at 2.8 m.
+- The helmet stays on inside the base ("conditions require"); it comes off aboard.
+- The race is placeholder geometry (rings, simple rival craft); the base, settlement and temple are built from simple
+  shapes (first playable pass, as Round 11 did Venus).
+- Way home: a short ride, then a cut to the shelf (the keeper's people show her the way up) instead of riding the whole
+  way back.
+- Europa finished + chosen again on the star map = a "visited" card (no replay yet).
+- New portraits for the Field Guide (`cetacean`, `keeper`) are not rendered yet (the entries show without a picture).
+
+## For Dan to check (Round 14)
+- Star map / VEN_C13 → Europa: the title card, the chair scene (hand on his back), the beam down with the helmet.
+- Riding under water: does the swim handling (A up / B down, floaty) feel right? Fog density under the ice (tuned twice).
+- The huge Cetacean passing under the bike; the keeper's voice with the whale call layered under it.
+- The race (optional) and whether the rival speeds feel fair.
+- The base: Tunneler on the screen, the workers opening doors themselves, the devices, the wait for the transports.
+- The escape ride: readable? fair? (ruptures 6 m/s behind a bike that tops out at 8.5 m/s).
+- The temple, the vision with the learning call, the icosahedron insert; the reunion and the debrief.
+- Open: Tunneler is untextured and unrigged (stands / is moved as a whole); Field Guide portraits for the Cetaceans.
+
 
 ## Round 13: conversation sounds + the ship's console (Dan, 2026-11-19) — done, status below; release 0.13.0
 Commit first. All standing rules (monochrome, Kyle's fog/glow, non-sexual presentation, 20-minute testing rule, look at

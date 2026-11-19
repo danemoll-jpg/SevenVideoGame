@@ -64,6 +64,7 @@ namespace Seven
         /// <summary>Check runs: the console does not drive the camera (a capture places it).</summary>
         [System.NonSerialized] public bool CameraOverride;
         public StarMap Map => _map;
+        public bool Choosing => _choosing;      // Round 14: the player-style Europa run reads it (the star map is up for a choice)
         public int Selection => _sel;
         public string LastStarMapLog { get; private set; } = "";
 
@@ -97,7 +98,8 @@ namespace Seven
             if (u == "never") return false;
             if (u.StartsWith("ch1>=")) return int.TryParse(u.Substring(5), out var n) && SaveGame.Furthest >= n;
             if (u.StartsWith("venus>=")) return System.Enum.TryParse<VenusState.Stage>(u.Substring(7), out var st) && VenusState.AtLeast(st);
-            if (u.StartsWith("scene:")) return VenusState.SceneDone(u.Substring(6));
+            if (u.StartsWith("scene:")) return u.Substring(6).StartsWith("EUR_") ? EuropaState.SceneDone(u.Substring(6)) : VenusState.SceneDone(u.Substring(6));
+            if (u.StartsWith("europa>=")) return int.TryParse(u.Substring(8), out var ec) && EuropaState.Reached && EuropaState.Checkpoint >= ec;   // Round 14: EuropaLayout.Cp*
             return false;
         }
 
@@ -134,7 +136,7 @@ namespace Seven
         public static string Here()
         {
             var ab = Chapter1Aboard.I;
-            return ab != null && ab.Active && ab.VenusMode ? "venus" : "moon";
+            return ab != null && ab.Active && ab.EuropaMode ? "europa" : ab != null && ab.Active && ab.VenusMode ? "venus" : "moon";
         }
         public static string WorldName(string id) => id == "moon" ? "The Moon" : id == "venus" ? "Venus" : id == "mars" ? "Mars" : id == "europa" ? "Europa" : id;
         /// <summary>One line from the Log for a visited world (its latest unlocked entry, first sentence); null = not visited.</summary>
@@ -143,7 +145,7 @@ namespace Seven
             var d = new Dictionary<string, string>();
             foreach (var e in LogEntries())
             {
-                string w = e.id != null && e.id.StartsWith("ch1_") ? "moon" : e.id != null && e.id.StartsWith("ven_") ? "venus" : null;
+                string w = e.id != null && e.id.StartsWith("ch1_") ? "moon" : e.id != null && e.id.StartsWith("ven_") ? "venus" : e.id != null && e.id.StartsWith("eur_") ? "europa" : null;
                 if (w != null) d[w] = e.title + ": " + FirstSentence(e.text);
             }
             if (!d.ContainsKey("venus") && VenusState.AtLeast(VenusState.Stage.Landed)) d["venus"] = "Visited.";
@@ -704,7 +706,18 @@ namespace Seven
         {
             _busy++;
             CapLog($"star map: set course for {WorldName(id)} ({id})");
-            if (id == "mars" || id == "europa")
+            if (id == "europa")
+            {
+                // Round 14: Europa is playable. Not started / in progress = the chapter (Continue where it left off);
+                // done = a short card (the record is aboard) and back to the map
+                if (EuropaState.Complete) { yield return ComingSoonCard("Europa — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                ReleaseForTravel();
+                if (UI != null) yield return UI.Fade(1f, 0.8f);
+                if (EuropaState.HasProgress) EuropaState.ContinueOwn(); else EuropaState.StartFresh();
+                _busy--;
+                yield break;
+            }
+            if (id == "mars")
             {
                 yield return ComingSoon(WorldName(id));
                 _map.SetConfirm(false); Redraw();
@@ -726,6 +739,13 @@ namespace Seven
         }
 
         /// <summary>The "Chapter 3 — &lt;world&gt; (coming soon)" card (fade out, the card, fade back in).</summary>
+        public IEnumerator ComingSoonCard(string card)
+        {
+            _busy++;
+            CapLog($"card '{card}'");
+            if (UI != null) { yield return UI.Fade(1f, 0.8f); yield return UI.Title(card, 0.6f, 1.8f, 0.6f); yield return UI.Fade(0f, 0.8f); }
+            _busy--;
+        }
         public IEnumerator ComingSoon(string worldLabel)
         {
             _busy++;

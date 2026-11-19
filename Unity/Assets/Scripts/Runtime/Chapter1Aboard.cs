@@ -65,6 +65,7 @@ namespace Seven
 
         void Start()
         {
+            if (EuropaState.ArrivalAboard || EuropaState.HomeAboard) { StartEuropa(); return; }      // Round 14: Europa's aboard scenes
             if (VenusState.VenusAboardStart) { VenusState.VenusAboardStart = false; StartVenus(); return; }   // Round 12: the Venus debrief / destinations
             if (!Chapter1State.Aboard) { enabled = false; return; }
             I = this;

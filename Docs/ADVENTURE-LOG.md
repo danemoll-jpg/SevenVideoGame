@@ -102,3 +102,14 @@ At the cube, 7 saw the first planting on Venus, and someone holding out a seed f
 
 Notes: the terrace fight and the city reveal both happen within checkpoint 6, so both unlock at `ch1>=7`. The ship
 entry covers the rescue, the beam and the larger interior (checkpoints 7-8) and unlocks at `ch1>=9`.
+
+
+## Round 14 — Europa entries (Log, mirror of `Resources/Console/adventure_log.json`)
+
+- **Beneath the ice** (`eur_dive`, unlock `europa>=2`): The saucer found a passage through Europa's ice. 7 rode the hover bike down into an ocean, and something enormous passed beneath her.
+- **The keeper** (`eur_keeper`, unlock `europa>=3`): A Cetacean guide led her to a settlement built around open swimming passages. Its keeper spoke with her - and a mechanical pulse interrupted them.
+- **Tunneler again** (`eur_tunneler`, unlock `europa>=4`): Tunneler's drills were closing the migration routes; he had brought Scree workers who could not leave. 7 went into his underwater base.
+- **All of them** (`eur_workers`, unlock `europa>=6`): She opened the holding area. The workers opened doors, showed her the way, and every transport left before the machinery was destroyed.
+- **Out** (`eur_escape`, unlock `europa>=7`): Tunneler escaped in his own craft. The base came down behind her as she raced out into open water - and then the calls could be heard again.
+- **One voice teaching another** (`eur_record`, unlock `europa>=8`): In the temple she saw a young one learning a call, and knew the answer before it came. The keeper gave her Europa's record, a small icosahedron.
+- **An ordinary sound** (`eur_home`, unlock `europa>=9`): Back aboard, Panther had waited by the boarding area. In the pilot's chair he purred, and that was one sound she knew.

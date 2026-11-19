@@ -105,7 +105,8 @@ namespace Seven
         /// their levels go through AudioKit (bus volume, mute).</summary>
         void EnsureAudio()
         {
-            if (_hum == null && AudioKit.Clip("bike_hum") != null) _hum = AudioKit.Loop("bike_hum", transform, null, 0.3f, AudioKit.Bus.Sfx, 3f, 40f);
+            string humId = Swim && AudioKit.Clip("europa_bike_hum") != null ? "europa_bike_hum" : "bike_hum";       // Round 14: muffled under water
+            if (_hum == null && AudioKit.Clip(humId) != null) _hum = AudioKit.Loop(humId, transform, null, 0.3f, AudioKit.Bus.Sfx, 3f, 40f);
             if (_whoosh == null && AudioKit.Clip("bike_whoosh") != null) _whoosh = AudioKit.Loop("bike_whoosh", transform, null, 0f, AudioKit.Bus.Sfx, 3f, 40f);
         }
         public bool HasHum => _hum != null && _hum.isPlaying;
@@ -113,6 +114,62 @@ namespace Seven
         public int Snags;
         /// <summary>Round 13 (0k): tremor wobble, 0..1 (decays by itself).</summary>
         [System.NonSerialized] public float Wobble;
+
+        // ---- Round 14 (Europa): the same bike swims. Steer (left stick), throttle (RT / stick up), brake (LT / stick down),
+        // ascend (A held) / descend (B held); slower and floaty (it drifts on, it settles), bubbles trail behind it, the hum is
+        // muffled. Kept inside the chapter's swim space by SwimClamp. No ground, no obstacle circles.
+        [System.NonSerialized] public bool Swim;
+        [System.NonSerialized] public bool SavesToVenus = true;
+        [System.NonSerialized] public System.Func<Vector3, Vector3> SwimClamp;
+        [System.NonSerialized] public float ScriptRise;
+        public ParticleSystem Bubbles;
+        public float SwimMax = 8.5f, SwimAccel = 3.2f, SwimDrag = 0.7f, SwimBrake = 5f, SwimTurn = 70f, SwimRise = 3.4f;
+        float _vy;
+        public float VerticalSpeed => _vy;
+        /// <summary>Round 14: a scripted push (the pressure wave): adds to its motion for a moment, spun off line.</summary>
+        public void Shove(Vector3 v, float spinDeg) { _shove = v; _spin = spinDeg; }
+        Vector3 _shove; float _spin;
+
+        void SwimUpdate(float dt)
+        {
+            float steer, throttle, rise;
+            if (ScriptDriven) { steer = ScriptSteer; throttle = ScriptThrottle; rise = ScriptRise; }
+            else
+            {
+                var mv = Input != null ? Input.Move.ReadValue<Vector2>() : Vector2.zero;
+                float rt = Input != null ? Input.Telekinesis.ReadValue<float>() : 0f, lt = Input != null ? Input.Block.ReadValue<float>() : 0f;
+                steer = mv.x; throttle = Mathf.Clamp(Mathf.Max(rt, mv.y) - Mathf.Max(lt, -mv.y), -1f, 1f);
+                rise = (Input != null && Input.Jump.IsPressed() ? 1f : 0f) - (Input != null && Input.Crouch.IsPressed() ? 1f : 0f);
+            }
+            if (throttle > 0.05f) Speed = Mathf.MoveTowards(Speed, SwimMax * throttle, SwimAccel * dt);
+            else if (throttle < -0.05f) Speed = Mathf.MoveTowards(Speed, 0f, SwimBrake * -throttle * dt);
+            else Speed = Mathf.MoveTowards(Speed, 0f, SwimDrag * dt);
+            _vy = Mathf.MoveTowards(_vy, rise * SwimRise, 2.6f * dt);
+            float turn = steer * SwimTurn * Mathf.Lerp(0.6f, 1f, Mathf.Clamp01(Speed / 3f)) * dt;
+            _spin = Mathf.MoveTowards(_spin, 0f, 120f * dt);
+            transform.rotation = Quaternion.Euler(0f, transform.eulerAngles.y + turn + _spin * dt * 2f, 0f);
+            var from = transform.position;
+            var p = from + transform.forward * Speed * dt + Vector3.up * _vy * dt + _shove * dt;
+            _shove = Vector3.MoveTowards(_shove, Vector3.zero, 9f * dt);
+            if (SwimClamp != null) p = SwimClamp(p);
+            float moved = (p - from).magnitude;
+            if (Speed > 1f && moved < Speed * dt * 0.25f) { _stuckFor += dt; Speed *= 0.6f; } else _stuckFor = Mathf.Max(0f, _stuckFor - dt);
+            transform.position = p;
+            Odometer += moved;
+            _lean = Mathf.Lerp(_lean, -steer * Mathf.Clamp01(Speed / 5f) * 18f, dt * 3f);
+            if (Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = p; }
+            if (Bubbles != null) { var e = Bubbles.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 6f + 22f * Mathf.Clamp01(Speed / SwimMax) : 0f; }
+        }
+
+        /// <summary>Round 14: get off onto a given spot (the base's dock), standing beside the bike.</summary>
+        public void DismountTo(Vector3 stand, Vector3 facing)
+        {
+            if (!Riding) return;
+            Riding = false; Speed = 0f; _vy = 0f;
+            if (_ik != null) { _ik.RightW = 0f; _ik.LeftW = 0f; _ik.LookW = 0f; _ik.enabled = true; }
+            Rider.EndRide(stand, facing);
+            AudioKit.Play("bike_dismount", stand, 0.8f, 0.05f);
+        }
 
         public bool CanMount(Vector3 p) => !Riding && Flat(p - transform.position).magnitude < 2.4f;
 
@@ -126,7 +183,7 @@ namespace Seven
             Rider.BeginRide(this);
             AudioKit.Play("bike_mount", transform.position, 0.8f, 0.05f);
             AudioKit.Play("bike_liftoff", transform.position, 0.75f, 0.03f);
-            VenusState.SaveBike(transform.position, transform.eulerAngles.y, true);
+            if (SavesToVenus) VenusState.SaveBike(transform.position, transform.eulerAngles.y, true);
         }
 
         /// <summary>Get off on the left side - only where she can stand (a walkable zone there).</summary>
@@ -144,14 +201,15 @@ namespace Seven
             Rider.EndRide(new Vector3(side.x, Ground.Height(side.x, side.z), side.z), transform.forward);
             AudioKit.Play("bike_settle", transform.position, 0.7f, 0.03f);
             AudioKit.Play("bike_dismount", side, 0.8f, 0.05f);
-            VenusState.SaveBike(transform.position, transform.eulerAngles.y, false);
+            if (SavesToVenus) VenusState.SaveBike(transform.position, transform.eulerAngles.y, false);
             return true;
         }
 
         /// <summary>Put the bike somewhere (parking, summon, reload), hovering over the ground there.</summary>
         public void Place(Vector3 at, float yaw)
         {
-            at.y = Ground.Height(at.x, at.z);
+            if (!Swim) at.y = Ground.Height(at.x, at.z);
+            _vy = 0f;
             transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
             LastSafe = at; Speed = 0f; _stuckFor = 0f;
         }
@@ -197,7 +255,8 @@ namespace Seven
         {
             float dt = Time.deltaTime;
             _bob += dt;
-            if (Riding)
+            if (Riding && Swim) SwimUpdate(dt);
+            else if (Riding)
             {
                 float steer, throttle;
                 if (ScriptDriven) { steer = ScriptSteer; throttle = ScriptThrottle; }
@@ -232,7 +291,7 @@ namespace Seven
                 Odometer += moved;
                 _lean = Mathf.Lerp(_lean, -steer * Mathf.Clamp01(Speed / 6f) * 14f, dt * 4f);
                 if (VenusLayout.BikeZone(p, 1.6f) && Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = p; }
-                if (Time.time > _saveT) { _saveT = Time.time + 3f; VenusState.SaveBike(transform.position, transform.eulerAngles.y, true); }
+                if (Time.time > _saveT && SavesToVenus) { _saveT = Time.time + 3f; VenusState.SaveBike(transform.position, transform.eulerAngles.y, true); }
                 if (Input != null && !ScriptDriven && Input.Restart.WasPressedThisFrame()) Recover();
             }
             else { Speed = 0f; _lean = Mathf.Lerp(_lean, 0f, dt * 3f); }
@@ -244,7 +303,7 @@ namespace Seven
                 // QF10 (6f): it follows the land - pitched to the slope under it (smoothed), so it never snags on a rise
                 var fw = transform.forward; var p0 = transform.position;
                 float ahead = Ground.Height(p0.x + fw.x * 1.3f, p0.z + fw.z * 1.3f), behind = Ground.Height(p0.x - fw.x * 1.3f, p0.z - fw.z * 1.3f);
-                float slope = float.IsNaN(GlideBottom) ? Mathf.Clamp(Mathf.Atan2(ahead - behind, 2.6f) * Mathf.Rad2Deg, -18f, 18f) : 0f;
+                float slope = Swim ? Mathf.Clamp(_vy * 6f, -22f, 22f) : float.IsNaN(GlideBottom) ? Mathf.Clamp(Mathf.Atan2(ahead - behind, 2.6f) * Mathf.Rad2Deg, -18f, 18f) : 0f;
                 _pitch = Mathf.Lerp(_pitch, slope, dt * 6f);
                 // Round 13 (0k): a tremor makes the bike wobble on its hover
                 Wobble = Mathf.MoveTowards(Wobble, 0f, dt * 0.35f);

@@ -34,7 +34,7 @@ namespace Seven.EditorTools
         static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         public static string ExePath => Path.Combine(ProjectRoot, "Builds", "Seven", "SevenDemo.exe");   // QF2
         /// <summary>Build order: the demo picker first.</summary>
-        static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath, VenusScenePath };
+        static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath, VenusScenePath, EuropaScenePath };
 
         static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle", "sneak_walk", "float",
                                            "hang_idle", "shimmy", "shimmy_mirror", "crouch_idle", "fall_idle",     // Round 9 traversal loops
@@ -83,6 +83,7 @@ namespace Seven.EditorTools
             BuildRound4(atmo);
             BuildRound6(sevenCtl, atmo, bank);
             BuildRound11(sevenCtl, atmo, bank);        // Round 11: Chapter 2 "Venus", part 1
+            BuildRound14(sevenCtl, atmo, bank);        // Round 14: Chapter "Europa — Beneath the Ice"
             EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
             ConfigurePlayer();
             AssetDatabase.SaveAssets();

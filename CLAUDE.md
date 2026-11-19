@@ -305,7 +305,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–13 + QF1–QF12 complete (2026-11-19), release 0.13.1.** Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–14 + QF1–QF12 complete (2026-11-19), release 0.14.0.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -432,7 +432,23 @@ scene (Round 10).
   - `WormCreature.BaseY` is not serialized — set it at runtime (`RestorePart2`). Particle materials: `AdditiveMatTex` (soft dot), never `AdditiveMat` (squares).
   - Check tools: `-menupick "Label|Label"` (`MenuPilot`: a run starting in the real main menu), `-stopafter <s>`,
     `BodyProbe` ("body still" line), `CameraOccluders.WalkBlockers` ("walk blockers" line).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.13.1** (Round 13 status in `TODO.md`), then Round 14.
+- **Round 14 — Europa (release 0.14.0)** (spec `Docs/CHAPTER_EUROPA.md`; status, decisions, "For Dan to check" in `TODO.md`):
+  - Scene `Europa`: `Editor/FightDemoBuilderEuropa.cs`, numbers + swim volumes + base zones + checkpoints in `Runtime/EuropaLayout.cs`,
+    `Atmosphere_Europa`. Flow `EuropaDirector.cs` + `EuropaDirectorBase.cs`; saves `EuropaState.cs` (`seven_europa`, select
+    slot `seven_europa_select`); aboard parts (title + chair scene, reunion, debrief) `Chapter1AboardEuropa.cs`.
+  - The bike swims: `HoverBike.Swim` (A up / B down, `SwimClamp`). Helmet `BubbleHelmet.cs`. Cetaceans `Cetacean.cs`
+    (procedural). Icosahedron `Icosahedron` (code). Guide light = `EuropaDirector.NextMarker`; base rooms routed door to
+    door (`RouteTo`); zones must overlap ≥ 0.6 m at doors.
+  - Models (before the Unity build): `F:lenderlender.exe --background --factory-startup --python Tools/Blender/cleanup_cetacean.py -- <repo> both`
+    (~3 min) and `... cleanup_tunneler.py -- <repo>` (~1 min).
+  - Dialogue: `python Tools/Voice/make_europa_lines.py` → `Resources/Europa/europa_dialogue.json` + `Docs/EUROPA-LINES.md`;
+    voices `python Tools/Voice/generate_europa_voices.py` → `Resources/EuropaVoice/` (Keeper / Tunneler / Seven / Cat by
+    name; Scree = a premade voice).
+  - Switches: `-europacp <n>` (check run at checkpoint n), `-europa` (start as from the star map), `-europarace`
+    (autopilot rides the race), `-europaplay` (player-style run `EuropaPlaytest.cs`; with
+    `-menupick "Scene select|Chapter 2 — Venus|Venus: the debrief"` it starts in the main menu and chooses Europa on the star map).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.0** (QF12 + Round 14 status in `TODO.md`).
+**Before: Dan plays 0.13.1** (Round 13 status in `TODO.md`), then Round 14.
 **Before: Dan plays 0.12.0** (Round 12 status in `TODO.md`), then Round 13.
 **Before:** Dan plays 0.10.2, then Round 11
 (`Docs/ROUND11.md`: Venus / the Elarim; open: Kyle's Elarim marking, first-play length). See `TODO.md`.

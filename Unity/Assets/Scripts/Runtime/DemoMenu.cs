@@ -29,8 +29,10 @@ namespace Seven
         static (string, string)[] BuildItems()
         {
             var l = new System.Collections.Generic.List<(string, string)>();
-            VenusState.UseOwnSave();
-            if (VenusState.Reached)
+            VenusState.UseOwnSave(); EuropaState.UseOwnSave();
+            if (EuropaState.Reached && !EuropaState.Complete)            // Round 14: the furthest chapter first
+                l.Add(("Continue  —  " + EuropaLayout.CpNames[EuropaState.Checkpoint], "@continueeuropa"));
+            else if (VenusState.Reached)
                 l.Add(("Continue  —  Venus: " + (VenusState.Objective ?? "the saucer"), ContinueVenus));
             else if (SaveGame.HasChapter1Save)
                 l.Add((SaveGame.Progress >= Chapter1State.CpExplore ? "Continue  —  explore the saucer" : "Continue  —  " + Chapter1State.CpName(SaveGame.Progress), ContinueScene));
@@ -52,6 +54,7 @@ namespace Seven
         {
             var l = new System.Collections.Generic.List<(string, string)>();
             foreach (var (label, id) in VenusState.SelectEntries) l.Add((label, "@ven:" + id));
+            foreach (var (label, cp) in EuropaState.SelectEntries) l.Add((label, "@eur:" + cp));      // Round 14
             l.Add(("Back", BackScene));
             return l.ToArray();
         }
@@ -74,13 +77,15 @@ namespace Seven
         {
             I = this;
             if (DemoBoot.MenuPick != null && DemoBoot.CaptureDir != null) { Build(); gameObject.AddComponent<MenuPilot>(); return; }   // QF12: a run that starts in the real menu
-            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay && !DemoBoot.VenusPlay2) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
+            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay && !DemoBoot.VenusPlay2 && !DemoBoot.EuropaPlay) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot && DemoBoot.MenuVenusConfirm) { _confirmVenus = true; Build(); _sel = System.Array.FindIndex(Items, x => x.scene == NewVenus); Refresh(); StartCoroutine(Shot()); return; }
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
             if (DemoBoot.Gallery) GalleryTV.Preload();      // the gallery check run exercises the preload path
             if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }
             if (DemoBoot.Continue) { SaveGame.Continue(); return; }
             if (DemoBoot.Chapter1Aboard) { Chapter1State.StartAboard(); return; }
+            if (DemoBoot.EuropaCp >= 0 && DemoBoot.CaptureDir != null) { SceneManager.LoadScene("Europa"); return; }     // Round 14 check runs
+            if (DemoBoot.Europa && DemoBoot.CaptureDir != null && !DemoBoot.EuropaPlay) { EuropaState.ResetForTest(); EuropaState.StartFresh(); return; }
             if (DemoBoot.VenusSelect != null) { VenusState.StartAt(DemoBoot.VenusSelect); return; }
             if (DemoBoot.Chapter2) { SceneManager.LoadScene("Venus"); return; }
             if (DemoBoot.Chapter1) { SceneManager.LoadScene("Chapter1"); return; }
@@ -109,7 +114,7 @@ namespace Seven
 
             // Round 10 (Dan): the logo image ("7" + THE OBSERVER, Arial Bold typeset by Tools/make_logo.py; no font shipped)
             if (_selectPage)
-                Text(canvasGo.transform, _venusPage ? "SCENE SELECT  —  CHAPTER 2" : "SCENE SELECT  —  CHAPTER 1", new Vector2(0, 300), 30, new Color(0.95f, 0.95f, 0.95f));
+                Text(canvasGo.transform, _venusPage ? "SCENE SELECT  —  CHAPTER 2 + EUROPA" : "SCENE SELECT  —  CHAPTER 1", new Vector2(0, 300), 30, new Color(0.95f, 0.95f, 0.95f));
             else if (Logo.Add(canvasGo.transform, new Vector2(0, 215), 360f, new Color(0.95f, 0.95f, 0.95f)) == null)
             {
                 Text(canvasGo.transform, "7", new Vector2(0, 240), 110, new Color(0.95f, 0.95f, 0.95f));
@@ -188,6 +193,8 @@ namespace Seven
             if (scene == BackScene && _venusPage) { _venusPage = false; _sel = System.Array.FindIndex(SelectItems(), x => x.Item2 == "@venuspage"); Build(); return; }
             if (scene == BackScene) { _selectPage = false; _sel = 0; Build(); return; }
             if (scene == "@venuspage") { _venusPage = true; _sel = 0; Build(); return; }
+            if (scene.StartsWith("@eur:")) { Debug.Log($"[Seven] scene select: {Items[_sel].label}"); Chapter1State.Reset(); EuropaState.StartAt(int.Parse(scene.Substring(5))); return; }
+            if (scene == "@continueeuropa") { Chapter1State.Reset(); EuropaState.ContinueOwn(); return; }
             if (scene.StartsWith("@ven:")) { Debug.Log($"[Seven] scene select: {Items[_sel].label}"); Chapter1State.Reset(); VenusState.StartAt(scene.Substring(5)); return; }
             // QF11: "Chapter 2 — Venus" always starts the chapter fresh; with Venus progress saved, confirm first
             if (scene == NewVenus)

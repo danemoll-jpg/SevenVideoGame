@@ -1,5 +1,5 @@
 {
- "note": "Ship console Log: one entry per completed chapter beat, in story order, shown once unlocked. Edit text/title freely; add an entry anywhere in the list (unique id); remove = delete it. Written only from what happens in the game. Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), or \"never\". Mirror: Docs/ADVENTURE-LOG.md.",
+ "note": "Ship console Log: one entry per completed chapter beat, in story order, shown once unlocked. Edit text/title freely; add an entry anywhere in the list (unique id); remove = delete it. Written only from what happens in the game. Unlock forms: \"ch1>=N\" (Chapter 1 checkpoint N reached: 0 cell, 1 escape, 2 old passage + ruins, 3 Scree guard, 4 vision, 5 lunar door + take the shape, 6 city reveal, 7 saucer rescue + beam, 8 aboard, 9 galley, 10 free exploration), \"venus>=<Stage>\" (Landed, GuardianMet, HelpAccepted, ControlDiscovered, EncounterActive, ThreatStopped, RecordReceived, Complete), \"scene:<VEN scene id>\" (that Venus scene completed), \"europa>=N\" (Europa checkpoint N: 0 arrival, 1 descent, 2 settlement, 3 machinery, 4 base, 5 workers, 6 escape, 7 temple, 8 home, 9 done), or \"never\". Mirror: Docs/ADVENTURE-LOG.md.",
  "entries": [
   {
    "id": "ch1_cell",
@@ -119,6 +119,55 @@
    "title": "Back aboard",
    "text": "7 told Panther what she had seen. She wishes she could remember the face. There are other temples to ask.",
    "unlock": "venus>=Complete"
+  },
+  {
+   "id": "eur_dive",
+   "chapter": "Chapter — Europa: Beneath the Ice",
+   "title": "Beneath the ice",
+   "text": "The saucer found a passage through Europa's ice. 7 rode the hover bike down into an ocean, and something enormous passed beneath her.",
+   "unlock": "europa>=2"
+  },
+  {
+   "id": "eur_keeper",
+   "chapter": "Chapter — Europa: Beneath the Ice",
+   "title": "The keeper",
+   "text": "A Cetacean guide led her to a settlement built around open swimming passages. Its keeper spoke with her - and a mechanical pulse interrupted them.",
+   "unlock": "europa>=3"
+  },
+  {
+   "id": "eur_tunneler",
+   "chapter": "Chapter — Europa: Beneath the Ice",
+   "title": "Tunneler again",
+   "text": "Tunneler's drills were closing the migration routes; he had brought Scree workers who could not leave. 7 went into his underwater base.",
+   "unlock": "europa>=4"
+  },
+  {
+   "id": "eur_workers",
+   "chapter": "Chapter — Europa: Beneath the Ice",
+   "title": "All of them",
+   "text": "She opened the holding area. The workers opened doors, showed her the way, and every transport left before the machinery was destroyed.",
+   "unlock": "europa>=6"
+  },
+  {
+   "id": "eur_escape",
+   "chapter": "Chapter — Europa: Beneath the Ice",
+   "title": "Out",
+   "text": "Tunneler escaped in his own craft. The base came down behind her as she raced out into open water - and then the calls could be heard again.",
+   "unlock": "europa>=7"
+  },
+  {
+   "id": "eur_record",
+   "chapter": "Chapter — Europa: Beneath the Ice",
+   "title": "One voice teaching another",
+   "text": "In the temple she saw a young one learning a call, and knew the answer before it came. The keeper gave her Europa's record, a small icosahedron.",
+   "unlock": "europa>=8"
+  },
+  {
+   "id": "eur_home",
+   "chapter": "Chapter — Europa: Beneath the Ice",
+   "title": "An ordinary sound",
+   "text": "Back aboard, Panther had waited by the boarding area. In the pilot's chair he purred, and that was one sound she knew.",
+   "unlock": "europa>=9"
   }
  ]
 }

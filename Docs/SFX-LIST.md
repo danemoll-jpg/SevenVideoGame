@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-80 sounds.
+96 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -90,3 +90,19 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `console_open` | A retro-futuristic chrome control console powering up: soft rising electronic chime, gentle glassy hum, warm. | 1.5 |  | the ship's console opens (item 2) |
 | `console_move` | A soft short electronic tick of a retro chrome console menu, glassy and quiet. | 0.5 |  | console: cursor moves |
 | `console_select` | A soft confirming electronic blip of a retro chrome console, two gentle rising tones. | 0.5 |  | console: select |
+| `europa_call_deep` | Deep slow whale song call, long low moan rising and falling, underwater, distant echo. | 6 |  | Europa: Cetacean calls (the keeper's layer, the huge one passing) |
+| `europa_call_answer` | Softer higher whale call answering in the distance, underwater, gentle. | 5 |  | Europa: the calls answering across open water |
+| `europa_call_learning` | Young whale attempting a short three-note call, slightly wobbly, then an older deep whale repeating it clearly, underwater. | 10 |  | Europa: the vision (its video is nearly silent) |
+| `europa_dolphin_chirp` | Friendly dolphin clicks and whistles, underwater. | 2.5 |  | Europa: the guide |
+| `europa_amb_underwater` | Deep underwater ambience beneath ice, soft muffled rumble, slow distant creaks of ice, gentle flowing water, faint bubbles. | 20 | yes | Europa: under the ice |
+| `europa_bubbles` | A short burst of bubbles rising underwater, soft and close. | 1.5 |  | Europa: bubbles (helmet, bike) |
+| `europa_bike_hum` | Smooth low electric hum of a small underwater vehicle, muffled by water, steady. | 6 | yes | Europa: the bike underwater |
+| `europa_extraction_pulse` | A heavy distant mechanical pulse thudding through water, industrial pressure wave, low and muffled. | 3 |  | Europa: Tunneler's extraction pulse |
+| `europa_drill` | Industrial drilling machinery grinding steadily far away, heard through water and metal walls. | 10 | yes | Europa: the machinery / the base |
+| `europa_alarm` | Muffled industrial base alarm, slow two-tone warning siren inside metal corridors. | 4 | yes | Europa: the base alarm |
+| `europa_pressure_door` | Heavy pressure chamber door cycling: hiss of equalizing air, clunk of locks, water draining. | 4 |  | Europa: the pressure chamber |
+| `europa_seal_tone` | A single soft clean confirmation tone, gentle electronic chime. | 1 |  | Europa: helmet seal check |
+| `europa_demolition` | Series of deep muffled underwater explosions rolling one after another, structural metal groaning and collapsing. | 6 |  | Europa: the demolition / the escape |
+| `europa_rupture` | Single heavy underwater rupture: a deep thump, metal tearing and a rush of bubbles. | 2 |  | Europa: ruptures chasing her |
+| `europa_pressure_wave` | A deep underwater pressure wave whoosh, a heavy surge of water passing, then calm. | 3 |  | Europa: the pressure wave after the escape |
+| `europa_device_place` | A small device clamps onto metal with a magnetic clunk and a soft beep. | 1 |  | Europa: placing a demolition device |

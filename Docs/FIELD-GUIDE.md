@@ -61,3 +61,10 @@ Notes:
 - The Scree entry does not name Tunneler: no line in the game names him yet; only his machinery is seen in 6b.
 - The Scree unlock is `ch1>=7` so the terrace fight (inside checkpoint 6) is covered by the text.
 - The guardian and the attendant are written without he / she (the spec does not say).
+
+
+## Round 14 — Europa entries (Field Guide, mirror of `Resources/Console/field_guide.json`)
+
+- **Tunneler** (`tunneler`, unlock `europa>=4`): Ring-segmented, with a spiral drill for a head that turns when he speaks. He kept me in the Moon prison; on Europa his machinery silenced the Cetaceans' calls and he worked Scree who could not leave. He promised to take only what nobody would miss. He escaped in his own craft - and he will remember.
+- **The Cetaceans** (`cetaceans`, unlock `europa>=2`): Europa's people live in the ocean under the ice: vast, slow, and they speak - an understandable voice carried on their calls. They teach their history through sound, one voice to another.
+- **The keeper** (`keeper`, unlock `europa>=3`): An ancient Cetacean who keeps the settlement and the old routes. Calm, patient; becomes very still when something does not belong. Gave me Europa's record and asked me to carry it somewhere it can be heard.

@@ -129,6 +129,7 @@ namespace Seven
                     if (target == "@back" && _venusSel) { _venusSel = false; Show(Page.Select, VenusPageIndex); }
                     else if (target == "@back") Show(Page.Main, MainSelect);
                     else if (target == "@venuspage") { _venusSel = true; Show(Page.Select, 0); }
+                    else if (target.StartsWith("@eur:")) { Close(); _venusSel = false; Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); EuropaState.StartAt(int.Parse(target.Substring(5))); }
                     else if (target.StartsWith("@ven:")) { Close(); _venusSel = false; Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); VenusState.StartAt(target.Substring(5)); }
                     else if (target.StartsWith("@cp")) { Close(); Debug.Log($"[Seven] scene select (pause menu): {sel[_sel].Item1}"); int cp0 = int.Parse(target.Substring(3)); Chapter1State.StartAt(cp0); Chapter1State.Intro = cp0 == Chapter1State.CpCell; }
                     break;
@@ -357,7 +358,7 @@ namespace Seven
         public static void NewGame()
         {
             PlayerPrefs.DeleteKey(Key); PlayerPrefs.DeleteKey(OldKey); PlayerPrefs.DeleteKey(FurthestKey);
-            VenusState.ClearOwnSave();
+            VenusState.ClearOwnSave(); EuropaState.ClearOwnSave();
             PlayerPrefs.Save();
             Debug.Log("[Seven] new game: Chapter 1 checkpoint, Venus save and console progress reset");
         }
