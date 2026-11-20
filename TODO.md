@@ -1,7 +1,27 @@
 # Active Development Plan — 7: The Observer
 
+## Side task S2: Reptilian ready for Mixamo (Dan, 2026-11-19) — DONE (2026-11-19), waiting for Dan's Mixamo upload
+**Status:** `Tools/Blender/cleanup_mixamo_body.py -- <repo> reptilian` (the S1 script, now shared, presets viper /
+reptilian; ~3 min) → `Art/Export/reptilian/reptilian_for_mixamo.fbx` (4.1 MB, 35,944 tris, 1.90 m, feet at 0, faces
+front, arms 57° below horizontal, 201 loose pieces welded into 1, grayscale 2048 texture embedded) +
+`reptilian_mixamo_metrics.txt`; previews `Docs/Previews/reptilian/` (sheet, q34, head, `hipL_*` close-ups).
+**Satchel + sash tail: not fused, nothing to separate** (measured, logged by `hip_check`): on this model the satchel
+hangs at his *right* hip and the knot + tail at his *left*. Below the tunic hem the tail is its own piece, 43 mm in
+front of the left thigh; the satchel's bottom (0.91 m) rests on the tunic skirt, 40 mm from the right trouser leg.
+(Still give the tail / satchel their own short bones in Unity, as `MODELS-NEEDED.md` says.) **Dan:** upload the FBX to
+Mixamo's auto-rigger, download "FBX for Unity, with skin" to `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx`.
+
+Same as S1 (Viper, `cleanup_viper.py`, now `cleanup_mixamo_body.py`) for Dan's Tripo model `Art/Source/reptilian/reptilian_v1.glb` (~57 MB;
+reference `Art/Reference/reptilian_ref_front.png`, notes in `Docs/MODELS-NEEDED.md` "Reptilians"): weld, decimate to
+~30–40 k tris keeping the face, hands, sash, satchel and the wrapped forearms readable, A-pose upright, **~1.9 m**, origin
+at the feet, texture embedded → **`Art/Export/reptilian/reptilian_for_mixamo.fbx`** + a preview sheet (front / side / back)
+`Docs/Previews/reptilian/reptilian_for_mixamo_sheet.png`. Check the satchel and the sash's hanging tail aren't fused to
+the left thigh (separate them by a small gap if they are) so Mixamo's skinning doesn't glue them to the leg. Then tell
+Dan: upload to Mixamo's auto-rigger, download "FBX for Unity, with skin" to `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx`.
+Commit + push. No release.
+
 ## Side task S1: Viper ready for Mixamo (Dan, 2026-11-19) — DONE (2026-11-19), waiting for Dan's Mixamo upload
-**Status:** `Tools/Blender/cleanup_viper.py` (~3 min) → `Art/Export/viper/viper_for_mixamo.fbx` (3.4 MB, 35,996 tris,
+**Status:** `Tools/Blender/cleanup_viper.py` (now `cleanup_mixamo_body.py … viper`, ~3 min) → `Art/Export/viper/viper_for_mixamo.fbx` (3.4 MB, 35,996 tris,
 2.30 m, feet at 0, faces front (-Y Blender = +Z Mixamo), arms 55° below horizontal, 121 loose pieces welded into 1,
 grayscale 2048 texture embedded) + `viper_mixamo_metrics.txt`; previews `Docs/Previews/viper/` (sheet front / side /
 back, q34, head close-up). **Dan:** upload the FBX to Mixamo's auto-rigger, download "FBX for Unity, with skin" to

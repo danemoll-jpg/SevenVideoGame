@@ -1,31 +1,35 @@
-"""Side task S1: Viper (Mars) ready for Mixamo's auto-rigger - the same recipe as the guardian's
-elarim_body_for_mixamo.fbx (cleanup_r11.py elarim_mixamo).
+"""Side tasks S1 / S2: a Tripo character made ready for Mixamo's auto-rigger - the same recipe as the guardian's
+elarim_body_for_mixamo.fbx (cleanup_r11.py elarim_mixamo). Presets: viper (Mars antagonist, 2.3 m), reptilian (Mars
+townspeople, 1.9 m).
 
 Usage (repo root):
-  F:\\blender\\blender.exe --background --factory-startup --python Tools/Blender/cleanup_viper.py -- <repo root> [target tris] [preview dir]
-In:  Art/Source/viper/viper_v1.glb (Tripo, ~2 M tris, A-pose).
-Out: Art/Export/viper/viper_for_mixamo.fbx (mesh only, grayscale texture embedded), Textures/viper_v1_basecolor.jpg,
-     viper_mixamo_metrics.txt, and previews in Docs/Previews/viper/ (front / side / back / q34 + viper_for_mixamo_sheet.png).
+  F:\\blender\\blender.exe --background --factory-startup --python Tools/Blender/cleanup_mixamo_body.py -- <repo root> <viper|reptilian> [target tris] [preview dir]
+In:  Art/Source/<name>/<name>_v1.glb (Tripo, ~2 M tris, A-pose).
+Out: Art/Export/<name>/<name>_for_mixamo.fbx (mesh only, grayscale texture embedded), Textures/<name>_v1_basecolor.jpg,
+     <name>_mixamo_metrics.txt, previews in Docs/Previews/<name>/ (front / side / back / q34 / head + <name>_for_mixamo_sheet.png).
 Steps: join every mesh piece, weld (merge by distance - the Tripo shell comes in loose triangles/patches), drop tiny
-floating crumbs, stand him up facing -Y in Blender (= +Z in Unity / Mixamo front), scale to HEIGHT (crown, not the hood
-tip, is not special - the full height is used), origin at the feet centred on the hips, decimate to the target.
-Dan then uploads the FBX to Mixamo, downloads 'FBX for Unity, with skin' to Art/Mixamo/viper/viper_body_mixamo.fbx.
+floating crumbs, keep Tripo's facing (-Y in Blender = +Z in Unity / Mixamo front), scale to the preset height (full
+height), origin at the feet centred on the hips, decimate to the target.
+Dan then uploads the FBX to Mixamo, downloads 'FBX for Unity, with skin' to Art/Mixamo/<name>/<name>_body_mixamo.fbx.
 """
 import bpy, os, sys, math
 import numpy as np
 
 argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 ROOT = os.path.abspath(argv[0]) if argv else os.getcwd()
-TARGET = int(argv[1]) if len(argv) > 1 else 36000
-PREVIEW = os.path.abspath(argv[2]) if len(argv) > 2 else os.path.join(ROOT, "Docs", "Previews", "viper")
-HEIGHT = 2.3            # Docs/MODELS-NEEDED.md "Viper": ~2.3 m
-WELD = 0.0006           # metres at 2.3 m height
+NAME = argv[1] if len(argv) > 1 else "viper"
+PRESETS = {"viper": 2.3,        # Docs/MODELS-NEEDED.md "Viper": ~2.3 m
+           "reptilian": 1.9}    # "Reptilians": ~1.9 m
+HEIGHT = PRESETS[NAME]
+TARGET = int(argv[2]) if len(argv) > 2 else 36000
+PREVIEW = os.path.abspath(argv[3]) if len(argv) > 3 else os.path.join(ROOT, "Docs", "Previews", NAME)
+WELD = 0.0006           # metres
 CRUMB = 50              # loose parts with fewer vertices than this are deleted
 _m = []
 
 
 def log(*a):
-    s = " ".join(str(x) for x in a); print("[viper]", s); _m.append(s)
+    s = " ".join(str(x) for x in a); print(f"[{NAME}]", s); _m.append(s)
 
 
 def tris(ob):
@@ -59,10 +63,45 @@ def edit(fn):
     bpy.ops.object.mode_set(mode='EDIT'); fn(); bpy.ops.object.mode_set(mode='OBJECT')
 
 
+def hip_check(ob, need=0.015):
+    """S2: the sash's hanging tail (his left hip, +X) and the satchel (his right hip, -X) must not be fused to a thigh, or
+    Mixamo's skinning glues them to the leg. Boxes in metres for the 1.9 m reptilian. Tail: below the tunic hem it must be
+    its own piece, clear of the leg. Satchel: its front layer vs the trouser below the hem. Logs the gaps; WARNING if < need."""
+    from mathutils.kdtree import KDTree
+    P = co(ob)
+    def gap(a, b):
+        kd = KDTree(int(b.sum()))
+        for i, p in enumerate(P[b]): kd.insert(p, i)
+        kd.balance()
+        return min(kd.find(p)[2] for p in P[a])
+    box = (P[:, 0] > 0.03) & (P[:, 0] < 0.17) & (P[:, 2] > 0.78) & (P[:, 2] < 0.90)
+    E = np.empty(len(ob.data.edges) * 2, dtype=np.int64); ob.data.edges.foreach_get("vertices", E); E = E.reshape(-1, 2)
+    par = np.arange(len(P))
+    def f(i):
+        while par[i] != i: par[i] = par[par[i]]; i = par[i]
+        return i
+    for a, b in E[box[E[:, 0]] & box[E[:, 1]]]:
+        ra, rb = f(a), f(b)
+        if ra != rb: par[ra] = rb
+    r = np.array([f(i) for i in range(len(P))]); u, c = np.unique(r[box], return_counts=True)
+    if len(u) < 2:
+        log("WARNING: sash tail: below the hem it is one piece with the left leg (fused)")
+    else:
+        parts = [r == k for k in u[np.argsort(-c)][:2]]
+        tail, leg = sorted(parts, key=lambda m: P[m, 1].mean())     # the tail hangs in front (-Y)
+        g = gap(tail, leg)
+        log(f"sash tail vs left thigh (below the hem): its own piece, gap {g*1000:.1f} mm" + (" - WARNING: too close" if g < need else " (ok)"))
+    sat = (P[:, 0] > -0.22) & (P[:, 0] < -0.06) & (P[:, 1] < -0.085) & (P[:, 2] > 0.88) & (P[:, 2] < 1.06)
+    leg = (P[:, 0] > -0.22) & (P[:, 0] < -0.02) & (P[:, 2] > 0.70) & (P[:, 2] < 0.90)
+    g = gap(sat, leg)
+    log(f"satchel (bottom at z {P[sat, 2].min():.3f} m, rests on the tunic skirt) vs right thigh: gap {g*1000:.1f} mm"
+        + (" - WARNING: too close" if g < need else " (ok)"))
+
+
 def main():
-    out = os.path.join(ROOT, "Art", "Export", "viper"); os.makedirs(out, exist_ok=True); os.makedirs(PREVIEW, exist_ok=True)
+    out = os.path.join(ROOT, "Art", "Export", NAME); os.makedirs(out, exist_ok=True); os.makedirs(PREVIEW, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.gltf(filepath=os.path.join(ROOT, "Art", "Source", "viper", "viper_v1.glb"))
+    bpy.ops.import_scene.gltf(filepath=os.path.join(ROOT, "Art", "Source", NAME, f"{NAME}_v1.glb"))
     meshes = [o for o in bpy.context.scene.objects if o.type == 'MESH']
     log(f"imported {len(meshes)} mesh object(s), {sum(tris(o) for o in meshes)} tris")
     bpy.ops.object.select_all(action='DESELECT')
@@ -71,7 +110,7 @@ def main():
     bpy.ops.object.parent_clear(type='CLEAR_KEEP_TRANSFORM')
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
     if len(meshes) > 1: bpy.ops.object.join()
-    ob = bpy.context.view_layer.objects.active; ob.name = "viper"
+    ob = bpy.context.view_layer.objects.active; ob.name = NAME
     for o in list(bpy.context.scene.objects):
         if o != ob: bpy.data.objects.remove(o, do_unlink=True)
 
@@ -123,13 +162,14 @@ def main():
         ang = math.degrees(math.atan2(sz - hand[2], abs(hand[0] - sx)))
         log(f"arm {nm}: hand at (x {hand[0]:.2f}, z {hand[2]:.2f}) -> {ang:.0f} deg below horizontal")
     log(f"final: {tris(ob)} tris, {len(ob.data.vertices)} vertices, height {np.ptp(P[:,2]):.3f} m, feet at z {P[:,2].min():.3f}")
+    if NAME == "reptilian": hip_check(ob)
 
     # texture: grayscale (the game is monochrome), 2048
     mat = ob.material_slots[0].material if ob.material_slots else None
     img = next((nd.image for nd in mat.node_tree.nodes if nd.type == "TEX_IMAGE" and nd.image is not None), None) if mat else None
     if img is not None:
         tex_dir = os.path.join(out, "Textures"); os.makedirs(tex_dir, exist_ok=True)
-        path = os.path.join(tex_dir, "viper_v1_basecolor.jpg")
+        path = os.path.join(tex_dir, f"{NAME}_v1_basecolor.jpg")
         img2 = img.copy(); img2.scale(2048, 2048)
         px = np.empty(2048 * 2048 * 4, dtype=np.float32); img2.pixels.foreach_get(px); px = px.reshape(-1, 4)
         g = 0.2126 * px[:, 0] + 0.7152 * px[:, 1] + 0.0722 * px[:, 2]; px[:, 0] = px[:, 1] = px[:, 2] = g
@@ -137,7 +177,7 @@ def main():
         img2.filepath = path
         for nd in mat.node_tree.nodes:
             if nd.type == "TEX_IMAGE": nd.image = img2
-        mat.name = "viper_v1_mat"
+        mat.name = f"{NAME}_v1_mat"
         log(f"texture {img.size[0]}x{img.size[1]} -> grayscale 2048 {path}")
     else:
         log("WARNING: no texture found")
@@ -151,15 +191,19 @@ def main():
     cam = bpy.data.objects.new("pcam", cd); scn.collection.objects.link(cam); scn.camera = cam
     from mathutils import Vector
     views = (("front", (0, -1, 0.04)), ("side", (1, 0, 0.04)), ("back", (0, 1, 0.04)), ("q34", (0.7, -0.7, 0.3)), ("head", (0.35, -1, 0.15)))
+    if NAME == "reptilian":   # the satchel and the sash tail at the left hip (character's left = +X)
+        views += (("hipL_front", (0, -1, 0.0)), ("hipL_side", (1, 0, 0.0)), ("hipL_back", (0, 1, 0.0)), ("hipL_low", (0.5, -0.6, -0.6)))
     shots = []
     for vn, dv in views:
         c = Vector((0, 0, HEIGHT / 2)); d = Vector(dv).normalized()
         if vn == "head":
             cd.ortho_scale = HEIGHT * 0.32; c = Vector((0, 0, HEIGHT * 0.88))
+        elif vn.startswith("hipL"):
+            cd.ortho_scale = HEIGHT * 0.36; c = Vector((HEIGHT * 0.08, 0, HEIGHT * 0.45))
         else:
             cd.ortho_scale = HEIGHT * 1.12
         cam.location = c + d * 30; cam.rotation_euler = (-d).to_track_quat("-Z", "Y").to_euler()
-        p = os.path.join(PREVIEW, f"viper_for_mixamo_{vn}.png"); scn.render.filepath = p
+        p = os.path.join(PREVIEW, f"{NAME}_for_mixamo_{vn}.png"); scn.render.filepath = p
         bpy.ops.render.render(write_still=True); shots.append(p)
     # sheet: front | side | back
     tiles = []
@@ -168,16 +212,16 @@ def main():
         a = np.empty(w * h * 4, dtype=np.float32); im.pixels.foreach_get(a); tiles.append(a.reshape(h, w, 4))
     sheet = np.concatenate(tiles, axis=1); hh, ww = sheet.shape[:2]
     simg = bpy.data.images.new("sheet", ww, hh, alpha=True); simg.pixels.foreach_set(sheet.ravel())
-    simg.filepath_raw = os.path.join(PREVIEW, "viper_for_mixamo_sheet.png"); simg.file_format = "PNG"; simg.save()
+    simg.filepath_raw = os.path.join(PREVIEW, f"{NAME}_for_mixamo_sheet.png"); simg.file_format = "PNG"; simg.save()
     log("sheet", simg.filepath_raw)
 
     # export (Mixamo wants the texture inside the FBX)
     bpy.ops.object.select_all(action='DESELECT'); ob.select_set(True); bpy.context.view_layer.objects.active = ob
-    fbx = os.path.join(out, "viper_for_mixamo.fbx")
+    fbx = os.path.join(out, f"{NAME}_for_mixamo.fbx")
     bpy.ops.export_scene.fbx(filepath=fbx, use_selection=True, object_types={"MESH"}, apply_scale_options="FBX_SCALE_ALL",
                              axis_forward="-Z", axis_up="Y", mesh_smooth_type="FACE", path_mode="COPY", embed_textures=True)
     log(f"exported {fbx} ({os.path.getsize(fbx) / 1e6:.1f} MB)")
-    with open(os.path.join(out, "viper_mixamo_metrics.txt"), "w") as f: f.write("\n".join(_m) + "\n")
+    with open(os.path.join(out, f"{NAME}_mixamo_metrics.txt"), "w") as f: f.write("\n".join(_m) + "\n")
 
 
 main()

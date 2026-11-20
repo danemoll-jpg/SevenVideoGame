@@ -166,5 +166,5 @@ opens with his voice's loudness (no lip-sync); the hood can flare on angry lines
 One base model reused for the guard, the worker, the caretaker, families and traders (scale ±10 %, a few material
 tones; guards get a simple chest plate / helmet prop attached in Unity). Related to Viper but clearly not him: lizard
 heads (no cobra hood, no fangs showing), sturdier, ordinary people, simple fitted work clothes — **no capes or long
-robes** (the guardian's cape cost four rounds). Prompt given in chat. Expected: `Art/Reference/reptilian_ref_front.png`
+robes** (the guardian's cape cost four rounds). Prompt given in chat. **Reference in (Dan, 2026-11-19): `Art/Reference/reptilian_ref_front.png`** — friendly lizard head, sleeveless tunic, knotted sash, cross-body satchel at the left hip, wrapped forearms, trousers, three-toed feet. When rigging: the sash's hanging tail and the satchel go on their own short bones (or are trimmed / pinned to the hip) so they never stretch with the thigh or pass through the leg. Expected: the reference
 → Tripo → `Art/Source/reptilian/reptilian_v1.glb` → Code makes `Art/Export/reptilian/reptilian_for_mixamo.fbx` → Mixamo.
