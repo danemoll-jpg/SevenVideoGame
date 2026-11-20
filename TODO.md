@@ -1,5 +1,290 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF18: show it, don't write it + Dan's Mars review (Dan, 2026-11-20) — to do
+Commit first. All standing rules + the repeat-item rule. 20-minute rule. Release **0.15.3**; "QF18 — status"; "For Dan to
+check (QF18)". Dan's screenshot: `Docs/Previews/qf18/dan_mars_window_text.png` (aboard at the Mars arrival: the window is
+fog with one ravine outline, and a line of text across the screen describing what should be there).
+
+1. **New standing rule — add "Show, don't caption" to `CLAUDE.md`:** on-screen text is only for titles / chapter cards,
+   objectives, control prompts, menus, subtitles of spoken lines and the console's pages. **Never** text describing what the
+   player is supposed to be seeing — when the spec describes something to show, build it (even simply), never caption it.
+2. **Replace every descriptive caption with the real thing** — found so far:
+   - `Chapter1AboardMars.cs:82` "MARS · two fortress cities either side of a ravine · the temple on its island of stone" →
+     the navigation display **shows** it: a glowing top-down / three-quarter holographic view of the actual Mars level (the
+     plain, the ravine, the two cities, the temple island, the barricaded bridges), the temple highlighted.
+   - `Chapter1AboardMars.cs:93` "both approaches barricaded" → the display zooms to the two bridges, the barricades marked.
+   - `Chapter1AboardMars.cs:228` "the Mars route + the Cetaceans' sequence · the intervals match" → the display shows **the two
+     records side by side** (the Mars route line; the Cetaceans' sequence as a pattern of pulses), their intervals lining up
+     with a soft pulse, then **the route completing** out to Biaveh.
+   - `Chapter1AboardEuropa.cs:91` "EUROPA · ice field · a passage…" → the display shows the ice field with the passage through
+     it marked near the temple coordinates.
+   Search every director / aboard script for any other caption of this kind and replace it the same way; list them in the status.
+   Build the display views from the real levels (a render of the actual scene from above, baked at build time, shown in the
+   console's glowing hologram style) so they always match.
+3. **The window views must show the real world, not fog** (QF16 1 was too thin: Mars showed a single ravine outline). Bake a
+   panorama of each world's **actual level** from where the saucer hovers (at build time), with Kyle's fog / glow but the
+   landmarks clearly readable: Mars — the plain, the ravine, **both fortress cities, the temple on its island** (with QF17's
+   new architecture); Europa — the ice field, its fractures, Jupiter; Venus — the gardens, terraces, clouds; the Moon — its
+   surface, Earth. Captures from the interior at each world compared with the level itself.
+4. **Panther's shoulder perch (MAR_01) looks wrong** — he hangs off the side of her head with his hind legs dangling. He should
+   **sit on top of her shoulder**, small, balanced: all four paws on the shoulder (front paws forward, hind paws tucked),
+   body along the shoulder line, tail down her back (the tail-flick moment still works), head beside hers looking out of the
+   window. Check from the camera angles the scene uses.
+
+5. **The objective box is hard to read — white text washes out** against the bright fog / sky (all worlds). Give it a
+   background: a soft dark translucent panel behind "OBJECTIVE" and the text (rounded, slightly blurred edges, in keeping
+   with the game's look), plus a subtle text shadow / outline. Do the same for the other on-screen text that sits over the
+   world (control prompts, hints, the guide marker's distance, subtitles). Check captures against the brightest backgrounds
+   (Venus gardens, Europa's bright water, Mars's fog, the Moon's white fog).
+
+6. **Mars checkpoint (MAR_02): a large bright open gap in the ground** beside the supply transport — Dan's screenshot
+   `Docs/Previews/qf18/dan_mars_checkpoint_gap.png` (the glowing white rectangle, bottom right). You don't fall through it,
+   so it looks like a hole in the ground mesh showing the bright fog / sky below (or a missing floor tile / an unfinished
+   trench). Find what it is; close it with ground, or if it's meant to be something (a trench, a pit), make it read as one
+   with real walls and a bottom. Also in the same screenshot: **the supply transport is a plain box with a Reptilian
+   standing inside it** (only his feet show below it) — QF17's no-boxes rule applies to vehicles too (a real transport:
+   hull, cab, wheels / hover pads, cargo), and nobody stands inside geometry; the Reptilians stand with arms held out
+   stiffly (an A-pose look) — give them their idle / talk clips. (The subtitle cut-off in the screenshot is only Dan's crop — not a bug.)
+   **One Reptilian stands right on top of the gap** — after fixing it, check nobody is placed over a hole or inside
+   geometry (a quick placement scan of every NPC's feet against the ground).
+
+7. **Dialogue shots that show a wall instead of the speaker** — Mars MAR_02, the worker's "Those are water filters. They're
+   waiting for them.": the camera looks at the containers and the worker is hidden behind them
+   (`Docs/Previews/qf18/dan_mars_worker_hidden.png`; the containers are plain boxes too — QF17's no-boxes rule). Fix this shot,
+   then make it a **rule for every dialogue shot in every chapter**: before a line plays, check (a ray from the camera to the
+   speaker's head and chest) that the speaker is visible and in frame; if blocked, pick another angle (over the listener's
+   shoulder, a side two-shot) or move the camera — never a shot of a wall. Telepathic Panther lines are exempt (he's aboard).
+   Run the check over every scripted line in Mars, Europa, Venus and Chapter 1 and list any shots it had to change.
+
+8. **Viper's reveal (MAR_03): the guard blocks Viper most of the time** — `Docs/Previews/qf18/dan_mars_viper_blocked.png`: the
+   subtitle says VIPER but the shot is a low close-up of a helmeted guard. **Dan wants close-up shots of Viper while he
+   speaks**: for each of his lines a close-up / medium close-up of **Viper himself** on his raised platform — low angle, the
+   harsh white light from beneath, his hood and glowing eyes readable, the fog behind him (not washed out — enough contrast
+   that his head reads clearly); 7's replies over her shoulder looking up at him; the wide low-angle reveal first as the
+   spec says. Move the guards so none stands between the camera and Viper (item 7's visibility check catches the rest).
+   Same for his lines in the encounter (MAR_07) and after it.
+
+9. **Objectives must come from the story — she can't just know** (Dan: "how can she just know that she needs to go there
+   and how to get there?" — `Docs/Previews/qf18/dan_mars_route_objective.png`: "Take the old maintenance route down into the
+   ravine" appears from nowhere after Viper leaves). Add to `CLAUDE.md` ("Show, don't caption" section): **every objective
+   follows from something she was told or saw on screen just before** — a line, a sight, a display; never knowledge from
+   nowhere. Audit every objective in Mars (and Europa / Venus) against this and list the ones changed.
+   **Fix for MAR_03 — new lines after "I noticed him noticing." (proposed by the chat; Dan to confirm or edit — if he hasn't
+   by the time you get here, use them as written):**
+   | id | who | line | direction |
+   | --- | --- | --- | --- |
+   | `MAR_03_11` | Worker | There's an old maintenance route under the crossing. The builders used it. | quietly, with a glance at the guard |
+   | `MAR_03_12` | 7 | Can the transport get through? | |
+   | `MAR_03_13` | Worker | Not anymore. The service gate's been dead for years. | |
+   | `MAR_03_14` | 7 | Then I'll take a look. | |
+   | `MAR_03_15` | Panther | I see it from here. A ramp cut into the bank, east of you. | telepathic |
+   Then a short shot **showing the route's entrance** (old stone steps / the ramp cut into the bank, a half-buried gate), and
+   only then the objective changes ("Find another way across" → "Take the old maintenance route down into the ravine").
+   Voice them (the worker's premade voice, 7 v3, Panther); add to the spec and `Docs/MARS-LINES.md`.
+
+10. **The west ramp down into the ravine is broken** (the maintenance route, spec 4) — Dan's screenshots
+    `dan_mars_ramp_top_gap.png` (a bright open gap at the top where the ramp should meet the ground — the same kind of hole as
+    item 6) and `dan_mars_ramp_end_wall.png` (the ramp ends **straight into a wall**; you only get through because the bike
+    clips through it). **Not acceptable for gameplay.** Fix: the ramp meets the ground seamlessly at the top (no gap, no lip)
+    and opens at the bottom onto the ravine floor / the route onward — a real opening, cut, or turn, never a wall. **Clipping
+    through walls must not be possible on land either** (QF15 made collision complete under water; do the same for the land
+    bike and for 7 on foot on every world: every solid surface stops her, she slides along it). Then **ride the whole Mars
+    route end to end at full speed** (arrival → ravine → causeway → passage → east ramp → service gate → far bank → the
+    controls → the plaza → the temple → back) and the other worlds' land routes: the route is continuous with **no gaps,
+    no dead ends into walls, no place where getting on only works by clipping**; list every spot fixed. Include the QF15-style
+    wall test for the land bike (full speed into and along walls, 0 frames inside geometry).
+
+11. **The broken causeway repeats Venus's bridge puzzle, with no reason, and the restored slab shimmers**
+    (`Docs/Previews/qf18/dan_mars_causeway.png`). (a) **Don't repeat Venus's "lift the slab across the gap".** On Venus the
+    quake broke the walkway; here it's just broken. Replace it with a **different puzzle that has a visible story reason**
+    tied to Mars's division. Proposal: during the division one kingdom **raised and chained an old stone drawbridge section**
+    to cut the maintenance route — the raised span, heavy chains, a lock / counterweight, a faded order-sign of one kingdom on
+    it; she breaks the lock / swings the counterweight with telekinesis and the span lowers into place (heavy, rumbling,
+    dust). Readable at a glance, different from Venus, and it says something about the two sides. (b) **The shimmer** is the
+    same z-fighting as the Moon's door frames (QF9: two coplanar surfaces) — the placed section sits flush on / in the
+    causeway surface. Fix it (offset, merge, or cut the hole) and **scan every level for coplanar overlapping faces** so it
+    can't come back anywhere — note QF9's check (`FightDemoBuilderZFight.cs`) only runs on the **Chapter 1** build; run it on
+    every scene (Saucer, Venus, Europa, Mars) and on objects that move into place at runtime (this slab), and log the count. Also in the shot: flat light rectangles on the ground and a
+    plain table-like structure — QF17's no-boxes rule.
+
+12. **The east ramp + the sealed service gate** (`Docs/Previews/qf18/dan_mars_service_gate.png`). (a) The east ramp has the
+    **same problems as the west ramp** (item 10) — fix it the same way. (b) **The gate "puzzle" is filler** — Dan: "all you do
+    is stand up and press a button … just seems like throwing something at you to throw something at you." New standing rule
+    for `CLAUDE.md` (with "Boss fights" / "Show, don't caption"): **no filler tasks — every task has a reason the player
+    understands, a little real play, and a visible payoff.** For this gate (it's what lets the supply transport through —
+    spec 4, so it matters): proposal — the gate's power line was **deliberately cut** during the division; she **follows the
+    dead conduit** along the ravine wall to the break (a short on-foot / riding stretch), finds the severed cable ends hanging
+    apart, and **pulls them together with telekinesis** while sparks arc (hold steady for a moment); the power runs back along
+    the conduit in a visible glow, the gate grinds open, and — the payoff — **the supply transport comes through it**, its
+    driver raising a hand to her. Or, if the chat's proposal doesn't fit the layout, anything with the same three parts.
+    Apply the same test to every other "press X at the panel" task in Mars, Europa and Venus — list each and what it became
+    (or why it stays).
+
+13. **Gaps in the ground are everywhere in Mars — fix them as a class, not one by one** (`dan_mars_gap_strip.png`: a long
+    glowing strip between two ground pieces that 7 walks along without falling — so there's collision there but no visible
+    floor, or the pieces don't meet; also items 6 and 10). Find the cause in how the Mars level pieces are built / placed (ground
+    tiles, ramps, causeways not meeting; a collider without its mesh) and fix it at the source. Then add a **"holes" build
+    check for every scene**: cast a dense grid of rays down over every walkable / ridable area and along every route; any ray
+    that finds a collider but no visible surface, or sees through to the fog / sky below, is a hole — the build reports them
+    and fails above 0. Log the count per scene.
+
+14. **Mimed conversations — the worker "talks" with no dialogue** (`dan_mars_worker_mime.png`: "Talk to the worker by the
+    checkpoint (X)" → he gestures, nothing is said). Round 15 decided to mime the lines the spec gives as action only; Dan
+    doesn't want that. Rule (add to `CLAUDE.md`): **if a character is shown talking, they have voiced lines.** New lines
+    (proposed by the chat; Dan to confirm or edit — if not by the time you get here, use them as written):
+    **The worker volunteers (spec 6, start):**
+    | id | who | line | direction |
+    | --- | --- | --- | --- |
+    | `MAR_06_V1` | 7 | The service route's open. The caretaker on the far bank will work the other control. | |
+    | `MAR_06_V2` | Worker | The caretaker? From over there? | surprised |
+    | `MAR_06_V3` | 7 | They're waiting for someone on this side. | |
+    | `MAR_06_V4` | Worker | Then I'll go. Someone should. | a beat; a glance at the guard first |
+    | `MAR_06_V5` | 7 | Thank you. | warmly |
+    | `MAR_06_V6` | Panther | Two volunteers. Practically a treaty. | telepathic, dry |
+    **The guard and the caretaker's "few practical words" (spec 11):**
+    | id | who | line | direction |
+    | --- | --- | --- | --- |
+    | `MAR_11_P1` | Guard | The next load comes at dusk. | stiff, formal |
+    | `MAR_11_P2` | Caretaker | We'll have the gate open. | calm |
+    | `MAR_11_P3` | Guard | …Good. | after a pause |
+    Voice them (the existing premade voices — guard "Daniel", worker "Sarah", caretaker "Bill"; 7 v3; Panther); add to the
+    spec and `Docs/MARS-LINES.md`. Check every other chapter for mimed talking and list it.
+
+15. **The controls and mechanisms should look like something** (`dan_mars_controls.png`: the control is a glowing ball on a
+    flat wall with a bare rod on the ground; a plain box floats in the sky behind). Model every interactive object in Mars as
+    a real, readable thing (scripted Blender is fine), ancient and older than the fortifications:
+    - **The two temple controls** (spec 5–6): carved stone-and-bronze pedestals, each with a **big lever or turning wheel**,
+      each carved with **one kingdom's half of the shared symbol** (so when both are worked together the halves read as the
+      temple's joined design — item 9 of the spec), glowing channel grooves running from them toward the bridge.
+    - **The ancient mechanism on the overlook:** gears / counterweights / a housing the two channels feed into.
+    - **The relay** on the west rim: a crystal or lens node in a carved housing on a pillar, its glow travelling down the
+      channel when it's restored.
+    - **The displaced conduit** (pier steps): a segmented stone-and-metal pipe with a glowing core, its broken section
+      visibly out of line, so lifting it back with telekinesis makes sense at a glance.
+    - **Viper's three small machines** and **his pylons / barrier emitters** in the fight: clearly *his* tech (harsher,
+      angular, darker metal, red-less — monochrome — but with hard white light), contrasting with the ancient pieces.
+    - Every one gives **feedback** when it works (light running along it, sound, movement). And the floating box in the sky —
+      no plain boxes (QF17).
+
+16. **The pier conduit (spec 6, after the first control): Dan went there three times and still doesn't understand what's
+    going on or what he's accomplishing** (`dan_mars_pier_conduit.png`: "…down the pier walk under the old bridge and push the
+    displaced conduit back into place (RT)" — dark rock walls, the camera half inside the rock, nothing that reads as a pier
+    walk or a conduit; the bike can't go there). Make it one clear cause-and-effect chain the player can **see**:
+    - **Show the problem first:** when the first control is worked, its power visibly runs along the channel (a glowing line
+      toward the bridge) and **stops** at a point under the old bridge — a short camera move follows the light to the break
+      and shows the conduit section knocked out of line, sparking. Panther (telepathic, proposed): **"The power stops under the
+      bridge. Something down there's knocked loose."**
+    - **A readable way down:** real carved steps / a walkway along the pier (not dark rock wedges), lit, the camera kept out
+      of the rock (item 7 / QF15 cut-away rules), the conduit in view as she goes.
+    - **The fix:** she lifts the section back with telekinesis; the light runs through it, along the channel, **up to the
+      far control, which lights up** — so the player sees what it accomplished. Then on to the next step.
+    - If this stretch still adds nothing after that, **cut it** (the no-filler rule, item 12) and let the power reach the far
+      control directly. Say which you chose.
+    Apply the same test to every task in spec 6 (relay, conduit, Viper's machines, the swinging span): the player must know
+    *why* before doing it and *see* the result after.
+    **Also: 7 clips through the ground badly at this spot** (sinking into / passing through the rock floor on foot). Fix the
+    ground and her foot / ground collision here, and include on-foot paths in item 10's collision pass: walk every on-foot
+    stretch in Mars (pier steps, the overlook, the plaza, the temple) — feet on the surface, never sinking or passing through
+    — with a per-frame "feet vs ground" log and 0 frames inside geometry.
+
+17. **Viper's "three small machines" (spec 6) — what are they, and how would she know?** (`dan_mars_viper_machines.png`: 7 with
+    her hands up at a tiny grey disc lost in the fog). Make them a proper, introduced beat:
+    - **Introduce them with Viper taunting her** — his voice from a loudspeaker horn on a nearby pylon (or his image on one of
+      his emitters), then the machines dropping in. Proposed lines (the chat's; Dan to confirm or edit — otherwise use as
+      written; Viper = his saved voice):
+      | id | who | line | direction |
+      | --- | --- | --- | --- |
+      | `MAR_06_D1` | Viper | You've been busy. Let's see how you manage several things at once. | over a loudspeaker; cold, amused |
+      | `MAR_06_D2` | Worker | Those are his sentries — they'll wreck the control! | alarmed, pointing |
+      | `MAR_06_D3` | Panther | Three of them. All heading for the worker. | telepathic, quick |
+      | `MAR_06_D4` | 7 | Not if I can help it. | |
+      | `MAR_06_D5` | Viper | Every bridge has a weak point. | mid-fight taunt, over the loudspeaker |
+      | `MAR_06_D6` | Viper | Enjoy it. Bridges fall. | after the last sentry goes down |
+    - **Make the sentries readable:** Viper's tech (item 15 — angular, dark metal, hard white light), big enough to see clearly
+      (~1 m), a visible eye / searchlight sweeping, a buzzing hum, flying in a clear line toward the worker's control and
+      **attacking it** (sparks) so the threat is obvious; she knocks each aside with telekinesis (they tumble, smoke, go dark —
+      machines, nobody hurt). Each one that reaches the control costs time / damages it (a little pressure, fair).
+    - **Contrast in the fog:** the shot above is almost all white — make sure gameplay moments in Mars read: the sentries and
+      their targets dark against the fog (or lit), and the fog thinned enough around the action that she, the worker, the
+      control and the machines are clearly visible.
+
+18. **The "hold" conversation after the sentries makes no sense** (Dan). Spec 6's "The far control is ready." / "Tell them to
+    hold." / "They are holding." comes with nothing set up — the player never sees the caretaker at the far control, "them"
+    refers to nobody, and Panther (telepathic, only to 7) can't tell anyone to hold. Replace it with this (proposed by the
+    chat; Dan to confirm or edit — otherwise use as written), and **show** each beat:
+    | id | who | line | direction / what we see |
+    | --- | --- | --- | --- |
+    | `MAR_06_H1` | Panther | The caretaker's at the far control. They've raised a lamp — they're ready. | telepathic; **cut to the far bank: the caretaker at their control raising a lamp** |
+    | `MAR_06_H2` | 7 | The other side is ready. Hold until I say. | to the worker beside her |
+    | `MAR_06_H3` | Worker | Holding. | hands on the lever |
+    | — | — | *(the power surges — a loose span section swings out of line)* | cut to the span swinging |
+    | `MAR_06_H4` | 7 | Not that one! | startled breath (Dan's line) |
+    | `MAR_06_H5` | Panther | Specificity. Always helpful. | dry (Dan's line) |
+    | — | — | *(she catches the section with telekinesis and holds it)* | |
+    | `MAR_06_H6` | 7 | Now! | a short, relieved laugh |
+    | — | — | *(the worker and the caretaker pull together — the spans align)* | the wide of the bridge forming (spec) |
+    Remove the old `MAR_06` "ready / hold / holding" lines and their voice files; voice the new ones; update the spec and
+    `Docs/MARS-LINES.md`.
+
+19. **The Viper fight — Dan's playtest of QF17's version (repeat item: QF17's proofs passed, Dan still found it unclear and
+    not fun). Change it as follows, and update the "Boss fights" rule in `CLAUDE.md` to match for every boss:**
+    a. **Don't lock her facing Viper.** She's turned toward him the whole time, so walking to the pylons is awkward. Default:
+       she moves freely (camera and movement like normal play). Lock-on is **optional** — a button toggles it (e.g. right stick
+       click / LB; Tab on keyboard) for strafing round him in close combat; show the toggle on the controls hint.
+    b. **Pylons must show they're done.** Today nothing changes and "X: deactivate" stays after deactivating. When she disables
+       one: its light dies, sparks and a power-down sound, a visible collapse / panels falling open, its barrier drops; the
+       prompt disappears and it can't be used again; a small counter on screen ("Pylons 1 / 3"). Same for every interactive
+       objective in every chapter (the Venus devices too): a clear done state, the prompt gone.
+    c. **The defeat loop — Dan's design: throw objects with telekinesis to stun him → close in → fight him hand to hand.**
+       "Crazy that she can fight but she literally never uses her fighting skills." So:
+       - **Telekinesis only stuns** (a throw that hits = he's **stunned** for ~3–4 s: reels, hood drops, dazed sway, a clear
+         visual + sound so the player knows *now*).
+       - **Then she goes in close and fights**: her real strikes — jab, cross, hook, MMA kick, roundhouse, the finisher (her
+         existing Mixamo clips, Chapter 1's fight system) — combos land while he's stunned and **do the real damage**.
+       - He recovers and fights back (strike, sweep, spit) — she has to back off, dodge / block, and set up the next stun.
+       - Last phase: when his energy is nearly gone, the finisher → the takedown / containment ring (alive), then MAR_07's
+         two-shot.
+    d. **An energy bar for Viper** on screen during the fight (top centre, "VIPER", drains with her hits, a notch / shake on
+       each stun, phase marks on it), and **her own state visible too** (how many hits she can still take — a small bar, or
+       her forehead energy point's brightness as Kyle proposed, plus a red-free white flash when hit). Same for the Wormmaster.
+    e. **Apply the same loop to the Wormmaster** (Venus): telekinetic stun → close in → strikes, with his energy bar.
+    f. Proof: a player-style fight that **uses melee for most of the damage** (log: damage by strikes vs throws, stuns,
+       hits taken, length), a capture sequence of stun → close in → combo, and the bars in frame; the idle test still fails
+       within ~60 s.
+
+20. **Make it obvious she touches the rune and goes into a vision** (Dan: "it is almost not obvious that she is having a
+    vision"). One shared "touch → vision → return" sequence used for **every** vision (the Moon door, Venus, Europa, Mars, and
+    later ones):
+    - **The reach:** a close insert of **her hand reaching out and touching the rune** (fingertips meeting the surface — hand IK
+      onto the shape, measured, no gap or clipping), a breath.
+    - **The rune answers:** its glow surges, light runs up from her fingers along her hand and arm, **her forehead energy point
+      lights bright**, a rising tone / shimmer.
+    - **Into the vision:** a quick push-in to her eyes (steady gaze, as in the creative rules), the light blooms to white, then
+      the vision video fades up — the player can't miss the transition.
+    - **Back:** the white fades back to her standing with her hand still on the rune, the glow settling, then **the insert of
+      her hand leaving the rune** (Mars spec 9 has it; do it for all), her first line.
+    Capture the whole sequence for each world.
+
+21. **Make Mars look like Mars.** The background is plain fog and grey ground: add a real Martian landscape around the play
+    area in Kyle's misty monochrome — **sand dunes** (rippled, wind-shaped, rolling away into the haze), rocky mesas and buttes,
+    scattered boulders, wind-blown dust drifting across the ground and in the air, a pale small sun through the haze. Visible
+    behind the settlements, from the ravine, from the temple, and in the window / panorama views (item 3). And **the "Face on
+    Mars"** (Cydonia — the famous face-shaped mesa) as an easter egg, **clearly visible from above** when the saucer is parked
+    over Mars (the arrival's extreme wide over the plain and the view from orbit / the saucer window at Mars); from the ground
+    it's just a far-off mesa. Keep it a natural rock formation (Kyle's style), not a sculpted head.
+22. **The star map: Biaveh and the asteroid aren't in our solar system.** Round 15 put them at the outer edge of our system —
+    wrong ("Beyond this solar system"; the asteroid is found "after the warp into its system"). Make the star map two levels:
+    **our solar system** (Earth's Moon, Venus, Mars, Europa at Jupiter) and **the Biaveh system** (its star, Biaveh, the asteroid
+    with its structures), with a zoomed-out view between them showing our Sun and Biaveh's star and the route line joining
+    them (once unlocked). The map opens on the system the saucer is in; selecting Biaveh / the asteroid from our system shows
+    the route and switches to their system. Travel to them uses the sacred-geometry passage (QF16) as a longer jump, arriving
+    in the Biaveh system (where TRV_AST happens). Biaveh's system stays hidden / unknown until MAR_13C unlocks the route.
+    Update the console's star map, the travel code and the window views (open space of the right system while there).
+
+Checks + release: captures of each replaced caption's new visual, the window at each world, the perch; publish **0.15.3**;
+docs; commit + push.
+
+
 ## Quick fix QF17: real boss fights + Mars clean-up (Dan, 2026-11-20) — done, status below; release 0.15.2
 Commit first. All standing rules + the repeat-item rule (why the last fix didn't hold, fix the cause, prove it in normal
 play, never "done" on a partial fix). Release **0.15.2**; "QF17 — status"; "For Dan to check (QF17)". The proofs below may
