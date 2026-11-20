@@ -448,7 +448,7 @@ namespace Seven
         public static void NewGame()
         {
             PlayerPrefs.DeleteKey(Key); PlayerPrefs.DeleteKey(OldKey); PlayerPrefs.DeleteKey(FurthestKey);
-            VenusState.ClearOwnSave(); EuropaState.ClearOwnSave();
+            VenusState.ClearOwnSave(); EuropaState.ClearOwnSave(); MarsState.ClearOwnSave(); WorldFlags.Clear();
             PlayerPrefs.Save();
             Debug.Log("[Seven] new game: Chapter 1 checkpoint, Venus save and console progress reset");
         }

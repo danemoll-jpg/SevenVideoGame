@@ -135,7 +135,7 @@ and Venus runs.
 - Europa's end: after the beam, straight to the chair debrief.
 
 
-## Round 15: Chapter "Mars — The Divided Kingdoms", first playable pass (Dan, 2026-11-19) — to do, AFTER QF15
+## Round 15: Chapter "Mars — The Divided Kingdoms", first playable pass (Dan, 2026-11-19) — done, status below; release 0.15.0
 Commit a checkpoint first. If Dan is away when you get here, **never stop to ask**: make the most reasonable call, list it
 under "Round 15 — decisions made", keep going. All standing rules (monochrome, Kyle's fog/glow, non-sexual, 7 never kills,
 no exact-spot triggers, captures you look at), **the one saucer prefab (bike always via the bike hold, beam only for 7 /
@@ -220,6 +220,158 @@ prototype (easy to replace; the guardrails say the symbol, mechanisms, Viper's e
 reveal, the maintenance route ride, the two controls, the encounter, the temple + vision, the route display, both MAR_13 branches, the Europa-second branch, the asteroid travel event), one
 player-style run from the star map to the destination choice, the menu sections start correctly. Publish **0.15.0**; docs;
 commit + push.
+
+## Round 15 — status (2026-11-20): first playable pass done, exe-verified off-screen; release 0.15.0 (`game-1500`)
+Captures + sheets: `Docs/Previews/r15/` (the autopilot run `run/`, the player-style run `playtest/`, the two MAR_13
+branches `routing/`, the menus `menus/`).
+
+1. **Getting there — done.** VEN_C13's Mars choice now starts the chapter (no more "coming soon"); Mars is set from the star
+   map at any time (Continue where it left off; done = a "visited" card) and is in the main menu's chapter list (same unlock
+   rule as Europa: VEN_C12) with its 9 sections, in the pause menu's Scene select too, and "Continue — Mars: …" when a Mars
+   game is in progress. Title card "MARS — THE DIVIDED KINGDOMS" over black from the first frame.
+2. **Arrival — done.** The chair scene aboard (Panther in her lap, the navigation display, MAR_01), then the Mars scene opens
+   on the extreme wide: the saucer crossing the plain (walls, trenches, elevated roads, the two fortress cities in the haze,
+   the ravine, the temple on its island) to the landing outside the approaches; the bike out of the bike hold, 7 down the
+   beam, Panther aboard. Saucer check passes (the one prefab).
+3. **The crossing — done.** 25 Reptilians going about their day (workers, families, traders, guards; ±10 % sizes, three
+   tones, guards with helmet + chest plate; market stalls, street lamps), the checkpoint: barrier, the stranded supply
+   transport, the guard (medium two-shot) and the worker (MAR_02).
+4. **Viper — done.** He rises on his platform above the checkpoint, lit from beneath (low angle), notices the records, she
+   keeps them close, the dry laugh, he orders the crossing secured and sinks away; Panther's private lines in gameplay.
+5. **Both sides of the ravine — done.** The maintenance route: the west ramp cut into the bank, the ravine floor (broad riding,
+   rubble, two lookouts), the broken causeway (lay the fallen slab with telekinesis), the sheltered passage (a carved roof on
+   columns), the east ramp and its sealed service gate (restore its power, X) - the transport comes through the restored
+   service passage (nobody attacks the guards); the caretaker on the far bank (MAR_04).
+6. **The shared door — done.** The mechanism on its overlook, the two channels, the conversation (MAR_05).
+7. **Two controls — done.** Back across to the worker (who volunteers), ride to the relay on the west rim (X), on foot down
+   the pier steps beside the old bridge to the displaced conduit (TK), Viper's three small machines going for the worker's
+   control knocked aside (TK - machines, nobody hurt), Panther coordinating, the span section that swings out - "Not that
+   one!" - held with TK, "Now." - both controls together, the wide: the spans' sections rise and lock into a passage.
+8. **Viper's intervention — done (a new kind of encounter).** On the island plaza: three lanes divided by low walls and his
+   energy barriers, a moving section that opens and closes on a rhythm (timing), a broken strip she bridges by lifting a
+   walkway section (TK), three control pylons to disable (X) - each opens a route; then she closes the distance and
+   restrains him (a telekinetic push, he goes down, a containment ring - alive, left for local custody); the two-shot with
+   the worker and the caretaker coming from opposite sides (MAR_07).
+9. **The temple — done.** The two kingdoms' symbols as one design (insert, held), the tetrahedron rune (code), the vision
+   (`vision_04_mars.mp4`, soft stone + wind, no music; still fallback kept), the return lines, the small tetrahedron awarded
+   once (`awards 1`), then with the other records on the chair arm aboard.
+10. **A route that stops — done (revised spec).** The display shows a route out of the system that breaks off; MAR_10; sent to
+    the saucer; no unlocks.
+11. **The ride back + aboard + departure routing — done (revised spec).** The barrier open, the transport crossing openly,
+    the guard and the caretaker working side by side (MAR_11 as she slows); the bike into the hold, the beam; aboard MAR_12
+    (Panther climbs into her lap); MAR_13 by the completed-world flags: **Europa unfinished → MAR_13U** ("Europa, then." -
+    Europa starts / continues); **Europa complete → MAR_13C** (the Mars route + the Cetaceans' sequence, Biaveh unlocks) →
+    MAR_13B → "Toward Biaveh" → **TRV_AST** (the asteroid, the choice: investigate / continue - both unlock; "coming soon"
+    card for the one picked) → free exploration. **Europa finished second:** the same MAR_13C + MAR_13B + TRV_AST play after
+    EUR_17, once (a saved flag). All 40 new / revised lines voiced.
+12. **Progression + saves — done.** `MarsState` (checkpoints for Continue, Scene Select slot), `WorldFlags` (Biaveh only after
+    Mars + Europa; the asteroid only after the travel event; Cattalus after the five; the final Moon after Cattalus -
+    flags only); Log (8 entries) + Field Guide (Reptilians, the guard, the worker, the caretaker, Viper; growing with the
+    story); a new game clears Mars and the route flags.
+
+**Checks.** The autopilot through the whole chapter (crossing → aboard) and the arrival (title card, chair, the wide, the landing); the two MAR_13 branches (`-routes europa -marscp 8`: MAR_13C at the Mars debrief → Biaveh unlocked → TRV_AST → choice; `-routes mars -europacp 8`: Europa finished second → MAR_13C + MAR_13B + TRV_AST after EUR_17, once); the menus (`-menupages`: Mars in the chapter list + its 9 sections, the pause menu's Scene select; monochrome 0); and the **player-style run from the main menu / VEN_C13's star map to the departure routing** (`-marsplay -menupick "Venus|Venus: the debrief" -routes none`): **MARS PLAYTEST: 1/1, soft-locks 0, skips 1** (12.6 game-min; the one skip - she was still on the pier walk when the bridge aligned and the light pointed across the ravine - fixed after: a guided walk back up the steps; the stretch from the controls to Viper re-run: 0 skips), riding camera **0 aim / 0 position shifts / 0 reversals, camera inside geometry 0** (10,653 riding frames), audio peak 0. Earlier player-style runs needed 7 then 4 skips - all guide / driver issues fixed (lights placed beyond gates, the pier steps and the east gate routed, the bike re-mount, braking at the light). **Testing time: about 90 game-minutes - far over the 20-minute rule**, spent on four full player-style runs and five autopilot / section runs while the chapter's first pass was being made to play through. Not run: Viper's / the Reptilians' animation measured in Blender (sash / satchel vs legs), a sound check of the new SFX.
+
+## Round 15 — decisions made (Dan away; easy to change)
+- **Arrival order:** the chair scene aboard first, then the extreme wide over the plain in the Mars scene (one scene change
+  instead of two); the title card is first, over black.
+- **Viper talking:** Dan's Mixamo rig has no jaw bone - his head and upper body move with his voice's loudness, the hood
+  flares (head / neck widen) on his sharper lines. A real jaw needs a jaw bone weighted in Blender (follow-up if wanted).
+- **Reptilians' walk (Orc Walk):** played at their real speed (1.15 m/s, families 0.9) with the hip sway damped by a third -
+  reads as an ordinary walk in the captures. Sash tail / satchel: no extra bones on the Mixamo rig yet (not measured in
+  motion).
+- **Voices:** premade ElevenLabs voices - guard "Daniel" (steady, formal), worker "Sarah" (young, warm), caretaker "Bill"
+  (old, calm). Only the vocal part of a direction becomes a v3 tag (the tables' stage directions drive camera / animation).
+- **Lines the spec gives as action only** are mimed, no new dialogue: the worker volunteering (a wave, a point), the
+  guard and the caretaker's "few practical words" (talk animations).
+- **Short cuts:** the transport's crossing ends on it coming up through the gate (a fade before); the caretaker taking her
+  to the mechanism, and out of the temple to her bike, are fades.
+- **Section 6 tasks:** relay (ride + X), the pier conduit (on foot + TK), Viper's three machines (TK), the swinging section
+  (TK) - Panther's lines placed between them.
+- **The encounter:** lanes + barriers + a rhythm-timed moving section + a TK walkway + three pylons, then a telekinetic
+  takedown and a containment ring (Viper lies dazed, alive).
+- **MAR_13U ends the chapter by flying to Europa** (her line "Europa, then." selects it) - Europa starts or continues.
+- **MAR_13C → straight to the first journey toward Biaveh:** a "Toward Biaveh" card, then TRV_AST right away (both at the
+  Mars debrief and after EUR_17); choosing Biaveh later on the star map before the asteroid is found plays the same journey.
+- **Star map:** Biaveh at the outer edge ("beyond this solar system"), the asteroid beside it.
+- **Mars unlock** in the chapter list = the Europa rule (VEN_C12 sent it to the star map).
+- **Field guide:** no portraits for the Mars characters yet.
+
+## For Dan to check (Round 15)
+- Chapter list → Mars → Play from the start (or VEN_C13 → Mars): title card, the chair, the wide over the plain, the landing.
+- The settlement and the checkpoint: do the Reptilians read as ordinary people? Viper's reveal on his platform.
+- The maintenance route on the bike (the causeway slab, the gate), the caretaker, the mechanism.
+- The two controls (relay, pier steps + conduit, the three machines, "Not that one!"), the bridge aligning.
+- The encounter: barriers, the moving section, the walkway, the three pylons, restraining Viper.
+- The temple: the joined symbols, the tetrahedron, the vision, the route that stops.
+- Aboard: with Europa unfinished → "Europa, then."; finish Europa afterwards → the combined records + Biaveh + the asteroid
+  appear at the end of Europa.
+- Decisions above (especially Viper's jaw, the arrival order, MAR_13U flying straight to Europa).
+
+
+## Quick fix QF16: the view outside, travel between worlds, staging + Panther's cat moments (Dan, 2026-11-20) — to do, AFTER Round 15 (Mars)
+Commit first. All standing rules (monochrome, Kyle's fog/glow, the one saucer prefab). 20-minute rule. Release **0.15.1**;
+"QF16 — status"; "For Dan to check (QF16)".
+
+1. **Aboard the saucer, the view outside is the world you're at.** Every window / exterior view from inside the saucer
+   (and the console's star map backdrop, if it shows outside) shows **the place the saucer is currently at**: the Moon's
+   surface and Earth in the sky; Venus's gardens and clouds; Europa's ice field and Jupiter; Mars's plains, the ravine and
+   the two cities; open space only while travelling. Driven by one "where is the saucer" state (set on arrival, saved, used
+   on Continue / Scene Select / the chair scenes), not per scene. Use simple, cheap backdrops (a skybox / matte painting /
+   a low-detail version of the world's own terrain + atmosphere) in Kyle's misty style. Check captures from the interior
+   at each world.
+2. **A travel sequence between worlds — "sacred-geometry passage" (Dan's pick, 2026-11-20).** When she sets course, a short
+   sequence (about 6–10 s, skippable, then the arrival / title card): seen from outside behind the saucer and through the
+   window, **rings of glowing geometric shapes — the rune solids she has collected (cube, dodecahedron, icosahedron,
+   tetrahedron, …) — unfold out of the dark ahead, turning slowly, and form a corridor around the saucer**; the saucer
+   glides through it; on arrival they **fold shut** behind it and the destination fills the view. Monochrome, soft glow and
+   haze (Kyle), slow and elegant — **not** star streaks or a classic warp tunnel. The corridor uses only the shapes she has
+   collected so far (it grows over the game; with one record, rings of that one shape). A soft swelling hum + chime, the
+   ship's music ducked. Used for every journey (star map, the chapter-end choices, the asteroid travel event happens inside
+   it on the first trip to Biaveh). Short capture sequence of one journey.
+
+3. **Vary where the conversations aboard happen (Dan, 2026-11-20): not every talk in the pilot's chair with the cat in her
+   lap.** Use different places and poses around the saucer. Staging per scene (the chat's proposal — keep it in one data
+   table so Dan can swap any of them):
+   | Scene | Staging |
+   | --- | --- |
+   | Venus C11 (debrief after Venus) | **Both lying on the sofa** on the main deck: 7 on her back, head on the armrest, Panther (house-cat size) stretched out on her stomach; her hand on his back |
+   | Venus C13 (choosing the next world) | At the navigation console, 7 in the chair, **Panther sitting on the console** beside the star map (not in her lap) |
+   | Europa EUR_01 (arrival) | **Standing at the window** looking down at the ice field (QF16 item 1's view); Panther on the window ledge / console beside her |
+   | Europa EUR_17 (debrief) | **7 sitting on the floor, back against the sofa**, Panther curled on the cushion beside her head |
+   | Mars MAR_01 (arrival) | **At the window**, Panther small, **perched on her shoulder**, both looking down at the plain |
+   | Mars MAR_12 (what she remembers) | **Both lying on the sofa** (quiet, personal talk) |
+   | Mars MAR_13 / the Europa-second discovery (route display) | Navigation chair (it needs the display); Panther **on the console**, turning to the display |
+   | The galley | keep for a future meal moment (Panther's "I suggest eating before we leave") |
+   Scenes start already in their pose after a short fade (no long get-up / lie-down transitions needed). The lines'
+   directions that say "in her lap" / "strokes his back" become the matching beat for the new pose (a hand on him, his head
+   against her hand, etc.). **Non-sexual presentation rule applies fully to the lying poses**: relaxed, natural,
+   fully clothed as always, the camera framing faces and the cat — no body-emphasis angles. Poses: 7 lying = a Mixamo
+   clip if Dan adds `Art/Mixamo/7/7_lying_idle.fbx`, otherwise build the pose (like the guardian's kneel); sitting on the
+   floor and the shoulder perch can be built poses too. Panther's poses from `CatPoseOverlay` + new lying-on-her / perched
+   variants. Hand IK released when each scene ends (QF13 15). Captures of every staging.
+
+4. **Panther does cat things — the humor (Dan, 2026-11-20): "not always, but sometimes."** The joke is the dignified,
+   dry-witted telepathic cat still being a cat. Two kinds, all in one editable table (the chat's proposal; mostly wordless —
+   body language + 7's reaction sounds from the reaction bank):
+   **Scripted moments (one each, in these scenes):**
+   - **Venus C13, the star map:** as she brings Mars up, he strolls across the console **right in front of the screen**,
+     pauses there, sits; she leans sideways to see round him; he moves on, unhurried (Dan's example).
+   - **Mars MAR_13C, the route display:** as the route resolves he **bats at the glowing route line** on the display with a
+     paw; on "Those intervals match." he's sitting with his paw still raised.
+   - **Europa EUR_01 at the window:** he **paws at the glass** at something drifting past outside, tail twitching.
+   - **Mars MAR_01, on her shoulder:** his **tail flicks across her face**; she blows it aside without looking.
+   **Ambient while she's free aboard** (random, rare — at most one every 2–4 minutes, never repeat back-to-back):
+   - asleep in the light from the window (QF16 1); kneading the sofa, turning round twice, flopping down;
+   - sitting **in the pilot's chair** when she walks up — he looks at her, then gets down slowly, with dignity;
+   - curled **in the bike's cradle** in the bike bay (QF14 3);
+   - **nudging one of the small rune records off the chair arm / console while looking straight at her** — she catches it
+     mid-air with telekinesis and puts it back (rare; a small chuckle);
+   - chasing a light reflection across the deck, stopping dead when she looks, grooming as if nothing happened;
+   - a big stretch and yawn; sitting in a "loaf" staring at nothing.
+   **Rules:** never during sincere / emotional lines (the same moments the reaction placements leave alone — e.g. the
+   visions' aftermath, "How could I know that?", the reunion beats); never blocking a gameplay choice for more than a couple
+   of seconds; the player can always walk away. Build the poses / motions procedurally on his rig (`CatPoseOverlay` etc.)
+   and with his growth at house-cat size. Captures of each scripted moment and two or three ambient ones.
 
 ## Quick fix QF14: Dan's 0.14.1 play — Europa focus + the menu (Dan, 2026-11-19) — done, status below; release 0.14.2
 Commit first. All standing rules; the QF13 rule for repeat items (say why the last fix didn't hold, fix the cause, prove

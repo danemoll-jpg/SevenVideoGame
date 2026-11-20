@@ -100,7 +100,10 @@ namespace Seven
             if (u == "never") return false;
             if (u.StartsWith("ch1>=")) return int.TryParse(u.Substring(5), out var n) && SaveGame.Furthest >= n;
             if (u.StartsWith("venus>=")) return System.Enum.TryParse<VenusState.Stage>(u.Substring(7), out var st) && VenusState.AtLeast(st);
-            if (u.StartsWith("scene:")) return u.Substring(6).StartsWith("EUR_") ? EuropaState.SceneDone(u.Substring(6)) : VenusState.SceneDone(u.Substring(6));
+            if (u.StartsWith("scene:")) return u.Substring(6).StartsWith("EUR_") ? EuropaState.SceneDone(u.Substring(6)) : u.Substring(6).StartsWith("MAR_") ? MarsState.SceneDone(u.Substring(6)) : VenusState.SceneDone(u.Substring(6));
+            if (u.StartsWith("mars>=")) return int.TryParse(u.Substring(6), out var mc) && MarsState.Reached && MarsState.Checkpoint >= mc;   // Round 15: MarsLayout.Cp*
+            if (u == "biaveh") return WorldFlags.BiavehUnlocked;
+            if (u == "asteroid") return WorldFlags.AsteroidFound;
             if (u.StartsWith("europa>=")) return int.TryParse(u.Substring(8), out var ec) && EuropaState.Reached && EuropaState.Checkpoint >= ec;   // Round 14: EuropaLayout.Cp*
             return false;
         }
@@ -138,22 +141,24 @@ namespace Seven
             var l = new List<string> { "venus", "moon" };
             if (MarsAvailable) l.Add("mars");
             if (EuropaAvailable) l.Add("europa");
+            if (WorldFlags.BiavehUnlocked) l.Add("biaveh");          // Round 15: only after Mars + Europa (the combined records)
+            if (WorldFlags.AsteroidFound) l.Add("asteroid");         // only after the travel event on the way to Biaveh
             return l;
         }
         /// <summary>Where the saucer is now: at Venus in the Venus aboard mode, otherwise at the Moon (Chapter 1).</summary>
         public static string Here()
         {
             var ab = Chapter1Aboard.I;
-            return ab != null && ab.Active && ab.EuropaMode ? "europa" : ab != null && ab.Active && ab.VenusMode ? "venus" : "moon";
+            return ab != null && ab.Active && ab.MarsMode ? "mars" : ab != null && ab.Active && ab.EuropaMode ? "europa" : ab != null && ab.Active && ab.VenusMode ? "venus" : "moon";
         }
-        public static string WorldName(string id) => id == "moon" ? "The Moon" : id == "venus" ? "Venus" : id == "mars" ? "Mars" : id == "europa" ? "Europa" : id;
+        public static string WorldName(string id) => id == "moon" ? "The Moon" : id == "venus" ? "Venus" : id == "mars" ? "Mars" : id == "europa" ? "Europa" : id == "biaveh" ? "Biaveh" : id == "asteroid" ? "The asteroid" : id;
         /// <summary>One line from the Log for a visited world (its latest unlocked entry, first sentence); null = not visited.</summary>
         public static Dictionary<string, string> VisitedNotes()
         {
             var d = new Dictionary<string, string>();
             foreach (var e in LogEntries())
             {
-                string w = e.id != null && e.id.StartsWith("ch1_") ? "moon" : e.id != null && e.id.StartsWith("ven_") ? "venus" : e.id != null && e.id.StartsWith("eur_") ? "europa" : null;
+                string w = e.id != null && e.id.StartsWith("ch1_") ? "moon" : e.id != null && e.id.StartsWith("ven_") ? "venus" : e.id != null && e.id.StartsWith("eur_") ? "europa" : e.id != null && e.id.StartsWith("mar_") ? "mars" : null;
                 if (w != null) d[w] = e.title + ": " + FirstSentence(e.text);
             }
             if (!d.ContainsKey("venus") && VenusState.AtLeast(VenusState.Stage.Landed)) d["venus"] = "Visited.";
@@ -727,7 +732,20 @@ namespace Seven
             }
             if (id == "mars")
             {
-                yield return ComingSoon(WorldName(id));
+                // Round 15: Mars is playable (as Europa: done = a short card, else the chapter where it left off)
+                if (MarsState.OwnComplete) { yield return ComingSoonCard("Mars — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                ReleaseForTravel();
+                if (UI != null) yield return UI.Fade(1f, 0.8f);
+                if (MarsState.HasProgress) MarsState.ContinueOwn(); else MarsState.StartFresh();
+                _busy--;
+                yield break;
+            }
+            if (id == "biaveh" || id == "asteroid")
+            {
+                // the asteroid is found on the first journey toward Biaveh (TRV_AST); neither chapter exists yet
+                var ab0 = Chapter1Aboard.I;
+                if (id == "biaveh" && !WorldFlags.AsteroidFound && ab0 != null && ab0.Active) { ReleaseForTravel(); yield return ab0.TravelToBiaveh(); _busy--; yield break; }
+                yield return ComingSoonCard($"{WorldName(id)} (coming soon)");
                 _map.SetConfirm(false); Redraw();
                 _busy--;
                 yield break;

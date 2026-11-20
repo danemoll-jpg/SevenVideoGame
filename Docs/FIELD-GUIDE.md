@@ -85,3 +85,47 @@ Europa’s people live in the ocean under the ice: vast, slow, and they speak - 
 An ancient Cetacean who keeps the settlement and the old routes. Calm, patient; becomes very still when something does not belong.
 
 *From `europa>=8`:* Gave me Europa’s record and asked me to carry it somewhere it can be heard.
+
+## Round 15 — Mars (mirror of `Resources/Console/field_guide.json`; no portraits yet)
+
+### Reptilians
+
+`reptilians` · unlock `mars>=1`
+
+The people of Mars's two kingdoms: workers, families, traders, guards. Ordinary people on both banks of the ravine; their distrust has its reasons.
+
+*From `mars>=7`:* Their two kingdoms' symbols turned out to be halves of one design.
+
+### The checkpoint guard
+
+`mars_guard` · unlock `mars>=2`
+
+Holds the main crossing on the west bank. He has his orders, and he keeps them.
+
+*From `mars>=9`:* Later I saw him talking with the caretaker by the open barrier. Not friends - but working.
+
+### The worker
+
+`mars_worker` · unlock `mars>=2`
+
+Was with the stranded supply transport - water filters for the other bank.
+
+*From `mars>=5`:* Volunteered to work one of the temple's two controls.
+
+*From `mars>=7`:* “We were taught it was taken from us.”
+
+### The caretaker
+
+`mars_caretaker` · unlock `mars>=3` · before `mars>=3`: "A Reptilian on the far bank" - Waiting at the east checkpoint.
+
+Keeps the approach to the temple on the east bank. Careful, honest about what both sides want.
+
+*From `mars>=5`:* Worked the east control while the worker worked the west.
+
+### Viper
+
+`viper` · unlock `mars>=2`
+
+Profits from the division between the two kingdoms; tells each bank the other means to seize the temple. He noticed the records I carry.
+
+*From `mars>=6`:* Subdued and contained at the temple approach, left for local custody. “They'll turn on each other again.” That is their choice.

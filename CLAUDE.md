@@ -324,7 +324,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–14 + QF1–QF15 complete (2026-11-19), release 0.14.3.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–15 + QF1–QF15 complete (2026-11-20), release 0.15.0.** Round 15 = Chapter "Mars — The Divided Kingdoms" (first playable pass). Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -510,7 +510,28 @@ scene (Round 10).
   - Merged Europa meshes split per piece (`AncientStructure*`, `ChamberSpire*`, `RacePillar*`, `Platform*`) so the camera
     cuts away only the one in its way. Star map input reads every pad (`ShipConsole.ChooseInput`).
   - Europa reunion (EUR_16) cut: the beam-up fades straight into the chair debrief.
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.3** (QF15 status in `TODO.md`).
+- **Round 15 — Mars (release 0.15.0)** (spec `Docs/CHAPTER_MARS.md` incl. Dan's revised sections 10 + 13; status, decisions,
+  "For Dan to check" in `TODO.md`):
+  - Scene `Mars`: `Editor/FightDemoBuilderMars.cs` (plain, ravine, settlement, checkpoint, maintenance route, rims, mechanism,
+    controls, the two spans, the temple island + arena, the temple; `Atmosphere_Mars`); numbers + zones + checkpoints
+    `Runtime/MarsLayout.cs`. Flow `MarsDirector.cs` (helpers: `Until`, `RideRoute`, `Interact`, `Telekinesis`, `GuideWalk`,
+    `TwoShot` / `ShotClear` = framings with a clear view) + `MarsDirectorFlow.cs` (1-6) + `MarsDirectorTemple.cs` (7-11).
+    Saves `MarsState.cs` (`seven_mars`, select slot `seven_mars_select`) + `WorldFlags` (completed-world flags, the
+    combined-record / asteroid route flags in `seven_routes`; Biaveh only after Mars + Europa, played once whichever is
+    second; the asteroid from the TRV_AST travel event). Aboard: `Chapter1AboardMars.cs` (title + chair arrival, MAR_12,
+    MAR_13U / 13C / 13B, `CombinedRecords` - also called after EUR_17 when Europa is finished second -, `TravelAsteroid`,
+    `TravelToBiaveh`). Rune = `Tetrahedron` (code).
+  - Characters on Dan's Mixamo rigs: `SetupMixamoFolk` (Humanoid, explicit Mixamo map, clips per MODELS-NEEDED);
+    `MarsFolk.cs` (walk at its real speed, the Orc walk's hips damped, voice-driven head / body, Viper's hood flare).
+  - The bike on land per chapter: `HoverBike.ZoneTest` (Mars = `MarsLayout.BikeZone`).
+  - Lines: `python Tools/Voice/make_mars_lines.py` (reads the `**SPEAKER:**` lines and Dan's section-13 tables) →
+    `Resources/Mars/mars_dialogue.json` + `Docs/MARS-LINES.md`; voices `python Tools/Voice/generate_mars_voices.py`
+    (`Viper` saved voice; premade Daniel = guard, Sarah = worker, Bill = caretaker) → `Resources/MarsVoice/`.
+  - Switches: `-marscp <n>` (check run at checkpoint n; 8 = aboard), `-mars` (as from the star map), `-marsplay` (player-style
+    run `MarsPlaytest.cs`; with `-menupick "Venus|Venus: the debrief"` it starts in the main menu and picks Mars at VEN_C13),
+    `-marspick europa|asteroid|biaveh`, `-routes none|europa|mars` (fake the world flags: neither / Europa done / Mars done).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.0** (Round 15 status in `TODO.md`).
+**Before: Dan plays 0.14.3** (QF15 status in `TODO.md`).
 **Before: Dan plays 0.14.2** (QF14 status in `TODO.md`).
 **Before: Dan plays 0.14.1** (QF13 status in `TODO.md`).
 **Before: Dan plays 0.14.0** (QF12 + Round 14 status in `TODO.md`).

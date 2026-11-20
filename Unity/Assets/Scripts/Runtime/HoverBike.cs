@@ -303,10 +303,12 @@ namespace Seven
 
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
+        /// <summary>Round 15: which zones the bike may use on land (Venus by default; Mars sets its own).</summary>
+        public static System.Func<Vector3, float, bool> ZoneTest = VenusLayout.BikeZone;
         /// <summary>Nearest point the bike may be at (inside a riding zone, outside every obstacle circle).</summary>
         Vector3 ClampBike(Vector3 p, Vector3 from)
         {
-            if (!VenusLayout.BikeZone(p, 0.25f))
+            if (!ZoneTest(p, 0.25f))
             {
                 // Round 13 (0d): glide along the edge instead of snagging - try the move turned a little either way (it keeps
                 // most of its length), then the two axis moves, else stay. At a ramp or bridge end met at an angle this
@@ -315,12 +317,12 @@ namespace Seven
                 foreach (var ang in new[] { 12f, -12f, 25f, -25f, 40f, -40f, 55f, -55f, 70f, -70f })
                 {
                     var q = from + Quaternion.Euler(0f, ang, 0f) * mv * Mathf.Cos(ang * Mathf.Deg2Rad); q.y = p.y;
-                    if (VenusLayout.BikeZone(q, 0.25f)) { p = q; ok = true; Snags += 0; break; }
+                    if (ZoneTest(q, 0.25f)) { p = q; ok = true; Snags += 0; break; }
                 }
                 if (!ok)
                 {
                     var a = new Vector3(p.x, p.y, from.z); var b = new Vector3(from.x, p.y, p.z);
-                    if (VenusLayout.BikeZone(a, 0.25f)) p = a; else if (VenusLayout.BikeZone(b, 0.25f)) p = b; else { p = from; Snags++; }
+                    if (ZoneTest(a, 0.25f)) p = a; else if (ZoneTest(b, 0.25f)) p = b; else { p = from; Snags++; }
                 }
             }
             foreach (var c in Ground.Obstacles)
@@ -371,7 +373,7 @@ namespace Seven
                 transform.position = p;
                 Odometer += moved;
                 _lean = Mathf.Lerp(_lean, -steer * Mathf.Clamp01(Speed / 6f) * 14f, dt * 4f);
-                if (VenusLayout.BikeZone(p, 1.6f) && Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = p; }
+                if (ZoneTest(p, 1.6f) && Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = p; }
                 if (Time.time > _saveT && SavesToVenus) { _saveT = Time.time + 3f; VenusState.SaveBike(transform.position, transform.eulerAngles.y, true); }
                 if (Input != null && !ScriptDriven && Input.Restart.WasPressedThisFrame()) Recover();
             }

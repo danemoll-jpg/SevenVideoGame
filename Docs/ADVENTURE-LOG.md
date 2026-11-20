@@ -113,3 +113,14 @@ entry covers the rescue, the beam and the larger interior (checkpoints 7-8) and 
 - **Out** (`eur_escape`, unlock `europa>=7`): Tunneler escaped in his own craft. The base came down behind her as she raced out into open water - and then the calls could be heard again.
 - **One voice teaching another** (`eur_record`, unlock `europa>=8`): In the temple she saw a young one learning a call, and knew the answer before it came. The keeper gave her Europa's record, a small icosahedron.
 - **An ordinary sound** (`eur_home`, unlock `europa>=9`): Back aboard, in the pilot's chair with Panther in her lap: he purred, and that was one sound she knew.
+
+## Round 15 — Mars entries (Log, mirror of `Resources/Console/adventure_log.json`)
+
+- **Lines across a world** (`mar_arrival`, unlock `mars>=1`): Two fortress cities either side of a ravine, and between them a temple older than every wall round it. Both approaches were barricaded.
+- **A small problem with real people** (`mar_crossing`, unlock `mars>=2`): At the checkpoint, water filters waited behind a closed barrier. Viper looked down from his platform - and noticed the records.
+- **The old maintenance route** (`mar_route`, unlock `mars>=3`): Under the main crossing an old route still ran. The supplies went through; on the far bank the caretaker had heard a different story.
+- **The shared door** (`mar_door`, unlock `mars>=4`): Two controls, one on each bank. Both sides have to open it. Or they used to trust each other.
+- **Two controls** (`mar_controls`, unlock `mars>=5`): The worker on one bank, the caretaker on the other, at the same moment. The old bridge aligned.
+- **Viper's intervention** (`mar_viper`, unlock `mars>=6`): He divided the crossing with barriers and moving sections. He is secured now - what happens to him is for the people here to decide.
+- **History that belongs to both** (`mar_temple`, unlock `mars>=7`): Their two symbols were halves of one design. In the vision both banks built the bridge together. The temple's records show a route out from Mars - and it stops.
+- **What she remembers** (`mar_home`, unlock `mars>=9`): They were both so certain. What if she is doing the same? Keep asking, Panther said. He would mention it.

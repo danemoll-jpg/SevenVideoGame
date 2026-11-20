@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -119,6 +119,15 @@ namespace Seven
         public static bool Europa { get; private set; }
         public static bool EuropaRace { get; private set; }
         public static bool EuropaPlay { get; private set; }
+        /// <summary>Round 15: -marscp &lt;n&gt; = start the Mars scene at checkpoint n (MarsLayout.Cp*); -mars = start the chapter as
+        /// from the star map (the chair scene aboard, then the landing); -marsplay = the player-style run (MarsPlaytest);
+        /// -marspick &lt;id&gt; = what a check run picks on the star map (europa / asteroid / biaveh); -routes europa|combined =
+        /// fake the world flags for the departure-routing checks.</summary>
+        public static int MarsCp { get; private set; } = -1;
+        public static bool Mars { get; private set; }
+        public static bool MarsPlay { get; private set; }
+        public static string MarsPick { get; private set; }
+        public static string Routes { get; private set; }
         /// <summary>QF15 (2): -europawalltest = the automated wall test (EuropaWallTest; starts at checkpoint 2 unless -europacp is given).</summary>
         public static bool EuropaWallTest { get; private set; }
 
@@ -175,6 +184,11 @@ namespace Seven
                 if (args[i] == "-europa") Europa = true;
                 if (args[i] == "-europarace") EuropaRace = true;
                 if (args[i] == "-europaplay") { EuropaPlay = true; Europa = true; }
+                if (args[i] == "-marscp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var mcp)) MarsCp = mcp;
+                if (args[i] == "-mars") Mars = true;
+                if (args[i] == "-marsplay") { MarsPlay = true; Mars = true; }
+                if (args[i] == "-marspick" && i + 1 < args.Length) MarsPick = args[i + 1];
+                if (args[i] == "-routes" && i + 1 < args.Length) Routes = args[i + 1];
                 if (args[i] == "-europawalltest") EuropaWallTest = true;
                 if (args[i] == "-stopafter" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sa)) StopAfter = sa;
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }

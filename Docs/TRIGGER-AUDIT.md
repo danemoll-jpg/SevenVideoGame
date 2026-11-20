@@ -148,3 +148,17 @@ checks:
 
 The 25-run playtest and the 25-run cat-follow test are no longer standing checks. The switches still exist for
 investigating a bug.
+
+## Round 15 — Mars (2026-11-20)
+
+| # | Place | One-way? | Verdict |
+|---|---|---|---|
+| M1 | West ramp down into the ravine (maintenance route) | no - a ramp both ways | ok |
+| M2 | The broken causeway | closed until the slab is laid (TK); open both ways after | ok (the way forward stays closed until done) |
+| M3 | East ramp + the service gate | the gate opens from the ramp side (panel X), then both ways | ok |
+| M4 | The aligned spans to the temple island | closed until section 6 aligns them; both ways after | ok |
+| M5 | The arena (Viper's barriers, the moving section, the broken strip) | each gate opens as its pylon is disabled; the moving section opens every 5.4 s; the walkway (TK) stays | ok - nothing behind her is needed |
+| M6 | The pier walk (steps down beside the west span) | steps both ways | ok |
+
+Every Mars wait is `MarsDirector.Until` (hint 45 s / 25 s riding, skip 2 min / 60 s riding); riding / walking steps fire at
+or past their place (route points ahead count).

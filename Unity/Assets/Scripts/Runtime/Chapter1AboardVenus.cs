@@ -458,7 +458,7 @@ namespace Seven
             string pick = null;
             if (con != null)
             {
-                if (Auto) con.ScriptPick = DemoBoot.R13 == "europa" || DemoBoot.Europa ? "europa" : "mars";
+                if (Auto) con.ScriptPick = DemoBoot.R13 == "europa" || DemoBoot.Europa && !DemoBoot.Mars ? "europa" : "mars";
                 CutPilot("ots");
                 NavHand(true);
                 yield return con.ChooseOnStarMap(new[] { "mars", "europa" },
@@ -487,7 +487,8 @@ namespace Seven
             VenusState.CompleteScene("VEN_C13_" + pick);
             // Round 14: Europa is playable - the chapter starts (its title card, the chair scene, the dive); Mars stays "coming soon"
             if (pick == "europa") { yield return UI.Fade(1f, 1.0f); if (DemoBoot.CaptureDir != null) Cap?.Log("VEN_C13: Europa chosen -> Chapter 'Europa — Beneath the Ice' starts"); EuropaState.StartFresh(); yield break; }
-            if (con != null) yield return con.ComingSoon("Mars");
+            // Round 15: Mars is playable - the chapter starts (its title card, the chair scene, the landing)
+            if (pick == "mars") { yield return UI.Fade(1f, 1.0f); if (DemoBoot.CaptureDir != null) Cap?.Log("VEN_C13: Mars chosen -> Chapter 'Mars — The Divided Kingdoms' starts"); MarsState.StartFresh(); yield break; }
         }
     }
 }

@@ -60,6 +60,15 @@ namespace Seven
                 PlayFromStart = () => { Chapter1State.Reset(); EuropaState.StartFresh(); },
                 Sections = EuropaSections,
             },
+            new ChapterDef
+            {
+                Id = "mars", Name = "Mars",
+                // Mars was reached, or VEN_C12 has sent it to the ship's star map (the same rule as Europa)
+                Reached = () => MarsState.OwnReached || VenusState.OwnSceneDone("VEN_C12"),
+                HasProgress = () => MarsState.OwnHasProgress, Confirm = "Start Mars over? Your Mars progress will be reset.",
+                PlayFromStart = () => { Chapter1State.Reset(); MarsState.StartFresh(); },
+                Sections = MarsSections,
+            },
         };
 
         static (string label, System.Action start)[] MoonSections()
@@ -82,6 +91,13 @@ namespace Seven
         {
             var l = new List<(string label, System.Action start)>();
             foreach (var (label, cp) in EuropaState.SelectEntries) { int c = cp; l.Add((label, () => { Chapter1State.Reset(); EuropaState.StartAt(c); })); }
+            return l.ToArray();
+        }
+
+        static (string label, System.Action start)[] MarsSections()
+        {
+            var l = new List<(string label, System.Action start)>();
+            foreach (var (label, cp) in MarsState.SelectEntries) { int c = cp; l.Add((label, () => { Chapter1State.Reset(); MarsState.StartAt(c); })); }
             return l.ToArray();
         }
 

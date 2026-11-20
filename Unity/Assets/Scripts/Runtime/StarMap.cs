@@ -32,6 +32,8 @@ namespace Seven
             ("moon", "The Moon", 0.25f, 328f, 11f),
             ("mars", "Mars", 0.34f, 52f, 14f),
             ("europa", "Europa", 0.45f, 134f, 9f),
+            ("biaveh", "Biaveh", 0.49f, 258f, 12f),           // Round 15: beyond this solar system (unlocked by the combined records)
+            ("asteroid", "The asteroid", 0.47f, 282f, 6f),     // found on the way to Biaveh (TRV_AST)
         };
         const float Tilt = 0.46f;                 // ellipse squash (the map is seen at an angle)
 
