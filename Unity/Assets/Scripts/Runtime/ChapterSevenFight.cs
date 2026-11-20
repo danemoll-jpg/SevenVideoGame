@@ -18,13 +18,42 @@ namespace Seven
     ///  - hit feedback: a 2-3 frame hit-pause and a small camera nudge on contact.
     /// Still nonlethal: takedowns leave the Scree down, stunned, alive.
     /// </summary>
+    /// <summary>QF17: anything 7 can fight - the terrace Scree, and the bosses (BossFight).</summary>
+    public interface IFightTarget
+    {
+        Transform transform { get; }
+        bool IsOut { get; }
+        bool Dazed { get; }
+        /// <summary>Her blow lands (already in reach). False = it cannot be hit now.</summary>
+        bool TakeBlow(Vector3 dir, bool takedown);
+    }
+
     public partial class ChapterSeven
     {
-        public enum FightAct { Idle, Attack, Block, Dodge, Flinch, Down }
+        public enum FightAct { Idle, Attack, Block, Dodge, Flinch, Down, Hop, Throw }
         public FightAct Act { get; private set; }
-        public System.Func<ScreeGuard> FightTarget;
+        public System.Func<IFightTarget> FightTarget;
         /// <summary>QF10: everyone she may fight (the soft lock picks the nearest in front of her).</summary>
-        public System.Func<IEnumerable<ScreeGuard>> FightTargets;
+        public System.Func<IEnumerable<IFightTarget>> FightTargets;
+        // ---- QF17 (boss fights): the boss sets these for its fight; the terrace tutorial keeps the defaults
+        /// <summary>Hits she can take before she goes down (the boss table's "sevenHits").</summary>
+        [System.NonSerialized] public int MaxFightHits = 3;
+        /// <summary>Movement in stance x this (a boss arena is bigger than the terrace); LB / Shift runs x1.5 on top.</summary>
+        [System.NonSerialized] public float FightMoveScale = 1f;
+        /// <summary>Jump (A) in the fight: a short hop over sweeps, shock rings and waves (bosses only).</summary>
+        [System.NonSerialized] public bool FightHop;
+        /// <summary>Telekinesis (RT) in the fight: where it would throw (null = nothing to throw now) and what happens at the
+        /// peak of the gesture.</summary>
+        public System.Func<Vector3?> TkAim; public System.Action TkFire;
+        /// <summary>X / E near a fight objective (a pylon, a device): its label (null = none) and the action - takes the
+        /// press instead of a strike.</summary>
+        public System.Func<string> FightUseLabel; public System.Action FightUse;
+        [System.NonSerialized] public bool AutoHop, AutoTk, AutoUse;
+        public bool IsBlocking => Act == FightAct.Block;
+        public bool IsDodging => Act == FightAct.Dodge && Time.time - _dodgeStart < DodgeInvuln;
+        public bool IsAirborne => Act == FightAct.Hop && _hopY > 0.22f;
+        float _hopStart, _hopY, _invulnUntil; bool _tkFired;
+        public const float HopTime = 0.62f, HopHeight = 0.85f, HitInvuln = 0.9f;
         public bool InFight => Current == Mode.Fight;
         public bool FightDown => Act == FightAct.Down;
         public int HitsTaken { get; private set; }
@@ -49,7 +78,7 @@ namespace Seven
         static readonly float[] ComboHit = { 0.32f, 0.36f, 0.42f };
         const float FinisherHit = 0.45f;
         int _combo; bool _hitDone; float _flinchUntil;
-        ScreeGuard _target;
+        IFightTarget _target;
         Vector3 _fightVel;
         float _atkPressedAt = -9f, _dodgePressedAt = -9f, _dodgeStart = -9f, _blowStart, _blowPressed, _hitAtTn, _activeAt;
         string _bufAtk;                              // buffered: "attack" / "takedown"
@@ -60,23 +89,27 @@ namespace Seven
         {
             StopTraversal(); Release();
             Current = Mode.Fight; Act = FightAct.Idle; HitsTaken = 0; _combo = 0; _fightVel = Vector3.zero; _bufAtk = null;
-            Crouched = false; Ground.BlockLow = true;
+            Crouched = false; Ground.BlockLow = true; _hopY = 0f;
             Play("fight_idle", 0.2f);
         }
         public void EndFight()
         {
             if (Current != Mode.Fight) return;
             Freeze(false);
-            Current = Mode.Free; Act = FightAct.Idle;
+            Current = Mode.Free; Act = FightAct.Idle; _hopY = 0f;
+            MaxFightHits = 3; FightMoveScale = 1f; FightHop = false; TkAim = null; TkFire = null; FightUseLabel = null; FightUse = null;
             Play("idle", 0.4f);
         }
         /// <summary>Back on her feet at the start of the fight (after being knocked down).</summary>
-        public void ResetFight() { Freeze(false); Act = FightAct.Idle; HitsTaken = 0; _combo = 0; _fightVel = Vector3.zero; _bufAtk = null; Play("fight_idle", 0.2f); }
+        public void ResetFight() { Freeze(false); Act = FightAct.Idle; _hopY = 0f; _invulnUntil = Time.time + 1.5f; HitsTaken = 0; _combo = 0; _fightVel = Vector3.zero; _bufAtk = null; Play("fight_idle", 0.2f); }
 
         bool AttackPressed => AutoAttack || !ScriptDriven && Input != null && Input.Attack.WasPressedThisFrame();
         bool BlockHeld => AutoBlockHeld || !ScriptDriven && Input != null && Input.Block.IsPressed();
         bool DodgePressed => AutoDodge || !ScriptDriven && Input != null && Input.Dodge.WasPressedThisFrame();
         bool TakedownPressed => AutoTakedown || !ScriptDriven && Input != null && Input.Takedown.WasPressedThisFrame();
+        bool HopPressed => AutoHop || !ScriptDriven && Input != null && Input.Jump.WasPressedThisFrame();
+        bool TkPressed => AutoTk || !ScriptDriven && Input != null && Input.Telekinesis.WasPressedThisFrame();
+        bool RunHeld => ScriptDriven ? ScriptRun : Input != null && Input.Run.IsPressed();
 
         public bool IsDefending => Act == FightAct.Block || Act == FightAct.Dodge && Time.time - _dodgeStart < DodgeInvuln;
 
@@ -106,7 +139,13 @@ namespace Seven
             Speed = 0f; Context = null;
             _target = PickTarget();
             bool atk = AttackPressed, dodge = DodgePressed, takedown = TakedownPressed, block = BlockHeld;
-            AutoAttack = AutoDodge = AutoTakedown = false;
+            bool hop = FightHop && HopPressed, tk = TkAim != null && TkPressed, use = false;
+            AutoAttack = AutoDodge = AutoTakedown = AutoHop = AutoTk = false;
+            // QF17: X next to a fight objective uses it instead of striking
+            string useLabel = FightUseLabel?.Invoke();
+            if ((atk || AutoUse) && useLabel != null && (Act == FightAct.Idle || Act == FightAct.Block)) { atk = false; use = true; }
+            AutoUse = false;
+            if (use) { Freeze(false); ToFightIdle(); FightUse?.Invoke(); FightEvent?.Invoke("use"); return; }
             if (atk) { _atkPressedAt = Time.time; _bufAtk = "attack"; }
             if (takedown) { _atkPressedAt = Time.time; _bufAtk = "takedown"; }
             if (dodge) _dodgePressedAt = Time.time;
@@ -119,6 +158,25 @@ namespace Seven
             {
                 case FightAct.Down:
                     return;                                              // the director resets the fight
+                case FightAct.Hop:
+                {
+                    float u = (Time.time - _hopStart) / HopTime;
+                    var mv = MoveInput(out _);
+                    if (mv.sqrMagnitude > 0.04f) { var st = mv * FightMoveSpeed * FightMoveScale * Time.deltaTime; transform.position += st; ClampToArena(); }
+                    _hopY = u >= 1f ? 0f : Mathf.Sin(Mathf.Clamp01(u) * Mathf.PI) * HopHeight;
+                    var p = transform.position; p.y = Ground.Height(p.x, p.z) + _hopY; transform.position = p;
+                    if (u >= 1f) { ToFightIdle(); break; }
+                    return;
+                }
+                case FightAct.Throw:
+                {
+                    var aim = TkAim?.Invoke();
+                    if (aim.HasValue) FaceTowards(aim.Value, 720f);
+                    if (!_tkFired && Tn >= 0.45f) { _tkFired = true; TkFire?.Invoke(); FightEvent?.Invoke("tk_throw"); SetEnergyPoint(1f, 0.6f); }
+                    if (_tkFired && wantDodge) { StartDodge(); return; }
+                    if (Tn >= 0.72f) { ToFightIdle(); break; }
+                    return;
+                }
                 case FightAct.Flinch:
                     if (Time.time >= _flinchUntil) ToFightIdle(); else return;
                     break;
@@ -133,6 +191,8 @@ namespace Seven
                     {
                         // cancel the rest of the blow: dodge / block first (defence wins), else the next attack in the chain
                         if (wantDodge) { Timing("recovery->dodge"); StartDodge(); return; }
+                        if (hop) { StartHop(); return; }
+                        if (tk && TkAim() is Vector3 tkA) { StartThrow(tkA); return; }
                         if (block) { Timing("recovery->block"); StartBlock(); return; }
                         if (wantAtk && _bufAtk == "attack" && _combo < 2) { Timing("recovery->next"); _combo++; StartBlow(Combo[_combo]); return; }
                         if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
@@ -145,6 +205,7 @@ namespace Seven
                     if (Tn >= 0.45f) Freeze(true);
                     if (!block) { Freeze(false); ToFightIdle(); break; }
                     if (wantDodge) { StartDodge(); return; }
+                    if (hop) { Freeze(false); StartHop(); return; }
                     return;
                 case FightAct.Dodge:
                     if (Time.time - _dodgeStart < DodgeRecover) return;
@@ -152,20 +213,24 @@ namespace Seven
                     break;
             }
             // idle / moving (also the frame a cancel or a recovery ends: buffered presses fire here)
+            if (hop) { StartHop(); return; }
+            if (tk && TkAim() is Vector3 tkAt) { StartThrow(tkAt); return; }
             if (block) { StartBlock(); return; }
             if (wantDodge) { StartDodge(); return; }
             if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
             if (wantAtk && _bufAtk == "attack") { _combo = Act == FightAct.Idle && Time.time - _activeAt < 0.6f && _combo < 2 ? _combo + 1 : 0; StartBlow(Combo[_combo]); return; }
             var v = MoveInput(out _);
             // light movement: quick to start and stop, turns fast, no slide
-            var want = v.sqrMagnitude > 0.04f ? v * FightMoveSpeed : Vector3.zero;
+            float spd = FightMoveSpeed * FightMoveScale * (FightMoveScale > 1f && RunHeld ? 1.5f : 1f);
+            var want = v.sqrMagnitude > 0.04f ? v * spd : Vector3.zero;
             _fightVel = Vector3.MoveTowards(_fightVel, want, FightAccel * Time.deltaTime);
             if (_fightVel.sqrMagnitude > 0.0004f)
             {
                 var step = _fightVel * Time.deltaTime;
                 int n = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / 0.15f));
                 for (int i = 0; i < n; i++) { transform.position += step / n; ClampToArena(); }
-                if (State != "walk") Play("walk", 0.1f, 1.25f, false);
+                string clip = spd > 3.2f && HasState("run") ? "run" : "walk";
+                if (State != clip) Play(clip, 0.1f, clip == "run" ? 1f : 1.25f, false);
                 if (_target != null) FaceTarget(FightTurn); else FaceTowards(transform.position + v, FightTurn);
             }
             else
@@ -175,12 +240,52 @@ namespace Seven
             }
         }
 
+        void StartHop()
+        {
+            Freeze(false); Act = FightAct.Hop; _hopStart = Time.time; _hopY = 0f;
+            if (HasState("jump")) Play("jump", 0.05f, 1.5f, true, 0.18f); else Play("fight_idle", 0.05f);
+            FightEvent?.Invoke("hop");
+        }
+        void StartThrow(Vector3 at)
+        {
+            Freeze(false); Act = FightAct.Throw; _tkFired = false;
+            FaceTowards(at, 720f);
+            Play("telekinesis", 0.06f, 1.7f, true, 0.18f);
+            SetEnergyPoint(1.9f, 0.15f);
+            FightEvent?.Invoke("tk");
+        }
+        /// <summary>QF17: a boss's attack reaches her (the boss already checked block / dodge / jump). Knocked back by
+        /// <paramref name="knock"/> m; <paramref name="damage"/> of her <see cref="MaxFightHits"/>; a short safe window after.</summary>
+        public bool TakeBossHit(Vector3 dir, int damage, float knock)
+        {
+            if (Act == FightAct.Down || Time.time < _invulnUntil) return false;
+            _invulnUntil = Time.time + HitInvuln;
+            HitsTaken += Mathf.Max(1, damage);
+            Freeze(false); _hopY = 0f;
+            var p = transform.position; p.y = Ground.Height(p.x, p.z); transform.position = p;
+            FightEvent?.Invoke("hit_taken");
+            CameraKick.Nudge(dir * 0.09f);
+            if (HitsTaken >= MaxFightHits)
+            {
+                Act = FightAct.Down;
+                Play(HasState("crouch_idle") ? "crouch_idle" : "idle", 0.12f);
+                Slide(dir, knock + 0.4f, 0.45f);
+                FightEvent?.Invoke("down");
+                return true;
+            }
+            Act = FightAct.Flinch; _flinchUntil = Time.time + 0.5f;
+            Play(HasState("landing") ? "landing" : "fight_idle", 0.05f, 1.4f);
+            Slide(dir, knock, 0.3f);
+            return true;
+        }
+        public bool Invulnerable => Time.time < _invulnUntil;
+
         void Timing(string what) { FightTimings.Add($"{what} {Time.time - _activeAt:0.000}s"); }
 
         /// <summary>Soft lock: the nearest opponent in front of her (within the cone and range), else the director's target.</summary>
-        ScreeGuard PickTarget()
+        IFightTarget PickTarget()
         {
-            ScreeGuard best = null; float bestD = AssistRange;
+            IFightTarget best = null; float bestD = AssistRange;
             if (FightTargets != null)
                 foreach (var s in FightTargets())
                 {
@@ -195,7 +300,7 @@ namespace Seven
         }
 
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
-        float Dist(ScreeGuard s) => Flat(s.transform.position - transform.position).magnitude;
+        float Dist(IFightTarget s) => Flat(s.transform.position - transform.position).magnitude;
         void FaceTarget(float deg) { if (_target != null) FaceTowards(_target.transform.position, deg); }
         void ToFightIdle() { Freeze(false); Act = FightAct.Idle; Play("fight_idle", 0.12f); }
 
@@ -262,7 +367,7 @@ namespace Seven
             Freeze(false);
             FightEvent?.Invoke("hit_taken");
             CameraKick.Nudge(dir * 0.05f);
-            if (HitsTaken >= 3)
+            if (HitsTaken >= MaxFightHits)
             {
                 Act = FightAct.Down;
                 Play(HasState("crouch_idle") ? "crouch_idle" : "idle", 0.15f);   // down on one knee, winded (landing_hard flipped her in the air)

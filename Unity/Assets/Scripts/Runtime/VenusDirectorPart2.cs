@@ -297,35 +297,94 @@ namespace Seven
             Objective(VenusState.Objectives[(int)VenusState.Stage.EncounterActive]);
             if (_machineHum == null) _machineHum = AudioKit.Loop("machinery_hum", null, VenusLayout.DaisAt + Vector3.up * 3f, 0.6f, AudioKit.Bus.Sfx, 4f, 60f);
             _encSafe = P7.x > 103.4f ? P7 : VenusLayout.ControlEntry;
-            foreach (var d in Devices) if (d != null) d.Pulsed += OnDevicePulse;
             yield return EncounterIntro();                               // QF12 (8): the boss is on screen first
+            // QF17 (2): a real boss fight (BossFight): he attacks her; the devices go off under attack; she counters him
+            _wmFight = Wormmaster.GetComponent<WormmasterFight>() ?? Wormmaster.gameObject.AddComponent<WormmasterFight>();
+            Material rootMat = null;
+            foreach (var r in FindObjectsByType<MeshRenderer>()) if (r.sharedMaterial != null && (r.sharedMaterial.name.Contains("root") || r.sharedMaterial.name.Contains("Root"))) { rootMat = r.sharedMaterial; break; }
+            _wmFight.Setup(Wormmaster, Devices, ChamberWorms, rootMat ?? Markers.DarkGloss());
+            _wmFight.PlaceStart();
+            _wmFight.DisableDevice = i => DisableDevice(i);
+            _wmFight.CrystalOut = CrystalOutInFight;
+            _wmFight.Beat = WormmasterComesDown;
+            _wmFight.UI = UI; _wmFight.AutoPilot = Auto;
+            _wmFight.PhaseObjective = ph => ph == 0 ? "He fights from his dais - shut the north device (X) and the ledge device (RT from below) down under attack"
+                                         : ph == 1 ? "He comes down - make him waste an attack, throw root debris at him (RT); pull the signal crystal (RT)"
+                                         : "His signal fails - read him, dodge, counter: three more staggers";
             _encounterOn = true;
-            StartCoroutine(EncounterWatch());
-            StartCoroutine(Harass());                                    // Round 13 (0f): they try to stop her
-            if (Auto) StartCoroutine(AutoEncounter());
-            else StartCoroutine(TeachEncounter());
-            while (!AllOff)
-            {
-                int i = NextDevice(); int n0 = OffCount;
-                string[] hint = {
-                    "The north device: wait for the dust and rumble in the trough to pass, cross, then X at the device",
-                    "The device on the raised ledge (south-west): climb up the low wall (A), then X",
-                    "The crystal device stands in the south trough: from the walkway beside it, look at its crystal and use telekinesis (RT)" };
-                yield return Until(() => OffCount > n0, $"disable the control devices ({n0}/3)", 150f, hint[i], VenusLayout.DeviceUse[i], () => DisableDevice(i, true));
-                if (n0 == 0 && ReloadCheck("first_device")) { _reloading = true; yield break; }      // check run: the save after a device
-            }
+            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Strike X  ·  Telekinesis RT: throw debris when he is open", 9f);
+            _wmFight.Begin(BossFight.Load("wormmaster"), Seven, Cam);
+            StartCoroutine(FightPrompts());
+            yield return _wmFight.Run(Objective);
+            if (DemoBoot.BossIdle) yield break;
+            _wmFight.End();
+            _encounterOn = false; _encPrompt = null;
+            Knockdowns += _wmFight.Knockdowns;
+            for (int i = 0; i < 3; i++) if (Devices[i] != null && Devices[i].On) DisableDevice(i, true);
             yield return Shot("enc_all_three_devices_off");
-            // the creatures withdraw (their control is gone): alive, back into the burrows
+            // subdued: he drags himself back onto his dais, his dominance gone; the creatures withdraw (alive, into the burrows)
+            yield return Cutscene(true);
+            if (Wormmaster != null) Wormmaster.Current = WormmasterRig.Pose.Contained;
+            { var a = Wormmaster.transform.position; var side = Vector3.Cross(Vector3.up, Flat(a - P7).normalized);
+              Shoot((a + P7) * 0.5f + side * 7f + Vector3.up * 3f, a + Vector3.up * 1.6f, 50f, 0.01f);
+              yield return Wait(0.8f);
+              yield return Shot("enc_he_is_subdued");
+              for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f) { float u = Mathf.SmoothStep(0f, 1f, t); Wormmaster.transform.position = Vector3.Lerp(a, VenusLayout.WormmasterAt, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 0.8f; yield return null; } }
+            Wormmaster.transform.rotation = Quaternion.LookRotation(Vector3.left);
             AudioKit.Play("creatures_withdraw", VenusLayout.ControlCentre, 0.9f, 0f, AudioKit.Bus.Sfx, 80f);
             foreach (var w in ChamberWorms) if (w != null && w.gameObject.activeSelf) w.Withdraw(NearestBurrow(w.transform.position));
+            Seven.Release();
+            yield return Cutscene(false);
             Objective("Close the containment barrier");
             if (ConsoleGlow != null) Glow(ConsoleGlow, 1.6f);
             _consoleHit = false;
             if (Auto) yield return AutoConsole();
+            StartCoroutine(ConsoleWatch());
             yield return Until(() => _consoleHit, "close the containment barrier (the console)", 90f, "The console in front of his dais: X closes the barrier", VenusLayout.ConsoleAt, () => _consoleHit = true);
-            _encounterOn = false;
-            foreach (var d in Devices) if (d != null) d.Pulsed -= OnDevicePulse;
+            _encPrompt = null;
             yield return CloseBarrier();
+            if (DemoBoot.BossCheck && DemoBoot.CaptureDir != null) { Cap.Finish("boss check (QF17): the Wormmaster's fight done - " + _wmFight.Summary()); yield break; }
+        }
+        WormmasterFight _wmFight;
+        public BossFight BossNow => _wmFight != null && _encounterOn && !_wmFight.Over ? _wmFight : null;
+        IEnumerator FightPrompts()
+        {
+            while (_encounterOn && _wmFight != null && !_wmFight.Over)
+            {
+                _encPrompt = _wmFight.PromptLabel; _encBtn = _wmFight.PromptIsTk ? ControlsLegend.Btn.Tk : _encPrompt == "Takedown" ? ControlsLegend.Btn.Takedown : ControlsLegend.Btn.Interact;
+                yield return null;
+            }
+            _encPrompt = null;
+        }
+        IEnumerator ConsoleWatch()
+        {
+            while (!_consoleHit)
+            {
+                bool near = Seven.Current == ChapterSeven.Mode.Free && Flat(VenusLayout.ConsoleAt - P7).magnitude < 2.0f;
+                _encPrompt = near ? "Close the barrier" : null; _encBtn = ControlsLegend.Btn.Interact;
+                if (near && !Auto && Input.Interact.WasPressedThisFrame()) _consoleHit = true;
+                yield return null;
+            }
+            _encPrompt = null;
+        }
+        IEnumerator CrystalOutInFight()
+        {
+            if (Crystal == null) { DisableDevice(2); yield break; }
+            AudioKit.Play("tk_push", Crystal.position, 0.8f);
+            var p0 = Crystal.position; var p1 = CrystalRest;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.0f) { float u = Mathf.SmoothStep(0f, 1f, t); Crystal.position = Vector3.Lerp(p0, p1, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 1.4f; Crystal.Rotate(0f, 260f * Time.deltaTime, 0f); yield return null; }
+            Crystal.position = p1;
+            AudioKit.Play("stone_fall", p1, 0.4f);
+            DisableDevice(2);
+        }
+        IEnumerator WormmasterComesDown()
+        {
+            var a = VenusLayout.WormmasterAt;
+            Shoot(a + new Vector3(-11f, 1.5f, -9f), a + Vector3.down * 1.5f, 50f, 0.4f);
+            yield return Wait(0.9f);
+            yield return Shot("enc_he_comes_down_off_his_dais");
+            yield return Wait(1.2f);
+            FollowCamera();
         }
         bool _encounterOn;
         /// <summary>The device the hint / skip is about: the nearest one still on.</summary>

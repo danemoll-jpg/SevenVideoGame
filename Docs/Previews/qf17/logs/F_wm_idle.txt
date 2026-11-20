@@ -1,0 +1,68 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.00s] Venus check run: Venus state: VEN_S04_CONTROL_DISCOVERED, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike (74.00, -6.00, 148.00) riding False
+[   0.21s] objective: Find the source of the signal - down the root pit stairs, then east along the tunnels
+[   0.21s] restore: Venus state: VEN_S04_CONTROL_DISCOVERED, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike (74.00, -6.00, 148.00) riding False -> 7 at (78.00, -6.00, 143.00), the slab bridge is down
+[   0.55s] objective: Find the source of the signal - down the root pit stairs, then east along the tunnels
+[   0.66s] walk blockers (QF12 7) after the root gate opened: 379 blocked samples in the walkable ground - Court_Trees (Venus) x109 at (14.6, 1.3, 210.9); Machinery (VEN_05_Underground) x60 at (108.2, -29.5, 70.4); Court_Fountain (Venus) x25 at (19.5, 0.5, 198.3); Ctrl_Ribs (VEN_05_Underground) x24 at (103.1, -29.2, 88.0); Temple_GrownRibs (Venus) x22 at (22.6, 0.5, 238.7); Dais (VEN_05_Underground) x22 at (130.6, -29.5, 87.2); Pylon (Device_dev_ledge) x8 at (107.0, -28.5, 66.9); Channel_6 (Venus) x7 at (22.1, 0.8, 74.3); Channel_9 (Venus) x7 at (22.8, 1.2, 80.6); Channel_10 (Venus) x7 at (22.8, 1.2, 82.7); Channel_12 (Venus) x7 at (22.8, 0.7, 88.3); Court_FountainWater (Venus) x6 at (20.9, 0.5, 197.6); Cube_ProtectedStructure (Venus) x5 at (29.1, 0.5, 268.9); Display_Panel (LocationsDisplay) x5 at (34.0, 1.3, 266.1); 
+[   0.95s] shot 01_w01_root_gate_open.png  audioPeak=0.000000  cursorVisible=False
+[  14.57s] shot 02_qf13_19a_stairs_follow_camera.png  audioPeak=0.000000  cursorVisible=False
+[  14.72s] shot 03_qf13_19b_stairs_dan_view.png  audioPeak=0.000000  cursorVisible=False
+[  14.77s] shot 04_w02_root_pit_steps.png  audioPeak=0.000000  cursorVisible=False
+[  17.17s] music: below ground -> venus_underground (crossfade 3 s at (69.0, -12.4, 120.0))
+[  24.27s] shot 05_w03_root_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  30.23s] shot 06_enc_lunge_0_creature_comes_at_her.png  audioPeak=0.000000  cursorVisible=False
+[  30.23s] lunge 0: TunnelWorm surfaced True, 5.9 m from her
+[  35.33s] shot 07_w04_root_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  48.57s] shot 08_w05_deep_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  58.22s] way down (0f): the root-chamber creature lunged at her 2x, knocked her back 0x, stunned 2x; it stays behind (alive)
+[  58.22s] ok: the control chamber (C06) (57.3s)
+[  63.34s] shot 09_c06_01_wide_the_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  63.95s] shot 10_c06_02_low_angle_above_his_machinery.png  audioPeak=0.000000  cursorVisible=False
+[  64.61s] coverage VEN_C06_01 (wormmaster): speaker head at (0.50, 0.64) in frame, camera -6.1 m vs his / her head (low angle), wormmaster tip x1.21
+[  64.67s] shot 11_cov_C06_01_wormmaster.png  audioPeak=0.000000  cursorVisible=False
+[  65.82s] coverage VEN_C06_02 (seven): speaker head at (0.50, 0.56) in frame, camera +0.0 m vs his / her head (level), wormmaster tip x1.21
+[  65.88s] shot 12_cov_C06_02_seven.png  audioPeak=0.000000  cursorVisible=False
+[  67.06s] coverage VEN_C06_03 (wormmaster): speaker head at (-0.06, 0.28) OUT OF FRAME, camera +0.7 m vs his / her head (high), wormmaster tip x1.21
+[  67.11s] shot 13_cov_C06_03_wormmaster.png  audioPeak=0.000000  cursorVisible=False
+[  68.26s] coverage VEN_C06_04 (seven): speaker head at (0.50, 0.57) in frame, camera +0.0 m vs his / her head (level), wormmaster tip x1.21
+[  68.31s] shot 14_cov_C06_04_seven.png  audioPeak=0.000000  cursorVisible=False
+[  69.46s] coverage VEN_C06_05 (wormmaster): speaker head at (0.50, 0.64) in frame, camera -6.1 m vs his / her head (low angle), wormmaster tip x1.21
+[  69.51s] shot 15_cov_C06_05_wormmaster.png  audioPeak=0.000000  cursorVisible=False
+[  71.43s] shot 16_c06_03_he_activates_a_signal_pulse.png  audioPeak=0.000000  cursorVisible=False
+[  72.10s] coverage VEN_C06_06 (seven): speaker head at (0.50, 0.57) in frame, camera +0.0 m vs his / her head (level), wormmaster tip x1.24
+[  72.15s] shot 17_cov_C06_06_seven.png  audioPeak=0.000000  cursorVisible=False
+[  73.31s] coverage VEN_C06_07 (wormmaster): speaker head at (0.50, 0.63) in frame, camera -5.8 m vs his / her head (low angle), wormmaster tip x1.24
+[  73.36s] shot 18_cov_C06_07_wormmaster.png  audioPeak=0.000000  cursorVisible=False
+[  73.92s] shot 19_c06_04_come_and_do_it_yourself.png  audioPeak=0.000000  cursorVisible=False
+[  73.92s] scene VEN_C06 complete; VEN_S05_ENCOUNTER_ACTIVE
+[  73.92s] objective: Disable the control devices - all three, around the chamber
+[  73.92s] objective: Disable the control devices - all three, around the chamber
+[  76.82s] shot 20_enc_00_intro_he_sends_them.png  audioPeak=0.000000  cursorVisible=False
+[  76.82s] encounter intro (QF12 8): 4 creatures in the frame; the Wormmaster on screen (visible), his pulse, 6 creatures surfaced at once, taunt
+[  77.82s] BOSS wormmaster: the fight begins - 3 phases, she can take 6 hits, table Resources/Bosses/boss_tuning.json
+[  77.82s] objective: He fights from his dais - shut the north device (X) and the ledge device (RT from below) down under attack
+[  79.82s] boss wormmaster: attack 1 'worm_lunge' (wave) - telegraph 1.10 s, she is 25.3 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[  80.52s] shot 21_boss_wormmaster_worm_lunge_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  80.58s] shot 22_boss_wormmaster_worm_lunge_telegraph_side.png (second angle)
+[  81.09s] shot 23_boss_wormmaster_worm_lunge_active.png  audioPeak=0.000000  cursorVisible=False
+[  81.14s] shot 24_boss_wormmaster_worm_lunge_active_side.png (second angle)
+[  81.36s] boss wormmaster: 'worm_lunge' HIT her (1/6)
+[  83.29s] boss wormmaster: attack 2 'worm_lunge' (wave) - telegraph 1.10 s, she is 24.8 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[  84.71s] boss wormmaster: 'worm_lunge' HIT her (2/6)
+[  86.77s] boss wormmaster: attack 3 'worm_lunge' (wave) - telegraph 1.10 s, she is 24.8 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[  88.38s] boss wormmaster: 'worm_lunge' HIT her (3/6)
+[  90.70s] boss wormmaster: attack 4 'slam_wave' (wave) - telegraph 1.00 s, she is 25.5 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[  91.36s] shot 25_boss_wormmaster_slam_wave_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  91.42s] shot 26_boss_wormmaster_slam_wave_telegraph_side.png (second angle)
+[  91.88s] shot 27_boss_wormmaster_slam_wave_active.png  audioPeak=0.000000  cursorVisible=False
+[  91.93s] shot 28_boss_wormmaster_slam_wave_active_side.png (second angle)
+[  92.48s] boss wormmaster: 'slam_wave' HIT her (4/6)
+[  95.27s] boss wormmaster: attack 5 'slam_wave' (wave) - telegraph 1.00 s, she is 27.3 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[  97.12s] boss wormmaster: 'slam_wave' HIT her (5/6)
+[  99.82s] boss wormmaster: attack 6 'worm_lunge' (wave) - telegraph 1.10 s, she is 29.2 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 101.24s] boss wormmaster: 'worm_lunge' HIT her (6/6) - she is DOWN
+[ 101.24s] BOSS IDLE TEST (wormmaster): nobody pressed anything - she was knocked down after 23.4 s (6 attacks, 6 hits) - PASS (within ~60 s)
+[ 101.30s] shot 29_boss_wormmaster_idle_test_down.png  audioPeak=0.000000  cursorVisible=False
+[ 101.30s] cat speed vs clip (QF11): walk clip 0 frames, walking in place (speed < 0.06 m/s x scale for > 0.25 s, then switched to idle) 0x
+[ 101.30s] BOSS IDLE TEST (wormmaster): down after 23.4 s, attacks 6, hits 6
+[ 101.30s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

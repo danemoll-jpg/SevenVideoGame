@@ -11,7 +11,7 @@ namespace Seven
     /// <see cref="Engaged"/> one attacks; the other keeps its distance. Uses the sparring bot's clips (fight_idle, punch,
     /// hit_head / hit_body, knocked_down, get_up, dazed) retargeted onto the Scree.
     /// </summary>
-    public partial class ScreeGuard
+    public partial class ScreeGuard : IFightTarget
     {
         public enum Fight { None, Approach, Guard, Windup, Punch, Hit, Dazed, Down, Sitting }
         public Fight FightState { get; private set; } = Fight.None;

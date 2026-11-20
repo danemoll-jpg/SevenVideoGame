@@ -36,10 +36,23 @@ namespace Seven
             if (_pad == null) return;
             if (Gamepad.current != _pad) _pad.MakeCurrent();
             if (_phase == 0 && _presses.Count > 0) { _cur = _presses.Dequeue(); _phase = 1; }
-            uint bits = 0u; float rt = _rt;
+            uint bits = _held; float rt = _rt;
+            if (_rtTap > 0) { rt = _rtTap > 2 ? 1f : 0f; _rtTap--; }
             if (_phase >= 1 && _phase <= 3) { if (_cur == GamepadButton.RightTrigger) rt = 1f; else bits |= 1u << (int)_cur; }
             if (_phase > 0) _phase = _phase >= 6 ? 0 : _phase + 1;
-            InputSystem.QueueStateEvent(_pad, new GamepadState { leftStick = _stick, rightTrigger = rt, buttons = bits });
+            InputSystem.QueueStateEvent(_pad, new GamepadState { leftStick = _stick, rightTrigger = rt, leftTrigger = _lt, buttons = bits });
+        }
+        float _lt; uint _held; int _rtTap;
+        /// <summary>QF17: the boss fight - the pilot's read of what a player sees, as pad input.</summary>
+        void FightPad(BossFight f, ChapterSeven s)
+        {
+            var I = BossPilot.Think(f, s);
+            _stick = BossPilot.Stick(I.Move);
+            _lt = I.Block ? 1f : 0f; _rt = 0f;
+            _held = I.Run ? 1u << (int)GamepadButton.LeftShoulder : 0u;
+            if (I.Tk && _rtTap == 0) _rtTap = 5;
+            GamepadButton? b = I.Dodge ? GamepadButton.East : I.Hop ? GamepadButton.South : (I.Attack || I.Use) ? GamepadButton.West : I.Takedown ? GamepadButton.North : (GamepadButton?)null;
+            if (b.HasValue && (_phase == 0 || I.Dodge || I.Hop)) { _presses.Clear(); _cur = b.Value; _phase = 1; }
         }
 
         static VenusDirector D => VenusDirector.I != null && VenusDirector.I.isActiveAndEnabled ? VenusDirector.I : null;
@@ -105,6 +118,8 @@ namespace Seven
                 if (Obj != _lastObj) { _lastObj = Obj; _objSince = Time.time; Log($"objective: '{Obj}' at {P:0.0}"); }
                 if (Time.time - _objSince > 240f) { _soft++; Log($"SOFT-LOCK: '{Obj}' unchanged for 240 s at {P:0.0}"); break; }
                 if (D.UI.VideoAlpha > 0.5f && !skippedVision) { skippedVision = true; _stick = Vector2.zero; yield return WaitR(7f); Log("the vision plays - skipping it (Y)"); Press(Y); yield return WaitR(1.5f); continue; }
+                if (BossFight.Active != null && !BossFight.Active.Over && D.Seven.InFight && !D.InCutscene) { FightPad(BossFight.Active, D.Seven); yield return null; continue; }
+                _held = 0u; _lt = 0f;
                 if (D.Dlg.Busy) { _stick = Vector2.zero; if (Idle && D.UI.SubtitleVisible) Press(Y); yield return WaitR(0.35f); continue; }
                 var s7 = D.Seven; var bike = D.Bike;
                 switch (true)
@@ -114,7 +129,7 @@ namespace Seven
                             { yield return WalkTo(p, 0.9f); if (!Obj.StartsWith("Find")) break; }
                         break;
                     case true when Obj.StartsWith("Disable the control devices"):
-                        yield return Devices(); break;
+                        _stick = Vector2.zero; break;          // QF17: the boss fight starts here - the fight pilot (FightPad) plays it
                     case true when Obj.StartsWith("Close the containment barrier"):
                         yield return WalkTo(VenusLayout.ConsoleAt - Vector3.right * 1.3f, 0.5f);
                         if (D.Legend.ContextText != null && D.Legend.ContextText.Contains("barrier")) { Press(X); yield return WaitR(1.0f); }

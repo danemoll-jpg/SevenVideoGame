@@ -75,7 +75,7 @@ namespace Seven
         public void BeginFloat() { Current = Mode.Float; if (State != "idle") Play("idle", 0.4f); _floatT = 0f; }
         public void EndFloat() { Current = Mode.Locked; }
         // the beam carries her; Round 9: jumps, hangs, climbs and landings place her themselves
-        protected override bool Grounded => Current != Mode.Ride && Current != Mode.Float && Current != Mode.Air && Current != Mode.Hang && Current != Mode.Climb && Current != Mode.Land;
+        protected override bool Grounded => Current != Mode.Ride && Current != Mode.Float && Current != Mode.Air && Current != Mode.Hang && Current != Mode.Climb && Current != Mode.Land && !(Current == Mode.Fight && Act == FightAct.Hop);
         protected override bool UseRootMotion => Current == Mode.Free || Current == Mode.Fight || Current == Mode.Locked || Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Look;
         float _floatT;
 

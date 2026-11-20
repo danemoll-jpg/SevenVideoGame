@@ -1,0 +1,42 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.00s] first frame (Mars): fade 1.00 (1 = black)
+[   0.01s] Mars check run: Mars state: Mars: Viper's intervention (cp 5), scenes [MAR_01, MAR_02, MAR_03, MAR_04, MAR_05, MAR_06], record not yet (awards 0), route not yet
+[   0.64s] restore: Mars state: Mars: Viper's intervention (cp 5), scenes [MAR_01, MAR_02, MAR_03, MAR_04, MAR_05, MAR_06], record not yet (awards 0), route not yet -> on foot at (-58.00, 0.00, 150.00)
+[   0.89s] shot 01_m00_first_frame.png  audioPeak=0.000000  cursorVisible=False
+[   2.10s] objective: Cross the aligned bridge to the temple
+[  31.26s] ok: across the span to the temple approach (0.0s)
+[  33.90s] shot 02_m24_wide_temple_approach_viper_blocks_her.png  audioPeak=0.000000  cursorVisible=False
+[  39.91s] shot 03_m25_it_goes_both_ways.png  audioPeak=0.000000  cursorVisible=False
+[  42.32s] shot 04_m26_viper_on_his_platform_the_machinery_arms.png  audioPeak=0.000000  cursorVisible=False
+[  42.33s] BOSS viper: the fight begins - 3 phases, she can take 6 hits, table Resources/Bosses/boss_tuning.json
+[  42.33s] objective: Viper attacks from his platform - shut his two pylons down (X) under fire
+[  44.33s] boss viper: attack 1 'machine_sweep' (beam) - telegraph 1.20 s, she is 28.0 m away (answer: jump the energy sweep (A) as it passes)
+[  45.08s] shot 05_boss_viper_machine_sweep_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  45.13s] shot 06_boss_viper_machine_sweep_telegraph_side.png (second angle)
+[  45.68s] shot 07_boss_viper_machine_sweep_active.png  audioPeak=0.000000  cursorVisible=False
+[  45.72s] shot 08_boss_viper_machine_sweep_active_side.png (second angle)
+[  46.12s] boss viper: 'machine_sweep' HIT her (1/6)
+[  48.75s] boss viper: attack 2 'machine_sweep' (beam) - telegraph 1.20 s, she is 28.2 m away (answer: jump the energy sweep (A) as it passes)
+[  50.54s] boss viper: 'machine_sweep' HIT her (2/6)
+[  52.88s] boss viper: attack 3 'spit' (spit) - telegraph 1.00 s, she is 28.4 m away (answer: step out from between the marked spots (or dodge B))
+[  53.52s] shot 09_boss_viper_spit_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  53.56s] shot 10_boss_viper_spit_telegraph_side.png (second angle)
+[  54.06s] shot 11_boss_viper_spit_active.png  audioPeak=0.000000  cursorVisible=False
+[  54.13s] shot 12_boss_viper_spit_active_side.png (second angle)
+[  54.74s] boss viper: 'spit' HIT her (3/6)
+[  56.83s] boss viper: attack 4 'spit' (spit) - telegraph 1.00 s, she is 29.4 m away (answer: step out from between the marked spots (or dodge B))
+[  58.69s] boss viper: 'spit' HIT her (4/6)
+[  60.91s] boss viper: attack 5 'spit' (spit) - telegraph 1.00 s, she is 30.4 m away (answer: step out from between the marked spots (or dodge B))
+[  62.76s] boss viper: 'spit' HIT her (5/6)
+[  64.53s] boss viper: attack 6 'cage' (cage) - telegraph 0.80 s, she is 31.4 m away (answer: barriers slam up round her - then dodge what follows)
+[  65.05s] shot 13_boss_viper_cage_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  65.09s] shot 14_boss_viper_cage_telegraph_side.png (second angle)
+[  65.47s] shot 15_boss_viper_cage_active.png  audioPeak=0.000000  cursorVisible=False
+[  65.51s] shot 16_boss_viper_cage_active_side.png (second angle)
+[  65.54s] boss viper: attack 7 'spit' (spit) - telegraph 1.00 s, she is 31.4 m away (answer: step out from between the marked spots (or dodge B))
+[  67.39s] boss viper: 'spit' HIT her (6/6) - she is DOWN
+[  67.39s] BOSS IDLE TEST (viper): nobody pressed anything - she was knocked down after 25.1 s (7 attacks, 6 hits) - PASS (within ~60 s)
+[  67.43s] shot 17_boss_viper_idle_test_down.png  audioPeak=0.000000  cursorVisible=False
+[  67.43s] cat speed vs clip (QF11): walk clip 0 frames, walking in place (speed < 0.06 m/s x scale for > 0.25 s, then switched to idle) 0x
+[  67.43s] BOSS IDLE TEST (viper): down after 25.1 s, attacks 7, hits 6
+[  67.43s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

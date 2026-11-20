@@ -34,6 +34,21 @@ namespace Seven
         /// <summary>QF9: may this mesh fade out of the camera's way? Never architecture.</summary>
         /// <summary>-noqf9fix = 0.10.5's behaviour (architecture under 2.6 m could fade; solids faded when still blind) - repro only.</summary>
         public static bool QF9Fix = true;
+        /// <summary>QF17 (4): anything she can ride or walk on (ramps, stairs, decks, bridges, spans, roads, slabs, platforms,
+        /// piers, ledges, floors) - never cut away or faded by any camera, in any world.</summary>
+        static readonly string[] Walkable = { "Ramp", "Stair", "Step", "Deck", "Bridge", "Span", "Walk", "Road", "Slab", "Causeway", "Platform", "Pier", "Ledge", "Floor", "Plaza", "Terrace", "Dais", "Landing", "Ground", "Terrain" };
+        public static bool IsWalkableName(string n) { foreach (var w in Walkable) if (n.Contains(w)) return true; return false; }
+        /// <summary>QF17 (4): may a camera cut this renderer away while she / the bike is at <paramref name="at"/>? Only
+        /// walls, roofs and overhead pieces above her - never anything walkable, under her, or at / below her level.</summary>
+        public static bool MayCutAway(Renderer r, Vector3 at)
+        {
+            if (r == null || IsWalkableName(r.name) || IsWalkableName(r.transform.parent != null ? r.transform.parent.name : "")) return false;
+            var b = r.bounds;
+            if (b.max.y < at.y + 1.6f) return false;                                     // at or below her level (a low wall, a kerb, a ramp)
+            bool over = at.x > b.min.x - 0.3f && at.x < b.max.x + 0.3f && at.z > b.min.z - 0.3f && at.z < b.max.z + 0.3f;
+            if (over && b.min.y < at.y + 0.6f) return false;                             // she is on it / it is under her
+            return true;
+        }
         public static bool IsLooseProp(string n)
         {
             foreach (var a in Architecture) if (n.Contains(a)) return false;

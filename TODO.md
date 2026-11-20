@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF17: real boss fights + Mars clean-up (Dan, 2026-11-20) — to do
+## Quick fix QF17: real boss fights + Mars clean-up (Dan, 2026-11-20) — done, status below; release 0.15.2
 Commit first. All standing rules + the repeat-item rule (why the last fix didn't hold, fix the cause, prove it in normal
 play, never "done" on a partial fix). Release **0.15.2**; "QF17 — status"; "For Dan to check (QF17)". The proofs below may
 take testing time past 20 minutes — keep it purposeful.
@@ -61,6 +61,126 @@ takedown) were obstacle courses; neither boss ever threatened her. That stops no
 Checks + release: the boss-fight proofs for Viper and the Wormmaster (player run log, idle test, capture sequence, length),
 the Mars captures (architecture, ramps, the bike out of the hold on each start path), the clunk list. Publish **0.15.2**;
 docs (the new "Boss fights" rule in `CLAUDE.md`); commit + push.
+
+
+## QF17 — status (2026-11-20): done, exe-verified off-screen; release 0.15.2 (`game-1502`)
+Proofs + captures: `Docs/Previews/qf17/` (attack sheets `viper_attacks_sheet.png`, `wormmaster_attacks_sheet.png`,
+`architecture_sheet.png`, folders `viper_attacks/`, `wormmaster_attacks/`, `architecture/`, `ramps/`, `bike_hold/`, the run
+logs in `logs/`). Monochrome check over all 113 QF17 captures: max |R−G|,|G−B| = 0. Audio peak 0 in every run (muted). Dan was
+not around: every call below was made without asking (noted where it matters).
+
+0. **"Boss fights" rule** — in `CLAUDE.md` (its own section), with the proof list and the one data table
+   `Unity/Assets/Resources/Bosses/boss_tuning.json`. One shared system: `BossFight.cs` (attacks + white ground markers that
+   brighten and lock before the hit, a white tell light on him, his wind-up pose + a sound; hits knock her back; her hits
+   from the table → down → fade → retry from the start of the phase; a wasted committed attack leaves him open → a
+   telekinetic throw of debris (the pieces glow when he is open) or three strikes staggers him; phases; the takedown;
+   after 3 knockdowns in one part a skip of that part is offered - Y / Enter), `BossPilot.cs` (how a player plays it),
+   `ViperFight.cs`, `WormmasterFight.cs`. 7's side (`ChapterSevenFight.cs`): jump A (a hop over sweeps / waves / rings),
+   telekinesis RT (the throw), X on an objective uses it (pylons / devices take 3 s at them - a hit or a dodge interrupts),
+   LB runs in a boss arena, her hits from the table.
+1. **Viper's fight — rebuilt** on the island plaza (now one open arena; his platform rises out of it in front of the
+   temple steps). Phase 1 "from his platform": venom spit (3 dark arcing globs onto marked spots → burning puddles for 3 s),
+   the energy sweep from his platform (a white wall of light turning across the plaza - jump it), barriers that slam up
+   round her (then a spit into the cage); she shuts his two pylons down (X, 3 s) under fire → the platform sinks, he drops
+   down. Phase 2 "he hunts her": the snake strike (he coils, the hood flares, a hiss, then a 7.5 m lunge - dodge sideways
+   or block), the tail / arm sweep when she is close (jump or block), spit, the third pylon's sweep. Phase 3 "enraged":
+   faster, the sweep → strike combo. Only the strike and the sweep leave him open (his spit and his machinery do not);
+   4 + 5 staggers; dazed → takedown (Y / E) pins him; the containment ring; MAR_07's two-shot as before. Clips: his rig +
+   the reused YBot fight idle / punch / hit / dazed / knocked down / get up and the tunneler's roar / swipe / walk, with the
+   coil / strike / spit procedural on his spine, neck and head and the hood flare.
+2. **The Wormmaster — to the same rule.** Phase 1 "above his machinery": from the dais he whips one long boneless arm
+   along a marked line (lash: dodge), sends a creature (it surfaces and runs a marked line at her: jump or step aside) and
+   slams the dais so a wave of surfacing humps rolls at her (jump); she shuts the north device (X, 3 s) and the ledge
+   device (RT from below - a call: the old climb is not possible in fight stance) down under attack. Phase 2 "he comes
+   down": he leaves the dais and fights - arm sweep when she is close (jump / block), lash, slam wave, creatures; the
+   crystal device (RT) + 3 staggers (root-debris throws). Phase 3 "the signal fails": faster, combos sweep → slam, lash →
+   shock ring (jump); 4 staggers → dazed → takedown → he drags himself back onto his dais → the console closes the barrier
+   (as before). The creatures are victims: only the ones he sends reach her (touching a surfaced one does nothing - the
+   first tuning made phase 1 a lottery); they withdraw alive.
+   **Proofs (both bosses)** — testing time ~2 h this round (allowed by Dan for QF17; each run on purpose):
+
+   | | Viper | Wormmaster |
+   |---|---|---|
+   | (a) player-style run (virtual pad), log | 1:40 / 2:06 / 2:17 in the three full-chapter runs (13-15 attacks/min, hits 4-9, down 0-1×, staggers 7-9) | 1:48, 20 attacks (11.1/min), hits 4, down 0×, jumped 13, throws 9 (4 swatted aside), staggers 7 |
+   | (a) first-time-player pilot (`-bossnovice`: reads 66 %, takes 60 % of his openings) | final table: 3:19 (50 attacks, 15.1/min, hits 20, down 2×, dodged 13, jumped 7, throws 8, staggers 8) and 2:12 (32 attacks, hits 10, down 1×); earlier tables 2:37 / 5:31 / 7:04 | 3:35, 51 attacks (14.3/min), hits 15, down 2×, dodged 8, jumped 26, throws 17 (8 swatted), staggers 9 |
+   | (b) idle test `-bossidle` (nobody presses anything) | knocked down after 29.4 s (8 attacks, 7 hits) - PASS | knocked down after 23.4 s (6 attacks, 6 hits) - PASS |
+   | (c) captures mid-attack (player camera + side angle) | `viper_attacks/` (spit, energy sweep, cage, strike, tail sweep, staggers, pinned) | `wormmaster_attacks/` (sent creature, slam wave, lash, arm sweep, shock ring, staggers, he comes down, subdued) |
+   | (d) first-time length (target 3-5 min) | 2:12 / 3:19 (final table; a first-time pilot's length swings with its luck) | 3:35 |
+
+   In the story (the full Mars run from the Venus debrief, player-style, real speed) Viper's fight took 1:40-2:17 (expert pilot).
+   Tuning on the way (all table numbers): the first table let every wasted spit open him (54 s with the expert pilot), the
+   second killed the first-time pilot ten times in phase 2 (10 min), then: her hits 5 → 6 (7 against Viper), the strike costs 1 not 2, fewer
+   spits, no strike → spit combo, longer gaps in phases 2-3, only committed attacks open him, objectives take 3 s.
+3. **Mars architecture — no plain boxes left.** `Editor/FightDemoBuilderMarsArch.cs`, a Reptilian kit in code (no Blender
+   round trip): dressed masonry for every block (battered sides, plinth, chamfered coping - `MBox` / `MBlock`; every
+   `Block` / `AddBox` in the Mars builder replaced), towers (battered polygon bodies, moulding, crenellated parapets, domes
+   or pointed roofs, window bands), arched gateways (the two checkpoints over the bridge heads, the fortress gatehouses),
+   arched doors and windows (dark, some lit white), stepped terraced houses with parapets, balconies, awnings, banners,
+   domes or corner towers, market stalls with sloped cloth awnings on turned posts, jars and sacks, turned lanterns, the
+   fortress cities (curtain walls with 18 towers, gatehouse toward the ravine, terraced quarters, a stepped citadel with
+   great domes and a spire), the temple in an older smoother style (rounded battered walls, a great round-arched doorway,
+   a stepped rounded roof with a crown, columns with entasis). Houses are one object each (the camera can cut away just
+   the one in its way). Captures from the player's camera: `architecture/` (main street, market, checkpoint, the ravine,
+   both rims with the cities in the haze, the extreme wide on arrival, the temple inside).
+4. **Ramps vanishing — fixed (repeat).** *Why the last fix didn't hold:* QF15's riding camera sorted meshes by name only -
+   "shells" (Ceiling / Floor / Wall / Tunnel …) ease the camera in, *everything else* between the camera and the bike is cut
+   away. Ramps, stairs, decks, spans, slabs were never in the rule - and riding **down** a ramp the camera (behind = uphill)
+   sat *under* the ramp's surface, so the ramp itself was "in the way" and was cut away. *Now:* no camera ever cuts away
+   anything she rides or walks on or anything at / under her (`CameraOccluders.MayCutAway` / `IsWalkableName`: the riding
+   camera and the Europa base cut-away), and the riding camera rises above the slope behind her (the line to her clears
+   the ground at four points along it, eased - never a step). Proof `-rampcheck`: Mars 2 ramps (6,004 frames) and Venus 3
+   ramps (610), ridden up and down: **cut-away under her / walkable 0**; Mars ramp run: aim / position shifts 0, camera
+   inside geometry 0. Captures `ramps/`.
+5. **Bike outside the hold on Mars — fixed (repeat).** *Why the last fix didn't hold:* QF13 put the hold into each world's
+   *arrival cutscene* only. The star map does "Mars has progress ? Continue : start fresh", and Dan had Mars progress from
+   0.15.0 - so 0.15.1's star map **continued his save at checkpoint 1**, which restored her on the bike on the plain (no
+   hatch, no beam). Continue and Scene Select "the crossing" did the same. *Now:* every start at Mars's landing site plays
+   the landing's tail (`Relanding`: the saucer hovering, the hatch opens, the bike lowers out, 7 comes down the beam), and
+   the arrival itself is unchanged. **Check on every world:** `BikeHoldWatch` - from the world's first frame to the hatch
+   opening, is the bike drawn outside the hold? Logged in every run that plays an arrival. PASS on: Mars from the star map
+   (fresh + via the Venus debrief, 3 runs), Mars resumed at the landing site (2 runs), Venus arrival, Europa arrival - 0
+   frames each. Captures `bike_hold/`. (A call: Venus / Europa resumes after their own hatch scenes start beside the bike
+   where she left it - those scenes are their own Scene Select entries.)
+6. **Mars clean-up — the clunk list** (the full chapter played player-style at real speed three times, from the Venus
+   debrief's star map through the arrival, the fight and MAR_12 / MAR_13 aboard: 1/1, 0 soft-locks, 0 skips, ~11.5
+   game-min each; captures + the riding-camera log). Fixed:
+   - the encounter was an obstacle course with Viper standing still → the fight (1);
+   - every building a box → the kit (3); the lane walls' dark "footing" blobs on the plaza looked like holes → gone;
+   - ramps vanishing under the bike (4); the riding camera under the ramp surface / inside it (306 frames in the first
+     run) → lifted above the slope;
+   - the bike outside the hold on resume (5);
+   - two market stalls stood in the middle of the road (the bike rode through them) and a market house sat half on the
+     road (rode through its corner, the camera clipped it) → moved off the road, stalls solid;
+   - the kit's meshes were named "…_Walls", so the riding camera treated every house as a tunnel wall and pulled in tight
+     behind her (a low close-up of her back at the checkpoint and on the ravine floor) → renamed;
+   - `m09` framed Viper from below (his crotch) → over her shoulder up to his face; Viper's intro two-shot was taken from
+     19 m apart and showed only a wall → she walks up to him first; the record insert `m37` was framed at her hip → in
+     her hand at chest height (non-sexual framing rule);
+   - the barrier cage was an opaque white cylinder hiding her → low faint rings; the energy sweep had no visible beam and
+     the wind-up no light → a white wall of light, a white tell light;
+   - the follow camera in the fight now eases toward him when he leaves the middle of the view.
+   **Left (not fixed this round):** the riding camera still has a few small moves where the two maintenance ramps meet
+   the ravine floor (5 aim / 6 position shifts, ~11 in/out reversals per full run, all at the two ramp feet; the camera
+   is behind the ramp's low parapet ~1,000 frames there) and 60-150 frames inside geometry at the east ramp foot;
+   on foot the plaza's pylons sometimes stand between the follow camera and her in phase 1; Viper's wind-up for the
+   strike uses the tunneler's roar (arms spread) - reads, but a real coil clip would read better; the chapter is short
+   for a first play (~8 min of Mars play at the pilot's pace); the getting on / off the bike for every on-foot step (13
+   X presses) is a lot of stop-and-go.
+
+## For Dan to check (QF17)
+- **Viper** (Scene Select "Mars: Viper's intervention"): he raises his platform and attacks at once - spit (marked spots,
+  burning puddles), the energy sweep (jump A), the barrier cage; shut the two pylons (X, hold your ground 3 s). He comes
+  down and hunts you: dodge B / block LT the strike, jump the sweep; when he has wasted one, the debris glows - RT throws
+  it and staggers him; strike while he reels. Enraged: faster. Takedown Y / E when he is dazed. Try standing still: he
+  should put you down in well under a minute.
+- **The Wormmaster** (Scene Select "Venus: the way down + the control chamber"): the same rules; the north device X, the
+  ledge device RT from below, then he comes down; the crystal RT; then the console as before.
+- Numbers you want changed (her hits, his speed, wind-up lengths, openings, staggers per phase) are all in
+  `Unity/Assets/Resources/Bosses/boss_tuning.json` - tell me the change.
+- **Mars**: ride through the settlement, the checkpoint, the ravine and the rims - real buildings everywhere, the two
+  fortress cities in the haze, the temple older and smoother. Ride down both maintenance ramps: they never vanish.
+- **The bike hold**: from the star map with an existing Mars save, and Continue: the hatch opens, the bike lowers out, then
+  7 comes down the beam.
 
 
 ## Side task S2: Reptilian ready for Mixamo (Dan, 2026-11-19) — DONE; Dan's rigged body in: `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx`

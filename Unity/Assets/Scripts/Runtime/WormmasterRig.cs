@@ -20,6 +20,9 @@ namespace Seven
         /// <summary>The voice level 0..1 driving the head tip (for the check run's log).</summary>
         public float Voice { get; private set; }
         public float MaxTipScale { get; private set; } = 1f;
+        // QF17 (2): the fight - lash (one arm drawn back, then whipped out, stretched), slam (both arms high, then down),
+        // gliding (sway), dazed (slack)
+        [System.NonSerialized] public float LashW, LashS, LashSide = 1f, SlamW, SlamS, Dazed, Moving;
 
         class B { public Transform T; public Quaternion Rest; public Vector3 Axis; public int Side; public int Index; }
         readonly List<B> _armL = new List<B>(), _armR = new List<B>(), _spine = new List<B>();
@@ -77,18 +80,23 @@ namespace Seven
             }
             Voice = Mathf.Lerp(Voice, level, 1f - Mathf.Exp(-dt * 18f));
             // arms: dominant = raised and slowly curling (Kyle's sketch: arms flung up and out); contained = lowered, curled in
-            void Arm(List<B> arm, float phase)
+            void Arm(List<B> arm, float phase, float lash)
             {
                 foreach (var b in arm)
                 {
                     float raise = b.Index == 0 ? Mathf.Lerp(32f + 22f * pulse, -14f, _pose) : 0f;
                     float curl = Mathf.Lerp(7f + 5f * Mathf.Sin(t * 0.8f + phase + b.Index * 0.7f) + 16f * pulse * b.Index / 4f, 22f, _pose);
                     if (b.Index == 0) curl = 0f;
+                    // the fight: drawn back and coiled (wind-up), then whipped out straight and long; the slam: both high, then down
+                    float lw = LashW * lash, ls = LashS * lash;
+                    if (b.Index == 0) raise += 55f * lw - 85f * ls + 70f * SlamW - 95f * SlamS - 30f * Dazed;
+                    else curl += 26f * lw - curl * ls - 6f * SlamS + 18f * Dazed;
                     b.T.localRotation = b.Rest * Quaternion.AngleAxis(raise + curl, b.Axis);
+                    if (b.Index == 0) { float st = 1f + 0.9f * ls; b.T.localScale = new Vector3(st, st, st); }
                 }
             }
-            Arm(_armL, 0f); Arm(_armR, 1.7f);
-            float sway = Mathf.Sin(t * 0.55f) * 2.5f * (1f - _pose);
+            Arm(_armL, 0f, LashSide > 0f ? 1f : 0f); Arm(_armR, 1.7f, LashSide > 0f ? 0f : 1f);
+            float sway = Mathf.Sin(t * 0.55f) * 2.5f * (1f - _pose) + Mathf.Sin(t * 3.1f) * 6f * Moving - 14f * SlamS + 8f * SlamW + 12f * Dazed;
             foreach (var b in _spine) b.T.localRotation = b.Rest * Quaternion.AngleAxis(Mathf.Lerp(-2f + sway * 0.4f, 9f, _pose) - 4f * pulse, b.Axis);
             if (_neck != null) _neck.T.localRotation = _neck.Rest * Quaternion.AngleAxis(Mathf.Lerp(3f * Mathf.Sin(t * 0.4f), 12f, _pose), _neck.Axis);
             if (_head != null) _head.T.localRotation = _head.Rest * Quaternion.AngleAxis(Mathf.Lerp(-6f * pulse + 4f * Voice, 16f, _pose), _head.Axis);

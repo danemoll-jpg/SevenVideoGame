@@ -10,42 +10,21 @@ namespace Seven
     public partial class MarsDirector
     {
         // ------------------------------------------------------------------------------------------ 7: Viper's intervention
-        /// <summary>The arena's gates / barriers / moving section / walkway (done = everything open, as after the encounter).</summary>
+        /// <summary>QF17 (1): the plaza is one open arena; the old lanes' barriers, moving section and fallen walkway are gone
+        /// (done = after the fight: the pylons dark, his platform sunk).</summary>
         void SetEncounter(bool done)
         {
-            SetZone("GateWC", done); SetZone("GateCE", done); SetZone("CentreBarrier", done); SetZone("SlideGate", done); SetZone("FallenWalkZ", done);
-            if (BarrierWC != null) BarrierWC.SetActive(false); if (BarrierCE != null) BarrierCE.SetActive(false); if (BarrierCentre != null) BarrierCentre.SetActive(false);
-            if (FallenWalk != null) { if (done) FallenWalk.SetPositionAndRotation(L.FallenWalk, Quaternion.identity); else FallenWalk.SetPositionAndRotation(L.FallenWalkRest, Quaternion.Euler(14f, 8f, -18f)); }
-            if (SlideBlock != null) SlideBlock.position = new Vector3(6.7f, done ? -3f : 0f, L.SlideGateZ);
+            SetZone("Arena", true);
+            foreach (var z in new[] { "GateWC", "GateCE", "CentreBarrier", "SlideGate", "FallenWalkZ" }) SetZone(z, true);
+            foreach (var g in new[] { BarrierWC, BarrierCE, BarrierCentre }) if (g != null) g.SetActive(false);
+            if (FallenWalk != null) FallenWalk.gameObject.SetActive(false);
+            if (SlideBlock != null) SlideBlock.gameObject.SetActive(false);
+            if (Dais != null) Dais.position = ViperFight.DaisAt + Vector3.down * ViperFight.DaisTop;
             if (Pylons != null) foreach (var p in Pylons) Glow(p, done ? 0f : 1.4f);
         }
-
-        bool _slideRun, _slideOpen;
-        /// <summary>The moving section: a block that slides across the gap in the east wall and back (open 2.4 s, closed 3 s).</summary>
-        IEnumerator SlideCycle()
-        {
-            _slideRun = true;
-            while (_slideRun)
-            {
-                // closing: the block slides in
-                AudioKit.Play("mars_section_slide", new Vector3(6.7f, 0f, L.SlideGateZ), 0.7f, 0.03f, AudioKit.Bus.Sfx, 40f);
-                for (float t = 0f; t < 1f && _slideRun; t += Time.deltaTime / 0.6f) { if (SlideBlock != null) SlideBlock.position = new Vector3(6.7f, Mathf.Lerp(-3f, 0f, t), L.SlideGateZ); yield return null; }
-                _slideOpen = false; SetZone("SlideGate", false);
-                for (float t = 0f; t < 3f && _slideRun; t += Time.deltaTime) yield return null;
-                AudioKit.Play("mars_section_slide", new Vector3(6.7f, 0f, L.SlideGateZ), 0.7f, 0.03f, AudioKit.Bus.Sfx, 40f);
-                for (float t = 0f; t < 1f && _slideRun; t += Time.deltaTime / 0.6f) { if (SlideBlock != null) SlideBlock.position = new Vector3(6.7f, Mathf.Lerp(0f, -3f, t), L.SlideGateZ); yield return null; }
-                _slideOpen = true; SetZone("SlideGate", true);
-                for (float t = 0f; t < 2.4f && _slideRun; t += Time.deltaTime) yield return null;
-            }
-        }
-
-        IEnumerator SetBarrier(GameObject b, bool on, string zone, Vector3 at)
-        {
-            if (b != null) b.SetActive(on);
-            SetZone(zone, !on);
-            AudioKit.Play(on ? "mars_barrier_on" : "mars_barrier_off", at, 0.9f, 0.04f, AudioKit.Bus.Sfx, 60f);
-            yield return null;
-        }
+        public Transform Dais;
+        ViperFight _viperFight;
+        public BossFight BossNow => _viperFight != null && _viperFight.isActiveAndEnabled && !_viperFight.Over ? _viperFight : null;
 
         IEnumerator Encounter()
         {
@@ -62,108 +41,93 @@ namespace Seven
             FreeBike = false;
             yield return Cutscene(true);
             // WIDE - TEMPLE APPROACH: Viper moves to seize the restored crossing; he blocks her path
-            if (Viper != null) { Viper.gameObject.SetActive(true); Viper.Place(L.ViperBlocks + Vector3.forward * 4f, Vector3.back); Viper.WalkTo(L.ViperBlocks, 1.2f); }
+            if (Viper != null) { Viper.gameObject.SetActive(true); Viper.Place(L.ViperBlocks + Vector3.forward * 4f, Vector3.back); Viper.WalkTo(L.ViperBlocks + Vector3.back * 7f, 1.6f); }
             Shoot(L.IslandC + new Vector3(-26f, 9f, -18f), L.ViperBlocks + Vector3.up * 2f, 54f, 0.01f);
             MusicSystem.Play("mars_viper", 1.5f);
             yield return Wait(2.6f);
             yield return Shot("m24_wide_temple_approach_viper_blocks_her");
-            var vp = L.ViperBlocks; var mid = (P7 + vp) * 0.5f; var side = Vector3.Cross(Vector3.up, Flat(vp - P7).normalized);
+            // QF17 (6): she walks up to him first (from 19 m apart the two-shot found no clear framing and showed a wall)
+            { var vq = Viper != null ? Viper.transform.position : L.ViperBlocks; var near = vq + Flat(P7 - vq).normalized * 6.5f; Seven.Place(near, Flat(vq - near)); }
+            var vp = Viper != null ? Viper.transform.position : L.ViperBlocks; var mid = (P7 + vp) * 0.5f; var side = Vector3.Cross(Vector3.up, Flat(vp - P7).normalized);
             Seven.transform.rotation = Quaternion.LookRotation(Flat(vp - P7)); if (Viper != null) Viper.Face(P7);
             TwoShot(mid, side, 9f, 2.4f, 1.8f, 46f, 0.6f);
             yield return Say("MAR_07", 1, 5);                    // Do you know what you've opened? / A bridge. / ... / It goes both ways. / That is what concerns me.
             yield return Shot("m25_it_goes_both_ways");
-            // he activates the crossing's defensive machinery: barriers divide the arena, a section starts moving
-            if (Viper != null) Viper.Play("point");
+            // QF17 (1): he raises his platform out of the plaza and springs onto it; his machinery arms (the pylons light)
+            if (Viper != null) { Viper.Stop(); Viper.Play("roar"); Viper.Flare = 1f; }
             AudioKit.Play("mars_defense_arm", L.IslandC, 1f, 0.02f, AudioKit.Bus.Sfx, 200f);
+            AudioKit.Play("mars_platform_rise", ViperFight.DaisAt, 1f, 0f, AudioKit.Bus.Sfx, 120f);
             CameraShake.Quake(0.8f, 0.3f);
-            yield return SetBarrier(BarrierWC, true, "GateWC", new Vector3(-6.7f, 0f, 138f));
-            yield return SetBarrier(BarrierCE, true, "GateCE", new Vector3(6.7f, 0f, 158f));
-            yield return SetBarrier(BarrierCentre, true, "CentreBarrier", new Vector3(0f, 0f, 150.5f));
-            SetZone("FallenWalkZ", false);
+            Shoot(ViperFight.DaisAt + new Vector3(9f, 4.5f, -14f), ViperFight.DaisAt + Vector3.up * 2.4f, 50f, 0.5f);
+            var from = Viper != null ? Viper.transform.position : ViperFight.DaisAt;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.8f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                if (Dais != null) Dais.position = ViperFight.DaisAt + Vector3.down * ViperFight.DaisTop * (1f - u);
+                if (Viper != null && t > 0.35f) { float k = Mathf.Clamp01((t - 0.35f) / 0.4f); Viper.transform.position = Vector3.Lerp(from, ViperFight.DaisAt + Vector3.up * ViperFight.DaisTop * u, k) + Vector3.up * Mathf.Sin(k * Mathf.PI) * 1.2f; }
+                yield return null;
+            }
             if (Pylons != null) foreach (var p in Pylons) Glow(p, 1.4f);
-            StartCoroutine(SlideCycle());
-            Shoot(L.IslandC + new Vector3(0f, 22f, -22f), L.IslandC + Vector3.up * 0.5f, 54f, 0.6f);
-            yield return Wait(1.8f);
-            yield return Shot("m26_the_arena_divided_barriers_and_moving_section");
-            if (Viper != null) Viper.Play("idle");
+            foreach (var g in new[] { BarrierWC, BarrierCE, BarrierCentre }) if (g != null) g.SetActive(false);
+            if (FallenWalk != null) FallenWalk.gameObject.SetActive(false);
+            if (SlideBlock != null) SlideBlock.gameObject.SetActive(false);
+            SetZone("Arena", true);
+            yield return Wait(0.6f);
+            yield return Shot("m26_viper_on_his_platform_the_machinery_arms");
+            // the fight
+            _viperFight = Viper.GetComponent<ViperFight>() ?? Viper.gameObject.AddComponent<ViperFight>();
+            var deck = GameObject.Find("PlazaDeckW");
+            var rockMat = deck != null && deck.GetComponent<Renderer>() != null ? deck.GetComponent<Renderer>().sharedMaterial : Markers.DarkGloss();
+            _viperFight.Setup(Viper, Dais, Pylons, rockMat);
+            _viperFight.PlaceStart();
+            if (Flat(P7 - ViperFight.HerStart).magnitude > 8f) Seven.Place(new Vector3(-9f, 0f, 132f), Flat(ViperFight.DaisAt - new Vector3(-9f, 0f, 132f)));
+            _viperFight.UI = UI; _viperFight.AutoPilot = Auto;
+            _viperFight.Beat = ViperComesDown;
+            _viperFight.PhaseObjective = ph => ph == 0 ? "Viper attacks from his platform - shut his two pylons down (X) under fire"
+                                            : ph == 1 ? "He hunts you - make him waste an attack (dodge B, jump A, block LT), then throw debris at him (RT)"
+                                            : "Enraged - read him, dodge, counter: three more staggers";
             yield return Cutscene(false);
-            // the encounter: positioning and timing - reconnect routes, disable his control points, close the distance
-            Objective("Viper holds the crossing - disable his control points (X) and reach him");
-            // control point 1 (west lane)
-            yield return Interact(L.Pylons[0], "Disable", "disable control point 1 (west lane)", "The glowing control pylon in the west lane - walk up and press X", new[] { new Vector3(-14f, 0f, 140f), L.Pylons[0] + new Vector3(0f, 0f, 1.4f) });
-            yield return PylonDown(0);
-            yield return SetBarrier(BarrierWC, false, "GateWC", new Vector3(-6.7f, 0f, 138f));
-            yield return SayViperBark("He reroutes the centre");
-            // he answers: the centre lane's barrier stays; the east lane only through the moving section
-            Objective("Into the centre lane, then through the moving section into the east lane when it opens - control point 2 (X)");
-            ShowGuide(new Vector3(-3f, 0f, 138f));                                        // beyond the gate, so the light leads through it
-            if (Auto) yield return WalkPath(new[] { new Vector3(-9f, 0f, 138f), new Vector3(-4f, 0f, 138f), new Vector3(4.5f, 0f, 143f) }, 20f);
-            yield return Until(() => P7.x > -5.5f || P7.x > 6f, "through the west gate into the centre lane", 60f, "The west gate is open now - walk through into the centre lane", new Vector3(-6.7f, 0f, 138f), () => Seven.Place(new Vector3(-3f, 0f, 138f), Vector3.right));
-            // in front of the moving section first, then through it (the light beyond it) once she is there
-            if (!Auto && P7.x < 4.6f) { ShowGuide(new Vector3(5.0f, 0f, L.SlideGateZ)); yield return Until(() => P7.x > 4.4f && Mathf.Abs(P7.z - L.SlideGateZ) < 2.2f || P7.x > 7.8f, "to the moving section", 40f, "Walk to the sliding block in the east wall of the centre lane", new Vector3(5f, 0f, L.SlideGateZ), () => Seven.Place(new Vector3(5f, 0f, L.SlideGateZ), Vector3.right)); }
-            ShowGuide(new Vector3(10f, 0f, L.SlideGateZ));
-            if (Auto) { while (!_slideOpen) yield return null; yield return WalkPath(new[] { new Vector3(6.7f, 0f, L.SlideGateZ), new Vector3(10f, 0f, 140f) }, 12f); }
-            yield return Until(() => P7.x > 7.8f && MarsLayout.ZoneAt(P7) == "PlazaE_S", "through the moving section into the east lane (timing)", 60f, "Wait by the sliding block in the east wall - go through while it is down", new Vector3(6.7f, 0f, L.SlideGateZ), () => Seven.Place(new Vector3(10f, 0f, 140f), Vector3.right));
-            HideGuide();
-            yield return Shot("m27_through_the_moving_section");
-            yield return Interact(L.Pylons[1], "Disable", "disable control point 2 (east lane)", "The control pylon in the east lane - press X", new[] { L.Pylons[1] + new Vector3(-1.3f, 0f, 0f) });
-            yield return PylonDown(1);
-            // reconnect the route: the walkway section lies broken across the gap in the east lane - lift it back (TK)
-            Objective("The east lane is broken - lift the fallen walkway section back into place (RT)");
-            yield return Telekinesis(L.FallenWalkRest, 14f, "lift the walkway section (telekinesis)", "Look at the fallen walkway section in the gap and use telekinesis (RT)", null, new[] { new Vector3(14f, 0f, 141.5f) });
-            yield return LiftWalkway();
-            SetZone("FallenWalkZ", true);
-            Objective("Across the walkway to control point 3 (X)");
-            yield return Interact(L.Pylons[2], "Disable", "disable control point 3 (by the temple)", "The last control pylon, north of the walkway - press X", new[] { new Vector3(14f, 0f, 146.5f), new Vector3(14f, 0f, 152f), L.Pylons[2] + new Vector3(0f, 0f, -1.3f) });
-            yield return PylonDown(2);
-            _slideRun = false;
-            yield return SetBarrier(BarrierCentre, false, "CentreBarrier", new Vector3(0f, 0f, 150.5f));
-            yield return SetBarrier(BarrierCE, false, "GateCE", new Vector3(6.7f, 0f, 158f));
-            SetZone("SlideGate", true);
-            // close the distance and contain him (never killed): a takedown, the restraint field
-            Objective("His machinery is down - close the distance and restrain Viper (X)");
-            if (Viper != null) Viper.Play("roar");
-            if (P7.x > 7f) yield return GuideWalk(new[] { new Vector3(10f, 0f, 158f), new Vector3(4.5f, 0f, 158f) }, "through the east gate");
-            yield return Interact(Viper != null ? Viper.transform.position : L.ViperBlocks, "Restrain", "restrain Viper", "Go through the east gate to Viper by the temple steps and press X", new[] { new Vector3(10f, 0f, 158f), new Vector3(4.5f, 0f, 158f), L.ViperBlocks + new Vector3(1.1f, 0f, -1.0f) }, null, 2.6f);
+            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Strike X  ·  Telekinesis RT: throw debris when he is open", 9f);
+            _viperFight.Begin(BossFight.Load("viper"), Seven, Cam);
+            StartCoroutine(FightPrompts(_viperFight));
+            yield return _viperFight.Run(Objective);
+            if (DemoBoot.BossIdle) yield break;
+            _viperFight.End();
+            yield return Shot("m28b_viper_pinned");
             yield return Subdue();
         }
-
-        IEnumerator SayViperBark(string what) { if (Viper != null) Viper.Play("point"); Log($"encounter: {what}"); yield return Wait(0.2f); if (Viper != null) Viper.Play("idle"); }
-
-        IEnumerator PylonDown(int i)
+        IEnumerator FightPrompts(BossFight f)
         {
-            if (Pylons != null && i < Pylons.Length) Glow(Pylons[i], 0f);
-            AudioKit.Play("mars_barrier_off", L.Pylons[i], 0.9f, 0.04f, AudioKit.Bus.Sfx, 60f);
-            Log($"encounter: control point {i + 1} disabled");
-            if (i == 0) yield return Shot("m26b_control_point_disabled");
-            yield return null;
+            while (f != null && !f.Over && f.isActiveAndEnabled)
+            {
+                if (!_cut) { var l = f.PromptLabel; SetPrompt(l, f.PromptIsTk ? ControlsLegend.Btn.Tk : l == "Takedown" ? ControlsLegend.Btn.Takedown : ControlsLegend.Btn.Interact); }
+                yield return null;
+            }
+            SetPrompt(null);
         }
-
-        IEnumerator LiftWalkway()
+        IEnumerator ViperComesDown()
         {
-            if (FallenWalk == null) yield break;
-            AudioKit.Play("slab_lift", FallenWalk.position, 0.9f, 0.05f, AudioKit.Bus.Sfx, 40f);
-            var a = FallenWalk.position; var r0 = FallenWalk.rotation;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.8f) { float u = Mathf.SmoothStep(0f, 1f, t); FallenWalk.SetPositionAndRotation(Vector3.Lerp(a, L.FallenWalk, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 1.2f, Quaternion.Slerp(r0, Quaternion.identity, u)); yield return null; }
-            AudioKit.Play("mars_section_slide", L.FallenWalk, 0.8f, 0.05f, AudioKit.Bus.Sfx, 40f);
-            yield return Shot("m28_the_walkway_lifted_back");
+            // a short beat from the side: the platform sinks, he drops onto the plaza
+            Shoot(ViperFight.DaisAt + new Vector3(-12f, 3.5f, -9f), ViperFight.DaisAt + Vector3.up * 1.6f, 48f, 0.4f);
+            yield return Wait(0.8f);
+            yield return Shot("m27_his_platform_sinks_he_comes_down");
+            yield return Wait(1.6f);
+            FollowCamera();
         }
 
         IEnumerator Subdue()
         {
             yield return Cutscene(true);
             var vp = Viper != null ? Viper.transform.position : L.ViperBlocks;
-            { var back = Flat(P7 - vp); if (back.sqrMagnitude < 0.01f) back = Vector3.back; Seven.Place(vp + back.normalized * 2.8f, -back); }   // she stops a few steps short of him
+            { var back = Flat(P7 - vp); if (back.sqrMagnitude < 0.01f) back = Vector3.back; if (back.magnitude < 2f || back.magnitude > 4f) Seven.Place(vp + back.normalized * 2.8f, -back); }
             Seven.transform.rotation = Quaternion.LookRotation(Flat(vp - P7));
             TwoShot((P7 + vp) * 0.5f, Vector3.Cross(Vector3.up, Flat(vp - P7).normalized), 3.6f, 1.5f, 1.4f, 44f, 0.01f);
-            Seven.Gesture(vp + Vector3.up * 1.2f); Seven.SetEnergyPoint(2.2f, 0.4f);
-            for (float t = 0f; t < 2.5f && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
-            if (Viper != null) { Viper.Play("hit", 0.1f); }
-            yield return Wait(0.5f);
-            if (Viper != null) Viper.Play("down", 0.3f);                 // knocked down - alive, contained where he lies
+            if (Viper != null) Viper.Play("down", 0.3f);                 // pinned - alive, contained where he lies
+            Seven.SetEnergyPoint(2.2f, 0.4f);
             yield return Wait(0.9f);
             if (Restraint != null) { Restraint.SetActive(true); Restraint.transform.position = vp; }
             AudioKit.Play("mars_restraint", vp, 1f, 0.03f, AudioKit.Bus.Sfx, 40f);
+            Seven.SetEnergyPoint(1f, 1f);
             yield return Shot("m29_viper_subdued_and_contained");
             Log("Viper subdued and contained (alive - left secured for local custody)");
             MusicSystem.Play("mars_kingdoms", 4f);
@@ -181,7 +145,9 @@ namespace Seven
             yield return Say("MAR_07", 7, 7);                    // That's their choice. You don't get to make it for them.
             Complete("MAR_07");
             SetEncounter(true);
+            if (Viper != null) Viper.Play("dazed");
             yield return Cutscene(false);
+            if (DemoBoot.BossCheck && DemoBoot.CaptureDir != null) Cap.Finish("boss check (QF17): Viper's fight done - " + (_viperFight != null ? _viperFight.Summary() : ""));
         }
 
         // ------------------------------------------------------------------------------------------ 8-10: the temple, the vision, the leads
@@ -251,11 +217,17 @@ namespace Seven
             if (RecordTet != null)
             {
                 RecordTet.gameObject.SetActive(true);
-                var lh = Seven.Bone(HumanBodyBones.LeftHand); var lp = lh != null ? lh.position : P7 + Vector3.up * 1.1f;
-                RecordTet.position = lp + Vector3.up * 0.08f;
-                Shoot(lp + Vector3.up * 0.5f + Seven.transform.forward * 0.25f, lp, 26f, 0.01f);
-                yield return Wait(0.8f);
+                // QF17 (6): in her hand at chest height, framed on the hand from in front (never at her hip)
+                var fw = Flat(Seven.transform.forward).normalized;
+                var lp = P7 + Vector3.up * 1.22f + fw * 0.4f - Seven.transform.right * 0.08f;
+                var tik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
+                tik.enabled = true; tik.Ease = 3f; tik.LeftPos = lp; tik.LeftW = 1f; tik.LookPos = lp; tik.LookW = 0.8f;
+                yield return Wait(0.7f);
+                RecordTet.position = lp + Vector3.up * 0.07f;
+                Shoot(lp + fw * 0.75f + Vector3.up * 0.18f + Seven.transform.right * 0.2f, lp + Vector3.up * 0.04f, 28f, 0.01f);
+                yield return Wait(0.6f);
                 yield return Shot("m37_insert_the_small_tetrahedron_beside_the_other_records");
+                tik.ReleaseAll("the Mars record insert");
             }
             Log($"Mars's record: awarded {(first ? "now (first time)" : "ALREADY - no second award")} (awards {MarsState.RecordAwards}, must be 1)");
             Complete("MAR_09");

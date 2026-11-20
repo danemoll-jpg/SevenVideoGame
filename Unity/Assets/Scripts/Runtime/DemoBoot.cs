@@ -132,6 +132,16 @@ namespace Seven
         public static string Routes { get; private set; }
         /// <summary>QF15 (2): -europawalltest = the automated wall test (EuropaWallTest; starts at checkpoint 2 unless -europacp is given).</summary>
         public static bool EuropaWallTest { get; private set; }
+        /// <summary>QF17: -bossidle = the idle test - in a boss fight nobody presses anything (he must put her down within ~60 s),
+        /// the run ends at her first knockdown. -bosscheck = the boss check: a run stops right after the fight.</summary>
+        public static bool BossIdle { get; private set; }
+        public static bool BossCheck { get; private set; }
+        /// <summary>QF17: -bossnovice = the pilot plays like a first-time player (the first-time fight length).</summary>
+        public static bool BossNovice { get; private set; }
+        /// <summary>QF17 (5): -holdcheck = the bike-hold check only (the run stops once she is down the beam on the bike).</summary>
+        public static bool HoldCheck { get; private set; }
+        /// <summary>QF17 (4): -rampcheck = ride every ramp of the world with the riding camera (RampCheck).</summary>
+        public static bool RampCheck { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -193,6 +203,11 @@ namespace Seven
                 if (args[i] == "-marspick" && i + 1 < args.Length) MarsPick = args[i + 1];
                 if (args[i] == "-routes" && i + 1 < args.Length) Routes = args[i + 1];
                 if (args[i] == "-europawalltest") EuropaWallTest = true;
+                if (args[i] == "-bossidle") { BossIdle = true; BossCheck = true; }
+                if (args[i] == "-bosscheck") BossCheck = true;
+                if (args[i] == "-bossnovice") BossNovice = true;
+                if (args[i] == "-holdcheck") HoldCheck = true;
+                if (args[i] == "-rampcheck") RampCheck = true;
                 if (args[i] == "-stopafter" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sa)) StopAfter = sa;
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;

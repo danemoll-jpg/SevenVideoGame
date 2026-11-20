@@ -430,8 +430,11 @@ namespace Seven
             Ground.Obstacles.Clear();
             foreach (var f in AllFolk()) if (f.gameObject.activeInHierarchy) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(f.transform.position.x, f.transform.position.z), R = 0.45f });
             if (Transport != null && Transport.gameObject.activeInHierarchy) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(Transport.position.x, Transport.position.z), R = 2.4f });
+            foreach (var sa in MarketStalls) { var sp = MarsLayout.MarketAt + new Vector3(Mathf.Cos(sa * Mathf.Deg2Rad), 0f, Mathf.Sin(sa * Mathf.Deg2Rad)) * 12.5f; Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(sp.x, sp.z), R = 2.0f }); }   // QF17 (6): the stalls are solid
+            if (Dais != null && Dais.position.y > -2.5f) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(Dais.position.x, Dais.position.z), R = 3.0f });   // QF17: his raised platform
         }
 
+        static readonly float[] MarketStalls = { 40f, 70f, 110f, 140f, 220f, 250f, 290f, 320f };   // = the builder's stall angles
         // ------------------------------------------------------------------------------------------ the world's life
         IEnumerator World()
         {

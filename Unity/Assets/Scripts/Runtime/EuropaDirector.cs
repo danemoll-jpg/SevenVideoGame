@@ -366,7 +366,7 @@ namespace Seven
                         var q = P7 + Vector3.up * h; var sq = q - cam; float lq = sq.magnitude;
                         if (lq > 0.05f && b.IntersectRay(new Ray(cam, sq / lq), out float d) && d < lq - 0.25f) inWay = true;
                     }
-                    if (inWay) _cutUntil[r] = now + 0.6f;
+                    if (inWay && CameraOccluders.MayCutAway(r, P7)) _cutUntil[r] = now + 0.6f;   // QF17 (4): never a floor, a stair or anything under her
                     hide = _cutUntil.TryGetValue(r, out var until) && now < until;
                 }
                 if (r.forceRenderingOff != hide) r.forceRenderingOff = hide;
@@ -640,6 +640,7 @@ namespace Seven
         {
             Restore(cp);
             yield return null; yield return null;
+            if (cp <= EuropaLayout.CpArrival) BikeHoldWatch.Begin("europa", Hold, Bike, Saucer);   // QF17 (5)
             if (cp <= EuropaLayout.CpArrival) { yield return Arrival(); Checkpoint(EuropaLayout.CpDescent); }
             else yield return UI.Fade(0f, 1.2f);
             if (EuropaState.Checkpoint <= EuropaLayout.CpDescent) { yield return Descent(); Checkpoint(EuropaLayout.CpSettlement); }

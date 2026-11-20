@@ -58,7 +58,7 @@ namespace Seven
         bool Shots => DemoBoot.CaptureDir != null && Cap != null;
         ChapterCapture Cap => ChapterCapture.I;
         string _objective, _hintLine;
-        bool _cut;
+        bool _cut; public bool InCutscene => _cut;
         CarriedShape _carry;
         bool _firstFrameCovered;
         static readonly HashSet<string> _taught = new HashSet<string>();
@@ -328,6 +328,8 @@ namespace Seven
             Restore();
             yield return null;
             if (Auto && DemoBoot.R13 == "bridge") { yield return BridgeTest(); yield break; }        // Round 13 (0d) check
+            if (DemoBoot.RampCheck && DemoBoot.CaptureDir != null) { UI.SetFade(0f); Bike.gameObject.SetActive(true); foreach (var r in Bike.GetComponentsInChildren<Renderer>(true)) r.enabled = true; yield return global::Seven.RampCheck.Run(Bike, Seven, Cam, "venus", VenusLayout.IsBikeZone); yield break; }   // QF17 (4)
+            if (!VenusState.SceneDone("VEN_B01")) BikeHoldWatch.Begin("venus", Hold, Bike, Saucer);   // QF17 (5)
             if (!VenusState.SceneDone("VEN_C01")) { yield return Arrival(); if (ReloadCheck("VEN_C01")) yield break; }
             if (!VenusState.SceneDone("VEN_B01")) { yield return B01(); if (ReloadCheck("VEN_B01")) yield break; }
             if (!VenusState.SceneDone("VEN_C03")) { yield return RideToTemple(); yield return C03(); if (ReloadCheck("VEN_C03")) yield break; }

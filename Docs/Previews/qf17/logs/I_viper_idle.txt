@@ -1,0 +1,44 @@
+[   0.00s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   0.00s] first frame (Mars): fade 1.00 (1 = black)
+[   0.01s] Mars check run: Mars state: Mars: Viper's intervention (cp 5), scenes [MAR_01, MAR_02, MAR_03, MAR_04, MAR_05, MAR_06], record not yet (awards 0), route not yet
+[   0.60s] restore: Mars state: Mars: Viper's intervention (cp 5), scenes [MAR_01, MAR_02, MAR_03, MAR_04, MAR_05, MAR_06], record not yet (awards 0), route not yet -> on foot at (-58.00, 0.00, 150.00)
+[   0.83s] shot 01_m00_first_frame.png  audioPeak=0.000000  cursorVisible=False
+[   2.05s] objective: Cross the aligned bridge to the temple
+[  31.20s] ok: across the span to the temple approach (0.0s)
+[  33.84s] shot 02_m24_wide_temple_approach_viper_blocks_her.png  audioPeak=0.000000  cursorVisible=False
+[  39.86s] shot 03_m25_it_goes_both_ways.png  audioPeak=0.000000  cursorVisible=False
+[  42.26s] shot 04_m26_viper_on_his_platform_the_machinery_arms.png  audioPeak=0.000000  cursorVisible=False
+[  42.27s] BOSS viper: the fight begins - 3 phases, she can take 7 hits, table Resources/Bosses/boss_tuning.json
+[  42.28s] objective: Viper attacks from his platform - shut his two pylons down (X) under fire
+[  44.28s] boss viper: attack 1 'spit' (spit) - telegraph 1.00 s, she is 28.0 m away (answer: step out from between the marked spots (or dodge B))
+[  44.92s] shot 05_boss_viper_spit_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  44.97s] shot 06_boss_viper_spit_telegraph_side.png (second angle)
+[  45.44s] shot 07_boss_viper_spit_active.png  audioPeak=0.000000  cursorVisible=False
+[  45.48s] shot 08_boss_viper_spit_active_side.png (second angle)
+[  46.13s] boss viper: 'spit' HIT her (1/7)
+[  48.24s] boss viper: attack 2 'cage' (cage) - telegraph 0.80 s, she is 29.0 m away (answer: barriers slam up round her - then dodge what follows)
+[  48.76s] shot 09_boss_viper_cage_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  48.81s] shot 10_boss_viper_cage_telegraph_side.png (second angle)
+[  49.16s] shot 11_boss_viper_cage_active.png  audioPeak=0.000000  cursorVisible=False
+[  49.20s] shot 12_boss_viper_cage_active_side.png (second angle)
+[  49.24s] boss viper: attack 3 'spit' (spit) - telegraph 1.00 s, she is 29.0 m away (answer: step out from between the marked spots (or dodge B))
+[  51.10s] boss viper: 'spit' HIT her (2/7)
+[  52.89s] boss viper: attack 4 'machine_sweep' (beam) - telegraph 1.20 s, she is 30.0 m away (answer: jump the energy sweep (A) as it passes)
+[  53.65s] shot 13_boss_viper_machine_sweep_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  53.69s] shot 14_boss_viper_machine_sweep_telegraph_side.png (second angle)
+[  54.25s] shot 15_boss_viper_machine_sweep_active.png  audioPeak=0.000000  cursorVisible=False
+[  54.29s] shot 16_boss_viper_machine_sweep_active_side.png (second angle)
+[  54.67s] boss viper: 'machine_sweep' HIT her (3/7)
+[  57.59s] boss viper: attack 5 'machine_sweep' (beam) - telegraph 1.20 s, she is 30.2 m away (answer: jump the energy sweep (A) as it passes)
+[  59.38s] boss viper: 'machine_sweep' HIT her (4/7)
+[  61.75s] boss viper: attack 6 'machine_sweep' (beam) - telegraph 1.20 s, she is 30.4 m away (answer: jump the energy sweep (A) as it passes)
+[  63.54s] boss viper: 'machine_sweep' HIT her (5/7)
+[  65.91s] boss viper: attack 7 'spit' (spit) - telegraph 1.00 s, she is 30.6 m away (answer: step out from between the marked spots (or dodge B))
+[  67.77s] boss viper: 'spit' HIT her (6/7)
+[  69.90s] boss viper: attack 8 'machine_sweep' (beam) - telegraph 1.20 s, she is 31.6 m away (answer: jump the energy sweep (A) as it passes)
+[  71.69s] boss viper: 'machine_sweep' HIT her (7/7) - she is DOWN
+[  71.69s] BOSS IDLE TEST (viper): nobody pressed anything - she was knocked down after 29.4 s (8 attacks, 7 hits) - PASS (within ~60 s)
+[  71.72s] shot 17_boss_viper_idle_test_down.png  audioPeak=0.000000  cursorVisible=False
+[  71.72s] cat speed vs clip (QF11): walk clip 0 frames, walking in place (speed < 0.06 m/s x scale for > 0.25 s, then switched to idle) 0x
+[  71.72s] BOSS IDLE TEST (viper): down after 29.4 s, attacks 8, hits 7
+[  71.72s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)

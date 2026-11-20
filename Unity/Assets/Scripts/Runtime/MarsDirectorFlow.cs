@@ -12,7 +12,10 @@ namespace Seven
         {
             Restore(cp);
             yield return null; yield return null;
+            if (DemoBoot.RampCheck && DemoBoot.CaptureDir != null) { yield return UI.Fade(0f, 0.3f); SetZone("Bridge", true); yield return global::Seven.RampCheck.Run(Bike, Seven, Cam, "mars", MarsLayout.IsBikeZone); yield break; }
+            if (cp <= L.CpArrival) BikeHoldWatch.Begin("mars", Hold, Bike, Saucer);   // QF17 (5)
             if (cp <= L.CpArrival) { yield return Arrival(); Checkpoint(L.CpCrossing); }
+            else if (cp == L.CpCrossing) { BikeHoldWatch.Begin("mars_resumed", Hold, Bike, Saucer); yield return Relanding(); }   // QF17 (5)
             else yield return UI.Fade(0f, 1.2f);
             if (MarsState.Checkpoint <= L.CpCrossing) { yield return Crossing(); Checkpoint(L.CpMaint); }
             if (MarsState.Checkpoint <= L.CpMaint) { yield return Maintenance(); Checkpoint(L.CpSharedDoor); }
@@ -64,7 +67,7 @@ namespace Seven
                 default: at = new Vector3(-58f, 0f, 146f); yaw = 180f; break;
             }
             if (cp == L.CpTemple || cp == L.CpViper) Bike.Place(new Vector3(-62f, 0f, 146f), 90f); else Bike.Place(at, yaw);
-            if (cp == L.CpArrival) { Bike.gameObject.SetActive(false); Seven.gameObject.SetActive(false); }
+            if (cp == L.CpArrival || cp == L.CpCrossing && !DemoBoot.RampCheck) { Bike.gameObject.SetActive(false); Seven.gameObject.SetActive(false); }   // QF17 (5): both start in the hold / aboard
             else if (riding) { Seven.gameObject.SetActive(true); Bike.Mount(); }
             else { Seven.gameObject.SetActive(true); Seven.Place(at + (cp == L.CpSharedDoor ? new Vector3(1.5f, 0f, 1.5f) : Vector3.zero), Quaternion.Euler(0f, yaw, 0f) * Vector3.forward); if (cp == L.CpSharedDoor) Bike.Place(L.EastStop + new Vector3(-2f, 0f, -1f), 0f); }
             MusicSystem.Play(cp == L.CpViper ? "mars_viper" : "mars_kingdoms", 2.5f);
@@ -96,6 +99,29 @@ namespace Seven
                 yield return null;
             }
             Saucer.position = land;
+            yield return LandingTail();
+            Objective("Find a route to the temple - ride east through the settlement to the crossing");
+            Complete("MAR_01");
+        }
+
+        /// <summary>QF17 (5): Mars entered from a save at the landing site (Continue, the star map continuing a save, Scene
+        /// Select "the crossing") - QF13's rule lived only inside the arrival, so these starts restored the bike straight onto
+        /// the plain. Now they play the landing's tail too: the saucer hovering, the hatch opens, the bike lowers out, 7 comes
+        /// down the beam to it.</summary>
+        IEnumerator Relanding()
+        {
+            yield return Cutscene(true);
+            Seven.gameObject.SetActive(false); Bike.gameObject.SetActive(false);
+            Saucer.position = L.SaucerAt;
+            Shoot(L.SaucerAt + new Vector3(30f, 10f, -32f), L.SaucerAt + Vector3.up * 2f, 58f, 0.01f);
+            StartCoroutine(UI.Fade(0f, 1.2f));
+            yield return Wait(1.2f);
+            yield return LandingTail();
+            Objective("Find a route to the temple - ride east through the settlement to the crossing");
+        }
+        IEnumerator LandingTail()
+        {
+            var land = L.SaucerAt;
             // the bike lowers out of the bike hold; 7 descends in the beam (Panther stays aboard)
             yield return HoldBikeOut(L.BikeDown, 90f);
             Shoot(land + new Vector3(10f, 2.2f, 9f), land + new Vector3(0f, 2.2f, 0f), 46f, 0.01f);
@@ -109,8 +135,6 @@ namespace Seven
             Seven.Lock(true);
             Bike.Mount(); FollowCamera();
             yield return Cutscene(false);
-            Objective("Find a route to the temple - ride east through the settlement to the crossing");
-            Complete("MAR_01");
         }
 
         // ---- the bike hold (the one saucer prefab): the same opening, glide and close as Venus / Europa
@@ -254,6 +278,7 @@ namespace Seven
             // he orders the crossing secured and leaves
             if (Viper != null) Viper.Play("point");
             if (Guard != null) { Guard.Face(L.BarrierAt); }
+            { var dv = Flat(vp - P7).normalized; Shoot(P7 - dv * 2.2f + Vector3.up * 1.85f + Vector3.Cross(Vector3.up, dv) * 0.8f, vp + Vector3.up * 2.3f, 48f, 0.4f); }   // QF17 (6): over her shoulder up to him, never from below
             yield return Wait(1.4f);
             yield return Shot("m09_he_orders_the_crossing_secured");
             if (ViperPlatform != null)

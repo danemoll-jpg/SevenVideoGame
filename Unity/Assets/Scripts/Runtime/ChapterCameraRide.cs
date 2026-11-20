@@ -57,13 +57,14 @@ namespace Seven
             _rideCutReady = true; _rideCutable = new HashSet<Renderer>();
             foreach (var r in CameraOccluders.Renderers)
             {
-                if (r == null || IsShell(r.name)) continue;
+                if (r == null || IsShell(r.name) || CameraOccluders.IsWalkableName(r.name)) continue;   // QF17 (4): never anything she rides on
                 _rideCutable.Add(r);
             }
             Debug.Log($"[Seven] ride camera (QF15 1): {_rideCutable.Count} meshes cut away when they stand between the camera and the bike (shells ease the camera in)");
         }
 
         bool RidingNow => _bike != null && _bike.Riding && Cutaway == null;
+        float _rideLift;
 
         void RideBegin(Vector3 f)
         {
@@ -212,6 +213,26 @@ namespace Seven
             }
             // the last guard: the camera itself never inside geometry or through a wall (should not be needed - counted)
             var cp = f + dir * _dist;
+            // QF17 (4): on a slope the ground behind her is higher than she is (riding down a ramp): the camera rises to stay
+            // above that surface (eased, never a jump) instead of sitting under it - the old fix cut the ramp away
+            {
+                // the line from the camera to her must clear the ground (ramp surfaces, crests) at every point along it:
+                // the lowest camera height that does, eased (never a step, so no shift)
+                string zb = Ground.ZoneName(bt.position.x, bt.position.z);
+                float need = 0f; var fb = f;
+                for (int k = 0; k < 4; k++)
+                {
+                    float u = k * 0.25f; var q = Vector3.Lerp(cp, fb, u);
+                    string zq = Ground.ZoneName(q.x, q.z);
+                    if (zq == null || zq != zb && Mathf.Abs(Ground.Height(q.x, q.z) - bt.position.y) > 6f) continue;
+                    float clear = Ground.Height(q.x, q.z) + (k == 0 ? 1.6f : 0.7f);
+                    // camera y so that the line's height at fraction u is >= clear
+                    float camY = (clear - u * fb.y) / Mathf.Max(0.25f, 1f - u);
+                    need = Mathf.Max(need, camY - cp.y);
+                }
+                _rideLift = Mathf.MoveTowards(_rideLift, need, dt * (need > _rideLift ? 5f : 2f));
+                cp.y += _rideLift;
+            }
             if (RideProbe.Overlap(cp, 0.3f, RideIgnore, _rideCutable, false) || (!snap && RideProbe.Crosses(_ridePrevCam, cp, RideIgnore, _rideCutable, false, out _)))
             {
                 if (RideProbe.Cast(f, 0.3f, dir, _dist, RideIgnore, _rideCutable, out var hh)) { _dist = Mathf.Max(0.8f, hh - 0.1f); _rideTarget = Mathf.Min(_rideTarget, _dist); _rideHoldUntil = now + 1f; RideForced++; cp = f + dir * _dist; }
@@ -225,7 +246,8 @@ namespace Seven
             foreach (var q in new[] { bc, f, bc + bt.forward * 1.3f, bc - bt.forward * 1.3f })
                 CameraOccluders.RenderersBetween(q, cp, _rideTmp, CameraOccluders.AllMask);
             CameraOccluders.OverlapRenderers(cp, 0.6f, _rideTmp);
-            foreach (var r in _rideTmp) if (r != null && _rideCutable.Contains(r)) { if (!_rideCut.ContainsKey(r)) RideCutAways++; _rideCut[r] = now + 0.8f; }
+            var bikeAt = bt.position;
+            foreach (var r in _rideTmp) if (r != null && _rideCutable.Contains(r) && CameraOccluders.MayCutAway(r, bikeAt)) { if (!_rideCut.ContainsKey(r)) RideCutAways++; _rideCut[r] = now + 0.8f; }
             _done.Clear();
             foreach (var kv in _rideCut) { bool hide = now < kv.Value; if (kv.Key != null && kv.Key.forceRenderingOff != hide) kv.Key.forceRenderingOff = hide; if (!hide) _done.Add(kv.Key); }
             foreach (var r in _done) _rideCut.Remove(r);

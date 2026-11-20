@@ -100,6 +100,8 @@ namespace Seven
             // the temple, the island plaza and the spans (raised over the ravine)
             R("TempleHall", -9f, 169f, 9f, 191f, 0f, false, false),
             R("TempleSteps", -6f, 162f, 6f, 169.8f, 0f, false),
+            // QF17 (1): the plaza is one open arena for Viper's fight (and after it) - the lanes below stay for old saves
+            R("Arena", -21f, 124f, 21f, 168f, 0f, false),
             // the encounter's three lanes (low ancient walls between them, gaps = gates): west, centre (split by Viper's
             // barrier), east (split by a broken strip the fallen walkway section bridges once she lifts it back)
             R("PlazaW", -21f, 124f, -7f, 168f, 0f, false),

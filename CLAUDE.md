@@ -17,6 +17,33 @@ apply to every asset and scene:
   (component + volume profile + `SevenHeightFog` full-screen pass + lights + `Glow*` sources). Knobs, recipe and
   cost in `Docs/ATMOSPHERE.md`.
 
+## Boss fights — STANDING RULE (Dan, QF17, 2026-11-20; every boss, now and later)
+Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing there." Never again:
+- **The boss moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: his pose, a
+  sound, a white light, a white marker on the ground where it lands) that she reads and answers with her own moves
+  (**dodge, block, jump, telekinesis, her strikes**).
+- **She can lose:** hits knock her back and cost her; enough hits = she goes down → a quick retry from the start of the
+  current phase. Still nonlethal for everyone (7 never kills; the boss is subdued / pinned / contained, alive).
+- **2–3 phases that escalate** (faster, a new attack, the arena changes). Objectives (switches, pylons, devices) only
+  *while* he is attacking — never the whole fight.
+- **He is beaten by her countering him:** an attack he wastes (dodged, blocked, jumped) leaves him open → a telekinetic
+  throw of debris / his machinery (or three strikes) staggers him → press the advantage; the last phase ends dazed →
+  her takedown (Y / E) pins him. Never by flipping switches while he waits.
+- **One data table:** `Unity/Assets/Resources/Bosses/boss_tuning.json` (per boss: her hits, open / stagger times, per
+  phase: staggers, tempo, gaps, attacks, combos; per attack: telegraph / active / recover / open, damage, knock, reach,
+  which answers work). Dan's feedback = a number change there, no code.
+- **Proof every time** (a boss is not done without all four):
+  (a) a player-style run that plays the fight → `BOSS <id>: fight length …, attacks N (X/min), hits she took, she went
+  down N×, dodged / blocked / jumped, throws, strikes, staggers; phases: …` in `capture_log.txt`;
+  (b) the **idle test** `-bossidle` (nobody presses anything): `BOSS IDLE TEST (<id>): … knocked down after N s` — must be
+  within ~60 s;
+  (c) a capture sequence of the boss mid-attack (`boss_<id>_<attack>_telegraph / _active (+ _side)`, staggers);
+  (d) a first-time-player fight length of about **3–5 minutes**.
+- Code: `Runtime/BossFight.cs` (the shared brain: attacks, telegraph markers, hits, open / stagger / phases, retry, idle
+  test, the fight camera, captures), `BossPilot.cs` (how a player plays it: check runs + player-style runs),
+  `ViperFight.cs`, `WormmasterFight.cs` (per-boss animation, objectives, arena), 7's side in `ChapterSevenFight.cs`
+  (`TakeBossHit`, jump `A`, telekinetic throw `RT`, X on an objective, `MaxFightHits`). A new boss = a subclass + a table entry.
+
 ## Saucer — fixed design (Dan, 2026-11-19; never let it drift)
 - **One saucer, one prefab (QF13):** `Assets/Saucer/Saucer.prefab` — exterior, belly iris + beam, the bike hold + its
   seamless panel — is built ONCE per build (`FightDemoBuilderSaucerExt.SaucerPrefab()`, from `BuildSaucerExterior` +
@@ -324,7 +351,9 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–15 + QF1–QF16 complete (2026-11-20), release 0.15.1.** QF16 = the view outside per world, the
+**Rounds 1–15 + QF1–QF17 complete (2026-11-20), release 0.15.2.** QF17 = real boss fights (the "Boss fights" rule
+above: Viper and the Wormmaster rebuilt), the Mars architecture kit, the ramp cut-away rule, the bike-hold rule on every
+start path, the Mars clunk pass. QF16 = the view outside per world, the
 sacred-geometry passage, varied staging aboard, Panther's cat moments. Round 15 = Chapter "Mars — The Divided Kingdoms" (first playable pass). Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
@@ -550,7 +579,28 @@ scene (Round 10).
     while free aboard; `CatPoseOverlay.PawTo / TailToward / TailTwitch`, `CatCompanion.ShowCurled`).
   - Check: `-qf16check` (~3.5 min: every ambient moment, then journeys Moon → Venus → Europa → Mars → Moon with window +
     porthole captures, ends `QF16 CHECK: cat moments N, journeys 4`).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.1** (QF16 status in `TODO.md`).
+- **QF17 (release 0.15.2)** — real boss fights + Mars clean-up (status + "For Dan to check (QF17)" in `TODO.md`):
+  - **Boss fights** (rule above): `BossFight.cs` + `BossPilot.cs` + `ViperFight.cs` / `WormmasterFight.cs`, table
+    `Resources/Bosses/boss_tuning.json`. Viper: platform (spit, energy sweep, barrier cage; two pylons X under fire) → he
+    hunts her (snake strike, tail sweep, spit, the third pylon's sweep) → enraged; the plaza is one open arena (zone
+    `Arena`, his raised platform `ViperDais`). Wormmaster: from his dais (lash, sent creatures, slam wave; north device X,
+    ledge device RT from below) → he comes down (arm sweep, lash, slam wave; the crystal RT) → the signal fails (shock
+    ring, combos); creatures only hurt when he sends one. Switches: `-bossidle` (idle test, ends at her first knockdown),
+    `-bosscheck` (the run ends after the fight), `-bossnovice` (the pilot plays like a first-time player). Runs:
+    Viper `-marsplay -marscp 5 -bosscheck [-bossnovice]`, idle `-marscp 5 -bossidle`; Wormmaster `-venusplay2 -bosscheck
+    [-bossnovice]`, idle `-r13 encounter -bossidle`.
+  - **Mars architecture kit** `Editor/FightDemoBuilderMarsArch.cs`: `MBox` / `MBlock` (dressed masonry - battered,
+    plinth, chamfer; replaces every cube in the Mars builder), `Tower`, `Gateway`, `ArchInset`, `ReptHouse` (stepped
+    terraced houses), `FortressCity`, `RoundSlab` (the temple's older smooth style), `MarsLamp`. No `Block` / `AddBox` in
+    `FightDemoBuilderMars.cs` any more.
+  - **Cameras never cut away anything she rides or walks on** (`CameraOccluders.MayCutAway` / `IsWalkableName`: ramps,
+    stairs, decks, bridges, spans, roads, slabs, platforms, floors; or anything at / under her) - the riding camera and
+    the Europa base cut-away. Proof `-rampcheck` (with `-marscp 2` / `-chapter2`) → `RAMP CHECK (QF17 4) … cut-away under her 0`.
+  - **Bike hold on every start path**: `BikeHoldWatch` (`BIKE HOLD CHECK (QF17 5) <world>: PASS / FAIL` in every run that
+    plays an arrival; `-holdcheck` ends the run once she is on the bike). Mars entered from a save at the landing site
+    (Continue, the star map continuing a save, Scene Select "the crossing") plays `Relanding()` (hatch → bike → beam).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.2** (QF17 status in `TODO.md`).
+**Before: Dan plays 0.15.1** (QF16 status in `TODO.md`).
 **Before: Dan plays 0.15.0** (Round 15 status in `TODO.md`).
 **Before: Dan plays 0.14.3** (QF15 status in `TODO.md`).
 **Before: Dan plays 0.14.2** (QF14 status in `TODO.md`).

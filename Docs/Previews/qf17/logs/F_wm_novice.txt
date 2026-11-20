@@ -1,0 +1,235 @@
+[   0.01s] chapter 1 capture start, muted=True, listenerVolume=0, paused=True
+[   4.00s] objective: Find the source of the signal - down the root pit stairs, then east along the tunnels
+[   4.00s] restore: Venus state: VEN_S04_CONTROL_DISCOVERED, scenes done [VEN_C01, VEN_B01, VEN_B02, VEN_C02, VEN_B03, VEN_B03_bridge, VEN_B04, VEN_C03, VEN_C04, VEN_B05_lines, VEN_C05], devices [], Wormmaster contained False, record awarded False (awards 0), garden help [], bike (74.00, -6.00, 148.00) riding False -> 7 at (78.00, -6.00, 143.00), the slab bridge is down
+[   4.19s] venus playtest 2: virtual gamepad on the real input actions; muted=True listenerVolume=0; started at the Scene Select entry 'the way down + the control chamber'
+[   4.42s] objective: Find the source of the signal - down the root pit stairs, then east along the tunnels
+[   4.42s] venus playtest 2: objective: 'Find the source of the signal - down the root pit stairs, then east along the tunnels' at (78.0, -6.0, 143.0)
+[   4.51s] walk blockers (QF12 7) after the root gate opened: 379 blocked samples in the walkable ground - Court_Trees (Venus) x109 at (14.6, 1.3, 210.9); Machinery (VEN_05_Underground) x60 at (108.2, -29.5, 70.4); Court_Fountain (Venus) x25 at (19.5, 0.5, 198.3); Ctrl_Ribs (VEN_05_Underground) x24 at (103.1, -29.2, 88.0); Temple_GrownRibs (Venus) x22 at (22.6, 0.5, 238.7); Dais (VEN_05_Underground) x22 at (130.6, -29.5, 87.2); Pylon (Device_dev_ledge) x8 at (107.0, -28.5, 66.9); Channel_6 (Venus) x7 at (22.1, 0.8, 74.3); Channel_9 (Venus) x7 at (22.8, 1.2, 80.6); Channel_10 (Venus) x7 at (22.8, 1.2, 82.7); Channel_12 (Venus) x7 at (22.8, 0.7, 88.3); Court_FountainWater (Venus) x6 at (20.9, 0.5, 197.6); Cube_ProtectedStructure (Venus) x5 at (29.1, 0.5, 268.9); Display_Panel (LocationsDisplay) x5 at (34.0, 1.3, 266.1); 
+[   4.80s] shot 01_w01_root_gate_open.png  audioPeak=0.000000  cursorVisible=False
+[  18.50s] shot 02_qf13_19a_stairs_follow_camera.png  audioPeak=0.000000  cursorVisible=False
+[  18.66s] shot 03_qf13_19b_stairs_dan_view.png  audioPeak=0.000000  cursorVisible=False
+[  18.71s] shot 04_w02_root_pit_steps.png  audioPeak=0.000000  cursorVisible=False
+[  21.35s] music: below ground -> venus_underground (crossfade 3 s at (69.0, -12.4, 120.0))
+[  28.56s] shot 05_w03_root_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  34.48s] shot 06_enc_lunge_0_creature_comes_at_her.png  audioPeak=0.000000  cursorVisible=False
+[  34.48s] lunge 0: TunnelWorm surfaced True, 5.0 m from her
+[  38.14s] shot 07_w04_root_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  40.54s] KNOCKED BACK by a creature (TunnelWorm) at (72.2, -22.0, 89.7) -> white fade, back on the walkway at (70.3, -22.0, 91.5) (nobody hurt; knockdowns 1)
+[  46.91s] KNOCKED BACK by a creature (TunnelWorm) at (79.6, -22.0, 89.3) -> white fade, back on the walkway at (76.0, -22.0, 90.2) (nobody hurt; knockdowns 2)
+[  54.50s] shot 08_w05_deep_tunnel.png  audioPeak=0.000000  cursorVisible=False
+[  64.14s] way down (0f): the root-chamber creature lunged at her 3x, knocked her back 2x, stunned 0x; it stays behind (alive)
+[  64.14s] ok: the control chamber (C06) (59.4s)
+[  69.24s] shot 09_c06_01_wide_the_chamber.png  audioPeak=0.000000  cursorVisible=False
+[  69.86s] shot 10_c06_02_low_angle_above_his_machinery.png  audioPeak=0.000000  cursorVisible=False
+[  74.84s] shot 11_c06_03_he_activates_a_signal_pulse.png  audioPeak=0.000000  cursorVisible=False
+[  76.23s] shot 12_c06_04_come_and_do_it_yourself.png  audioPeak=0.000000  cursorVisible=False
+[  76.23s] scene VEN_C06 complete; VEN_S05_ENCOUNTER_ACTIVE
+[  76.23s] objective: Disable the control devices - all three, around the chamber
+[  76.23s] objective: Disable the control devices - all three, around the chamber
+[  76.40s] venus playtest 2: objective: 'Disable the control devices - all three, around the chamber' at (109.7, -30.0, 89.0)
+[  77.04s] coverage VEN_C06_07 (wormmaster): speaker head at (0.50, 0.54) in frame, camera -5.2 m vs his / her head (low angle), wormmaster tip x1.26
+[  77.10s] shot 13_cov_C06_07_wormmaster.png  audioPeak=0.000000  cursorVisible=False
+[  79.14s] shot 14_enc_00_intro_he_sends_them.png  audioPeak=0.000000  cursorVisible=False
+[  79.14s] encounter intro (QF12 8): 5 creatures in the frame; the Wormmaster on screen (visible), his pulse, 6 creatures surfaced at once, taunt
+[  80.12s] BOSS wormmaster: the fight begins - 3 phases, she can take 6 hits, table Resources/Bosses/boss_tuning.json
+[  80.12s] objective: He fights from his dais - shut the north device (X) and the ledge device (RT from below) down under attack
+[  80.15s] venus playtest 2: objective: 'He fights from his dais - shut the north device (X) and the ledge device (RT from below) down under attack' at (109.7, -30.0, 89.0)
+[  82.12s] boss wormmaster: attack 1 'worm_lunge' (wave) - telegraph 1.10 s, she is 23.6 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[  82.83s] shot 15_boss_wormmaster_worm_lunge_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  82.89s] shot 16_boss_wormmaster_worm_lunge_telegraph_side.png (second angle)
+[  83.41s] shot 17_boss_wormmaster_worm_lunge_active.png  audioPeak=0.000000  cursorVisible=False
+[  83.48s] shot 18_boss_wormmaster_worm_lunge_active_side.png (second angle)
+[  83.48s] boss wormmaster: 'worm_lunge' - she JUMPED it
+[  85.35s] boss wormmaster: she starts shutting objective 0 down (3.0 s under fire)
+[  86.11s] boss wormmaster: attack 2 'slam_wave' (wave) - telegraph 1.00 s, she is 25.2 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[  86.77s] shot 19_boss_wormmaster_slam_wave_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[  86.82s] shot 20_boss_wormmaster_slam_wave_telegraph_side.png (second angle)
+[  87.30s] shot 21_boss_wormmaster_slam_wave_active.png  audioPeak=0.000000  cursorVisible=False
+[  87.35s] shot 22_boss_wormmaster_slam_wave_active_side.png (second angle)
+[  87.89s] boss wormmaster: 'slam_wave' HIT her (1/6)
+[  87.90s] boss wormmaster: shutting objective 0 down INTERRUPTED at 85%
+[  88.65s] boss wormmaster: she starts shutting objective 0 down (3.0 s under fire)
+[  90.54s] boss wormmaster: attack 3 'worm_lunge' (wave) - telegraph 1.10 s, she is 26.0 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[  91.64s] device dev_north disabled: 2 creatures of its trough withdraw (alive); saved - devices [dev_north] (1/3)
+[  91.70s] shot 23_enc_dev_north_off.png  audioPeak=0.000000  cursorVisible=False
+[  92.09s] boss wormmaster: 'worm_lunge' HIT her (2/6)
+[  94.13s] boss wormmaster: attack 4 'worm_lunge' (wave) - telegraph 1.10 s, she is 21.6 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[  98.02s] boss wormmaster: attack 5 'worm_lunge' (wave) - telegraph 1.10 s, she is 25.3 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[  99.45s] boss wormmaster: 'worm_lunge' HIT her (3/6)
+[ 101.87s] boss wormmaster: attack 6 'slam_wave' (wave) - telegraph 1.00 s, she is 27.0 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 103.71s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 103.89s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 107.56s] boss wormmaster: attack 7 'slam_wave' (wave) - telegraph 1.00 s, she is 27.6 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 109.43s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 109.56s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 111.02s] device dev_ledge disabled: 2 creatures of its trough withdraw (alive); saved - devices [dev_north, dev_ledge] (2/3)
+[ 111.08s] shot 24_enc_dev_ledge_off.png  audioPeak=0.000000  cursorVisible=False
+[ 111.99s] shot 25_enc_he_comes_down_off_his_dais.png  audioPeak=0.000000  cursorVisible=False
+[ 114.24s] boss wormmaster: PHASE 2 'he comes down' (tempo x1.00, attacks arm_sweep, lash, slam_wave, worm_lunge)
+[ 114.24s] objective: He comes down - make him waste an attack, throw root debris at him (RT); pull the signal crystal (RT)
+[ 114.26s] venus playtest 2: objective: 'He comes down - make him waste an attack, throw root debris at him (RT); pull the signal crystal (RT)' at (109.3, -30.0, 76.4)
+[ 115.51s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 115.74s] boss wormmaster: attack 8 'slam_wave' (wave) - telegraph 1.00 s, she is 19.3 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 116.51s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 117.47s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 117.75s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 121.88s] boss wormmaster: attack 9 'worm_lunge' (wave) - telegraph 1.10 s, she is 16.0 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 123.47s] boss wormmaster: 'worm_lunge' - she JUMPED it
+[ 125.44s] boss wormmaster: attack 10 'worm_lunge' (wave) - telegraph 1.10 s, she is 13.6 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 125.83s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 127.02s] boss wormmaster: 'worm_lunge' - she JUMPED it
+[ 129.02s] boss wormmaster: attack 11 'worm_lunge' (wave) - telegraph 1.10 s, she is 10.5 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 129.49s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 130.60s] boss wormmaster: 'worm_lunge' HIT her (4/6)
+[ 132.78s] boss wormmaster: attack 12 'slam_wave' (wave) - telegraph 1.00 s, she is 9.4 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 134.12s] boss wormmaster: 'slam_wave' HIT her (5/6)
+[ 136.57s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 137.16s] boss wormmaster: attack 13 'worm_lunge' (wave) - telegraph 1.10 s, she is 8.6 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 138.75s] boss wormmaster: 'worm_lunge' - she JUMPED it
+[ 141.09s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 141.10s] boss wormmaster: attack 14 'worm_lunge' (wave) - telegraph 1.10 s, she is 6.0 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 142.68s] boss wormmaster: 'worm_lunge' - she JUMPED it
+[ 144.82s] boss wormmaster: attack 15 'worm_lunge' (wave) - telegraph 1.10 s, she is 6.0 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 146.20s] boss wormmaster: 'worm_lunge' - she JUMPED it
+[ 147.74s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 149.10s] boss wormmaster: attack 16 'lash' (sweep) - telegraph 0.90 s, she is 6.0 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 149.71s] shot 26_boss_wormmaster_lash_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[ 149.77s] shot 27_boss_wormmaster_lash_telegraph_side.png (second angle)
+[ 150.19s] shot 28_boss_wormmaster_lash_active.png  audioPeak=0.000000  cursorVisible=False
+[ 150.19s] boss wormmaster: 'lash' - she DODGED it
+[ 150.25s] shot 29_boss_wormmaster_lash_active_side.png (second angle)
+[ 150.32s] boss wormmaster: 'lash' wasted - he is OPEN for 2.3 s
+[ 153.96s] boss wormmaster: attack 17 'worm_lunge' (wave) - telegraph 1.10 s, she is 7.5 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 155.53s] boss wormmaster: 'worm_lunge' - she JUMPED it
+[ 157.89s] boss wormmaster: he swats the thrown debris aside (not open - wait until he wastes an attack)
+[ 157.92s] boss wormmaster: attack 18 'worm_lunge' (wave) - telegraph 1.10 s, she is 6.0 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 159.44s] boss wormmaster: 'worm_lunge' HIT her (6/6) - she is DOWN
+[ 159.44s] boss wormmaster: she is down (6 hits) - the phase restarts
+[ 159.52s] shot 30_boss_wormmaster_she_is_down.png  audioPeak=0.000000  cursorVisible=False
+[ 160.75s] boss wormmaster: she went down (1x) - retry from the start of phase 2
+[ 162.96s] boss wormmaster: attack 19 'worm_lunge' (wave) - telegraph 1.10 s, she is 10.6 m away (answer: he sends a creature: it surfaces and runs the marked line - jump (A) or step aside)
+[ 164.55s] boss wormmaster: 'worm_lunge' HIT her (1/6)
+[ 164.77s] device dev_crystal disabled: 2 creatures of its trough withdraw (alive); saved - devices [dev_north, dev_ledge, dev_crystal] (3/3)
+[ 164.82s] shot 31_enc_dev_crystal_off.png  audioPeak=0.000000  cursorVisible=False
+[ 167.09s] boss wormmaster: attack 20 'lash' (sweep) - telegraph 0.90 s, she is 6.0 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 168.15s] boss wormmaster: 'lash' - she DODGED it
+[ 168.30s] boss wormmaster: 'lash' wasted - he is OPEN for 2.3 s
+[ 169.32s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (1/3 in phase 2)
+[ 169.69s] shot 32_boss_wormmaster_stagger_1.png  audioPeak=0.000000  cursorVisible=False
+[ 169.75s] shot 33_boss_wormmaster_stagger_1_side.png (second angle)
+[ 173.19s] boss wormmaster: attack 21 'lash' (sweep) - telegraph 0.90 s, she is 3.3 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 174.29s] boss wormmaster: 'lash' HIT her (2/6)
+[ 177.03s] boss wormmaster: attack 22 'lash' (sweep) - telegraph 0.90 s, she is 6.0 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 178.09s] boss wormmaster: 'lash' - she DODGED it
+[ 178.24s] boss wormmaster: 'lash' wasted - he is OPEN for 2.3 s
+[ 179.24s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (2/3 in phase 2)
+[ 179.60s] shot 34_boss_wormmaster_stagger_2.png  audioPeak=0.000000  cursorVisible=False
+[ 179.68s] shot 35_boss_wormmaster_stagger_2_side.png (second angle)
+[ 183.16s] boss wormmaster: attack 23 'arm_sweep' (sweep) - telegraph 0.75 s, she is 3.2 m away (answer: both arms sweep round him when she is close: jump (A) or block (LT))
+[ 183.67s] shot 36_boss_wormmaster_arm_sweep_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[ 183.73s] shot 37_boss_wormmaster_arm_sweep_telegraph_side.png (second angle)
+[ 184.11s] shot 38_boss_wormmaster_arm_sweep_active.png  audioPeak=0.000000  cursorVisible=False
+[ 184.11s] boss wormmaster: 'arm_sweep' - she JUMPED it
+[ 184.17s] shot 39_boss_wormmaster_arm_sweep_active_side.png (second angle)
+[ 184.24s] boss wormmaster: 'arm_sweep' wasted - he is OPEN for 2.3 s
+[ 186.59s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (3/3 in phase 2)
+[ 186.99s] shot 40_boss_wormmaster_stagger_3.png  audioPeak=0.000000  cursorVisible=False
+[ 187.05s] shot 41_boss_wormmaster_stagger_3_side.png (second angle)
+[ 191.28s] boss wormmaster: PHASE 3 'the signal fails' (tempo x1.20, attacks arm_sweep, lash, slam_wave, shock_ring)
+[ 191.29s] objective: His signal fails - read him, dodge, counter: three more staggers
+[ 191.30s] venus playtest 2: objective: 'His signal fails - read him, dodge, counter: three more staggers' at (117.7, -30.0, 86.0)
+[ 192.80s] boss wormmaster: attack 24 'shock_ring' (ring) - telegraph 0.75 s, she is 4.0 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 193.30s] shot 42_boss_wormmaster_shock_ring_telegraph.png  audioPeak=0.000000  cursorVisible=False
+[ 193.36s] shot 43_boss_wormmaster_shock_ring_telegraph_side.png (second angle)
+[ 193.74s] shot 44_boss_wormmaster_shock_ring_active.png  audioPeak=0.000000  cursorVisible=False
+[ 193.80s] shot 45_boss_wormmaster_shock_ring_active_side.png (second angle)
+[ 193.80s] boss wormmaster: 'shock_ring' - she JUMPED it
+[ 194.22s] boss wormmaster: 'shock_ring' wasted - he is OPEN for 2.5 s
+[ 197.71s] boss wormmaster: attack 25 'arm_sweep' (sweep) - telegraph 0.63 s, she is 4.0 m away (answer: both arms sweep round him when she is close: jump (A) or block (LT))
+[ 198.60s] boss wormmaster: attack 26 'slam_wave' (wave) - telegraph 0.83 s, she is 5.1 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 199.59s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 200.27s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 201.27s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (1/4 in phase 3)
+[ 205.21s] boss wormmaster: attack 27 'arm_sweep' (sweep) - telegraph 0.63 s, she is 2.0 m away (answer: both arms sweep round him when she is close: jump (A) or block (LT))
+[ 205.98s] boss wormmaster: 'arm_sweep' HIT her (3/6)
+[ 206.11s] boss wormmaster: attack 28 'slam_wave' (wave) - telegraph 0.83 s, she is 5.2 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 207.10s] boss wormmaster: 'slam_wave' HIT her (4/6)
+[ 209.49s] boss wormmaster: attack 29 'lash' (sweep) - telegraph 0.75 s, she is 5.5 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 210.37s] boss wormmaster: 'lash' - she DODGED it
+[ 210.49s] boss wormmaster: attack 30 'shock_ring' (ring) - telegraph 0.75 s, she is 9.0 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 211.69s] boss wormmaster: 'shock_ring' HIT her (5/6)
+[ 213.56s] boss wormmaster: attack 31 'shock_ring' (ring) - telegraph 0.75 s, she is 5.5 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 214.68s] boss wormmaster: 'shock_ring' - she JUMPED it
+[ 214.98s] boss wormmaster: 'shock_ring' wasted - he is OPEN for 2.5 s
+[ 217.25s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (2/4 in phase 3)
+[ 221.35s] boss wormmaster: attack 32 'arm_sweep' (sweep) - telegraph 0.63 s, she is 1.8 m away (answer: both arms sweep round him when she is close: jump (A) or block (LT))
+[ 222.13s] boss wormmaster: 'arm_sweep' - she JUMPED it
+[ 222.24s] boss wormmaster: attack 33 'slam_wave' (wave) - telegraph 0.83 s, she is 1.8 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 223.12s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 223.92s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 227.61s] boss wormmaster: attack 34 'shock_ring' (ring) - telegraph 0.75 s, she is 4.1 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 228.63s] boss wormmaster: 'shock_ring' - she JUMPED it
+[ 229.05s] boss wormmaster: 'shock_ring' wasted - he is OPEN for 2.5 s
+[ 232.63s] boss wormmaster: attack 35 'lash' (sweep) - telegraph 0.75 s, she is 3.9 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 233.52s] boss wormmaster: 'lash' - she DODGED it
+[ 233.65s] boss wormmaster: attack 36 'shock_ring' (ring) - telegraph 0.75 s, she is 7.5 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 234.85s] boss wormmaster: 'shock_ring' HIT her (6/6) - she is DOWN
+[ 234.85s] boss wormmaster: she is down (6 hits) - the phase restarts
+[ 236.17s] boss wormmaster: she went down (2x) - retry from the start of phase 3
+[ 238.37s] boss wormmaster: attack 37 'slam_wave' (wave) - telegraph 0.83 s, she is 5.5 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 239.37s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 240.05s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 241.06s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (1/4 in phase 3)
+[ 245.02s] boss wormmaster: attack 38 'arm_sweep' (sweep) - telegraph 0.63 s, she is 2.0 m away (answer: both arms sweep round him when she is close: jump (A) or block (LT))
+[ 245.78s] boss wormmaster: 'arm_sweep' - she JUMPED it
+[ 245.89s] boss wormmaster: attack 39 'slam_wave' (wave) - telegraph 0.83 s, she is 2.0 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 246.78s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 247.57s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 251.02s] boss wormmaster: attack 40 'slam_wave' (wave) - telegraph 0.83 s, she is 4.0 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 251.98s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 252.70s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 253.71s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (2/4 in phase 3)
+[ 257.72s] boss wormmaster: attack 41 'arm_sweep' (sweep) - telegraph 0.63 s, she is 1.9 m away (answer: both arms sweep round him when she is close: jump (A) or block (LT))
+[ 258.48s] boss wormmaster: 'arm_sweep' - she DODGED out of its path
+[ 258.61s] boss wormmaster: attack 42 'slam_wave' (wave) - telegraph 0.83 s, she is 5.1 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 259.60s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 260.30s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 263.56s] boss wormmaster: attack 43 'lash' (sweep) - telegraph 0.75 s, she is 5.4 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 264.47s] boss wormmaster: 'lash' HIT her (1/6)
+[ 264.58s] boss wormmaster: attack 44 'shock_ring' (ring) - telegraph 0.75 s, she is 6.5 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 265.83s] boss wormmaster: 'shock_ring' - she JUMPED it
+[ 266.00s] boss wormmaster: 'shock_ring' wasted - he is OPEN for 2.5 s
+[ 269.29s] boss wormmaster: attack 45 'lash' (sweep) - telegraph 0.75 s, she is 5.5 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 270.17s] boss wormmaster: 'lash' - she DODGED it
+[ 270.30s] boss wormmaster: attack 46 'shock_ring' (ring) - telegraph 0.75 s, she is 9.1 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 271.49s] boss wormmaster: 'shock_ring' HIT her (2/6)
+[ 273.38s] boss wormmaster: attack 47 'slam_wave' (wave) - telegraph 0.83 s, she is 5.5 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 274.38s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 275.07s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 278.59s] boss wormmaster: attack 48 'slam_wave' (wave) - telegraph 0.83 s, she is 5.5 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 279.60s] boss wormmaster: 'slam_wave' HIT her (3/6)
+[ 282.13s] boss wormmaster: attack 49 'lash' (sweep) - telegraph 0.75 s, she is 5.5 m away (answer: one long arm whips out along the marked line: dodge sideways (B) or block (LT))
+[ 283.03s] boss wormmaster: 'lash' - she DODGED it
+[ 283.15s] boss wormmaster: attack 50 'shock_ring' (ring) - telegraph 0.75 s, she is 9.2 m away (answer: a shock ring rolls out of the floor round him: jump it (A))
+[ 284.55s] boss wormmaster: 'shock_ring' - she JUMPED it
+[ 284.58s] boss wormmaster: 'shock_ring' wasted - he is OPEN for 2.5 s
+[ 286.80s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (3/4 in phase 3)
+[ 290.70s] boss wormmaster: attack 51 'slam_wave' (wave) - telegraph 0.83 s, she is 2.7 m away (answer: he slams: a wave of surfacing worms rolls along the marked line - jump it (A))
+[ 291.64s] boss wormmaster: 'slam_wave' - she JUMPED it
+[ 292.40s] boss wormmaster: 'slam_wave' wasted - he is OPEN for 2.5 s
+[ 293.40s] boss wormmaster: STAGGERED by a telekinetic throw while he was open (4/4 in phase 3)
+[ 296.44s] boss wormmaster: phase 3 ends - he is DAZED: her takedown (Y) pins him
+[ 296.44s] objective: He is dazed - take him down (Y / E)
+[ 296.45s] venus playtest 2: objective: 'He is dazed - take him down (Y / E)' at (115.8, -30.0, 84.4)
+[ 296.60s] boss wormmaster: her takedown pins him - subdued, alive
+[ 297.88s] BOSS wormmaster: fight length 3:35 (215 s), attacks 51 (14.3/min: worm_lunge 13, slam_wave 15, lash 9, arm_sweep 6, shock_ring 8), her presses: dodge 8, jump 26, block 0, telekinesis 20, hits she took 15, she went down 2x, answered: dodged 8, blocked 0, jumped 26, out of reach 2; telekinetic throws 17 (deflected 8), strikes landed 56, staggers 9; phases: phase 1 'above his machinery' from 0:00 to 0:31 (31 s) | phase 2 'he comes down' from 0:34 to 1:49 (75 s) | phase 3 'the signal fails' from 1:50 to 3:33 (103 s) | dazed from 3:33 | pinned at 3:33
+[ 297.94s] shot 46_enc_all_three_devices_off.png  audioPeak=0.000000  cursorVisible=False
+[ 298.81s] shot 47_enc_he_is_subdued.png  audioPeak=0.000000  cursorVisible=False
+[ 301.18s] objective: Close the containment barrier
+[ 301.20s] venus playtest 2: objective: 'Close the containment barrier' at (117.0, -30.0, 83.3)
+[ 306.86s] ok: close the containment barrier (the console) (5.7s)
+[ 309.60s] shot 48_enc_barrier_closing.png  audioPeak=0.000000  cursorVisible=False
+[ 311.00s] containment: the barrier closed round the dais - Wormmaster contained (saved); devices [dev_north, dev_ledge, dev_crystal]; knockdowns during the encounter 4; creatures harmed 0
+[ 311.00s] cat speed vs clip (QF11): walk clip 0 frames, walking in place (speed < 0.06 m/s x scale for > 0.25 s, then switched to idle) 0x
+[ 311.00s] boss check (QF17): the Wormmaster's fight done - BOSS wormmaster: fight length 3:48 (228 s), attacks 51 (13.4/min: worm_lunge 13, slam_wave 15, lash 9, arm_sweep 6, shock_ring 8), her presses: dodge 8, jump 26, block 0, telekinesis 20, hits she took 15, she went down 2x, answered: dodged 8, blocked 0, jumped 26, out of reach 2; telekinetic throws 17 (deflected 8), strikes landed 56, staggers 9; phases: phase 1 'above his machinery' from 0:00 to 0:31 (31 s) | phase 2 'he comes down' from 0:34 to 1:49 (75 s) | phase 3 'the signal fails' from 1:50 to 3:33 (103 s) | dazed from 3:33 | pinned at 3:33
+[ 311.00s] audio output peak over the whole run = 0.000000 (muted=True, listenerVolume=0)
