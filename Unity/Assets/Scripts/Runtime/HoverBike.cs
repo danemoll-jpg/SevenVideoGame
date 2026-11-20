@@ -174,33 +174,71 @@ namespace Seven
             // QF13 (10): real collision under water - the bike's body (a 1 m sphere) sweeps against the level's meshes (the
             // camera-occluder copy: structures, pillars, arches, platforms, pipes) and slides along a surface, never through it
             p = SlideSwim(from, p);
-            if (SwimClamp != null) p = SwimClamp(p);
+            if (SwimClamp != null) { var q = SwimClamp(p); if ((q - p).sqrMagnitude > 1e-8f) p = SlideSwim(p, q); }   // QF15 (2): the clamp is swept too
             float moved = (p - from).magnitude;
             if (Speed > 1f && moved < Speed * dt * 0.25f) { _stuckFor += dt; Speed *= 0.6f; } else _stuckFor = Mathf.Max(0f, _stuckFor - dt);
             transform.position = p;
             Odometer += moved;
+            if (DemoBoot.CaptureDir != null) MeasureInside(from, p);
             _lean = Mathf.Lerp(_lean, -steer * Mathf.Clamp01(Speed / 5f) * 18f, dt * 3f);
             if (Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = p; }
             if (Bubbles != null) { var e = Bubbles.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 8f + 70f * Mathf.Clamp01(Speed / SwimMax) : 0f; }
             if (Streaks != null) { var e = Streaks.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 160f * Mathf.Clamp01((Speed - 6f) / (SwimMax - 6f)) : 0f; Streaks.transform.position = transform.position + transform.forward * 9f + Vector3.up * 0.8f; Streaks.transform.rotation = transform.rotation; }
         }
 
+        // QF15 (2) - Dan: "the bike can still go through walls under water" (a repeat of QF13 10). Why QF13's fix did not
+        // hold: the sweep asked only the visual-mesh copy's solid layer, which skipped every mesh over 60 m (the chamber's ice
+        // ceiling and floor, the ice passage, the approach / escape tubes, the temple hall, the merged pillars, structures,
+        // spires and platforms), every surface with a real collider (the base's outer walls and floors) and the small props;
+        // and the swim-volume clamp that ran AFTER the sweep moved the bike back inside its capsules / boxes with no sweep at
+        // all - where a volume reaches past a wall, straight through it. Now the whole frame's move (at 25 m/s too) is swept
+        // against everything (RideProbe: real colliders + every visual mesh, both faces, no size cut in Europa), slides along
+        // up to four surfaces, and the clamp's correction is swept the same way (a clamp into a wall is refused).
+        public static Transform[] IgnoreRoots = new Transform[0];
+        public int Depenetrations { get; private set; }
+        public const float Skin = 0.06f;
         Vector3 SlideSwim(Vector3 from, Vector3 to)
         {
             if (!CameraOccluders.Ready) return to;
             var c0 = from + Vector3.up * 0.6f; var mv = to - from;
-            for (int it = 0; it < 3; it++)
+            // already touching a surface (a scripted push, a placement): out of it first, or the sweep would not see it
+            float push = RideProbe.Depenetrate(ref c0, BodyRadius - 0.02f, IgnoreRoots);
+            if (push > 0f) Depenetrations++;
+            for (int it = 0; it < 4; it++)
             {
                 float len = mv.magnitude; if (len < 1e-4f) break;
-                if (!CameraOccluders.SphereCast(c0, BodyRadius, mv, out var hit, len + 0.05f)) { c0 += mv; mv = Vector3.zero; break; }
-                float go = Mathf.Max(0f, hit.distance - 0.06f);
-                c0 += mv.normalized * go;
-                var rest = mv.normalized * (len - go);
-                mv = Vector3.ProjectOnPlane(rest, hit.normal);
-                if (Vector3.Dot(hit.normal, transform.forward) < -0.5f) Speed *= Mathf.Pow(0.4f, Time.deltaTime);   // head-on: scrapes speed off
+                if (!RideProbe.Sweep(c0, BodyRadius, mv, len + Skin, IgnoreRoots, out var hit)) { c0 += mv; mv = Vector3.zero; break; }
+                float go = Mathf.Max(0f, hit.distance - Skin);
+                var md = mv / len;
+                c0 += md * go;
+                var rest = md * (len - go);
+                var nrm = hit.normal; if (Vector3.Dot(nrm, md) > 0f) nrm = -nrm;            // a back face: the normal toward the bike
+                mv = Vector3.ProjectOnPlane(rest, nrm);
+                if (Vector3.Dot(nrm, md) < -0.6f) Speed *= Mathf.Pow(0.4f, Time.deltaTime);   // head-on: scrapes speed off
                 WallSlides++;
             }
             return c0 - Vector3.up * 0.6f;
+        }
+
+        // QF15 (2) check runs: every swimming frame - is the bike's core (0.55 m of its 1 m body) inside any surface, and did
+        // its centre cross a surface this frame (tunnelling)?
+        public static int SwimFrames, InsideFrames, TunnelFrames; public static string InsideWorst;
+        void MeasureInside(Vector3 from, Vector3 to)
+        {
+            if (!CameraOccluders.Ready) return;
+            SwimFrames++;
+            var c = to + Vector3.up * 0.6f;
+            if (RideProbe.Overlap(c, 0.55f, IgnoreRoots, null, false, out var w)) { InsideFrames++; InsideWorst = $"bike core inside '{w}' at {to}"; Debug.Log("[Seven] BIKE INSIDE GEOMETRY (QF15 2): " + InsideWorst); }
+            if (RideProbe.Crosses(from + Vector3.up * 0.6f, c, IgnoreRoots, null, false, out var w2)) { TunnelFrames++; InsideWorst = $"bike crossed '{w2}' from {from} to {to}"; Debug.Log("[Seven] BIKE THROUGH A SURFACE (QF15 2): " + InsideWorst); }
+        }
+        public static string InsideSummary() => $"BIKE vs GEOMETRY (QF15 2): {SwimFrames} swimming frames, bike core inside geometry {InsideFrames}, centre crossed a surface {TunnelFrames} (both must be 0){(InsideWorst != null ? "; last: " + InsideWorst : "")}";
+
+        /// <summary>QF15 (2) wall test: put the bike somewhere under water already moving (full speed, nose pitch).</summary>
+        public void TestLaunch(Vector3 at, float yaw, float pitch, float speed)
+        {
+            transform.SetPositionAndRotation(at, Quaternion.Euler(0f, yaw, 0f));
+            _swimPitch = pitch; Speed = speed; _vy = speed * Mathf.Sin(pitch * Mathf.Deg2Rad); _shove = Vector3.zero; _spin = 0f; _stuckFor = 0f;
+            LastSafe = at;
         }
 
         /// <summary>Round 14: get off onto a given spot (the base's dock), standing beside the bike.</summary>

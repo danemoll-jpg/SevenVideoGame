@@ -36,7 +36,7 @@ texture embedded → **`Art/Export/viper/viper_for_mixamo.fbx`**, plus a preview
 "FBX for Unity, with skin" to `Art/Mixamo/viper/viper_body_mixamo.fbx`. Commit + push. No release.
 
 
-## Quick fix QF15: the bike camera + walls in Europa (Dan, 2026-11-19) — to do
+## Quick fix QF15: the bike camera + walls in Europa (Dan, 2026-11-19) — done, status below; release 0.14.3
 Commit first. All standing rules and the repeat-item rule (say why the last fix didn't hold, fix the cause, prove it in
 normal play, never "done" on a partial fix). Dan: **"Two main fixes for Europa now."** Items 1–2 are the focus — do them
 properly; item 3 is a small cut. Release **0.14.3**; "QF15 — status"; "For Dan to check (QF15)". Testing time may go over 20 minutes for the
@@ -72,6 +72,67 @@ proofs below, but keep it purposeful.
 
 Checks + release: the two proofs above, one player-style ride through Europa from the dive to the base and from the
 escape to the temple, publish **0.14.3**; docs; commit + push.
+
+## QF15 — status (2026-11-19): done, exe-verified off-screen; release 0.14.3 (`game-1403`)
+Captures + logs: `Docs/Previews/qf15/` (the minute of riding `ride_sequence/`, the wall slides `wall_test/`, contact sheets,
+the per-frame logs `ride_camera_frames_*.csv`, the wall test and run logs).
+
+1. **The riding camera — fixed (repeat of QF14 5).** *Why QF14's fix didn't hold:* it only switched the follow camera's wall
+   logic off inside the race (`RaceMode`). Everywhere else the **on-foot** follow camera still drove the bike: it snapped in
+   at once for any mesh on the boom, its "is 7 visible" check looked for her bones on the *bike's* transform (none - it used
+   fixed points 1-1.6 m above the bike, often inside the hull or a ceiling) and pulled in / swung / **cut** round whenever
+   those points were "hidden", its recentre stopped while that check said "occluded" and then re-aimed, its pitch never
+   followed the bike's nose, and the speed FOV pushed in and out by itself. *Now* there is **one riding camera**
+   (`ChapterCameraRide.cs`) whenever she rides, in any world, outside cutscenes - none of the on-foot logic runs:
+   behind and a little above the bike, its heading and nose pitch followed through a two-stage first-order lag (cannot
+   overshoot), turns capped at 140°/s, never below her level; anything in the way that is not a shell around her (pillars,
+   arches, rings, structures, platforms, rocks, vehicles) is **cut away** (held 0.8 s) instead of moving the camera; only
+   shells (ice ceiling, floors, tunnel / tube walls, the temple hall) bring it closer - seen early by a wide probe, a
+   clearance probe and a look-ahead 0.6 s along her path, eased in over 0.5 s, eased out only after 1.2 s fully clear, 0.5 m
+   dead band; a last guard keeps the camera itself out of geometry. The race's look-toward-the-next-ring is a slow ease
+   (its weight moves at most 0.5/s). Speed FOV: +6° over 1.2 s. A cutscene that ends far round from her heading or with its
+   camera behind a wall, and a skip that moves the bike, are **cuts** (counted separately), never a fast swing.
+   **Proof** (`ride_camera_frames.csv` every riding frame; a shift = aim change > 3° or offset change > 0.3 m per 60 fps frame
+   beyond what the bike's own turn / pitch / sideways travel explains, or an in-out-in of the distance within 0.5 s):
+   the player-style Europa run from the descent to the debrief (`-europaplay -europacp 1`, settlement, approach, the base's outside, the escape tube, open water, the temple, the way home): **13,660 riding frames - aim shifts 0, position shifts 0, distance reversals 0, camera inside geometry 0, behind a surface 0**; the race run (`-europacp 2 -europarace`, two races): **10,882 frames - 0 / 0 / 0**, race 3,678 frames 0; Venus (`-venusplay`, B01 + the garden road): **568 frames - 0 / 0 / 0**. Explicit cuts in those runs: 10 + 4 + 4 (cutscene hand-overs far round / behind a wall, one skip teleport). A minute of riding: `ride_sequence/` + `ride_sequence_sheet.png` (one frame has the keeper swimming close past the camera - characters are never cut away).
+   *Measured along the way and fixed:* the cutscene hand-over swing (Venus 32 flags → 0), the escape's burst-out framed from
+   outside the tube (camera dragged through the wall → now a cut), a skip teleport counted as a move, a race-start swing,
+   tiny in/out in the escape tube, the camera dropping below her level when climbing (met the floor), the bike slipping under
+   the dock floor in the access bay (the bay's swim box now stops at the dock edge).
+2. **Walls under water — fixed (repeat of QF13 10).** *Why QF13's fix didn't hold:* the bike's sweep asked only the
+   visual-mesh copy's "solid" layer, which skipped every mesh over 60 m (the chamber's ice ceiling and floor, the ice passage,
+   the approach / escape tubes, the temple hall - and the *merged* pillars, ancient structures, spires and platforms, whose
+   combined bounds were over 60 m), every surface with a real collider (the base's outside, the dock floors) and the small
+   props; sphere sweeps also missed many triangles met from behind (tubes face inward); and the swim-volume clamp ran
+   *after* the sweep with no sweep of its own - where a volume reaches past a wall it moved the bike straight through it.
+   *Now:* `RideProbe` sweeps the whole frame's move (25 m/s too) against the real colliders **and** every visual mesh
+   (Europa: no size cut, both faces), slides along up to four surfaces, pushes out of anything it already touches, and the
+   clamp's correction is swept as well; the escape's flying debris glances off the bike. The merged meshes are split per
+   piece (so the camera can cut away just the one in its way). **Proof - the wall test** (`-europawalltest`, 157 attempts
+   at full speed head-on / 35° / 60° into every area: ice passage 12, great chamber incl. ceiling + floor 36, settlement 24,
+   race course 26, damaged passage 4, approach tunnel 14, base outside / bay 6, escape tube 16, open water + temple 13, way
+   home 6): **0 failed attempts, bike core inside geometry 0 frames, centre through a surface 0, camera inside geometry 0**
+   (57,440 swimming frames). In the free riding runs: *bike core inside geometry **0** / through a surface **0** (24,022 swimming frames in the playthrough, 16,981 in the race run).* *Fixed on the way:* the first wall test failed 68 of
+   157 (her own helmet collar counted as a wall - excluded - and one tube wall entered from outside); the second 1 (a sweep
+   starting inside the damaged-passage tube: the push-out step did not work with a disabled probe collider - fixed).
+   Captures: `wall_test/` (12 slides along walls). In ramming tests the camera still pulls in hard against tube walls
+   (9 flagged moves in 57,597 frames of deliberate wall-ramming) - never inside geometry.
+3. **The Europa reunion — cut.** After the beam-up a short fade goes straight to the debrief: 7 already in the pilot's chair,
+   helmet off, Panther in her lap. `EUR_16` removed (spec, `Docs/EUROPA-LINES.md`, `europa_dialogue.json`), `EUR_16_04.mp3`
+   deleted; the Log entry "An ordinary sound" no longer mentions the boarding area.
+
+Also: the star map now reads every connected pad (a second pad holding "current" hid the player's d-pad - found when the
+player-style run could not leave Venus's star map). Testing time: about 40 game-minutes - over the 20-minute rule for the
+two proofs (allowed by Dan for QF15): 5 wall tests (6.6 min each) while finding the causes, 4 player-style Europa runs, race
+and Venus runs.
+
+## For Dan to check (QF15)
+- Ride anywhere in Europa (and Venus): the camera stays behind the bike, follows turns and dives smoothly, never swings,
+  cuts or jumps by itself; a pillar / arch / ring in the way simply vanishes for a moment; in tunnels it comes a little
+  closer and eases back out. The race still turns gently toward the next ring.
+- Try to ride through walls, the ice ceiling, the chamber floor, pillars, the tunnels and the temple at full speed: the bike
+  slides along every surface.
+- Europa's end: after the beam, straight to the chair debrief.
 
 
 ## Round 15: Chapter "Mars — The Divided Kingdoms", first playable pass (Dan, 2026-11-19) — to do, AFTER QF15
@@ -130,18 +191,33 @@ prototype (easy to replace; the guardrails say the symbol, mechanisms, Viper's e
    distance; he's subdued and contained (never killed); the level two-shot after; he's left secured for local custody.
 9. **The temple (spec 8–9):** the symbols of both kingdoms as one design (insert), the tetrahedron rune, the vision, the
    return lines, the small counterpart awarded once (insert beside the other records).
-10. **Two new leads (spec 10):** the temple display — the asteroid world and Biaveh; sent to the saucer; **unlock both on the
-    star map** (their chapters don't exist yet → "coming soon" cards, like Mars once was).
+10. **A route that stops (spec 10 — revised 2026-11-19):** the temple display shows a route leading out from Mars that
+    breaks off partway; the caretaker / 7 / worker lines; sent to the saucer ("Received. Part of a route."). **No new
+    destinations unlock here** (the old "asteroid world and Biaveh" leads are gone from the spec).
 11. **The ride back (spec 11)** with the transport crossing openly and the guard and caretaker talking; **aboard (spec 12)**
-    already seated in the chair; **the destination choice (spec 13)** with both versions (Europa unfinished / finished),
-    checking the completed-world flags; Panther's lines; set course.
-12. **Progression + saves:** the guardrails (completed-world checks; Cattalus after Venus + Mars + Europa + asteroid + Biaveh;
+    already seated in the chair; then **departure routing (spec 13 — Dan's revised MAR_13, 2026-11-19)**, saucer stationary:
+    - **Europa unfinished → MAR_13U**: only Europa is offered next; no Biaveh, no asteroid.
+    - **Europa complete → MAR_13C**: the two records side by side on the display (the Mars route + the Cetaceans' sequence,
+      matching intervals, the route resolving) → **Biaveh unlocks** ("Beyond this solar system"); the asteroid stays
+      undiscovered.
+    - Then **MAR_13B** (shared closing) after either branch; set course.
+    - **Europa finished second:** add the same discovery to the **end of Europa** — after EUR_17, if Mars is already complete,
+      play MAR_13C + MAR_13B there (the lines work as written: both records are aboard) and unlock Biaveh. It plays **once**,
+      whichever of the two is finished second (a saved flag).
+    - **Travel event — asteroid discovery (TRV_AST):** on the **first journey toward Biaveh**, after the warp into its system:
+      a navigation chime, the display reveals an asteroid with artificial structures, the lines, the player choice
+      (Investigate the asteroid / Continue to Biaveh) → **both unlock**. Neither chapter exists yet → after the choice a
+      "Chapter — coming soon" card for the one picked, back to free exploration; both stay on the star map. Plays once.
+    - Voice every MAR_13U / 13C / 13B / TRV_AST line with its direction (the strokes, the head press, the purr-ish hum as
+      animation on the lap pose).
+12. **Progression + saves:** the guardrails (completed-world checks; Biaveh only after Mars + Europa; the asteroid only after
+    the travel event; Cattalus after Venus + Mars + Europa + asteroid + Biaveh;
     the final Moon mission after Cattalus — just the flags for now), checkpoints for Continue, the chapter + its sections in
     the main menu / pause menu lists, Log + Field Guide entries (Reptilians, the guard, the worker, the caretaker, Viper) with
     the QF13 "grows with the story" unlocks; the tetrahedron with the other records on the chair arm.
 
 **Checks + release (20-minute rule):** targeted runs per section with captures you look at (arrival, settlement, Viper's
-reveal, the maintenance route ride, the two controls, the encounter, the temple + vision, the leads, the choice), one
+reveal, the maintenance route ride, the two controls, the encounter, the temple + vision, the route display, both MAR_13 branches, the Europa-second branch, the asteroid travel event), one
 player-style run from the star map to the destination choice, the menu sections start correctly. Publish **0.15.0**; docs;
 commit + push.
 

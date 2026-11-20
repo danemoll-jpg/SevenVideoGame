@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Seven
@@ -9,7 +9,7 @@ namespace Seven
     /// with a sphere-cast against the level's colliders so it never ends up inside rock. Cutscenes take over with
     /// <see cref="Shot"/> (a fixed position looking at a point, eased in) and hand back with <see cref="Follow"/>.
     /// </summary>
-    public class ChapterCamera : MonoBehaviour
+    public partial class ChapterCamera : MonoBehaviour
     {
         public Transform Target;
         public ChapterInput Input;
@@ -158,7 +158,7 @@ namespace Seven
         {
             Subjects.Clear();
             if (_baseFov > 0f) GetComponent<Camera>().fieldOfView = _baseFov;
-            _shot = false;
+            _shot = false; _rideOn = false;
             if (behind && Target != null)
             {
                 var d = Target.position + Vector3.up * LookHeight - transform.position; d.y = 0f;
@@ -187,6 +187,8 @@ namespace Seven
         public void SnapBehind()
         {
             if (Target == null) return;
+            if (_bikeOf != Target) { _bikeOf = Target; _bike = Target.GetComponent<HoverBike>(); }
+            if (RidingNow && !_shot) { RideSnapBehind(); return; }
             Yaw = Target.eulerAngles.y; Pitch = DefaultPitch;
             _focus = Target.position + Vector3.up * LookHeight; _dist = Distance;
             Place(1f);
@@ -198,6 +200,8 @@ namespace Seven
             if (_shot)
             {
                 if (_faded.Count > 0 || _fades.Count > 0) Unfade();
+                if (_rideCut.Count > 0) RideUncutAll();
+                _rideOn = false;                                 // QF15 (1): back from a cutscene the ride camera eases on from here
                 if (Subjects.Count > 0 && !_userShot && (DialoguePlayer.AnyBusy || Time.time < TalkUntil) && Time.time >= _nextCheck) { _nextCheck = Time.time + 0.2f; Reframe(); }
                 transform.position = Vector3.SmoothDamp(transform.position, _shotPos, ref _shotPosVel, _shotEase * 0.5f);
                 _look = Vector3.SmoothDamp(_look, _shotLook, ref _shotLookVel, _shotEase * 0.5f);
@@ -205,10 +209,13 @@ namespace Seven
                 return;
             }
             if (Target == null) return;
+            if (_bikeOf != Target) { _bikeOf = Target; _bike = Target.GetComponent<HoverBike>(); }
+            // QF15 (1): while she rides there is one bike camera (ChapterCameraRide.cs) - none of the on-foot logic below runs
+            if (RidingNow) { LateUpdateRide(dt); return; }
+            if (_rideOn) { _rideOn = false; RideUncutAll(); }
             // QF13 (13): a sense of speed on the bike - the field of view opens a little at speed and the camera sits a bit
             // further back and lower (the 2.4-3 m bike stays readable)
             {
-                if (_bikeOf != Target) { _bikeOf = Target; _bike = Target.GetComponent<HoverBike>(); }
                 var cm = GetComponent<Camera>(); if (_baseFov <= 0f) _baseFov = cm.fieldOfView;
                 float k = _bike != null && _bike.Riding ? Mathf.Clamp01((_bike.Speed - 8f) / 16f) : 0f;
                 SpeedKick = Mathf.MoveTowards(SpeedKick, k, dt * 1.5f);

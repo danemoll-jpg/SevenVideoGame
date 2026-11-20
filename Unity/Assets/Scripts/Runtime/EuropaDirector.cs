@@ -90,10 +90,15 @@ namespace Seven
             // characters and the helmet are never walls (the wall push / camera checks only see the level)
             var ex = new List<Transform> { Seven.transform, Bike.transform };
             if (Helmet != null && Helmet.Sphere != null) ex.Add(Helmet.Sphere);
+            if (Helmet != null && Helmet.Collar != null) ex.Add(Helmet.Collar);          // QF15: her helmet's collar is never a wall either
             foreach (var c in new Component[] { Keeper, Guide, HugeOne, Tunneler, TunnelerCraft, GuideLight }) if (c != null) ex.Add(c.transform);
             if (Pod != null) foreach (var c in Pod) if (c != null) ex.Add(c.transform);
             foreach (var arr in new[] { Scree, Rivals, Vehicles, DeviceSlots }) if (arr != null) foreach (var t in arr) if (t != null) ex.Add(t);
+            // QF15 (2): every surface, whatever its size (the bike's sweep and the ride camera use this copy)
+            CameraOccluders.IncludeHuge = true;
             CameraOccluders.Build(ex.ToArray());
+            HoverBike.IgnoreRoots = ex.ToArray(); ChapterCamera.RideIgnore = ex.ToArray();
+            ChapterCamera.RideArea = () => RideAreaName(Bike != null ? Bike.transform.position : P7);
             ValidateSwimPaths();
             CollectBaseWalls();
             Dlg.LineStarted += OnLine;
@@ -240,6 +245,20 @@ namespace Seven
             Cam.Cutaway = !Bike.Riding && InBase(P7) ? _baseWallSet : null;
             Cam.Follow();
         }
+        /// <summary>QF15 (1): where the bike is, for the riding-camera log (settlement, descent, approach, race, the way home ...).</summary>
+        string RideAreaName(Vector3 p)
+        {
+            if (p.y > EuropaLayout.WaterY) return "ice passage (surface)";
+            if (Cam != null && Cam.RaceMode) return "race";
+            if (p.z < 128f && p.x > -20f && p.x < 20f) return "ice passage";
+            if (p.z > 440f && p.x < -140f) return "base outside / bay";
+            if (p.x < -160f && p.z > 250f) return "escape tube";
+            if (p.x < -150f && p.z < 250f) return (p - EuropaLayout.TempleCentre).magnitude < 50f ? "temple" : "open water";
+            if (p.z > 312f || p.x < -30f && p.z > 340f) return "approach";
+            if (EuropaState.Checkpoint >= EuropaLayout.CpHome || (p.z < 200f && p.x < -40f)) return "way home";
+            if (p.x > 60f && p.z > 240f) return "settlement";
+            return "great chamber (descent)";
+        }
         static bool InBase(Vector3 p) => p.y < EuropaLayout.BaseY + 3f && p.y > EuropaLayout.BaseY - 1f && p.x < -146f && p.x > -227f && p.z > 443f && p.z < 510f;
         IEnumerator Say(string scene, int from = 1, int to = 99)
         {
@@ -328,6 +347,9 @@ namespace Seven
             bool inside = !Bike.Riding && InBase(P7) && !_cut;
             var want = inside ? _baseWallSet : null;
             if (Cam.Cutaway != want) { Cam.Cutaway = want; if (inside) Log("base camera (QF14 6): cut-away mode on - walls never move the camera"); }
+            // QF15 (1): outside the base this loop leaves the renderers alone (it used to set every base part visible each
+            // frame - undoing the ride camera's cut-aways of the base's outside)
+            if (!inside) { if (_cutUntil.Count > 0) { foreach (var kv in _cutUntil) if (kv.Key != null) kv.Key.forceRenderingOff = false; _cutUntil.Clear(); } return; }
             var cam = Cam.transform.position; var head = P7 + Vector3.up * 1.45f; var seg = head - cam; float len = seg.magnitude;
             bool any = false, blocked = false; float now = Time.time;
             foreach (var r in _baseWalls)

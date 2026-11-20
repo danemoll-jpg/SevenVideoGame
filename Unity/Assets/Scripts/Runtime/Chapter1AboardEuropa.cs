@@ -8,9 +8,9 @@ namespace Seven
     /// section 1 (<see cref="EuropaState.ArrivalAboard"/>): the title card over black from the first frame, then 7 in the
     /// pilot's chair with Panther already curled in her lap (her hand on top of his back, QF12), the navigation display
     /// insert, the lines - then the Europa scene (the dive);
-    /// sections 16-17 (<see cref="EuropaState.HomeAboard"/>): helmet off, Panther waiting near the boarding area instead of
-    /// his usual spot, she kneels beside him, his head against her hand, a quiet pause; later the debrief in the pilot's chair
-    /// (already seated, Panther in her lap; Europa's record with the others), the purr, the two-shot held; then free
+    /// sections 16-17 (<see cref="EuropaState.HomeAboard"/>): QF15 (3) - the reunion is cut: a short fade from the beam-up
+    /// straight into the debrief in the pilot's chair (already seated, helmet off, Panther in her lap; Europa's record with
+    /// the others), the purr, the two-shot held; then free
     /// exploration with the star map (Mars available, Europa done).
     /// </summary>
     public partial class Chapter1Aboard
@@ -115,44 +115,10 @@ namespace Seven
             Seven.Frozen = true; Seven.Cutscene = true; Director.Cam.Hold = true;
             Cat.ForceTarget = null; Cat.enabled = false;
             MusicSystem.Play("aboard_saucer", 2.5f);
-            if (!EuropaState.SceneDone("EUR_16"))
-            {
-                // inside: she has come up the beam; the helmet comes off. Panther is waiting near the boarding area.
-                var at = new Vector3(-1.2f, 0f, -4.6f); var catAt = new Vector3(0.4f, 0f, -3.5f);
-                Seven.transform.SetPositionAndRotation(at, Quaternion.LookRotation(new Vector3(0.2f, 0f, 1f)));
-                Cat.transform.SetPositionAndRotation(catAt, Quaternion.LookRotation(Flat(at - catAt)));
-                CatClip("sit", 0.05f);
-                var mid = (at + catAt) * 0.5f;
-                CamTo(mid + new Vector3(2.6f, 1.35f, 2.6f), mid + Up * 0.7f, 0f, 44f);
-                yield return UI.Fade(0f, 1.2f);
-                // she removes her bubble helmet (a quick lift - the glass dome gone, a breath)
-                AudioKit.Play("europa_bubbles", at + Up * 1.6f, 0.3f);
-                yield return ShotV("ea10_helmet_off_panther_waiting");
-                // she notices where he is
-                yield return Turn(Seven.transform, catAt, 0.6f);
-                // QF13 (18): the bike talk is cut (the bike is not in view aboard) - EUR_16_01..03 removed; the reunion stays
-                yield return Wait(0.6f);
-                // she kneels beside him
-                Seven.Frozen = false; bool sd = Seven.ScriptDriven; Seven.ScriptDriven = true;
-                yield return AutoWalk(catAt + Flat(at - catAt).normalized * 0.75f);
-                Seven.ScriptMove = Vector2.zero; Seven.ScriptDriven = sd; Seven.Frozen = true;
-                if (Seven.HasState("crouch_idle")) Seven.PlayClip("crouch_idle", 0.5f);
-                yield return Turn(Seven.transform, catAt, 0.4f);
-                CamTo(catAt + new Vector3(1.6f, 0.8f, 1.2f), (catAt + Seven.transform.position) * 0.5f + Up * 0.5f, 0.8f, 42f);
-                yield return Wait(0.8f);
-                // he presses his head against her hand
-                var head = catAt + Up * 0.32f + Cat.transform.forward * 0.18f;
-                _ik.RightPos = head + Up * 0.04f; _ik.RightW = 1f; _ik.LookPos = head; _ik.LookW = 0.8f;
-                Cat.LapNudge(10f);
-                yield return Wait(1.4f);
-                yield return ShotV("ea11_his_head_against_her_hand");
-                yield return Wait(1.0f);                          // a quiet pause
-                yield return SayE("EUR_16", 4, 4);               // Good.
-                yield return Wait(2.2f);                          // let her remain with him a moment before either moves
-                _ik.RightW = 0f; _ik.LookW = 0f;
-                EuropaState.CompleteScene("EUR_16");
-                yield return UI.Fade(1f, 1.4f);
-            }
+            // QF15 (3) - Dan: the reunion at the boarding area (helmet off, Panther waiting, the kneel, his head against her hand,
+            // "Good.") felt like a lock-up and is cut entirely (EUR_16 removed). The beam-up fades straight into the debrief: 7
+            // already seated in the pilot's chair, helmet off, Panther in her lap.
+            if (UI.FadeAlpha < 0.99f) yield return UI.Fade(1f, 0.6f);
             // later: the debrief in the pilot's chair, Panther in her lap (already seated), Europa's record with the others
             yield return SitInPilotChair();
             Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;

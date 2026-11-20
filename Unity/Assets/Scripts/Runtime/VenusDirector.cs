@@ -93,6 +93,8 @@ namespace Seven
             }
             ChapterCamera.CatRoot = Cat != null ? Cat.transform : null;
             CameraOccluders.Build(Seven.transform, Cat != null ? Cat.transform : null, Bike != null ? Bike.transform : null, Shape != null ? Shape.transform : null);
+            ChapterCamera.RideIgnore = new[] { Seven.transform, Cat != null ? Cat.transform : null, Bike != null ? Bike.transform : null, Shape != null ? Shape.transform : null };   // QF15 (1)
+            ChapterCamera.RideArea = () => "Venus";
             if (Shape != null) { _carry = CarriedShape.Attach(Seven.gameObject, Shape.transform); _carry.Set(CarriedShape.Where.Pocket, 0f); }
             if (Cat != null) Cat.LeashAllowed = () => false;            // the cat stays at the ship on Venus
             Bike.Rider = Seven; Bike.Input = Input;

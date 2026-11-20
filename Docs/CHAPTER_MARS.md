@@ -1,4 +1,4 @@
-> **Status (2026-11-19):** Mars chapter script from Dan. Not scheduled yet. Rune = tetrahedron (Dan).
+> **Status (2026-11-19):** Mars chapter script from Dan. Scheduled as Round 15. Rune = tetrahedron (Dan). Sections 10 + 13 revised 2026-11-19 (route to Biaveh needs Mars + Europa; asteroid found on the way).
 
 **MARS — THE DIVIDED KINGDOMS**
 
@@ -323,19 +323,21 @@ They agree to preserve and share the record. Under the proposed collection syste
 
 ---
 
-**10. TWO NEW LEADS**
+**10. A ROUTE THAT STOPS**
+
+*(Rewritten 2026-11-19 to match Dan’s new section 13: Mars no longer reveals the asteroid world and Biaveh. The worker’s question and 7’s answer are Dan’s original lines; the rest is the chat’s proposal — edit freely.)*
 
 As the temple systems reactivate, a display shows its old connections.
 
-**OVER 7’S SHOULDER — TWO LOCATIONS**
+**OVER 7’S SHOULDER — A ROUTE**
 
-One lies among asteroids. The other is Biaveh.
+A route leads out from Mars, beyond the edge of the solar system — and breaks off partway.
 
-**CARETAKER:** These were places our keepers exchanged records with.
+**CARETAKER:** Our keepers traded records along this route.
 
-**7:** The Elarim gave us locations too.
+**7:** It stops.
 
-**CARETAKER:** Then perhaps you can reach them.
+**CARETAKER:** The rest was never kept here. Another temple held it.
 
 **WORKER:** What do you expect to find?
 
@@ -343,17 +345,15 @@ One lies among asteroids. The other is Biaveh.
 
 **7:** I’m trying not to decide before I get there.
 
-She sends the locations to the saucer.
+She sends the route to the saucer.
 
-**PANTHER:** Received. An asteroid world and Biaveh.
+**PANTHER:** Received. Part of a route.
 
-**7:** We’ll look at them together.
+**7:** We’ll look at it together.
 
 **PROGRESSION**
 
-Unlock the asteroid world and Biaveh.
-
-Europa remains available if unfinished. Do not mark a completed Europa mission as a new lead.
+No new destinations unlock here. The route is completed in section 13 (with Europa’s record).
 
 ---
 
@@ -407,54 +407,83 @@ He settles as she brings up the navigation display.
 
 ---
 
-**13. DESTINATION CHOICE**
+**13. DEPARTURE ROUTING** *(Dan, 2026-11-19 — replaces the earlier destination choice)*
 
-**IF EUROPA IS UNFINISHED**
+#### MAR_13 — Departure routing
 
-**PANTHER:** Three places to look. Europa, the asteroid world, and Biaveh.
+7 sits in the navigation chair with Panther resting in her lap. Saucer remains stationary during the conversation.
 
-**7:** What do the new records tell us?
+- **Europa unfinished:** play MAR_13U. Europa is the next destination. Biaveh and the asteroid remain unavailable.
+- **Europa complete:** play MAR_13C. Together, the Mars and Europa records reveal the route to Biaveh.
+- Play MAR_13B after either branch.
 
-**PANTHER:** A machine-age temple among the asteroids. Another on Biaveh, among the Biaviian.
+#### MAR_13U — Europa unfinished
 
-**7:** And the Cetaceans beneath Europa’s ice.
+| id | speaker | line | direction |
+|---|---|---|---|
+| MAR_13U_01 | 7 | Does the record tell us where they went? | studying the navigation display; one hand rests on Panther |
+| MAR_13U_02 | Panther | Part of the route. Not enough to follow it. | thoughtful |
+| MAR_13U_03 | 7 | So we’re still missing something. | quiet exhale |
+| MAR_13U_04 | Panther | Mm-hmm. We still have the Cetaceans on Europa. Perhaps they remember something the people here lost. | glances toward the display |
+| MAR_13U_05 | 7 | Beneath all that ice. | looks down at him, amused |
+| MAR_13U_06 | Panther | And water. An unreasonable amount of water. | dry |
+| MAR_13U_07 | 7 | You haven’t forgotten. | small chuckle; strokes his back |
+| MAR_13U_08 | Panther | I have tried. | settles deeper into her lap |
+| MAR_13U_09 | 7 | Europa, then. | selects Europa |
 
-**PANTHER:** Mm-hmm. That one remains underwater.
+**Navigation:** Europa available. No Biaveh or asteroid destination choices.
 
-**7 — amused:** You haven’t forgotten.
+#### MAR_13C — Europa complete
 
-**PANTHER:** Remarkable powers of recollection.
+| id | speaker | line | direction |
+|---|---|---|---|
+| MAR_13C_01 | 7 | Wait. Put the route beside the sequence we brought back from Europa. | leans forward; hand pauses on Panther’s back |
+| MAR_13C_02 | Panther | Hmm. One moment. | turns toward the display |
+| MAR_13C_03 | 7 | There. Those intervals match. | indicates the two records |
+| MAR_13C_04 | Panther | They do. The Mars chart gives us the departure route. The Cetaceans’ sequence gives us the rest. | quiet interest |
+| MAR_13C_05 | 7 | They each kept a piece. | softly; watches the route resolve |
+| MAR_13C_06 | Panther | And you thought to put them together. | looks up at her |
+| MAR_13C_07 | 7 | Biaveh. | reads the destination |
+| MAR_13C_08 | Panther | Home of the Biaviian. Beyond this solar system. | measured |
+| MAR_13C_09 | 7 | That’s… a little farther than Europa. | breathy laugh |
+| MAR_13C_10 | Panther | I suggest eating before we leave. | matter-of-fact |
+| MAR_13C_11 | 7 | You suggest that before we do anything. | chuckles |
+| MAR_13C_12 | Panther | And yet we keep accomplishing things. | contented hum |
+| MAR_13C_13 | 7 | All right. Biaveh. Together? | looks down at him; quieter |
+| MAR_13C_14 | Panther | Mm-hmm. | gently presses his head against her hand |
 
-**PLAYER CHOICES**
+**Navigation:** Biaveh becomes available because **Mars and Europa are both complete**. The asteroid remains undiscovered.
 
-- **Europa:** Seek the Cetacean temple beneath the ice.
-- **Asteroid world:** Find the Great Machine Age temple.
-- **Biaveh:** Find the temple of the Connected Mind Age.
+#### MAR_13B — Shared closing
 
-**IF EUROPA IS COMPLETE**
+| id | speaker | line | direction |
+|---|---|---|---|
+| MAR_13B_01 | 7 | Comfortable? | looks down at Panther |
+| MAR_13B_02 | Panther | You may proceed. | eyes half-close |
+| MAR_13B_03 | 7 | Wouldn’t dream of leaving without your permission. | soft laugh; returns her hand to the controls |
 
-**PANTHER:** Two new leads. The asteroid world and Biaveh.
+#### Travel event — Asteroid discovery
 
-**7:** Machinery or minds.
+Trigger during their **first journey toward Biaveh, after the warp into its system**. A quiet navigation chime interrupts the flight. The display reveals an asteroid with artificial structures.
 
-**PANTHER:** I suspect both will be more complicated than that.
+| id | speaker | line | direction |
+|---|---|---|---|
+| TRV_AST_01 | Panther | Hmm. There’s something on that asteroid. | lifts his head |
+| TRV_AST_02 | 7 | Something? | glances from him to the display |
+| TRV_AST_03 | Panther | Structures. Machinery. And a signal that resembles the temples’. | attentive |
+| TRV_AST_04 | 7 | Out here? | leans closer |
+| TRV_AST_05 | Panther | Apparently someone liked their privacy. | dry |
+| TRV_AST_06 | 7 | Can you mark it? | studies the asteroid |
+| TRV_AST_07 | Panther | Already done. We can take a closer look, or continue to Biaveh and return. | looks up at her |
 
-**7 — a small laugh:** They usually are.
+**Player choices:**
 
-**PLAYER CHOICES**
+- **Investigate the asteroid.**
+- **Continue to Biaveh.**
 
-- **Asteroid world:** Find the Great Machine Age temple.
-- **Biaveh:** Find the temple of the Connected Mind Age.
+Both destinations are now available. Completing either leaves the other available; **both must be completed before progressing to Cattalus**.
 
-**IN BOTH VERSIONS**
-
-**7 — looking down at Panther:** Comfortable?
-
-He shifts slightly in her lap.
-
-**PANTHER:** You may proceed.
-
-She smiles in her voice as she selects the course.
+**Order consistency:** If Europa is completed after Mars, the combined-record discovery and Biaveh departure conversation happen after Europa instead. Play this discovery once, whichever world is finished second.
 
 **END OF MARS CHAPTER**
 
@@ -465,7 +494,8 @@ She smiles in her voice as she selects the course.
 - Check completed-world flags before displaying destination choices.
 - Cattalus unlocks after Venus, Mars, Europa, the asteroid world, and Biaveh are complete.
 - The final Moon mission unlocks after obtaining the last piece on Cattalus.
-- Mars’s new coordinates come from the restored temple records, not unexplained knowledge Panther possesses.
+- Mars’s route comes from the restored temple records, not unexplained knowledge Panther possesses. Biaveh unlocks only when Mars **and** Europa are complete (the combined records); the asteroid is discovered on the first journey toward Biaveh.
+- If Europa is finished after Mars, the combined-record discovery (MAR_13C) and the Biaveh departure happen at the end of Europa instead — play it once, whichever world is finished second.
 - All combat resolutions remain nonlethal.
 - The planet’s political divisions persist beyond this local victory.
 - The central symbol, temple mechanisms, Viper’s equipment, and vision are proposed details pending Kyle’s approval.

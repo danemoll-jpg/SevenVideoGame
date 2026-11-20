@@ -112,4 +112,4 @@ entry covers the rescue, the beam and the larger interior (checkpoints 7-8) and 
 - **All of them** (`eur_workers`, unlock `europa>=6`): She opened the holding area. The workers opened doors, showed her the way, and every transport left before the machinery was destroyed.
 - **Out** (`eur_escape`, unlock `europa>=7`): Tunneler escaped in his own craft. The base came down behind her as she raced out into open water - and then the calls could be heard again.
 - **One voice teaching another** (`eur_record`, unlock `europa>=8`): In the temple she saw a young one learning a call, and knew the answer before it came. The keeper gave her Europa's record, a small icosahedron.
-- **An ordinary sound** (`eur_home`, unlock `europa>=9`): Back aboard, Panther had waited by the boarding area. In the pilot's chair he purred, and that was one sound she knew.
+- **An ordinary sound** (`eur_home`, unlock `europa>=9`): Back aboard, in the pilot's chair with Panther in her lap: he purred, and that was one sound she knew.

@@ -825,6 +825,16 @@ namespace Seven
                 ok |= kb.enterKey.wasPressedThisFrame || kb.spaceKey.wasPressedThisFrame || kb.eKey.wasPressedThisFrame;
                 back |= kb.escapeKey.wasPressedThisFrame;
             }
+            // QF15: every connected pad, not only Gamepad.current (a second pad - the check runs' menu pilot - could hold
+            // "current" and the star map never saw the player's d-pad)
+            foreach (var g in Gamepad.all)
+            {
+                if (g == gp) continue;
+                if (g.dpad.left.wasPressedThisFrame || g.dpad.up.wasPressedThisFrame) step = -1;
+                if (g.dpad.right.wasPressedThisFrame || g.dpad.down.wasPressedThisFrame) step = 1;
+                ok |= g.buttonSouth.wasPressedThisFrame || g.buttonWest.wasPressedThisFrame;
+                back |= g.buttonEast.wasPressedThisFrame;
+            }
             if (gp != null)
             {
                 if (gp.dpad.left.wasPressedThisFrame || gp.dpad.up.wasPressedThisFrame) step = -1;

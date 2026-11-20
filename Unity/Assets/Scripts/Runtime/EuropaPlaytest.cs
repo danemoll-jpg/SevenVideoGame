@@ -35,7 +35,7 @@ namespace Seven
         static EuropaDirector D => EuropaDirector.I != null && EuropaDirector.I.isActiveAndEnabled ? EuropaDirector.I : null;
         static Chapter1Aboard S => Chapter1Aboard.I != null && Chapter1Aboard.I.isActiveAndEnabled ? Chapter1Aboard.I : null;
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
-        bool _inBase; float _nextWalkShot; int _walkShots, _sw0, _cu0;
+        bool _inBase; float _nextWalkShot; int _walkShots, _sw0, _cu0; int _rideShots; float _nextRideShot;
         int _soft; float _t0; string _lastObj; float _objSince; int _skipsTaken;
 
         void Update()
@@ -97,10 +97,17 @@ namespace Seven
                     if (!m.HasValue) { _stick = Vector2.zero; _rt = 0f; _lt = 0.4f; _holdA = _holdB = false; continue; }
                     var to = m.Value - bike.position; var f = Flat(to);
                     float err = Vector3.SignedAngle(Flat(bike.forward), f, Vector3.up);
-                    _stick = new Vector2(Mathf.Clamp(err / 30f, -1f, 1f), 0f);
+                    // QF15: under water the stick's Y pitches the nose (QF13 12 flying controls: push forward = dive); A / B no
+                    // longer climb or sink - the old run only got down because the swim-volume clamp pushed it
+                    float wantPitch = Mathf.Atan2(to.y, Mathf.Max(1f, f.magnitude)) * Mathf.Rad2Deg;
+                    float sy = d.Bike.Swim ? Mathf.Clamp(-(wantPitch - d.Bike.SwimPitch * 0.3f) / 25f, -1f, 1f) : 0f;
+                    if (d.Bike.Swim && HoverBike.InvertPitch) sy = -sy;
+                    _stick = new Vector2(Mathf.Clamp(err / 30f, -1f, 1f), sy);
                     _rt = Mathf.Abs(err) > 75f ? 0.2f : Mathf.Clamp(f.magnitude / 8f, 0.35f, 1f);
                     _lt = 0f;
-                    _holdA = to.y > 1.2f; _holdB = to.y < -1.2f;
+                    _holdA = false; _holdB = false;
+                    // QF15 (1): a minute of riding as a capture sequence (one every 2 s), from the first free ride
+                    if (!baseRun && _rideShots < 30 && Time.time >= _nextRideShot && !d.InCutscene) { if (_rideShots == 0) Log("QF15 ride capture sequence starts (one every 2 s for a minute)"); _nextRideShot = Time.time + 2f; StartCoroutine(Cap.Shot($"qf15_01_ride_{_rideShots++:00}")); }
                 }
                 else
                 {

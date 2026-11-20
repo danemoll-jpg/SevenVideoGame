@@ -101,7 +101,7 @@ namespace Seven
         public static readonly Box[] Boxes =
         {
             new Box { Min = new Vector3(-150f, -120f, 112f), Max = new Vector3(150f, -28f, 340f) },                 // the great chamber
-            new Box { Min = new Vector3(-180f, -101f, 444f), Max = new Vector3(-164f, -94.3f, 456f) },              // the access bay pool
+            new Box { Min = new Vector3(-175.2f, -101f, 444f), Max = new Vector3(-164f, -94.3f, 456f) },            // the access bay pool (QF15: stops at the dock's edge - the bike slipped under the dock floor and the camera had to jump in)
             new Box { Min = new Vector3(-300f, -125f, 120f), Max = new Vector3(-150f, -40f, 265f) },                // the open water + the temple
             new Box { Min = new Vector3(100f, -80f, 310f), Max = new Vector3(135f, -55f, 345f) },                   // the damaged passage mouth
         };

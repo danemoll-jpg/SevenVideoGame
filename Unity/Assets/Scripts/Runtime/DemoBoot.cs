@@ -119,6 +119,8 @@ namespace Seven
         public static bool Europa { get; private set; }
         public static bool EuropaRace { get; private set; }
         public static bool EuropaPlay { get; private set; }
+        /// <summary>QF15 (2): -europawalltest = the automated wall test (EuropaWallTest; starts at checkpoint 2 unless -europacp is given).</summary>
+        public static bool EuropaWallTest { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -173,6 +175,7 @@ namespace Seven
                 if (args[i] == "-europa") Europa = true;
                 if (args[i] == "-europarace") EuropaRace = true;
                 if (args[i] == "-europaplay") { EuropaPlay = true; Europa = true; }
+                if (args[i] == "-europawalltest") EuropaWallTest = true;
                 if (args[i] == "-stopafter" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sa)) StopAfter = sa;
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;
@@ -201,6 +204,7 @@ namespace Seven
                     (fails.Count == 0 ? "VENUS STATE TEST: all rules hold (forward-only stages, scenes once, record once, reload keeps all)" : "VENUS STATE TEST FAILED: " + string.Join(" | ", fails)) + System.Environment.NewLine);
                 Application.Quit();
             }
+            if (EuropaWallTest && EuropaCp < 0) EuropaCp = EuropaLayout.CpSettlement;
             if (CaptureDir == null) TestSpeed = 1f;          // only ever for automated check runs
             if (TestSpeed != 1f)
             {

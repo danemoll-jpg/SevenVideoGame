@@ -184,19 +184,18 @@ namespace Seven.EditorTools
                     bc.GetComponent<ParticleSystemRenderer>().sharedMaterial = m.bubble;
                 }
                 // ancient structures descending into the depths, their windows and pathways marked by small white lights
-                var av = new List<Vector3>(); var at2 = new List<int>(); var lv2 = new List<Vector3>(); var lt2 = new List<int>();
+                var av = new List<Vector3>(); var at2 = new List<int>(); var lv2 = new List<Vector3>(); var lt2 = new List<int>(); int ancN = 0;
                 foreach (var (x, z, depth, r) in new[] { (-70f, 160f, 70f, 6f), (-30f, 250f, 85f, 8f), (60f, 160f, 60f, 5f), (120f, 210f, 80f, 7f), (-110f, 300f, 75f, 9f), (20f, 320f, 65f, 6f) })
                 {
                     var prof = new List<Vector2> { new Vector2(0f, 0f), new Vector2(r, 0f), new Vector2(r * 0.8f, -depth * 0.4f), new Vector2(r * 1.1f, -depth * 0.7f), new Vector2(r * 0.4f, -depth), new Vector2(0f, -depth) };
-                    var mesh = Lathe(prof, 0f, 360f, 16, null, new Vector3(x, E.CeilingY, z)); int b = av.Count; av.AddRange(mesh.vertices); at2.AddRange(mesh.triangles.Select(k => k + b));
+                    // QF15: one object per structure (the ride camera cuts away the one in its way, not all six)
+                    var mesh = Lathe(prof, 0f, 360f, 16, null, new Vector3(x, E.CeilingY, z)); MeshObject($"AncientStructure{ancN}", SaveMesh(Finish(new List<Vector3>(mesh.vertices), new List<int>(mesh.triangles)), $"Europa_Ancient{ancN}"), m.stoneDark, chamber, false); ancN++;
                     for (int i = 0; i < 18; i++) { float a = i * 47f, y = E.CeilingY - 6f - i * depth / 20f; AddBox(lv2, lt2, new Vector3(x, y, z) + Quaternion.Euler(0f, a, 0f) * Vector3.forward * (r * 0.92f), Vector3.one * 0.35f); }
                 }
-                MeshObject("AncientStructures", SaveMesh(Finish(av, at2), "Europa_Ancient"), m.stoneDark, chamber, false);
                 MeshObject("AncientLights", SaveMesh(Finish(lv2, lt2), "Europa_AncientLights"), m.glow, chamber, false);
                 // rock spires rising from the floor (silhouettes)
                 var pv = new List<Vector3>(); var pt = new List<int>();
-                for (int i = 0; i < 30; i++) { var c = new Vector3((float)rnd.NextDouble() * 300f - 160f, -124f, 120f + (float)rnd.NextDouble() * 230f); Lump(pv, pt, c + Vector3.up * 10f, new Vector3(5f, 14f + (float)rnd.NextDouble() * 18f, 5f), 0.5f, rnd.Next(1000)); }
-                MeshObject("FloorSpires", SaveMesh(SmoothFinish(pv, pt), "Europa_Spires"), m.rock, chamber, false);
+                for (int i = 0; i < 30; i++) { pv.Clear(); pt.Clear(); var c = new Vector3((float)rnd.NextDouble() * 300f - 160f, -124f, 120f + (float)rnd.NextDouble() * 230f); Lump(pv, pt, c + Vector3.up * 10f, new Vector3(5f, 14f + (float)rnd.NextDouble() * 18f, 5f), 0.5f, rnd.Next(1000)); MeshObject($"ChamberSpire{i}", SaveMesh(SmoothFinish(pv, pt), $"Europa_Spire{i}"), m.rock, chamber, false); }
             }
             // ---------------------------------------------------------------- the settlement + the race course
             var vehicles = new List<Transform>(); var rings = new List<Transform>(); var rivals = new List<Transform>();
@@ -205,19 +204,23 @@ namespace Seven.EditorTools
                 var st = new GameObject("Settlement").transform; st.SetParent(world, false);
                 var v = new List<Vector3>(); var t = new List<int>(); var gv = new List<Vector3>(); var gt = new List<int>();
                 // platforms around open swimming passages (rings), broad chambers (half domes)
+                int platN = 0;   // QF15: one object per platform group (the ride camera cuts away only the one in its way)
                 foreach (var (x, y, z, r) in new[] { (100f, -66f, 300f, 10f), (120f, -58f, 270f, 8f), (84f, -72f, 318f, 9f), (130f, -70f, 316f, 12f) })
                 {
+                    v.Clear(); t.Clear();
                     var ring = new List<Vector3>(); for (int i = 0; i < 24; i++) { float a = i * 15f * Mathf.Deg2Rad; ring.Add(new Vector3(x + Mathf.Cos(a) * r, y, z + Mathf.Sin(a) * r)); }
                     Sweep(v, t, ring, 1.2f, true, 10);
                     for (int i = 0; i < 24; i += 3) AddBox(gv, gt, ring[i] + Vector3.up * 1.3f, Vector3.one * 0.3f);
                     var dome = Lathe(new[] { new Vector2(r * 1.6f, 0f), new Vector2(r * 1.4f, r * 0.8f), new Vector2(r * 0.6f, r * 1.3f), new Vector2(0f, r * 1.4f) }, 0f, 200f, 16, null, new Vector3(x + r * 2.6f, y - 6f, z + r * 1.5f));
                     int b = v.Count; v.AddRange(dome.vertices); t.AddRange(dome.triangles.Select(k => k + b));
+                    MeshObject($"Platform{platN}", SaveMesh(SmoothFinish(v, t), $"Europa_Platform{platN}"), m.stone, st); platN++;
                 }
+                v.Clear(); t.Clear();
                 // the receiving platform
                 var rp = Lathe(new[] { new Vector2(0f, 0f), new Vector2(6f, 0f), new Vector2(6.4f, -1.2f), new Vector2(0f, -1.6f) }, 0f, 360f, 32, null, E.Receiving + Vector3.down * 2.2f);
                 { int b = v.Count; v.AddRange(rp.vertices); t.AddRange(rp.triangles.Select(k => k + b)); }
                 for (int i = 0; i < 12; i++) { float a = i * 30f * Mathf.Deg2Rad; AddBox(gv, gt, E.Receiving + new Vector3(Mathf.Cos(a) * 6.1f, -2.0f, Mathf.Sin(a) * 6.1f), Vector3.one * 0.25f); }
-                MeshObject("Platforms", SaveMesh(SmoothFinish(v, t), "Europa_Platforms"), m.stone, st);
+                MeshObject("ReceivingPlatform", SaveMesh(SmoothFinish(v, t), "Europa_Receiving"), m.stone, st);
                 MeshObject("PlatformLights", SaveMesh(Finish(gv, gt), "Europa_PlatformLights"), m.glow, st, false);
                 // small vehicles moving between the platforms
                 for (int i = 0; i < 6; i++)
@@ -242,8 +245,7 @@ namespace Seven.EditorTools
                     var ring = MeshObject($"RaceRing{g}", SaveMesh(SmoothFinish(rv, rt), $"Europa_RaceRing{g}"), m.crack, st, false); rings.Add(ring.transform);
                 }
                 var pil = new List<Vector3>(); var pilT = new List<int>();
-                foreach (var p in E.RacePillars) { var mesh = Lathe(new[] { new Vector2(0f, -60f), new Vector2(4f, -60f), new Vector2(3f, 0f), new Vector2(4.2f, 40f), new Vector2(0f, 40f) }, 0f, 360f, 16, null, p); int b = pil.Count; pil.AddRange(mesh.vertices); pilT.AddRange(mesh.triangles.Select(k => k + b)); }
-                MeshObject("RacePillars", SaveMesh(Finish(pil, pilT), "Europa_Pillars"), m.stoneDark, st, false);
+                for (int pi = 0; pi < E.RacePillars.Length; pi++) { var mesh = Lathe(new[] { new Vector2(0f, -60f), new Vector2(4f, -60f), new Vector2(3f, 0f), new Vector2(4.2f, 40f), new Vector2(0f, 40f) }, 0f, 360f, 16, null, E.RacePillars[pi]); MeshObject($"RacePillar{pi}", SaveMesh(Finish(new List<Vector3>(mesh.vertices), new List<int>(mesh.triangles)), $"Europa_Pillar{pi}"), m.stoneDark, st, false); }
                 var sv = new List<Vector3>(); var stt = new List<int>();
                 AddBox(sv, stt, new Vector3(10f, -64f, 306f), new Vector3(30f, 2f, 18f)); AddBox(sv, stt, new Vector3(-8f, -72f, 262f), new Vector3(20f, 2f, 30f));   // ice shelves overhead
                 MeshObject("RaceIceShelves", SaveMesh(Finish(sv, stt), "Europa_RaceShelves"), m.ice, st, false);

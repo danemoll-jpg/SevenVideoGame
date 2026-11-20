@@ -214,12 +214,6 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 | `EUR_15_07` | Keeper | Then you have brought a question we cannot answer for you. |  |
 | `EUR_15_08` | Keeper | Carry it somewhere it can be heard. |  |
 
-## EUR_16 — Return to the saucer — a quiet reunion
-
-| id | who | line | direction |
-| --- | --- | --- | --- |
-| `EUR_16_04` | Panther | Good. |  |
-
 ## EUR_17 — Debrief — an ordinary sound
 
 | id | who | line | direction |

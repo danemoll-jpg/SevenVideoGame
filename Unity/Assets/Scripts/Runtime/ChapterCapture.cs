@@ -105,6 +105,8 @@ namespace Seven
         public void Finish(string summary)
         {
             Log(ChapterCat.SpeedReport());              // QF11: never the walk cycle on the spot
+            if (ChapterCamera.RideFrames > 0) Log(ChapterCamera.RideSummary());   // QF15 (1)
+            if (HoverBike.SwimFrames > 0) Log(HoverBike.InsideSummary());         // QF15 (2)
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");
             File.WriteAllText(Path.Combine(DemoBoot.CaptureDir, "capture_log.txt"), _log.ToString());

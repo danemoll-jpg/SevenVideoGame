@@ -440,7 +440,19 @@ namespace Seven
         IEnumerator Fly(Transform d, Vector3 from, Vector3 v)
         {
             d.gameObject.SetActive(true); d.position = from; var spin = UnityEngine.Random.onUnitSphere * 200f;
-            for (float t = 0f; t < 2.4f; t += Time.deltaTime) { v *= Mathf.Pow(0.45f, Time.deltaTime); v += Vector3.down * 3f * Time.deltaTime; d.position += v * Time.deltaTime; d.Rotate(spin * Time.deltaTime, Space.World); yield return null; }
+            // QF15 (2): a flying piece never passes into the bike - it glances off her bubble of space (the wall test found
+            // debris moving through the bike: the bike's sweep only stops HER moving into things)
+            var rd = d.GetComponentInChildren<Renderer>(); float rad = rd != null ? Mathf.Max(rd.bounds.extents.x, Mathf.Max(rd.bounds.extents.y, rd.bounds.extents.z)) : 1f;
+            for (float t = 0f; t < 2.4f; t += Time.deltaTime)
+            {
+                v *= Mathf.Pow(0.45f, Time.deltaTime); v += Vector3.down * 3f * Time.deltaTime; d.position += v * Time.deltaTime; d.Rotate(spin * Time.deltaTime, Space.World);
+                if (Bike != null)
+                {
+                    var bc = Bike.transform.position + Vector3.up * 0.6f; var off = d.position - bc; float keep = HoverBike.BodyRadius + rad + 0.35f;
+                    if (off.sqrMagnitude < keep * keep) { var n = off.sqrMagnitude > 1e-4f ? off.normalized : Vector3.up; d.position = bc + n * keep; if (Vector3.Dot(v, n) < 0f) v = Vector3.Reflect(v, n) * 0.5f; }
+                }
+                yield return null;
+            }
             d.gameObject.SetActive(false);
         }
 

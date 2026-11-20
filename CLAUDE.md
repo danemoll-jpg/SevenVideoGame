@@ -324,7 +324,7 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–14 + QF1–QF14 complete (2026-11-19), release 0.14.2.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–14 + QF1–QF15 complete (2026-11-19), release 0.14.3.** Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -494,7 +494,24 @@ scene (Round 10).
     CutawayBounces`). Proof run: `-europaplay -europacp 4 -testspeed 2` → `BASE WALK: 1/1, bounces 0`,
     `base_camera_frames.csv`, `qf14_06_walk_*` captures.
   - Guardian walk = `elarim_walk_v2` (root motion not baked, playback matched; `ElarimNpc.CalmSway` damps the hips by a third).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.2** (QF14 status in `TODO.md`).
+- **QF15 (release 0.14.3)** — the bike camera + walls in Europa (status + "For Dan to check (QF15)" in `TODO.md`):
+  - **One riding camera** (`ChapterCameraRide.cs`, partial of `ChapterCamera`): whenever she rides (any world, outside
+    cutscenes) none of the on-foot camera logic runs. Behind / above the bike, heading + nose pitch through a two-stage
+    first-order lag (never overshoots), turn-rate cap 140°/s, never below her level; non-shell meshes in the way are **cut
+    away** (`forceRenderingOff`, held 0.8 s); only shells (names with Ceiling / Floor / Passage / Tunnel / Wall / Hall /
+    Tube / Terrain / Ground …) bring it in: wide probe + clearance + look-ahead 0.6 s, eased in 0.5 s, out only after 1.2 s
+    clear, dead band 0.5 m; a last guard keeps the camera out of geometry. Hand-overs from a cutscene far round / behind a
+    wall and bike teleports (skips) are explicit cuts. Race aim = a slow ease (`_raceW`). Measure in every check run:
+    `ride_camera_frames.csv` + `RIDE CAMERA (QF15 1)` line (aim / position shifts, reversals, inside / behind geometry).
+  - **Full collision under water**: `RideProbe.cs` (real colliders + every visual mesh, both faces, `Depenetrate`);
+    `CameraOccluders.IncludeHuge` (Europa / Mars: no 60 m size cut; two-sided collider copies); the swim clamp's move is
+    swept too; flying debris glances off the bike. Measure: `BIKE vs GEOMETRY (QF15 2)`. **Wall test:**
+    `-europawalltest -testspeed 2` (`EuropaWallTest.cs`, ~3.5 min) → `WALL TEST (QF15 2): N attempts …, failed 0`.
+  - Merged Europa meshes split per piece (`AncientStructure*`, `ChamberSpire*`, `RacePillar*`, `Platform*`) so the camera
+    cuts away only the one in its way. Star map input reads every pad (`ShipConsole.ChooseInput`).
+  - Europa reunion (EUR_16) cut: the beam-up fades straight into the chair debrief.
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.14.3** (QF15 status in `TODO.md`).
+**Before: Dan plays 0.14.2** (QF14 status in `TODO.md`).
 **Before: Dan plays 0.14.1** (QF13 status in `TODO.md`).
 **Before: Dan plays 0.14.0** (QF12 + Round 14 status in `TODO.md`).
 **Before: Dan plays 0.13.1** (Round 13 status in `TODO.md`), then Round 14.

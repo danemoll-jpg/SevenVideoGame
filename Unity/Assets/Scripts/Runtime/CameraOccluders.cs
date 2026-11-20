@@ -50,15 +50,57 @@ namespace Seven
             var n = r.name;
             if (n.Contains("Fog") || n.Contains("Glow") || n.Contains("Beam") || n.Contains("Halo") || n.Contains("Light")
                 || n.Contains("Ghost") || n.Contains("Skylight") || n.Contains("Haze") || n.Contains("Mist") || n.Contains("Lines")
-                || n.Contains("Engrav") || n.Contains("Seam") || n.Contains("Inscription") || n.Contains("Cracks")) return true;
+                || n.Contains("Engrav") || n.Contains("Seam") || n.Contains("Inscription") || n.Contains("Cracks")
+                || n.StartsWith("Blast")) return true;                                   // QF15: the escape's explosion glow is light, not a surface
             var m = r.sharedMaterial;
             if (m == null || m.renderQueue > 2500) return true;                              // transparent sheets
             var mf = r.GetComponent<MeshFilter>();
             if (mf == null || mf.sharedMesh == null) return true;
             var s = r.bounds.size;
             if (Mathf.Min(s.x, Mathf.Min(s.y, s.z)) < 0.015f && Mathf.Max(s.x, Mathf.Max(s.y, s.z)) < 1f) return true;   // decals
-            if (Mathf.Max(s.x, Mathf.Max(s.y, s.z)) > 60f) return true;                     // sky domes / far backdrops
+            // sky domes / far backdrops. QF15 (2): in Europa nothing is skipped by size - the chamber's ice ceiling and floor,
+            // the ice passage, the approach / escape tubes, the temple hall, the pillars and structures were all over 60 m, so
+            // the bike's sweep (which only sees this scene) never saw them and the swim volumes were all that held it in
+            if (Mathf.Max(s.x, Mathf.Max(s.y, s.z)) > 60f && !(_huge && !n.Contains("Sky") && !n.Contains("Backdrop") && !n.Contains("Distant"))) return true;
             return false;
+        }
+        /// <summary>QF15 (2): the next Build keeps meshes larger than 60 m (Europa: every surface the bike can meet).</summary>
+        public static bool IncludeHuge;
+        static bool _huge;
+        public static IEnumerable<Renderer> Renderers { get { foreach (var it in _items) if (it.R != null) yield return it.R; } }
+
+        // QF15: raw queries (both faces) for the bike's sweep and the ride camera
+        public static int SphereCastAll(Vector3 o, float r, Vector3 dir, float len, RaycastHit[] buf, int mask = AllMask)
+        {
+            if (!Ready || len <= 0f) return 0;
+            SyncAll();
+            bool bf = Physics.queriesHitBackfaces; Physics.queriesHitBackfaces = true;
+            int n = _ps.SphereCast(o, r, dir.normalized, buf, len, mask, QueryTriggerInteraction.Ignore);
+            Physics.queriesHitBackfaces = bf;
+            return n;
+        }
+        public static int RaycastAll(Vector3 o, Vector3 dir, float len, RaycastHit[] buf, int mask = AllMask)
+        {
+            if (!Ready || len <= 0f) return 0;
+            SyncAll();
+            bool bf = Physics.queriesHitBackfaces; Physics.queriesHitBackfaces = true;
+            int n = _ps.Raycast(o, dir.normalized, buf, len, mask, QueryTriggerInteraction.Ignore);
+            Physics.queriesHitBackfaces = bf;
+            return n;
+        }
+        public static int OverlapSphere(Vector3 p, float r, Collider[] buf, int mask = AllMask)
+        {
+            if (!Ready) return 0;
+            SyncAll();
+            return _ps.OverlapSphere(p, r, buf, mask, QueryTriggerInteraction.Ignore);
+        }
+        /// <summary>Move a helper object into the occluder scene (gone with it when the scene changes).</summary>
+        public static bool Adopt(GameObject go) { if (!Ready) return false; SceneManager.MoveGameObjectToScene(go, _scene); return true; }
+        static readonly Collider[] _obuf = new Collider[32];
+        public static void OverlapRenderers(Vector3 p, float r, List<Renderer> into)
+        {
+            int n = OverlapSphere(p, r, _obuf);
+            for (int i = 0; i < n; i++) { var rr = RendererOf(_obuf[i]); if (rr != null && !into.Contains(rr)) into.Add(rr); }
         }
 
         /// <summary>Build for the active scene (once per scene load). <paramref name="exclude"/>: 7, the cat, the guards.</summary>
@@ -67,6 +109,7 @@ namespace Seven
             var active = SceneManager.GetActiveScene();
             if (Ready) return;
             Clear();
+            _huge = IncludeHuge; IncludeHuge = false;
             _scene = SceneManager.CreateScene("CameraOccluders_" + Time.frameCount + "_" + active.name, new CreateSceneParameters(LocalPhysicsMode.Physics3D));
             _ps = _scene.GetPhysicsScene();
             _builtFor = active;
@@ -84,7 +127,7 @@ namespace Seven
                 SceneManager.MoveGameObjectToScene(go, _scene);
                 Collider c;
                 if (mesh.name == "Cube" || !mesh.isReadable) { var b = go.AddComponent<BoxCollider>(); b.center = mesh.bounds.center; b.size = mesh.bounds.size; c = b; }
-                else { var mc = go.AddComponent<MeshCollider>(); mc.sharedMesh = mesh; c = mc; }
+                else { var mc = go.AddComponent<MeshCollider>(); mc.sharedMesh = _huge ? TwoSided(mesh) : mesh; c = mc; }
                 var it = new Item { R = r, Src = r.transform, Dst = go.transform, C = c };
                 Sync(it, true);
                 _items.Add(it); _byCol[c] = r;
@@ -92,6 +135,21 @@ namespace Seven
             }
             Physics.SyncTransforms(); _ps.Simulate(0.0001f);
             Debug.Log($"[Seven] camera occluders (QF8): {solid} solid + {fade} fade-only visual meshes ({skipped} skipped) in {(Time.realtimeSinceStartup - t0) * 1000f:0} ms");
+        }
+
+        // QF15 (2): sphere sweeps do not reliably hit a triangle from behind (queriesHitBackfaces is for rays); the level's
+        // tubes face inward and its solids outward, so the bike met many surfaces from their back. In Europa every collider
+        // copy has both faces.
+        static readonly Dictionary<Mesh, Mesh> _two = new Dictionary<Mesh, Mesh>();
+        static Mesh TwoSided(Mesh m)
+        {
+            if (_two.TryGetValue(m, out var d) && d != null) return d;
+            var v = m.vertices; var t = m.triangles; var t2 = new int[t.Length * 2];
+            System.Array.Copy(t, t2, t.Length);
+            for (int i = 0; i < t.Length; i += 3) { t2[t.Length + i] = t[i]; t2[t.Length + i + 1] = t[i + 2]; t2[t.Length + i + 2] = t[i + 1]; }
+            d = new Mesh { name = m.name + "_2s", indexFormat = v.Length > 65000 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16 };
+            d.vertices = v; d.triangles = t2; d.RecalculateBounds();
+            _two[m] = d; return d;
         }
 
         static void Clear()
