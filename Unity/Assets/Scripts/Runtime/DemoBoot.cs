@@ -126,6 +126,8 @@ namespace Seven
         public static int MarsCp { get; private set; } = -1;
         public static bool Mars { get; private set; }
         public static bool MarsPlay { get; private set; }
+        /// <summary>QF16: -qf16check = aboard free exploration: every ambient cat moment, then the passage to each world + window views.</summary>
+        public static bool QF16Check { get; private set; }
         public static string MarsPick { get; private set; }
         public static string Routes { get; private set; }
         /// <summary>QF15 (2): -europawalltest = the automated wall test (EuropaWallTest; starts at checkpoint 2 unless -europacp is given).</summary>
@@ -187,6 +189,7 @@ namespace Seven
                 if (args[i] == "-marscp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var mcp)) MarsCp = mcp;
                 if (args[i] == "-mars") Mars = true;
                 if (args[i] == "-marsplay") { MarsPlay = true; Mars = true; }
+                if (args[i] == "-qf16check") { QF16Check = true; Chapter1 = true; }
                 if (args[i] == "-marspick" && i + 1 < args.Length) MarsPick = args[i + 1];
                 if (args[i] == "-routes" && i + 1 < args.Length) Routes = args[i + 1];
                 if (args[i] == "-europawalltest") EuropaWallTest = true;

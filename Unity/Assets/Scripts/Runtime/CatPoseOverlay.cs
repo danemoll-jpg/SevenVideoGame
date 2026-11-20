@@ -29,6 +29,12 @@ namespace Seven
         public float Crouch;
         /// <summary>QF7: the planted front paws move this far back (m) while he eats, so they stay outside the bowl.</summary>
         public float PawBack;
+        /// <summary>QF16 (4): his right front paw reaches for a point (batting at the display, pawing at the glass), weight 0..1.</summary>
+        public Vector3? PawTo; public float PawW;
+        /// <summary>QF16 (4): tail flick toward a point (across her face on her shoulder), 0..1; and a twitching tail tip (0..1).</summary>
+        public Vector3? TailToward; public float TailFlick, TailTwitch;
+        readonly System.Collections.Generic.List<Transform> _tail = new System.Collections.Generic.List<Transform>();
+        float _paw, _tailF;
         public Vector3 PawL => _legF[0] != null ? _legF[0].position : transform.position;
         public Vector3 PawR => _legF[1] != null ? _legF[1].position : transform.position;
         /// <summary>QF7: head (and a little neck) turned toward this point - he lifts his head and looks at her when he
@@ -71,6 +77,7 @@ namespace Seven
                     case "earL": _earL = t; break;
                     case "earR": _earR = t; break;
                 }
+                if (t.name.StartsWith("tail")) _tail.Add(t);
             }
             // rest offsets (rig: muzzle 3.3 cm ahead / 2.7 cm below the head bone at 0.25 m shoulder height)
             if (_head != null)
@@ -124,6 +131,26 @@ namespace Seven
             }
             if (_head != null && _tilt > 0.001f) _head.rotation = Quaternion.AngleAxis(TiltDeg * _tilt, fwd) * _head.rotation;
             if (Alive && !EarToward.HasValue) FlickEar();
+            // QF16 (4): the paw reaching out (a soft bat: it bobs a little) and the tail
+            _paw = Mathf.MoveTowards(_paw, PawTo.HasValue ? PawW : 0f, dt * 3f);
+            if (_paw > 0.01f && PawTo.HasValue && _legU[1] != null && _legL[1] != null && _legF[1] != null)
+            {
+                var foot = _legF[1].position; var tgt = PawTo.Value + Vector3.up * Mathf.Abs(Mathf.Sin(_t * 5f)) * 0.03f * transform.localScale.x;
+                PlantLeg(1, Vector3.Lerp(foot, tgt, _paw), _legF[1].rotation);
+            }
+            _tailF = Mathf.MoveTowards(_tailF, TailToward.HasValue ? TailFlick : 0f, dt * 4f);
+            for (int i = 0; i < _tail.Count; i++)
+            {
+                var tb = _tail[i]; if (tb == null) continue;
+                float k = (i + 1f) / _tail.Count;
+                if (_tailF > 0.01f && TailToward.HasValue)
+                {
+                    var want = TailToward.Value - tb.position; var cur = tb.up;
+                    var q = Quaternion.FromToRotation(cur, want.normalized);
+                    tb.rotation = Quaternion.Slerp(Quaternion.identity, q, _tailF * 0.35f * k) * tb.rotation;
+                }
+                if (TailTwitch > 0.01f) tb.rotation = Quaternion.AngleAxis(Mathf.Sin(_t * 7f + i) * 14f * TailTwitch * k, transform.up) * tb.rotation;
+            }
             if (_ear > 0.001f && EarToward.HasValue && _head != null)
             {
                 // the ear nearer to her turns toward her (yaw about up) and gives a small flick

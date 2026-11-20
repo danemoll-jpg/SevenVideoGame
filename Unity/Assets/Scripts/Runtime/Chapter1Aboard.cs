@@ -65,6 +65,8 @@ namespace Seven
 
         void Start()
         {
+            // QF16 (1): the saucer is where this aboard part happens (the windows show that world)
+            SaucerLocation.Set(EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
             if (EuropaState.ArrivalAboard || EuropaState.HomeAboard) { StartEuropa(); return; }      // Round 14: Europa's aboard scenes
             if (MarsState.ArrivalAboard || MarsState.HomeAboard) { StartMars(); return; }            // Round 15: Mars's aboard scenes
             if (VenusState.VenusAboardStart) { VenusState.VenusAboardStart = false; StartVenus(); return; }   // Round 12: the Venus debrief / destinations
@@ -432,6 +434,7 @@ namespace Seven
         bool _forkInHand, _shapeInLeft;
         void LateUpdate()
         {
+            LateUpdateStaging(); LateUpdateCatMoments();
             if (!Active) return;
             if (_forkInHand && Fork != null)
             {
@@ -1092,7 +1095,7 @@ namespace Seven
             if (id == "moon" || (id == "venus" && (VenusMode || VenusState.AtLeast(VenusState.Stage.Complete))))
             {
                 _settingCourse = true; Director.ExtraPrompt = null; Seven.Frozen = true;
-                AudioKit.Play("course_set", null, 0.8f);
+                yield return TravelPassage.Run(id);                          // QF16 (2): the sacred-geometry passage
                 yield return UI.Fade(1f, 1.0f);
                 if (stayForCheck)
                 {
@@ -1136,8 +1139,8 @@ namespace Seven
             // Round 11: the course is set for real - a short transit, then Chapter 2 opens with the descent under Venus's clouds
             VenusState.Advance(VenusState.Stage.Available);
             if (Auto) { Cap.Log("set course: Venus (VEN_S00_AVAILABLE) - Chapter 2 loads here in play"); StartCoroutine(ShotLater("x05_transit")); }
-            AudioKit.Play("saucer_hum", null, 0.5f);
-            yield return Wait(1.6f);
+            yield return TravelPassage.Run("venus");                         // QF16 (2): the passage replaces the plain transit
+            yield return UI.Fade(1f, 0.6f);
             if (!Auto || DemoBoot.VenusChain) { UnityEngine.SceneManagement.SceneManager.LoadScene("Venus"); yield break; }
             yield return UI.Title("Chapter 2 — Venus", 0.8f, 1.6f, 0.8f);
             if (Moon != null) { Moon.position = _moonHome; Moon.localScale = _moonScale; }
@@ -1188,6 +1191,7 @@ namespace Seven
             yield return Wait(6f);
             Objective(null);
             if (!Auto) yield break;
+            if (DemoBoot.QF16Check) { yield return QF16Check(); yield break; }     // QF16: cat moments + journeys + window views
             if (ConsoleCaptureRun.Active) yield break;      // Round 13: -r13 console / consolefresh drive the console instead
 
             // ---- check run: the set-course placeholder at her seat, then the chair (the cat comes to her lap), pause menu.

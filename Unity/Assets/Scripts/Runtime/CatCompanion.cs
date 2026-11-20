@@ -280,6 +280,8 @@ namespace Seven
         }
 
         /// <summary>QF3: the static curled cat (child "CatLap") replaces the rigged cat while it lies on her lap.</summary>
+        /// <summary>QF16: the static curled body (the lap mesh) anywhere - asleep on her, on a cushion, in the window light.</summary>
+        public void ShowCurled(bool on) => ShowLapMesh(on);
         void ShowLapMesh(bool on)
         {
             if (_lapMesh == null) return;

@@ -73,13 +73,12 @@ namespace Seven
             yield return UI.Title("EUROPA  —  BENEATH THE ICE", 1.0f, 2.4f, 1.0f);
             if (DemoBoot.CaptureDir != null) Cap?.Log("title card: 'EUROPA — BENEATH THE ICE' over black");
             // 7 sits with Panther in her lap (already settled - no hop); ahead, the Elarim's coordinates beneath the surface
-            yield return SitInPilotChair();
-            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;
-            Cat.PlaceOnLap();
+            yield return EnterStaging("EUR_01");                                // QF16 (3): standing at the window over the ice field
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0f;
             CutPilot("two");
             yield return UI.Fade(0f, 1.4f);
             yield return ShotV("ea01_pilot_chair_panther_in_her_lap");
+            StartCoroutine(CatMomentGlass());                                    // QF16 (4): he paws at the glass, tail twitching
             yield return SayE("EUR_01", 1, 4);                   // There's an ocean under all of this. / Apparently. / ... / I'm curious from here.
             // she laughs softly and strokes his back
             _stroke = 1f;
@@ -120,9 +119,7 @@ namespace Seven
             // already seated in the pilot's chair, helmet off, Panther in her lap.
             if (UI.FadeAlpha < 0.99f) yield return UI.Fade(1f, 0.6f);
             // later: the debrief in the pilot's chair, Panther in her lap (already seated), Europa's record with the others
-            yield return SitInPilotChair();
-            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;
-            Cat.PlaceOnLap();
+            yield return EnterStaging("EUR_17");                                // QF16 (3): on the floor, back against the sofa
             yield return PlaceRecordsOnArm();
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
             CutPilot("two");
@@ -162,7 +159,7 @@ namespace Seven
             _stroke = 0f; yield return Wait(0.4f);
             if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
             _ik.ReleaseAll("the Europa debrief ends");
-            yield return StandFromPilotChair();
+            yield return ExitStaging("the Europa debrief ends");
             if (DemoBoot.CaptureDir != null)
             {
                 // QF13 (15) check: after standing up she walks off - her arms hang naturally (no hand still reaching for the cat)

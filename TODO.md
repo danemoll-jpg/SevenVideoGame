@@ -308,7 +308,7 @@ branches `routing/`, the menus `menus/`).
 - Decisions above (especially Viper's jaw, the arrival order, MAR_13U flying straight to Europa).
 
 
-## Quick fix QF16: the view outside, travel between worlds, staging + Panther's cat moments (Dan, 2026-11-20) — to do, AFTER Round 15 (Mars)
+## Quick fix QF16: the view outside, travel between worlds, staging + Panther's cat moments (Dan, 2026-11-20) — done, status below; release 0.15.1
 Commit first. All standing rules (monochrome, Kyle's fog/glow, the one saucer prefab). 20-minute rule. Release **0.15.1**;
 "QF16 — status"; "For Dan to check (QF16)".
 
@@ -372,6 +372,76 @@ Commit first. All standing rules (monochrome, Kyle's fog/glow, the one saucer pr
    visions' aftermath, "How could I know that?", the reunion beats); never blocking a gameplay choice for more than a couple
    of seconds; the player can always walk away. Build the poses / motions procedurally on his rig (`CatPoseOverlay` etc.)
    and with his growth at house-cat size. Captures of each scripted moment and two or three ambient ones.
+
+## QF16 — status (2026-11-20): done, exe-verified off-screen; release 0.15.1 (`game-1501`)
+Checkpoint = the Round 15 commit (the tree was clean). Previews: `Docs/Previews/qf16/` (`1_*` window views, `2_*` the
+passage, `3_*` stagings, `4_*` cat moments; `sheet_1..4_*.png` contact sheets). Monochrome check over all 37: 0 non-grey
+pixels. Every run muted (audio peak 0.000000), minimized, Below Normal.
+
+1. **The view outside = where the saucer is.** One saved state, `SaucerLocation` (`Runtime/SaucerOutside.cs`; PlayerPrefs
+   `seven_ship_at`, check runs `seven_test_ship_at`): "moon" / "venus" / "europa" / "mars", "space" while travelling (not
+   saved). Each aboard part sets it on start (Chapter 1 = the Moon, the Venus debrief = Venus, Europa / Mars aboard = that
+   world), every journey sets it on arrival, so Continue / Scene Select / the chair scenes all agree.
+   `Editor/FightDemoBuilderOutside.cs` builds one cheap backdrop per world at the old city's depth (y −200, the ship
+   hovers high): the Moon (grey cratered plain, Earth low in the black sky), Venus (rolling garden hills, dark tree clumps,
+   a bright cloud ceiling), Europa (ridged ice field, Jupiter huge in the sky), Mars (the plain, an arc of walls, the ravine,
+   the two fortress cities), open space (stars). `SaucerOutside` switches the group and sets the Atmosphere to that
+   world's haze (ground mist on the backdrop's ground, light distance haze, Kyle's bright misty distance). The galley
+   porthole's disc shows that world too. The Round 3 hollow-Moon city stays only for the saucer demo and Chapter 1's
+   scene 9 (still inside the Moon). Captures: `1_window_view_<world>` (+ `_low`, + porthole) at all four worlds, reached by
+   real journeys in one run (`-qf16check`).
+2. **The sacred-geometry passage** (`Runtime/TravelPassage.cs`, ~8 s, skippable with Y / Enter / A / Esc): the one saucer
+   prefab instance (unchanged, `SAUCER CHECK` passes; parked far above the deck in `TravelStage`) glides through the haze
+   while rings of her collected solids unfold ahead, turning slowly; then through the window the corridor slides past; on
+   arrival the rings fold shut (chime) and the destination's view is there. Shapes = what she has: the dodecahedron always
+   (she has it since the Moon), the cube after Venus's record, the icosahedron after Europa's, the tetrahedron after Mars's.
+   A soft swelling shimmer (`vision_shimmer`) + the `course_set` / `console_select` chime; the music suspended and resumed.
+   Used for every journey: the star map (Europa, Mars, the Moon / Venus), VEN_C13's pick, the destination screen, MAR_13U →
+   Europa, and the first trip toward Biaveh (replaces the "Toward Biaveh" card; TRV_AST follows it with the windows on open
+   space). Captures `2_passage_*` (a Venus journey a/b/c; the Biaveh journey with dodecahedra + tetrahedra).
+3. **Staging per conversation** — one table, `Chapter1AboardStaging.cs` (`Table`), any row can be swapped:
+   VEN_C11 + MAR_12 = both on the sofa (7 on her back, head on the armrest, Panther settled on her, her hand by him);
+   VEN_C13 + MAR_13 (+ the combined records) = the chair, Panther **on the console** beside the display; EUR_01 = standing at
+   the window, Panther at the glass; EUR_17 = on the floor, back against the sofa, Panther on the cushion; MAR_01 = at the
+   window, Panther small on her shoulder. Each starts in its pose after a short fade; the scenes' framings (two / lap /
+   side / ots / wide) map to staging-specific shots that frame faces and the cat (three-quarter front at the window, over
+   the shoulder at the view, never full-length from behind). Hand IK released at every exit.
+   **Poses:** 7 lying / sitting on the floor = `SevenRestPose.cs`, her own bones aimed after the animator (Blender-made clips
+   were tried first: the humanoid retarget turned them into the muscle-zero pose, so they were dropped). At the window she is
+   held in her idle. Captures `3_*`.
+4. **Panther's cat moments** (`Chapter1AboardCatMoments.cs`). Scripted: VEN_C13 he strolls across the console, sits right
+   in front of the star map, she leans to see round him ("hm?"), he moves on; MAR_13C he bats at the route line on "Hmm. One
+   moment." and sits with the paw still raised on "There. Those intervals match."; EUR_01 a mote drifts past outside, he paws
+   at the glass, tail twitching; MAR_01 his tail flicks across her face, she blows it aside. Ambient while she is free aboard
+   (one every 2–4 min, never the same twice running, only when no scene / line / journey is on, and it stops the moment one
+   starts): asleep in the window light (curled), kneading the sofa + two turns + flopping down, sitting in the pilot's chair
+   until she walks up (he looks at her, gets down, she laughs through her nose), chasing a light reflection then grooming
+   when she looks, a big stretch + yawn, a loaf staring at nothing. Captures `4_*` (all four scripted, six ambient).
+
+**Decisions made (Dan away; easy to change):**
+- **Not built:** the bike-cradle nap (the bay isn't reachable on foot) and the record nudge + telekinesis catch (no records
+  rest on the chair arm while she explores). Both left for later.
+- In the lying stagings Panther sits settled on her chest / on the cushion rather than fully curled (the skinned "sleep"
+  clip doesn't read curled; the static curled body is used for the ambient naps).
+- EUR_01: there is no window ledge, so Panther sits on the glass floor at the window (the glass moment happens there).
+- The windows look down at each world from high above (all backdrops at y −200), not a ground-level view.
+- The "Toward Biaveh" title card is replaced by the passage itself.
+
+**Testing:** `-qf16check` (new: free exploration aboard → every ambient moment → journeys Moon → Venus → Europa → Mars →
+Moon with window + porthole captures, ~3.5 min), `-venusselect C11` (VEN_C11 → C13 → the passage → MAR_01),
+`-marscp 8 -routes europa` (MAR_12 → MAR_13C → the Biaveh passage → TRV_AST), `-europa`, `-europacp 8`. About
+**22 minutes** in all — a little over the 20-minute rule (three short rounds of fixes on the stagings: the rest pose, the
+cat's pose, the window framings). One crash on the way (`level4 is corrupted`: two MonoBehaviours shared
+`TravelPassage.cs`) → split into `TravelStage.cs` / `FaceCamera.cs`, clean build.
+
+## For Dan to check (QF16)
+- The windows at each world (Moon, Venus, Europa, Mars) and the porthole disc — misty enough, or more of the world?
+- One journey from the star map: the passage (outside, through the window, folding shut) — length, glow, the shapes
+  growing as she collects records.
+- The sofa scenes (VEN_C11, MAR_12): her lying pose and Panther on her; EUR_17 on the floor; EUR_01 / MAR_01 at the window.
+- The cat moments: C13 in front of the star map, the paw on "Those intervals match.", the glass, the tail; the ambient ones
+  while exploring (stay aboard for a few minutes).
+- Whether any staging should go back to the chair (one line in `Chapter1AboardStaging.Table`).
 
 ## Quick fix QF14: Dan's 0.14.1 play — Europa focus + the menu (Dan, 2026-11-19) — done, status below; release 0.14.2
 Commit first. All standing rules; the QF13 rule for repeat items (say why the last fix didn't hold, fix the cause, prove

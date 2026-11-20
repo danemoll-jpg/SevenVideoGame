@@ -240,8 +240,8 @@ namespace Seven
                 Cap.Finish($"VENUS CHAPTER DONE: {VenusState.CurrentId}, record awards {VenusState.RecordAwards}, devices {VenusState.DevicesDisabled.Count}, contained {VenusState.WormmasterContained}, destination screen shown");
                 yield break;
             }
-            if (c == "venus") { yield return UI.Fade(1f, 1f); UnityEngine.SceneManagement.SceneManager.LoadScene("Venus"); yield break; }
-            if (c == "moon") { yield return UI.Fade(1f, 1f); VenusState.UseOwnSave(); Chapter1State.StartAt(Chapter1State.CpCell); yield break; }
+            if (c == "venus") { yield return TravelPassage.Run("venus"); yield return UI.Fade(1f, 1f); UnityEngine.SceneManagement.SceneManager.LoadScene("Venus"); yield break; }
+            if (c == "moon") { yield return TravelPassage.Run("moon"); yield return UI.Fade(1f, 1f); VenusState.UseOwnSave(); Chapter1State.StartAt(Chapter1State.CpCell); yield break; }
             Director.Cam.Hold = false; Seven.Frozen = false; _settingCourse = false;
         }
 
@@ -301,14 +301,15 @@ namespace Seven
                     var top = Cat != null ? Cat.BackTop(0f, PilotFwd) : back;
                     Cap?.Log($"petting (QF12 10): her left palm {palm.y - top.y:+0.00;-0.00} m vs the top of his back, {Flat(palm - top).magnitude:0.00} m from its middle; her lap {Seven.LapPoint(0f).y - top.y:+0.00;-0.00} m (palm {(Mathf.Abs(palm.y - top.y) < 0.07f && Flat(palm - top).magnitude < 0.2f ? "on his back" : "OFF his back")})");
                 }
-                _ik.LeftW = Mathf.MoveTowards(_ik.LeftW, _stroke, Time.deltaTime * 2f);
+                _ik.LeftW = Mathf.MoveTowards(_ik.LeftW, _staged && CurrentStage != Stage.Chair && CurrentStage != Stage.ChairCatConsole ? 0f : _stroke, Time.deltaTime * 2f);   // QF16: the rest poses keep her hand on him
                 yield return null;
             }
         }
-        void NavHand(bool on) { if (on && ShipConsole.I != null && ShipConsole.I.Display != null) { _ik.RightPos = PilotHips + PilotFwd * 0.55f + PilotRight * 0.28f + Up * 0.28f; _ik.RightW = 0.9f; } else _ik.RightW = 0f; }
+        void NavHand(bool on) { if (_staged && CurrentStage != Stage.Chair && CurrentStage != Stage.ChairCatConsole) on = false; if (on && ShipConsole.I != null && ShipConsole.I.Display != null) { _ik.RightPos = PilotHips + PilotFwd * 0.55f + PilotRight * 0.28f + Up * 0.28f; _ik.RightW = 0.9f; } else _ik.RightW = 0f; }
 
         void CutPilot(string kind)
         {
+            if (CutStage(kind)) return;                                            // QF16 (3): the staging's own framings
             var disp = ShipConsole.I.Display != null ? ShipConsole.I.Display.position : PilotHead + PilotFwd * 2f;
             switch (kind)
             {
@@ -331,9 +332,7 @@ namespace Seven
             Cat.ForceTarget = null; Cat.enabled = false;
             // QF12 (11, Dan): back on the ship after Venus they are ALREADY in the pilot's chair - 7 seated, Panther curled
             // in her lap - when the picture comes up (no walk to the chair, no hop). C11's first two lines play there.
-            yield return SitInPilotChair();
-            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;   // after its Start has run
-            Cat.PlaceOnLap();
+            yield return EnterStaging("VEN_C11");                               // QF16 (3): both lying on the sofa
             yield return null;
             CutPilot("two");
             yield return UI.Fade(0f, 1.4f);
@@ -346,7 +345,7 @@ namespace Seven
             yield return Wait(0.8f);
             yield return ShotV("c11_02b_pilot_chair_panther_in_her_lap");
             // the dodecahedron and the small cube, set on the chair's arm
-            yield return SetBothOnArm();
+            if (CurrentStage == Stage.Chair) yield return SetBothOnArm();
             CutPilot("objects");
             yield return Wait(1.0f);
             yield return ShotV("c11_03_insert_both_objects");
@@ -354,11 +353,15 @@ namespace Seven
             yield return SayV("VEN_C11", 3, 5);                                  // And the people you saw? / ...
             yield return ShotV("c11_04_side_two_shot");
             yield return SayV("VEN_C11", 6, 7);                                  // What did you see? / Someone giving me a seed.
-            // open-hand insert: her right hand open, palm up on the chair's arm
-            _ik.RightPos = ArmRest - PilotRight * 0.08f + PilotFwd * 0.1f; _ik.RightW = 1f; _ik.LookPos = _ik.RightPos; _ik.LookW = 0.7f;
-            yield return Wait(0.7f);
-            var palm = Palm(true);
-            Cut(palm + PilotRight * 0.4f + Up * 0.3f + PilotFwd * 0.2f, palm, 34f, null, 0.55f, 50f, 3f);
+            // open-hand insert: her right hand open, palm up on the chair's arm (in the chair staging; on the sofa: her face)
+            if (CurrentStage == Stage.Chair)
+            {
+                _ik.RightPos = ArmRest - PilotRight * 0.08f + PilotFwd * 0.1f; _ik.RightW = 1f; _ik.LookPos = _ik.RightPos; _ik.LookW = 0.7f;
+                yield return Wait(0.7f);
+                var palm = Palm(true);
+                Cut(palm + PilotRight * 0.4f + Up * 0.3f + PilotFwd * 0.2f, palm, 34f, null, 0.55f, 50f, 3f);
+            }
+            else CutPilot("side");
             yield return Wait(0.6f);
             yield return ShotV("c11_05_open_hand_insert");
             yield return Wait(0.8f);
@@ -372,14 +375,15 @@ namespace Seven
             yield return SayV("VEN_C11", 9, 10);                                 // There are other temples. / Then we have somewhere else to ask.
             bool first = VenusState.CompleteScene("VEN_C11", VenusState.Stage.Complete);
             if (DemoBoot.CaptureDir != null) Cap?.Log($"scene VEN_C11 complete{(first ? "" : " (already)")} in the pilot's chair: {VenusState.CurrentId}");
-            // ---- VEN_C13: choosing the next world - straight on
+            // ---- VEN_C13: choosing the next world - straight on (QF16 3: at the console, Panther sitting on it)
+            yield return SwitchStaging("VEN_C13");
             yield return C13();
             _stroke = 0f; yield return Wait(0.5f);
             if (_strokeRoutine != null) StopCoroutine(_strokeRoutine);
             _ik.LeftW = 0f; _ik.RightW = 0f; _ik.LookW = 0f;
             yield return UI.Fade(1f, 1.2f);
             if (ShipConsole.I != null) ShipConsole.I.HideMap();
-            yield return StandFromPilotChair();
+            yield return ExitStaging("VEN_C13 ends");
             ShipConsole.StoryLock = false;
             yield return ExploreVenus(false);
         }
@@ -422,7 +426,9 @@ namespace Seven
             CutPilot("ots");
             yield return Wait(0.6f);
             yield return ShotV("c13_01_over_her_shoulder_display");
-            yield return SayV("VEN_C13", 2, 4);                                  // A temple between divided kingdoms. / Convenient... / Perhaps...
+            var stroll = StartCoroutine(CatMomentC13());                         // QF16 (4): he strolls across the console in front of the screen
+            yield return SayV("VEN_C13", 2, 4);
+            if (stroll != null) { float w0 = Time.time; while (_leanHook != null && Time.time - w0 < 8f) yield return null; }                                  // A temple between divided kingdoms. / Convenient... / Perhaps...
             // he lifts his head to look up at her
             Cat.LapNudge(-14f);
             CutPilot("lap");
@@ -486,9 +492,9 @@ namespace Seven
             VenusState.CompleteScene("VEN_C13");
             VenusState.CompleteScene("VEN_C13_" + pick);
             // Round 14: Europa is playable - the chapter starts (its title card, the chair scene, the dive); Mars stays "coming soon"
-            if (pick == "europa") { yield return UI.Fade(1f, 1.0f); if (DemoBoot.CaptureDir != null) Cap?.Log("VEN_C13: Europa chosen -> Chapter 'Europa — Beneath the Ice' starts"); EuropaState.StartFresh(); yield break; }
+            if (pick == "europa") { yield return TravelPassage.Run("europa"); yield return UI.Fade(1f, 1.0f); if (DemoBoot.CaptureDir != null) Cap?.Log("VEN_C13: Europa chosen -> Chapter 'Europa — Beneath the Ice' starts"); EuropaState.StartFresh(); yield break; }
             // Round 15: Mars is playable - the chapter starts (its title card, the chair scene, the landing)
-            if (pick == "mars") { yield return UI.Fade(1f, 1.0f); if (DemoBoot.CaptureDir != null) Cap?.Log("VEN_C13: Mars chosen -> Chapter 'Mars — The Divided Kingdoms' starts"); MarsState.StartFresh(); yield break; }
+            if (pick == "mars") { yield return TravelPassage.Run("mars"); yield return UI.Fade(1f, 1.0f); if (DemoBoot.CaptureDir != null) Cap?.Log("VEN_C13: Mars chosen -> Chapter 'Mars — The Divided Kingdoms' starts"); MarsState.StartFresh(); yield break; }
         }
     }
 }

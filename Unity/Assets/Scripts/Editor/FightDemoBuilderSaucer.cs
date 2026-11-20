@@ -912,7 +912,8 @@ namespace Seven.EditorTools
             ch.UiRendererIndex = EnsureUiRenderer();
             ch.TableCentre = tb.centre; ch.TableAlong = tb.along; ch.TableOut = tb.outward; ch.TableTopY = TableTopY;
             ch.SofaCamPos = Polar(4.4f, 176f, 1.35f); ch.SofaCamLook = Polar(6.95f, 160f, 0.55f);
-            WireShipConsole(consoleRefs, dir, chUi);                                // Round 13: Seven.ShipConsole
+            WireShipConsole(consoleRefs, dir, chUi);
+            BuildOutside(atmo, ch);                                                 // QF16 (1 + 2): the view outside + the passage stage                                // Round 13: Seven.ShipConsole
 
             EditorSceneManager.SaveScene(scene, SaucerScenePath);
             Log("scene saved " + SaucerScenePath);

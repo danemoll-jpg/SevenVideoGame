@@ -324,7 +324,8 @@ apply to every asset and scene:
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–15 + QF1–QF15 complete (2026-11-20), release 0.15.0.** Round 15 = Chapter "Mars — The Divided Kingdoms" (first playable pass). Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
+**Rounds 1–15 + QF1–QF16 complete (2026-11-20), release 0.15.1.** QF16 = the view outside per world, the
+sacred-geometry passage, varied staging aboard, Panther's cat moments. Round 15 = Chapter "Mars — The Divided Kingdoms" (first playable pass). Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
 scene (Round 10).
 - QF5 (Dan's 0.10.0 playtest): the cat can no longer be left behind, and the lock mechanism is on the right as in the
   vision.
@@ -530,7 +531,27 @@ scene (Round 10).
   - Switches: `-marscp <n>` (check run at checkpoint n; 8 = aboard), `-mars` (as from the star map), `-marsplay` (player-style
     run `MarsPlaytest.cs`; with `-menupick "Venus|Venus: the debrief"` it starts in the main menu and picks Mars at VEN_C13),
     `-marspick europa|asteroid|biaveh`, `-routes none|europa|mars` (fake the world flags: neither / Europa done / Mars done).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.0** (Round 15 status in `TODO.md`).
+- **QF16 (release 0.15.1)** — the view outside, the passage, staging, Panther's cat moments (status + "For Dan to check
+  (QF16)" in `TODO.md`):
+  - **Where the saucer is** = `SaucerLocation` (`Runtime/SaucerOutside.cs`, PlayerPrefs `seven_ship_at`; "space" while
+    travelling). Set by each aboard part on start and by every journey on arrival. `SaucerOutside` shows that world's
+    backdrop (`Editor/FightDemoBuilderOutside.cs`: Moon + Earth, Venus hills + cloud ceiling, Europa ice + Jupiter, Mars
+    plain / walls / ravine / two cities, stars; all at y −200) + its haze preset + the galley porthole disc. The Round 3
+    city only for the saucer demo and Chapter 1 scene 9.
+  - **Journeys** = `TravelPassage.Run(to)` (~8 s, skippable): rings of her collected solids (dodecahedron always, cube /
+    icosahedron / tetrahedron per record), outside shot of the one saucer prefab parked in `TravelStage` (far above the
+    deck), then through the window, fold shut. Called from the star map, VEN_C13, the destination screen, MAR_13U, the
+    first trip toward Biaveh (`TowardBiaveh`).
+  - **Staging table** `Chapter1AboardStaging.Table` (scene → Chair / ChairCatConsole / Sofa / FloorSofa / Window /
+    WindowShoulder); `EnterStaging` / `SwitchStaging` / `ExitStaging`; `CutStage` maps the old framing keywords. 7's
+    lying / floor-sitting poses = `SevenRestPose.cs` (bones aimed after the animator; Blender pose clips retarget to the
+    muscle-zero pose — don't use them).
+  - **Cat moments** `Chapter1AboardCatMoments.cs` (scripted C13 / MAR_13C / EUR_01 / MAR_01; ambient loop every 2–4 min
+    while free aboard; `CatPoseOverlay.PawTo / TailToward / TailTwitch`, `CatCompanion.ShowCurled`).
+  - Check: `-qf16check` (~3.5 min: every ambient moment, then journeys Moon → Venus → Europa → Mars → Moon with window +
+    porthole captures, ends `QF16 CHECK: cat moments N, journeys 4`).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.1** (QF16 status in `TODO.md`).
+**Before: Dan plays 0.15.0** (Round 15 status in `TODO.md`).
 **Before: Dan plays 0.14.3** (QF15 status in `TODO.md`).
 **Before: Dan plays 0.14.2** (QF14 status in `TODO.md`).
 **Before: Dan plays 0.14.1** (QF13 status in `TODO.md`).

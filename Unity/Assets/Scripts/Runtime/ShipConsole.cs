@@ -725,6 +725,7 @@ namespace Seven
                 // done = a short card (the record is aboard) and back to the map
                 if (EuropaState.Complete) { yield return ComingSoonCard("Europa — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
                 ReleaseForTravel();
+                yield return TravelPassage.Run("europa");                    // QF16 (2): the sacred-geometry passage
                 if (UI != null) yield return UI.Fade(1f, 0.8f);
                 if (EuropaState.HasProgress) EuropaState.ContinueOwn(); else EuropaState.StartFresh();
                 _busy--;
@@ -735,6 +736,7 @@ namespace Seven
                 // Round 15: Mars is playable (as Europa: done = a short card, else the chapter where it left off)
                 if (MarsState.OwnComplete) { yield return ComingSoonCard("Mars — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
                 ReleaseForTravel();
+                yield return TravelPassage.Run("mars");                      // QF16 (2): the sacred-geometry passage
                 if (UI != null) yield return UI.Fade(1f, 0.8f);
                 if (MarsState.HasProgress) MarsState.ContinueOwn(); else MarsState.StartFresh();
                 _busy--;

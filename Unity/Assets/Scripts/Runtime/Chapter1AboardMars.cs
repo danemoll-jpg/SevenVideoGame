@@ -73,10 +73,8 @@ namespace Seven
             MusicSystem.Play("mars_kingdoms", 3f);
             yield return UI.Title("MARS  —  THE DIVIDED KINGDOMS", 1.0f, 2.4f, 1.0f);
             if (DemoBoot.CaptureDir != null) Cap?.Log("title card: 'MARS — THE DIVIDED KINGDOMS' over black");
-            yield return SitInPilotChair();
-            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;
-            Cat.PlaceOnLap();
-            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0.6f;
+            yield return EnterStaging("MAR_01");                                // QF16 (3): at the window, Panther on her shoulder
+            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0f;
             PlaceRecordsOnArmMars();
             // the navigation display: the plain, the two fortress cities, the ravine, the temple on its island
             NavHand(true);
@@ -87,6 +85,7 @@ namespace Seven
             yield return ShotV("ma01_navigation_display_the_temple");
             yield return SayM("MAR_01", 1, 1);                                   // There's the temple.
             CutPilot("lap");
+            StartCoroutine(CatMomentTailFlick());                                // QF16 (4): his tail flicks across her face
             yield return SayM("MAR_01", 2, 2);                                   // And several people determined to make reaching it inconvenient.
             yield return ShotV("ma02_panther_in_her_lap");
             // she studies the bridges - both approaches are barricaded
@@ -116,15 +115,10 @@ namespace Seven
             Cat.ForceTarget = null;
             MusicSystem.Play("aboard_saucer", 2.5f);
             // 7 sits in the pilot's chair; Panther climbs into her lap
-            yield return SitInPilotChair();
-            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true;
-            Cat.transform.SetPositionAndRotation(Flat(PilotHips + PilotRight * 0.9f - PilotFwd * 0.1f), Quaternion.LookRotation(-PilotRight));
+            yield return EnterStaging("MAR_12");                                // QF16 (3): both lying on the sofa (a quiet, personal talk)
             PlaceRecordsOnArmMars();
-            CutPilot("side");
+            CutPilot("two");
             yield return UI.Fade(0f, 1.2f);
-            Cat.HopOntoLap();
-            for (float t = 0f; t < Cat.HopTime + 0.4f; t += Time.deltaTime) yield return null;
-            if (Cat.Current != CatCompanion.Mode.OnLap) Cat.PlaceOnLap();
             yield return ShotV("ma10_panther_climbs_into_her_lap");
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
             CutPilot("two");
@@ -143,6 +137,7 @@ namespace Seven
             // section 13 (Dan's revised departure routing): the saucer stays put; the completed-world flags decide
             MarsState.Reach(MarsLayout.CpDone);
             MarsDebriefDone = false;
+            yield return SwitchStaging("MAR_13");                               // QF16 (3): the route display - the chair, Panther on the console
             if (DemoBoot.CaptureDir != null) Cap?.Log($"MAR_13: {WorldFlags.Summary()} -> {(WorldFlags.CombinedDue ? "MAR_13C (Europa complete: the combined records)" : !WorldFlags.EuropaDone ? "MAR_13U (Europa unfinished)" : "MAR_13B only (the combined records already played)")}");
             if (WorldFlags.CombinedDue) { yield return CombinedRecords("the Mars debrief"); yield break; }
             var con = ShipConsole.I;
@@ -173,6 +168,7 @@ namespace Seven
                 MarsDebriefDone = true;
                 if (DemoBoot.CaptureDir != null) Cap?.Log($"MARS CHAPTER DONE: {MarsState.Summary()}; {WorldFlags.Summary()}; next: Europa");
                 EndChairMoment("the Mars debrief ends");
+                yield return TravelPassage.Run("europa");                    // QF16 (2)
                 yield return UI.Fade(1f, 1.0f);
                 if (EuropaState.HasProgress) EuropaState.ContinueOwn(); else EuropaState.StartFresh();
                 yield break;
@@ -181,7 +177,7 @@ namespace Seven
             yield return Closing();
             MarsDebriefDone = true;
             EndChairMoment("the Mars debrief ends");
-            yield return StandFromPilotChair();
+            yield return ExitStaging("the Mars departure routing ends");
             ShipConsole.StoryLock = false;
             yield return ExploreVenus(false);
         }
@@ -215,6 +211,7 @@ namespace Seven
         /// departure toward Biaveh and, on that first journey after the warp, the asteroid discovery (TRV_AST) and its choice.</summary>
         public IEnumerator CombinedRecords(string where)
         {
+            if (!_staged || CurrentStage != Stage.ChairCatConsole) yield return SwitchStaging("MAR_13");
             if (DemoBoot.CaptureDir != null) Cap?.Log($"MAR_13C (the combined records) plays at {where}: {WorldFlags.Summary()}");
             var con = ShipConsole.I;
             NavHand(true);
@@ -223,7 +220,11 @@ namespace Seven
             _stroke = 0.3f;                                                      // her hand pauses on his back
             yield return SayM("MAR_13C", 1, 1);                                  // Wait. Put the route beside the sequence we brought back from Europa.
             Cat.LapNudge(-10f);                                                  // he turns toward the display
-            yield return SayM("MAR_13C", 2, 3);                                  // Hmm. One moment. / There. Those intervals match.
+            StartCoroutine(CatMomentRouteBat(false));                            // QF16 (4): he bats at the route line
+            yield return SayM("MAR_13C", 2, 2);                                  // Hmm. One moment.
+            StartCoroutine(CatMomentRouteBat(true));                             // ... and sits with his paw still raised
+            yield return SayM("MAR_13C", 3, 3);                                  // There. Those intervals match.
+            CatPawDown();
             UI.Hint("the Mars route  +  the Cetaceans' sequence  ·  the intervals match", 4f);
             yield return ShotV("ma15_two_records_side_by_side");
             yield return SayM("MAR_13C", 4, 5);                                  // They do... / They each kept a piece.
@@ -246,9 +247,7 @@ namespace Seven
             _ik.LookW = 0f;
             yield return Closing();
             // the first journey toward Biaveh: the warp into its system, then a quiet navigation chime
-            AudioKit.Play("course_set", null, 0.7f);
-            yield return UI.Fade(1f, 0.9f);
-            yield return UI.Title("Toward Biaveh", 0.5f, 1.4f, 0.5f);
+            yield return TowardBiaveh();
             CutPilot("ots");
             yield return UI.Fade(0f, 0.9f);
             yield return TravelAsteroid();
@@ -260,15 +259,20 @@ namespace Seven
             ShipConsole.StoryLock = true; InGalleyScene = true;
             Seven.Frozen = true; Seven.Cutscene = true; Director.Cam.Hold = true;
             yield return UI.Fade(1f, 0.8f);
-            yield return SitInPilotChair();
-            Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;
-            Cat.PlaceOnLap();
-            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0.8f;
-            AudioKit.Play("course_set", null, 0.7f);
-            yield return UI.Title("Toward Biaveh", 0.5f, 1.4f, 0.5f);
+            yield return EnterStaging("MAR_13");
+            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0f;
+            yield return TowardBiaveh();
             CutPilot("ots");
             yield return UI.Fade(0f, 0.9f);
             yield return TravelAsteroid();
+        }
+        /// <summary>QF16 (2): the first journey toward Biaveh = the sacred-geometry passage; the windows then show open space
+        /// (the asteroid is found on the way, TRV_AST; Biaveh is not reached yet, so nothing is saved).</summary>
+        IEnumerator TowardBiaveh()
+        {
+            yield return TravelPassage.Run("biaveh");
+            SaucerLocation.Travelling = true;
+            yield return UI.Fade(1f, 0.5f);
         }
         void Log13(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) Cap?.Log(s); }
 
@@ -300,7 +304,7 @@ namespace Seven
             if (DemoBoot.CaptureDir != null) Cap?.Log($"TRV_AST choice: {pick}; MARS / ROUTES DONE: {MarsState.Summary()}; {WorldFlags.Summary()}");
             EndChairMoment("the departure routing ends");
             if (con != null) yield return con.ComingSoonCard($"{ShipConsole.WorldName(pick)} (coming soon)");
-            yield return StandFromPilotChair();
+            yield return ExitStaging("the Mars departure routing ends");
             ShipConsole.StoryLock = false;
             yield return ExploreVenus(false);
         }
