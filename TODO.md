@@ -1,5 +1,68 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF17: real boss fights + Mars clean-up (Dan, 2026-11-20) — to do
+Commit first. All standing rules + the repeat-item rule (why the last fix didn't hold, fix the cause, prove it in normal
+play, never "done" on a partial fix). Release **0.15.2**; "QF17 — status"; "For Dan to check (QF17)". The proofs below may
+take testing time past 20 minutes — keep it purposeful.
+
+**Dan (2026-11-20): "So far every boss 'fight' is me pushing buttons and the boss just standing there."** The Venus
+encounter (QF12 / Round 13) and the Mars encounter (Round 15: lanes, barriers, a moving section, three pylons, then a
+takedown) were obstacle courses; neither boss ever threatened her. That stops now.
+
+0. **New standing rule — add "Boss fights" to `CLAUDE.md`** (applies to every boss, now and later):
+   - The boss **moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: pose, sound,
+     light) she must read and answer with her own moves (**dodge, block, jump, telekinesis, her strikes**).
+   - **She can lose:** hits knock her back and cost her; enough hits = she goes down → retry from the start of the current
+     phase (fair, quick). Still nonlethal for everyone.
+   - **Phases (2–3)** that escalate: faster, a new attack, the arena changes. Objectives (switches, pylons) are allowed only
+     *while* the boss is attacking — never as the whole fight.
+   - The boss is defeated by her **countering him** (stagger him — e.g. a dodge or block into a telekinetic throw of
+     debris / his own machinery back at him — then press the advantage), not by flipping switches while he waits.
+   - **Proof every time:** (a) a player-style run with a log of boss attacks per minute, hits she took, staggers, phase
+     times; (b) an **"idle test"**: a run where the player does nothing must be knocked down within ~60 s (proves the
+     threat is real); (c) a capture sequence of the boss mid-attack; (d) a first-time-player length of about 3–5 minutes.
+   - Tune from one data table (attack timings, damage, telegraph lengths) so Dan's feedback is a number change.
+1. **Rebuild Viper's fight on the island plaza** (spec 7; keep the positioning idea, but he's the threat). Proposal:
+   - **Snake strike:** he coils, the hood flares, a hiss — then lunges 6–8 m very fast; dodge sideways (or block, pushed back).
+   - **Venom spit:** arcing globs (dark, glossy) that leave burning puddles for a few seconds — zone denial.
+   - **Tail / arm sweep** when she's close — jump or block.
+   - **His defensive machinery:** barriers slam up to box her in; a rotating energy sweep across a lane she must jump or time.
+   - **Phase 1:** he fights from his raised platform (spits, works the machinery); she disables a pylon under fire to bring
+     the platform down. **Phase 2:** he comes down and hunts her — strikes and sweeps, the machinery still active; she staggers
+     him by dodging a strike and hurling debris / a barrier section with telekinesis. **Phase 3:** enraged — faster combos,
+     strike → spit; three staggers and she pins him — the containment ring, alive, left for local custody; then MAR_07's
+     two-shot as now.
+   - Uses Viper's rig + the reused clips (`viper_*` / tunneler / YBot list) plus procedural coil / lunge / spit motions.
+2. **Bring the Venus Wormmaster fight up to the same rule.** He leaves his dais and fights: **lashing attacks with his long
+   boneless arms** (the curl bones), a **ground slam that sends a wave of surfacing worms** along a line at her, and he
+   **directs worm lunges** as now; phases as above; she counters (dodge a lash → telekinetic throw of root debris / a device
+   casing at him → stagger); the three control devices still have to go off, but **under attack**. The worms are still
+   victims — stunned and withdrawing, never harmed; the Wormmaster subdued, not killed. Same proofs (idle test included).
+3. **Mars buildings are all cubes — make it real architecture.** The two fortress cities, the settlement, the checkpoint,
+   the market, the lookouts and the temple: a modular **Reptilian architecture kit** (scripted Blender is fine) — thick
+   sloped / battered walls, stepped terraces, arched gates and doorways, towers with domed or pointed roofs, windows,
+   balconies, parapets, awnings over the market, banners and walkways; the temple in a different, older, smoother monumental
+   style (it predates the fortifications). Kyle's look: `Art/Reference/kyle_world_mood.jpg`, `kyle_city_vehicles.jpg`,
+   `kyle_command_center.jpg` (misty, glowing, huge forms fading into haze). **No plain boxes left in view anywhere in Mars.**
+   Captures from the player's camera in the settlement, at the checkpoint, the ravine views of both cities, the temple.
+4. **Ramps disappear when you drive over them** — almost certainly QF15's cut-away (it hides geometry between the camera and
+   the bike) catching the ramp she's on. Fix the rule for every world: **never cut away anything she can ride or walk on, or
+   anything at / below the bike** — only walls, roofs and overhead pieces above her. Check every ramp in Mars (and Venus /
+   Europa) with a capture while on it.
+5. **The bike was already outside the hold when she arrived on Mars** (repeat of the bike-hold rule). Find which start
+   path places it outside (the chapter start from the star map / VEN_C13 / MAR_13U, the main menu chapter list, Scene Select
+   "arrival", Continue) — on **every** path the bike starts inside the hold, the hatch opens, the bike lowers out, then 7
+   comes down the beam. Add a check that fails if the bike is outside the hold before the hatch opens, on every world.
+6. **Mars is clunky — a clean-up pass.** Play Mars yourself, player-style, at real speed from the arrival to MAR_13, watch
+   the captures, and write a **"clunk list"** in the status: every spot that feels awkward (stalls, fades where a cut or
+   continuous play would be better, unclear objectives, getting stuck, characters popping / T-posing / sliding, the camera,
+   too-long waits, invisible walls, dead ends). Fix everything on it you can; say what's left.
+
+Checks + release: the boss-fight proofs for Viper and the Wormmaster (player run log, idle test, capture sequence, length),
+the Mars captures (architecture, ramps, the bike out of the hold on each start path), the clunk list. Publish **0.15.2**;
+docs (the new "Boss fights" rule in `CLAUDE.md`); commit + push.
+
+
 ## Side task S2: Reptilian ready for Mixamo (Dan, 2026-11-19) — DONE; Dan's rigged body in: `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx`
 **Status:** `Tools/Blender/cleanup_mixamo_body.py -- <repo> reptilian` (the S1 script, now shared, presets viper /
 reptilian; ~3 min) → `Art/Export/reptilian/reptilian_for_mixamo.fbx` (4.1 MB, 35,944 tris, 1.90 m, feet at 0, faces
