@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Side task S2: Reptilian ready for Mixamo (Dan, 2026-11-19) — DONE (2026-11-19), waiting for Dan's Mixamo upload
+## Side task S2: Reptilian ready for Mixamo (Dan, 2026-11-19) — DONE; Dan's rigged body in: `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx`
 **Status:** `Tools/Blender/cleanup_mixamo_body.py -- <repo> reptilian` (the S1 script, now shared, presets viper /
 reptilian; ~3 min) → `Art/Export/reptilian/reptilian_for_mixamo.fbx` (4.1 MB, 35,944 tris, 1.90 m, feet at 0, faces
 front, arms 57° below horizontal, 201 loose pieces welded into 1, grayscale 2048 texture embedded) +
@@ -20,7 +20,7 @@ the left thigh (separate them by a small gap if they are) so Mixamo's skinning d
 Dan: upload to Mixamo's auto-rigger, download "FBX for Unity, with skin" to `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx`.
 Commit + push. No release.
 
-## Side task S1: Viper ready for Mixamo (Dan, 2026-11-19) — DONE (2026-11-19), waiting for Dan's Mixamo upload
+## Side task S1: Viper ready for Mixamo (Dan, 2026-11-19) — DONE; Dan's rigged body in: `Art/Mixamo/viper/viper_body_mixamo.fbx`
 **Status:** `Tools/Blender/cleanup_viper.py` (now `cleanup_mixamo_body.py … viper`, ~3 min) → `Art/Export/viper/viper_for_mixamo.fbx` (3.4 MB, 35,996 tris,
 2.30 m, feet at 0, faces front (-Y Blender = +Z Mixamo), arms 55° below horizontal, 121 loose pieces welded into 1,
 grayscale 2048 texture embedded) + `viper_mixamo_metrics.txt`; previews `Docs/Previews/viper/` (sheet front / side /
@@ -38,8 +38,8 @@ texture embedded → **`Art/Export/viper/viper_for_mixamo.fbx`**, plus a preview
 
 ## Quick fix QF15: the bike camera + walls in Europa (Dan, 2026-11-19) — to do
 Commit first. All standing rules and the repeat-item rule (say why the last fix didn't hold, fix the cause, prove it in
-normal play, never "done" on a partial fix). Dan: **"Two main fixes for Europa now."** Only these two — do them
-properly. Release **0.14.3**; "QF15 — status"; "For Dan to check (QF15)". Testing time may go over 20 minutes for the
+normal play, never "done" on a partial fix). Dan: **"Two main fixes for Europa now."** Items 1–2 are the focus — do them
+properly; item 3 is a small cut. Release **0.14.3**; "QF15 — status"; "For Dan to check (QF15)". Testing time may go over 20 minutes for the
 proofs below, but keep it purposeful.
 
 1. **The camera keeps shifting while riding the bike — it must be smooth, always.** QF14 smoothed it only in the race
@@ -64,9 +64,86 @@ proofs below, but keep it purposeful.
    shells and the race course) and the free-riding routes: **0 frames with the bike or camera inside geometry**; list
    any spot that failed and was fixed. Also a few captures riding hard along a wall.
 
+3. **Small, from Dan (2026-11-19): cut the reunion at the end of Europa entirely.** After 7 boards in the beam, go
+   **straight to the debrief with them already sitting in the pilot's chair** (Panther in her lap) — no helmet-off beat at
+   the boarding area, no Panther waiting there, no kneel, no head-against-hand, no "Good." (`EUR_16` is removed; Dan: it
+   feels like a lock-up). A short fade from the beam-up into the chair shot is fine. Spec + `Docs/EUROPA-LINES.md` + the
+   dialogue data updated; drop `EUR_16_04`'s voice file. Her helmet is simply off in the chair.
+
 Checks + release: the two proofs above, one player-style ride through Europa from the dive to the base and from the
 escape to the temple, publish **0.14.3**; docs; commit + push.
 
+
+## Round 15: Chapter "Mars — The Divided Kingdoms", first playable pass (Dan, 2026-11-19) — to do, AFTER QF15
+Commit a checkpoint first. If Dan is away when you get here, **never stop to ask**: make the most reasonable call, list it
+under "Round 15 — decisions made", keep going. All standing rules (monochrome, Kyle's fog/glow, non-sexual, 7 never kills,
+no exact-spot triggers, captures you look at), **the one saucer prefab (bike always via the bike hold, beam only for 7 /
+Panther)**, the fast bike, QF15's one smooth riding camera and full collision, the hand-IK release rules (QF13 15), the
+repeat-item rule. 20-minute rule for checks. Release **0.15.0**; "Round 15 — status"; "For Dan to check (Round 15)".
+
+**The spec is `Docs/CHAPTER_MARS.md`** (Dan's script, sections 1–13 + implementation guardrails). Build it as playable
+connected spaces like Venus / Europa, reusing every existing system. "PROPOSED" parts are built as written for the
+prototype (easy to replace; the guardrails say the symbol, mechanisms, Viper's equipment and the vision await Kyle).
+
+**Everything Dan made for it is in the repo:**
+- **Viper:** Kyle's design `Art/Reference/kyle_viper.jpg`, reference `viper_ref_front.png`, Tripo `Art/Source/viper/viper_v1.glb`,
+  **rigged body `Art/Mixamo/viper/viper_body_mixamo.fbx`** (~2.3 m). Talking: a jaw bone opens with his voice's loudness (no
+  lip-sync); the hood can flare on angry lines. Voice: Dan's saved ElevenLabs voice **`Viper`** (`Docs/VOICES.md`).
+- **Reptilians** (one model for the guard, the worker, the caretaker, families, traders; ±10 % size, a few tones; guards get
+  a simple helmet / chest plate attached in Unity): `reptilian_ref_front.png`, `Art/Source/reptilian/reptilian_v1.glb`,
+  **rigged body `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx`** (~1.9 m). Sash tail + satchel on their own short bones /
+  pinned so they never pass through the leg. Voices: premade ElevenLabs voices picked by you via the API (no new saved
+  voices) — the guard, the worker and the caretaker clearly different from each other.
+- **Animations** (Humanoid retarget; list in `Docs/MODELS-NEEDED.md` "Mars animation clips"): Viper reuses tunneler / elarim /
+  YBot clips; Reptilians: new `reptilian_walk.fbx` (Mixamo "Orc Walk" — make sure it reads as an ordinary person, slow / damp
+  it if brutish) and `reptilian_wave.fbx`, the rest reused; guards use the idle.
+- **Music:** `mars_kingdoms.mp3` (exploration — plains, settlements, ravine, temple, ride back), `mars_viper.mp3` (Viper's
+  intervention / the encounter) — `Docs/MUSIC.md`.
+- **Vision:** `Art/Video/vision_04_mars.mp4` + still `Resources/Mars/vision_04_still.jpg` (spec section 9 note: the centre
+  span lowered into place from both banks; nearly silent — soft stone and wind, no music; play like the other visions).
+- **Rune: a tetrahedron**, generated in code like the cube, dodecahedron and icosahedron (Dan).
+- Voice all lines with ids `MAR_<scene>_<nn>` (dialogue as data + `Docs/MARS-LINES.md`), 7 on v3 with the spec's delivery
+  directions (laughs, breaths, sighs), Panther with his telepathic treatment. SFX for what the chapter needs (barriers,
+  machinery, bridge alignment, defensive machinery, crowd / market ambience, wind) → `Docs/SFX-LIST.md`.
+
+**Items**
+1. **Getting there:** Mars is playable from the star map / VEN_C13's choice and the main menu's chapter list (works before
+   or after Europa). Title card "MARS — THE DIVIDED KINGDOMS" over black from the first frame.
+2. **Arrival (spec 1):** the extreme wide over the plain (walls, trenches, elevated roads; two fortress cities either side
+   of a deep ravine; the temple on a central stone island, older than the fortifications around it); the pilot's-chair lap
+   scene (already seated); land outside the occupied approaches — bike out of the hold, 7 down the beam; Panther aboard.
+3. **The crossing (spec 2):** a living Reptilian settlement first (workers, families, traders, guards going about their day),
+   then the checkpoint, the stranded supply transport behind the barrier, the guard and the worker.
+4. **Viper (spec 3):** the low-angle reveal on the elevated platform, harsh light from beneath; he notices the records; she
+   keeps them close; his dry laugh; he orders the crossing secured and leaves.
+5. **Both sides of the ravine (spec 4):** the old maintenance route under the main crossing on the bike — broken causeways,
+   sheltered passages, broad fast riding sections, clear stopping points; reopen the supply route without attacking the
+   guards (nonlethal; a restored service passage the transport crosses); the caretaker on the far bank. Ordinary people on
+   both sides, never foolish or warlike.
+6. **The shared door (spec 5):** the ancient two-control mechanism overlooking the temple, the conversation.
+7. **Two controls (spec 6):** the cooperation sequence — riding between access points, on-foot traversal through the
+   ancient bridge structures, redirecting power / repositioning with telekinesis, protecting the repair nonlethally; Panther
+   coordinating; the worker and the caretaker on the two controls; the startled "Not that one!"; together → the ancient
+   structures align into a passage.
+8. **Viper's intervention (spec 7):** a **new kind of encounter — positioning and timing, not Venus's creature fight:** he
+   divides the arena with barriers and moving sections; she reconnects routes, disables his control points, closes the
+   distance; he's subdued and contained (never killed); the level two-shot after; he's left secured for local custody.
+9. **The temple (spec 8–9):** the symbols of both kingdoms as one design (insert), the tetrahedron rune, the vision, the
+   return lines, the small counterpart awarded once (insert beside the other records).
+10. **Two new leads (spec 10):** the temple display — the asteroid world and Biaveh; sent to the saucer; **unlock both on the
+    star map** (their chapters don't exist yet → "coming soon" cards, like Mars once was).
+11. **The ride back (spec 11)** with the transport crossing openly and the guard and caretaker talking; **aboard (spec 12)**
+    already seated in the chair; **the destination choice (spec 13)** with both versions (Europa unfinished / finished),
+    checking the completed-world flags; Panther's lines; set course.
+12. **Progression + saves:** the guardrails (completed-world checks; Cattalus after Venus + Mars + Europa + asteroid + Biaveh;
+    the final Moon mission after Cattalus — just the flags for now), checkpoints for Continue, the chapter + its sections in
+    the main menu / pause menu lists, Log + Field Guide entries (Reptilians, the guard, the worker, the caretaker, Viper) with
+    the QF13 "grows with the story" unlocks; the tetrahedron with the other records on the chair arm.
+
+**Checks + release (20-minute rule):** targeted runs per section with captures you look at (arrival, settlement, Viper's
+reveal, the maintenance route ride, the two controls, the encounter, the temple + vision, the leads, the choice), one
+player-style run from the star map to the destination choice, the menu sections start correctly. Publish **0.15.0**; docs;
+commit + push.
 
 ## Quick fix QF14: Dan's 0.14.1 play — Europa focus + the menu (Dan, 2026-11-19) — done, status below; release 0.14.2
 Commit first. All standing rules; the QF13 rule for repeat items (say why the last fix didn't hold, fix the cause, prove

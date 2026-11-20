@@ -44,3 +44,9 @@ pressure chamber. The escape and the debrief follow the spec's own cues (the mom
 before the Cetacean calls — fade the music out there and bring `europa_underwater` back in the temple).
 
 **Status:** both made by Dan and saved in `Unity/Assets/Audio/Music/` (2026-11-19).
+
+# Chapter — Mars (made by Dan in Suno, 2026-11-19, both ~3:00, saved in `Unity/Assets/Audio/Music/`)
+| File | Where it plays |
+| --- | --- |
+| `mars_kingdoms.mp3` | The plains, the settlements, the ravine, the maintenance route, the temple, the ride back |
+| `mars_viper.mp3` | Viper's intervention / the encounter at the temple approach |

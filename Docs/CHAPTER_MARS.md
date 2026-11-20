@@ -1,4 +1,4 @@
-> **Status (2026-11-19):** Mars chapter script from Dan. Not scheduled yet. Rune shape still open (see section 8).
+> **Status (2026-11-19):** Mars chapter script from Dan. Not scheduled yet. Rune = tetrahedron (Dan).
 
 **MARS — THE DIVIDED KINGDOMS**
 
@@ -279,11 +279,13 @@ Hold on the complete pattern.
 
 They approach Mars’s geometric rune.
 
-**DESIGN NOTE:** Its shape remains undecided. A tetrahedron is a possible choice, but do not treat it as approved.
+**DESIGN NOTE (Dan, 2026-11-19):** Mars’s rune is a **tetrahedron**, generated in code like the cube, dodecahedron and icosahedron.
 
 ---
 
 **9. MARS’S VISION — PROPOSED**
+
+**VISION VIDEO (Dan, 2026-11-19):** `Art/Video/vision_04_mars.mp4` (12 s, 1920×1044; still fallback `Resources/Mars/vision_04_still.jpg`). It shows the bridge being completed in the past: the great arch over the ravine with its cradle, two Reptilians on opposite banks guiding the centre span down into place between them until it joins both sides, the white cities in the mist behind, a planet in the sky. Its own audio is nearly silent — add soft stone-on-stone and wind, no music (as the other visions). The carved panel and the vague figure aren’t in the video; the joining span carries the same meaning, and 7’s lines (“They built it together.” / “The bridge. Both sides.”) fit it as written.
 
 7 touches the rune.
 

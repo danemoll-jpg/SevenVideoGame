@@ -612,7 +612,7 @@ This connects Europa to passing on history without resolving the larger mystery.
 
 ---
 
-**16. RETURN TO THE SAUCER — A QUIET REUNION**
+**16. RETURN TO THE SAUCER**
 
 **WIDE — SAUCER ABOVE THE ICE**
 
@@ -620,31 +620,13 @@ The bike returns to the boarding position and rises back into the bike hold, whi
 
 7 boards through the beam. No ramp.
 
-**INT. SAUCER**
-
-She removes her bubble helmet.
-
-Panther is waiting near the boarding area, rather than in his usual comfortable spot.
-
-She notices.
-
-She kneels beside him.
-
-He presses his head against her hand.
-
-*(Dan, 2026-11-19: the bike lines here are cut — the bike isn't visible aboard.)*
-
-A quiet pause.
-
-**PANTHER:** Good.
-
-Let her remain with him for a moment before either moves.
+*(Dan, 2026-11-19: the reunion at the boarding area is cut entirely — it felt like a lock-up. Fade from the beam-up straight into section 17, with 7 already seated in the pilot’s chair, helmet off, Panther in her lap.)*
 
 ---
 
 **17. DEBRIEF — AN ORDINARY SOUND**
 
-Later, 7 sits in the pilot’s chair with Panther in her lap.
+7 sits in the pilot’s chair with Panther in her lap.
 
 Europa’s record rests with the others.
 

@@ -168,3 +168,18 @@ tones; guards get a simple chest plate / helmet prop attached in Unity). Related
 heads (no cobra hood, no fangs showing), sturdier, ordinary people, simple fitted work clothes — **no capes or long
 robes** (the guardian's cape cost four rounds). Prompt given in chat. **Reference in (Dan, 2026-11-19): `Art/Reference/reptilian_ref_front.png`** — friendly lizard head, sleeveless tunic, knotted sash, cross-body satchel at the left hip, wrapped forearms, trousers, three-toed feet. When rigging: the sash's hanging tail and the satchel go on their own short bones (or are trimmed / pinned to the hip) so they never stretch with the thigh or pass through the leg. Expected: the reference
 → Tripo → `Art/Source/reptilian/reptilian_v1.glb` → Code makes `Art/Export/reptilian/reptilian_for_mixamo.fbx` → Mixamo.
+
+## Mars models rigged — in (Dan, 2026-11-19)
+- `Art/Mixamo/viper/viper_body_mixamo.fbx` and `Art/Mixamo/reptilian/reptilian_body_mixamo.fbx` — Mixamo auto-rig + skin
+  (from S1 / S2's `*_for_mixamo.fbx`). Animation clips: Dan downloads them on these rigged bodies (list in chat,
+  file names `viper_<clip>.fbx` / `reptilian_<clip>.fbx` in the same folders).
+
+## Mars animation clips (Dan, 2026-11-19) — Humanoid retarget, reuse existing clips
+- **Viper** (nothing new): idle `tunneler/tunneler_idle`, talk `elarim/elarim_talk`, walk `tunneler/tunneler_walk`,
+  command `elarim/elarim_point`, angry `tunneler/tunneler_roar`, hit `YBot/ybot_hit_body` / `ybot_hit_head`, subdued
+  `YBot/ybot_knocked_down` → `ybot_dazed` (or `elarim/elarim_kneel`).
+- **Reptilians**: new from Dan (animation only, on the rigged Reptilian): `reptilian/reptilian_walk.fbx` (Mixamo "Orc
+  Walk" — check it reads as an ordinary person, not a brute; slow / damp it if too heavy) and `reptilian/reptilian_wave.fbx`
+  ("Waving"). Reused: idle `elarim/elarim_idle` (**guards use the idle too** — Dan found no guard stance), talk
+  `elarim/elarim_talk`, point `elarim/elarim_point`, work `elarim/elarim_carry` / `elarim_lift` / `7/7_touch_wall`.
+- Viper's voice: **saved by Dan in ElevenLabs as `Viper`** (2026-11-19).

@@ -111,6 +111,7 @@ Where are we being taken? All of us? These connections feed the drills. Break th
 `europa_dolphin_chirp` — "friendly dolphin clicks and whistles, underwater" (the guide).
 
 ## Viper — voice name `Viper`
+**Status: created and saved by Dan in ElevenLabs (2026-11-19).**
 Mars antagonist (`Docs/CHAPTER_MARS.md`): profits from the division between the two kingdoms; cold, controlled,
 contemptuous. Must sound clearly different from Tunneler (grinding bass) and the Wormmaster (wet, slithering).
 In Unity: jaw opens with loudness; optional faint hiss layer at the ends of some lines.
