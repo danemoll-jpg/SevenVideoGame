@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-96 sounds.
+110 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -106,3 +106,17 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `europa_rupture` | Single heavy underwater rupture: a deep thump, metal tearing and a rush of bubbles. | 2 |  | Europa: ruptures chasing her |
 | `europa_pressure_wave` | A deep underwater pressure wave whoosh, a heavy surge of water passing, then calm. | 3 |  | Europa: the pressure wave after the escape |
 | `europa_device_place` | A small device clamps onto metal with a magnetic clunk and a soft beep. | 1 |  | Europa: placing a demolition device |
+| `mars_amb_wind` | Dry wind across a vast open stone plain, soft gusts, faint grit hissing over rock, distant hollow resonance. | 20 | yes | Mars: the plains, the ravine, the temple approach |
+| `mars_amb_market` | A calm busy market street of a stone town: many soft distant voices murmuring (no words), footsteps, carts rolling, light clatter of goods. | 20 | yes | Mars: the settlements (crowd / market ambience) |
+| `mars_barrier_hum` | Steady low electric hum of a large energy barrier wall, with a faint crackle. | 5 | yes | Mars: the checkpoint barrier, Viper's barriers |
+| `mars_barrier_on` | An energy barrier wall snapping on: a rising electric surge and a firm hum. | 1.5 |  | Mars: a barrier rises (encounter) |
+| `mars_barrier_off` | An energy barrier wall switching off: a descending electric whine fading out. | 1.5 |  | Mars: a barrier drops |
+| `mars_machinery` | Old heavy stone-and-metal machinery working slowly, deep grinding gears and counterweights, measured clanks. | 10 | yes | Mars: the ancient mechanism, the controls |
+| `mars_bridge_align` | Enormous ancient stone bridge sections grinding and shifting into alignment, deep rumbling, heavy locking thuds, dust. | 6 |  | Mars: the ancient structures align (section 6) |
+| `mars_defense_arm` | Defensive machinery powering up across a stone bridge: rising servo whine, heavy mechanical clanks, warning tones. | 3 |  | Mars: Viper activates the crossing's defenses (section 7) |
+| `mars_section_slide` | A heavy metal bridge section sliding on rails, grinding, then a solid stop. | 2.5 |  | Mars: the moving sections (encounter) |
+| `mars_platform_rise` | A heavy elevated metal platform rising on hydraulics, deep hum and hiss, a final clunk. | 4 |  | Mars: Viper arrives on his platform (section 3) |
+| `mars_control_on` | An ancient control mechanism engaging: a deep stone clunk, then a resonant rising tone. | 2 |  | Mars: a control / relay restored |
+| `mars_restraint` | A containment field closing around someone: soft electric shimmer tightening into a steady quiet hum. | 2.5 |  | Mars: Viper is contained |
+| `mars_vision_stone` | Soft stone grinding slowly on stone, a gentle distant wind, very quiet, no music. | 12 |  | Mars: the vision (its video is nearly silent) |
+| `mars_transport_hum` | A heavy cargo hover-transport moving slowly, low steady engine hum with a soft whine. | 6 | yes | Mars: the supply transport |
