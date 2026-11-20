@@ -142,6 +142,8 @@ namespace Seven
         public static bool HoldCheck { get; private set; }
         /// <summary>QF17 (4): -rampcheck = ride every ramp of the world with the riding camera (RampCheck).</summary>
         public static bool RampCheck { get; private set; }
+        /// <summary>QF18 (10): -landwalltest = the land bike + on-foot wall test in Mars (LandWallTest).</summary>
+        public static bool LandWallTest { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
         static void Boot()
@@ -208,6 +210,7 @@ namespace Seven
                 if (args[i] == "-bossnovice") BossNovice = true;
                 if (args[i] == "-holdcheck") HoldCheck = true;
                 if (args[i] == "-rampcheck") RampCheck = true;
+                if (args[i] == "-landwalltest") LandWallTest = true;
                 if (args[i] == "-stopafter" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sa)) StopAfter = sa;
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;

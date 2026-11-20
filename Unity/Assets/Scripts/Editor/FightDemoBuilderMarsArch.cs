@@ -1,3 +1,4 @@
+using System.Linq;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
@@ -68,6 +69,58 @@ namespace Seven.EditorTools
             go.transform.position = (min + max) * 0.5f;
             if (collider) { var bc = go.AddComponent<BoxCollider>(); bc.size = size; }
             return go;
+        }
+
+        /// <summary>QF18 (13): ground, decks, floors and slabs she rides or walks on. QF17 turned every Mars block into dressed
+        /// masonry (MBlock: the top steps in by batter + chamfer - 0.9 m on a 22 m tall ground block), so wherever two ground
+        /// pieces met their tops pulled apart into an open groove showing the bright fog below: the checkpoint hole (the plain
+        /// blocks meeting at x = -60 under the transport), the long glowing strip, the ramp tops. Ground is terrain, not
+        /// masonry: straight sides, a flat top that meets its neighbour edge to edge. The holes check (HolesCheck) proves it.</summary>
+        static GameObject MGround(string name, Vector3 min, Vector3 max, Material mat, Transform parent, bool collider = false)
+        {
+            var size = new Vector3(Mathf.Abs(max.x - min.x), Mathf.Abs(max.y - min.y), Mathf.Abs(max.z - min.z));
+            var v = new List<Vector3>(); var t = new List<int>();
+            Loft(v, t, Vector3.zero, size.x * 0.5f, size.z * 0.5f, 0f, new List<(float, float)> { (-size.y * 0.5f, 0f), (size.y * 0.5f, 0f) });
+            var go = MeshObject(name, SaveMesh(Finish(v, t), $"Mars_gnd_{name}_{_mblock++}"), mat, parent);
+            go.transform.position = (min + max) * 0.5f;
+            if (collider) { var bc = go.AddComponent<BoxCollider>(); bc.size = size; }
+            return go;
+        }
+
+        /// <summary>QF18 (12, 15, 16): a power line / conduit along a path - a glowing core split into segs pieces (so the
+        /// light can visibly run along it: <see cref="Seven.PowerLine"/>), metal bands round it every bandStep m.</summary>
+        static Seven.PowerLine PowerLineObj(string name, Vector3[] path, int segs, float radius, Material glow, Material bands, Transform parent, float bandStep = 0.7f)
+        {
+            var root = new GameObject(name).transform; root.SetParent(parent, false);
+            var cum = new float[path.Length]; for (int i = 1; i < path.Length; i++) cum[i] = cum[i - 1] + Vector3.Distance(path[i - 1], path[i]);
+            float L = cum[path.Length - 1];
+            Vector3 At(float s) { for (int i = 1; i < path.Length; i++) if (s <= cum[i] || i == path.Length - 1) { float u = Mathf.InverseLerp(cum[i - 1], cum[i], s); return Vector3.Lerp(path[i - 1], path[i], u); } return path[path.Length - 1]; }
+            Vector3 Tan(float s) { var a = At(Mathf.Max(0f, s - 0.05f)); var b = At(Mathf.Min(L, s + 0.05f)); var d = b - a; return d.sqrMagnitude > 1e-8f ? d.normalized : Vector3.forward; }
+            var rs = new List<Renderer>(); var pts = new List<Vector3>();
+            for (int k = 0; k < segs; k++)
+            {
+                float s0 = L * k / segs, s1 = L * (k + 1) / segs;
+                var sub = new List<Vector3> { At(s0) };
+                for (int i = 1; i < path.Length - 1; i++) if (cum[i] > s0 + 0.02f && cum[i] < s1 - 0.02f) sub.Add(path[i]);
+                sub.Add(At(s1));
+                var v = new List<Vector3>(); var t = new List<int>(); Sweep(v, t, sub, radius, false, 7);
+                var go = MeshObject($"{name}_{k:00}", SaveMesh(SmoothFinish(v, t), $"Mars_{name}_{k:00}"), glow, root, false);
+                go.transform.localPosition = Vector3.zero;
+                rs.Add(go.GetComponent<Renderer>()); pts.Add(At((s0 + s1) * 0.5f));
+            }
+            if (bands != null)
+            {
+                var bv = new List<Vector3>(); var bt = new List<int>();
+                for (float s = 0.15f; s < L; s += bandStep)
+                {
+                    var c = At(s); var tg = Tan(s); var u = Vector3.Cross(tg, Mathf.Abs(tg.y) < 0.9f ? Vector3.up : Vector3.right).normalized; var w = Vector3.Cross(tg, u);
+                    var ring = Enumerable.Range(0, 11).Select(i => c + (u * Mathf.Cos(i / 10f * Mathf.PI * 2f) + w * Mathf.Sin(i / 10f * Mathf.PI * 2f)) * radius * 1.9f).ToList();
+                    Sweep(bv, bt, ring, radius * 0.45f, true, 5);
+                }
+                var bg = MeshObject(name + "_Bands", SaveMesh(SmoothFinish(bv, bt), $"Mars_{name}_Bands"), bands, root, false); bg.transform.localPosition = Vector3.zero;
+            }
+            var pl = root.gameObject.AddComponent<Seven.PowerLine>(); pl.Segs = rs.ToArray(); pl.Points = pts.ToArray();
+            return pl;
         }
 
         // ---------------------------------------------------------------- towers, arches, windows
@@ -312,4 +365,7 @@ namespace Seven.EditorTools
             for (int i = 0; i < prev.Count; i++) { t.Add(k0); t.Add(k0 + 1 + (i + 1) % prev.Count); t.Add(k0 + 1 + i); }
         }
     }
+
+    /// <summary>QF18: x.Let(f) = f(x) (builder one-liners that tweak a generated mesh).</summary>
+    static class BuilderLet { public static T Let<T>(this T x, System.Func<T, T> f) => f(x); }
 }

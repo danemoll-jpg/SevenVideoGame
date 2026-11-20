@@ -88,7 +88,16 @@ namespace Seven
             // insert: the navigation display - a passage through the ice near the temple coordinates
             NavHand(true);
             CutPilot("ots");
-            UI.Hint("EUROPA  ·  ice field  ·  a passage through the ice near the temple coordinates", 4f);
+            // QF18 (2): the display SHOWS it - a hologram of Europa's actual ice field, the passage through the ice marked, the
+            // temple's coordinates marked below it
+            var holo = HoloDisplay.Get();
+            if (holo != null)
+            {
+                holo.Show("europa", 1.15f, 560f, new Vector3(-60f, 0f, 90f));
+                holo.Mark(EuropaLayout.OpeningAt, 12f, "the passage through the ice");
+                holo.Mark(EuropaLayout.TempleCentre, 14f, "the temple coordinates", false);
+                Cut(holo.transform.position + PilotFwd * -0.95f + PilotRight * 0.3f + Up * 0.32f, holo.transform.position, 38f);
+            }
             yield return Wait(1.0f);
             yield return ShotV("ea03_insert_navigation_display");
             yield return SayE("EUR_01", 5, 5);                   // There. A way down.
@@ -96,6 +105,7 @@ namespace Seven
             CutPilot("lap");
             yield return SayE("EUR_01", 6, 7);                   // You said that rather enthusiastically. / Mm-hmm.
             NavHand(false);
+            holo?.Hide();
             CutPilot("wide");
             yield return Wait(1.6f);
             if (_strokeRoutine != null) StopCoroutine(_strokeRoutine);

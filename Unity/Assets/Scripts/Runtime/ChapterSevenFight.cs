@@ -76,6 +76,18 @@ namespace Seven
 
         static readonly string[] Combo = { "jab", "cross", "hook" };
         static readonly float[] ComboHit = { 0.32f, 0.36f, 0.42f };
+        // QF18 (19c): in a boss fight her full chain - jab, cross, hook, the MMA kick, the roundhouse (her Mixamo clips; hit
+        // moments measured in Round 1: mma kick 0.40, roundhouse 0.43)
+        static readonly string[] BossChain = { "jab", "cross", "hook", "mma_kick", "roundhouse" };
+        static readonly float[] BossChainHit = { 0.32f, 0.36f, 0.42f, 0.40f, 0.43f };
+        string[] Chain => FightHop && HasState("mma_kick") && HasState("roundhouse") ? BossChain : Combo;
+        float[] ChainHit => Chain == BossChain ? BossChainHit : ComboHit;
+        int ChainMax => Chain.Length - 1;
+        /// <summary>QF18 (19): the blow that is landing now (jab / cross / hook / mma_kick / roundhouse / finisher).</summary>
+        public string LastBlow { get; private set; }
+        /// <summary>QF18 (19a): optional lock-on (R3 / Tab) - off by default: in a boss fight she moves and faces freely.</summary>
+        public static bool LockOn;
+        bool FreeFacing => FightHop && !LockOn;
         const float FinisherHit = 0.45f;
         int _combo; bool _hitDone; float _flinchUntil;
         IFightTarget _target;
@@ -140,6 +152,7 @@ namespace Seven
             _target = PickTarget();
             bool atk = AttackPressed, dodge = DodgePressed, takedown = TakedownPressed, block = BlockHeld;
             bool hop = FightHop && HopPressed, tk = TkAim != null && TkPressed, use = false;
+            if (FightHop && !ScriptDriven && Input != null && Input.LockOn != null && Input.LockOn.WasPressedThisFrame()) { LockOn = !LockOn; FightEvent?.Invoke(LockOn ? "lock_on" : "lock_off"); }
             AutoAttack = AutoDodge = AutoTakedown = AutoHop = AutoTk = false;
             // QF17: X next to a fight objective uses it instead of striking
             string useLabel = FightUseLabel?.Invoke();
@@ -184,7 +197,7 @@ namespace Seven
                 {
                     FaceTarget(FightTurn);
                     bool fin = State == "finisher";
-                    float hitAt = fin ? FinisherHit : ComboHit[Mathf.Clamp(_combo, 0, 2)];
+                    float hitAt = fin ? FinisherHit : ChainHit[Mathf.Clamp(_combo, 0, ChainMax)];
                     if (!_hitDone && Tn >= hitAt) { _hitDone = true; _activeAt = Time.time; LandBlow(fin); }
                     bool recovering = _hitDone && Time.time - _activeAt >= ChainAfter / AttackSpeed * 1.0f;
                     if (recovering && !fin)
@@ -194,7 +207,7 @@ namespace Seven
                         if (hop) { StartHop(); return; }
                         if (tk && TkAim() is Vector3 tkA) { StartThrow(tkA); return; }
                         if (block) { Timing("recovery->block"); StartBlock(); return; }
-                        if (wantAtk && _bufAtk == "attack" && _combo < 2) { Timing("recovery->next"); _combo++; StartBlow(Combo[_combo]); return; }
+                        if (wantAtk && _bufAtk == "attack" && _combo < ChainMax) { Timing("recovery->next"); _combo++; StartBlow(Chain[_combo]); return; }
                         if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
                     }
                     if (Tn >= (fin ? 0.92f : 0.72f)) { _combo = wantAtk && !fin ? _combo : 0; ToFightIdle(); break; }
@@ -218,7 +231,7 @@ namespace Seven
             if (block) { StartBlock(); return; }
             if (wantDodge) { StartDodge(); return; }
             if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
-            if (wantAtk && _bufAtk == "attack") { _combo = Act == FightAct.Idle && Time.time - _activeAt < 0.6f && _combo < 2 ? _combo + 1 : 0; StartBlow(Combo[_combo]); return; }
+            if (wantAtk && _bufAtk == "attack") { _combo = Act == FightAct.Idle && Time.time - _activeAt < 0.6f && _combo < ChainMax ? _combo + 1 : 0; StartBlow(Chain[_combo]); return; }
             var v = MoveInput(out _);
             // light movement: quick to start and stop, turns fast, no slide
             float spd = FightMoveSpeed * FightMoveScale * (FightMoveScale > 1f && RunHeld ? 1.5f : 1f);
@@ -231,12 +244,12 @@ namespace Seven
                 for (int i = 0; i < n; i++) { transform.position += step / n; ClampToArena(); }
                 string clip = spd > 3.2f && HasState("run") ? "run" : "walk";
                 if (State != clip) Play(clip, 0.1f, clip == "run" ? 1f : 1.25f, false);
-                if (_target != null) FaceTarget(FightTurn); else FaceTowards(transform.position + v, FightTurn);
+                if (_target != null && !FreeFacing) FaceTarget(FightTurn); else FaceTowards(transform.position + v, FightTurn);
             }
             else
             {
                 if (State != "fight_idle") Play("fight_idle", 0.15f, 1f, false);
-                FaceTarget(500f);
+                if (!FreeFacing) FaceTarget(500f);
             }
         }
 
@@ -331,7 +344,7 @@ namespace Seven
                 transform.rotation = Quaternion.AngleAxis(Mathf.Clamp(ang, -AssistCone, AssistCone), Vector3.up) * transform.rotation;
                 float d = to.magnitude; if (d > 1.15f && d < AssistRange) Slide(to.normalized, Mathf.Min(d - 1.05f, 1.2f), 0.12f);
             }
-            float hit = state == "finisher" ? FinisherHit : ComboHit[Mathf.Clamp(_combo, 0, 2)];
+            float hit = state == "finisher" ? FinisherHit : ChainHit[Mathf.Clamp(_combo, 0, ChainMax)];
             Play(state, 0.05f, AttackSpeed, true, StartTn(state, hit));
             _blowStart = Time.time;
             FightEvent?.Invoke(state);
@@ -339,10 +352,11 @@ namespace Seven
 
         void LandBlow(bool takedown)
         {
-            FightTimings.Add($"{(takedown ? "takedown" : Combo[Mathf.Clamp(_combo, 0, 2)])} button->active {Time.time - _blowPressed:0.000}s");
+            LastBlow = takedown ? "finisher" : Chain[Mathf.Clamp(_combo, 0, ChainMax)];
+            FightTimings.Add($"{LastBlow} button->active {Time.time - _blowPressed:0.000}s");
             if (_target == null) return;
             var to = Flat(_target.transform.position - transform.position);
-            if (to.magnitude > 1.9f) return;                             // whiffed - out of reach
+            if (to.magnitude > (Chain == BossChain && _combo >= 3 ? 2.2f : 1.9f)) return;      // whiffed - out of reach (kicks reach a little further)
             if (_target.TakeBlow(to.normalized, takedown))
             {
                 HitsLanded++; FightEvent?.Invoke(takedown ? "takedown_landed" : "hit");

@@ -41,17 +41,33 @@ namespace Seven
         // ---- the maintenance route (section 4) - down the west wall, across the floor, up the east wall
         public static readonly Vector3[] Maint =
         {
-            new Vector3(-58f, 0f, -16f), new Vector3(-56f, -10f, -34f), new Vector3(-56f, FloorY, -62f), new Vector3(-34f, FloorY, -72f),
+            new Vector3(-55.4f, -0.6f, -16f), new Vector3(-55.4f, -10f, -34f), new Vector3(-56f, FloorY, -62f), new Vector3(-34f, FloorY, -72f),
             new Vector3(-12f, FloorY, -67f), new Vector3(12f, FloorY, -67f), new Vector3(30f, FloorY, -80f), new Vector3(46f, FloorY, -74f),
             new Vector3(56f, FloorY, -62f), new Vector3(56f, -10f, -34f), new Vector3(58f, 0f, -16f),
         };
-        public static readonly Vector3 CausewaySlabRest = new Vector3(-13f, FloorY, -76.5f);   // the fallen slab beside the gap
+        // QF18 (10, 12a): both ramps run from the bank top down to RampFootZ, then a flat landing RampLanding m long opens onto the floor
+        public const float RampFootZ = -56f, RampLanding = 16f;
+        // QF18 (11): the channel down the middle of the ravine floor (x -7..7, ChannelDepth deep, z ChannelZ0..ChannelZ1)
+        public const float ChannelZ0 = -300f, ChannelZ1 = 110f, ChannelDepth = 4f;
+        // QF18 (11): the drawbridge - raised and chained by one kingdom during the division; hinged on the west abutment
+        public static readonly Vector3 DrawHinge = new Vector3(-7.3f, FloorY, -67f);
+        public const float DrawLen = 14.6f, DrawWidth = 7f, DrawRaisedDeg = 74f;
+        public static readonly Vector3 DrawTower = new Vector3(-12.5f, FloorY, -73.5f);         // the winding tower (the chain's pulley on top, the drum at its foot)
+        public const float DrawPulleyH = 15f;
+        public static readonly Vector3 DrawPulleyOff = new Vector3(2.6f, DrawPulleyH, 1.0f), DrawDrumOff = new Vector3(2.6f, 1.0f, 1.0f);
+        public static readonly Vector3 DrawLock = new Vector3(-9.9f, FloorY + 1.35f, -71.55f);   // the lock clamped on the drum (TK)
+        public static readonly Vector3 CausewaySlabRest = DrawLock;
+        public static readonly Vector3 RampEntryW = new Vector3(-55.4f, 0f, -4f), RampEntryE = new Vector3(55.2f, 0f, -5f);   // QF18: in line with the ramps' gateways                               // (old name: the TK target)
         public static readonly Vector3 CausewayGap = new Vector3(0f, FloorY, -67f);            // the broken causeway over the channel
         public static readonly Vector3 CausewayStop = new Vector3(-14f, FloorY, -67f);
         public const float SlabTkRange = 15f;
         public static readonly Vector3[] Lookouts = { new Vector3(-40f, FloorY, -85f), new Vector3(40f, FloorY, -86f) };   // clear stopping points
-        public static readonly Vector3 ServiceGatePanel = new Vector3(58.8f, 0f, -14.2f);        // the east top: the service gate (X)
-        public static readonly Vector3 ServiceGateAt = new Vector3(58f, 0f, -12.5f);
+        // QF18 (12): the service gate at the east ramp's top (a 7 m gateway), its power line down the ramp's inner wall, cut at GateBreakZ
+        public static readonly Vector3 ServiceGateAt = new Vector3(55.2f, 0f, -12.6f);
+        public const float GateSpan = 7f, GateBreakZ = -40f;
+        public static readonly Vector3 GateBreak = new Vector3(59.72f, -12.6f, GateBreakZ);          // the cut (the joint, ~1.3 m above the ramp)
+        public static readonly Vector3 GateBreakView = new Vector3(55.5f, -13.9f, GateBreakZ - 1.5f); // where she stands to pull the ends together
+        public static readonly Vector3 ServiceGatePanel = GateBreakView;
         public static readonly Vector3 CaretakerAt = new Vector3(63f, 0f, -2f);
         public static readonly Vector3 EastStop = new Vector3(60f, 0f, -8f);
 
@@ -61,10 +77,17 @@ namespace Seven
         public static readonly Vector3 WestControl = new Vector3(-60f, 0f, 152f);
         public static readonly Vector3 EastControl = new Vector3(60f, 0f, 152f);
         public static readonly Vector3 RelayWest = new Vector3(-64f, 0f, 104f);                // ride to it, X: reconnect
-        public static readonly Vector3 PierConduit = new Vector3(-46.2f, -4f, 166f);           // on foot down the pier walk; telekinesis
-        public static readonly Vector3 PierConduitRest = new Vector3(-45.6f, -5.2f, 170.4f);
-        public static readonly Vector3 PierWalkTop = new Vector3(-56f, 0f, 160f);
+        // QF18 (16): the pier walk - steps down the outside of the bank wall north of the west span, a ledge walk along the
+        // wall under it; the conduit runs along the wall (y -3) and its displaced section lies on the walk under the span
+        public const float PierStairZ0 = 160.4f, PierStairZ1 = 169.4f, PierWalkZ0 = 155.6f;   // QF18: the walk is north of the span (zones can't stack under it)
+        public static readonly Vector3 PierConduit = new Vector3(-50.3f, -3.0f, 157.4f);             // installed (along the wall, axis z)
+        public static readonly Vector3 PierConduitRest = new Vector3(-48.45f, -3.78f, 158.4f);       // knocked out of line onto the walk
+        public static readonly Quaternion PierConduitRestRot = Quaternion.Euler(4f, 38f, 12f);
+        public static readonly Vector3 PierWalkTop = new Vector3(-53f, 0f, 171f);
+        public static readonly Vector3 PierConduitView = new Vector3(-48.6f, -4f, 160.6f);           // where she stands to lift it back
         public static readonly Vector3 SwingSegment = new Vector3(-36f, -1f, 150f);           // "Not that one!" - the span section that moves
+        public static readonly Vector3 FaceAt = new Vector3(-270f, 0f, 480f);                  // QF18 (21): the Cydonia mesa (reads as a face from above)
+        public static readonly Vector3 ViperHornAt = new Vector3(-66f, 0f, 160f);                // QF18 (17): his loudspeaker mast by the west control
         public static readonly Vector3[] JammerFrom = { new Vector3(-80f, 6f, 176f), new Vector3(-44f, 7f, 182f), new Vector3(-86f, 5f, 136f) };
 
         // ---- the temple approach + the encounter (section 7) - the island plaza
@@ -86,7 +109,7 @@ namespace Seven
         public static readonly Vector3 DisplayAt = new Vector3(-6.5f, 1.8f, 184f);
 
         // ---- the ride back (section 11)
-        public static readonly Vector3[] Back = { new Vector3(-30f, 0f, 150f), new Vector3(-64f, 0f, 120f), new Vector3(-64f, 0f, 30f), new Vector3(-80f, 0f, 0f), new Vector3(-130f, 0f, 0f), new Vector3(-190f, 0f, 2f) };
+        public static readonly Vector3[] Back = { new Vector3(-30f, 0f, 150f), new Vector3(-60f, 0f, 120f), new Vector3(-60f, 0f, 92f), new Vector3(-64f, 0f, 30f), new Vector3(-80f, 0f, 0f), new Vector3(-130f, 0f, 0f), new Vector3(-190f, 0f, 2f) };
         public static readonly Vector3 TransportCrossFrom = new Vector3(-62f, 0f, -1f), TransportCrossTo = new Vector3(66f, 0f, -1f);
         public static readonly Vector3 HomeStop = new Vector3(-196f, 0f, 6f);
 
@@ -114,25 +137,28 @@ namespace Seven
             R("GateWC", -7.6f, 136f, -5.8f, 140f, 0f, false),             // gaps in the low walls (Viper's barriers close them)
             R("GateCE", 5.8f, 156f, 7.6f, 160f, 0f, false),
             R("SlideGate", 5.8f, 141f, 7.6f, 145f, 0f, false),           // the moving section opens / closes it (timing)
-            R("SpanW", -47f, SpanZ0, -20.4f, SpanZ1, 0f, true, false),    // the west span (aligned in section 6)
-            R("SpanE", 20.4f, SpanZ0, 47f, SpanZ1, 0f, true, false),
+            R("SpanW", -47.2f, SpanZ0, -20.4f, SpanZ1, 0f, true, false),    // the west span (aligned in section 6)
+            R("SpanE", 20.4f, SpanZ0, 47.2f, SpanZ1, 0f, true, false),
             // the west bluff + the pier walk (on foot)
-            S("PierStair", -54.6f, 156f, -48f, 164f, 0f, -4f, 0, false),
-            R("PierWalk", -48.6f, 155f, -44f, 172f, -4f, false),
-            R("SpanHeadW", -55f, 145f, -46f, 155f, 0f),
-            R("SpanHeadE", 46f, 145f, 55f, 155f, 0f),
+            S("PierStair", -49.75f, PierStairZ0, -47.6f, PierStairZ1, -4f, 0f, 1, false),
+            R("PierWalk", -49.75f, PierWalkZ0, -47.6f, PierStairZ0 + 0.6f, -4f, false),
+            R("PierTop", -56f, 167.4f, -47.6f, PierStairZ1 + 2.6f, 0f, false),          // overlaps the west bluff (ends z 168) by 0.6 m
+            R("SpanHeadW", -55f, 145f, -46.6f, 155f, 0f),
+            R("SpanHeadE", 46.6f, 145f, 55f, 155f, 0f),
             R("WestBluff", -78f, 136f, -54f, 168f, 0f),
             R("WestRim", -76f, 4f, -56f, 137f, 0f),
             R("EastBluff", 54f, 136f, 78f, 168f, 0f),
             R("EastRim", 56f, 4f, 76f, 137f, 0f),
             R("Overlook", 50f, 108f, 76f, 132f, 0f),
             // the maintenance route (down the west wall, the ravine floor, up the east wall)
-            S("MaintRampW", -60f, -60f, -50f, -11f, FloorY, 0f, 1),
-            R("FloorW", -50.6f, -92f, -7f, -59.4f, FloorY),
+            S("MaintRampW", -60f, RampFootZ, -50f, -11f, FloorY, 0f, 1),
+            R("MaintLandW", -60f, RampFootZ - RampLanding, -49.4f, RampFootZ + 0.6f, FloorY),
+            R("FloorW", -50f, -92f, -7f, -59.4f, FloorY),          // QF18 (13): ends at the bank wall (it overhung 0.6 m into it)
             R("Causeway", -8f, -70f, 8f, -64f, FloorY, true, false),      // the broken causeway (the slab, section 4)
-            R("FloorE", 7f, -92f, 50.6f, -59.4f, FloorY),
-            S("MaintRampE", 50f, -60f, 60f, -12.6f, FloorY, 0f, 1),
-            R("ServiceGateZ", 52f, -13.2f, 60f, -10.6f, 0f, true, false),     // the east service gate (opened from its panel)
+            R("FloorE", 7f, -92f, 50f, -59.4f, FloorY),
+            S("MaintRampE", 50f, RampFootZ, 60f, -12.6f, FloorY, 0f, 1),
+            R("MaintLandE", 49.4f, RampFootZ - RampLanding, 60f, RampFootZ + 0.6f, FloorY),
+            R("ServiceGateZ", 52.1f, -13.6f, 58.3f, -10.6f, 0f, true, false),     // the east service gate (opened from its panel)
             // the banks: the checkpoint plazas, the roads, the settlement, the landing site
             R("CheckW", -70f, -12f, -51.6f, 12f, 0f),
             R("Bridge", -52f, -4.5f, 52f, 4.5f, 0f, true, false),        // the main crossing (barred until the ride back)

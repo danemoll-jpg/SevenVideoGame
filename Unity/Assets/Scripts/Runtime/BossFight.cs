@@ -31,6 +31,13 @@ namespace Seven
         public float debrisRespawn = 5f;      // a thrown piece comes back (dust, a new piece) after this
         public float tkRange = 12f;           // debris within this of her can be thrown
         public float objectiveTime = 2f;      // an X objective (pylon / device) takes this long at it - a hit or stepping away interrupts it
+        // QF18 (19c) - Dan's loop: telekinesis only STUNS, her hand-to-hand strikes do the real damage
+        public float stunTime = 3.6f;         // a thrown object that hits while he is open: stunned this long (reels, dazed sway)
+        public float throwChip = 0.02f;       // the stun itself costs him a sliver of energy
+        public float strikeDamage = 0.045f;   // a jab / cross / hook while he is stunned (fraction of his energy)
+        public float kickDamage = 0.065f;     // the MMA kick / roundhouse while he is stunned
+        public float openStrikeScale = 0.3f;  // a strike while he is merely open (not stunned): this share of it
+        public float dazedAt = 0.06f;         // last phase: at or under this energy he is dazed -> the finisher / takedown
         public PhaseDef[] phases;
         public AttackDef[] attacks;
         public AttackDef Attack(string id) { foreach (var a in attacks) if (a.id == id) return a; return null; }
@@ -39,7 +46,8 @@ namespace Seven
     public class PhaseDef
     {
         public string name;
-        public int staggers = 2;              // staggers that end the phase (0 = an objective ends it)
+        public int staggers = 2;              // (QF17; QF18 ends phases by energy - see endAt)
+        public float endAt = -1f;             // QF18: the phase ends when his energy reaches this (-1 = its objective ends it)
         public float gapMin = 1.6f, gapMax = 2.6f;   // pause between attacks
         public float tempo = 1f;              // telegraphs / recoveries / speeds x 1/tempo (faster in later phases)
         public float moveSpeed = 2.2f;        // how fast he closes in / circles
@@ -98,6 +106,12 @@ namespace Seven
         bool _locked;
         // stats (the proof)
         public int Attacks, HitsOnHer, Staggers, Knockdowns, Dodged, Blocked, Jumped, OutOfReach, Throws, Deflected, Strikes;
+        // QF18 (19): his energy (1 = full) and where it went
+        public float Energy { get; private set; } = 1f;
+        public float DamageByStrikes, DamageByThrows; public int StunStrikes, OpenStrikes;
+        public bool Stunned => State == St.Staggered;
+        public float[] PhaseMarks { get { var m = new float[Def.phases.Length]; for (int i = 0; i < m.Length; i++) m[i] = Def.phases[i].endAt; return m; } }
+        float _phaseFloor => P.endAt >= 0f ? P.endAt : Energy;
         public readonly List<string> PhaseLog = new List<string>();
         public readonly Dictionary<string, int> AttackCount = new Dictionary<string, int>();
         public float FightStart { get; private set; }
@@ -153,6 +167,8 @@ namespace Seven
         public bool PromptIsTk => PromptLabel != null && PromptLabel.StartsWith("Telekinesis");
         /// <summary>The phase was skipped (fairness): complete its objectives.</summary>
         protected virtual void SkipObjectives() { }
+        /// <summary>QF18: may this attack be used now (e.g. not once the machine that makes it is shut down)?</summary>
+        protected virtual bool Allowed(AttackDef a) => true;
         /// <summary>The pilot (check runs / player-style runs): where an objective of this phase is and how it is used.</summary>
         public virtual (Vector3 at, string how)? PilotObjective() => null;
         /// <summary>Extra visuals of an attack (globs, worms, the beam) - per frame while it is active.</summary>
@@ -179,7 +195,7 @@ namespace Seven
         public void Begin(BossDef def, ChapterSeven seven, ChapterCamera cam)
         {
             Def = def; Seven = seven; Cam = cam; Active = this;
-            Phase = 0; _phaseStaggers = 0; Over = false; Paused = false;
+            Phase = 0; _phaseStaggers = 0; Over = false; Paused = false; Energy = 1f; _phaseStartEnergy = 1f; _endPending = false; DamageByStrikes = DamageByThrows = 0f; StunStrikes = OpenStrikes = 0;
             FightStart = _phaseStart = Time.time; _next = Time.time + 2.0f;
             SetState(St.Idle, 0f);
             Seven.BeginFight();
@@ -200,6 +216,7 @@ namespace Seven
         void OnSeven(string e) { if (e == "dodge") _herDodgeAt = Time.time; if (e == "hop") _herHopAt = Time.time; if (e == "dodge") _herDodges++; else if (e == "hop") _herHops++; else if (e == "block") _herBlocks++; else if (e == "tk") _herTk++; }
         public void End()
         {
+            UI?.HideBossBar();
             Seven.FightEvent -= OnSeven;
             Markers.Clear();
             if (Seven.InFight) Seven.EndFight();
@@ -212,7 +229,8 @@ namespace Seven
             float len = Time.time - FightStart, min = Mathf.Max(0.01f, len / 60f);
             var per = new List<string>(); foreach (var kv in AttackCount) per.Add($"{kv.Key} {kv.Value}");
             return $"BOSS {Def.id}: fight length {Mathf.FloorToInt(len / 60f)}:{len % 60f:00} ({len:0} s), attacks {Attacks} ({Attacks / min:0.0}/min: {string.Join(", ", per)}), her presses: dodge {_herDodges}, jump {_herHops}, block {_herBlocks}, telekinesis {_herTk}, hits she took {HitsOnHer}, she went down {Knockdowns}x, " +
-                   $"answered: dodged {Dodged}, blocked {Blocked}, jumped {Jumped}, out of reach {OutOfReach}; telekinetic throws {Throws} (deflected {Deflected}), strikes landed {Strikes}, staggers {Staggers}; phases: {string.Join(" | ", PhaseLog)}";
+                   $"answered: dodged {Dodged}, blocked {Blocked}, jumped {Jumped}, out of reach {OutOfReach}; telekinetic throws {Throws} (deflected {Deflected}), stuns {Staggers}, strikes landed {Strikes} ({StunStrikes} while stunned, {OpenStrikes} while open); " +
+                   $"DAMAGE (QF18): dealt by her strikes {DamageByStrikes * 100f:0}%, by throws {DamageByThrows * 100f:0}% of a full bar (a retried phase counts again) - melee {(DamageByStrikes + DamageByThrows > 0f ? DamageByStrikes / (DamageByStrikes + DamageByThrows) * 100f : 0f):0}% of the damage; energy left {Energy * 100f:0}%; phases: {string.Join(" | ", PhaseLog)}";
         }
 
         // ---------------------------------------------------------------- the brain
@@ -252,7 +270,8 @@ namespace Seven
                     }
                     else Face(Her, 200f);
                     Anim(St.Idle, null, 0f, moving, spd);
-                    if (Time.time >= _next) StartAttack(PickAttack());
+                    if (_endPending) { _endPending = false; StartCoroutine(NextPhase()); break; }
+                    if (Time.time >= _next) { var pick = _counter ? CloseAttack() ?? PickAttack() : PickAttack(); _counter = false; StartAttack(pick); }
                     break;
                 }
                 case St.Telegraph:
@@ -289,10 +308,12 @@ namespace Seven
                     break;
                 case St.Recover:
                     Anim(St.Recover, Cur, u, false, 0f);
+                    if (_endPending) { _endPending = false; StartCoroutine(NextPhase()); break; }
                     if (u >= 1f) { SetState(St.Idle, 0f); _next = Time.time + Random.Range(P.gapMin, P.gapMax) / Tempo; }
                     break;
                 case St.Staggered:
                     Anim(St.Staggered, null, u, false, 0f);
+                    if (_endPending) { _endPending = false; StartCoroutine(NextPhase()); break; }
                     if (u >= 1f) AfterStagger();
                     break;
                 case St.Dazed: Anim(St.Dazed, null, u, false, 0f); break;
@@ -306,12 +327,20 @@ namespace Seven
             transform.rotation = Quaternion.RotateTowards(transform.rotation, Quaternion.LookRotation(d), degPerSec * Time.deltaTime);
         }
 
+        /// <summary>QF18: right after a stun, the attack that answers her being close (a sweep / strike in reach).</summary>
+        AttackDef CloseAttack()
+        {
+            float d = Flat(Her - transform.position).magnitude; if (d > 4.2f) return null;
+            foreach (var id in P.attacks) { var a = Def.Attack(id); if (a != null && (a.kind == "sweep" || a.kind == "ring") && d <= a.maxDist && d >= a.minDist) return a; }
+            return null;
+        }
         AttackDef PickAttack()
         {
             float d = Flat(Her - transform.position).magnitude, sum = 0f;
             var ok = new List<AttackDef>();
-            foreach (var id in P.attacks) { var a = Def.Attack(id); if (a == null) continue; if (d < a.minDist || d > a.maxDist) continue; ok.Add(a); sum += a.weight; }
-            if (ok.Count == 0) foreach (var id in P.attacks) { var a = Def.Attack(id); if (a != null) { ok.Add(a); sum += a.weight; } }
+            foreach (var id in P.attacks) { var a = Def.Attack(id); if (a == null || !Allowed(a)) continue; if (d < a.minDist || d > a.maxDist) continue; ok.Add(a); sum += a.weight; }
+            if (ok.Count == 0) foreach (var id in P.attacks) { var a = Def.Attack(id); if (a != null && Allowed(a)) { ok.Add(a); sum += a.weight; } }
+            if (ok.Count == 0) { var a = Def.Attack(P.attacks[0]); ok.Add(a); sum += a.weight; }
             float r = Random.value * sum;
             foreach (var a in ok) { r -= a.weight; if (r <= 0f) return a; }
             return ok[ok.Count - 1];
@@ -512,6 +541,9 @@ namespace Seven
             }
             Markers.Cage(Caged ? CageAt : (Vector3?)null);
             FightCamera();
+            if (UI != null && !Paused) { UI.BossBar(Def.name, Energy, PhaseMarks, Stunned); UI.HerBar(Mathf.Max(0, Def.sevenHits - Seven.HitsTaken), Def.sevenHits); }
+            // her forehead energy point dims with each hit she takes (Kyle's idea)
+            if (Seven != null && !Paused && Seven.Act != ChapterSeven.FightAct.Throw) Seven.SetEnergyPoint(Mathf.Lerp(0.25f, 1.1f, Mathf.Clamp01(1f - Seven.HitsTaken / (float)Mathf.Max(1, Def.sevenHits))), 0.2f);
         }
 
         // ---------------------------------------------------------------- her side: strikes, throws, takedown
@@ -528,11 +560,19 @@ namespace Seven
                 Log($"boss {Def.id}: her takedown pins him - subdued, alive");
                 return true;
             }
-            if (State == St.Staggered || State == St.Dazed) { Strikes++; AudioKit.Play("fight_hit", Centre, 0.8f, 0.06f); return true; }
+            // QF18 (19c): her strikes do the real damage - in full while he is stunned, a little while he is merely open
+            string blow = Seven != null ? Seven.LastBlow : "jab";
+            float dmg = blow == "mma_kick" || blow == "roundhouse" ? Def.kickDamage : blow == "finisher" ? Def.kickDamage * 1.4f : Def.strikeDamage;
+            if (State == St.Staggered || State == St.Dazed)
+            {
+                Strikes++; StunStrikes++; AudioKit.Play("fight_hit", Centre, 0.9f, 0.06f);
+                if (State == St.Staggered) Damage(dmg, true, blow);
+                return true;
+            }
             if (Open)
             {
-                Strikes++; _openStrikes++; AudioKit.Play("fight_hit", Centre, 0.8f, 0.06f);
-                if (_openStrikes >= Def.strikesForStagger) StaggerHim("three strikes while he was open");
+                Strikes++; OpenStrikes++; _openStrikes++; AudioKit.Play("fight_hit", Centre, 0.8f, 0.06f);
+                Damage(dmg * Def.openStrikeScale, true, blow + " (open)");
                 return true;
             }
             // not open: he turns the blow aside
@@ -564,7 +604,8 @@ namespace Seven
             if (open && Reachable)
             {
                 AudioKit.Play("stone_fall", Centre, 1f, 0.05f);
-                StaggerHim("a telekinetic throw while he was open");
+                StaggerHim("a telekinetic throw while he was open - STUNNED: close in and fight");
+                Damage(Def.throwChip, false, "throw");
             }
             else
             {
@@ -594,21 +635,45 @@ namespace Seven
         {
             Staggers++; _phaseStaggers++;
             Markers.Hide(); Markers.Beam(From, 0f, 0f, false); Markers.Tell(Centre, 0f); _comboNext = null;
-            SetState(St.Staggered, Def.staggerTime);
+            SetState(St.Staggered, Def.stunTime > 0f ? Def.stunTime : Def.staggerTime);
             CameraKick.Nudge(Flat(Centre - Her).normalized * 0.05f);
+            AudioKit.Play("scree_grunt", Centre, 1f, 0.05f, AudioKit.Bus.Sfx, 40f); AudioKit.Play("signal_pulse", Centre, 0.7f, 0.05f, AudioKit.Bus.Sfx, 40f);
+            UI?.BossStunned();
             Log($"boss {Def.id}: STAGGERED by {how} ({_phaseStaggers}/{P.staggers} in phase {Phase + 1})");
             Burst("stagger");
         }
         void AfterStagger()
         {
-            if (P.staggers > 0 && _phaseStaggers >= P.staggers && ObjectiveDone) { StartCoroutine(NextPhase()); return; }
-            SetState(St.Idle, 0f); _next = Time.time + 1.2f / Tempo;
+            if (P.endAt < 0f && P.staggers > 0 && _phaseStaggers >= P.staggers && ObjectiveDone) { StartCoroutine(NextPhase()); return; }
+            // QF18 (19c): he recovers and fights back at once - a close attack if she is in his face
+            SetState(St.Idle, 0f); _next = Time.time + 0.35f / Tempo; _counter = true;
+            Log($"boss {Def.id}: he shakes the stun off and fights back (energy {Energy * 100f:0}%)");
         }
+        bool _counter;
+        /// <summary>QF18 (19c): energy goes down; at the phase's mark the phase ends (overkill never skips a phase); in the
+        /// last phase at dazedAt he is dazed - the finisher / takedown.</summary>
+        void Damage(float d, bool melee, string how)
+        {
+            if (d <= 0f || Over) return;
+            float floor = P.endAt >= 0f ? P.endAt : Energy;
+            bool last = Phase >= Def.phases.Length - 1;
+            if (last) floor = 0f;
+            float before = Energy;
+            Energy = Mathf.Max(floor, Energy - d);
+            float took = before - Energy;
+            if (melee) DamageByStrikes += took; else DamageByThrows += took;
+            if (DemoBoot.CaptureDir != null) Log($"boss {Def.id}: {how} -{took * 100f:0.0}% -> energy {Energy * 100f:0}%");
+            if (!last && P.endAt >= 0f && Energy <= P.endAt + 1e-4f && ObjectiveDone) { _endPending = true; }
+            if (last && Energy <= Def.dazedAt && State != St.Dazed) { _endPending = true; }
+        }
+        bool _endPending;
         /// <summary>The subclass calls this when an objective completes (phase.staggers = 0: the objective ends the phase).</summary>
         protected void ObjectiveProgress()
         {
-            if (P.staggers == 0 && ObjectiveDone && State != St.Hold) StartCoroutine(NextPhase());
+            bool energyOk = P.endAt < 0f ? P.staggers == 0 : Energy <= P.endAt + 1e-4f;
+            if (energyOk && ObjectiveDone && State != St.Hold) StartCoroutine(NextPhase());
         }
+        float _phaseStartEnergy = 1f;
         bool _phaseBusy;
         IEnumerator NextPhase()
         {
@@ -625,7 +690,7 @@ namespace Seven
             }
             Paused = true; SetState(St.Hold, 0f);
             yield return PhaseBeat(ended);
-            Phase = ended + 1; _phaseStaggers = 0; _phaseStart = Time.time;
+            Phase = ended + 1; _phaseStaggers = 0; _phaseStart = Time.time; _phaseStartEnergy = Energy; _endPending = false;
             PhaseLog.Add($"phase {Phase + 1} '{P.name}' from {Clock(Time.time - FightStart)}");
             Log($"boss {Def.id}: PHASE {Phase + 1} '{P.name}' (tempo x{P.tempo:0.00}, attacks {string.Join(", ", P.attacks)})");
             Paused = false; SetState(St.Idle, 0f); _next = Time.time + 1.5f;
@@ -638,7 +703,7 @@ namespace Seven
         {
             Knockdowns++;
             Markers.Hide(); _puddles.Clear(); Markers.ClearPuddles(); CageUntil = 0f; _comboNext = null;
-            _phaseStaggers = 0;
+            _phaseStaggers = 0; Energy = _phaseStartEnergy; _endPending = false;      // QF18: the retry restores the energy the phase began with
             ResetPhase();                                   // (Place puts her in free mode)
             Seven.BeginFight(); Seven.ResetFight(); ArmSeven();
             SetState(St.Idle, 0f); _next = Time.time + 2.2f;
@@ -708,6 +773,8 @@ namespace Seven
         {
             if (Cam == null || Paused || Cam.Subjects.Count > 0) return;
             var toB = Flat(transform.position - Her); if (toB.magnitude < 0.5f) return;
+            // QF18 (19a): lock-on off = the camera plays like normal play (no pull toward him); on = it keeps him in view
+            if (!ChapterSeven.LockOn) { Cam.Distance = Mathf.Lerp(Cam.Distance, 5.2f, Time.deltaTime * 2f); return; }
             Cam.Distance = Mathf.Lerp(Cam.Distance, 5.6f, Time.deltaTime * 2f); Cam.DefaultPitch = 20f;
             float want = Quaternion.LookRotation(toB).eulerAngles.y;
             float off = Mathf.DeltaAngle(Cam.Yaw, want);

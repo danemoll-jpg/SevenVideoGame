@@ -47,7 +47,7 @@ namespace Seven
             var rt = (RectTransform)_subPanel.transform;
             rt.anchorMin = rt.anchorMax = rt.pivot = new Vector2(0.5f, 0f);
             rt.anchoredPosition = new Vector2(0f, 140f); rt.sizeDelta = new Vector2(860f, 64f);
-            _subPanel.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.55f);
+            { var im = _subPanel.AddComponent<Image>(); im.sprite = SoftSprite(); im.type = Image.Type.Sliced; im.color = new Color(0f, 0f, 0f, 0.6f); im.raycastTarget = false; }
             _subName = MakeText(_subPanel.transform, "", 17, TextAnchor.UpperCenter, new Vector2(0f, 20f), new Vector2(840f, 24f));
             _subName.color = new Color(0.72f, 0.72f, 0.72f);
             _subName.fontStyle = FontStyle.Bold;
@@ -61,6 +61,8 @@ namespace Seven
             ort.anchorMin = ort.anchorMax = ort.pivot = new Vector2(0f, 1f);
             ort.anchoredPosition = new Vector2(20f, -18f); ort.sizeDelta = new Vector2(560f, 50f);
             _objGroup = objGo.AddComponent<CanvasGroup>();
+            // QF18 (5): a soft dark translucent panel behind it (white text washed out against the bright fog / sky)
+            _objPanel = Panel(objGo.transform, new Vector2(0f, 1f), new Vector2(-12f, 10f), new Vector2(580f, 70f), 0.5f);
             var lbl = MakeText(objGo.transform, "OBJECTIVE", 12, TextAnchor.UpperLeft, new Vector2(0f, 0f), new Vector2(560f, 18f));
             lbl.color = new Color(0.62f, 0.62f, 0.62f);
             ((RectTransform)lbl.transform).anchorMin = ((RectTransform)lbl.transform).anchorMax = ((RectTransform)lbl.transform).pivot = new Vector2(0f, 1f);
@@ -69,8 +71,10 @@ namespace Seven
             _objGroup.alpha = 0f;
 
             // Small hint line under the objective (e.g. "Spotted - back to the entrance").
+            _hintPanel = Panel(root, new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(400f, 40f), 0.5f, true);
             _hint = MakeText(root, "", 18, TextAnchor.MiddleCenter, new Vector2(0f, 120f), new Vector2(900f, 30f));
             var hrt = (RectTransform)_hint.transform; hrt.anchorMin = hrt.anchorMax = hrt.pivot = new Vector2(0.5f, 0.5f);
+            _hintPanel.gameObject.SetActive(false);
 
             // Title card + fade.
             var fadeGo = new GameObject("Fade", typeof(RectTransform));
@@ -102,8 +106,39 @@ namespace Seven
             t.raycastTarget = false;
             var sh = go.AddComponent<Shadow>();
             sh.effectColor = new Color(0f, 0f, 0f, 0.9f); sh.effectDistance = new Vector2(1.5f, -1.5f);
+            var ol = go.AddComponent<Outline>(); ol.effectColor = new Color(0f, 0f, 0f, 0.55f); ol.effectDistance = new Vector2(1f, -1f);   // QF18 (5)
             return t;
         }
+
+        // ---- QF18 (5): the soft panel - a rounded rectangle with feathered edges (generated once), sliced to any size
+        static Sprite _soft;
+        public static Sprite SoftSprite()
+        {
+            if (_soft != null) return _soft;
+            const int N = 64; const float R = 22f, F = 10f;
+            var tex = new Texture2D(N, N, TextureFormat.RGBA32, false) { wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear };
+            var px = new Color32[N * N];
+            for (int y = 0; y < N; y++)
+                for (int x = 0; x < N; x++)
+                {
+                    float cx = Mathf.Clamp(x + 0.5f, R, N - R), cy = Mathf.Clamp(y + 0.5f, R, N - R);
+                    float d = Vector2.Distance(new Vector2(x + 0.5f, y + 0.5f), new Vector2(cx, cy));
+                    float a = Mathf.Clamp01((R - d) / F);
+                    px[y * N + x] = new Color32(255, 255, 255, (byte)(255f * a * a * (3f - 2f * a)));
+                }
+            tex.SetPixels32(px); tex.Apply();
+            _soft = Sprite.Create(tex, new Rect(0, 0, N, N), new Vector2(0.5f, 0.5f), 100f, 0, SpriteMeshType.FullRect, new Vector4(R, R, R, R));
+            return _soft;
+        }
+        Image Panel(Transform parent, Vector2 anchor, Vector2 pos, Vector2 size, float alpha, bool centred = false)
+        {
+            var go = new GameObject("Panel", typeof(RectTransform)); go.transform.SetParent(parent, false); go.transform.SetAsFirstSibling();
+            var rt = (RectTransform)go.transform; rt.anchorMin = rt.anchorMax = anchor; rt.pivot = centred ? new Vector2(0.5f, 0.5f) : anchor;
+            rt.anchoredPosition = pos; rt.sizeDelta = size;
+            var im = go.AddComponent<Image>(); im.sprite = SoftSprite(); im.type = Image.Type.Sliced; im.color = new Color(0f, 0f, 0f, alpha); im.raycastTarget = false;
+            return im;
+        }
+        Image _objPanel, _hintPanel, _markPanel;
 
         public void ShowSubtitle(string speaker, string text, bool telepathic, bool far)
         {
@@ -130,6 +165,7 @@ namespace Seven
             var root = _hint.transform.parent;
             _mark = MakeText(root, "", 30, TextAnchor.MiddleCenter, Vector2.zero, new Vector2(60f, 60f));
             var rt = (RectTransform)_mark.transform; rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.5f); rt.pivot = new Vector2(0.5f, 0.5f);
+            _markPanel = Panel(root, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(110f, 26f), 0.45f, true);
             _markInfo = MakeText(root, "", 16, TextAnchor.UpperCenter, Vector2.zero, new Vector2(140f, 40f));
             var rt2 = (RectTransform)_markInfo.transform; rt2.anchorMin = rt2.anchorMax = new Vector2(0.5f, 0.5f); rt2.pivot = new Vector2(0.5f, 1f);
         }
@@ -138,7 +174,7 @@ namespace Seven
             if (_mark == null) return;
             var cam = Cam != null ? Cam : Camera.main;
             bool fading = _fade != null && _fade.color.a > 0.5f;
-            if (!_markAt.HasValue || cam == null || fading || (_video != null && _video.enabled && _video.color.a > 0.1f)) { _mark.text = ""; _markInfo.text = ""; MarkerState = "off"; return; }
+            if (!_markAt.HasValue || cam == null || fading || (_video != null && _video.enabled && _video.color.a > 0.1f)) { _mark.text = ""; _markInfo.text = ""; MarkerState = "off"; if (_markPanel != null) _markPanel.gameObject.SetActive(false); return; }
             var w = _markAt.Value;
             var vp = cam.WorldToViewportPoint(w);
             var canvasRt = (RectTransform)_mark.transform.parent;
@@ -172,6 +208,7 @@ namespace Seven
             ((RectTransform)_mark.transform).anchoredPosition = pos;
             ((RectTransform)_markInfo.transform).anchoredPosition = pos + new Vector2(0f, -22f);
             _markInfo.text = info;
+            if (_markPanel != null) { _markPanel.gameObject.SetActive(true); var mrt = (RectTransform)_markPanel.transform; mrt.anchoredPosition = pos + new Vector2(0f, -31f); mrt.sizeDelta = new Vector2(_markInfo.preferredWidth + 22f, 26f); }
             MarkerScreen = pos;
         }
 
@@ -180,6 +217,7 @@ namespace Seven
             Build();
             Objective = text;
             _objective.text = text ?? "";
+            if (_objPanel != null) { float h = Mathf.Max(30f, _objective.preferredHeight); float w = Mathf.Min(560f, Mathf.Max(140f, _objective.preferredWidth)); ((RectTransform)_objPanel.transform).sizeDelta = new Vector2(w + 30f, h + 36f); }
             StopCoroutine(nameof(ObjFade));
             StartCoroutine(nameof(ObjFade), string.IsNullOrEmpty(text) ? 0f : 1f);
         }
@@ -198,8 +236,9 @@ namespace Seven
         IEnumerator HintRoutine(string text, float seconds)
         {
             _hint.text = text;
+            if (_hintPanel != null) { _hintPanel.gameObject.SetActive(!string.IsNullOrEmpty(text)); ((RectTransform)_hintPanel.transform).sizeDelta = new Vector2(Mathf.Min(900f, _hint.preferredWidth) + 44f, 40f); }
             for (float t = 0f; t < seconds; t += Time.deltaTime) yield return null;
-            _hint.text = "";
+            _hint.text = ""; if (_hintPanel != null) _hintPanel.gameObject.SetActive(false);
         }
 
         /// <summary>Fade the overlay to a shade (0 = black, 1 = white) and opacity.</summary>
@@ -244,5 +283,86 @@ namespace Seven
         }
 
         public void ShowTitle(string text, float alpha) { Build(); _title.text = text; _title.color = new Color(1f, 1f, 1f, alpha); }
+
+        // ---- QF18 (19d): the boss's energy bar (top centre: his name, the bar draining with her hits, phase marks, a notch +
+        // shake on each stun), her own state (a small bar of the hits she can still take, bottom left) and a white flash
+        // when she is hit. Strictly white / grays.
+        RectTransform _bossRoot, _bossFill, _herRoot, _herFill; Text _bossName, _herLabel; Image _flash, _bossNotch;
+        readonly System.Collections.Generic.List<RectTransform> _marks = new System.Collections.Generic.List<RectTransform>();
+        float _shakeUntil, _notchUntil, _flashT = -9f, _bossShown = -1f, _herShown = -1f;
+        public bool BossBarVisible => _bossRoot != null && _bossRoot.gameObject.activeSelf;
+        void BuildBars()
+        {
+            if (_bossRoot != null) return;
+            Build();
+            var root = _title.transform.parent;
+            var b = new GameObject("BossBar", typeof(RectTransform)); b.transform.SetParent(root, false); _bossRoot = (RectTransform)b.transform;
+            _bossRoot.anchorMin = _bossRoot.anchorMax = _bossRoot.pivot = new Vector2(0.5f, 1f); _bossRoot.anchoredPosition = new Vector2(0f, -22f); _bossRoot.sizeDelta = new Vector2(520f, 48f);
+            Panel(_bossRoot, new Vector2(0.5f, 0.5f), new Vector2(0f, -2f), new Vector2(560f, 64f), 0.5f, true);
+            _bossName = MakeText(_bossRoot, "", 15, TextAnchor.UpperCenter, new Vector2(0f, 12f), new Vector2(500f, 20f)); _bossName.fontStyle = FontStyle.Bold;
+            var bg = new GameObject("Back", typeof(RectTransform)); bg.transform.SetParent(_bossRoot, false); var bgr = (RectTransform)bg.transform; bgr.anchoredPosition = new Vector2(0f, -10f); bgr.sizeDelta = new Vector2(480f, 12f);
+            bg.AddComponent<Image>().color = new Color(0.12f, 0.12f, 0.12f, 0.85f);
+            var f = new GameObject("Fill", typeof(RectTransform)); f.transform.SetParent(bg.transform, false); _bossFill = (RectTransform)f.transform;
+            _bossFill.anchorMin = new Vector2(0f, 0f); _bossFill.anchorMax = new Vector2(1f, 1f); _bossFill.pivot = new Vector2(0f, 0.5f); _bossFill.offsetMin = _bossFill.offsetMax = Vector2.zero;
+            f.AddComponent<Image>().color = new Color(0.94f, 0.94f, 0.94f, 1f);
+            var n = new GameObject("Notch", typeof(RectTransform)); n.transform.SetParent(bg.transform, false); var nr = (RectTransform)n.transform; nr.sizeDelta = new Vector2(480f, 20f);
+            _bossNotch = n.AddComponent<Image>(); _bossNotch.color = new Color(1f, 1f, 1f, 0f); _bossNotch.raycastTarget = false;
+            _bossRoot.gameObject.SetActive(false);
+            var h = new GameObject("HerBar", typeof(RectTransform)); h.transform.SetParent(root, false); _herRoot = (RectTransform)h.transform;
+            _herRoot.anchorMin = _herRoot.anchorMax = _herRoot.pivot = new Vector2(0f, 0f); _herRoot.anchoredPosition = new Vector2(24f, 26f); _herRoot.sizeDelta = new Vector2(220f, 30f);
+            Panel(_herRoot, new Vector2(0f, 0f), new Vector2(-10f, -8f), new Vector2(240f, 46f), 0.5f);
+            _herLabel = MakeText(_herRoot, "7", 14, TextAnchor.MiddleLeft, new Vector2(-92f, 0f), new Vector2(30f, 20f)); _herLabel.fontStyle = FontStyle.Bold;
+            var hb = new GameObject("Back", typeof(RectTransform)); hb.transform.SetParent(_herRoot, false); var hbr = (RectTransform)hb.transform; hbr.anchoredPosition = new Vector2(14f, 0f); hbr.sizeDelta = new Vector2(170f, 9f);
+            hb.AddComponent<Image>().color = new Color(0.12f, 0.12f, 0.12f, 0.85f);
+            var hf = new GameObject("Fill", typeof(RectTransform)); hf.transform.SetParent(hb.transform, false); _herFill = (RectTransform)hf.transform;
+            _herFill.anchorMin = Vector2.zero; _herFill.anchorMax = Vector2.one; _herFill.pivot = new Vector2(0f, 0.5f); _herFill.offsetMin = _herFill.offsetMax = Vector2.zero;
+            hf.AddComponent<Image>().color = new Color(0.86f, 0.86f, 0.86f, 1f);
+            _herRoot.gameObject.SetActive(false);
+            var fl = new GameObject("HitFlash", typeof(RectTransform)); fl.transform.SetParent(root, false); var flr = (RectTransform)fl.transform; flr.anchorMin = Vector2.zero; flr.anchorMax = Vector2.one; flr.offsetMin = flr.offsetMax = Vector2.zero;
+            _flash = fl.AddComponent<Image>(); _flash.color = new Color(1f, 1f, 1f, 0f); _flash.raycastTarget = false;
+        }
+        /// <summary>Show / update the boss bar: energy 0..1, the phase marks (energies where a phase ends).</summary>
+        public void BossBar(string name, float energy, float[] marks, bool stunned)
+        {
+            BuildBars();
+            _bossRoot.gameObject.SetActive(true);
+            _bossName.text = (name ?? "").ToUpperInvariant() + (stunned ? "   ·   STUNNED" : "");
+            energy = Mathf.Clamp01(energy);
+            if (_bossShown >= 0f && energy < _bossShown - 0.001f) _notchUntil = Time.time + 0.25f;
+            _bossShown = energy;
+            _bossFill.anchorMax = new Vector2(energy, 1f);
+            if (marks != null)
+            {
+                while (_marks.Count < marks.Length)
+                {
+                    var m = new GameObject("Mark", typeof(RectTransform)); m.transform.SetParent(_bossFill.parent, false);
+                    var mr = (RectTransform)m.transform; mr.sizeDelta = new Vector2(2f, 18f); mr.anchorMin = mr.anchorMax = new Vector2(0f, 0.5f);
+                    m.AddComponent<Image>().color = new Color(0.05f, 0.05f, 0.05f, 0.95f); _marks.Add(mr);
+                }
+                for (int i = 0; i < _marks.Count; i++)
+                {
+                    bool on = i < marks.Length && marks[i] > 0.001f && marks[i] < 0.999f; _marks[i].gameObject.SetActive(on);
+                    if (on) { _marks[i].anchorMin = _marks[i].anchorMax = new Vector2(marks[i], 0.5f); _marks[i].anchoredPosition = Vector2.zero; }
+                }
+            }
+            float shake = Time.time < _shakeUntil ? 4f : 0f;
+            _bossRoot.anchoredPosition = new Vector2(Random.Range(-shake, shake), -22f + Random.Range(-shake, shake) * 0.5f);
+            _bossNotch.color = new Color(1f, 1f, 1f, Time.time < _notchUntil ? 0.35f * (_notchUntil - Time.time) / 0.25f : 0f);
+        }
+        /// <summary>The stun: the bar shakes and flashes.</summary>
+        public void BossStunned() { BuildBars(); _shakeUntil = Time.time + 0.45f; _notchUntil = Time.time + 0.4f; }
+        public void HideBossBar() { if (_bossRoot != null) { _bossRoot.gameObject.SetActive(false); _herRoot.gameObject.SetActive(false); _flash.color = new Color(1f, 1f, 1f, 0f); _bossShown = -1f; _herShown = -1f; } }
+        /// <summary>Her state: hits she can still take of max (a white flash when it drops).</summary>
+        public void HerBar(int left, int max)
+        {
+            BuildBars();
+            _herRoot.gameObject.SetActive(true);
+            float k = max > 0 ? Mathf.Clamp01(left / (float)max) : 0f;
+            if (_herShown >= 0f && k < _herShown - 0.001f) _flashT = Time.time;
+            _herShown = k;
+            _herFill.anchorMax = new Vector2(k, 1f);
+            _flash.color = new Color(1f, 1f, 1f, Mathf.Clamp01(1f - (Time.time - _flashT) / 0.35f) * 0.38f);
+        }
+
     }
 }

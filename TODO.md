@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF18: show it, don't write it + Dan's Mars review (Dan, 2026-11-20) — to do
+## Quick fix QF18: show it, don't write it + Dan's Mars review (Dan, 2026-11-20) — done, status below; release 0.15.3
 Commit first. All standing rules + the repeat-item rule. 20-minute rule. Release **0.15.3**; "QF18 — status"; "For Dan to
 check (QF18)". Dan's screenshot: `Docs/Previews/qf18/dan_mars_window_text.png` (aboard at the Mars arrival: the window is
 fog with one ravine outline, and a line of text across the screen describing what should be there).
@@ -283,6 +283,112 @@ fog with one ravine outline, and a line of text across the screen describing wha
 
 Checks + release: captures of each replaced caption's new visual, the window at each world, the perch; publish **0.15.3**;
 docs; commit + push.
+
+## QF18 — status (2026-11-20): done, exe-verified off-screen; release 0.15.3 (`game-1503`)
+Proof runs (all muted, minimized, Below Normal; captures + `capture_log.txt` in the session scratchpad, numbers below).
+
+**Repeat items — why the last fix didn't hold, and the real cause fixed**
+- **Gaps in the ground (6, 10, 13)** — QF17 turned every Mars block into battered masonry (`MBlock`), the 22 m ground blocks
+  too: each top stepped in ~0.9 m, so every ground seam was an open groove onto the bright fog (the strip, the ramp tops).
+  Ground / decks / floors are now `MGround` (flat-topped terrain). The "hole" by the transport was the transport's vent glow -
+  a white slab lying on the ground beside a box; the transport is now a real hover vehicle (hull, cab, crate racks, four
+  hover pads), the slab is gone. **Holes check** on every scene at every build: **Mars 0 holes / 25,045 rays** (the build
+  fails above 0); Europa 0; Chapter 1: 1 ray at the cell-door threshold (report only); Venus: 9 on the slab bridge, which is
+  laid at runtime (report only - its rays run before it exists).
+- **Through walls on land (10)** — QF15 swept only the swimming bike; on land only the zones kept bike / 7 in, and the west
+  ramp ended in the bank's end wall with a 0.6 m corner of zone overlap behind it. Ramps now run out onto landings open to the
+  floor; **land collision** (`RideProbe.SlideLand`) for the bike and on foot, every world. Full Mars run: **bike on land
+  55,550 frames, inside geometry 0, crossed a surface 0**; riding camera inside geometry 0. **`-landwalltest`: 19 attempts
+  (14 at full speed into walls / props, 5 on foot), failed 0.** Grass never collides (Venus's
+  grass chunks held her - caught by the player-style run, fixed).
+- **7 sinking at the pier walk (16)** — the pier stairs were a slope *inside* the solid bank block; and (found this round)
+  the new walk under the span head stacked two zone heights, so crossing the span head dropped her to the walk. Stairs + walk
+  rebuilt outside the bank wall, north of the span (zones never stack); low plinths (controls, relay, mechanism, pylons, the
+  tower) are ground obstacles. `FEET vs GROUND (QF18 16)` logs every on-foot frame.
+- **The boss fight (19)** — QF17's proofs counted attacks and answers, but the loop never used her fighting and locked her
+  facing him. New loop for every boss (see 19).
+
+**Items**
+1. Rule "Show, don't caption" in `CLAUDE.md` (with "objectives come from the story", "no filler tasks", "characters shown
+   talking have lines", "every dialogue shot shows the speaker", done states, readable text).
+2. Captions replaced — **all four found**: Mars MAR_01 (×2), MAR_13C, Europa EUR_01 → `HoloDisplay`: a glowing hologram built
+   from the **real level** (`Resources/Holo/Holo_<world>`, copied at build time): Mars with the temple marked, then zoomed to
+   the bridges with the barricades / broken spans marked; MAR_13C the two records side by side, intervals lining up, the route
+   completing to Biaveh; Europa the ice field, the passage and the temple coordinates marked. Swept every director / aboard
+   script: the other `UI.Hint`s are gameplay hints, not descriptions (kept).
+3. Window views = the **real level** copied under the ship (`Resources/Outside/Outside_<world>`: Mars 545 renderers, Venus 324,
+   Europa 238), lighter haze; the Moon keeps its surface + Earth backdrop. `-qf16check`: journeys 4, window captures each.
+4. Perch: on TOP of her left shoulder (between the clavicle and the arm joint, raised to the skin), along the shoulder line,
+   looking out with her (scale 0.6, sitting); captures `qf18_04_perch_front/_side`. Note: at the old spot by her neck he
+   vanished inside her pigtail - he now sits at the outer shoulder; from the front he is still partly behind the pigtail.
+5. Objective box, hints, marker distance, subtitles on a soft dark rounded panel + outline (`ChapterUI`).
+6. See "gaps" above + the transport; the Reptilians' **A-pose arms**: their avatars took Tripo's A-pose as the T-pose
+   reference (arms 55° off) - enforced a true T-pose on the bodies and every clip copy (Viper too). **NPC placement scan:
+   Mars 30 people, 0 over a hole / inside geometry** (every scene: 0).
+7. **Every dialogue shot shows the speaker** (`DialogueFraming`, all chapters): full Mars run **70 lines checked, 17
+   reframed, 0 still blocked**; Venus encounter 1 reframed (VEN_C06_03); the worker's filters line now frames the worker by
+   the transport.
+8. Viper close-ups for each of his lines (low angle, lit from beneath, eye glow, haze thinned / dimmed behind him), her
+   replies over her shoulder looking up; the guard steps aside first. Same in MAR_07.
+9. MAR_03_11–15 voiced (worker = Sarah, 7 v3, Panther), the shot of the route entrance (the old ramp, a half-buried
+   gateway), then the objective. Objective audit (Mars): the route, the drawbridge ("one kingdom raised and chained the span"),
+   the gate's cut line, the dark control → relay, the power stopping under the bridge, the sentries - each follows a line or
+   a shot now.
+10. Ramps + landings + land collision (above); route ridden end to end (full Mars run, all scenes complete); `-landwalltest`.
+11. **Drawbridge** (raised and chained by one kingdom, its barred order plaque; TK breaks the lock, the drum runs, the span
+    swings down with dust and a boom) instead of Venus's slab; a real channel in the ravine floor; the arcade instead of the
+    "table". **Coplanar check + fix on every scene** (any mesh; QF9 only saw Chapter 1's cubes): Mars 1,384 → 0, Venus 936 → 0,
+    Europa 256 → 0, Chapter 1 780 → 0; the lowered drawbridge (runtime probe) 0. Saucer interior: 721 left (the fridge panels
+    moved off their shared planes; what remains is under / inside props - report only).
+12. East ramp = west; the **service gate**: its power line was cut - the camera follows it to the severed ends; she holds RT
+    to pull them together (sparks), the light runs up to the gate, it grinds open, the transport comes through and a driver
+    raises a hand. "Press X" audit: Mars relay → reset its knocked crystal (reason: the dark control's channel; payoff: the
+    light runs); Europa holding door / lift power / schematic / devices and Venus devices kept (each has a spoken reason and a
+    visible payoff); Venus devices got a done counter.
+13. Holes check (above).
+14. MAR_06_V1–V6 and MAR_11_P1–P3 voiced (guard Daniel, worker Sarah, caretaker Bill). Other chapters: no gesture-only
+    talking found.
+15. Real controls (carved pedestal, bronze wheel, one kingdom's half-symbol each), the mechanism (two great gears, weights),
+    the relay (lens crystal in a ribbed housing on a pillar), the conduit (banded pipe, glowing core), Viper's angular pylons
+    (hinged panels, hard white head), sentries (angular drones, eye + searchlight), his loudspeaker mast. Feedback = light
+    running along `PowerLine`s.
+16. One visible chain: dark control → its channel to the relay → the crystal reset → the light runs and stops under the bridge
+    (MAR_06_P1) → the steps → the section lifted → the light runs to the control, which lights, the worker waves.
+17. Sentries introduced by Viper over the loudspeaker (MAR_06_D1–D6), ~1 m, searchlights, attack the control (sparks, a
+    "failing" warning), knocked aside (tumble, smoke, dark); counter 0/3 → 3/3; fog thinned round the action.
+18. The hold: MAR_06_H1–H6 (H4–H6 keep Dan's takes), the caretaker raising a lamp at the far control, the worker on the wheel,
+    the span section swinging out, caught with TK; old ready / hold / holding lines and files removed.
+19. Boss loop (Viper + Wormmaster): free movement, optional lock-on (R3 / Tab); TK only **stuns** (3.2 s), her full chain
+    (jab, cross, hook, MMA kick, roundhouse) does the damage; he recovers and counters; energy bar (name, phase marks, notch +
+    shake on a stun), her bar + forehead point dimming + white hit flash; pylon done state (light dies, panels fall open,
+    prompt gone) + "Pylons n / 3" (the third pylon optional - it stops the sweep). **Player-style first-time runs: Viper 2:53,
+    melee 91 % of the damage, 6 stuns; Wormmaster 3:08, melee 89 %, 7 stuns. Idle tests: Viper down after 29.4 s, Wormmaster
+    22.7 s.**
+20. `VisionTouch` for all four visions (Moon, Venus, Europa, Mars): the reach insert (fingertips 4.0 cm from the rune on Mars),
+    the glow surge + light up her arm + the forehead point, the push-in to her eyes, the bloom to white; back with her hand
+    still on it, the hand leaving (Venus keeps Dan's open-palm match cut as its return; Europa reaches from the bike).
+21. Dune sea, plain dunes, 16 mesas / buttes, boulders, a pale sun, drifting dust (`MarsDust`), the **Cydonia mesa**
+    (`MarsLayout.FaceAt`) - a face from above (the arrival's new high opening shot, the window view), a mesa from the ground.
+22. Two-level star map (our system / Biaveh's system / the overview with the route between, gateways once unlocked), opens
+    on the ship's system (`SaucerLocation.System`); the windows show Biaveh's star in its system.
+
+Not done / known: `FEET vs GROUND` still logs foot overlaps on the pier stairs' step edges (worst 43 cm on one step, body
+inside geometry 0) - the stairs are steps, the zone is a slope; the Saucer interior's remaining coplanar faces (report only); Chapter 1 cell-door ray and Venus's
+runtime slab bridge in the holes report; check-run autopilot on foot still needed skips at two spots (route geometry is
+fine for a player - the player-style Viper run had none).
+
+## For Dan to check (QF18)
+1. Mars arrival aboard: the hologram over the plain instead of the caption; the bridges zoom; Panther sitting on her shoulder.
+2. The ground: no glowing strips / holes anywhere (checkpoint, ramp tops); the transport is a vehicle; the Reptilians' arms.
+3. The west / east ramps at full speed: landings, no walls, no clipping; try riding into walls and props anywhere.
+4. MAR_02 worker's line shows the worker; Viper's reveal: close-ups of Viper, readable against the haze.
+5. The worker's route lines + the shot of the old ramp before the objective.
+6. The drawbridge; the gate's cut line (hold RT) and the transport coming through.
+7. Section 6: the dark control → relay → power stopping under the bridge → the steps → the conduit → the control lights;
+   the sentries; the hold with the caretaker's lamp.
+8. Viper's fight: stun with debris, then fight him hand to hand; the bars; the pylons going dark; lock-on (R3 / Tab).
+9. The vision at the rune (and the other worlds'): obvious now?
+10. Mars's look (dunes, mesas, dust, the face from above), the window views, the two-level star map.
 
 
 ## Quick fix QF17: real boss fights + Mars clean-up (Dan, 2026-11-20) — done, status below; release 0.15.2

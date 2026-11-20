@@ -12,7 +12,7 @@ namespace Seven
     /// </summary>
     public class ChapterInput : MonoBehaviour
     {
-        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown;
+        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown, LockOn;
 
         static InputAction Button(string name, params string[] paths)
         {
@@ -47,6 +47,7 @@ namespace Seven
             Block = Button("block", "<Gamepad>/leftTrigger", "<Keyboard>/q");
             Dodge = Button("dodge", "<Gamepad>/buttonEast", "<Keyboard>/leftCtrl");
             Takedown = Button("takedown", "<Gamepad>/buttonNorth", "<Keyboard>/e");
+            LockOn = Button("lockon", "<Gamepad>/rightStickPress", "<Keyboard>/tab");     // QF18 (19a): optional lock-on in boss fights
             Restart = Button("restart", "<Gamepad>/dpad/down", "<Keyboard>/backspace");
             foreach (var a in All()) a.Enable();
         }

@@ -126,6 +126,7 @@ namespace Seven
             var src = line.IsCat ? (far ? _catFar : _cat) : _seven;
             UI?.ShowSubtitle(line.Label ?? (line.IsCat ? "Cat" : "7"), line.Text, line.IsCat, far);
             LineStarted?.Invoke(line);
+            DialogueFraming.Check(line);          // QF18 (7): the speaker must be visible in a dialogue shot
             float len = line.Clip != null ? line.Clip.length : 1.2f + line.Text.Length * 0.06f;
             if (line.Clip != null) { src.clip = line.Clip; src.Play(); }
             _skip = false;

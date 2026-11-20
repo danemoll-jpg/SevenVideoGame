@@ -148,6 +148,7 @@ namespace Seven
         /// <summary>Where the saucer is now: at Venus in the Venus aboard mode, otherwise at the Moon (Chapter 1).</summary>
         public static string Here()
         {
+            if (SaucerLocation.System == StarMap.Bia) return SaucerLocation.Saved == "biaveh" ? "biaveh" : SaucerLocation.Saved == "asteroid" ? "asteroid" : "biaveh_space";   // QF18 (22)
             var ab = Chapter1Aboard.I;
             return ab != null && ab.Active && ab.MarsMode ? "mars" : ab != null && ab.Active && ab.EuropaMode ? "europa" : ab != null && ab.Active && ab.VenusMode ? "venus" : "moon";
         }
@@ -671,6 +672,7 @@ namespace Seven
             {
                 if (d != 0 || lr != 0) { _map.Step(lr != 0 ? lr : d); AudioKit.Play("console_move", null, 0.5f); Redraw(); }
                 if (back) { if (_map.Confirming) { _map.SetConfirm(false); AudioKit.Play("console_move", null, 0.5f); } else ShowPage(Page.Main, _mainSel); return; }
+                if (ok && _map.Selected != null && _map.IsGateway(_map.Selected)) { _map.SwitchSystem(); CapLog($"star map (QF18 22): through the gateway to the {(_map.View == StarMap.Sol ? "Biaveh system" : "solar system")}"); return; }   // QF18 (22)
                 if (ok && _map.Selected != null)
                 {
                     AudioKit.Play("console_select", null, 0.7f);

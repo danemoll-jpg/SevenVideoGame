@@ -26,7 +26,10 @@ namespace Seven
         public MarsFolk Folk;
         public Transform Dais;                 // his raised platform (sinks at the end of phase 1)
         public Renderer[] PylonGlow;
+        public MarsPylon[] PylonObjs;           // QF18 (19b): the pylons' done state (light dies, panels fall open)
+        public System.Action<int> PylonCount;   // QF18 (19b): the on-screen counter "Pylons n / 3"
         public bool[] PylonOff = new bool[3];
+        public int PylonsDown { get { int n = 0; foreach (var b in PylonOff) if (b) n++; return n; } }
         public System.Func<IEnumerator> Beat;  // the director's camera beat between phases (optional)
         public const float DaisTop = 3.2f;
         public static readonly Vector3 DaisAt = new Vector3(0f, 0f, 158.5f);
@@ -71,30 +74,34 @@ namespace Seven
         protected override bool ObjectiveDone => Phase != 0 || PylonOff[0] && PylonOff[1];
         public override (Vector3 at, string how)? PilotObjective()
         {
-            if (Phase != 0) return null;
-            for (int i = 0; i < 2; i++) if (!PylonOff[i]) return (L.Pylons[i] + Flat(HerStart - L.Pylons[i]).normalized * 0.9f, "use");
+            if (Phase == 0) { for (int i = 0; i < 2; i++) if (!PylonOff[i]) return (L.Pylons[i] + Flat(HerStart - L.Pylons[i]).normalized * 0.9f, "use"); return null; }
+            // QF18: the third pylon (its sweep crosses the plaza) - optional, a player shuts it when he is not on top of her
+            if (!PylonOff[2] && !Stunned && Flat(Her - transform.position).magnitude > 4f) return (L.Pylons[2] + Flat(HerStart2 - L.Pylons[2]).normalized * 0.9f, "use");
             return null;
         }
         protected override string ObjectiveUseLabel()
         {
-            if (Phase != 0) return null;
-            for (int i = 0; i < 2; i++) if (!PylonOff[i] && Flat(L.Pylons[i] - Her).magnitude < 1.9f) return "Shut it down";
+            for (int i = 0; i < 3; i++) if (!PylonOff[i] && (Phase == 0 ? i < 2 : i == 2) && Flat(L.Pylons[i] - Her).magnitude < 1.9f) return "Shut it down";
             return null;
         }
         protected override void ObjectiveUse()
         {
-            for (int i = 0; i < 2; i++) if (!PylonOff[i] && Flat(L.Pylons[i] - Her).magnitude < 1.9f) { int k = i; StartChannel(k, L.Pylons[k], () => PylonDown(k)); break; }
+            for (int i = 0; i < 3; i++) if (!PylonOff[i] && (Phase == 0 ? i < 2 : i == 2) && Flat(L.Pylons[i] - Her).magnitude < 1.9f) { int k = i; StartChannel(k, L.Pylons[k], () => PylonDown(k)); break; }
         }
         void PylonDown(int i)
         {
+            if (PylonOff[i]) return;
             PylonOff[i] = true;
-            if (PylonGlow != null && i < PylonGlow.Length && PylonGlow[i] != null) { var m = PylonGlow[i].material; m.SetColor("_EmissionColor", Color.black); }
-            AudioKit.Play("mars_barrier_off", L.Pylons[i], 0.9f, 0.04f, AudioKit.Bus.Sfx, 60f);
-            Log($"boss viper: pylon {i + 1} shut down under fire ({(PylonOff[0] ? 1 : 0) + (PylonOff[1] ? 1 : 0)}/2)");
+            if (PylonObjs != null && i < PylonObjs.Length && PylonObjs[i] != null) PylonObjs[i].Collapse();
+            else if (PylonGlow != null && i < PylonGlow.Length && PylonGlow[i] != null) { var m = PylonGlow[i].material; m.SetColor("_EmissionColor", Color.black); }
+            PylonCount?.Invoke(PylonsDown);
+            Log($"boss viper: pylon {i + 1} shut down - its light dies, the panels fall open, the prompt is gone (pylons {PylonsDown} / 3)");
             if (Folk != null) Folk.Flare = 1f;
             ObjectiveProgress();
         }
         protected override void SkipObjectives() { for (int i = 0; i < 2; i++) if (!PylonOff[i]) PylonDown(i); }
+        /// <summary>QF18: with the third pylon down its energy sweep is gone.</summary>
+        protected override bool Allowed(AttackDef a) => !(a.id == "machine_sweep" && Phase > 0 && PylonOff[2]);
 
         protected override IEnumerator PhaseBeat(int ended)
         {

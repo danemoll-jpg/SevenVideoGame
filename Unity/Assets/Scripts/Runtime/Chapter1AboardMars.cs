@@ -78,8 +78,12 @@ namespace Seven
             PlaceRecordsOnArmMars();
             // the navigation display: the plain, the two fortress cities, the ravine, the temple on its island
             NavHand(true);
-            CutPilot("ots");
-            UI.Hint("MARS  ·  two fortress cities either side of a ravine  ·  the temple on its island of stone", 4.5f);
+            // QF18 (2): the display SHOWS it - a glowing hologram of the actual Mars level (the plain, the ravine, both fortress
+            // cities, the temple island, the bridges), the temple highlighted - projected in front of her at the window
+            var holo = HoloDisplay.Get(Seven.transform.position + Seven.transform.forward * 1.25f + Vector3.up * 1.12f, -Seven.transform.forward);
+            holo?.Show("mars", 1.0f, 1150f, new Vector3(-40f, 0f, 60f));
+            holo?.Mark(new Vector3(0f, 0f, 178f), 28f, "the temple");
+            if (holo != null) Cut(holo.transform.position - Seven.transform.forward * 1.9f + Seven.transform.right * 0.55f + Up * 0.45f, holo.transform.position + Up * 0.05f, 44f);
             yield return UI.Fade(0f, 1.4f);
             yield return Wait(0.8f);
             yield return ShotV("ma01_navigation_display_the_temple");
@@ -88,14 +92,23 @@ namespace Seven
             StartCoroutine(CatMomentTailFlick());                                // QF16 (4): his tail flicks across her face
             yield return SayM("MAR_01", 2, 2);                                   // And several people determined to make reaching it inconvenient.
             yield return ShotV("ma02_panther_in_her_lap");
-            // she studies the bridges - both approaches are barricaded
-            CutPilot("ots");
-            UI.Hint("both approaches barricaded", 2.5f);
-            yield return Wait(1.0f);
+            // she studies the bridges - QF18 (2): the display zooms to the two bridges, the barricades marked
+            if (holo != null)
+            {
+                holo.Bar(new Vector3(-51f, 0f, -6f), new Vector3(-51f, 0f, 6f), 4f, "the west checkpoint barrier");
+                holo.Bar(new Vector3(51f, 0f, -6f), new Vector3(51f, 0f, 6f), 4f, "the east checkpoint barrier");
+                holo.Bar(new Vector3(-34f, 0f, 143f), new Vector3(-34f, 0f, 157f), 4f, "the west span, out of line");
+                holo.Bar(new Vector3(34f, 0f, 143f), new Vector3(34f, 0f, 157f), 4f, "the east span, out of line");
+                Cut(holo.transform.position + Seven.transform.forward * -0.8f + Seven.transform.right * 0.25f + Up * 0.42f, holo.transform.position, 36f);
+                yield return holo.Focus(new Vector3(0f, 0f, 75f), 2.4f, 1.8f);
+                yield return ShotV("ma02b_hologram_the_barricaded_bridges");
+            }
+            yield return Wait(0.6f);
             CutPilot("two");
             yield return SayM("MAR_01", 3, 4);                                   // The guardian did mention borders. / Mm. They appear to have been thorough.
             yield return ShotV("ma03_two_shot_in_the_chair");
             NavHand(false);
+            holo?.Hide();
             _stroke = 0f;
             yield return Wait(0.8f);
             if (_strokeRoutine != null) StopCoroutine(_strokeRoutine);
@@ -219,15 +232,20 @@ namespace Seven
             if (con != null) con.ShowMap(null, "The Mars route  ·  the Cetaceans' sequence");
             _stroke = 0.3f;                                                      // her hand pauses on his back
             yield return SayM("MAR_13C", 1, 1);                                  // Wait. Put the route beside the sequence we brought back from Europa.
+            // QF18 (2): the display SHOWS the two records side by side, their intervals lining up (no caption)
+            var holo = HoloDisplay.Get();
+            Coroutine recs = holo != null ? StartCoroutine(holo.Records()) : null;
             Cat.LapNudge(-10f);                                                  // he turns toward the display
             StartCoroutine(CatMomentRouteBat(false));                            // QF16 (4): he bats at the route line
             yield return SayM("MAR_13C", 2, 2);                                  // Hmm. One moment.
             StartCoroutine(CatMomentRouteBat(true));                             // ... and sits with his paw still raised
             yield return SayM("MAR_13C", 3, 3);                                  // There. Those intervals match.
             CatPawDown();
-            UI.Hint("the Mars route  +  the Cetaceans' sequence  ·  the intervals match", 4f);
+            if (recs != null) yield return recs;
+            if (holo != null) Cut(holo.transform.position + PilotFwd * -0.9f + PilotRight * 0.3f + Up * 0.3f, holo.transform.position, 38f);
             yield return ShotV("ma15_two_records_side_by_side");
             yield return SayM("MAR_13C", 4, 5);                                  // They do... / They each kept a piece.
+            if (holo != null) yield return holo.RouteCompletes();
             if (con != null) con.ShowMap("biaveh", "Biaveh  ·  beyond this solar system");
             WorldFlags.MarkCombined();
             Log13("Biaveh unlocked (Mars + Europa records combined)");
@@ -236,6 +254,7 @@ namespace Seven
             CutPilot("ots");
             yield return SayM("MAR_13C", 7, 8);                                  // Biaveh. / Home of the Biaviian. Beyond this solar system.
             yield return ShotV("ma16_the_route_resolves_biaveh");
+            holo?.Hide();
             CutPilot("two");
             _stroke = 1f;
             yield return SayM("MAR_13C", 9, 12);                                 // That's... a little farther than Europa. / I suggest eating... / You suggest that... / And yet...
@@ -271,6 +290,7 @@ namespace Seven
         IEnumerator TowardBiaveh()
         {
             yield return TravelPassage.Run("biaveh");
+            SaucerLocation.System = StarMap.Bia;                                 // QF18 (22): the long jump arrives in Biaveh's system
             SaucerLocation.Travelling = true;
             yield return UI.Fade(1f, 0.5f);
         }

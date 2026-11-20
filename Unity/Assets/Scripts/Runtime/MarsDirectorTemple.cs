@@ -20,7 +20,8 @@ namespace Seven
             if (FallenWalk != null) FallenWalk.gameObject.SetActive(false);
             if (SlideBlock != null) SlideBlock.gameObject.SetActive(false);
             if (Dais != null) Dais.position = ViperFight.DaisAt + Vector3.down * ViperFight.DaisTop;
-            if (Pylons != null) foreach (var p in Pylons) Glow(p, done ? 0f : 1.4f);
+            if (PylonObjs != null) { foreach (var po in PylonObjs) if (po != null) { if (done) po.Collapse(true); else po.Arm(false); } }
+            else if (Pylons != null) { foreach (var pr in Pylons) Glow(pr, done ? 0f : 1.4f); }
         }
         public Transform Dais;
         ViperFight _viperFight;
@@ -32,7 +33,7 @@ namespace Seven
             Objective("Cross the aligned bridge to the temple");
             if (Worker != null) Worker.Place(L.WestControl + new Vector3(-1.6f, 0f, 0f), Vector3.right);
             if (Caretaker != null) Caretaker.Place(L.EastControl + new Vector3(1.6f, 0f, 0f), Vector3.left);
-            if (P7.y < -1f) yield return GuideWalk(new[] { new Vector3(-49f, -3.4f, 160f), new Vector3(-55.5f, 0f, 160f) }, "up from the pier walk");
+            if (P7.y < -1f) yield return GuideWalk(new[] { new Vector3(-48.8f, -4f, L.PierStairZ0 - 0.4f), new Vector3(-48.8f, 0f, L.PierStairZ1 + 1f), L.PierWalkTop, new Vector3(-57f, 0f, 165f), new Vector3(-56f, 0f, 150f) }, "up from the pier walk");
             ShowGuide(L.ArenaEntry);
             if (Auto) { if (!Riding) { yield return WalkPath(new[] { new Vector3(-56f, 0f, 150f), L.SpanWestFoot, new Vector3(-24f, 0f, 150f), L.ArenaEntry }, 40f); } }
             yield return Until(() => P7.x > L.ArenaEntry.x - 5f && Flat(P7 - L.ArenaEntry).magnitude < 14f, "across the span to the temple approach", 90f, "Walk (or ride) east over the aligned span", L.ArenaEntry, () => { if (Riding) Bike.Dismount(true); Seven.Place(L.ArenaEntry, Vector3.right); });
@@ -51,7 +52,19 @@ namespace Seven
             var vp = Viper != null ? Viper.transform.position : L.ViperBlocks; var mid = (P7 + vp) * 0.5f; var side = Vector3.Cross(Vector3.up, Flat(vp - P7).normalized);
             Seven.transform.rotation = Quaternion.LookRotation(Flat(vp - P7)); if (Viper != null) Viper.Face(P7);
             TwoShot(mid, side, 9f, 2.4f, 1.8f, 46f, 0.6f);
-            yield return Say("MAR_07", 1, 5);                    // Do you know what you've opened? / A bridge. / ... / It goes both ways. / That is what concerns me.
+            yield return Wait(0.6f);
+            // QF18 (8): his lines on Viper himself, her replies over her shoulder
+            StartCoroutine(FogThin(0.6f, 1.5f, 1f));
+            ViperCloseUp(true);
+            yield return Say("MAR_07", 1, 1);                    // Do you know what you've opened?
+            OverHerShoulderUp(HeadOf(Viper));
+            yield return Say("MAR_07", 2, 2);                    // A bridge.
+            ViperCloseUp();
+            yield return Say("MAR_07", 3, 3);                    // A way for them to come through.
+            OverHerShoulderUp(HeadOf(Viper));
+            yield return Say("MAR_07", 4, 4);                    // It goes both ways.
+            ViperCloseUp();
+            yield return Say("MAR_07", 5, 5);                    // That is what concerns me.
             yield return Shot("m25_it_goes_both_ways");
             // QF17 (1): he raises his platform out of the plaza and springs onto it; his machinery arms (the pylons light)
             if (Viper != null) { Viper.Stop(); Viper.Play("roar"); Viper.Flare = 1f; }
@@ -67,7 +80,7 @@ namespace Seven
                 if (Viper != null && t > 0.35f) { float k = Mathf.Clamp01((t - 0.35f) / 0.4f); Viper.transform.position = Vector3.Lerp(from, ViperFight.DaisAt + Vector3.up * ViperFight.DaisTop * u, k) + Vector3.up * Mathf.Sin(k * Mathf.PI) * 1.2f; }
                 yield return null;
             }
-            if (Pylons != null) foreach (var p in Pylons) Glow(p, 1.4f);
+            if (PylonObjs != null) { foreach (var po in PylonObjs) if (po != null) po.Arm(true); } else if (Pylons != null) foreach (var pr in Pylons) Glow(pr, 1.4f);
             foreach (var g in new[] { BarrierWC, BarrierCE, BarrierCentre }) if (g != null) g.SetActive(false);
             if (FallenWalk != null) FallenWalk.gameObject.SetActive(false);
             if (SlideBlock != null) SlideBlock.gameObject.SetActive(false);
@@ -79,15 +92,17 @@ namespace Seven
             var deck = GameObject.Find("PlazaDeckW");
             var rockMat = deck != null && deck.GetComponent<Renderer>() != null ? deck.GetComponent<Renderer>().sharedMaterial : Markers.DarkGloss();
             _viperFight.Setup(Viper, Dais, Pylons, rockMat);
+            _viperFight.PylonObjs = PylonObjs;
+            _viperFight.PylonCount = n => { Objective((_viperFight.Phase == 0 ? "Viper attacks from his platform - shut his two pylons down (X) under fire" : "Shut the third pylon down (X) to stop its sweep - or fight him: stun him with debris (RT), then strike (X)") + $"  ·  Pylons {n} / 3"); UI.Hint($"Pylon shut down  ·  {n} / 3", 2.5f); };
             _viperFight.PlaceStart();
             if (Flat(P7 - ViperFight.HerStart).magnitude > 8f) Seven.Place(new Vector3(-9f, 0f, 132f), Flat(ViperFight.DaisAt - new Vector3(-9f, 0f, 132f)));
             _viperFight.UI = UI; _viperFight.AutoPilot = Auto;
             _viperFight.Beat = ViperComesDown;
-            _viperFight.PhaseObjective = ph => ph == 0 ? "Viper attacks from his platform - shut his two pylons down (X) under fire"
-                                            : ph == 1 ? "He hunts you - make him waste an attack (dodge B, jump A, block LT), then throw debris at him (RT)"
-                                            : "Enraged - read him, dodge, counter: three more staggers";
+            _viperFight.PhaseObjective = ph => ph == 0 ? $"Viper attacks from his platform - shut his two pylons down (X) under fire  ·  Pylons {_viperFight.PylonsDown} / 3"
+                                            : ph == 1 ? "He hunts you - when he wastes an attack, stun him with debris (RT), then close in and fight (X)"
+                                            : "Enraged - dodge, stun him (RT), then hit him hard (X) until he falls";
             yield return Cutscene(false);
-            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Strike X  ·  Telekinesis RT: throw debris when he is open", 9f);
+            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Strike X (keep pressing: a combo)  ·  Telekinesis RT: stun him when he is open  ·  R3 / Tab: lock on", 10f);
             _viperFight.Begin(BossFight.Load("viper"), Seven, Cam);
             StartCoroutine(FightPrompts(_viperFight));
             yield return _viperFight.Run(Objective);
@@ -192,16 +207,16 @@ namespace Seven
             yield return Until(() => Flat(P7 - L.RuneView).magnitude < 1.4f || P7.z > L.RuneView.z, "reach the rune", 60f, "The glowing tetrahedron at the temple's heart", L.RuneView, () => Seven.Place(L.RuneView, Vector3.forward));
             HideGuide();
             yield return Cutscene(true);
-            Seven.Place(L.RuneView, Vector3.forward); Seven.Lock(true);
+            // QF18 (20): the shared touch -> vision -> return - she steps to arm's reach and touches the rune
+            { var rf = new Vector3(L.RuneAt.x, 0f, L.RuneAt.z); Seven.Place(rf - Vector3.forward * 0.95f, Vector3.forward); Seven.Lock(true); }
             Shoot(L.RuneView + new Vector3(2.2f, 1.6f, 0.6f), L.RuneAt, 38f, 0.01f);
-            Seven.Gesture(L.RuneAt);
-            yield return Wait(0.9f);
+            yield return Wait(0.5f);
             yield return Shot("m34_she_touches_the_rune");
+            System.Action<float> runeGlow = k => { if (Rune != null) foreach (var rr in Rune.GetComponentsInChildren<Renderer>()) if (rr.name == "Edges") Glow(rr, 1.1f * k); };
+            yield return VisionTouch.Into("mars", Seven, Cam, UI, L.RuneAt, 0.32f, runeGlow);
             yield return Vision4Play();
-            // RETURN - insert of 7's hand leaving the rune
-            // the insert: the rune, her hand drawing back from it
-            Shoot(L.RuneAt + new Vector3(1.1f, 0.5f, -1.0f), L.RuneAt + new Vector3(0f, 0f, -0.35f), 32f, 0.01f);
-            yield return Wait(0.6f);
+            // RETURN - her hand still on the rune as the white clears, the glow settling, the insert of her hand leaving it
+            yield return VisionTouch.Back("mars", Seven, Cam, L.RuneAt, 0.32f, runeGlow);
             yield return Shot("m35_insert_her_hand_leaving_the_rune");
             var mid = L.RuneView + Vector3.up * 1.3f;
             Shoot(mid + new Vector3(0f, 0.6f, 4.2f), mid, 50f, 0.5f);
@@ -327,7 +342,7 @@ namespace Seven
             yield return Cutscene(false);
             FreeBike = true;
             Objective("Ride back to the saucer");
-            yield return RideRoute(new[] { L.Back[1], L.Back[2], new Vector3(-66f, 0f, 14f) }, "back along the west rim", 8f);
+            yield return RideRoute(new[] { L.Back[1], L.Back[2], L.Back[3], new Vector3(-66f, 0f, 14f) }, "back along the west rim", 8f);
             // 7 slows to let the transport pass - it crosses openly; the guard and the caretaker exchange a few practical words
             StartCoroutine(TransportCrosses());
             yield return StopBike(2.5f);
@@ -335,16 +350,19 @@ namespace Seven
             _cut = true;
             yield return Wait(1.2f);
             yield return Shot("m39_the_transport_crosses_openly");
-            yield return Say("MAR_11", 1, 2);                    // Did you settle their differences? / No.
-            // she watches the crossing
+            // she watches the crossing - QF18 (14): the guard and the caretaker's few practical words (spoken, not mimed)
             Shoot(L.GuardAt + new Vector3(-8f, 1.8f, -12f), (L.GuardAt + new Vector3(-3f, 0f, -7.3f)) + Vector3.up * 1.3f, 42f, 0.6f);
+            if (Guard != null && Caretaker != null) { Guard.Face(Caretaker.transform.position); Caretaker.Face(Guard.transform.position); }
             yield return Wait(0.8f);
+            yield return SayIds("MAR_11_P1", "MAR_11_P2", "MAR_11_P3");   // The next load comes at dusk. / We'll have the gate open. / ...Good.
             yield return Shot("m40_the_guard_and_the_caretaker_working");
+            Shoot(P7 + new Vector3(-4f, 2.4f, 4f), L.TransportCrossFrom + new Vector3(10f, 1f, 0f), 50f, 0.8f);
+            yield return Say("MAR_11", 1, 2);                    // Did you settle their differences? / No.
             yield return Say("MAR_11", 3, 4);                    // Got them talking. / A productive afternoon, then.
             Complete("MAR_11");
             _cut = false; FollowCamera();
             // she gives a quiet chuckle and continues toward the saucer
-            yield return RideRoute(new[] { L.Back[3], L.Back[4], L.Back[5], L.HomeStop }, "back to the saucer", 8f);
+            yield return RideRoute(new[] { L.Back[4], L.Back[5], L.Back[6], L.HomeStop }, "back to the saucer", 8f);
             yield return StopBike(2f);
             yield return Home();
         }

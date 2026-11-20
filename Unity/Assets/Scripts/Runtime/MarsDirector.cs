@@ -41,7 +41,11 @@ namespace Seven
         public Transform CausewaySlab; public Renderer CausewayEdges;
         public Transform ServiceGate; public Renderer ServicePanel;
         [Header("The controls")]
-        public Transform Mechanism; public Renderer ChannelW, ChannelE, ControlW, ControlE, RelayW;
+        public Transform Mechanism; public Renderer ControlW, ControlE, RelayW;
+        // QF18 (12, 15, 16): power lines whose light runs, the control wheels, the mechanism's gears, the relay crystal
+        public PowerLine ChannelWA, ChannelWB, ChannelE, GateLine, GateFeed;
+        public Transform WheelW, WheelE, RelayCrystal, CableEndUpper, CableEndLower, ViperHorn; public Transform[] MechGears;
+        public MarsDrawbridge Drawbridge; public MarsPylon[] PylonObjs;
         public Transform Conduit, SwingSeg, SpanW, SpanE; public Transform[] Jammers;
         [Header("The encounter")]
         public Renderer[] Pylons; public GameObject BarrierWC, BarrierCE, BarrierCentre; public Transform SlideBlock, FallenWalk; public GameObject Restraint;
@@ -95,13 +99,14 @@ namespace Seven
             HoverBike.IgnoreRoots = ex.ToArray(); ChapterCamera.RideIgnore = ex.ToArray();
             ChapterCamera.RideArea = () => RideAreaName(Riding ? Bike.transform.position : P7);
             Dlg.LineStarted += OnLine;
+            DialogueFraming.Speaker = id => id == "seven" ? Seven.transform : id == "guard" ? Guard?.transform : id == "worker" ? Worker?.transform : id == "caretaker" ? Caretaker?.transform : id == "viper" ? Viper?.transform : null;
             _wind = AudioKit.Loop("mars_amb_wind", null, null, 0.55f, AudioKit.Bus.Ambience);
             _market = AudioKit.Loop("mars_amb_market", null, null, 0f, AudioKit.Bus.Ambience);
             if (Viper != null) Viper.Role = "viper";
             StartCoroutine(Flow(startCp));
             StartCoroutine(World());
         }
-        void OnDestroy() { if (Dlg != null) Dlg.LineStarted -= OnLine; if (I == this) I = null; HoverBike.ZoneTest = VenusLayout.BikeZone; }
+        void OnDestroy() { if (Dlg != null) Dlg.LineStarted -= OnLine; if (I == this) I = null; HoverBike.ZoneTest = VenusLayout.BikeZone; DialogueFraming.Speaker = null; }
         IEnumerator FirstFrame() { Cap.Log($"first frame (Mars): fade {UI.FadeAlpha:0.00} (1 = black)"); yield return Cap.Shot("m00_first_frame"); }
 
         IEnumerable<MarsFolk> AllFolk()
@@ -268,10 +273,12 @@ namespace Seven
         bool Reached(Vector3[] pts, int k, float r) { for (int j = k + 1; j < pts.Length; j++) if (Flat(Bike.transform.position - pts[j]).magnitude < r) return true; return false; }
         IEnumerator GetBackOn()
         {
+            var prev = _objective;
             Objective("Get back on the bike (X)");
             ShowGuide(Bike.transform.position);
             if (Auto) { yield return WalkSeven(Bike.transform.position - Bike.transform.right * 1.1f, 12f); PlaceRiding(Bike.transform.position); }
             yield return Until(() => Riding, "back on the bike", 30f, "Walk to the bike and press X", Bike.transform.position, () => PlaceRiding(Bike.transform.position));
+            if (prev != null && prev != _objective) Objective(prev);       // QF18: the step's own objective comes back
         }
 
         /// <summary>Check runs: the bike steered along the points (yaw toward each, throttle by distance).</summary>
@@ -327,7 +334,7 @@ namespace Seven
         IEnumerator GuideWalk(Vector3[] pts, string what, float r = 1.6f)
         {
             int k = 0;
-            if (Auto) StartCoroutine(WalkPath(pts, 40f));
+            if (Auto) StartCoroutine(WalkPath(pts, 40f * pts.Length));   // QF18: the walk's budget per point, not one 40 s for all
             while (k < pts.Length)
             {
                 for (int j = pts.Length - 1; j >= k; j--) if (Flat(P7 - pts[j]).magnitude < r) { k = j + 1; break; }
@@ -414,6 +421,7 @@ namespace Seven
 
         void LateUpdate()
         {
+            if (DemoBoot.CaptureDir != null && !Riding && Seven != null && Seven.gameObject.activeInHierarchy) FeetProbe.Sample(Seven, "mars " + MarsLayout.ZoneAt(P7));   // QF18 (16)
             if (GuideLight != null && Cam != null)
             {
                 bool show = NextMarker.HasValue && !_cut;
@@ -431,9 +439,12 @@ namespace Seven
             foreach (var f in AllFolk()) if (f.gameObject.activeInHierarchy) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(f.transform.position.x, f.transform.position.z), R = 0.45f });
             if (Transport != null && Transport.gameObject.activeInHierarchy) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(Transport.position.x, Transport.position.z), R = 2.4f });
             foreach (var sa in MarketStalls) { var sp = MarsLayout.MarketAt + new Vector3(Mathf.Cos(sa * Mathf.Deg2Rad), 0f, Mathf.Sin(sa * Mathf.Deg2Rad)) * 12.5f; Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(sp.x, sp.z), R = 2.0f }); }   // QF17 (6): the stalls are solid
+            // QF18 (16): the props with low plinths she must walk round (the body sweep sits above a 0.3 m flange)
+            foreach (var (c, r) in PropCircles) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(c.x, c.z), R = r });
             if (Dais != null && Dais.position.y > -2.5f) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(Dais.position.x, Dais.position.z), R = 3.0f });   // QF17: his raised platform
         }
 
+        static readonly (Vector3 c, float r)[] PropCircles = { (MarsLayout.WestControl, 1.15f), (MarsLayout.EastControl, 1.15f), (MarsLayout.RelayWest, 0.8f), (MarsLayout.MechanismAt, 2.7f), (MarsLayout.Pylons[0], 0.85f), (MarsLayout.Pylons[1], 0.85f), (MarsLayout.Pylons[2], 0.85f), (MarsLayout.DrawTower, 2.1f), (MarsLayout.ViperHornAt, 0.4f) };
         static readonly float[] MarketStalls = { 40f, 70f, 110f, 140f, 220f, 250f, 290f, 320f };   // = the builder's stall angles
         // ------------------------------------------------------------------------------------------ the world's life
         IEnumerator World()

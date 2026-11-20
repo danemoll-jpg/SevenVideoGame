@@ -107,6 +107,10 @@ namespace Seven
             Log(ChapterCat.SpeedReport());              // QF11: never the walk cycle on the spot
             if (ChapterCamera.RideFrames > 0) Log(ChapterCamera.RideSummary());   // QF15 (1)
             if (HoverBike.SwimFrames > 0) Log(HoverBike.InsideSummary());         // QF15 (2)
+            if (HoverBike.LandFrames > 0) Log(HoverBike.LandSummary());           // QF18 (10)
+            if (FeetProbe.Frames > 0) Log(FeetProbe.Summary());                   // QF18 (16)
+            Log($"collision on foot (QF18 10): she slid along walls / props {ChapterSeven.FootSlides} times");
+            Log(DialogueFraming.Summary());                                        // QF18 (7)
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");
             File.WriteAllText(Path.Combine(DemoBoot.CaptureDir, "capture_log.txt"), _log.ToString());

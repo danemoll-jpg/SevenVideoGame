@@ -17,6 +17,27 @@ apply to every asset and scene:
   (component + volume profile + `SevenHeightFog` full-screen pass + lights + `Glow*` sources). Knobs, recipe and
   cost in `Docs/ATMOSPHERE.md`.
 
+## Show, don't caption — STANDING RULES (Dan, QF18, 2026-11-20; every chapter, now and later)
+- **On-screen text is only** titles / chapter cards, objectives, control prompts, menus, subtitles of spoken lines and the
+  console's pages. **Never** text describing what the player is supposed to be seeing. When a spec describes something to
+  show, build it (even simply) — never caption it. Display / window views are built from the real levels (baked at build
+  time), so they always match.
+- **Objectives come from the story — she can't just know.** Every objective follows from something she was told or saw
+  on screen just before (a line, a sight, a display). Never knowledge from nowhere: if the player would ask "how does she
+  know that?", add the line / the shot first.
+- **No filler tasks.** Every task has (1) a reason the player understands before doing it, (2) a little real play, and
+  (3) a visible payoff after it (light running along it, something opening / moving, a person reacting). "Walk up and
+  press X at a panel" with nothing before or after is filler — rework it or cut it.
+- **Characters shown talking have voiced lines.** No mimed conversations: if a scene shows someone talking, they have
+  lines (subtitled + voiced). Proposed lines go in the spec + the line list and get voiced with the existing voices.
+- **Every dialogue shot shows the speaker.** Before a line plays, `DialogueFraming` checks (rays from the camera to the
+  speaker's head and chest, in frame) that the speaker is visible; if blocked it picks another angle (over the listener's
+  shoulder, a side two-shot) or moves the camera — never a shot of a wall. Telepathic Panther lines are exempt.
+- **Every interactive objective has a clear done state:** its light changes / dies, it moves or opens, the prompt
+  disappears and it can't be used again; counted objectives show a counter ("Pylons 1 / 3").
+- **Text over the world is readable:** objectives, prompts, hints, subtitles and marker distances sit on a soft dark
+  translucent panel with a text shadow (`ChapterUI` styles) — check captures against the brightest backgrounds.
+
 ## Boss fights — STANDING RULE (Dan, QF17, 2026-11-20; every boss, now and later)
 Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing there." Never again:
 - **The boss moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: his pose, a
@@ -26,9 +47,17 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   current phase. Still nonlethal for everyone (7 never kills; the boss is subdued / pinned / contained, alive).
 - **2–3 phases that escalate** (faster, a new attack, the arena changes). Objectives (switches, pylons, devices) only
   *while* he is attacking — never the whole fight.
-- **He is beaten by her countering him:** an attack he wastes (dodged, blocked, jumped) leaves him open → a telekinetic
-  throw of debris / his machinery (or three strikes) staggers him → press the advantage; the last phase ends dazed →
-  her takedown (Y / E) pins him. Never by flipping switches while he waits.
+- **He is beaten by her countering him — the loop (QF18, Dan's design):** an attack he wastes (dodged, blocked, jumped)
+  leaves him open → **telekinesis only stuns** (a thrown object that hits = he is stunned ~3–4 s: reels, dazed sway, a
+  clear visual + sound) → **she closes in and fights hand to hand** (jab, cross, hook, MMA kick, roundhouse, the
+  finisher — her real strikes do the real damage) → he recovers and fights back, she backs off, dodges / blocks and sets
+  up the next stun. The last phase ends with the finisher → her takedown (Y / E) pins him. Never by flipping switches
+  while he waits. Proof logs damage by strikes vs throws: **melee does most of the damage.**
+- **Energy bars:** the boss's bar on screen during the fight (top centre, his name, drains with her hits, a notch /
+  shake on each stun, phase marks), and **her own state** (a small bar + her forehead energy point dims with each hit,
+  a white flash when hit).
+- **Movement is free:** she is never locked facing the boss; lock-on is an optional toggle (R3 / Tab) for strafing in
+  close combat, shown on the controls hint.
 - **One data table:** `Unity/Assets/Resources/Bosses/boss_tuning.json` (per boss: her hits, open / stagger times, per
   phase: staggers, tempo, gaps, attacks, combos; per attack: telegraph / active / recover / open, damage, knock, reach,
   which answers work). Dan's feedback = a number change there, no code.
@@ -351,7 +380,9 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–15 + QF1–QF17 complete (2026-11-20), release 0.15.2.** QF17 = real boss fights (the "Boss fights" rule
+**Rounds 1–15 + QF1–QF18 complete (2026-11-20), release 0.15.3.** QF18 = show it, don't write it + Dan's Mars review
+(the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
+energy bars, visions, holograms, window views, the two-level star map). QF17 = real boss fights (the "Boss fights" rule
 above: Viper and the Wormmaster rebuilt), the Mars architecture kit, the ramp cut-away rule, the bike-hold rule on every
 start path, the Mars clunk pass. QF16 = the view outside per world, the
 sacred-geometry passage, varied staging aboard, Panther's cat moments. Round 15 = Chapter "Mars — The Divided Kingdoms" (first playable pass). Round 14 = Chapter "Europa — Beneath the Ice" (first playable pass). Round 11 = Chapter 2 "Venus", part 1 (to VEN_S04); Round 12 = part 2 (to VEN_S08 + destinations). Chapter 1 "The Moon Prison" ends with the galley
@@ -599,7 +630,41 @@ scene (Round 10).
   - **Bike hold on every start path**: `BikeHoldWatch` (`BIKE HOLD CHECK (QF17 5) <world>: PASS / FAIL` in every run that
     plays an arrival; `-holdcheck` ends the run once she is on the bike). Mars entered from a save at the landing site
     (Continue, the star map continuing a save, Scene Select "the crossing") plays `Relanding()` (hatch → bike → beam).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.2** (QF17 status in `TODO.md`).
+- **QF18 (release 0.15.3)** — show it, don't write it + Dan's Mars review (status + "For Dan to check (QF18)" in `TODO.md`):
+  - **Standing rules** "Show, don't caption" (top of this file): no descriptive captions, objectives from the story, no
+    filler tasks, characters shown talking have voiced lines, every dialogue shot shows the speaker
+    (`DialogueFraming`, inside `DialoguePlayer.PlayOne`: every chapter; log `DIALOGUE FRAMING (QF18 7)`), done states,
+    readable text over the world (`ChapterUI` soft panels + outlines).
+  - **Ground = `MGround`** (flat-topped terrain) in the Mars builder; `MBlock` (battered masonry) only for structures - a
+    battered ground block opens a groove at every seam. **Build checks on every scene** (`FightDemoBuilderQF18Checks.cs`):
+    `COPLANAR CHECK / FIX (QF18 11)` (any mesh, nudges the smaller of a fighting pair 4 mm), `HOLES CHECK (QF18 13)` (rays
+    down over every zone; Mars fails the build above 0), `NPC PLACEMENT (QF18 6)`; reports in `Docs/Previews/qf18/`.
+    Runtime: `ZFightProbe.Report` for things that move into place.
+  - **Land collision** on every world: `RideProbe.SlideLand` (the bike on land; 7 on foot, `ChapterSeven.FootCollide`),
+    measured `BIKE vs GEOMETRY ON LAND (QF18 10)`, `FEET vs GROUND (QF18 16)` (`FeetProbe`); `-landwalltest` (Mars: the
+    land bike at full speed into and along walls + on foot, ends `LAND WALL TEST (QF18 10)`).
+  - **Mars level**: ramps run out onto landings (`MarsLayout.RampFootZ / RampLanding`), a real channel down the ravine
+    floor, the **drawbridge** (`MarsDrawbridge`: raised + chained by one kingdom, the lock broken with TK), the service gate's
+    cut **power line** (hold RT to join the ends; `PowerLine` = light that visibly runs), the pier walk outside the bank wall,
+    real controls / mechanism / relay / conduit (`FightDemoBuilderMars.cs`), Viper's tech (`MarsPylon`, `MarsSentry`, the
+    loudspeaker horn), the landscape (`FightDemoBuilderMarsLand.cs`: dune sea, mesas, boulders, the Cydonia mesa
+    `MarsLayout.FaceAt`, a pale sun, `MarsDust`). The Mars folk avatars use a true T-pose reference (their A-pose arms).
+  - **Mars story**: named line ids in the spec's tables (`| MAR_06_V1 | Worker | ... |`, `make_mars_lines.py` reads them;
+    `MarsDialogue.Ids(...)`); the worker's route lines (MAR_03_11-15), the volunteer (MAR_06_V*), the power chain
+    (MAR_06_P1), the sentries (MAR_06_D*), the hold (MAR_06_H*), the guard / caretaker (MAR_11_P*); Viper close-ups
+    (`ViperCloseUp`, `OverHerShoulderUp`, `FogThin`, his eye glow).
+  - **Boss loop** (rule above): `BossDef.stunTime / strikeDamage / kickDamage / openStrikeScale / dazedAt`,
+    `PhaseDef.endAt` (energy marks) in `boss_tuning.json`; `BossFight.Energy`, `DAMAGE (QF18)` in the summary; her full
+    chain jab-cross-hook-mma_kick-roundhouse in boss fights; lock-on toggle `ChapterSeven.LockOn` (R3 / Tab);
+    `ChapterUI.BossBar / HerBar`; pylon / device done states + counters.
+  - **Visions**: `VisionTouch.Into / Back` - the one touch -> vision -> return sequence (Moon, Venus, Europa, Mars).
+  - **Aboard**: `HoloDisplay` (navigation hologram from the real level: `Resources/Holo/Holo_<world>`; markers, zoom,
+    MAR_13C's two records), window views from the real level (`Resources/Outside/Outside_<world>`, built by
+    `FightDemoBuilderWorldViews.cs` after every level; `SaucerOutside.LevelView`), the shoulder perch (`PerchCat`).
+  - **Star map** two levels (`StarMap.cs`: our solar system / the Biaveh system / the overview between them, gateways once
+    Biaveh is unlocked); `SaucerLocation.System` ("sol" / "biaveh"; the windows show Biaveh's star while there).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.3** (QF18 status in `TODO.md`).
+**Before: Dan plays 0.15.2** (QF17 status in `TODO.md`).
 **Before: Dan plays 0.15.1** (QF16 status in `TODO.md`).
 **Before: Dan plays 0.15.0** (Round 15 status in `TODO.md`).
 **Before: Dan plays 0.14.3** (QF15 status in `TODO.md`).

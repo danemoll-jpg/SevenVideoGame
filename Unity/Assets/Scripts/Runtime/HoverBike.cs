@@ -231,6 +231,20 @@ namespace Seven
             if (RideProbe.Overlap(c, 0.55f, IgnoreRoots, null, false, out var w)) { InsideFrames++; InsideWorst = $"bike core inside '{w}' at {to}"; Debug.Log("[Seven] BIKE INSIDE GEOMETRY (QF15 2): " + InsideWorst); }
             if (RideProbe.Crosses(from + Vector3.up * 0.6f, c, IgnoreRoots, null, false, out var w2)) { TunnelFrames++; InsideWorst = $"bike crossed '{w2}' from {from} to {to}"; Debug.Log("[Seven] BIKE THROUGH A SURFACE (QF15 2): " + InsideWorst); }
         }
+        /// <summary>QF18 (10): land collision on (every world).</summary>
+        public static bool LandCollide = true;
+        float _landLogT;
+        public int LandSlides;
+        public static int LandFrames, LandInsideFrames, LandCrossFrames; public static string LandWorst;
+        void MeasureLand(Vector3 from, Vector3 to)
+        {
+            if (!CameraOccluders.Ready) return;
+            LandFrames++;
+            if (RideProbe.LandInside(to, 1.1f, 0.45f, IgnoreRoots, out var w)) { LandInsideFrames++; LandWorst = $"bike body inside '{w}' at {to}"; Debug.Log("[Seven] BIKE INSIDE GEOMETRY ON LAND (QF18 10): " + LandWorst); }
+            var a = from + Vector3.up * 1.1f; var b = to + Vector3.up * 1.1f;
+            if ((b - a).sqrMagnitude > 1e-6f && RideProbe.SweepWalls(a, 0.05f, b - a, (b - a).magnitude, IgnoreRoots, out var hh)) { LandCrossFrames++; LandWorst = $"bike crossed '{hh.collider.name}' from {from} to {to}"; }
+        }
+        public static string LandSummary() => $"BIKE vs GEOMETRY ON LAND (QF18 10): {LandFrames} riding frames, body inside a wall / prop {LandInsideFrames}, crossed a surface {LandCrossFrames} (both must be 0){(LandWorst != null ? "; last: " + LandWorst : "")}";
         public static string InsideSummary() => $"BIKE vs GEOMETRY (QF15 2): {SwimFrames} swimming frames, bike core inside geometry {InsideFrames}, centre crossed a surface {TunnelFrames} (both must be 0){(InsideWorst != null ? "; last: " + InsideWorst : "")}";
 
         /// <summary>QF15 (2) wall test: put the bike somewhere under water already moving (full speed, nose pitch).</summary>
@@ -367,11 +381,28 @@ namespace Seven
                 var from = transform.position;
                 var to2 = from + transform.forward * Speed * dt;
                 var p = ClampBike(to2, from);
+                // QF18 (10): real collision on land too - the body swept against walls / props (slides along them), the nose kept
+                // out of them; before, only the zones kept it in, so where two zones met behind a wall it went straight through
+                if (LandCollide && CameraOccluders.Ready)
+                {
+                    p.y = Ground.Height(p.x, p.z);
+                    var q = RideProbe.SlideLand(from, p, 1.1f, 0.55f, IgnoreRoots, out bool hitWall);
+                    if (hitWall && DemoBoot.CaptureDir != null && Time.time > _landLogT && Flat(q - from).magnitude < Flat(p - from).magnitude * 0.3f) { _landLogT = Time.time + 2f; Debug.Log($"[Seven] land collision (QF18 10): the bike held by '{RideProbe.LastLandHit}' at {from}"); }
+                    if (hitWall) { LandSlides++; q.y = p.y; p = ClampBike(q, from); if (Vector3.Dot(Flat(to2 - from).normalized, Flat(p - from).normalized) < 0.5f) Speed *= Mathf.Pow(0.35f, dt); }
+                    for (int k = 0; k < 6; k++)
+                    {
+                        var nose = p + transform.forward * (Length * 0.4f); nose.y = Mathf.Max(p.y, Ground.Height(nose.x, nose.z));
+                        if (!RideProbe.LandInside(nose, 0.9f, 0.32f, IgnoreRoots, out _)) break;
+                        p -= Flat(transform.forward) * 0.18f; Speed *= 0.6f;
+                    }
+                    p = ClampBike(p, from);
+                }
                 float moved = Flat(p - from).magnitude;
                 if (Speed > 1f && moved < Speed * dt * 0.3f) { _stuckFor += dt; Speed *= 0.5f; } else _stuckFor = Mathf.Max(0f, _stuckFor - dt);
                 p.y = Ground.Height(p.x, p.z);
                 transform.position = p;
                 Odometer += moved;
+                if (DemoBoot.CaptureDir != null) MeasureLand(from, p);
                 _lean = Mathf.Lerp(_lean, -steer * Mathf.Clamp01(Speed / 6f) * 14f, dt * 4f);
                 if (ZoneTest(p, 1.6f) && Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = p; }
                 if (Time.time > _saveT && SavesToVenus) { _saveT = Time.time + 3f; VenusState.SaveBike(transform.position, transform.eulerAngles.y, true); }

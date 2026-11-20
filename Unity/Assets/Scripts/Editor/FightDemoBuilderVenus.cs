@@ -209,9 +209,34 @@ namespace Seven.EditorTools
             ("LeftUpLeg", "LeftUpperLeg"), ("LeftLeg", "LeftLowerLeg"), ("LeftFoot", "LeftFoot"), ("LeftToeBase", "LeftToes"),
             ("RightUpLeg", "RightUpperLeg"), ("RightLeg", "RightLowerLeg"), ("RightFoot", "RightFoot"), ("RightToeBase", "RightToes"),
         };
-        static void ApplyMixamoHumanMap(ModelImporter imp, string path)
+        static void ApplyMixamoHumanMap(ModelImporter imp, string path) => ApplyMixamoHumanMap(imp, path, false);
+        /// <summary>tpose (QF18 6): the avatar's reference pose = a true T-pose (arms horizontal). Dan's Reptilian / Viper
+        /// bodies came out of Mixamo in the Tripo A-pose; Unity took that rest pose as the T-pose reference, so every clip
+        /// retargeted onto them raised the arms by the A / T difference (the "arms held out stiffly" look). Enforced on the
+        /// body and on every clip source used for it, so all references agree.</summary>
+        static void ApplyMixamoHumanMap(ModelImporter imp, string path, bool tpose)
         {
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
+            GameObject tmp = null;
+            if (tpose)
+            {
+                tmp = Object.Instantiate(model); tmp.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity); tmp.transform.localScale = Vector3.one;
+                var tt = tmp.GetComponentsInChildren<Transform>(true);
+                Transform Bn(string mix) => tt.FirstOrDefault(t => t.name == "mixamorig:" + mix || t.name == "mixamorig_" + mix || t.name.EndsWith(":" + mix));
+                var hipsT = Bn("Hips"); float fixedDeg = 0f;
+                foreach (var side in new[] { "Left", "Right" })
+                    foreach (var (b, c) in new[] { (side + "Arm", side + "ForeArm"), (side + "ForeArm", side + "Hand") })
+                    {
+                        var bt = Bn(b); var ct = Bn(c); if (bt == null || ct == null || hipsT == null) continue;
+                        var cur = (ct.position - bt.position).normalized;
+                        float sx = Mathf.Sign(bt.position.x - hipsT.position.x); if (sx == 0f) sx = side == "Left" ? 1f : -1f;
+                        var want = new Vector3(sx, 0f, 0f);
+                        fixedDeg = Mathf.Max(fixedDeg, Vector3.Angle(cur, want));
+                        bt.rotation = Quaternion.FromToRotation(cur, want) * bt.rotation;
+                    }
+                Log($"{path}: T-pose reference enforced (arms were up to {fixedDeg:0} deg off horizontal)");
+                model = tmp;
+            }
             var all = model.GetComponentsInChildren<Transform>(true);
             string Find(string mix) => all.FirstOrDefault(t => t.name == "mixamorig:" + mix || t.name == "mixamorig_" + mix || t.name == mix || t.name.EndsWith(":" + mix))?.name;
             var hd = imp.humanDescription;
@@ -223,12 +248,14 @@ namespace Seven.EditorTools
                 human.Add(new HumanBone { boneName = n, humanName = unityName, limit = new HumanLimit { useDefaultValues = true } });
             }
             hd.human = human.ToArray();
-            hd.skeleton = all.Select(t => new SkeletonBone { name = t.name, position = t.localPosition, rotation = t.localRotation, scale = t.localScale }).ToArray();
+            hd.skeleton = all.Select(t => new SkeletonBone { name = t == model.transform ? AssetDatabase.LoadAssetAtPath<GameObject>(path).name : t.name, position = t.localPosition, rotation = t.localRotation, scale = t.localScale }).ToArray();
             hd.hasTranslationDoF = false;
+            string firstBone = all.Skip(1).FirstOrDefault()?.name;
+            if (tmp != null) Object.DestroyImmediate(tmp);
             imp.humanDescription = hd;
             imp.SaveAndReimport();
             var av = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
-            Log($"{path}: explicit Mixamo human map {human.Count} bones -> avatar human={av?.isHuman} valid={av?.isValid} (first bone name '{all.Skip(1).FirstOrDefault()?.name}')");
+            Log($"{path}: explicit Mixamo human map {human.Count} bones -> avatar human={av?.isHuman} valid={av?.isValid} (first bone name '{firstBone}')");
         }
 
         static GameObject BuildAtmosphereVenus(GameObject atmoPrefab)
@@ -723,6 +750,7 @@ namespace Seven.EditorTools
             AddProbe(new Vector3(0f, 3f, 20f), new Vector3(60f, 20f, 60f), Vector3.zero);
             AddProbe(new Vector3(30f, 5f, 250f), new Vector3(30f, 16f, 50f), Vector3.zero);
             ZFightFix("Venus");
+            QF18SceneChecks("Venus", false);   // QF18 (11, 13): report
             EditorSceneManager.SaveScene(scene, VenusScenePath);
             Log("scene saved " + VenusScenePath);
         }

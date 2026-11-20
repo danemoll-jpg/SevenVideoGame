@@ -277,6 +277,56 @@
    "voice": "Cat"
   },
   {
+   "id": "MAR_03_11",
+   "scene": "MAR_03",
+   "speaker": "worker",
+   "label": "Worker",
+   "text": "There's an old maintenance route under the crossing. The builders used it.",
+   "direction": "quietly",
+   "action": "quietly, with a glance at the guard",
+   "voice": "worker"
+  },
+  {
+   "id": "MAR_03_12",
+   "scene": "MAR_03",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Can the transport get through?",
+   "direction": "",
+   "action": "",
+   "voice": "Seven"
+  },
+  {
+   "id": "MAR_03_13",
+   "scene": "MAR_03",
+   "speaker": "worker",
+   "label": "Worker",
+   "text": "Not anymore. The service gate's been dead for years.",
+   "direction": "",
+   "action": "",
+   "voice": "worker"
+  },
+  {
+   "id": "MAR_03_14",
+   "scene": "MAR_03",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Then I'll take a look.",
+   "direction": "",
+   "action": "",
+   "voice": "Seven"
+  },
+  {
+   "id": "MAR_03_15",
+   "scene": "MAR_03",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "I see it from here. A ramp cut into the bank, east of you.",
+   "direction": "",
+   "action": "telepathic",
+   "voice": "Cat"
+  },
+  {
    "id": "MAR_04_01",
    "scene": "MAR_04",
    "speaker": "caretaker",
@@ -403,57 +453,193 @@
    "voice": "caretaker"
   },
   {
-   "id": "MAR_06_01",
-   "scene": "MAR_06",
-   "speaker": "cat",
-   "label": "Panther",
-   "text": "The far control is ready.",
-   "direction": "",
-   "voice": "Cat"
-  },
-  {
-   "id": "MAR_06_02",
+   "id": "MAR_06_V1",
    "scene": "MAR_06",
    "speaker": "seven",
    "label": "7",
-   "text": "Tell them to hold.",
+   "text": "The service route's open. The caretaker on the far bank will work the other control.",
    "direction": "",
+   "action": "",
    "voice": "Seven"
   },
   {
-   "id": "MAR_06_03",
+   "id": "MAR_06_V2",
+   "scene": "MAR_06",
+   "speaker": "worker",
+   "label": "Worker",
+   "text": "The caretaker? From over there?",
+   "direction": "surprised",
+   "action": "surprised",
+   "voice": "worker"
+  },
+  {
+   "id": "MAR_06_V3",
+   "scene": "MAR_06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "They're waiting for someone on this side.",
+   "direction": "",
+   "action": "",
+   "voice": "Seven"
+  },
+  {
+   "id": "MAR_06_V4",
+   "scene": "MAR_06",
+   "speaker": "worker",
+   "label": "Worker",
+   "text": "Then I'll go. Someone should.",
+   "direction": "",
+   "action": "a beat; a glance at the guard first",
+   "voice": "worker"
+  },
+  {
+   "id": "MAR_06_V5",
+   "scene": "MAR_06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Thank you.",
+   "direction": "warmly",
+   "action": "warmly",
+   "voice": "Seven"
+  },
+  {
+   "id": "MAR_06_V6",
    "scene": "MAR_06",
    "speaker": "cat",
    "label": "Panther",
-   "text": "They are holding.",
-   "direction": "",
+   "text": "Two volunteers. Practically a treaty.",
+   "direction": "dry",
+   "action": "telepathic, dry",
    "voice": "Cat"
   },
   {
-   "id": "MAR_06_04",
+   "id": "MAR_06_P1",
+   "scene": "MAR_06",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "The power stops under the bridge. Something down there's knocked loose.",
+   "direction": "",
+   "action": "telepathic",
+   "voice": "Cat"
+  },
+  {
+   "id": "MAR_06_D1",
+   "scene": "MAR_06",
+   "speaker": "viper",
+   "label": "Viper",
+   "text": "You've been busy. Let's see how you manage several things at once.",
+   "direction": "cold, amused",
+   "action": "over a loudspeaker; cold, amused",
+   "voice": "Viper"
+  },
+  {
+   "id": "MAR_06_D2",
+   "scene": "MAR_06",
+   "speaker": "worker",
+   "label": "Worker",
+   "text": "Those are his sentries — they'll wreck the control!",
+   "direction": "alarmed",
+   "action": "alarmed, pointing",
+   "voice": "worker"
+  },
+  {
+   "id": "MAR_06_D3",
+   "scene": "MAR_06",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "Three of them. All heading for the worker.",
+   "direction": "quick",
+   "action": "telepathic, quick",
+   "voice": "Cat"
+  },
+  {
+   "id": "MAR_06_D4",
+   "scene": "MAR_06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "Not if I can help it.",
+   "direction": "",
+   "action": "",
+   "voice": "Seven"
+  },
+  {
+   "id": "MAR_06_D5",
+   "scene": "MAR_06",
+   "speaker": "viper",
+   "label": "Viper",
+   "text": "Every bridge has a weak point.",
+   "direction": "",
+   "action": "mid-fight taunt, over the loudspeaker",
+   "voice": "Viper"
+  },
+  {
+   "id": "MAR_06_D6",
+   "scene": "MAR_06",
+   "speaker": "viper",
+   "label": "Viper",
+   "text": "Enjoy it. Bridges fall.",
+   "direction": "",
+   "action": "after the last sentry goes down",
+   "voice": "Viper"
+  },
+  {
+   "id": "MAR_06_H1",
+   "scene": "MAR_06",
+   "speaker": "cat",
+   "label": "Panther",
+   "text": "The caretaker's at the far control. They've raised a lamp — they're ready.",
+   "direction": "",
+   "action": "telepathic; cut to the far bank: the caretaker at their control raising a lamp",
+   "voice": "Cat"
+  },
+  {
+   "id": "MAR_06_H2",
+   "scene": "MAR_06",
+   "speaker": "seven",
+   "label": "7",
+   "text": "The other side is ready. Hold until I say.",
+   "direction": "",
+   "action": "to the worker beside her",
+   "voice": "Seven"
+  },
+  {
+   "id": "MAR_06_H3",
+   "scene": "MAR_06",
+   "speaker": "worker",
+   "label": "Worker",
+   "text": "Holding.",
+   "direction": "",
+   "action": "hands on the wheel",
+   "voice": "worker"
+  },
+  {
+   "id": "MAR_06_H4",
    "scene": "MAR_06",
    "speaker": "seven",
    "label": "7",
    "text": "Not that one!",
    "direction": "a startled breath",
+   "action": "a startled breath",
    "voice": "Seven"
   },
   {
-   "id": "MAR_06_05",
+   "id": "MAR_06_H5",
    "scene": "MAR_06",
    "speaker": "cat",
    "label": "Panther",
    "text": "Specificity. Always helpful.",
-   "direction": "",
+   "direction": "dry",
+   "action": "dry",
    "voice": "Cat"
   },
   {
-   "id": "MAR_06_06",
+   "id": "MAR_06_H6",
    "scene": "MAR_06",
    "speaker": "seven",
    "label": "7",
-   "text": "Now.",
-   "direction": "a short, relieved laugh",
+   "text": "Now!",
+   "direction": "relieved laugh",
+   "action": "a short, relieved laugh",
    "voice": "Seven"
   },
   {
@@ -662,6 +848,36 @@
    "text": "We’ll look at it together.",
    "direction": "",
    "voice": "Seven"
+  },
+  {
+   "id": "MAR_11_P1",
+   "scene": "MAR_11",
+   "speaker": "guard",
+   "label": "Guard",
+   "text": "The next load comes at dusk.",
+   "direction": "stiff, formal",
+   "action": "stiff, formal",
+   "voice": "guard"
+  },
+  {
+   "id": "MAR_11_P2",
+   "scene": "MAR_11",
+   "speaker": "caretaker",
+   "label": "Caretaker",
+   "text": "We'll have the gate open.",
+   "direction": "calm",
+   "action": "calm",
+   "voice": "caretaker"
+  },
+  {
+   "id": "MAR_11_P3",
+   "scene": "MAR_11",
+   "speaker": "guard",
+   "label": "Guard",
+   "text": "…Good.",
+   "direction": "",
+   "action": "after a pause",
+   "voice": "guard"
   },
   {
    "id": "MAR_11_01",

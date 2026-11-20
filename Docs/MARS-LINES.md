@@ -37,6 +37,11 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 | `MAR_03_08` | Panther | Charming. | privately |
 | `MAR_03_09` | 7 | He noticed the records. |  |
 | `MAR_03_10` | Panther | I noticed him noticing. |  |
+| `MAR_03_11` | Worker | There's an old maintenance route under the crossing. The builders used it. | quietly |
+| `MAR_03_12` | 7 | Can the transport get through? |  |
+| `MAR_03_13` | Worker | Not anymore. The service gate's been dead for years. |  |
+| `MAR_03_14` | 7 | Then I'll take a look. |  |
+| `MAR_03_15` | Panther | I see it from here. A ramp cut into the bank, east of you. |  |
 
 ## MAR_04 — Both sides of the ravine
 
@@ -66,12 +71,25 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 
 | id | speaker | line | direction |
 |---|---|---|---|
-| `MAR_06_01` | Panther | The far control is ready. |  |
-| `MAR_06_02` | 7 | Tell them to hold. |  |
-| `MAR_06_03` | Panther | They are holding. |  |
-| `MAR_06_04` | 7 | Not that one! | a startled breath |
-| `MAR_06_05` | Panther | Specificity. Always helpful. |  |
-| `MAR_06_06` | 7 | Now. | a short, relieved laugh |
+| `MAR_06_V1` | 7 | The service route's open. The caretaker on the far bank will work the other control. |  |
+| `MAR_06_V2` | Worker | The caretaker? From over there? | surprised |
+| `MAR_06_V3` | 7 | They're waiting for someone on this side. |  |
+| `MAR_06_V4` | Worker | Then I'll go. Someone should. |  |
+| `MAR_06_V5` | 7 | Thank you. | warmly |
+| `MAR_06_V6` | Panther | Two volunteers. Practically a treaty. | dry |
+| `MAR_06_P1` | Panther | The power stops under the bridge. Something down there's knocked loose. |  |
+| `MAR_06_D1` | Viper | You've been busy. Let's see how you manage several things at once. | cold, amused |
+| `MAR_06_D2` | Worker | Those are his sentries — they'll wreck the control! | alarmed |
+| `MAR_06_D3` | Panther | Three of them. All heading for the worker. | quick |
+| `MAR_06_D4` | 7 | Not if I can help it. |  |
+| `MAR_06_D5` | Viper | Every bridge has a weak point. |  |
+| `MAR_06_D6` | Viper | Enjoy it. Bridges fall. |  |
+| `MAR_06_H1` | Panther | The caretaker's at the far control. They've raised a lamp — they're ready. |  |
+| `MAR_06_H2` | 7 | The other side is ready. Hold until I say. |  |
+| `MAR_06_H3` | Worker | Holding. |  |
+| `MAR_06_H4` | 7 | Not that one! | a startled breath |
+| `MAR_06_H5` | Panther | Specificity. Always helpful. | dry |
+| `MAR_06_H6` | 7 | Now! | relieved laugh |
 
 ## MAR_07 — Viper’s intervention
 
@@ -120,6 +138,9 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 
 | id | speaker | line | direction |
 |---|---|---|---|
+| `MAR_11_P1` | Guard | The next load comes at dusk. | stiff, formal |
+| `MAR_11_P2` | Caretaker | We'll have the gate open. | calm |
+| `MAR_11_P3` | Guard | …Good. |  |
 | `MAR_11_01` | Panther | Did you settle their differences? |  |
 | `MAR_11_02` | 7 | No. |  |
 | `MAR_11_03` | 7 | Got them talking. |  |

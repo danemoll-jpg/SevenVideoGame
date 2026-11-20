@@ -21,11 +21,16 @@ namespace Seven
         public static void Set(string world)
         {
             if (string.IsNullOrEmpty(world) || world == "space") return;
+            if (world == "moon" || world == "venus" || world == "europa" || world == "mars") { try { PlayerPrefs.SetString(SysKey, "sol"); } catch { } }
             try { PlayerPrefs.SetString(Key, world); PlayerPrefs.Save(); } catch { }
             Debug.Log("[Seven] the saucer is at: " + world);
             Changed?.Invoke();
         }
         public static bool Travelling { get => _travelling; set { if (_travelling == value) return; _travelling = value; Changed?.Invoke(); } }
+        /// <summary>QF18 (22): which star system the saucer is in ("sol" / "biaveh") - the star map opens on it, the windows
+        /// show its open space. Biaveh's system after the long jump (TRV_AST happens there).</summary>
+        static string SysKey => DemoBoot.CaptureDir != null ? "seven_test_ship_sys" : "seven_ship_sys";
+        public static string System { get { try { return PlayerPrefs.GetString(SysKey, "sol"); } catch { return "sol"; } } set { try { PlayerPrefs.SetString(SysKey, value); PlayerPrefs.Save(); } catch { } Debug.Log("[Seven] the saucer is in the star system: " + value); Changed?.Invoke(); } }
     }
 
     /// <summary>
@@ -51,7 +56,7 @@ namespace Seven
             { "moon",   new Haze { valleyD = 0.0f, noise = 0.1f, fogStart = 40f, groundD = 0.003f, groundBase = -200f, groundFall = 6f, groundRange = 300f, distD = 0.0003f, hazeH = 80f, maxFog = 0.4f, near = 0.12f, far = 0.35f, brightDist = 500f, zenith = 0.05f, glow = 0.25f } },
             { "venus",  new Haze { valleyD = 0.0012f, noise = 0.35f, fogStart = 30f, groundD = 0.006f, groundBase = -200f, groundFall = 25f, groundRange = 500f, distD = 0.0009f, hazeH = 150f, maxFog = 0.55f, near = 0.45f, far = 0.75f, brightDist = 600f, zenith = 0.85f, glow = 0.35f } },
             { "europa", new Haze { valleyD = 0.0007f, noise = 0.25f, fogStart = 40f, groundD = 0.004f, groundBase = -200f, groundFall = 12f, groundRange = 400f, distD = 0.0006f, hazeH = 120f, maxFog = 0.5f, near = 0.3f, far = 0.6f, brightDist = 700f, zenith = 0.2f, glow = 0.3f } },
-            { "mars",   new Haze { valleyD = 0.001f, noise = 0.3f, fogStart = 30f, groundD = 0.005f, groundBase = -200f, groundFall = 20f, groundRange = 500f, distD = 0.0008f, hazeH = 150f, maxFog = 0.55f, near = 0.35f, far = 0.65f, brightDist = 600f, zenith = 0.6f, glow = 0.35f } },
+            { "mars",   new Haze { valleyD = 0.0005f, noise = 0.3f, fogStart = 60f, groundD = 0.0025f, groundBase = -230f, groundFall = 20f, groundRange = 500f, distD = 0.00045f, hazeH = 150f, maxFog = 0.45f, near = 0.35f, far = 0.65f, brightDist = 600f, zenith = 0.6f, glow = 0.35f } },
             { "space",  new Haze { valleyD = 0.0f, noise = 0.0f, fogStart = 200f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0002f, hazeH = 10f, maxFog = 0.15f, near = 0.02f, far = 0.04f, brightDist = 900f, zenith = 0.02f, glow = 0.2f } },
         };
         Haze _saved; bool _savedSet;
@@ -89,12 +94,69 @@ namespace Seven
             if (DiscVenus != null) DiscVenus.SetActive(w == "venus");
             if (DiscEuropa != null) DiscEuropa.SetActive(w == "europa");
             if (DiscMars != null) DiscMars.SetActive(w == "mars");
+            ShowLevel(w);                                                   // QF18 (3): the real level under the ship
+            ShowBiavehSpace(w == "space" && SaucerLocation.System == StarMap.Bia);   // QF18 (22)
             if (Atmo != null)
             {
                 if (!_savedSet) { _saved = Read(Atmo); _savedSet = true; }
                 var h = City != null && City.activeSelf ? _saved : Looks.TryGetValue(w, out var hh) ? hh : _saved;
                 Write(Atmo, h);
             }
+        }
+        // ---- QF18 (3): the window looks out over the ACTUAL level (Resources/Outside/Outside_<world>, the level's own meshes and
+        // materials copied at build time) - QF16's procedural ground showed Mars as one ravine outline in fog. Per world: the
+        // point of the level under the ship (S), what the window faces (aim) and how high the ship hovers (H).
+        static readonly Dictionary<string, (Vector3 S, Vector3 aim, float H)> LevelView = new Dictionary<string, (Vector3, Vector3, float)>
+        {
+            { "mars", (new Vector3(-170f, 0f, -330f), new Vector3(-70f, 0f, 260f), 230f) },     // over the plain south of the settlement: the ravine, the crossing, the temple, both cities, the Face
+            { "venus", (new Vector3(0f, 0f, -70f), new Vector3(0f, 0f, 200f), 150f) },
+            { "europa", (new Vector3(0f, 0f, -90f), new Vector3(-30f, 0f, 160f), 140f) },
+        };
+        GameObject _levelGo; string _levelW;
+        public bool LevelShown => _levelGo != null && _levelGo.activeSelf;
+        void ShowLevel(string w)
+        {
+            if (_levelGo != null && _levelW != w) { Destroy(_levelGo); _levelGo = null; }
+            bool has = LevelView.ContainsKey(w);
+            if (has && _levelGo == null)
+            {
+                var pf = Resources.Load<GameObject>("Outside/Outside_" + w);
+                if (pf != null)
+                {
+                    _levelGo = Instantiate(pf); _levelW = w;
+                    var v = LevelView[w]; var d = v.aim - v.S; d.y = 0f;
+                    var R = Quaternion.Euler(0f, -Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg, 0f);
+                    _levelGo.transform.SetPositionAndRotation(new Vector3(0f, -v.H, 0f) - R * v.S, R);
+                    Debug.Log($"[Seven] window view (QF18 3): the real {w} level under the ship ({_levelGo.transform.childCount} pieces), {v.H:0} m up over {v.S}, facing {v.aim}");
+                }
+            }
+            if (_levelGo != null) _levelGo.SetActive(has);
+            // the world group keeps its sky (Earth, Jupiter, the cloud ceiling); its procedural ground gives way to the level
+            var grp = w == "mars" ? Mars : w == "venus" ? Venus : w == "europa" ? Europa : null;
+            if (grp != null && _levelGo != null)
+                foreach (Transform c in grp.transform)
+                {
+                    string n = c.name;
+                    bool ground = n.Contains("Plain") || n.Contains("Hills") || n.EndsWith("Ice") || n.Contains("Ground") || n.Contains("City") || n.Contains("Wall") || n.Contains("Tree") || n.Contains("Ravine") || n.Contains("Ridge") || n.Contains("Crack");
+                    if (ground) c.gameObject.SetActive(false);
+                }
+        }
+        // ---- QF18 (22): open space in Biaveh's system - its star large and bright, Biaveh itself a dark disc
+        GameObject _bia;
+        void ShowBiavehSpace(bool on)
+        {
+            if (on && _bia == null)
+            {
+                _bia = new GameObject("Outside_SpaceBiaveh");
+                var star = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(star.GetComponent<Collider>()); star.transform.SetParent(_bia.transform, false);
+                star.transform.position = new Vector3(700f, 260f, 2300f); star.transform.localScale = Vector3.one * 140f; star.GetComponent<Renderer>().sharedMaterial = Markers.Additive(3f);
+                var halo = GameObject.CreatePrimitive(PrimitiveType.Quad); Destroy(halo.GetComponent<Collider>()); halo.transform.SetParent(_bia.transform, false);
+                halo.transform.position = star.transform.position; halo.transform.localScale = Vector3.one * 1300f; halo.GetComponent<Renderer>().sharedMaterial = Markers.Additive(0.35f); halo.AddComponent<FaceCamera>();
+                var planet = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(planet.GetComponent<Collider>()); planet.transform.SetParent(_bia.transform, false);
+                planet.transform.position = new Vector3(-420f, -60f, 1500f); planet.transform.localScale = Vector3.one * 260f; planet.GetComponent<Renderer>().sharedMaterial = Markers.DarkGloss();
+                Debug.Log("[Seven] window view (QF18 22): open space in the Biaveh system - its star, Biaveh");
+            }
+            if (_bia != null) _bia.SetActive(on);
         }
         static Haze Read(Atmosphere a) => new Haze { valleyD = a.ValleyDensity, noise = a.NoiseStrength, fogStart = a.FogStart, groundD = a.GroundDensity, groundBase = a.GroundBase, groundFall = a.GroundFalloff, groundRange = a.GroundRange, distD = a.DistanceDensity, hazeH = a.HazeHeight, maxFog = a.MaxFog, near = a.NearBrightness, far = a.FarBrightness, brightDist = a.BrightnessDistance, zenith = a.ZenithBrightness, glow = a.GlowIntensity };
         static void Write(Atmosphere a, Haze h)

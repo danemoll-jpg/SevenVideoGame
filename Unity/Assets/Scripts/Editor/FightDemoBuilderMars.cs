@@ -69,7 +69,7 @@ namespace Seven.EditorTools
             var imp = (ModelImporter)AssetImporter.GetAtPath(path);
             imp.animationType = ModelImporterAnimationType.Human; imp.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             imp.importAnimation = false; imp.materialImportMode = ModelImporterMaterialImportMode.None; imp.isReadable = true; imp.SaveAndReimport();
-            ApplyMixamoHumanMap(imp, path);
+            ApplyMixamoHumanMap(imp, path, true);   // QF18 (6): a true T-pose reference (the A-pose arms)
             var avatar = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
             Log($"{path}: {kind} avatar human={avatar?.isHuman} valid={avatar?.isValid}");
             if (avatar == null || !avatar.isHuman) return null;
@@ -110,7 +110,7 @@ namespace Seven.EditorTools
                 var ci = (ModelImporter)AssetImporter.GetAtPath(dst);
                 ci.animationType = ModelImporterAnimationType.Human; ci.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
                 ci.materialImportMode = ModelImporterMaterialImportMode.None; ci.importAnimation = true; ci.SaveAndReimport();
-                ApplyMixamoHumanMap(ci, dst);
+                ApplyMixamoHumanMap(ci, dst, true);
                 var cl = ci.defaultClipAnimations;
                 // in place: the walk's forward travel is not applied (MarsFolk moves them and matches the playback)
                 foreach (var c in cl) { c.name = state; c.loopTime = loop; c.lockRootRotation = true; c.lockRootHeightY = true; c.lockRootPositionXZ = true; c.keepOriginalOrientation = true; c.keepOriginalPositionY = true; c.keepOriginalPositionXZ = true; }
@@ -181,32 +181,68 @@ namespace Seven.EditorTools
             // ---------------------------------------------------------------- the plain, the ravine, the trenches for the ramps
             var land = new GameObject("Land").transform; land.SetParent(world, false);
             float fy = M.FloorY;
-            MBlock("PlainW_A", new Vector3(-900f, fy - 2f, -700f), new Vector3(-60f, 0f, 700f), m.sand, land, false);
-            MBlock("PlainW_B", new Vector3(-60f, fy - 2f, -700f), new Vector3(-50f, 0f, -62f), m.sand, land, false);
-            MBlock("PlainW_C", new Vector3(-60f, fy - 2f, -11f), new Vector3(-50f, 0f, 700f), m.sand, land, false);
-            MBlock("PlainE_A", new Vector3(60f, fy - 2f, -700f), new Vector3(900f, 0f, 700f), m.sand, land, false);
-            MBlock("PlainE_B", new Vector3(50f, fy - 2f, -700f), new Vector3(60f, 0f, -62f), m.sand, land, false);
-            MBlock("PlainE_C", new Vector3(50f, fy - 2f, -12.6f), new Vector3(60f, 0f, 700f), m.sand, land, false);
-            MBlock("RavineFloor", new Vector3(-50f, fy - 2f, -700f), new Vector3(50f, fy, 700f), m.rock, land, false);
-            // the ramps cut into the banks (a slope surface from the floor up to the bank top)
+            // QF18 (13): ground pieces are flat-topped terrain (MGround) - they meet edge to edge, no grooves
+            MGround("PlainW_A", new Vector3(-900f, fy - 5f, -700f), new Vector3(-60f, 0f, 700f), m.sand, land);
+            MGround("PlainW_B", new Vector3(-60f, fy - 5f, -700f), new Vector3(-50f, 0f, M.RampFootZ - M.RampLanding), m.sand, land);
+            MGround("PlainW_C", new Vector3(-60f, fy - 5f, -11f), new Vector3(-50f, 0f, 700f), m.sand, land);
+            MGround("PlainE_A", new Vector3(60f, fy - 5f, -700f), new Vector3(900f, 0f, 700f), m.sand, land);
+            MGround("PlainE_B", new Vector3(50f, fy - 5f, -700f), new Vector3(60f, 0f, M.RampFootZ - M.RampLanding), m.sand, land);
+            MGround("PlainE_C", new Vector3(50f, fy - 5f, -12.6f), new Vector3(60f, 0f, 700f), m.sand, land);
+            // QF18 (11): the ravine floor with a real channel down its middle (before it was a dark strip 2 cm high, so the
+            // "broken causeway" had no gap to cross): floor W / E, the channel bed 4 m down from z -300 to 110, closed ends
+            MGround("RavineFloorW", new Vector3(-50f, fy - 5f, -700f), new Vector3(-7f, fy, 700f), m.rock, land);
+            MGround("RavineFloorE", new Vector3(7f, fy - 5f, -700f), new Vector3(50f, fy, 700f), m.rock, land);
+            MGround("RavineFloorS", new Vector3(-7f, fy - 5f, -700f), new Vector3(7f, fy, M.ChannelZ0), m.rock, land);
+            MGround("RavineFloorN", new Vector3(-7f, fy - 5f, M.ChannelZ1), new Vector3(7f, fy, 700f), m.rock, land);
+            MGround("ChannelBed", new Vector3(-7f, fy - 5f, M.ChannelZ0), new Vector3(7f, fy - M.ChannelDepth, M.ChannelZ1), m.rockDark, land);
+            // QF18 (10, 12a): the ramps - a solid wedge cut into the bank (top surface, the ravine-side face down to the floor),
+            // meeting the bank top flush at the top and running out onto a flat landing at the foot that opens east onto the
+            // ravine floor (before: it ended head-on in the bank's 22 m end wall, the only way on was a 0.6 m corner of zone
+            // overlap behind the wall, so the bike went through it). A parapet only where the drop is over a metre.
             {
-                var v = new List<Vector3>(); var t = new List<int>();
-                foreach (var (x0, x1, z0, z1) in new[] { (-60f, -50f, -62f, -11f), (50f, 60f, -62f, -12.6f) })
+                var v = new List<Vector3>(); var t = new List<int>(); var pv = new List<Vector3>(); var pt = new List<int>();
+                foreach (var (x0, x1, zTop) in new[] { (-60f, -50f, -11f), (50f, 60f, -12.6f) })
                 {
-                    Quad(v, t, new Vector3(x0, fy, z0), new Vector3(x0, 0f, z1), new Vector3(x1, 0f, z1), new Vector3(x1, fy, z0));
-                    // a low parapet on the ravine side
-                    float xp = x0 < 0 ? x1 - 0.3f : x0 + 0.3f;
-                    Quad(v, t, new Vector3(xp, fy + 0.8f, z0), new Vector3(xp, 0.8f, z1), new Vector3(xp, 0f, z1), new Vector3(xp, fy, z0));
+                    float zF = M.RampFootZ;
+                    Quad(v, t, new Vector3(x0, fy, zF), new Vector3(x0, 0f, zTop), new Vector3(x1, 0f, zTop), new Vector3(x1, fy, zF));
+                    float xr = x0 < 0 ? x1 : x0;                                   // the ravine-side face of the wedge
+                    Quad(v, t, new Vector3(xr, fy, zF), new Vector3(xr, fy, zTop), new Vector3(xr, 0f, zTop), new Vector3(xr, fy, zF));
+                    // the landing at the foot (the floor level, open to the east / west onto the ravine floor)
+                    MGround(x0 < 0 ? "RampLandingW" : "RampLandingE", new Vector3(x0, fy - 5f, zF - M.RampLanding), new Vector3(x1, fy, zF), m.rock, land);
+                    // the wedge's fill under the slope (so the ravine never sees under the ramp)
+                    MGround(x0 < 0 ? "RampFillW" : "RampFillE", new Vector3(x0, fy - 5f, zF), new Vector3(x1, fy, zTop), m.rock, land);
+                    // a low parapet on the ravine side, from the top down to where the drop is about a metre
+                    float xp = x0 < 0 ? x1 - 0.35f : x0 + 0.35f, zP = zF + (zTop - zF) * (1.2f / -fy);
+                    float yAt(float z) => Mathf.Lerp(fy, 0f, (z - zF) / (zTop - zF));
+                    for (float z = zTop; z > zP + 0.01f; z -= 3f)
+                    {
+                        float zb = Mathf.Max(zP, z - 3f);
+                        var a = new Vector3(xp, yAt(z), z); var b = new Vector3(xp, yAt(zb), zb);
+                        MBox(pv, pt, (a + b) * 0.5f + Vector3.up * 0.45f, new Vector3(0.45f, 0.9f + Mathf.Abs(a.y - b.y), Mathf.Abs(z - zb) - 0.08f), 0f, 0.02f);
+                    }
                 }
                 MeshObject("MaintRamps", SaveMesh(Finish(v, t), "Mars_MaintRamps"), m.rock, land);
+                MeshObject("MaintRampParapets", SaveMesh(Finish(pv, pt), "Mars_MaintRampParapets"), m.wall, land);
             }
-            // the ravine's walls: rough rock faces (buttresses, ledges) over the block sides
+            // QF18 (9): the route's entrance - an old half-buried gateway over the top of the west ramp (the shot after the
+            // worker tells her about it shows this), worn steps beside it
+            {
+                var kg = new Kit();
+                Gateway(kg.sv, kg.st, new Vector3(-55f, -1.1f, -12.4f), 9.4f, 5.4f, 1.6f, 0f);
+                kg.Save("MaintGateway", land, m.wall, m.rockDark, m.stone, m.glow, m.cloth);
+            }
+            // the ravine's walls: rough rock faces (buttresses, ledges) over the block sides - kept clear of the ramps, their
+            // landings and (west) the pier walk under the old bridge
             {
                 var v = new List<Vector3>(); var t = new List<int>();
                 for (int i = 0; i < 70; i++)
                 {
-                    float z = -300f + i * 9f + (float)rnd.NextDouble() * 4f; if (z > -66f && z < -8f) continue;
-                    foreach (var sx in new[] { -1f, 1f }) Lump(v, t, new Vector3(sx * (M.RavineX - 1.5f), fy + 6f + (float)rnd.NextDouble() * 8f, z), new Vector3(3f, 9f + (float)rnd.NextDouble() * 6f, 4.5f), 0.5f, rnd.Next(1000));
+                    float z = -300f + i * 9f + (float)rnd.NextDouble() * 4f; if (z > M.RampFootZ - M.RampLanding - 6f && z < -6f) continue;
+                    foreach (var sx in new[] { -1f, 1f })
+                    {
+                        if (z > 134f && z < 184f) continue;                              // the span heads, the pier walk
+                        Lump(v, t, new Vector3(sx * (M.RavineX + 0.6f), fy + 6f + (float)rnd.NextDouble() * 8f, z), new Vector3(2.4f, 9f + (float)rnd.NextDouble() * 6f, 4.5f), 0.5f, rnd.Next(1000));
+                    }
                 }
                 MeshObject("RavineWallRock", SaveMesh(SmoothFinish(v, t), "Mars_RavineRock"), m.rockDark, land);
             }
@@ -216,7 +252,7 @@ namespace Seven.EditorTools
                 foreach (var (x, z, len, yaw) in new[] { (-300f, -160f, 320f, 12f), (-260f, 180f, 280f, -18f), (300f, -150f, 320f, -10f), (280f, 190f, 300f, 22f), (-420f, 60f, 260f, 80f), (420f, -40f, 240f, 95f), (-150f, 320f, 200f, 5f), (160f, -320f, 220f, -6f) })
                     MBox(v, t, new Vector3(x, 2.5f, z), new Vector3(len, 5f, 2.2f), yaw);
                 foreach (var (x, z, len, yaw) in new[] { (-330f, -60f, 240f, 70f), (340f, 70f, 260f, 110f), (-220f, 260f, 200f, 30f), (230f, -250f, 200f, -40f) })
-                { MBox(tv, tt, new Vector3(x, 0.03f, z), new Vector3(len, 0.06f, 5f), yaw); MBox(v, t, new Vector3(x, 0.4f, z) + Quaternion.Euler(0f, yaw, 0f) * Vector3.forward * 3f, new Vector3(len, 0.8f, 0.8f), yaw); MBox(v, t, new Vector3(x, 0.4f, z) - Quaternion.Euler(0f, yaw, 0f) * Vector3.forward * 3f, new Vector3(len, 0.8f, 0.8f), yaw); }
+                { MBox(tv, tt, new Vector3(x, 0.045f, z), new Vector3(len, 0.06f, 5f), yaw); MBox(v, t, new Vector3(x, 0.4f, z) + Quaternion.Euler(0f, yaw, 0f) * Vector3.forward * 3f, new Vector3(len, 0.8f, 0.8f), yaw); MBox(v, t, new Vector3(x, 0.4f, z) - Quaternion.Euler(0f, yaw, 0f) * Vector3.forward * 3f, new Vector3(len, 0.8f, 0.8f), yaw); }
                 foreach (var (x0, z0, x1, z1) in new[] { (-640f, -40f, -260f, -30f), (260f, 30f, 640f, 40f), (-300f, 240f, -120f, 420f), (130f, -420f, 300f, -240f) })
                 {
                     var a = new Vector3(x0, 7f, z0); var b = new Vector3(x1, 7f, z1); var dd = b - a; float yaw = Mathf.Atan2(dd.x, dd.z) * Mathf.Rad2Deg;
@@ -227,6 +263,7 @@ namespace Seven.EditorTools
                 MeshObject("PlainTrenches", SaveMesh(Finish(tv, tt), "Mars_Trenches"), m.rockDark, land, false);
                 MeshObject("ElevatedRoads", SaveMesh(Finish(rv, rt), "Mars_ElevatedRoads"), m.stoneDark, land);
             }
+            BuildMarsLandscape(world, m.sand, m.rock, m.rockDark, rnd);     // QF18 (21): dunes, mesas, boulders, the Face, a pale sun, dust
             // QF17 (3): the two fortress cities either side of the ravine - real Reptilian fortifications (FortressCity):
             // curtain walls with towers and a gatehouse toward the ravine, terraced quarters, a stepped citadel with domes
             foreach (var sx in new[] { -1f, 1f })
@@ -285,10 +322,10 @@ namespace Seven.EditorTools
 
             // ---------------------------------------------------------------- the crossing: the main bridge, checkpoints, barrier, platform, transport
             var cross = new GameObject("Crossing").transform; cross.SetParent(world, false);
-            MBlock("MainBridgeDeck", new Vector3(-50f, -1.2f, -4.5f), new Vector3(50f, 0f, 4.5f), m.stoneDark, cross, false);
+            MGround("MainBridgeDeck", new Vector3(-50f, -1.2f, -4.5f), new Vector3(50f, 0f, 4.5f), m.stoneDark, cross);
             MBlock("MainBridgeRailS", new Vector3(-50f, 0f, -4.6f), new Vector3(50f, 1.1f, -4.2f), m.wall, cross, false);
             MBlock("MainBridgeRailN", new Vector3(-50f, 0f, 4.2f), new Vector3(50f, 1.1f, 4.6f), m.wall, cross, false);
-            for (int i = -2; i <= 2; i++) MBlock($"MainBridgePier{i + 2}", new Vector3(i * 20f - 2f, fy, -3f), new Vector3(i * 20f + 2f, -1.2f, 3f), m.wall, cross, false);
+            for (int i = -2; i <= 2; i++) MBlock($"MainBridgePier{i + 2}", new Vector3(i * 20f - 2f, fy - M.ChannelDepth - 0.5f, -3f), new Vector3(i * 20f + 2f, -1.2f, 3f), m.wall, cross, false);
             foreach (var sx in new[] { -1f, 1f })
             {
                 // QF17 (3): the checkpoint's two watchtowers and the gateway arch over the bridge head
@@ -314,11 +351,32 @@ namespace Seven.EditorTools
             // the supply transport (a cargo hover-cart with crates of water filters)
             var transport = new GameObject("SupplyTransport").transform; transport.SetParent(cross, false); transport.position = M.TransportAt;
             {
-                var v = new List<Vector3>(); var t = new List<int>();
-                MBox(v, t, new Vector3(0f, 0.9f, 0f), new Vector3(2.4f, 0.9f, 5.2f)); MBox(v, t, new Vector3(0f, 1.8f, 1.8f), new Vector3(2.0f, 1.0f, 1.4f));
-                for (int i = 0; i < 6; i++) MBox(v, t, new Vector3(-0.55f + (i % 2) * 1.1f, 1.75f, -1.6f + (i / 2) * 1.05f), new Vector3(0.9f, 0.8f, 0.9f));
+                // QF18 (6): a real hover transport - a hull with a rounded nose, the cab with dark windows, cargo racks of banded
+                // crates (the water filters), four hover pads with soft glow rings under it; it floats 0.55 m up
+                var v = new List<Vector3>(); var t = new List<int>(); var dv = new List<Vector3>(); var dt = new List<int>(); var cv = new List<Vector3>(); var ct = new List<int>(); var gv = new List<Vector3>(); var gt = new List<int>();
+                float lift = 0.55f;
+                Loft(v, t, new Vector3(0f, lift, -0.2f), 1.25f, 2.7f, 0f, new List<(float, float)> { (0f, 0.25f), (0.12f, 0.05f), (0.55f, 0f), (0.7f, 0.08f) });   // the hull (chamfered tray)
+                Add(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(1.2f, 0f), new Vector2(1.15f, 0.5f), new Vector2(0.9f, 0.62f), new Vector2(0f, 0.64f) }, -90f, 90f, 10, null, new Vector3(0f, lift + 0.06f, 2.5f)));   // the rounded nose
+                MBox(v, t, new Vector3(0f, lift + 1.25f, 1.75f), new Vector3(2.1f, 1.1f, 1.3f), 0f, 0.06f);                                           // the cab
+                MBox(dv, dt, new Vector3(0f, lift + 1.38f, 2.42f), new Vector3(1.8f, 0.45f, 0.04f), 0f, 0f);                                          // its windows
+                foreach (var sx in new[] { -1.06f, 1.06f }) MBox(dv, dt, new Vector3(sx, lift + 1.38f, 1.8f), new Vector3(0.04f, 0.42f, 0.9f), 0f, 0f);
+                foreach (var sx in new[] { -1.15f, 1.15f }) for (float z = -2.6f; z <= 0.9f; z += 0.7f) MBox(v, t, new Vector3(sx, lift + 1.15f, z), new Vector3(0.08f, 0.9f, 0.08f), 0f, 0f);   // rack posts
+                foreach (var sx in new[] { -1.15f, 1.15f }) MBox(v, t, new Vector3(sx, lift + 1.6f, -0.85f), new Vector3(0.08f, 0.08f, 3.6f), 0f, 0f);   // rack rails
+                for (int i = 0; i < 6; i++)
+                {
+                    var c = new Vector3(-0.52f + (i % 2) * 1.04f, lift + 1.1f, -2.2f + (i / 2) * 1.0f);
+                    MBox(cv, ct, c, new Vector3(0.88f, 0.78f, 0.88f), 0f, 0.02f);
+                    foreach (var dy in new[] { -0.22f, 0.22f }) MBox(v, t, c + Vector3.up * dy, new Vector3(0.92f, 0.06f, 0.92f), 0f, 0f);       // the bands round each crate
+                }
+                foreach (var (px, pz) in new[] { (-0.9f, -2.1f), (0.9f, -2.1f), (-0.9f, 1.8f), (0.9f, 1.8f) })
+                {
+                    Add(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.38f, 0f), new Vector2(0.42f, 0.12f), new Vector2(0.3f, 0.2f), new Vector2(0f, 0.22f) }, 0f, 360f, 12, null, new Vector3(px, lift - 0.2f, pz)));
+                    Sweep(gv, gt, Enumerable.Range(0, 13).Select(i => new Vector3(px + Mathf.Cos(i / 12f * Mathf.PI * 2f) * 0.3f, lift - 0.21f, pz + Mathf.Sin(i / 12f * Mathf.PI * 2f) * 0.3f)).ToList(), 0.03f, true, 5);
+                }
                 var tm = MeshObject("TransportBody", SaveMesh(Finish(v, t), "Mars_Transport"), m.metal, transport, true); tm.transform.localPosition = Vector3.zero;
-                var g = MBlock("TransportVent", new Vector3(-0.9f, 0.38f, -2.2f), new Vector3(0.9f, 0.42f, 2.2f), m.glow, transport, false); g.transform.localPosition = Vector3.zero;
+                var tw = MeshObject("TransportWindows", SaveMesh(Finish(dv, dt), "Mars_TransportWindows"), m.metalDark, transport, false); tw.transform.localPosition = Vector3.zero;
+                var tc = MeshObject("TransportCrates", SaveMesh(Finish(cv, ct), "Mars_TransportCrates"), m.cloth, transport, true); tc.transform.localPosition = Vector3.zero;
+                var g = MeshObject("TransportPads", SaveMesh(SmoothFinish(gv, gt), "Mars_TransportPads"), GlowMat("Mars_transport_pads"), transport, false); g.transform.localPosition = Vector3.zero;
                 transport.rotation = Quaternion.Euler(0f, 90f, 0f);
             }
 
@@ -326,13 +384,90 @@ namespace Seven.EditorTools
             var maint = new GameObject("MaintenanceRoute").transform; maint.SetParent(world, false);
             {
                 var v = new List<Vector3>(); var t = new List<int>();
-                // the channel across the floor (dark), the broken causeway's two stubs over it
-                MBlock("Channel", new Vector3(-7f, fy - 1.6f, -700f), new Vector3(7f, fy + 0.02f, 700f), m.rockDark, maint, false);
-                MBlock("CausewayStubW", new Vector3(-8.5f, fy - 1.6f, -70f), new Vector3(-3.5f, fy + 0.02f, -64f), m.stone, maint, false);
-                MBlock("CausewayStubE", new Vector3(3.5f, fy - 1.6f, -70f), new Vector3(8.5f, fy + 0.02f, -64f), m.stone, maint, false);
-                // the sheltered passage: a carved roof on columns over the east floor
-                MBlock("ShelterRoof", new Vector3(18f, fy + 6.5f, -92f), new Vector3(42f, fy + 7.4f, -62f), m.stoneDark, maint, false);
-                for (float z = -90f; z <= -64f; z += 6.5f) foreach (var x in new[] { 18.5f, 41.5f }) MBlock($"ShelterColumn{(int)x}_{(int)-z}", new Vector3(x - 0.6f, fy, z - 0.6f), new Vector3(x + 0.6f, fy + 6.5f, z + 0.6f), m.stone, maint, false);
+                // QF18 (11): the sheltered passage - an arcade (columns with capitals, a barrel vault, a cornice) instead of a
+                // flat slab on posts (Dan: "a plain table-like structure")
+                {
+                    var av = new List<Vector3>(); var at = new List<int>(); var cv = new List<Vector3>(); var ct = new List<int>();
+                    float x0 = 18.5f, x1 = 41.5f, z0 = -90f, z1 = -64f, ys = fy + 5.2f, r = (x1 - x0) * 0.5f;
+                    for (float z = z0; z <= z1 + 0.1f; z += 6.5f)
+                        foreach (var x in new[] { x0, x1 })
+                            Add(cv, ct, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.95f, 0f), new Vector2(0.9f, 0.4f), new Vector2(0.62f, 0.62f), new Vector2(0.6f, 3.4f), new Vector2(0.54f, ys - fy - 0.6f), new Vector2(0.86f, ys - fy - 0.2f), new Vector2(0.95f, ys - fy), new Vector2(0f, ys - fy) }, 0f, 360f, 16, null, new Vector3(x, fy, z)));
+                    // the vault: a half-ring section extruded along z, 0.7 m thick, plus a cornice on each side
+                    int nA = 18;
+                    for (int i = 0; i < nA; i++)
+                    {
+                        float a0 = Mathf.PI * i / nA, a1 = Mathf.PI * (i + 1) / nA; float cx = (x0 + x1) * 0.5f;
+                        Vector3 VP(float a, float rr, float z) => new Vector3(cx - Mathf.Cos(a) * rr, ys + Mathf.Sin(a) * rr * 0.55f, z);
+                        Quad(av, at, VP(a0, r + 0.7f, z0 - 1f), VP(a0, r + 0.7f, z1 + 1f), VP(a1, r + 0.7f, z1 + 1f), VP(a1, r + 0.7f, z0 - 1f));
+                        Quad(av, at, VP(a0, r, z1 + 1f), VP(a0, r, z0 - 1f), VP(a1, r, z0 - 1f), VP(a1, r, z1 + 1f));
+                        Quad(av, at, VP(a0, r, z0 - 1f), VP(a0, r + 0.7f, z0 - 1f), VP(a1, r + 0.7f, z0 - 1f), VP(a1, r, z0 - 1f));
+                        Quad(av, at, VP(a1, r, z1 + 1f), VP(a1, r + 0.7f, z1 + 1f), VP(a0, r + 0.7f, z1 + 1f), VP(a0, r, z1 + 1f));
+                    }
+                    foreach (var x in new[] { x0, x1 }) MBox(av, at, new Vector3(x, ys - 0.15f, (z0 + z1) * 0.5f), new Vector3(1.6f, 0.5f, z1 - z0 + 2.4f), 0f, 0.02f);
+                    MeshObject("ShelterVault", SaveMesh(Finish(av, at), "Mars_ShelterVault"), m.stoneDark, maint);
+                    MeshObject("ShelterColumns", SaveMesh(Finish(cv, ct), "Mars_ShelterColumns"), m.stone, maint);
+                }
+                // QF18 (11): the drawbridge. During the division one kingdom raised the old causeway's span and chained it up
+                // to cut the maintenance route: the span stands hinged on the west abutment; its chain runs from the span's tip
+                // over a pulley on the winding tower to the drum at the tower's foot, held by a heavy lock; the kingdom's order
+                // plaque (its half of the shared symbol, barred) is fixed to the tower. She breaks the lock with telekinesis,
+                // the drum runs free and the span comes down across the channel (MarsDrawbridge).
+                {
+                    var hinge = M.DrawHinge; var tw = M.DrawTower;
+                    // the hinge blocks either side of the span + the iron axle, the corbel on the east wall the tip rests on
+                    foreach (var dz in new[] { -M.DrawWidth * 0.5f - 0.7f, M.DrawWidth * 0.5f + 0.7f }) MBlock($"DrawHingeBlock{(dz < 0 ? "S" : "N")}", hinge + new Vector3(-1.2f, 0f, dz - 0.6f), hinge + new Vector3(0.9f, 1.3f, dz + 0.6f), m.stone, maint, false);
+                    { var axv = new List<Vector3>(); var axt = new List<int>(); Sweep(axv, axt, new[] { hinge + new Vector3(0f, 0.25f, -M.DrawWidth * 0.5f - 1.1f), hinge + new Vector3(0f, 0.25f, M.DrawWidth * 0.5f + 1.1f) }, 0.22f, false, 10); MeshObject("DrawAxle", SaveMesh(SmoothFinish(axv, axt), "Mars_DrawAxle"), m.metalDark, maint, false); }
+                    MBlock("DrawCorbelE", new Vector3(6.4f, fy - 1.3f, hinge.z - M.DrawWidth * 0.5f), new Vector3(7.05f, fy - 0.68f, hinge.z + M.DrawWidth * 0.5f), m.stone, maint, false);
+                    // the span (pivot = the hinge; local +x across the channel)
+                    var span = new GameObject("Drawbridge").transform; span.SetParent(maint, false); span.position = hinge;
+                    var dk = MGround("DrawDeck", new Vector3(0.1f, -0.64f, -M.DrawWidth * 0.5f), new Vector3(M.DrawLen, 0.06f, M.DrawWidth * 0.5f), m.stone, span); dk.transform.localPosition = new Vector3(M.DrawLen * 0.5f + 0.05f, -0.29f, 0f);
+                    var sv2 = new List<Vector3>(); var st2 = new List<int>(); var iv = new List<Vector3>(); var it2 = new List<int>();
+                    foreach (var sz in new[] { -1f, 1f }) MBox(sv2, st2, new Vector3(M.DrawLen * 0.5f, -0.25f, sz * (M.DrawWidth * 0.5f + 0.18f)), new Vector3(M.DrawLen, 1.1f, 0.36f), 0f, 0.02f);   // side beams (below the deck top, outside the zone)
+                    for (float x = 1.2f; x < M.DrawLen - 0.5f; x += 2.2f) MBox(iv, it2, new Vector3(x, -0.66f, 0f), new Vector3(0.24f, 0.08f, M.DrawWidth + 0.5f), 0f, 0.01f);   // iron bands under it
+                    foreach (var sz in new[] { -1.4f, 1.4f }) Sweep(iv, it2, Enumerable.Range(0, 13).Select(i => new Vector3(M.DrawLen - 0.3f, 0.32f + Mathf.Sin(i / 12f * Mathf.PI * 2f) * 0.22f, sz + Mathf.Cos(i / 12f * Mathf.PI * 2f) * 0.22f)).ToList(), 0.05f, true, 6);   // chain eyes at the tip
+                    var sb = MeshObject("DrawBeams", SaveMesh(Finish(sv2, st2), "Mars_DrawBeams"), m.stoneDark, span); sb.transform.localPosition = Vector3.zero;
+                    var ib = MeshObject("DrawIron", SaveMesh(SmoothFinish(iv, it2), "Mars_DrawIron"), m.metalDark, span, false); ib.transform.localPosition = Vector3.zero;
+                    // the winding tower (round, battered, a crown), the pulley wheel on a bracket at its top, the drum at its foot
+                    var kt = new Kit(); Tower(kt, tw, 1.7f, M.DrawPulleyH - 0.6f, 8, false, rnd, false); kt.Save("DrawTower", maint, m.wall, m.rockDark, m.stoneDark, m.glow, m.cloth);
+                    var pulleyAt = tw + M.DrawPulleyOff; var drumAt = tw + M.DrawDrumOff;
+                    var pul = MeshObject("DrawPulley", SaveMesh(Lathe(new[] { new Vector2(0f, -0.18f), new Vector2(0.7f, -0.18f), new Vector2(0.62f, -0.06f), new Vector2(0.55f, 0f), new Vector2(0.62f, 0.06f), new Vector2(0.7f, 0.18f), new Vector2(0f, 0.18f) }, 0f, 360f, 20, null, Vector3.zero), "Mars_DrawPulley"), m.metalDark, maint, false).transform;
+                    pul.position = pulleyAt; pul.rotation = Quaternion.Euler(90f, 0f, 0f);   // its axis along z
+                    MBlock("DrawPulleyBracket", tw + new Vector3(0.4f, M.DrawPulleyH - 0.9f, 0.6f), pulleyAt + new Vector3(0.25f, 0.2f, 0.35f), m.metalDark, maint, false);
+                    var drum = MeshObject("DrawDrum", SaveMesh(Lathe(new[] { new Vector2(0f, -1.0f), new Vector2(0.75f, -1.0f), new Vector2(0.75f, -0.85f), new Vector2(0.5f, -0.8f), new Vector2(0.5f, 0.8f), new Vector2(0.75f, 0.85f), new Vector2(0.75f, 1.0f), new Vector2(0f, 1.0f) }, 0f, 360f, 18, null, Vector3.zero), "Mars_DrawDrum"), m.metal, maint, false).transform;
+                    drum.position = drumAt; drum.rotation = Quaternion.Euler(0f, 0f, 90f);       // its axis along x
+                    foreach (var sx in new[] { -1.15f, 1.15f }) MBlock($"DrawDrumCheek{(sx < 0 ? "W" : "E")}", drumAt + new Vector3(sx - 0.15f, -drumAt.y + fy, -0.5f), drumAt + new Vector3(sx + 0.15f, 1.0f, 0.5f), m.stoneDark, maint, false);
+                    // the chain links (placed along the chain each frame by MarsDrawbridge)
+                    var links = new GameObject("DrawChain").transform; links.SetParent(maint, false);
+                    var lv = new List<Vector3>(); var lt = new List<int>(); Sweep(lv, lt, Enumerable.Range(0, 13).Select(i => new Vector3(Mathf.Sin(i / 12f * Mathf.PI * 2f) * 0.07f, 0f, Mathf.Cos(i / 12f * Mathf.PI * 2f) * 0.13f)).ToList(), 0.028f, true, 5);
+                    var linkMesh = SaveMesh(SmoothFinish(lv, lt), "Mars_DrawChainLink");
+                    for (int i = 0; i < 140; i++) { var l = MeshObject($"Link{i:000}", linkMesh, m.metalDark, links, false); l.transform.localPosition = Vector3.zero; }
+                    // the lock: a heavy bronze clamp on the drum (its shackle round the chain); it shatters in three pieces
+                    var lockRoot = new GameObject("DrawLock").transform; lockRoot.SetParent(maint, false); lockRoot.position = M.DrawLock;
+                    for (int k = 0; k < 3; k++)
+                    {
+                        var pv = new List<Vector3>(); var ptt = new List<int>();
+                        if (k == 0) MBox(pv, ptt, new Vector3(0f, -0.1f, 0f), new Vector3(0.7f, 0.55f, 0.35f), 0f, 0.03f);
+                        else { float s = k == 1 ? -1f : 1f; Sweep(pv, ptt, Enumerable.Range(0, 7).Select(i => new Vector3(s * 0.09f + Mathf.Cos(i / 6f * Mathf.PI * 0.5f + (s < 0 ? Mathf.PI * 0.5f : 0f)) * 0.26f, 0.18f + Mathf.Sin(i / 6f * Mathf.PI * 0.5f + (s < 0 ? Mathf.PI * 0.5f : 0f)) * 0.3f, 0f)).ToList(), 0.06f, false, 8); }
+                        var piece = MeshObject($"LockPiece{k}", SaveMesh(SmoothFinish(pv, ptt), $"Mars_DrawLockPiece{k}"), m.metal, lockRoot, false); piece.transform.localPosition = Vector3.zero;
+                    }
+                    var lockGlow = MBlock("DrawLockGlow", new Vector3(-0.37f, -0.4f, -0.19f), new Vector3(0.37f, -0.36f, 0.19f), GlowMat("Mars_drawlock_glow"), lockRoot, false); lockGlow.transform.localPosition = new Vector3(0f, -0.38f, 0f);
+                    // the order plaque: the west kingdom's half of the shared symbol, barred across - "closed by order"
+                    {
+                        var pq = new List<Vector3>(); var pqt = new List<int>(); var pc = tw + new Vector3(1.55f, 3.2f, 1.1f); var nrm = new Vector3(0.75f, 0f, 0.66f).normalized; var rt = Vector3.Cross(Vector3.up, nrm);
+                        MBox(pq, pqt, pc - nrm * 0.05f, new Vector3(1.5f, 1.2f, 0.14f), Mathf.Atan2(nrm.x, nrm.z) * Mathf.Rad2Deg, 0.02f);
+                        MeshObject("OrderPlaque", SaveMesh(Finish(pq, pqt), "Mars_OrderPlaque"), m.stoneDark, maint, false);
+                        var sy = new List<Vector3>(); var syt = new List<int>();
+                        var ring = Enumerable.Range(0, 11).Select(i => { float a = Mathf.PI * 0.5f + i / 10f * Mathf.PI; return pc + nrm * 0.04f + rt * Mathf.Cos(a) * 0.38f + Vector3.up * Mathf.Sin(a) * 0.38f; }).ToList();
+                        Sweep(sy, syt, ring, 0.03f, false, 5);
+                        Sweep(sy, syt, Enumerable.Range(0, 7).Select(i => pc + nrm * 0.04f + rt * (-0.04f - Mathf.Sin(i * 0.9f) * 0.1f) + Vector3.up * (-0.38f + i * 0.127f)).ToList(), 0.025f, false, 5);
+                        Sweep(sy, syt, new[] { pc + nrm * 0.07f - rt * 0.55f - Vector3.up * 0.42f, pc + nrm * 0.07f + rt * 0.55f + Vector3.up * 0.42f }, 0.045f, false, 6);   // the bar across it
+                        MeshObject("OrderPlaqueSymbol", SaveMesh(SmoothFinish(sy, syt), "Mars_OrderPlaqueSymbol"), m.stone, maint, false);
+                    }
+                    var db = span.gameObject.AddComponent<Seven.MarsDrawbridge>();
+                    db.Span = span; db.Drum = drum; db.Links = links; db.Lock = lockRoot; db.LockGlow = lockGlow.GetComponent<Renderer>();
+                    db.Pulley = pulleyAt; db.DrumTop = drumAt + Vector3.up * 0.55f + Vector3.forward * 0.0f; db.TipLocal = new Vector3(M.DrawLen - 0.3f, 0.32f, 0f);
+                    db.Set(0f);
+                }
                 // lookouts with lamps (clear stopping points)
                 foreach (var p in M.Lookouts)
                 {
@@ -345,36 +480,149 @@ namespace Seven.EditorTools
                 for (int i = 0; i < 30; i++) { var p = new Vector3((float)rnd.NextDouble() * 96f - 48f, fy, -10f + (float)rnd.NextDouble() * 120f); if (Mathf.Abs(p.x) < 8f) continue; Lump(v, t, p + Vector3.up * 0.8f, Vector3.one * (0.8f + (float)rnd.NextDouble() * 1.8f), 0.4f, rnd.Next(1000)); }
                 MeshObject("FloorRubble", SaveMesh(SmoothFinish(v, t), "Mars_FloorRubble"), m.rock, maint);
             }
-            var slab = MBlock("CausewaySlab", new Vector3(-3.5f, -0.3f, -3f), new Vector3(3.5f, 0.3f, 3f), m.stone, maint, false).transform;
-            { var ctr = slab.GetComponent<MeshFilter>(); slab.position = M.CausewaySlabRest; slab.rotation = Quaternion.Euler(8f, 30f, -6f); }
-            var slabEdges = MBlock("CausewaySlabEdges", new Vector3(-3.55f, 0.28f, -3.05f), new Vector3(3.55f, 0.34f, 3.05f), GlowMat("Mars_slab_edges"), slab, false).GetComponent<Renderer>();
-            slabEdges.transform.localPosition = Vector3.zero; slabEdges.transform.localRotation = Quaternion.identity;
-            var gate = MBlock("ServiceGate", new Vector3(-5f, 0f, -0.3f), new Vector3(5f, 4.5f, 0.3f), m.metalDark, maint, false).transform; gate.position = M.ServiceGateAt + new Vector3(-3f, 0f, 0f);
-            var gatePanel = MBlock("ServicePanel", M.ServiceGatePanel + new Vector3(-0.3f, 0.4f, -0.2f), M.ServiceGatePanel + new Vector3(0.3f, 1.4f, 0.2f), m.panel, maint, false).GetComponent<Renderer>();
-            gatePanel.transform.position = M.ServiceGatePanel + new Vector3(1.2f, -0.9f, 0f);
+            var bridgeObj = maint.Find("Drawbridge");
+            var slab = bridgeObj; var slabEdges = bridgeObj.GetComponent<Seven.MarsDrawbridge>().LockGlow;
+            // QF18 (12): the service gate - a gateway in the old masonry over the east ramp's top, a heavy ribbed door that
+            // sinks into its slot, seam lights along its top (dark while unpowered), the power housing beside it, and its
+            // power line down the ramp's inner wall - deliberately cut during the division (the two severed ends hang apart)
+            var gk = new Kit(); Gateway(gk.sv, gk.st, M.ServiceGateAt, M.GateSpan, 4.8f, 1.8f, 0f); gk.Save("ServiceGateway", maint, m.wall, m.rockDark, m.stoneDark, m.glow, m.cloth);
+            var gate = new GameObject("ServiceGate").transform; gate.SetParent(maint, false); gate.position = M.ServiceGateAt;
+            {
+                var dv = new List<Vector3>(); var dt = new List<int>(); float w = M.GateSpan + 0.2f, h = 4.7f;
+                MBox(dv, dt, new Vector3(0f, h * 0.5f, 0f), new Vector3(w, h, 0.22f), 0f, 0.0f);
+                for (float x = -w * 0.5f + 0.5f; x < w * 0.5f - 0.2f; x += 0.9f) MBox(dv, dt, new Vector3(x, h * 0.5f, -0.16f), new Vector3(0.16f, h - 0.2f, 0.14f), 0f, 0.0f);
+                foreach (var y in new[] { 0.6f, 2.3f, 4.0f }) MBox(dv, dt, new Vector3(0f, y, -0.25f), new Vector3(w - 0.1f, 0.3f, 0.12f), 0f, 0.0f);
+                var door = MeshObject("GateDoor", SaveMesh(Finish(dv, dt), "Mars_GateDoor"), m.metalDark, gate, false); door.transform.localPosition = Vector3.zero;
+                var seam = MBlock("GateSeam", new Vector3(-w * 0.5f, h - 0.08f, -0.14f), new Vector3(w * 0.5f, h - 0.02f, 0.14f), GlowMat("Mars_gate_seam"), gate, false); seam.transform.localPosition = new Vector3(0f, h - 0.05f, 0f);
+            }
+            var housingAt = M.ServiceGateAt + new Vector3(M.GateSpan * 0.5f + 1.9f, 0f, -1.4f);
+            MBlock("GateHousing", housingAt + new Vector3(-0.5f, 0f, -0.45f), housingAt + new Vector3(0.5f, 2.2f, 0.45f), m.metalDark, maint, false);
+            var gatePanel = MBlock("GateHousingLight", housingAt + new Vector3(-0.42f, 1.5f, -0.48f), housingAt + new Vector3(0.42f, 1.9f, -0.46f), GlowMat("Mars_gate_housing"), maint, false).GetComponent<Renderer>();
+            // the power line: from the housing down the inner wall of the ramp to the cut, the live feed below it
+            float RampY(float z) => Mathf.Lerp(fy, 0f, (z - M.RampFootZ) / (-12.6f - M.RampFootZ));
+            var wallX = 59.72f;
+            var upper = new List<Vector3> { housingAt + new Vector3(0f, 1.2f, -0.5f), new Vector3(wallX, 1.3f, -13.6f) };
+            for (float z = -16f; z > M.GateBreakZ + 1.2f; z -= 3f) upper.Add(new Vector3(wallX, RampY(z) + 1.3f, z));
+            upper.Add(new Vector3(wallX, RampY(M.GateBreakZ + 1.1f) + 1.3f, M.GateBreakZ + 1.1f));
+            upper.Reverse();                                                    // segment 0 = at the cut, the last one = the housing
+            var gateLine = PowerLineObj("GateLine", upper.ToArray(), 12, 0.065f, GlowMat("Mars_gate_line"), m.metalDark, maint);
+            var feed = new List<Vector3>(); for (float z = M.RampFootZ + 2f; z < M.GateBreakZ - 1.1f; z += 3f) feed.Add(new Vector3(wallX, RampY(z) + 1.3f, z)); feed.Add(new Vector3(wallX, RampY(M.GateBreakZ - 1.1f) + 1.3f, M.GateBreakZ - 1.1f));
+            var feedLine = PowerLineObj("GateFeed", feed.ToArray(), 5, 0.065f, GlowMat("Mars_gate_feed"), m.metalDark, maint);
+            // the two severed ends (they hang apart; telekinesis pulls them together)
+            Transform CableEnd(string n, Vector3 at, Vector3 droop)
+            {
+                var root = new GameObject(n).transform; root.SetParent(maint, false); root.position = at;
+                var cv = new List<Vector3>(); var ctt = new List<int>(); var pts = Enumerable.Range(0, 8).Select(i => { float u = i / 7f; return droop * u + Vector3.down * Mathf.Sin(u * Mathf.PI * 0.5f) * 0.25f * u; }).ToList();
+                Sweep(cv, ctt, pts, 0.07f, false, 8);
+                var go = MeshObject(n + "_Cable", SaveMesh(SmoothFinish(cv, ctt), "Mars_" + n), m.metalDark, root, false); go.transform.localPosition = Vector3.zero;
+                var tip = new List<Vector3>(); var tipt = new List<int>(); Ellipsoid(tip, tipt, droop, new Vector3(0.1f, 0.1f, 0.1f), 5, 8);
+                var tg = MeshObject(n + "_Tip", SaveMesh(SmoothFinish(tip, tipt), "Mars_" + n + "_Tip"), GlowMat("Mars_" + n + "_tip"), root, false); tg.transform.localPosition = Vector3.zero;
+                return root;
+            }
+            var endUp = CableEnd("GateCableEndUpper", new Vector3(wallX, RampY(M.GateBreakZ + 1.1f) + 1.3f, M.GateBreakZ + 1.1f), new Vector3(-0.25f, -1.05f, -0.15f));
+            var endLo = CableEnd("GateCableEndLower", new Vector3(wallX, RampY(M.GateBreakZ - 1.1f) + 1.3f, M.GateBreakZ - 1.1f), new Vector3(-0.85f, -1.15f, 0.55f));
 
             // ---------------------------------------------------------------- the rims, the overlook + mechanism, the controls, the relay, the pier walk
             var anc = new GameObject("Ancient").transform; anc.SetParent(world, false);
-            var mech = MeshObject("SharedMechanism", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(2.6f, 0f), new Vector2(2.4f, 0.8f), new Vector2(1.6f, 1.2f), new Vector2(1.7f, 2.2f), new Vector2(0.8f, 2.6f), new Vector2(0f, 2.7f) }, 0f, 360f, 24, null, M.MechanismAt), "Mars_Mechanism"), m.stone, anc).transform;
-            Renderer ChannelLine(string n, Vector3 a, Vector3 b) { var v = new List<Vector3>(); var t = new List<int>(); Sweep(v, t, new[] { a, (a + b) * 0.5f + Vector3.up * 0.2f, b }, 0.12f, false, 6); return MeshObject(n, SaveMesh(SmoothFinish(v, t), "Mars_" + n), GlowMat("Mars_" + n + "_mat"), anc, false).GetComponent<Renderer>(); }
-            var chE = ChannelLine("ChannelEast", M.EastControl + Vector3.up * 0.05f, M.MechanismAt + Vector3.up * 0.05f);
-            var chW = ChannelLine("ChannelWest", M.WestControl + Vector3.up * 0.05f, M.RelayWest + Vector3.up * 0.05f);
-            Renderer Control(string n, Vector3 p) { MeshObject(n + "Base", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.9f, 0f), new Vector2(0.7f, 1.1f), new Vector2(0f, 1.15f) }, 0f, 360f, 16, null, p), "Mars_" + n + "Base"), m.stone, anc); return MBlock(n + "Top", p + new Vector3(-0.5f, 1.12f, -0.5f), p + new Vector3(0.5f, 1.22f, 0.5f), GlowMat("Mars_" + n + "_glow"), anc, false).GetComponent<Renderer>(); }
-            var ctlW = Control("ControlWest", M.WestControl); var ctlE = Control("ControlEast", M.EastControl);
-            var relay = MBlock("RelayPylonGlow", M.RelayWest + new Vector3(-0.25f, 2.6f, -0.25f), M.RelayWest + new Vector3(0.25f, 3.1f, 0.25f), GlowMat("Mars_relay_glow"), anc, false).GetComponent<Renderer>();
-            MBlock("RelayPylon", M.RelayWest + new Vector3(-0.3f, 0f, -0.3f), M.RelayWest + new Vector3(0.3f, 2.6f, 0.3f), m.metal, anc, false);
-            // the pier walk: steps down the side of the old bridge and a ledge walk with the displaced conduit at its end
+            // QF18 (15): the shared mechanism on the overlook - a carved stone housing, two great bronze gear wheels standing
+            // on it (they turn when the spans align), a central axle, two weights hanging on chains, the channel feeding in
+            var mech = MeshObject("SharedMechanism", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(2.6f, 0f), new Vector2(2.5f, 0.3f), new Vector2(2.25f, 0.45f), new Vector2(2.2f, 1.6f), new Vector2(2.45f, 1.75f), new Vector2(2.45f, 1.95f), new Vector2(0f, 1.95f) }, 0f, 360f, 28, null, M.MechanismAt), "Mars_Mechanism"), m.stone, anc).transform;
+            var gears = new List<Transform>();
+            foreach (var gx in new[] { -0.9f, 0.9f })
             {
-                var v = new List<Vector3>(); var t = new List<int>();
-                Quad(v, t, new Vector3(-54.6f, 0f, 156f), new Vector3(-54.6f, 0f, 164f), new Vector3(-48f, -4f, 164f), new Vector3(-48f, -4f, 156f));
-                MeshObject("PierStairs", SaveMesh(Finish(v, t), "Mars_PierStairs"), m.stone, anc);
-                MBlock("PierWalkDeck", new Vector3(-48.6f, -4.6f, 155f), new Vector3(-44f, -4f, 172f), m.stone, anc, false);
-                for (float z = 156f; z < 172f; z += 4f) MBlock($"PierBracket{(int)z}", new Vector3(-48f, -9f, z - 0.4f), new Vector3(-46f, -4.6f, z + 0.4f), m.stoneDark, anc, false);
-                MBlock("PierRail", new Vector3(-44.3f, -4f, 155f), new Vector3(-44f, -3f, 172f), m.stoneDark, anc, false);
+                var g = new GameObject(gx < 0 ? "MechGearW" : "MechGearE").transform; g.SetParent(anc, false); g.position = M.MechanismAt + new Vector3(gx, 3.35f, 0f); g.rotation = Quaternion.Euler(0f, 0f, 90f);
+                var gv = new List<Vector3>(); var gt = new List<int>();
+                Add(gv, gt, Lathe(new[] { new Vector2(0f, -0.14f), new Vector2(1.25f, -0.14f), new Vector2(1.25f, 0.14f), new Vector2(0f, 0.14f) }, 0f, 360f, 32, null, Vector3.zero));
+                for (int k = 0; k < 18; k++) { var a = k * 20f; MBox(gv, gt, Quaternion.Euler(0f, a, 0f) * new Vector3(0f, 0f, 1.38f), new Vector3(0.24f, 0.26f, 0.3f), a, 0.0f); }
+                var gm = MeshObject(g.name + "_Wheel", SaveMesh(Finish(gv, gt), "Mars_" + g.name), m.metal, g, false); gm.transform.localPosition = Vector3.zero; gm.transform.localRotation = Quaternion.identity;
+                gears.Add(g);
             }
-            var conduit = MeshObject("PierConduit", SaveMesh(Lathe(new[] { new Vector2(0f, -0.9f), new Vector2(0.35f, -0.9f), new Vector2(0.35f, 0.9f), new Vector2(0f, 0.9f) }, 0f, 360f, 12, null, Vector3.zero), "Mars_Conduit"), m.metal, anc).transform;
-            conduit.position = M.PierConduitRest; conduit.rotation = Quaternion.Euler(70f, 20f, 0f);
-            MBlock("ConduitSocket", M.PierConduit + new Vector3(-0.5f, -1.2f, -0.5f), M.PierConduit + new Vector3(0.5f, -0.9f, 0.5f), m.metalDark, anc, false);
+            {
+                var mv2 = new List<Vector3>(); var mt2 = new List<int>();
+                foreach (var gx in new[] { -1.4f, 1.4f }) MBox(mv2, mt2, M.MechanismAt + new Vector3(gx, 2.7f, 0f), new Vector3(0.35f, 1.6f, 0.6f), 0f, 0.03f);     // the gear stands
+                Sweep(mv2, mt2, new[] { M.MechanismAt + new Vector3(-1.7f, 3.35f, 0f), M.MechanismAt + new Vector3(1.7f, 3.35f, 0f) }, 0.12f, false, 10);   // the axle
+                foreach (var gz in new[] { -2.0f, 2.0f })
+                {
+                    Sweep(mv2, mt2, new[] { M.MechanismAt + new Vector3(0f, 3.35f, gz * 0.4f), M.MechanismAt + new Vector3(0f, 1.6f, gz) }, 0.04f, false, 5);
+                    Add(mv2, mt2, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.32f, 0.05f), new Vector2(0.36f, 0.6f), new Vector2(0.2f, 0.75f), new Vector2(0f, 0.78f) }, 0f, 360f, 12, null, M.MechanismAt + new Vector3(0f, 0.85f, gz)));
+                }
+                MeshObject("MechFrame", SaveMesh(SmoothFinish(mv2, mt2), "Mars_MechFrame"), m.metalDark, anc);
+            }
+            // QF18 (15, 16): the channels - power lines whose light visibly runs. West: the relay on the rim -> north along the
+            // rim -> down the bank wall -> along the wall under the old bridge (the displaced section) -> up -> the west control.
+            var chWA = PowerLineObj("ChannelWestA", new[] { M.RelayWest + new Vector3(0f, 2.2f, 0f), M.RelayWest + new Vector3(0f, 0.12f, 0.6f), new Vector3(-52.6f, 0.12f, 110f), new Vector3(-52.6f, 0.12f, 140f), new Vector3(-50.3f, 0.12f, 141f), new Vector3(-50.3f, -3.0f, 142.5f), new Vector3(-50.3f, -3.0f, M.PierConduit.z - 1.05f) }, 16, 0.08f, GlowMat("Mars_channelWA"), m.metalDark, anc, 0.9f);
+            var chWB = PowerLineObj("ChannelWestB", new[] { new Vector3(-50.3f, -3.0f, M.PierConduit.z + 1.05f), new Vector3(-50.3f, -3.0f, 159.2f), new Vector3(-50.3f, 0.12f, 159.9f), new Vector3(-53.5f, 0.12f, 159.9f), new Vector3(-58.2f, 0.12f, 153.4f), new Vector3(-59.0f, 0.12f, 152.2f), M.WestControl + new Vector3(0.75f, 0.9f, 0f) }, 8, 0.08f, GlowMat("Mars_channelWB"), m.metalDark, anc, 0.9f);
+            var chE = PowerLineObj("ChannelEast", new[] { M.EastControl + new Vector3(-0.9f, 0.9f, 0f), M.EastControl + new Vector3(-1.2f, 0.12f, -1f), new Vector3(60f, 0.12f, 140f), M.MechanismAt + new Vector3(0f, 0.12f, 3.0f), M.MechanismAt + new Vector3(0f, 1.0f, 2.3f) }, 10, 0.08f, GlowMat("Mars_channelE"), m.metalDark, anc, 1.2f);
+            // QF18 (15): the two temple controls - carved stone-and-bronze pedestals, a big bronze wheel on each, one kingdom's
+            // half of the shared symbol carved on each slanted top (worked together, the halves make the temple's design)
+            (Renderer glow, Transform wheel) Control(string n, Vector3 p, float side, Vector3 face)
+            {
+                var yaw = Mathf.Atan2(face.x, face.z) * Mathf.Rad2Deg; var q = Quaternion.Euler(0f, yaw, 0f);
+                MeshObject(n + "Base", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(1.05f, 0f), new Vector2(1.0f, 0.22f), new Vector2(0.78f, 0.34f), new Vector2(0.62f, 0.5f), new Vector2(0.58f, 0.95f), new Vector2(0.8f, 1.05f), new Vector2(0.84f, 1.18f), new Vector2(0f, 1.18f) }, 0f, 360f, 8, null, p), "Mars_" + n + "Base"), m.stone, anc);
+                var tv = new List<Vector3>(); var tt = new List<int>();
+                MBox(tv, tt, p + q * new Vector3(0f, 1.32f, 0f), new Vector3(1.3f, 0.28f, 1.1f), yaw, 0.02f);
+                MeshObject(n + "Top", SaveMesh(Finish(tv, tt), "Mars_" + n + "TopStone"), m.stoneDark, anc);
+                // the carved half-symbol on the top (half ring + wave + three dots, as on the temple wall)
+                var sv = new List<Vector3>(); var stt = new List<int>(); var c = p + Vector3.up * 1.48f;
+                var ring = Enumerable.Range(0, 13).Select(i => { float a = (side < 0 ? 90f : -90f) + i / 12f * 180f; return c + q * new Vector3(Mathf.Cos(a * Mathf.Deg2Rad) * 0.42f, 0f, Mathf.Sin(a * Mathf.Deg2Rad) * 0.42f); }).ToList();
+                Sweep(sv, stt, ring, 0.03f, false, 5);
+                Sweep(sv, stt, Enumerable.Range(0, 8).Select(i => c + q * new Vector3(Mathf.Sin(i * 0.9f) * 0.1f * side + side * 0.02f, 0f, -0.42f + i * 0.12f)).ToList(), 0.025f, false, 5);
+                for (int k = 0; k < 3; k++) Ellipsoid(sv, stt, c + q * new Vector3(side * (0.2f + k * 0.06f), 0f, 0.22f - k * 0.22f), new Vector3(0.04f, 0.02f, 0.04f), 4, 6);
+                var glow = MeshObject(n + "Symbol", SaveMesh(SmoothFinish(sv, stt), "Mars_" + n + "Symbol"), GlowMat("Mars_" + n + "_glow"), anc, false).GetComponent<Renderer>();
+                // the bronze wheel on the front face (toward the operator), turned when it is worked
+                var wh = new GameObject(n + "Wheel").transform; wh.SetParent(anc, false); wh.position = p + q * new Vector3(0f, 0.95f, -0.78f); wh.rotation = q;
+                var wv = new List<Vector3>(); var wt = new List<int>();
+                Sweep(wv, wt, Enumerable.Range(0, 21).Select(i => new Vector3(Mathf.Cos(i / 20f * Mathf.PI * 2f) * 0.5f, Mathf.Sin(i / 20f * Mathf.PI * 2f) * 0.5f, 0f)).ToList(), 0.045f, true, 6);
+                for (int k = 0; k < 6; k++) { float a = k * 60f * Mathf.Deg2Rad; Sweep(wv, wt, new[] { Vector3.zero, new Vector3(Mathf.Cos(a) * 0.5f, Mathf.Sin(a) * 0.5f, 0f) }, 0.025f, false, 5); Ellipsoid(wv, wt, new Vector3(Mathf.Cos(a) * 0.55f, Mathf.Sin(a) * 0.55f, -0.04f), new Vector3(0.05f, 0.05f, 0.07f), 4, 6); }
+                Add(wv, wt, Lathe(new[] { new Vector2(0f, -0.12f), new Vector2(0.1f, -0.12f), new Vector2(0.1f, 0.12f), new Vector2(0f, 0.12f) }, 0f, 360f, 10, null, Vector3.zero));
+                var wm = MeshObject(n + "WheelMesh", SaveMesh(SmoothFinish(wv, wt), "Mars_" + n + "Wheel"), m.metal, wh, false); wm.transform.localPosition = Vector3.zero; wm.transform.localRotation = Quaternion.identity;
+                return (glow, wh);
+            }
+            var (ctlW, wheelW) = Control("ControlWest", M.WestControl, -1f, Vector3.right);
+            var (ctlE, wheelE) = Control("ControlEast", M.EastControl, 1f, Vector3.left);
+            // QF18 (15, 16): the relay on the west rim - a carved pillar, a housing of four ribs on top, the lens crystal in it
+            // (knocked askew; she seats it back, X, and its light runs down the channel)
+            MeshObject("RelayPillar", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.7f, 0f), new Vector2(0.62f, 0.3f), new Vector2(0.42f, 0.45f), new Vector2(0.36f, 2.0f), new Vector2(0.55f, 2.15f), new Vector2(0.6f, 2.3f), new Vector2(0f, 2.3f) }, 0f, 360f, 12, null, M.RelayWest), "Mars_RelayPillar"), m.stone, anc);
+            { var rv = new List<Vector3>(); var rt = new List<int>(); for (int k = 0; k < 4; k++) { float a = k * 90f + 45f; var b = M.RelayWest + Polar(0.45f, a, 2.3f); var top = M.RelayWest + Polar(0.18f, a, 3.45f); Sweep(rv, rt, new[] { b, M.RelayWest + Polar(0.5f, a, 2.85f), top }, 0.05f, false, 5); } Add(rv, rt, Lathe(new[] { new Vector2(0f, 3.4f), new Vector2(0.24f, 3.42f), new Vector2(0.12f, 3.6f), new Vector2(0f, 3.62f) }, 0f, 360f, 8, null, M.RelayWest)); MeshObject("RelayHousing", SaveMesh(SmoothFinish(rv, rt), "Mars_RelayHousing"), m.metal, anc, false); }
+            var relayT = new GameObject("RelayCrystal").transform; relayT.SetParent(anc, false); relayT.position = M.RelayWest + Vector3.up * 2.85f; relayT.rotation = Quaternion.Euler(38f, 0f, 24f);
+            var relay = MeshObject("RelayCrystalMesh", SaveMesh(Lathe(new[] { new Vector2(0f, -0.38f), new Vector2(0.2f, 0f), new Vector2(0f, 0.38f) }, 0f, 360f, 6, null, Vector3.zero), "Mars_RelayCrystal"), GlowMat("Mars_relay_glow"), relayT, false).GetComponent<Renderer>();
+            relay.transform.localPosition = Vector3.zero;
+            // QF18 (16): the pier walk - carved steps down the OUTSIDE of the bank wall north of the old bridge (before they
+            // were a slope inside the solid bank, so 7 walked through the ground and the camera sat in the rock), a lit ledge
+            // walk along the wall under the west span, the conduit along the wall with its displaced section
+            {
+                var v = new List<Vector3>(); var t = new List<int>(); var lv = new List<Vector3>(); var lt = new List<int>();
+                int steps = 10; float z0 = M.PierStairZ0, z1 = M.PierStairZ1;
+                for (int i = 0; i < steps; i++)
+                {
+                    float za = Mathf.Lerp(z0, z1, i / (float)steps), zb = Mathf.Lerp(z0, z1, (i + 1) / (float)steps);
+                    float ytop = Mathf.Lerp(-4f, 0f, (i + 1) / (float)steps);
+                    MBox(v, t, new Vector3(-48.8f, (ytop - 4.6f) * 0.5f, (za + zb) * 0.5f), new Vector3(2.4f, ytop + 4.6f, zb - za + 0.02f), 0f, 0f);
+                }
+                MBox(v, t, new Vector3(-48.8f, -2.3f, z1 + 1.3f), new Vector3(2.4f, 4.6f, 2.6f), 0f, 0f);                         // the landing at the top
+                for (float z = M.PierWalkZ0 + 1.5f; z < z0; z += 3f) MBox(lv, lt, new Vector3(-48.5f, -5.6f, z), new Vector3(1.4f, 2f, 0.6f), 0f, 0.03f);   // corbels under the walk
+                for (float z = M.PierWalkZ0; z < z1 + 2.4f; z += 2.2f) MBox(lv, lt, new Vector3(-47.35f, z < z0 ? -3.55f : Mathf.Lerp(-4f, 0f, Mathf.InverseLerp(z0, z1, z)) + 0.45f, z + 1f), new Vector3(0.3f, 0.9f, 1.9f), 0f, 0.02f);   // the low parapet
+                MeshObject("PierStairs", SaveMesh(Finish(v, t), "Mars_PierStairs"), m.stone, anc);
+                MeshObject("PierParapet", SaveMesh(Finish(lv, lt), "Mars_PierParapet"), m.stoneDark, anc);
+                MGround("PierWalkDeck", new Vector3(-50f, -4.6f, M.PierWalkZ0), new Vector3(-47.2f, -4f, z0 + 0.02f), m.stone, anc);
+                foreach (var z in new[] { 156.4f, 159.6f, 163f, 167f }) MarsLamp($"PierLamp{(int)z}", new Vector3(-49.75f, z < z0 ? -1.9f : Mathf.Lerp(-4f, 0f, Mathf.InverseLerp(z0, z1, z)) + 2.1f, z), 9f, 1.1f, m.glow, anc, new Vector3(0.24f, 0.24f, 0.24f));
+                // the abutments that join the bank to the spans (a 3 m hole in the walkway before)
+                MGround("SpanAbutW", new Vector3(-50f, -1.2f, M.SpanZ0 - 1f), new Vector3(-46.3f, 0f, M.SpanZ1 + 1f), m.temple, anc);
+                MGround("SpanAbutE", new Vector3(46.3f, -1.2f, M.SpanZ0 - 1f), new Vector3(50f, 0f, M.SpanZ1 + 1f), m.temple, anc);
+            }
+            // the displaced conduit section: a 2.1 m banded pipe with a glowing core, knocked out of line onto the walk
+            var conduit = new GameObject("PierConduit").transform; conduit.SetParent(anc, false);
+            {
+                var cv = new List<Vector3>(); var ctt = new List<int>(); var kv = new List<Vector3>(); var kt = new List<int>();
+                for (float zz = -0.95f; zz <= 0.96f; zz += 0.45f) Sweep(cv, ctt, Enumerable.Range(0, 11).Select(i => new Vector3(Mathf.Cos(i / 10f * Mathf.PI * 2f) * 0.15f, Mathf.Sin(i / 10f * Mathf.PI * 2f) * 0.15f, zz)).ToList(), 0.036f, true, 5);
+                foreach (var zz in new[] { -1.02f, 1.02f }) Add(cv, ctt, Lathe(new[] { new Vector2(0f, -0.05f), new Vector2(0.22f, -0.05f), new Vector2(0.22f, 0.05f), new Vector2(0f, 0.05f) }, 0f, 360f, 10, null, Vector3.zero).Let(mm => { var vs = mm.vertices; for (int i = 0; i < vs.Length; i++) vs[i] = new Vector3(vs[i].x, vs[i].z, vs[i].y + zz); mm.vertices = vs; mm.RecalculateNormals(); return mm; }));
+                Sweep(kv, kt, new[] { new Vector3(0f, 0f, -1.05f), new Vector3(0f, 0f, 1.05f) }, 0.08f, false, 7);
+                var cm = MeshObject("ConduitBands", SaveMesh(SmoothFinish(cv, ctt), "Mars_ConduitBands"), m.metalDark, conduit, false); cm.transform.localPosition = Vector3.zero;
+                var core = MeshObject("ConduitCore", SaveMesh(SmoothFinish(kv, kt), "Mars_ConduitCore"), GlowMat("Mars_conduit_core"), conduit, false); core.transform.localPosition = Vector3.zero;
+                conduit.position = M.PierConduitRest; conduit.rotation = M.PierConduitRestRot;
+            }
+            // the sockets either side of the gap on the wall
+            foreach (var dz in new[] { -1.12f, 1.12f }) MeshObject($"ConduitSocket{(dz < 0 ? "S" : "N")}", SaveMesh(Lathe(new[] { new Vector2(0f, -0.08f), new Vector2(0.24f, -0.08f), new Vector2(0.24f, 0.08f), new Vector2(0f, 0.08f) }, 0f, 360f, 10, null, Vector3.zero).Let(mm => { var vs = mm.vertices; for (int i = 0; i < vs.Length; i++) vs[i] = new Vector3(vs[i].x, vs[i].z, vs[i].y) + M.PierConduit + new Vector3(0f, 0f, dz); mm.vertices = vs; mm.RecalculateBounds(); return mm; }), $"Mars_ConduitSocket{dz}"), m.metalDark, anc, false);
 
             // ---------------------------------------------------------------- the ancient bridge's two spans (segments, misaligned until section 6)
             Transform Span(string n, float x0, float x1)
@@ -385,7 +633,7 @@ namespace Seven.EditorTools
                 {
                     var seg = new GameObject($"Seg{i}").transform; seg.SetParent(root, false); seg.localPosition = new Vector3(-(x1 - x0) * 0.5f + len * (i + 0.5f), 0f, 0f);
                     var v = new List<Vector3>(); var t = new List<int>();
-                    MBox(v, t, new Vector3(0f, -0.6f, 0f), new Vector3(len - 0.1f, 1.2f, 8f));
+                    MBox(v, t, new Vector3(0f, -0.6f, 0f), new Vector3(len, 1.2f, 8f), 0f, 0f);   // QF18 (13): full length - no 10 cm cracks between the segments
                     MBox(v, t, new Vector3(0f, 0.5f, -3.9f), new Vector3(len - 0.1f, 1.0f, 0.3f)); MBox(v, t, new Vector3(0f, 0.5f, 3.9f), new Vector3(len - 0.1f, 1.0f, 0.3f));
                     MBox(v, t, new Vector3(0f, -3.2f, 0f), new Vector3(len * 0.5f, 4f, 5f));                         // the arch's key under the deck
                     var go = MeshObject($"{n}_Seg{i}", SaveMesh(Finish(v, t), $"Mars_{n}_Seg{i}"), m.temple, seg); go.transform.localPosition = Vector3.zero;
@@ -407,9 +655,11 @@ namespace Seven.EditorTools
             var isl = new GameObject("TempleIsland").transform; isl.SetParent(world, false);
             MeshObject("IslandRock", SaveMesh(Lathe(new[] { new Vector2(0f, fy - 1f), new Vector2(30f, fy - 1f), new Vector2(27f, fy + 6f), new Vector2(25f, -3f), new Vector2(24f, -0.6f), new Vector2(0f, -0.6f) }, 0f, 360f, 36, null, new Vector3(0f, 0f, 152f)), "Mars_IslandRock"), m.rockDark, isl);
             // the plaza decks: west lane, centre (south / north), east (south / north) - the broken strip in the east lane left open
-            MBlock("PlazaDeckW", new Vector3(-21f, -0.6f, 124f), new Vector3(-6.7f, 0f, 168f), m.stone, isl, false);
-            MBlock("PlazaDeckC", new Vector3(-6.7f, -0.6f, 124f), new Vector3(6.7f, 0f, 168f), m.stone, isl, false);
-            MBlock("PlazaDeckE", new Vector3(6.7f, -0.6f, 124f), new Vector3(21f, 0f, 168f), m.stone, isl, false);
+            MGround("PlazaDeckW", new Vector3(-21f, -0.6f, 124f), new Vector3(-6.7f, 0f, 162f), m.stone, isl);
+            MGround("PlazaDeckC", new Vector3(-6.7f, -0.6f, 124f), new Vector3(6.7f, 0f, 162f), m.stone, isl);
+            MGround("PlazaDeckE", new Vector3(6.7f, -0.6f, 124f), new Vector3(21f, 0f, 162f), m.stone, isl);
+            MGround("PlazaDeckNW", new Vector3(-21f, -0.6f, 162f), new Vector3(-6f, 0f, 168f), m.stone, isl);
+            MGround("PlazaDeckNE", new Vector3(6f, -0.6f, 162f), new Vector3(21f, 0f, 168f), m.stone, isl);
             // QF17 (1): the plaza is one open arena now (the boss fight moves) - the old lane walls are gone; Viper's raised platform
             var dais = new GameObject("ViperDais").transform; dais.SetParent(isl, false); dais.position = Seven.ViperFight.DaisAt;
             {
@@ -428,25 +678,67 @@ namespace Seven.EditorTools
             var bC = EnergyWall("BarrierCentre", new Vector3(-6.4f, 0f, 150.35f), new Vector3(6.4f, 3.2f, 150.65f));
             var slide = MBlock("MovingSection", new Vector3(-0.35f, 0f, -2f), new Vector3(0.35f, 2.6f, 2f), m.metalDark, isl, false).transform; slide.position = new Vector3(6.7f, 0f, M.SlideGateZ);
             var fallen = MBlock("FallenWalkway", new Vector3(-5f, -0.3f, -2.6f), new Vector3(5f, 0f, 2.6f), m.stone, isl, false).transform; fallen.position = M.FallenWalkRest; fallen.rotation = Quaternion.Euler(14f, 8f, -18f);
-            var pylons = new List<Renderer>();
+            // QF18 (15, 19b): Viper's pylons - clearly HIS tech (angular, dark metal, a hard white emitter), three hinged armour
+            // panels that fall open when she shuts one down (MarsPylon: the light dies, sparks, the panels open, the head slumps)
+            var pylons = new List<Renderer>(); var pylonObjs = new List<Seven.MarsPylon>();
             for (int i = 0; i < M.Pylons.Length; i++)
             {
                 var p = M.Pylons[i];
-                MeshObject($"Pylon{i}", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.62f, 0f), new Vector2(0.55f, 0.25f), new Vector2(0.32f, 0.4f), new Vector2(0.26f, 2.2f), new Vector2(0.42f, 2.4f), new Vector2(0f, 2.42f) }, 0f, 360f, 14, null, p), $"Mars_Pylon{i}"), m.metalDark, isl);
-                pylons.Add(MeshObject($"PylonGlow{i}", SaveMesh(Lathe(new[] { new Vector2(0f, 2.4f), new Vector2(0.34f, 2.45f), new Vector2(0.3f, 2.75f), new Vector2(0f, 2.95f) }, 0f, 360f, 12, null, p), $"Mars_PylonGlow{i}"), GlowMat($"Mars_pylon_glow{i}"), isl, false).GetComponent<Renderer>());
+                var root = new GameObject($"Pylon{i}").transform; root.SetParent(isl, false); root.position = p;
+                var bm = MeshObject($"Pylon{i}_Body", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.78f, 0f), new Vector2(0.7f, 0.32f), new Vector2(0.42f, 0.5f), new Vector2(0.34f, 2.3f), new Vector2(0.5f, 2.42f), new Vector2(0.28f, 2.55f), new Vector2(0f, 2.55f) }, 0f, 360f, 6, null, Vector3.zero), $"Mars_Pylon{i}"), m.metalDark, root, true);
+                bm.transform.localPosition = Vector3.zero;
+                var panels = new List<Transform>();
+                for (int k = 0; k < 3; k++)
+                {
+                    float a = k * 120f + 30f;
+                    var hinge = new GameObject($"Panel{k}").transform; hinge.SetParent(root, false); hinge.localPosition = Polar(0.44f, a, 0.55f); hinge.localRotation = Quaternion.identity;
+                    var pivot = new GameObject("Pivot").transform; pivot.SetParent(hinge, false); pivot.localRotation = Quaternion.Euler(0f, 90f - a, 0f);
+                    var pv = new List<Vector3>(); var ptt = new List<int>();
+                    MBox(pv, ptt, new Vector3(0f, 0.8f, 0.04f), new Vector3(0.42f, 1.55f, 0.07f), 0f, 0f);
+                    MBox(pv, ptt, new Vector3(0f, 1.2f, 0.09f), new Vector3(0.12f, 0.9f, 0.05f), 0f, 0f);
+                    var pm = MeshObject($"Pylon{i}_Panel{k}", SaveMesh(Finish(pv, ptt), $"Mars_Pylon{i}_Panel{k}"), m.metal, pivot, false); pm.transform.localPosition = Vector3.zero; pm.transform.localRotation = Quaternion.identity;
+                    panels.Add(pivot);
+                }
+                var head = new GameObject("Head").transform; head.SetParent(root, false); head.localPosition = new Vector3(0f, 2.55f, 0f);
+                var hr = MeshObject($"PylonGlow{i}", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.3f, 0.18f), new Vector2(0.22f, 0.42f), new Vector2(0f, 0.62f) }, 0f, 360f, 4, null, Vector3.zero), $"Mars_PylonGlow{i}"), GlowMat($"Mars_pylon_glow{i}"), head, false).GetComponent<Renderer>();
+                hr.transform.localPosition = Vector3.zero;
+                var lamp = PointLight($"Pylon{i}_Lamp", p + Vector3.up * 3.0f, 9f, 3.2f, head); lamp.shadows = LightShadows.None;
+                var mp = root.gameObject.AddComponent<Seven.MarsPylon>(); mp.Head = hr; mp.Lamp = lamp; mp.Panels = panels.ToArray(); mp.HeadT = head;
+                pylons.Add(hr); pylonObjs.Add(mp);
             }
             var restraint = new GameObject("ViperRestraint"); restraint.transform.SetParent(isl, false);
             { var v = new List<Vector3>(); var t = new List<int>(); for (int k = 0; k < 3; k++) Sweep(v, t, Enumerable.Range(0, 28).Select(i => new Vector3(Mathf.Cos(i / 28f * Mathf.PI * 2f) * 0.75f, 0.3f + k * 0.5f, Mathf.Sin(i / 28f * Mathf.PI * 2f) * 0.75f)).ToList(), 0.035f, true, 6);
               var r = MeshObject("RestraintRings", SaveMesh(SmoothFinish(v, t), "Mars_Restraint"), m.glow, restraint.transform, false); r.transform.localPosition = Vector3.zero; restraint.SetActive(false); }
-            // Viper's small machines (three hovering jammers)
+            // QF18 (17): Viper's sentries - angular dark-metal drones about a metre across, a hard white eye, a searchlight that
+            // sweeps ahead (MarsSentry), side fins; they fly at the worker's control and attack it
             var jammers = new List<Transform>();
             for (int i = 0; i < 3; i++)
             {
                 var j = new GameObject($"Jammer{i}").transform; j.SetParent(world, false); j.position = M.JammerFrom[i];
-                var v = new List<Vector3>(); var t = new List<int>(); Ellipsoid(v, t, Vector3.zero, new Vector3(0.45f, 0.25f, 0.45f), 6, 10);
-                var b = MeshObject($"Jammer{i}_Body", SaveMesh(SmoothFinish(v, t), $"Mars_Jammer{i}"), m.metalDark, j, false); b.transform.localPosition = Vector3.zero;
-                var gl = MBlock($"Jammer{i}_Eye", new Vector3(-0.12f, -0.05f, 0.38f), new Vector3(0.12f, 0.05f, 0.46f), m.glow, j, false); gl.transform.localPosition = Vector3.zero;
+                var body = new GameObject("Body").transform; body.SetParent(j, false);
+                var v = new List<Vector3>(); var t = new List<int>();
+                Add(v, t, Lathe(new[] { new Vector2(0f, -0.28f), new Vector2(0.34f, -0.18f), new Vector2(0.52f, 0f), new Vector2(0.36f, 0.16f), new Vector2(0.14f, 0.3f), new Vector2(0f, 0.32f) }, 0f, 360f, 6, null, Vector3.zero));
+                foreach (var sx in new[] { -1f, 1f }) MBox(v, t, new Vector3(sx * 0.62f, 0.02f, -0.1f), new Vector3(0.36f, 0.06f, 0.5f), sx * 18f, 0f);
+                MBox(v, t, new Vector3(0f, 0.36f, -0.18f), new Vector3(0.06f, 0.16f, 0.34f), 0f, 0f);
+                var b = MeshObject($"Jammer{i}_Body", SaveMesh(Finish(v, t), $"Mars_Jammer{i}"), m.metalDark, body, false); b.transform.localPosition = Vector3.zero;
+                var ev = new List<Vector3>(); var et = new List<int>(); Ellipsoid(ev, et, new Vector3(0f, -0.02f, 0.46f), new Vector3(0.13f, 0.09f, 0.07f), 6, 10);
+                var gl = MeshObject($"Jammer{i}_Eye", SaveMesh(SmoothFinish(ev, et), $"Mars_JammerEye{i}"), GlowMat($"Mars_jammer_eye{i}"), body, false); gl.transform.localPosition = Vector3.zero;
+                var sl = new GameObject("Searchlight").AddComponent<Light>(); sl.transform.SetParent(j, false); sl.transform.localPosition = new Vector3(0f, -0.05f, 0.5f); sl.transform.localRotation = Quaternion.Euler(24f, 0f, 0f);
+                sl.type = LightType.Spot; sl.spotAngle = 34f; sl.range = 16f; sl.intensity = 7f; sl.color = Color.white; sl.shadows = LightShadows.None;
+                var ms = j.gameObject.AddComponent<Seven.MarsSentry>(); ms.Eye = gl.GetComponent<Renderer>(); ms.Search = sl; ms.Body = body;
                 j.gameObject.SetActive(false); jammers.Add(j);
+            }
+            // QF18 (17): Viper's loudspeaker horn on a mast by the west control (his voice comes from it; its light pulses)
+            var horn = new GameObject("ViperHorn").transform; horn.SetParent(world, false); horn.position = M.ViperHornAt;
+            {
+                var v = new List<Vector3>(); var t = new List<int>();
+                Add(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.32f, 0f), new Vector2(0.26f, 0.2f), new Vector2(0.11f, 0.3f), new Vector2(0.09f, 4.4f), new Vector2(0.2f, 4.5f), new Vector2(0f, 4.55f) }, 0f, 360f, 6, null, Vector3.zero));
+                var hornMesh = Lathe(new[] { new Vector2(0.08f, 0f), new Vector2(0.12f, 0.25f), new Vector2(0.24f, 0.55f), new Vector2(0.48f, 0.8f), new Vector2(0.44f, 0.82f), new Vector2(0f, 0.3f) }, 0f, 360f, 8, null, Vector3.zero);
+                var hv = hornMesh.vertices; var toCtl = (M.WestControl - M.ViperHornAt); toCtl.y = 0f; var q = Quaternion.LookRotation(toCtl.normalized) * Quaternion.Euler(80f, 0f, 0f);
+                for (int i = 0; i < hv.Length; i++) hv[i] = q * hv[i] + new Vector3(0f, 4.2f, 0f);
+                int hbase = v.Count; v.AddRange(hv); t.AddRange(hornMesh.triangles.Select(i => i + hbase));
+                MeshObject("ViperHornMast", SaveMesh(Finish(v, t), "Mars_ViperHorn"), m.metalDark, horn, false).transform.localPosition = Vector3.zero;
+                var hl = PointLight("ViperHornLight", M.ViperHornAt + Vector3.up * 4.3f, 7f, 0f, horn); hl.shadows = LightShadows.None;
             }
 
             // ---------------------------------------------------------------- the temple (older than everything round it)
@@ -469,8 +761,8 @@ namespace Seven.EditorTools
                 foreach (var (rw, rd, rh) in new[] { (24f, 26f, 1.4f), (20f, 22f, 1.3f), (15.5f, 17.5f, 1.2f), (11f, 13f, 1.1f), (6.5f, 8.5f, 1f) }) { RoundSlab(rvv, rtt, new Vector3(0f, ry + rh * 0.5f, 180f), new Vector3(rw, rh, rd), 0f, 1.6f, 0.06f); ry += rh; }
                 { int rb = rvv.Count; var crown = Lathe(new[] { new Vector2(2.6f, 0f), new Vector2(2.2f, 1.2f), new Vector2(1.2f, 2.4f), new Vector2(0f, 2.9f) }, 0f, 360f, 24, null, new Vector3(0f, ry, 180f)); rvv.AddRange(crown.vertices); rtt.AddRange(crown.triangles.Select(i => i + rb)); }
                 MeshObject("TempleRoof", SaveMesh(SmoothFinish(rvv, rtt), "Mars_TempleRoof"), m.temple, tem);
-                MBlock("TempleFloorDeck", new Vector3(-10f, -0.6f, 169f), new Vector3(10f, 0f, 191f), m.stoneDark, tem, false);
-                MBlock("TempleStepsDeck", new Vector3(-6f, -0.6f, 162f), new Vector3(6f, 0f, 169.8f), m.stone, tem, false);
+                MGround("TempleFloorDeck", new Vector3(-10f, -0.6f, 169f), new Vector3(10f, 0f, 191f), m.stoneDark, tem);
+                MGround("TempleStepsDeck", new Vector3(-6f, -0.6f, 162f), new Vector3(6f, 0f, 169f), m.stone, tem);
                 for (int i = 0; i < 3; i++) MBlock($"TempleStep{i}", new Vector3(-6f, 0f, 162f + i * 1.2f), new Vector3(6f, 0.06f + i * 0.02f, 163.2f + i * 1.2f), m.stone, tem, false);
                 foreach (var x in new[] { -7f, 7f }) for (float z = 173f; z < 190f; z += 5.5f)
                 {
@@ -606,14 +898,17 @@ namespace Seven.EditorTools
             d.Guard = guard; d.Worker = worker; d.Caretaker = caretaker; d.Viper = viperF; d.Townsfolk = folk.ToArray(); d.Drivers = drivers;
             d.Barrier = barrier; d.Transport = transport; d.ViperPlatform = plat; d.PlatformLight = plight;
             d.CausewaySlab = slab; d.CausewayEdges = slabEdges; d.ServiceGate = gate; d.ServicePanel = gatePanel;
-            d.Mechanism = mech; d.ChannelW = chW; d.ChannelE = chE; d.ControlW = ctlW; d.ControlE = ctlE; d.RelayW = relay;
+            d.Mechanism = mech; d.ChannelWA = chWA; d.ChannelWB = chWB; d.ChannelE = chE; d.ControlW = ctlW; d.ControlE = ctlE; d.RelayW = relay;
+            d.WheelW = wheelW; d.WheelE = wheelE; d.MechGears = gears.ToArray(); d.RelayCrystal = relayT;
+            d.GateLine = gateLine; d.GateFeed = feedLine; d.CableEndUpper = endUp; d.CableEndLower = endLo; d.Drawbridge = slab.GetComponent<Seven.MarsDrawbridge>(); d.ViperHorn = horn;
             d.Conduit = conduit; d.SwingSeg = swing; d.SpanW = spanW; d.SpanE = spanE; d.Jammers = jammers.ToArray();
-            d.Pylons = pylons.ToArray(); d.BarrierWC = bWC; d.BarrierCE = bCE; d.BarrierCentre = bC; d.SlideBlock = slide; d.FallenWalk = fallen; d.Restraint = restraint; d.Dais = dais;
+            d.Pylons = pylons.ToArray(); d.PylonObjs = pylonObjs.ToArray(); d.BarrierWC = bWC; d.BarrierCE = bCE; d.BarrierCentre = bC; d.SlideBlock = slide; d.FallenWalk = fallen; d.Restraint = restraint; d.Dais = dais;
             d.SymbolW = symW; d.SymbolE = symE; d.Display = disp; d.Rune = rune; d.RecordTet = recordTet; d.DisplayLeads = leads;
             d.Vision4 = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_04_mars.mp4");
             AddProbe(new Vector3(-110f, 6f, 0f), new Vector3(240f, 30f, 120f), Vector3.zero);
             AddProbe(new Vector3(0f, -8f, 80f), new Vector3(140f, 40f, 300f), Vector3.zero);
             AddProbe(new Vector3(0f, 6f, 180f), new Vector3(24f, 14f, 26f), Vector3.zero);
+            QF18SceneChecks("Mars", true, () => slab.GetComponent<Seven.MarsDrawbridge>().Set(1f), () => slab.GetComponent<Seven.MarsDrawbridge>().Set(0f));   // QF18 (6, 11, 13)
             EditorSceneManager.SaveScene(scene, MarsScenePath);
             Log("scene saved " + MarsScenePath + $" ({folk.Count} townsfolk, Viper {(viperF != null ? "rigged" : "missing")}, Reptilians {(rept != null ? "rigged" : "placeholder")})");
         }

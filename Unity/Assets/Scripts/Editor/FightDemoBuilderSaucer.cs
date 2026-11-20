@@ -412,8 +412,8 @@ namespace Seven.EditorTools
             var fridge = new GameObject("Fridge").transform; fridge.SetParent(nook, false);
             fridge.position = Polar(FridgeR, FridgeAngle, 0f);
             fridge.rotation = Quaternion.LookRotation(-Polar(1f, FridgeAngle, 0f));      // +Z faces the deck
-            Cube("FridgeBody", fridge, new Vector3(0f, 0.95f, -0.05f), new Vector3(0.82f, 1.9f, 0.62f), m.table);
-            Cube("FridgeInside", fridge, new Vector3(0f, 0.95f, 0.2f), new Vector3(0.7f, 1.75f, 0.12f), m.cove);
+            Cube("FridgeBody", fridge, new Vector3(0f, 0.953f, -0.05f), new Vector3(0.82f, 1.9f, 0.62f), m.table);   // QF18 (11): off the floor plane
+            Cube("FridgeInside", fridge, new Vector3(0f, 0.95f, 0.196f), new Vector3(0.7f, 1.75f, 0.12f), m.cove);   // QF18 (11): its face 4 mm behind the body front
             foreach (var y in new[] { 0.55f, 0.95f, 1.35f }) Cube("Shelf", fridge, new Vector3(0f, y, 0.27f), new Vector3(0.68f, 0.02f, 0.06f), m.frame);
             var hinge = new GameObject("FridgeDoor").transform; hinge.SetParent(fridge, false); hinge.localPosition = new Vector3(-0.41f, 0f, 0.28f);
             Cube("DoorPanel", hinge, new Vector3(0.41f, 0.95f, 0.03f), new Vector3(0.82f, 1.88f, 0.06f), m.table);       // QF3: dissolvable (was the chair-shell material and stayed after the reveal)
@@ -915,6 +915,7 @@ namespace Seven.EditorTools
             WireShipConsole(consoleRefs, dir, chUi);
             BuildOutside(atmo, ch);                                                 // QF16 (1 + 2): the view outside + the passage stage                                // Round 13: Seven.ShipConsole
 
+            QF18SceneChecks("Saucer", false);   // QF18 (11, 13): report
             EditorSceneManager.SaveScene(scene, SaucerScenePath);
             Log("scene saved " + SaucerScenePath);
         }

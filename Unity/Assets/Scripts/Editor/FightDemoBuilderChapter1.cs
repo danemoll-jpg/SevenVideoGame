@@ -450,6 +450,7 @@ namespace Seven.EditorTools
             d.VisionVideo = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_01_door.mp4");   // the first vision (Dan, 2026-11-17)
             if (d.VisionVideo == null) Log("WARNING: vision video missing (Assets/Video/vision_01_door.mp4) - the in-engine vision is the fallback");
 
+            QF18SceneChecks("Chapter1", false);   // QF18 (11, 13): report
             EditorSceneManager.SaveScene(scene, Chapter1ScenePath);
             Log("scene saved " + Chapter1ScenePath);
         }

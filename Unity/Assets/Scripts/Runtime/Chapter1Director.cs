@@ -1047,8 +1047,9 @@ namespace Seven
             yield return Wait(1.1f);
             if (Auto) { var rh = Seven.Bone(HumanBodyBones.RightMiddleProximal); Cap.Log($"touch: right hand knuckles {(rh != null ? Vector3.Distance(rh.position, MoonLayout.ShapeAt) - MoonLayout.ShapeRadius : -1f):0.000} m from the shape's surface (QF8: must be < 0.04)"); }
             yield return Shot("qf7_01_reaches_for_the_shape");
-            // her fingers on it: the edges flare, the light swells to white -> the vision
-            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { _shapeGlow = Mathf.Lerp(ShapeGlowIdle, 4f, t / 0.5f); yield return null; }
+            // her fingers on it: QF18 (20) the shared touch -> vision lead-in - the edges flare, light runs up her arm, her
+            // forehead point lights, the push-in to her eyes, the bloom to white (she keeps the shape after the vision)
+            yield return VisionTouch.Into("moon", Seven, Cam, UI, MoonLayout.ShapeAt, MoonLayout.ShapeRadius, k => _shapeGlow = Mathf.Max(ShapeGlowIdle, k));
             yield return Shot("s06_shape_touch_flare");
             // Wash to white; the vision (Dan, 2026-11-17): the video of this doorway long ago - the lock beside it intact,
             // being used - full-screen; the cat is heard faintly, far away. The music fades out (Round 13 0g: suspended, it

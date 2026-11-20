@@ -167,10 +167,18 @@ namespace Seven
             foreach (var x in F.lines)
             {
                 if (x.scene != scene) continue;
-                int n = int.Parse(x.id.Substring(x.id.LastIndexOf('_') + 1));
+                if (!int.TryParse(x.id.Substring(x.id.LastIndexOf('_') + 1), out int n)) continue;   // QF18: named ids (MAR_06_V1) go through Ids()
                 if (n < from || n > to) continue;
-                l.Add(new VoiceBank.Line { Id = x.id, Speaker = x.speaker, Text = x.text, Scene = 400, PauseAfter = 0.45f, Clip = Resources.Load<AudioClip>("MarsVoice/" + x.id), Label = x.label });
+                l.Add(Make(x));
             }
+            return l;
+        }
+        static VoiceBank.Line Make(Line x) => new VoiceBank.Line { Id = x.id, Speaker = x.speaker, Text = x.text, Scene = 400, PauseAfter = 0.45f, Clip = Resources.Load<AudioClip>("MarsVoice/" + x.id), Label = x.label };
+        /// <summary>QF18: lines by their ids, in the order given (the spec's named rows: MAR_06_V1, MAR_06_H4 ...).</summary>
+        public static List<VoiceBank.Line> Ids(params string[] ids)
+        {
+            var l = new List<VoiceBank.Line>();
+            foreach (var id in ids) { var x = F.lines.Find(y => y.id == id); if (x != null) l.Add(Make(x)); else Debug.LogWarning("[Seven] Mars line missing: " + id); }
             return l;
         }
         public static int Count(string scene) => F.lines.FindAll(x => x.scene == scene).Count;

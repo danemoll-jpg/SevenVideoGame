@@ -51,6 +51,9 @@ namespace Seven.EditorTools
             {
                 BuildAll();
                 code = BuildPlayer() ? 0 : 1;
+                // QF18: a scene that fails a build check (holes, z-fighting, NPC placement) fails the build (the player is still written)
+                if (BuildFailures.Count > 0) { Debug.LogError("[FightDemoBuilder] QF18 BUILD CHECKS FAILED: " + string.Join(" | ", BuildFailures)); if (code == 0) code = 2; }
+                else Log("QF18 build checks: all passed");
             }
             catch (Exception e)
             {
@@ -86,6 +89,7 @@ namespace Seven.EditorTools
             BuildRound11(sevenCtl, atmo, bank);        // Round 11: Chapter 2 "Venus", part 1
             BuildRound14(sevenCtl, atmo, bank);        // Round 14: Chapter "Europa — Beneath the Ice"
             BuildRound15(sevenCtl, atmo, bank);        // Round 15: Chapter "Mars — The Divided Kingdoms"
+            BuildWorldViews();                         // QF18 (2, 3): the window views + the holograms, from the real levels
             EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
             ConfigurePlayer();
             AssetDatabase.SaveAssets();

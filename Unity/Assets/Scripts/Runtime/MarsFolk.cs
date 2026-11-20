@@ -21,6 +21,26 @@ namespace Seven
         public bool CalmSway = true;
         public AudioSource Voice;                    // set while one of its lines plays
         [System.NonSerialized] public float Flare;   // Viper: 0..1 hood flare (angry lines)
+        /// <summary>QF18 (8): Viper's eyes glow white (two small emissive points + a faint light at the eyes) while he speaks
+        /// down from his platform - readable in his close-ups.</summary>
+        [System.NonSerialized] public bool EyeGlow;
+        GameObject _eyeL, _eyeR; Light _eyeLight;
+        void UpdateEyes()
+        {
+            bool on = EyeGlow && _head != null && gameObject.activeInHierarchy;
+            if (!on) { if (_eyeL != null) { _eyeL.SetActive(false); _eyeR.SetActive(false); _eyeLight.enabled = false; } return; }
+            if (_eyeL == null)
+            {
+                var m = Markers.Additive(2.2f);
+                GameObject Eye(string n) { var g = new GameObject(n); g.AddComponent<MeshFilter>().sharedMesh = Markers.Rock(7, Vector3.one * 0.018f); var r = g.AddComponent<MeshRenderer>(); r.sharedMaterial = m; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; return g; }
+                _eyeL = Eye("ViperEyeL"); _eyeR = Eye("ViperEyeR");
+                _eyeLight = new GameObject("ViperEyeLight").AddComponent<Light>(); _eyeLight.type = LightType.Point; _eyeLight.color = Color.white; _eyeLight.range = 0.9f; _eyeLight.intensity = 1.6f; _eyeLight.shadows = LightShadows.None;
+            }
+            _eyeL.SetActive(true); _eyeR.SetActive(true); _eyeLight.enabled = true;
+            var f = transform.forward; var r2 = transform.right; float s = transform.lossyScale.y;
+            var c = _head.position + (Vector3.up * 0.075f + f * 0.11f) * s;
+            _eyeL.transform.position = c - r2 * 0.038f * s; _eyeR.transform.position = c + r2 * 0.038f * s; _eyeLight.transform.position = c + f * 0.05f * s;
+        }
         public bool Busy => _co != null;
         public float Distance { get; private set; }
         string _state; Coroutine _co; Transform _head, _neck, _chest, _hips; float _talk, _nod; readonly float[] _buf = new float[256];
@@ -123,6 +143,7 @@ namespace Seven
                 _head.localScale = new Vector3(f, 1f, 1f + 0.05f * Mathf.Clamp01(Flare));
                 if (_neck != null) _neck.localScale = new Vector3(1f + 0.08f * Mathf.Clamp01(Flare), 1f, 1f);
             }
+            UpdateEyes();
             // the Orc Walk is broad in the hips: damp its side sway by a third while walking
             if (CalmSway && _hips != null && _state == "walk")
             {

@@ -42,6 +42,20 @@ namespace Seven
             }
         }
         /// <summary>0 = dark (dampened by the laser field), 1 = normal glow. Fades over the given time.</summary>
+        /// <summary>QF18 (10): collision on foot against walls / props (the zones still decide where the floor is).</summary>
+        public static bool FootCollide = true;
+        public static int FootSlides; float _footLogT;
+        Transform[] _footIgnore; int _footIgnoreN = -1;
+        Transform[] FootIgnore()
+        {
+            var ig = HoverBike.IgnoreRoots;
+            if (_footIgnore == null || _footIgnoreN != (ig != null ? ig.Length : 0))
+            {
+                var l = new System.Collections.Generic.List<Transform> { transform }; if (ig != null) l.AddRange(ig);
+                _footIgnore = l.ToArray(); _footIgnoreN = ig != null ? ig.Length : 0;
+            }
+            return _footIgnore;
+        }
         public void SetEnergyPoint(float level, float seconds = 0f)
         {
             _dotTarget = level; _dotRate = seconds <= 0f ? 1e6f : Mathf.Abs(level - _dotLevel) / seconds;
@@ -226,7 +240,18 @@ namespace Seven
                 // or the laser beams into the next walkable zone.
                 var step = v * spd * Time.deltaTime;
                 int n = Mathf.Max(1, Mathf.CeilToInt(step.magnitude / 0.15f));
-                for (int i = 0; i < n; i++) { transform.position += step / n; ClampToArena(); }
+                for (int i = 0; i < n; i++)
+                {
+                    var before = transform.position;
+                    transform.position += step / n; ClampToArena();
+                    // QF18 (10): every solid surface stops her on foot too (she slides along it) - not only the zone edges
+                    if (FootCollide && !Crouched && CameraOccluders.Ready)
+                    {
+                        var q = RideProbe.SlideLand(before, transform.position, 1.0f, 0.26f, FootIgnore(), out bool wall);
+                        if (wall && DemoBoot.CaptureDir != null && Time.time > _footLogT && new Vector2(q.x - before.x, q.z - before.z).magnitude < 0.3f * new Vector2(transform.position.x - before.x, transform.position.z - before.z).magnitude) { _footLogT = Time.time + 2f; Debug.Log($"[Seven] foot collision (QF18 10): held by '{RideProbe.LastLandHit}' at {before}"); }
+                        if (wall) { FootSlides++; transform.position = new Vector3(q.x, transform.position.y, q.z); ClampToArena(); }
+                    }
+                }
                 string clip = run && !sneak ? "run" : sneak && HasState("sneak_walk") ? "sneak_walk" : "walk";
                 float animSpeed = sneak && clip == "walk" ? 0.62f : 1f;
                 _idleFor = 0f;

@@ -119,9 +119,11 @@ namespace Seven
                 else
                 {
                     // small, perched on her left shoulder (follows the bone every frame)
-                    Cat.transform.localScale = Vector3.one * 0.42f;
+                    Cat.transform.localScale = Vector3.one * 0.6f;                      // QF18 (4): small, but big enough to show over her pigtail
                     _shoulder = Seven.Bone(HumanBodyBones.LeftShoulder);
-                    CatState("sit");
+                    // QF18 (4): lying along the top of her shoulder (front paws forward, hind paws tucked), not sitting off it
+                    CatState("sit");                                     // sitting ON TOP of the shoulder, balanced (the lie-down clip did not render him there)
+                    StartCoroutine(HoldPerchPose());
                     PerchCat();
                     _stageCat = Cat.transform.position;
                 }
@@ -132,11 +134,39 @@ namespace Seven
 
         string _stageCatAnim; bool _catScripted;
         void CatState(string s) { _stageCatAnim = s; if (Cat.Anim != null && Cat.Anim.HasState(0, Animator.StringToHash(s))) Cat.Anim.CrossFadeInFixedTime(s, 0.1f, 0); }
+        /// <summary>QF18 (4) - Dan: "he hangs off the side of her head with his hind legs dangling". Before, his root was put at
+        /// her clavicle joint (inside her, by the neck) facing forward in the sit pose, so his body rose beside her head and his
+        /// hind legs hung below the joint. Now: on TOP of her shoulder - the point over the deltoid between the clavicle and the
+        /// upper-arm joint, raised to the skin - his body along the shoulder line (rear toward her arm, head toward her neck),
+        /// lying (paws on the shoulder), his head turned to look out of the window beside hers, his tail down her back.</summary>
+        public const float PerchTop = 0.085f;
         void PerchCat()
         {
             if (_shoulder == null) return;
             var fwd = Flat(Seven.transform.forward).normalized;
-            Cat.transform.SetPositionAndRotation(_shoulder.position + Up * 0.07f - Seven.transform.right * 0.06f, Quaternion.LookRotation(fwd));
+            var arm = Seven.Bone(HumanBodyBones.LeftUpperArm); var neck = Seven.Bone(HumanBodyBones.Neck);
+            var a = _shoulder.position; var b = arm != null ? arm.position : a - Seven.transform.right * 0.15f;
+            var top = Vector3.Lerp(a, b, 1.0f) + (b - a).normalized * 0.03f - fwd * 0.03f; top.y = Mathf.Max(a.y, b.y) + PerchTop;   // the outer shoulder, clear of her pigtail (by the neck he vanished inside it)
+            if (Auto && Time.frameCount % 120 == 0) { var rs = Cat.GetComponentsInChildren<Renderer>(); int on = 0; foreach (var r in rs) if (r.enabled && r.gameObject.activeInHierarchy) on++; Debug.Log($"[Seven] perch: cat renderers on {on}/{rs.Length}, cat active {Cat.gameObject.activeInHierarchy}, scale {Cat.transform.lossyScale.x:0.00}"); }
+            var inward = Flat((neck != null ? neck.position : a) - b); if (inward.sqrMagnitude < 1e-4f) inward = Seven.transform.right; inward.Normalize();
+            var dir = (inward * 0.35f + fwd * 0.65f).normalized;             // along the shoulder, his head turned out toward the window beside hers
+            Cat.transform.SetPositionAndRotation(top, Quaternion.LookRotation(dir));
+            PerchTopY = top.y; PerchShoulderTop = top;
+        }
+        public float PerchTopY { get; private set; }
+        public Vector3 PerchShoulderTop { get; private set; }
+        System.Collections.IEnumerator HoldPerchPose()
+        {
+            for (float t = 0f; t < 1.1f; t += Time.deltaTime) yield return null;
+            if (Cat != null && Cat.Anim != null && CurrentStage == Stage.WindowShoulder && _stageCatAnim == "lie_down") Cat.Anim.speed = 0f;   // hold the lying pose
+            if (Auto && Cap != null && CurrentStage == Stage.WindowShoulder)
+            {
+                var fw = Flat(Seven.transform.forward).normalized; var rt = Vector3.Cross(Vector3.up, fw);
+                yield return Cap.ShotFrom("qf18_04_perch_front", PerchShoulderTop + fw * 1.1f - rt * 0.55f + Up * 0.2f, PerchShoulderTop + Up * 0.02f, 40f);
+                yield return Cap.ShotFrom("qf18_04_perch_side", PerchShoulderTop - rt * 1.2f + Up * 0.25f - fw * 0.1f, PerchShoulderTop, 40f);
+            }
+            if (Auto) { var rs = Cat.GetComponentsInChildren<SkinnedMeshRenderer>(); string mb = rs.Length > 0 ? rs[0].bounds.center.ToString("0.000") + " size " + rs[0].bounds.size.ToString("0.000") : "-"; Cap?.Log($"perch (QF18 4): cat root {Cat.transform.position:0.000}, mesh bounds {mb}"); }
+            if (Auto && _catPose != null) Cap?.Log($"perch (QF18 4): Panther sitting on her left shoulder top at {PerchShoulderTop:0.000}, his paws at {_catPose.PawL:0.000} / {_catPose.PawR:0.000} (shoulder top y {PerchTopY:0.000}: paw gaps {(_catPose.PawL.y - PerchTopY) * 100f:0} / {(_catPose.PawR.y - PerchTopY) * 100f:0} cm)");
         }
         void LateUpdateStaging()
         {
@@ -233,6 +263,7 @@ namespace Seven
             if (_ik != null) _ik.ReleaseAll(why);
             if (!_staged) yield break;
             var st = CurrentStage; _staged = false; _shoulder = null; _stageCatAnim = null; Cat.ShowCurled(false); SevenRestPose.On(Seven.gameObject, SevenRestPose.Kind.None);
+            if (Cat.Anim != null) Cat.Anim.speed = 1f; if (_catPose != null) { _catPose.LookAt = null; _catPose.TailToward = null; }   // QF18 (4)
             if (st == Stage.Chair || st == Stage.ChairCatConsole)
             {
                 if (st == Stage.ChairCatConsole) { Cat.transform.localScale = Vector3.one * Cat.RoamScale; Cat.transform.position = Flat(PilotHips + PilotRight * 1.1f); Cat.enabled = true; }

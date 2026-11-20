@@ -412,6 +412,7 @@ namespace Seven
             foreach (var w in ChamberWorms) if (w != null && w.Group == d.Id && w.gameObject.activeSelf) { w.Withdraw(NearestBurrow(w.transform.position)); gone++; }
             Log($"device {d.Id} disabled{(skipped ? " (skipped: done for her)" : "")}: {gone} creatures of its trough withdraw (alive); saved - devices [{string.Join(", ", VenusState.DevicesDisabled)}] ({OffCount}/3)");
             StartCoroutine(Shot($"enc_{d.Id}_off"));
+            UI.Hint($"Device shut down  ·  {OffCount} / 3", 2.5f);          // QF18 (19b): a counter, the done state shown
         }
 
         /// <summary>Prompts + actions in the chamber, and the creatures' contact: knocked back (white fade, back on the
@@ -875,7 +876,9 @@ namespace Seven
             { var hb = Seven.Bone(HumanBodyBones.RightHand); var h = hb != null ? Vector3.Lerp(hb.position, touch, 0.4f) : touch; var side = Vector3.Cross(Vector3.up, Flat(VenusLayout.CubeAt - P7).normalized); Shoot(h + side * 1.0f + Vector3.up * 0.3f + Flat(VenusLayout.CubeAt - P7).normalized * 0.2f, h, 34f, 0.01f); }
             yield return Wait(0.8f);
             yield return Shot("c09_02_hand_touches");
-            AudioKit.Play("energy_point", VenusLayout.CubeAt, 0.7f);
+            // QF18 (20): the shared touch -> vision lead-in (the cube answers, light up her arm, the forehead point, the push-in
+            // to her eyes, the bloom to white); the return is Dan's match cut to her open palm below
+            yield return VisionTouch.Into("venus", Seven, Cam, UI, VenusLayout.CubeAt, Flat(VenusLayout.CubeAt - touch).magnitude - 0.07f, null);
             // the vision: full screen (skippable; a still if the video can't play). Under it her hand comes back and opens,
             // palm up in front of her at chest height (ready for the match cut)
             var fw = Flat(Seven.transform.forward).normalized;

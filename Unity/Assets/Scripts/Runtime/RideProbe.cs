@@ -58,6 +58,75 @@ namespace Seven
             return any;
         }
 
+        /// <summary>Like <see cref="Sweep"/> but floors / ramps (normals within ~45° of up) never count - the land probe
+        /// slides along walls and props, it does not catch on the ground it stands on.</summary>
+        public static bool SweepWalls(Vector3 o, float r, Vector3 dir, float len, Transform[] ign, out RaycastHit best)
+        {
+            best = default; best.distance = float.MaxValue; bool any = false;
+            if (len <= 0f || dir.sqrMagnitude < 1e-10f) return false;
+            var d = dir.normalized;
+            bool bf = Physics.queriesHitBackfaces; Physics.queriesHitBackfaces = true;
+            int n = Physics.SphereCastNonAlloc(o, r, d, _h, len, Mask, QueryTriggerInteraction.Ignore);
+            Physics.queriesHitBackfaces = bf;
+            for (int i = 0; i < n; i++)
+            {
+                var h = _h[i]; if (h.collider == null || Started(h) || Ignored(h.collider.transform, ign) || Mathf.Abs(h.normal.y) > 0.7f) continue;
+                if (h.distance < best.distance) { best = h; any = true; }
+            }
+            int m = CameraOccluders.SphereCastAll(o, r, d, len, _h);
+            for (int i = 0; i < m; i++)
+            {
+                var h = _h[i]; if (h.collider == null || Started(h) || Mathf.Abs(h.normal.y) > 0.7f) continue;
+                var rr = CameraOccluders.RendererOf(h.collider);
+                if (rr != null && (Ignored(rr.transform, ign) || Soft(rr))) continue;
+                if (h.distance < best.distance) { best = h; any = true; }
+            }
+            return any;
+        }
+        /// <summary>QF18 (10): what never stops her or the bike - grass and other soft growth (blades she walks through).</summary>
+        static bool Soft(Renderer r) { if (r.name.StartsWith("Grass")) return true; var m = r.sharedMaterial; return m != null && m.shader != null && m.shader.name.Contains("Grass"); }
+
+        /// <summary>QF18 (10): collision on land (the bike and 7 on foot, every world). Why QF15's fix did not cover it: QF15
+        /// swept only the swimming bike; on land the bike and 7 were kept on the walkable zones alone, so wherever two zones
+        /// overlapped past a wall (the west ramp's foot: a 0.6 m corner of overlap behind the bank wall) they went straight
+        /// through it. Now the horizontal move is swept with a body sphere (centre h above the higher of the two ground
+        /// heights, radius r) against the real colliders and every visual mesh, sliding along up to three surfaces.</summary>
+        public static Vector3 SlideLand(Vector3 from, Vector3 to, float h, float r, Transform[] ign, out bool hit)
+        {
+            hit = false;
+            if (!CameraOccluders.Ready) return to;
+            float y = Mathf.Max(from.y, to.y) + h;
+            var c0 = new Vector3(from.x, y, from.z);
+            var mv = new Vector3(to.x - from.x, 0f, to.z - from.z);
+            for (int it = 0; it < 3; it++)
+            {
+                float len = mv.magnitude; if (len < 1e-4f) break;
+                if (!SweepWalls(c0, r, mv, len + LandSkin, ign, out var hh)) { c0 += mv; mv = Vector3.zero; break; }
+                hit = true; LastLandHit = hh.collider != null ? (CameraOccluders.RendererOf(hh.collider)?.name ?? hh.collider.name) + $" n{hh.normal:0.00} d{hh.distance:0.00}" : "?";
+                float go = Mathf.Max(0f, hh.distance - LandSkin);
+                var md = mv / len;
+                c0 += md * go;
+                var nrm = hh.normal; nrm.y = 0f; if (nrm.sqrMagnitude < 1e-6f) break;
+                nrm.Normalize(); if (Vector3.Dot(nrm, md) > 0f) nrm = -nrm;
+                mv = Vector3.ProjectOnPlane(md * (len - go), nrm); mv.y = 0f;
+            }
+            return new Vector3(c0.x, to.y, c0.z);
+        }
+        public const float LandSkin = 0.04f;
+        public static string LastLandHit;
+        /// <summary>QF18 (10) measure: is a body sphere at p (h up, radius r) inside any wall / prop? (floors never count)</summary>
+        public static bool LandInside(Vector3 p, float h, float r, Transform[] ign, out string what)
+        {
+            what = null;
+            var c = p + Vector3.up * h;
+            foreach (var dir in new[] { Vector3.forward, Vector3.back, Vector3.left, Vector3.right, (Vector3.forward + Vector3.left).normalized, (Vector3.forward + Vector3.right).normalized, (Vector3.back + Vector3.left).normalized, (Vector3.back + Vector3.right).normalized })
+            {
+                // a short outward ray from the centre: hitting a wall face (from either side) inside r = the body is in it
+                if (SweepWalls(c - dir * 0.01f, 0.02f, dir, r * 0.85f, ign, out var hh)) { what = hh.collider != null ? (CameraOccluders.RendererOf(hh.collider)?.name ?? hh.collider.name) : "?"; return true; }
+            }
+            return false;
+        }
+
         static SphereCollider _probe;
         /// <summary>Push a sphere at c out of anything it already overlaps (a sweep that starts inside a surface does not see
         /// it). Returns the total push.</summary>

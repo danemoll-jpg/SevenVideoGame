@@ -684,7 +684,11 @@ namespace Seven
             Shoot(EuropaLayout.RuneView + new Vector3(2.5f, 1.4f, 1.6f), EuropaLayout.RuneAt, 40f, 0.01f);
             yield return Wait(0.8f);
             yield return Shot("e31_the_rune_icosahedron");
+            // QF18 (20): the shared touch -> vision -> return (she reaches out from the bike)
+            System.Action<float> eGlow = k => { foreach (var rr in FindRuneRenderers()) { var m = rr.material; m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.white * 0.6f * k); } };
+            yield return VisionTouch.Into("europa", Seven, Cam, UI, EuropaLayout.RuneAt, 0.6f, eGlow, false);
             yield return Vision3Play();
+            yield return VisionTouch.Back("europa", Seven, Cam, EuropaLayout.RuneAt, 0.6f, eGlow, false);
             // back in the temple: 7 remains still
             Shoot(EuropaLayout.RuneView + Bike.transform.right * 3.5f + Vector3.up * 1.6f, P7 + Vector3.up * 1.3f, 44f, 0.01f);
             yield return Say("EUR_15", 1, 7);
@@ -706,6 +710,14 @@ namespace Seven
         }
 
         UnityEngine.Video.VideoPlayer _vp3; RenderTexture _vp3RT;
+        System.Collections.Generic.List<Renderer> _runeR;
+        System.Collections.Generic.List<Renderer> FindRuneRenderers()
+        {
+            if (_runeR != null) return _runeR;
+            _runeR = new System.Collections.Generic.List<Renderer>();
+            foreach (var r in FindObjectsByType<Renderer>()) if (r.name == "Edges" && Vector3.Distance(r.bounds.center, EuropaLayout.RuneAt) < 3f) _runeR.Add(r);
+            return _runeR;
+        }
         IEnumerator Vision3Play()
         {
             // as the Venus vision: music suspended, the shimmer in and out; the video is nearly silent - the learning call carries it

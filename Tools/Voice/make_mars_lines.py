@@ -26,6 +26,13 @@ sec, sub, n = None, None, {}
 # TRV_AST. Their direction column mixes stage directions with vocal ones - only the vocal part becomes the audio tag
 # ("direction"); the whole cell is kept as "action" for the animation.
 row_re = re.compile(r"^\|\s*((?:MAR_13[UCB]|TRV_AST)_\d\d)\s*\|\s*(7|Panther)\s*\|\s*(.+?)\s*\|\s*(.*?)\s*\|$")
+# QF18: named rows in any section - | MAR_03_11 | Worker | line | direction | (the chat's proposed lines, Dan's ids)
+any_row_re = re.compile(r"^\|\s*(MAR_\d\d_[A-Z]?\d+)\s*\|\s*(7|Panther|Viper|Worker|Guard|Caretaker)\s*\|\s*(.+?)\s*\|\s*(.*?)\s*\|$")
+WHO = {"7": "7", "Panther": "PANTHER", "Viper": "VIPER", "Worker": "WORKER", "Guard": "GUARD", "Caretaker": "CARETAKER"}
+TONE = ("quiet", "surprised", "warm", "dry", "alarmed", "quick", "stiff", "formal", "calm", "startled", "laugh", "breath", "cold", "amused", "softly", "gently")
+def tone(cell):
+    keep = [p.strip() for p in re.split(r"[;,]", cell) if any(w in p.lower() for w in TONE) and not any(w in p.lower() for w in ("cut to", "glance", "pointing", "hands on", "to the worker", "loudspeaker"))]
+    return ", ".join(keep)
 VOCAL = ("laugh", "chuckle", "exhale", "sigh", "breath", "hum", "thoughtful", "dry", "softly", "soft", "quiet", "measured",
          "matter-of-fact", "amused", "gently", "attentive", "warm")
 SCN13 = {"MAR_13U": "Departure routing (Europa unfinished)", "MAR_13C": "Departure routing (Europa complete)",
@@ -48,6 +55,13 @@ for raw in text.split("\n"):
         if not any(x["id"] == sid for x in scenes): scenes.append({"id": sid, "title": SCN13[sid], "round": 15})
         speaker, label, voice = SPK["7" if who == "7" else "PANTHER"]
         lines.append({"id": lid, "scene": sid, "speaker": speaker, "label": label, "text": said, "direction": vocal(act), "action": act, "voice": voice})
+        continue
+    r2 = any_row_re.match(s)
+    if r2 and sec is not None:
+        lid, who, said, act = r2.group(1), r2.group(2), r2.group(3), r2.group(4)
+        sid = lid[:lid.rfind("_")]
+        speaker, label, voice = SPK[WHO[who]]
+        lines.append({"id": lid, "scene": sid, "speaker": speaker, "label": label, "text": said, "direction": tone(act), "action": act, "voice": voice})
         continue
     m = line_re.match(s)
     if not m or sec is None: continue

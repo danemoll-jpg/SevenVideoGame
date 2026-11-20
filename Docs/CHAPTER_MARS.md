@@ -110,7 +110,19 @@ He orders the crossing secured and leaves.
 
 **PANTHER:** I noticed him noticing.
 
-**OBJECTIVE:** Find another way across.
+*QF18 (Dan, 2026-11-20 — the objective must come from the story): the worker tells her about the old route, Panther sees
+its entrance from the saucer, and a short shot shows it (the old ramp cut into the bank, the half-buried gateway) before the
+objective changes.*
+
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_03_11 | Worker | There's an old maintenance route under the crossing. The builders used it. | quietly, with a glance at the guard |
+| MAR_03_12 | 7 | Can the transport get through? | |
+| MAR_03_13 | Worker | Not anymore. The service gate's been dead for years. | |
+| MAR_03_14 | 7 | Then I'll take a look. | |
+| MAR_03_15 | Panther | I see it from here. A ramp cut into the bank, east of you. | telepathic |
+
+**OBJECTIVE:** Find another way across → (after the shot of the entrance) Take the old maintenance route down into the ravine.
 
 ---
 
@@ -195,21 +207,61 @@ Combine:
 
 Panther helps her coordinate from the saucer.
 
-**PANTHER:** The far control is ready.
+*QF18 (Dan, 2026-11-20): every step is shown and spoken - nobody mimes, nothing is known from nowhere.*
 
-**7:** Tell them to hold.
+**The worker volunteers** (7 back at the checkpoint):
 
-**PANTHER:** They are holding.
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_06_V1 | 7 | The service route's open. The caretaker on the far bank will work the other control. | |
+| MAR_06_V2 | Worker | The caretaker? From over there? | surprised |
+| MAR_06_V3 | 7 | They're waiting for someone on this side. | |
+| MAR_06_V4 | Worker | Then I'll go. Someone should. | a beat; a glance at the guard first |
+| MAR_06_V5 | 7 | Thank you. | warmly |
+| MAR_06_V6 | Panther | Two volunteers. Practically a treaty. | telepathic, dry |
 
-A mechanism moves unexpectedly.
+**The power chain** (one cause-and-effect chain the player sees): the worker's control is dark; the camera follows its dark
+channel back along the rim to the relay. 7 seats the relay's crystal; the light runs along the channel - and stops under the
+old bridge, where a section of the conduit hangs knocked out of line, sparking.
 
-**7 — a startled breath:** Not that one!
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_06_P1 | Panther | The power stops under the bridge. Something down there's knocked loose. | telepathic |
 
-**PANTHER:** Specificity. Always helpful.
+She goes down the carved steps to the ledge walk under the span and lifts the section back with telekinesis: the light runs
+through it, along the wall and up to the worker's control, which lights up.
 
-She secures it.
+**Viper's sentries** - his voice from a loudspeaker horn on a mast by the control, then three of his machines drop in:
 
-**7 — a short, relieved laugh:** Now.
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_06_D1 | Viper | You've been busy. Let's see how you manage several things at once. | over a loudspeaker; cold, amused |
+| MAR_06_D2 | Worker | Those are his sentries — they'll wreck the control! | alarmed, pointing |
+| MAR_06_D3 | Panther | Three of them. All heading for the worker. | telepathic, quick |
+| MAR_06_D4 | 7 | Not if I can help it. | |
+| MAR_06_D5 | Viper | Every bridge has a weak point. | mid-fight taunt, over the loudspeaker |
+| MAR_06_D6 | Viper | Enjoy it. Bridges fall. | after the last sentry goes down |
+
+**Hold** (replaces "The far control is ready." / "Tell them to hold." / "They are holding."):
+
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_06_H1 | Panther | The caretaker's at the far control. They've raised a lamp — they're ready. | telepathic; cut to the far bank: the caretaker at their control raising a lamp |
+| MAR_06_H2 | 7 | The other side is ready. Hold until I say. | to the worker beside her |
+| MAR_06_H3 | Worker | Holding. | hands on the wheel |
+
+The power surges - a loose span section swings out of line.
+
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_06_H4 | 7 | Not that one! | a startled breath |
+| MAR_06_H5 | Panther | Specificity. Always helpful. | dry |
+
+She catches the section with telekinesis and holds it.
+
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_06_H6 | 7 | Now! | a short, relieved laugh |
 
 The two inhabitants activate their controls together.
 
@@ -362,6 +414,12 @@ No new destinations unlock here. The route is completed in section 13 (with Euro
 On the ride back, the supply transport crosses openly.
 
 The guard and caretaker exchange a few practical words. They are not suddenly close friends, but they are working.
+
+| id | who | line | direction |
+| --- | --- | --- | --- |
+| MAR_11_P1 | Guard | The next load comes at dusk. | stiff, formal |
+| MAR_11_P2 | Caretaker | We'll have the gate open. | calm |
+| MAR_11_P3 | Guard | …Good. | after a pause |
 
 7 slows to let the transport pass.
 
