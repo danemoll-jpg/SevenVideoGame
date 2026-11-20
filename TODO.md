@@ -1,5 +1,53 @@
 # Active Development Plan — 7: The Observer
 
+## Side task S1: Viper ready for Mixamo (Dan, 2026-11-19) — DONE (2026-11-19), waiting for Dan's Mixamo upload
+**Status:** `Tools/Blender/cleanup_viper.py` (~3 min) → `Art/Export/viper/viper_for_mixamo.fbx` (3.4 MB, 35,996 tris,
+2.30 m, feet at 0, faces front (-Y Blender = +Z Mixamo), arms 55° below horizontal, 121 loose pieces welded into 1,
+grayscale 2048 texture embedded) + `viper_mixamo_metrics.txt`; previews `Docs/Previews/viper/` (sheet front / side /
+back, q34, head close-up). **Dan:** upload the FBX to Mixamo's auto-rigger, download "FBX for Unity, with skin" to
+`Art/Mixamo/viper/viper_body_mixamo.fbx`.
+
+Dan's Tripo model `Art/Source/viper/viper_v1.glb` (56 MB, ~2 M tris; reference `Art/Reference/viper_ref_front.png`,
+Kyle's design `kyle_viper.jpg`, notes in `Docs/MODELS-NEEDED.md` "Viper") — Mixamo won't take it (GLB, too heavy).
+Like the guardian's `elarim_body_for_mixamo.fbx`: weld the loose pieces, decimate to ~30–40 k tris keeping the hood,
+fangs, claws and the belly scales readable, A-pose facing +Z / upright, real-world scale (~2.3 m), origin at the feet,
+texture embedded → **`Art/Export/viper/viper_for_mixamo.fbx`**, plus a preview sheet (front / side / back)
+`Docs/Previews/viper/viper_for_mixamo_sheet.png`. Then tell Dan: upload that file to Mixamo's auto-rigger, download
+"FBX for Unity, with skin" to `Art/Mixamo/viper/viper_body_mixamo.fbx`. Commit + push. No release.
+
+
+## Quick fix QF15: the bike camera + walls in Europa (Dan, 2026-11-19) — to do
+Commit first. All standing rules and the repeat-item rule (say why the last fix didn't hold, fix the cause, prove it in
+normal play, never "done" on a partial fix). Dan: **"Two main fixes for Europa now."** Only these two — do them
+properly. Release **0.14.3**; "QF15 — status"; "For Dan to check (QF15)". Testing time may go over 20 minutes for the
+proofs below, but keep it purposeful.
+
+1. **The camera keeps shifting while riding the bike — it must be smooth, always.** QF14 smoothed it only in the race
+   (`ChapterCamera.RaceMode`); everywhere else under water (and on Venus) it still swings, pulls in, cuts or re-aims on its
+   own. While she rides — any section, any world, outside cutscenes — use **one** bike follow camera: behind and a little
+   above the bike, critically damped (no overshoot), following her heading and pitch smoothly; **no automatic swings,
+   cuts, resets or "tight spot" snaps**; when geometry is between camera and bike, **fade / cut it away** (as in the base)
+   rather than jumping the camera in; if it must come closer, ease in and out slowly with a dead band so it never pumps.
+   Look-toward-the-next-ring stays in the race only, as a slow ease. Find and remove every other system that moves the
+   camera during riding (guide marker framing, speed FOV, dialogue framing, collision probes) or route them through this
+   one with smoothing. **Proof:** a per-frame log during free riding (settlement, descent, approach, race, the way home)
+   and on Venus: camera position / aim change per frame vs the bike's — count "shifts" (aim jumps > 3° or position jumps
+   > 0.3 m in a frame not caused by the bike's own motion, and in/out reversals of distance within 0.5 s): **0**. Plus a
+   capture sequence of a minute of riding.
+2. **The bike can still go through walls under water.** QF13's sweep skipped every mesh larger than 60 m (the chamber
+   shell, the temple hall, the escape tube, big ice / rock pieces) and relied on swim volumes, which don't match the walls.
+   Make collision complete: **every** solid surface in Europa (ice ceiling, chamber walls, structures, pillars, arches,
+   the settlement, the base's outside, the tunnels, the temple) stops the bike — she slides along it, never through —
+   at the new top speed (25 m/s: sweep the whole frame's movement, no tunnelling). The camera never goes through walls
+   either (and never shows the inside of geometry). **Proof:** an automated wall test — ride at full speed straight into
+   walls and along them from many angles in every area (at least 150 attempts spread over the chapter, including the big
+   shells and the race course) and the free-riding routes: **0 frames with the bike or camera inside geometry**; list
+   any spot that failed and was fixed. Also a few captures riding hard along a wall.
+
+Checks + release: the two proofs above, one player-style ride through Europa from the dive to the base and from the
+escape to the temple, publish **0.14.3**; docs; commit + push.
+
+
 ## Quick fix QF14: Dan's 0.14.1 play — Europa focus + the menu (Dan, 2026-11-19) — done, status below; release 0.14.2
 Commit first. All standing rules; the QF13 rule for repeat items (say why the last fix didn't hold, fix the cause, prove
 it from the player's camera in normal play, never "done" on a partial fix). 20-minute rule except where proving a repeat

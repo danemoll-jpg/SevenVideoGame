@@ -153,3 +153,18 @@ Prompts: claude.ai project doc `claude/7-cetacean-model-reference.md`. Spec: `Do
   head/fin movement synced to the voice clip's loudness — no mouth animation.
 - Not modelled (Dan, 2026-11-19): the bubble helmet (a simple transparent sphere/shader in Unity — glass domes break in
   generation) and Europa's rune (icosahedron, generated in code like the cube and dodecahedron).
+
+## Viper — Mars (2026-11-19)
+Kyle's design: `Art/Reference/kyle_viper.jpg` (labelled "pit VIPER"; **his name is Viper** — Dan, 2026-11-19). Clean A-pose reference in: `Art/Reference/viper_ref_front.png` (Dan, 2026-11-19). Mars antagonist (`Docs/CHAPTER_MARS.md`). Not scheduled.
+Tall, lean, long-armed reptilian humanoid; hooded snake head (cobra-like hood flaring behind the head), glowing slit
+eyes, long fangs; a band of ribbed ventral scales from the throat down the chest and belly; long arms with large hands;
+long legs ending in dark, pointed, clawed feet. Pipeline: Dan generates a clean A-pose reference in Kyle's style (prompt
+given in chat, mouth closed) → Tripo → `Art/Source/viper/viper_v1.glb` → Mixamo auto-rig (Humanoid). Talking: a jaw bone
+opens with his voice's loudness (no lip-sync); the hood can flare on angry lines. Suggested height ~2.3 m.
+
+## Reptilians — Mars townspeople (2026-11-19)
+One base model reused for the guard, the worker, the caretaker, families and traders (scale ±10 %, a few material
+tones; guards get a simple chest plate / helmet prop attached in Unity). Related to Viper but clearly not him: lizard
+heads (no cobra hood, no fangs showing), sturdier, ordinary people, simple fitted work clothes — **no capes or long
+robes** (the guardian's cape cost four rounds). Prompt given in chat. Expected: `Art/Reference/reptilian_ref_front.png`
+→ Tripo → `Art/Source/reptilian/reptilian_v1.glb` → Code makes `Art/Export/reptilian/reptilian_for_mixamo.fbx` → Mixamo.

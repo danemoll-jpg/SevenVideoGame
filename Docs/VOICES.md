@@ -109,3 +109,20 @@ Where are we being taken? All of us? These connections feed the drills. Break th
 `europa_call_answer` — "softer higher whale call answering in the distance, underwater, gentle".
 `europa_call_learning` — "young whale attempting a short three-note call, slightly wobbly, then an older deep whale repeating it clearly, underwater" (Europa vision).
 `europa_dolphin_chirp` — "friendly dolphin clicks and whistles, underwater" (the guide).
+
+## Viper — voice name `Viper`
+Mars antagonist (`Docs/CHAPTER_MARS.md`): profits from the division between the two kingdoms; cold, controlled,
+contemptuous. Must sound clearly different from Tunneler (grinding bass) and the Wormmaster (wet, slithering).
+In Unity: jaw opens with loudness; optional faint hiss layer at the ends of some lines.
+Description (main pick):
+```
+A tall, lean reptilian male with a dry, cool, precise mid-to-low voice and a slight hiss on the S sounds. Clipped, controlled and quietly menacing, like a cold political operator who never raises his voice; superior, dismissive and faintly amused. Crisp consonants, measured pauses, a dry dismissive laugh. Close to the microphone, studio-quality recording, no background noise.
+```
+Alternative (if the first sounds too human):
+```
+A cold, raspy, serpentine voice of a towering snake-headed creature: smooth and dry with a sharp hissing edge, low and deliberate, contemptuous and calculating, speaking quietly but with authority. Studio-quality recording, no background noise.
+```
+Preview text:
+```
+Someone who understands what happens when we become careless. Then they can accept our terms. What business do you have there? History is precisely the problem.
+```

@@ -111,6 +111,9 @@ apply to every asset and scene:
   `Scree.controller` = 7's idle / walk / look_around + work / alert), `ScreeRig.cs` (procedural extras), `ScreeGuard.cs`
   (alert → walk → look around; `PostState = "work"` for workers). Missing export → the Y Bot placeholder. Must run before
   the Unity build.
+- Viper for Mixamo (S1): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_viper.py -- C:/Users/danmo/SevenVideoGame [tris 36000] [preview_dir]`
+  (~3 min) → `Art/Export/viper/viper_for_mixamo.fbx` (welded, 2.3 m, texture embedded; `TURN_180` if he ever faces away)
+  + `Docs/Previews/viper/viper_for_mixamo_sheet.png`. Mixamo download goes to `Art/Mixamo/viper/viper_body_mixamo.fbx`.
 - Previews: `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/preview_7.py -- C:/Users/danmo/SevenVideoGame`
   (args: repo root, optional FBX, optional output dir).
 - Launch Blender/Unity jobs with `Start-Process ... -WindowStyle Hidden -PassThru`, then `$p.PriorityClass = 'BelowNormal'`;
