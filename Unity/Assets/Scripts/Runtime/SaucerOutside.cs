@@ -63,6 +63,7 @@ namespace Seven
             { "europa", new Haze { valleyD = 0.0007f, noise = 0.25f, fogStart = 40f, groundD = 0.004f, groundBase = -200f, groundFall = 12f, groundRange = 400f, distD = 0.0006f, hazeH = 120f, maxFog = 0.5f, near = 0.3f, far = 0.6f, brightDist = 700f, zenith = 0.2f, glow = 0.3f } },
             { "mars",   new Haze { valleyD = 0.0005f, noise = 0.3f, fogStart = 60f, groundD = 0.0025f, groundBase = -230f, groundFall = 20f, groundRange = 500f, distD = 0.00045f, hazeH = 150f, maxFog = 0.45f, near = 0.35f, far = 0.65f, brightDist = 600f, zenith = 0.6f, glow = 0.35f } },
             { "asteroid", new Haze { valleyD = 0.0f, noise = 0.1f, fogStart = 140f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0004f, hazeH = 60f, maxFog = 0.25f, near = 0.03f, far = 0.12f, brightDist = 500f, zenith = 0.03f, glow = 0.4f } },
+            { "biaveh", new Haze { valleyD = 0.0f, noise = 0.1f, fogStart = 140f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0004f, hazeH = 60f, maxFog = 0.25f, near = 0.03f, far = 0.12f, brightDist = 500f, zenith = 0.03f, glow = 0.4f } },
             { "space",  new Haze { valleyD = 0.0f, noise = 0.0f, fogStart = 200f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0002f, hazeH = 10f, maxFog = 0.15f, near = 0.02f, far = 0.04f, brightDist = 900f, zenith = 0.02f, glow = 0.2f } },
         };
         Haze _saved; bool _savedSet;
@@ -95,14 +96,14 @@ namespace Seven
             if (Venus != null) Venus.SetActive(w == "venus");
             if (Europa != null) Europa.SetActive(w == "europa");
             if (Mars != null) Mars.SetActive(w == "mars");
-            if (Space != null) Space.SetActive(w == "space" || w == "asteroid");   // open space (stars) while travelling, and round the asteroid
+            if (Space != null) Space.SetActive(w == "space" || w == "asteroid" || w == "biaveh");   // open space (stars) while travelling, and round the asteroid
             if (Asteroid != null) Asteroid.SetActive(w == "asteroid");
             if (DiscMoon != null) DiscMoon.SetActive(w == "moon");
             if (DiscVenus != null) DiscVenus.SetActive(w == "venus");
             if (DiscEuropa != null) DiscEuropa.SetActive(w == "europa");
             if (DiscMars != null) DiscMars.SetActive(w == "mars");
             ShowLevel(w);                                                   // QF18 (3): the real level under the ship
-            ShowBiavehSpace(w == "space" && SaucerLocation.System == StarMap.Bia);   // QF18 (22) (round the asteroid: the asteroid fills the window)
+            ShowBiavehSpace(w == "biaveh" || w == "space" && SaucerLocation.System == StarMap.Bia);   // Round 17: at the mothership too   // QF18 (22) (round the asteroid: the asteroid fills the window)
             if (Atmo != null)
             {
                 if (!_savedSet) { _saved = Read(Atmo); _savedSet = true; }
@@ -169,6 +170,11 @@ namespace Seven
                     ring.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(r0, r1, 0f); ring.AddComponent<MeshRenderer>().sharedMaterial = Markers.Additive(glow);
                 }
                 planet.name = "Veyra";
+                // Round 17: the mothership beyond the ring plane (a dark egg with hull lights) and its three guardian orbs
+                var egg = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(egg.GetComponent<Collider>()); egg.name = "Mothership"; egg.transform.SetParent(_bia.transform, false);
+                egg.transform.position = new Vector3(260f, 40f, 1250f); egg.transform.localScale = new Vector3(240f, 320f, 240f); egg.GetComponent<Renderer>().sharedMaterial = Markers.DarkGloss();
+                for (int i = 0; i < 90; i++) { var d = Random.onUnitSphere; if (d.z > 0.3f) continue; var hl = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(hl.GetComponent<Collider>()); hl.transform.SetParent(_bia.transform, false); hl.transform.position = egg.transform.position + Vector3.Scale(d, new Vector3(120f, 160f, 120f)); hl.transform.localScale = Vector3.one * 2.5f; hl.GetComponent<Renderer>().sharedMaterial = Markers.Additive(i % 7 == 0 ? 1.4f : 0.4f); }
+                for (int i = 0; i < 3; i++) { var o = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(o.GetComponent<Collider>()); o.name = "GuardianOrb"; o.transform.SetParent(_bia.transform, false); o.transform.position = egg.transform.position + Quaternion.Euler(10f * i, 110f * i + 40f, 0f) * new Vector3(0f, 0f, 300f + 40f * i); o.transform.localScale = Vector3.one * 18f; o.GetComponent<Renderer>().sharedMaterial = Markers.DarkGloss(); }
                 Debug.Log("[Seven] window view (QF22): open space at Veyra - its star, Veyra and its rings");
             }
             if (_bia != null) _bia.SetActive(on);

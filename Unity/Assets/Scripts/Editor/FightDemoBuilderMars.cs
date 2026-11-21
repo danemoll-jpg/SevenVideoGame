@@ -73,18 +73,21 @@ namespace Seven.EditorTools
             var avatar = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
             Log($"{path}: {kind} avatar human={avatar?.isHuman} valid={avatar?.isValid}");
             if (avatar == null || !avatar.isHuman) return null;
-            mat = TexturedMat((kind == "machinist" ? "Ast_" : "Mars_") + kind, texPath, kind == "viper" ? 0.55f : kind == "machinist" ? 0.6f : 0.35f, kind == "machinist" ? 0.45f : 0f);
+            mat = TexturedMat((kind == "machinist" ? "Ast_" : kind == "biavian" ? "Bia_" : "Mars_") + kind, texPath, kind == "viper" ? 0.55f : kind == "machinist" ? 0.6f : kind == "biavian" ? 0.45f : 0.35f, kind == "machinist" ? 0.45f : 0f);
             mat.SetFloat("_Rim", 0.35f); EditorUtility.SetDirty(mat);
             // the clips: (state, source fbx, loop)
             var list = new List<(string state, string file, bool loop)>();
             string E(string n) => Path.Combine(RepoRoot, "Art", "Mixamo", "elarim", n);
             string T(string n) => Path.Combine(RepoRoot, "Art", "Mixamo", "tunneler", n);
             string Y(string n) => Path.Combine(RepoRoot, "Art", "Mixamo", "YBot", n);
-            if (kind == "reptilian")
+            if (kind == "reptilian" || kind == "biavian")
             {
+                // Round 17: the Biavians (Nela, the residents) use the same calm set - idle / talk / point / carry (the seedlings)
+                // / walk / wave, + the kneel pose (Nela beside the disoriented resident)
                 list.Add(("idle", E("elarim_idle.fbx"), true)); list.Add(("talk", E("elarim_talk.fbx"), true)); list.Add(("point", E("elarim_point.fbx"), false));
                 list.Add(("carry", E("elarim_carry.fbx"), true)); list.Add(("walk", Path.Combine(RepoRoot, "Art", "Mixamo", "reptilian", "reptilian_walk.fbx"), true));
                 list.Add(("wave", Path.Combine(RepoRoot, "Art", "Mixamo", "reptilian", "reptilian_wave.fbx"), false));
+                if (kind == "biavian") { var kp2 = Path.Combine(RepoRoot, "Art", "Export", "anim", "elarim_kneel_pose.fbx"); list.Add(("kneel", File.Exists(kp2) ? kp2 : E("elarim_kneel.fbx"), true)); }
             }
             else
             {
@@ -97,7 +100,7 @@ namespace Seven.EditorTools
                 var kp = Path.Combine(RepoRoot, "Art", "Export", "anim", "elarim_kneel_pose.fbx");
                 list.Add(("kneel", File.Exists(kp) ? kp : E("elarim_kneel.fbx"), true));
             }
-            var cpath = AnimDir + "/" + (kind == "viper" ? "Viper" : kind == "machinist" ? "Machinist" : "Reptilian") + ".controller";   // Round 16: the Machinist's own
+            var cpath = AnimDir + "/" + (kind == "viper" ? "Viper" : kind == "machinist" ? "Machinist" : kind == "biavian" ? "Biavian" : "Reptilian") + ".controller";   // Round 16: the Machinist's own
             AssetDatabase.DeleteAsset(cpath);
             ctl = AnimatorController.CreateAnimatorControllerAtPath(cpath);
             var sm = ctl.layers[0].stateMachine;

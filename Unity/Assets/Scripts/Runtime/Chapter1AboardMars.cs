@@ -350,6 +350,14 @@ namespace Seven
                 if (AsteroidState.HasProgress) AsteroidState.ContinueOwn(); else AsteroidState.StartFresh();
                 yield break;
             }
+            if (pick == "biaveh")
+            {
+                // Round 17: "Continue to the Biavian mothership" - the chapter begins (BIA_01 in the pilot's chair)
+                yield return UI.Fade(1f, 1.0f);
+                ShipConsole.StoryLock = false;
+                if (BiavehState.HasProgress) BiavehState.ContinueOwn(); else BiavehState.StartFresh();
+                yield break;
+            }
             if (con != null) yield return con.ComingSoonCard($"{ShipConsole.WorldName(pick)} (coming soon)");
             yield return ExitStaging("the Mars departure routing ends");
             ShipConsole.StoryLock = false;

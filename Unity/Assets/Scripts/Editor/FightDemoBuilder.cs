@@ -34,7 +34,7 @@ namespace Seven.EditorTools
         static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         public static string ExePath => Path.Combine(ProjectRoot, "Builds", "Seven", "SevenDemo.exe");   // QF2
         /// <summary>Build order: the demo picker first.</summary>
-        static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath, VenusScenePath, EuropaScenePath, MarsScenePath, AsteroidScenePath };
+        static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath, VenusScenePath, EuropaScenePath, MarsScenePath, AsteroidScenePath, BiavehScenePath };
 
         static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle", "sneak_walk", "float",
                                            "hang_idle", "shimmy", "shimmy_mirror", "crouch_idle", "fall_idle",     // Round 9 traversal loops
@@ -91,6 +91,7 @@ namespace Seven.EditorTools
             BuildRound14(sevenCtl, atmo, bank);        // Round 14: Chapter "Europa — Beneath the Ice"
             BuildRound15(sevenCtl, atmo, bank);        // Round 15: Chapter "Mars — The Divided Kingdoms"
             BuildRound16(sevenCtl, atmo, bank);        // Round 16: Chapter "The Asteroid — the Great Machine Age"
+            BuildRound17(sevenCtl, atmo, bank);        // Round 17: Chapter "The Biavian Mothership (Veyra)"
             BuildWorldViews();                         // QF18 (2, 3): the window views + the holograms, from the real levels
             EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
             ConfigurePlayer();

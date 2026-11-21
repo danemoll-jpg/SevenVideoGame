@@ -78,6 +78,15 @@ namespace Seven
                 PlayFromStart = () => { Chapter1State.Reset(); AsteroidState.StartFresh(); },
                 Sections = AsteroidSections,
             },
+            new ChapterDef
+            {
+                Id = "biaveh", Name = "The Biavian Mothership",
+                // Round 17: reached, or the combined records found the Biavian contact route (MAR_13C)
+                Reached = () => BiavehState.OwnReached || WorldFlags.BiavehUnlocked,
+                HasProgress = () => BiavehState.OwnHasProgress, Confirm = "Start the Biavian Mothership over? Your progress there will be reset.",
+                PlayFromStart = () => { Chapter1State.Reset(); BiavehState.StartFresh(); },
+                Sections = BiavehSections,
+            },
         };
 
         static (string label, System.Action start)[] MoonSections()
@@ -110,6 +119,12 @@ namespace Seven
             return l.ToArray();
         }
 
+        static (string label, System.Action start)[] BiavehSections()
+        {
+            var l = new List<(string label, System.Action start)>();
+            foreach (var (label, cp) in BiavehState.SelectEntries) { int c = cp; l.Add((label, () => { Chapter1State.Reset(); BiavehState.StartAt(c); })); }
+            return l.ToArray();
+        }
         static (string label, System.Action start)[] AsteroidSections()
         {
             var l = new List<(string label, System.Action start)>();

@@ -105,6 +105,7 @@ namespace Seven
             if (u == "biaveh") return WorldFlags.BiavehUnlocked;
             if (u == "asteroid") return WorldFlags.AsteroidFound;
             if (u.StartsWith("asteroid>=")) return int.TryParse(u.Substring(10), out var ac) && AsteroidState.Reached && AsteroidState.Checkpoint >= ac;   // Round 16: AsteroidLayout.Cp*
+            if (u.StartsWith("biaveh>=")) return int.TryParse(u.Substring(8), out var bc) && BiavehState.Reached && BiavehState.Checkpoint >= bc;   // Round 17: BiavehLayout.Cp*
             if (u.StartsWith("europa>=")) return int.TryParse(u.Substring(8), out var ec) && EuropaState.Reached && EuropaState.Checkpoint >= ec;   // Round 14: EuropaLayout.Cp*
             return false;
         }
@@ -776,6 +777,17 @@ namespace Seven
                 // the asteroid is found on the first journey toward Biaveh (TRV_AST); Biaveh's chapter does not exist yet
                 var ab0 = Chapter1Aboard.I;
                 if (id == "biaveh" && !WorldFlags.AsteroidFound && ab0 != null && ab0.Active) { ReleaseForTravel(); yield return ab0.TravelToBiaveh(); _busy--; yield break; }
+                if (id == "biaveh")
+                {
+                    // Round 17: the Biavian mothership at Veyra is playable (done = a short card, else the chapter where it left off)
+                    if (BiavehState.OwnComplete) { yield return ComingSoonCard("The Biavian Mothership — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                    ReleaseForTravel();
+                    yield return TravelPassage.Run("biaveh");
+                    if (UI != null) yield return UI.Fade(1f, 0.8f);
+                    if (BiavehState.HasProgress) BiavehState.ContinueOwn(); else BiavehState.StartFresh();
+                    _busy--;
+                    yield break;
+                }
                 yield return ComingSoonCard($"{WorldName(id)} (coming soon)");
                 _map.SetConfirm(false); Redraw();
                 _busy--;

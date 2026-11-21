@@ -653,6 +653,154 @@
      "windSound": "ast_steam_hiss"
     }
    ]
+  },
+  {
+   "id": "ratwing",
+   "name": "Ratwing",
+   "sevenHits": 6,
+   "sevenMoveScale": 1.6,
+   "openTime": 1.6,
+   "staggerTime": 3.2,
+   "strikesForStagger": 3,
+   "throwFlight": 0.35,
+   "debrisRespawn": 6.0,
+   "tkRange": 13.0,
+   "objectiveTime": 0.0,
+   "stunTime": 3.6,
+   "throwChip": 0.012,
+   "strikeDamage": 0.00975,
+   "kickDamage": 0.0143,
+   "bladeDamage": 0.02015,
+   "openStrikeScale": 0.25,
+   "dazedAt": 0.06,
+   "phases": [
+    {
+     "name": "open flight",
+     "staggers": 3,
+     "endAt": 0.66,
+     "gapMin": 1.4,
+     "gapMax": 2.4,
+     "tempo": 1.0,
+     "moveSpeed": 4.0,
+     "keep": 9.0,
+     "attacks": [
+      "swoop",
+      "claw_pass"
+     ],
+     "combos": []
+    },
+    {
+     "name": "protect the controls",
+     "staggers": 3,
+     "endAt": 0.33,
+     "gapMin": 1.2,
+     "gapMax": 2.0,
+     "tempo": 1.15,
+     "moveSpeed": 4.6,
+     "keep": 8.0,
+     "attacks": [
+      "swoop",
+      "claw_pass",
+      "wing_gust"
+     ],
+     "combos": []
+    },
+    {
+     "name": "the last exit",
+     "staggers": 3,
+     "endAt": -1.0,
+     "gapMin": 1.0,
+     "gapMax": 1.8,
+     "tempo": 1.3,
+     "moveSpeed": 5.0,
+     "keep": 7.0,
+     "attacks": [
+      "swoop",
+      "claw_pass",
+      "wing_gust"
+     ],
+     "combos": [
+      "swoop>claw_pass"
+     ]
+    }
+   ],
+   "attacks": [
+    {
+     "id": "swoop",
+     "kind": "lunge",
+     "answer": "dodge sideways",
+     "telegraph": 1.1,
+     "active": 0.6,
+     "recover": 1.0,
+     "open": 1.0,
+     "damage": 1,
+     "knock": 1.6,
+     "range": 16.0,
+     "width": 1.8,
+     "angle": 0.0,
+     "speed": 26.0,
+     "count": 1,
+     "puddle": 0.0,
+     "blockable": false,
+     "dodgeable": true,
+     "jumpable": false,
+     "minDist": 4.0,
+     "maxDist": 30.0,
+     "weight": 2.0,
+     "sound": "ratwing_flap",
+     "windSound": "ratwing_screech"
+    },
+    {
+     "id": "claw_pass",
+     "kind": "sweep",
+     "answer": "block or dodge",
+     "telegraph": 0.85,
+     "active": 0.3,
+     "recover": 0.8,
+     "open": 0.9,
+     "damage": 1,
+     "knock": 1.2,
+     "range": 3.6,
+     "width": 1.2,
+     "angle": 140.0,
+     "speed": 12.0,
+     "count": 1,
+     "puddle": 0.0,
+     "blockable": true,
+     "dodgeable": true,
+     "jumpable": false,
+     "minDist": 0.0,
+     "maxDist": 7.0,
+     "weight": 1.2,
+     "sound": "fight_swing",
+     "windSound": "ratwing_screech"
+    },
+    {
+     "id": "wing_gust",
+     "kind": "ring",
+     "answer": "jump",
+     "telegraph": 1.0,
+     "active": 0.45,
+     "recover": 0.9,
+     "open": 0.0,
+     "damage": 1,
+     "knock": 1.4,
+     "range": 9.0,
+     "width": 1.0,
+     "angle": 360.0,
+     "speed": 14.0,
+     "count": 1,
+     "puddle": 0.0,
+     "blockable": false,
+     "dodgeable": false,
+     "jumpable": true,
+     "minDist": 0.0,
+     "maxDist": 14.0,
+     "weight": 0.8,
+     "sound": "ratwing_flap",
+     "windSound": "ratwing_flap"
+    }
+   ]
   }
  ]
 }

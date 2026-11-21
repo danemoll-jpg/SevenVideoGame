@@ -75,7 +75,7 @@ A Biavian voice reaches them.
 
 | ID | Speaker | Dialogue | Direction |
 |---|---|---|---|
-| BIA_02_01 | Guide | Welcome to Veyra. Please hold your course. Our guardians will let you through. | Calm, telepathic. |
+| BIA_02_01 | Guide | Welcome to Veyra. I am Nela. Please hold your course. Our guardians will let you through. | Calm, telepathic. |
 | BIA_02_02 | 7 | Oh—hello. | Straightens, briefly looking around. |
 | BIA_02_03 | Guide | Forgive me. Was that too sudden? | Gentle concern. |
 | BIA_02_04 | 7 | A little. Usually there’s a cat attached to that voice. | Glances down at Panther. |
@@ -572,6 +572,7 @@ If Biaveh is completed first, the equivalent combined-record discovery happens a
   script). When his stamina is spent he flees — **the script's stage three**: Panther reads him ("Don't follow him. Watch the
   opening on your right." … "Wait…" … "Now."), she seals the outer barrier once he's inside the empty compartment; barriers
   never close on his body or wings; a mistimed attempt resets that chance. Ratwing ends contained, alive.
+- **The Guide is named Nela** (she introduces herself in BIA_02_01); the speaker column keeps "Guide", the line labels say "Nela".
 - **The Biavians / the Guide:** Kyle is sending art — the model waits for it. Everything else is prepared meanwhile.
 - **BIA_12 reunion:** keep it, straight from the beam-up, no gap (as the asteroid).
 

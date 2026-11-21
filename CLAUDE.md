@@ -402,7 +402,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–16 + QF1–QF22 complete (2026-11-21), release 0.16.2.** QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–17 + QF1–QF22 complete (2026-11-21), release 0.17.0.** Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -751,7 +751,30 @@ scene (Round 10).
     `CoolingTower`, `Overhead`, `HallDebrisMeshes`), obstacles `AsteroidLayout.HallProps`. The memory screen = a UV'd
     `Seven/GalleryScreen` quad (`MemoryPhase` syncs the video to AST_09; `MEMORY SURFACE (QF21 11a)`).
   - Switches: `-noqf21fix` (no automatic shot follow), `-qf21blades`.
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.16.2** (QF21 + QF22 status in `TODO.md`).
+- **Round 17 — The Biavian Mothership (Veyra) (release 0.17.0)** (spec `Docs/CHAPTER_BIAVEH.md` incl. the setting correction +
+  Dan's Decisions; status, decisions made, "For Dan to check" in `TODO.md`):
+  - Scene `Biaveh`: `Editor/FightDemoBuilderBiaveh.cs` (the interior city on the curving shell - `BiavehLayout.ShellRise` -, the
+    berth + overlook (west edge), the route display, the junction under the high bridge, the chasm + suspended bridge, the garden
+    (wall, seam, glass, upper opening), the quiet passage (airlock pair), the transfer chamber (platforms, partitions, the
+    compartment + barriers), the memory chamber + octahedron, a small aboard set for Panther's cuts; `Atmosphere_Biaveh`);
+    numbers + zones + routes + checkpoints `Runtime/BiavehLayout.cs`.
+  - Flow `BiavehDirector.cs` (helpers as the asteroid) + `BiavehDirectorFlow.cs` (BIA_03-08) + `BiavehDirectorTemple.cs` (BIA_09-11
+    + home); saves `BiavehState.cs` (`seven_biaveh`, select `seven_biaveh_select`) + `BiavehDialogue`; aboard
+    `Chapter1AboardBiaveh.cs` (BIA_01/02 with the runtime exterior: Veyra, the egg, the orbs, the iris; BIA_12 reunion on the floor;
+    BIA_13 A / B). `WorldFlags.MarkBiavehDone` / `MothershipKnown` / `ContactName`; `ChapterList` "The Biavian Mothership"; Log +
+    Field Guide `biaveh>=n`.
+  - Nela + residents = Dan's `Art/Mixamo/biavian/biavian_body_mixamo.fbx` via `SetupMixamoFolk("biavian")` (`Biavian.controller`);
+    Ratwing = the Round 4 model + `RatwingRig` (procedural flight / cling / stun) + `RatwingFight` (boss "ratwing": swoop / claw
+    pass / wing gust, partition stations, stamina; then stage three in the director: seal the compartment only while he is inside,
+    `Mistimed` resets the chance). `MemoryEcho` (translucent echoes), `Octahedron` (rune, code), vision 6 =
+    `Art/Video/vision_06_mothership.mp4`.
+  - Lines: `python Tools/Voice/make_biaveh_lines.py` → `Resources/Biaveh/biaveh_dialogue.json` + `Docs/BIAVEH-LINES.md`; voices
+    `python Tools/Voice/generate_biaveh_voices.py` (Nela = premade "Bella", Ratwing = saved "ratwing") → `Resources/BiavehVoice/`.
+    SFX `bia_*`, `ratwing_*` in `generate_sfx.py`.
+  - Switches: `-biacp <n>` (0 = BIA_01 aboard, 7 = home), `-bia` (as from the star map), `-biaplay` (player-style run
+    `BiavehPlaytest.cs`: free aboard → console → the star map → the chapter → BIA_13).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.17.0** (Round 17 status in `TODO.md`).
+**Before: Dan plays 0.16.2** (QF21 + QF22 status in `TODO.md`).
 **Before: Dan plays 0.16.0** (Round 16 status in `TODO.md`).
 **Before: Dan plays 0.15.5** (QF20 status in `TODO.md`).
 **Before: Dan plays 0.15.4** (QF19 status in `TODO.md`).

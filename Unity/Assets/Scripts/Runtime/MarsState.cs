@@ -149,6 +149,16 @@ namespace Seven
                 EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c);
                 Put(new R { combined = true, asteroidFound = true });
             }
+            // Round 17 (-biacp / -bia / -biaplay): Mars + Europa complete, the combined records seen, the asteroid found on the way
+            // (the run starts the mothership chapter; -biaplay starts free aboard and picks it on the star map)
+            if (what == "biaveh")
+            {
+                MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true);
+                EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c);
+                BiavehState.ClearTestSave(); BiavehState.ResetForTest(); AsteroidState.ClearTestSave(); AsteroidState.ResetForTest();   // a fresh mothership, the asteroid not visited (Branch A)
+                Put(new R { combined = true, combinedSeen = true, asteroidFound = true });
+                SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("asteroid");   // as a real save after TRV_AST: in Veyra's system
+            }
             Debug.Log("[Seven] -routes " + what + ": " + Summary());
         }
         public static bool VenusDone => VenusState.SceneDone("VEN_C12");
@@ -170,7 +180,8 @@ namespace Seven
         public static void MarkAsteroid() { var r = Get(); r.asteroidFound = true; Put(r); }
         public static bool AsteroidDone => Get().asteroidDone || AsteroidState.OwnComplete;   // Round 16: the chapter's own save
         public static void MarkAsteroidDone() { var r = Get(); r.asteroidDone = true; Put(r); }
-        public static bool BiavehDone => Get().biavehDone;
+        public static bool BiavehDone => Get().biavehDone || BiavehState.OwnComplete;   // Round 17: the chapter's own save
+        public static void MarkBiavehDone() { var r = Get(); r.biavehDone = true; r.mothershipKnown = true; Put(r); }
         /// <summary>QF22: the Biavian contact is the MOTHERSHIP among the rings of Veyra (not the Biavian homeworld). The
         /// internal id stays "biaveh" (saves); what the player reads is <see cref="ContactName"/>: "Biavian contact — Veyra"
         /// until the mothership chapter identifies it, then "Biavian Mothership".</summary>

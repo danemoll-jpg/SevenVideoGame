@@ -247,7 +247,100 @@ Progression unchanged (mothership + asteroid in either order → Cattalus). Upda
 2. MAR_13C / TRV_AST / AST_11 lines say Veyra / the Biavian mothership; the choice reads "Continue to the Biavian mothership".
 3. The window view at Veyra shows the ringed planet.
 
-## Round 17: Chapter "The Biavian Mothership (Veyra)", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do, AFTER QF22
+## Round 17 — status (2026-11-21): first playable pass done, exe-verified off-screen; release 0.17.0
+The whole chapter plays from the star map to BIA_13: the title card, BIA_01 + BIA_02 aboard (Veyra, the mothership, the orbs,
+Nela's welcome, the iris), BIA_03-BIA_11 in the new scene `Biaveh`, BIA_12 + BIA_13 aboard. Every run was muted (peak 0),
+minimized and Below Normal.
+
+**Real assets in (no stand-ins for the Biavians or the vision):**
+- **Nela and the residents** = Dan's `Art/Mixamo/biavian/biavian_body_mixamo.fbx` (Kyle's design) as a Humanoid
+  (`SetupMixamoFolk("biavian")`, `Biavian.controller`: idle / talk / point / carry / walk / wave / kneel, the Elarim + reptilian
+  clips). Residents vary in size (0.9-1.06), tone and medallion glyph.
+- **Vision 6** = `Art/Video/vision_06_mothership.mp4` (copied by Build everything; still fallback `Resources/Biaveh/vision_06_still.jpg`),
+  with a soft hum as the light travels into the archive and a faint chime, no music.
+- **Ratwing** = the Round 4 model (`ratwing_v1_rigged.fbx`) with procedural flight (`RatwingRig`: his rig has no flight clips).
+- Voices: 162 of 165 lines voiced (Nela = premade "Bella", Ratwing = Dan's saved "ratwing", the resident = premade "Chris").
+
+**Files:** `Runtime/BiavehLayout.cs` (numbers, zones, routes, checkpoints, the shell), `BiavehState.cs` (+ `BiavehDialogue`),
+`BiavehDirector.cs` / `BiavehDirectorFlow.cs` (BIA_03-08) / `BiavehDirectorTemple.cs` (BIA_09-11 + home), `RatwingFight.cs`,
+`RatwingRig.cs`, `MemoryEcho.cs`, `Octahedron.cs`, `Chapter1AboardBiaveh.cs` (BIA_01/02 + the runtime exterior, BIA_12/13),
+`BiavehPlaytest.cs`; `Editor/FightDemoBuilderBiaveh.cs`; boss table entry `ratwing`; `Tools/Voice/make_biaveh_lines.py` +
+`generate_biaveh_voices.py`; SFX `bia_*`, `ratwing_*`; Log + Field Guide entries (`biaveh>=n`).
+
+**Proof (exe, muted, off-screen; every capture monochrome - max |R-G|,|G-B| = 0; audio peak 0 in every shot):**
+| Run | Result |
+|---|---|
+| Player-style `-biaplay -testspeed 2` (free aboard → console → star map "Biavian contact — Veyra" → BIA_01 … BIA_13A) | `MOTHERSHIP PLAYTEST: 1/1, soft-locks 0`, 104 captures; `BIKE HOLD CHECK biaveh: PASS`; `DIALOGUE FRAMING`: 73 lines, still blocked 0, big-body rejections 0; `EMPTY SHOTS (QF21 6)`: 0. One skip (the first point of the ride home: the bike parked against the chamber wall) - fixed (the route now starts at the chamber entry) and re-proved below |
+| Boss, same run | `BOSS ratwing`: 2:52, 32 attacks (11.2/min: swoop 7, claw pass 24, wing gust 1), dodged 22, 23 throws = 23 stuns, melee 87 % of the damage (punches 31 %, kicks 51 %); X objectives: second presses 0, to a strike 0; stage three: sealed 8.6 s after it began, mistimed 0 |
+| Idle test `-biacp 5 -bossidle` | `BOSS IDLE TEST (ratwing): knocked down after 26.9 s - PASS` |
+| Retry `-biacp 5 -biaplay -bosscheck -bossdownonce` | she went down once: `RETRY: his energy 66.0 % before -> 66.0 % after`; fight 2:43, melee 89 %; contained alive, mistimed 0 |
+| Home `-biacp 6 -biaplay` (archive → ride home → BIA_12 → BIA_13) | `1/1, soft-locks 0, skips 0` |
+| Build checks (Biaveh) | `SAUCER CHECK`: the one prefab, unchanged; `COPLANAR`: 0 left; `HOLES CHECK`: 13 790 rays, 0 holes; `NPC PLACEMENT`: 0 bad; `KICK STATES`: present |
+
+Captures of the boss mid-attack: `boss_ratwing_swoop_telegraph / _active (+ _side)`, `_stagger_*` (player-style run).
+
+## Round 17 — decisions made (Dan away; easy to change)
+1. **Nela introduces herself** in BIA_02_01: "Welcome to Veyra. I am Nela. Please hold your course. Our guardians will let
+   you through." (TODO said she introduces herself there; the spec line had no name).
+2. **BIA_01 / BIA_02 play aboard** (like AST_01): the exterior (Veyra and its rings, the pale debris band, the egg mothership with
+   hull lights / traffic / recessed entrances, the three orbs, the iris) is built at runtime round the passage stage's saucer
+   (the one prefab). The mothership is shown at a distance that reads (an egg ~1.2 km tall seen from ~1.5 km) - the 26 miles are
+   in the line, not literal.
+3. **The overlook is on the berth's west edge**; the interior shell rises on all four sides beyond the play area
+   (`BiavehLayout.ShellRise`, R 320 m), towers standing out of the curve, hanging gardens, transit lights, bridges overhead. The
+   wide reveal thins the haze for the shot.
+4. **Panther's cuts aboard** (BIA_04_08 / BIA_05_12 tail-twitch, BIA_08_07, BIA_08_15, BIA_09 purring): a small aboard set in
+   the Biaveh scene (his seat, the console arc, the window glow) with the cat model - the chapter runs in its own scene.
+5. **BIA_06 puzzle**: the echo of an old span lies across the chasm (it can't be walked on); X at the service controls swings
+   the real three segments into line. **BIA_08's solo puzzle**: an airlock pair - panel A opens door A; inside, panel B is dead
+   until she lifts its loose coupling into the socket with telekinesis; panel B closes A behind her and opens B. No Panther
+   voice inside (no telepathy lines play there), music down.
+6. **The route share (BIA_04)** is shown in the world, not as a vision: a line of light runs from her feet along the roads to
+   the three relays, three faint beacons stand over them (each goes out when its relay is restored).
+7. **The bike through the garden**: an avenue (zone `GardenAvenue`) lets the bike cross the garden to the road west; the
+   garden itself is on foot.
+8. **Ratwing's fight** (Dan's Decisions): swoop (lunge: a line on the floor, dodge sideways), claw pass (sweep: block or dodge),
+   wing gust (ring: jump) from phase 2; telekinesis while he is low after a wasted dive knocks him down, stunned; punches /
+   kicks / arc blades (if she found them on the asteroid) do the damage; partition stations (X, while he attacks) in phases
+   1 and 2 close a partition and shrink his flight space; his bar = stamina; spent = he flees (no takedown) → **stage three**:
+   he circles, comes back through the doorway, inside the compartment; X at the barrier control seals it only while he is
+   inside (Panther's "Wait..." / "Now."); pressed in the doorway the barrier stops (never on him) and he slips out - the chance
+   resets; after 8 misses the fairness rule seals it.
+9. **The optional brief pursuit (BIA_05)** is not built this pass (the relay repair is the required step).
+10. **BIA_13 Branch B / the console**: BIA_13B plays when the asteroid is already complete; the "due at the console" rule
+    still plays the asteroid's AST_11B (same story beat), so the Cattalus lead is never missed.
+
+## Not covered / known (Round 17)
+- **3 lines unvoiced - the ElevenLabs account ran out of credits**: BIA_13B_08 "There will be rules.", BIA_13B_09 "Oh, of course
+  there will.", BIA_13B_10 "Some of the boxes are occupied." (Branch B only; subtitles show). When the account is topped up:
+  `python Tools/Voice/generate_biaveh_voices.py --only BIA_13B_08 BIA_13B_09 BIA_13B_10`, then Build everything.
+- Visuals are a first pass: the city reads as smooth pale towers in mist; the exterior mothership is primitive-built.
+- The optional pursuit (above); residents don't greet her beyond the scripted ones.
+- **Testing time went far over the 20-minute rule** this round (several full player-style runs while the test driver was fixed: it
+  once set course for the Moon, once got on and off the bike at a route stop - driver bugs, not game bugs). The final proof set
+  is one player-style run plus three short targeted runs.
+- **First-time-player fight length** (`-bossnovice`) was not run; the player-style fights took 2:43-2:52 (the rule asks ~3-5 min
+  for a first-timer, who will be slower) - if it feels short, raise `ratwing` stamina in `boss_tuning.json`.
+- Branch B (asteroid already complete) was not played through in a check run (the line order is as in the spec).
+
+## For Dan to check (Round 17)
+1. From the star map: "Biavian contact — Veyra" → the journey → BIA_01: Veyra's rings, the mothership, an orb crossing the
+   foreground; Nela's welcome; the iris opening, the saucer slipping through, the iris closing behind.
+2. The berth: the bike out of the hold, 7 down the beam; Nela at the overlook; the city curving up the shell.
+3. The memory echo and the disoriented resident; the route display and the shared route (a line of light, not a vision).
+4. Ratwing beneath the high bridge, his drop to the platform, the tail-twitch cut aboard; relay 1; the bridge and the seedlings.
+5. The garden: the remembered doorway, the seam, Ratwing at the glass, closing the upper opening.
+6. The quiet passage: no Panther inside; the airlock puzzle; "Panther? / Here."
+7. The fight: dodge his dives, knock him down with telekinesis, punches / kicks / blades; the partitions; let him knock you down -
+   his bar stays; then stage three: wait for "Now." and seal him in.
+8. The archive lights rippling through the city; the octahedron; the vision; the record on the chair arm.
+9. Back aboard: she sits on the floor, he walks into her lap (no gap); then BIA_13.
+10. Nela's voice (premade "Bella") - keep it or name a saved voice.
+
+**Stand-ins: none for the Biavians or the vision** (Dan's real model and video are used). The only thing to add: the 3 unvoiced
+Branch-B lines above (ElevenLabs credits).
+
+## Round 17: Chapter "The Biavian Mothership (Veyra)", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — done, status above; release 0.17.0
 Commit a checkpoint first. Runs overnight — **never stop to ask**: make the reasonable call, list it under "Round 17 — decisions
 made". **Every standing rule in `CLAUDE.md` applies from the first line** (as Round 16 — check each against your own captures;
 this chapter should arrive clean). Release **0.17.0**; "Round 17 — status"; "For Dan to check (Round 17)".

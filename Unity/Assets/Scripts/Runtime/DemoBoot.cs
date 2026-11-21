@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || AstPlay;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || AstPlay || BiaPlay;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -133,6 +133,11 @@ namespace Seven
         /// <summary>Round 16 - the Asteroid: -astcp n (a check run at checkpoint n; 9 = aboard), -asteroid (as from the star
         /// map), -astplay (the player-style run AsteroidPlaytest: from TRV_AST on the console to AST_11).</summary>
         public static int AstCp { get; private set; } = -1;
+        /// <summary>Round 17: -biacp n (check run at the mothership's checkpoint n; 0 = BIA_01 aboard, 7 = home), -bia (start the
+        /// chapter as from the star map), -biaplay (the player-style run BiavehPlaytest).</summary>
+        public static int BiaCp { get; private set; } = -1;
+        public static bool Bia { get; private set; }
+        public static bool BiaPlay { get; private set; }
         public static bool Asteroid { get; private set; }
         public static bool AstPlay { get; private set; }
         public static bool AstBird { get; private set; }      // -astbird: the check run takes the optional bird scene
@@ -218,6 +223,9 @@ namespace Seven
                 if (args[i] == "-mars") Mars = true;
                 if (args[i] == "-marsplay") { MarsPlay = true; Mars = true; }
                 if (args[i] == "-astcp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var acp)) AstCp = acp;
+                if (args[i] == "-biacp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var bcp)) BiaCp = bcp;
+                if (args[i] == "-bia") Bia = true;
+                if (args[i] == "-biaplay") BiaPlay = true;
                 if (args[i] == "-asteroid") Asteroid = true;
                 if (args[i] == "-astbird") AstBird = true;
                 if (args[i] == "-astplay") { AstPlay = true; Asteroid = true; }

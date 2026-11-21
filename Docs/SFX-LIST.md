@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-145 sounds.
+158 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -132,6 +132,19 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `ast_door_manual` | A large manual industrial door wheel being turned, ratchet clicks, then a heavy shutter rolling up. | 3 |  | Asteroid: the service entrance opens |
 | `ast_pressurize` | A sealed metal chamber pressurizing: rising air rush, valves hissing, a soft final clunk. | 3 |  | Asteroid: the receiving chamber pressurizes |
 | `ast_servo_heavy` | A huge machine's joint moving: deep hydraulic servo whine with metallic creak, precise and controlled. | 2 |  | Asteroid: the Machinist's servos |
+| `bia_iris_open` | An enormous mechanical iris aperture opening in a spaceship hull: overlapping metal segments rotating and sliding apart, a deep smooth hum, soft precise clicks. | 4 |  | Round 17: the mothership's iris opens (BIA_02) |
+| `bia_iris_close` | A giant mechanical iris closing: metal segments spiralling shut, smooth sliding, a final soft deep seal. | 3 |  | Round 17: the iris closes behind the saucer |
+| `bia_relay_on` | A communication relay coming back to life: a soft rising harmonic hum, then a clear gentle chime, calm and clean. | 2.5 |  | Round 17: a relay restored |
+| `bia_partition` | A large smooth security partition sliding shut across a tall shaft: soft hydraulic sigh, a deep sealing thud with a short echo. | 2.5 |  | Round 17: a partition closes |
+| `bia_barrier` | An energy barrier sealing a doorway: rising electric hum ending in a firm low clunk. | 2 |  | Round 17: the compartment barrier seals |
+| `bia_echo` | A faint ghostly shimmering tone like a distant memory, airy whispering texture, soft and unsettling but gentle. | 3 |  | Round 17: a memory echo appears |
+| `bia_route_share` | A gentle sweeping shimmer of soft tones, like light passing along a path, calm and warm. | 2.5 |  | Round 17: Nela shares the route (navigation impression) |
+| `bia_bridge` | Long suspended bridge segments swinging into line: smooth metallic sliding, then three soft locking clunks. | 3.5 |  | Round 17: the suspended bridge aligns |
+| `bia_seam` | A hidden wall panel's latch clicking open and the panel sliding back smoothly. | 1.5 |  | Round 17: the seam's release |
+| `bia_airlock` | A sleek airlock door sliding open with a short pressure hiss. | 1.5 |  | Round 17: the quiet passage's airlock doors |
+| `ratwing_screech` | A sly raspy bat-like creature shriek, short, nasal and sharp, echoing in a large space. | 1.5 |  | Round 17: Ratwing's telegraph |
+| `ratwing_flap` | Heavy leathery wing beats of a large bat-like creature taking off: three strong flaps with air whooshes. | 1.8 |  | Round 17: Ratwing's wings |
+| `ratwing_strike` | Sharp claws striking a glass barrier hard, a cracking thud and a scrape. | 1 |  | Round 17: Ratwing hits a partition / barrier |
 | `machinist_step_1` | One single heavy footstep of a four-metre iron machine on a metal floor: a deep metallic clunk with a short low boom, a brief piston hiss after it. | 1 |  | QF21: the Machinist's step (take 1) |
 | `machinist_step_2` | A single very heavy iron foot landing on a steel deck plate: deep resonant clank, faint rattle of loose armour plates, low thud. | 1 |  | QF21: the Machinist's step (take 2) |
 | `machinist_step_3` | One massive mechanical footfall on riveted metal flooring: a dull deep clunk, a short hydraulic sigh, metal plates rattling once. | 1 |  | QF21: the Machinist's step (take 3) |

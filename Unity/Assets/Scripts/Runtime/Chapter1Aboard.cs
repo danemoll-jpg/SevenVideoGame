@@ -66,7 +66,8 @@ namespace Seven
         void Start()
         {
             // QF16 (1): the saucer is where this aboard part happens (the windows show that world)
-            SaucerLocation.Set(AsteroidState.ArrivalAboard || AsteroidState.HomeAboard ? "asteroid" : EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
+            SaucerLocation.Set(BiavehState.ArrivalAboard || BiavehState.HomeAboard ? "biaveh" : AsteroidState.ArrivalAboard || AsteroidState.HomeAboard ? "asteroid" : EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
+            if (BiavehState.ArrivalAboard || BiavehState.HomeAboard) { StartBiaveh(); return; }      // Round 17: the mothership's aboard scenes
             if (AsteroidState.ArrivalAboard || AsteroidState.HomeAboard) { StartAsteroid(); return; } // Round 16: the asteroid's aboard scenes
             if (EuropaState.ArrivalAboard || EuropaState.HomeAboard) { StartEuropa(); return; }      // Round 14: Europa's aboard scenes
             if (MarsState.ArrivalAboard || MarsState.HomeAboard) { StartMars(); return; }            // Round 15: Mars's aboard scenes
@@ -435,7 +436,7 @@ namespace Seven
         bool _forkInHand, _shapeInLeft;
         void LateUpdate()
         {
-            LateUpdateStaging(); LateUpdateCatMoments();
+            LateUpdateStaging(); LateUpdateCatMoments(); LateUpdateBiaveh();
             if (!Active) return;
             if (_forkInHand && Fork != null)
             {
