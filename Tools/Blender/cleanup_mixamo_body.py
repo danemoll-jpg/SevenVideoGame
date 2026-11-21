@@ -2,9 +2,10 @@
 elarim_body_for_mixamo.fbx (cleanup_r11.py elarim_mixamo). Presets: viper (Mars antagonist, 2.3 m), reptilian (Mars
 townspeople, 1.9 m). S3: machinist (the asteroid's Machinist, 4.0 m, 45 k tris; centred on his legs - the claw arm
 pulls a mid-height median off-centre - and plate_check: the long front plate must hang free of the thighs).
+S4: biavian (Nela / the Biavians, 1.8 m, 36 k tris; extra close-ups of the face, the medallion and the belt buckle).
 
 Usage (repo root):
-  F:\\blender\\blender.exe --background --factory-startup --python Tools/Blender/cleanup_mixamo_body.py -- <repo root> <viper|reptilian> [target tris] [preview dir]
+  F:\\blender\\blender.exe --background --factory-startup --python Tools/Blender/cleanup_mixamo_body.py -- <repo root> <viper|reptilian|machinist|biavian> [target tris] [preview dir]
 In:  Art/Source/<name>/<name>_v1.glb (Tripo, ~2 M tris, A-pose).
 Out: Art/Export/<name>/<name>_for_mixamo.fbx (mesh only, grayscale texture embedded), Textures/<name>_v1_basecolor.jpg,
      <name>_mixamo_metrics.txt, previews in Docs/Previews/<name>/ (front / side / back / q34 / head + <name>_for_mixamo_sheet.png).
@@ -21,7 +22,8 @@ ROOT = os.path.abspath(argv[0]) if argv else os.getcwd()
 NAME = argv[1] if len(argv) > 1 else "viper"
 PRESETS = {"viper": 2.3,        # Docs/MODELS-NEEDED.md "Viper": ~2.3 m
            "reptilian": 1.9,    # "Reptilians": ~1.9 m
-           "machinist": 4.0}    # S3: "The Machinist" (asteroid): ~4 m
+           "machinist": 4.0,    # S3: "The Machinist" (asteroid): ~4 m
+           "biavian": 1.8}      # S4: "Biavians" (Nela): ~1.8 m
 TARGETS = {"machinist": 45000}
 HEIGHT = PRESETS[NAME]
 TARGET = int(argv[2]) if len(argv) > 2 else TARGETS.get(NAME, 36000)
@@ -236,11 +238,19 @@ def main():
         views += (("hipL_front", (0, -1, 0.0)), ("hipL_side", (1, 0, 0.0)), ("hipL_back", (0, 1, 0.0)), ("hipL_low", (0.5, -0.6, -0.6)))
     if NAME == "machinist":   # the front plate between the legs (must hang free of the thighs)
         views += (("plate_front", (0, -1, 0.0)), ("plate_low", (0.35, -0.6, -0.55)), ("plate_side", (1, 0, 0.0)))
+    if NAME == "biavian":     # S4: the face (eyes, crown ridge), the medallion (chest) and the belt buckle must read
+        views += (("face_front", (0, -1, 0.05)), ("face_q34", (0.6, -0.8, 0.1)), ("medallion", (0, -1, 0.0)), ("buckle", (0, -1, 0.0)))
     shots = []
     for vn, dv in views:
         c = Vector((0, 0, HEIGHT / 2)); d = Vector(dv).normalized()
         if vn == "head":
             cd.ortho_scale = HEIGHT * 0.32; c = Vector((0, 0, HEIGHT * 0.88))
+        elif vn.startswith("face"):
+            cd.ortho_scale = HEIGHT * 0.20; c = Vector((0, 0, HEIGHT * 0.875))
+        elif vn == "medallion":
+            cd.ortho_scale = HEIGHT * 0.22; c = Vector((0, 0, HEIGHT * 0.72))
+        elif vn == "buckle":
+            cd.ortho_scale = HEIGHT * 0.22; c = Vector((0, 0, HEIGHT * 0.56))
         elif vn.startswith("plate"):
             cd.ortho_scale = HEIGHT * 0.36; c = Vector((0, 0, HEIGHT * 0.42))
         elif vn.startswith("hipL"):
