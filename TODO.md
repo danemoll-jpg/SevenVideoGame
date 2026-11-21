@@ -1,5 +1,104 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF21: Dan's Asteroid review (Dan, 2026-11-21) — to do (Dan is still adding items — wait for the prompt)
+Commit first. All standing rules + the repeat-item rule. Release **0.16.1**; "QF21 — status"; "For Dan to check (QF21)".
+Dan: "happy overall" with the Asteroid.
+
+1. **AST_01 (arrival): seat them at the front of the ship and make the saucer "invisible" while they talk.** 7 sits in the seat
+   at the front of the ship (the pilot's chair at the front window) with Panther in her lap, as the scene starts (fade in already
+   seated). As they talk about the asteroid, **the saucer's hull fades away around them** — floor, walls, ceiling and the outer
+   shell dissolve to a faint glowing outline / nothing, so they sit in open space with the asteroid filling the view (the
+   observation idea from the concept doc: "the floor, walls and ceiling fading away"). Keep all of their dialogue (AST_01_01–10),
+   the chair and the seat beside it stay solid (she still lifts him onto the adjoining seat at AST_01_07). The hull fades back
+   when the scene ends / as she heads to disembark. Soft, elegant (a slow dissolve with a shimmer at the edges), monochrome. **Use the
+   effect that already exists** — the button that makes the ship see-through when she sits in the pilot's chair (Dan: "it is a
+   cool effect") — the scene simply triggers it during the talk and restores it after; don't build a second version. It can
+   be used the same way in later arrivals.
+
+
+2. **AST_02: give "System" — the receiving chamber's maintenance machine and its voice — a cooler design** (Dan: it's generic
+   right now). It's the player's first contact with the Great Machine Age, so make it charming and unmistakably of that age
+   (riveted, steam-age, wheels and lenses — like the vision and the Machinist): proposal — a squat, rounded brass-and-steel body
+   that **trundles on three jointed spindly legs** (or a single gyroscopic wheel), **one large round lens-eye with an iris
+   shutter that dilates and narrows as it speaks and scans**, a fan of scanning light from the lens across 7 (head to toe), a
+   little **projector that casts the guiding symbol** onto the floor toward the conveyor, a whistle of steam from a small stack
+   on each announcement, tiny gauges / a ticking dial on its back. The **System voice** comes visibly from it (the iris and a
+   speaker grille pulsing with the words), echoed by brass speaking-horns in the chamber walls that glow with each word. It
+   tilts its "head" at her "Hello." and at "Material?" (a beat of mechanical curiosity). Keep it an obstacle, never an enemy.
+
+3. **AST_02: no walking back and forth for the bike.** Today she walks to unlock the service door, then has to walk all the way
+   back to the hover bike. Instead: **she gets on the bike first** (the objective / Panther tells her: e.g. Panther — "Take the
+   bike. Whatever's through there, it's a long way." — or simply the objective "Get on your bike, then open the service
+   entrance"), and the door / its manual control is **usable from the bike** (ride up to it; the prompt works while riding, or
+   telekinesis on the control from the saddle). Keep the scanner-redirect puzzle, but it's solved from the bike too. General rule
+   for every chapter: never make the player walk back to the bike for no reason — if the next stretch is a ride, let her mount
+   first and do the step from the saddle.
+
+4. **AST_03 junctions: tell her if she's on foot.** The three rail-alignment junctions are worked from the bike. If she gets off
+   and walks up to one, show a clear prompt instead of nothing — "Use the junction from your bike" (and Panther, once, dry:
+   "It's built for something with wheels. Or hover pads.") — and point the marker back at the bike. General rule: any
+   interaction that needs the bike (or needs her on foot) says so when she's in the wrong state, never silently ignores her.
+
+5. **The Machinist's footsteps: heavy metal clunks.** Every step he takes lands with a **heavy, deep metallic clunk** — iron
+   foot on metal floor, a hiss of the piston legs and a faint rattle of plates — timed to his planted foot (from the clip's foot
+   contacts, like 7's footsteps), positional and loud enough to feel his ~4 m weight, with a light camera rumble when he's close.
+   His servos whir on turns and arm moves. New SFX via `generate_sfx.py` (`machinist_step_1..4`, `machinist_servo`, `machinist_hiss`;
+   vary between takes so it never sounds looped). Check in the reveal (AST_04), walking in the hall, and in the fight.
+
+6. **AST_04 (first meeting): the camera stays fixed while the Machinist walks off screen** — he leaves his repair cradle, walks
+   toward the camera and out of frame, and the player stares at an empty shot for a few moments. **The camera follows him**: track
+   / pan with him as he walks (keeping him framed, low angle for his scale as the spec says), then settle into the over-the-shoulder
+   shot behind 7 as he stops in front of her. General rule for every cutscene: **no shot holds on empty space** — a moving
+   character stays in frame (follow, cut ahead of him, or cut to the next shot when he exits); check each scripted move in every
+   chapter for a character walking out of a static shot.
+
+7. **Conversations with the Machinist: the over-his-shoulder shots don't work** — the camera sits behind his huge arm / body and
+   all you see is the back of his arm. For his conversations (AST_04, AST_07, AST_09): when the shot is from his side, **pull the
+   camera back and out to the side** so 7 is clearly visible (her face and body, a little of his shoulder / claw in the edge of
+   frame at most) — never a frame filled by his armour. And use **wide two-shots that show both of them together** often — 7
+   small at his feet, him towering — so his scale against her reads (Dan likes these); low angles up at him for his lines, high
+   angles down on her looking up. The item-7 visibility check (QF18) should also fail a shot where a character's own body fills
+   more than ~half the frame and hides the listener; apply it to every big character (Tunneler, Viper, the keeper).
+
+8. **The Machinist gestures too much in conversation** — his arms swing around a lot while talking (probably a borrowed talk clip).
+   He's economical and deliberate (the spec): while talking he stands **still and upright**, arms mostly at rest; his "acting" is
+   small — a slight head tilt / adjustment, the visor glow pulsing with his voice, the claw opening or closing once, a single
+   restrained gesture on a key line at most (e.g. pointing at the archive panel). Use a calm idle (slowed, damped) instead of the
+   gesturing talk clip; keep big arm movement for work and the fight.
+
+9. **The arc blades sit curved into her body when she isn't using them.** Hold them **further from her body**: when drawn but idle
+   (and while walking / running with them), the blades angle **outward and away** — tips pointing down and out, the curve facing
+   away from her — with her arms held slightly out from her sides, so no blade ever passes into or hugs her legs, hips or torso.
+   Check the blade's distance from her body every frame in the idle, walk, run and between strikes (a per-frame "blade vs body"
+   log: 0 frames inside her, a clear gap of a few cm at least), and adjust the hand grip / blade orientation per clip. When
+   sheathed, they rest on her back or hips on their own mount, clear of her too.
+
+10. **The central hall (the Machinist fight) is full of plain blocks — make them into something interesting** (the no-boxes rule).
+    Turn every block in the arena into a real Great Machine Age object that also **does something in the fight**:
+    - **cover / obstacles** → heavy machine housings: flywheel casings with turning spokes, boiler drums with gauges and valves,
+      stacks of riveted crates of archive panels, cooling towers venting steam;
+    - **throwable debris** for telekinesis → loose gears, pipe sections, gauge plates, small crates (clearly loose, so the player
+      knows what can be thrown);
+    - **the conveyor lanes** → real belt conveyors with rollers, carrying archive panels and parts;
+    - **the service stations** → big clamp rigs with jaws and pistons (where his tool arm gets locked);
+    - **the cradle** → the repair cradle from AST_04, framed and lit;
+    - overhead: gantries, chain hoists, a rail carrier crossing, hanging lamps — the hall should feel like a living foundry.
+    Keep the fight's layout (cover, lanes, sightlines) — change the look, not the gameplay. Same pass for any other plain blocks
+    in the chapter (the controls area, the causeway, the alcove). Captures of the hall from the fight camera before / after.
+
+11. **AST_09 (after the vision, talking to the restrained Machinist): the "TV" is a black screen, and he moves and clips in his
+    clamps.** (a) The archive surface she shows him the memory on is just black when the camera looks at it. It must **play the
+    memory**: the vision video (`vision_05_asteroid.mp4`) on that surface, in the console-hologram / archive-glow style, synced
+    to the script — the workshop and the bird as they talk, **the production line stopping on AST_09_05**, the bird fluttering —
+    framed as the spec says ("the enormous caretaker beside the tiny recorded bird"). Show-don't-caption rule: never a blank screen
+    the camera lingers on. (b) **He's restrained — he stays still.** In the clamps / cradle he doesn't walk or swing around: body
+    locked in place, arms held in the clamps; only his head turns toward the image / her, the visor glows with his voice, the
+    claw twitches once. No idle clip that moves his body; nothing passing through the clamps (check every frame). When he's
+    released after accepting the preservation task, the clamps open visibly first, then he moves.
+    **(c) His walk after the release has the same fixed-camera problem as item 6** — he steps out of the clamps and walks off
+    screen while the camera stays put. Follow him (track / pan with him to the protected storage he opens), keeping 7 in the
+    shot where possible; never hold on the empty clamps. Item 6's rule — check every scripted walk in every chapter.
+
 ## Quick fix QF20: the Biaveh discovery always plays + kicks + bosses don't reset (Dan, 2026-11-20) — done, status below; release 0.15.5
 Commit first. Small, focused. Release **0.15.5**; "QF20 — status"; "For Dan to check (QF20)". Prove with real button presses.
 
