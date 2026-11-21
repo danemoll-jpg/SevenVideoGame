@@ -167,9 +167,10 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   `Scree.controller` = 7's idle / walk / look_around + work / alert), `ScreeRig.cs` (procedural extras), `ScreeGuard.cs`
   (alert → walk → look around; `PostState = "work"` for workers). Missing export → the Y Bot placeholder. Must run before
   the Unity build.
-- Mars characters for Mixamo (S1 / S2): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_mixamo_body.py -- C:/Users/danmo/SevenVideoGame <viper|reptilian> [tris 36000] [preview_dir]`
-  (~3 min) → `Art/Export/<name>/<name>_for_mixamo.fbx` (welded, viper 2.3 m / reptilian 1.9 m, texture embedded;
-  `TURN_180` if one ever faces away; reptilian also logs `hip_check` = sash tail / satchel vs the thighs)
+- Characters for Mixamo (S1 / S2 / S3): `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/cleanup_mixamo_body.py -- C:/Users/danmo/SevenVideoGame <viper|reptilian|machinist> [tris 36000; machinist 45000] [preview_dir]`
+  (~3 min) → `Art/Export/<name>/<name>_for_mixamo.fbx` (welded, viper 2.3 m / reptilian 1.9 m / machinist 4.0 m, texture embedded;
+  `TURN_180` if one ever faces away; reptilian also logs `hip_check` = sash tail / satchel vs the thighs; machinist is
+  centred on his legs and logs `plate_check` = the front plate free of the thighs, + `_plate_*` close-ups)
   + `Docs/Previews/<name>/<name>_for_mixamo_sheet.png`. Mixamo download goes to `Art/Mixamo/<name>/<name>_body_mixamo.fbx`.
 - Previews: `F:\blender\blender.exe --background --factory-startup --python Tools/Blender/preview_7.py -- C:/Users/danmo/SevenVideoGame`
   (args: repo root, optional FBX, optional output dir).
