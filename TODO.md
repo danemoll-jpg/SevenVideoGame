@@ -1,5 +1,30 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF19: the Viper fight's pylons actually work (Dan, 2026-11-20) — to do
+Commit first. Repeat item (QF17 → QF18 → still broken in Dan's play): say why QF18's check passed while Dan's presses did
+nothing, fix the cause, prove it with **real button presses** (the virtual gamepad pressing X like a player — never calling
+the pylon / channel code directly). Release **0.15.4**; "QF19 — status"; "For Dan to check (QF19)". Small, focused round.
+
+Dan (0.15.3): the objective says "shut his two pylons down" but the counter says "0 / 3"; he stands beside a pylon, presses
+X as the prompt says, and **nothing happens**. "Why is it this complicated?" What the chat found in the code:
+`BossFight.StartChannel` makes X start a **3-second hold** that cancels on any hit, dodge, hop or flinch, or if she's more
+than 2.1 m away — while Viper attacks nonstop — with only a small "Shutting it down… %" in the prompt; **X is also her strike
+button** in the fight (the press may go to a strike instead); and the counter shows 3 while only 2 are required.
+**Dan's decision: keep the pylons, simplify:**
+1. **One press of X next to a pylon shuts it down instantly** — no hold, no channel, no interruption. Give it a generous reach
+   (~3 m) and a clear prompt only when in reach ("X: Shut down pylon"). **In reach of a pylon, X uses the pylon, not a
+   strike** (a strike only when no pylon is in reach). Remove the channel from every boss objective (Venus devices too).
+2. **Big, unmistakable effect** at once: a bang and sparks, its light dies, panels blow open, a power-down sound, its barrier
+   / beam drops, a short camera nudge toward it; the prompt is gone.
+3. **The counter only counts what's required:** "Pylons 0 / 2" in phase 1 (the objective text matches). Drop the optional third
+   pylon (remove its sweep too, or make it part of the platform) — no optional objectives mid-fight.
+4. **When both are down**, the platform sinks and he drops down → phase 2 (stun with telekinesis → close in → hand to hand, his
+   energy bar), as QF18.
+5. Proof: a player-style run where the virtual gamepad walks to each pylon and **presses X once** under fire — both go down on
+   the first press, the counter reads 1 / 2 then 2 / 2, the platform sinks; a capture of each pylon's shutdown; check the same
+   for the Venus devices.
+
+
 ## Quick fix QF18: show it, don't write it + Dan's Mars review (Dan, 2026-11-20) — done, status below; release 0.15.3
 Commit first. All standing rules + the repeat-item rule. 20-minute rule. Release **0.15.3**; "QF18 — status"; "For Dan to
 check (QF18)". Dan's screenshot: `Docs/Previews/qf18/dan_mars_window_text.png` (aboard at the Mars arrival: the window is

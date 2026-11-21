@@ -127,3 +127,17 @@ Preview text:
 ```
 Someone who understands what happens when we become careless. Then they can accept our terms. What business do you have there? History is precisely the problem.
 ```
+
+## The Machinist — voice name `Machinist` (asteroid)
+The asteroid city's last caretaker (`Docs/CHAPTER_ASTEROID.md`): not evil — dutiful, literal, certain; a hint of
+something almost sad under the precision. No mouth: the visor slit glows with his voice.
+Description (main pick):
+```
+A huge, ancient maintenance machine with a deep, calm, resonant male voice that is precise and mechanical but not robotic-sounding: measured, literal and unhurried, every word placed exactly, with a faint metallic resonance and the softest hum of machinery under it. Polite, certain, emotionless on the surface, with a barely perceptible hesitation before difficult answers. Close to the microphone, studio-quality recording, no background noise.
+```
+Preview text:
+```
+You have left the receiving route. State your function. Archive access is suspended. Restoration is ongoing. It must be ready when they return.
+```
+The facility **System** announcer (AST_02): a premade ElevenLabs voice picked by Code (flat, recorded announcement) — no
+saved voice needed.

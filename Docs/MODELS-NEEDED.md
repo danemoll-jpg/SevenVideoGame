@@ -183,3 +183,12 @@ robes** (the guardian's cape cost four rounds). Prompt given in chat. **Referenc
   ("Waving"). Reused: idle `elarim/elarim_idle` (**guards use the idle too** — Dan found no guard stance), talk
   `elarim/elarim_talk`, point `elarim/elarim_point`, work `elarim/elarim_carry` / `elarim_lift` / `7/7_touch_wall`.
 - Viper's voice: **saved by Dan in ElevenLabs as `Viper`** (2026-11-19).
+
+## The Machinist — asteroid (2026-11-20)
+Kyle's sketch `Art/Reference/kyle_terminator_villain.jpg`, adapted (Dan): no cape; the arm cannon → a heavy maintenance tool
+arm (cutter / clamp). Spec `Docs/CHAPTER_ASTEROID.md`. Pipeline: Dan generates a clean A-pose reference (prompt in chat) →
+`Art/Reference/machinist_ref_front.png` → Tripo `Art/Source/machinist/machinist_v1.glb` → Code makes `..._for_mixamo.fbx` →
+Mixamo → `Art/Mixamo/machinist/machinist_body_mixamo.fbx`. ~4 m tall. No face: the visor slit glows with his voice; small,
+precise head adjustments. Clips: reuse `tunneler_walk` / `tunneler_idle` / `tunneler_swipe` / YBot (slowed, deliberate).
+Code-built (hard-surface, scripted): the maintenance machine, the security machines, the mechanical bird, the arc blades
+(two curved crescent blades of light on short hilts), the cuboctahedron rune, the service-station clamps, the cradle.
