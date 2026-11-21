@@ -402,7 +402,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–16 + QF1–QF21 complete (2026-11-21), release 0.16.1.** QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–16 + QF1–QF22 complete (2026-11-21), release 0.16.2.** QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -751,7 +751,7 @@ scene (Round 10).
     `CoolingTower`, `Overhead`, `HallDebrisMeshes`), obstacles `AsteroidLayout.HallProps`. The memory screen = a UV'd
     `Seven/GalleryScreen` quad (`MemoryPhase` syncs the video to AST_09; `MEMORY SURFACE (QF21 11a)`).
   - Switches: `-noqf21fix` (no automatic shot follow), `-qf21blades`.
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.16.1** (QF21 status in `TODO.md`).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.16.2** (QF21 + QF22 status in `TODO.md`).
 **Before: Dan plays 0.16.0** (Round 16 status in `TODO.md`).
 **Before: Dan plays 0.15.5** (QF20 status in `TODO.md`).
 **Before: Dan plays 0.15.4** (QF19 status in `TODO.md`).

@@ -186,13 +186,13 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 | `MAR_13C_04` | Panther | They do. The Mars chart gives us the departure route. The Cetaceans’ sequence gives us the rest. | quiet interest |
 | `MAR_13C_05` | 7 | They each kept a piece. | softly |
 | `MAR_13C_06` | Panther | And you thought to put them together. |  |
-| `MAR_13C_07` | 7 | Biaveh. |  |
-| `MAR_13C_08` | Panther | Home of the Biaviian. Beyond this solar system. | measured |
+| `MAR_13C_07` | 7 | Veyra. |  |
+| `MAR_13C_08` | Panther | A Biavian contact. Beyond this solar system. | measured |
 | `MAR_13C_09` | 7 | That’s… a little farther than Europa. | breathy laugh |
 | `MAR_13C_10` | Panther | I suggest eating before we leave. | matter-of-fact |
 | `MAR_13C_11` | 7 | You suggest that before we do anything. | chuckles |
 | `MAR_13C_12` | Panther | And yet we keep accomplishing things. | contented hum |
-| `MAR_13C_13` | 7 | All right. Biaveh. Together? | quieter |
+| `MAR_13C_13` | 7 | All right. Veyra. Together? | quieter |
 | `MAR_13C_14` | Panther | Mm-hmm. |  |
 
 ## MAR_13B — Departure routing (shared closing)
@@ -213,5 +213,5 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 | `TRV_AST_04` | 7 | Out here? |  |
 | `TRV_AST_05` | Panther | Apparently someone liked their privacy. | dry |
 | `TRV_AST_06` | 7 | Can you mark it? |  |
-| `TRV_AST_07` | Panther | Already done. We can take a closer look, or continue to Biaveh and return. |  |
+| `TRV_AST_07` | Panther | Already done. We can take a closer look, or continue to the Biavian mothership and return. |  |
 

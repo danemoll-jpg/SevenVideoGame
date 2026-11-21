@@ -364,12 +364,12 @@ Hold without dialogue for a moment.
 
 | ID | Speaker | Dialogue | Performance |
 |---|---|---|---|
-| AST_11A_01 | Panther | Biaveh is still ahead of us. | Glances toward navigation. |
+| AST_11A_01 | Panther | The Biavian signal is still ahead of us. | Glances toward navigation. |
 | AST_11A_02 | 7 | Right. Our actual destination. | Small chuckle. |
 | AST_11A_03 | Panther | You wanted a closer look. | Mildly pointed. |
 | AST_11A_04 | 7 | I got one. | Rubs a sore shoulder. |
 | AST_11A_05 | Panther | An exceptionally close look. | Looks at the shoulder. |
-| AST_11A_06 | 7 | Biaveh. And something to eat on the way. | Selects the route. |
+| AST_11A_06 | 7 | The mothership. And something to eat on the way. | Selects the route. |
 | AST_11A_07 | Panther | Now that is a plan. | Contented hum. |
 
 **Navigation:** Biaveh is the next story destination. Cattalus remains locked.
@@ -382,7 +382,7 @@ Trigger the shared **Cattalus lead** only when both chapters are complete.
 
 | ID | Speaker | Dialogue | Performance |
 |---|---|---|---|
-| AST_11B_01 | 7 | There. The part missing from the Biaveh record. | Brings the two records together on the display. |
+| AST_11B_01 | 7 | There. The part missing from the Biavian record. | Brings the two records together on the display. |
 | AST_11B_02 | Panther | Hmm. Enlarge that mark. | Sits upright in her lap. |
 | AST_11B_03 | 7 | You recognize it? | Looks down at him. |
 | AST_11B_04 | Panther | Yes. | A small pause. |
@@ -462,8 +462,10 @@ The script's tables plus these, voiced with the existing voices (`Tools/Voice/ma
 | AST_02_P2 | 7 | More interesting than me. Rude. | Quiet laugh. |
 | AST_02_P3 | System | Material registered. Proceed to sorting. | Flat recorded announcement. |
 | AST_02_P4 | Panther | The door is free. Go, before it remembers you. | Dry. |
+| AST_02_P5 | Panther | Take the bike. Whatever's through there, it's a long way. | QF21: before the intro puzzle - she mounts first and solves it from the saddle. Practical. |
 | AST_03_P1 | Panther | The temple signal is past the far end of that causeway. The rail junctions are set for the carriers, not for you. | Studying the system aboard. |
 | AST_03_P2 | 7 | Then I'll borrow them. | Light. |
+| AST_03_P3 | Panther | It's built for something with wheels. Or hover pads. | QF21: once, if she walks up to a junction on foot. Dry. |
 | AST_04_P1 | Panther | Seven. The maintenance opening, on your right. Now. | Urgent, controlled. |
 | AST_05_P1 | Panther | The bypass wants a maintenance tool. The locker beside the terminal. | Practical. |
 | AST_05_10 | Panther | You've done that before. | Quiet; she handles the blades as if familiar. |

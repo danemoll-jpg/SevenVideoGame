@@ -35,8 +35,8 @@ namespace Seven
             ("moon", "The Moon", 0.25f, 328f, 11f, "sol"),
             ("mars", "Mars", 0.34f, 52f, 14f, "sol"),
             ("europa", "Europa", 0.45f, 134f, 9f, "sol"),
-            ("biaveh", "Biaveh", 0.24f, 214f, 17f, "biaveh"),           // QF18 (22): in its own system, not at our edge
-            ("asteroid", "The asteroid", 0.40f, 318f, 7f, "biaveh"),    // found after the warp into Biaveh's system (TRV_AST)
+            ("biaveh", "Biavian contact — Veyra", 0.24f, 214f, 17f, "biaveh"),   // QF22: the mothership among Veyra's rings (id kept for saves)
+            ("asteroid", "The asteroid", 0.40f, 318f, 7f, "biaveh"),    // found after the warp into Veyra's system (TRV_AST)
         };
         public const string Sol = "sol", Bia = "biaveh";
         public static string SystemOf(string id) { foreach (var d in Defs) if (d.id == id) return d.sys; return id == "biaveh_space" ? Bia : Sol; }
@@ -79,7 +79,7 @@ namespace Seven
             MakeSprites();
             Img(Root, null, Vector2.zero, size, new Color(0.02f, 0.02f, 0.02f, 0.94f));
             // the two systems, each in its own group (one is shown; the switch zooms out through the overview)
-            foreach (var (sys, star) in new[] { (Sol, "THE SUN"), (Bia, "BIAVEH'S STAR") })
+            foreach (var (sys, star) in new[] { (Sol, "THE SUN"), (Bia, "VEYRA'S STAR") })
             {
                 var g = new GameObject("System_" + sys, typeof(RectTransform)); g.transform.SetParent(Root, false);
                 var rt = (RectTransform)g.transform; rt.sizeDelta = size; _sys[sys] = rt; _sysG[sys] = g.AddComponent<CanvasGroup>();
@@ -94,7 +94,7 @@ namespace Seven
                 var g = new GameObject("Overview", typeof(RectTransform)); g.transform.SetParent(Root, false); _over = (RectTransform)g.transform; _over.sizeDelta = size;
                 _overG = g.AddComponent<CanvasGroup>(); _overG.alpha = 0f;
                 var a = new Vector2(-size.x * 0.34f, 20f); var b = new Vector2(size.x * 0.34f, 20f);
-                foreach (var (p, n) in new[] { (a, "OUR SUN"), (b, "BIAVEH'S STAR") })
+                foreach (var (p, n) in new[] { (a, "OUR SUN"), (b, "VEYRA'S STAR") })
                 {
                     Img(_over, _soft, p, new Vector2(150f, 150f), new Color(1f, 1f, 1f, 0.5f)); Img(_over, _disc, p, new Vector2(24f, 24f), Color.white);
                     Txt(_over, n, p + new Vector2(0f, -40f), 18, new Color(0.7f, 0.7f, 0.7f), TextAnchor.MiddleCenter, new Vector2(240f, 24f));
@@ -119,10 +119,18 @@ namespace Seven
                 b.Halo = Img(rt, _soft, b.Pos, Vector2.one * (d.size * 4.2f), new Color(1f, 1f, 1f, 0.32f)).rectTransform;
                 b.Dot = Img(rt, _disc, b.Pos, Vector2.one * d.size, new Color(0.92f, 0.92f, 0.92f, 1f)).rectTransform;
                 if (d.id == "asteroid") { Img(rt, _ringThin, b.Pos, Vector2.one * (d.size * 2.2f), new Color(1f, 1f, 1f, 0.7f)); }   // its structures: a faint ring of light
-                b.Label = Txt(rt, d.name, b.Pos + new Vector2(0f, d.size * 0.5f + 18f), 24, new Color(0.88f, 0.88f, 0.88f), TextAnchor.MiddleCenter, new Vector2(220f, 26f));
+                if (d.id == "biaveh")
+                {
+                    // QF22: Veyra with its rings (a wide tilted ellipse round the planet), the mothership a small bright mark beside it
+                    Img(rt, OrbitSprite(d.size * 1.6f, d.size * 0.45f), b.Pos, new Vector2(d.size * 3.4f, d.size * 1.1f), new Color(1f, 1f, 1f, 0.75f));
+                    Img(rt, OrbitSprite(d.size * 1.25f, d.size * 0.34f), b.Pos, new Vector2(d.size * 2.7f, d.size * 0.85f), new Color(1f, 1f, 1f, 0.4f));
+                    Img(rt, _disc, b.Pos + new Vector2(d.size * 1.45f, d.size * 0.55f), new Vector2(5f, 7f), Color.white);
+                    Txt(rt, "VEYRA", b.Pos + new Vector2(d.size * 2.2f, -d.size * 0.2f), 15, new Color(0.6f, 0.6f, 0.6f), TextAnchor.MiddleCenter, new Vector2(160f, 20f));
+                }
+                b.Label = Txt(rt, d.name, b.Pos + new Vector2(0f, d.size * 0.5f + 18f), 24, new Color(0.88f, 0.88f, 0.88f), TextAnchor.MiddleCenter, new Vector2(d.id == "biaveh" ? 360f : 220f, 26f));   // QF22: the contact's name on one line
             }
             // the gateways at the edges (to the other system)
-            foreach (var (id, name, sys, pos) in new[] { ("to_biaveh", "The Biaveh system  →", Sol, new Vector2(size.x * 0.40f, -size.y * 0.04f)), ("to_sol", "←  Our solar system", Bia, new Vector2(-size.x * 0.40f, -size.y * 0.04f)) })
+            foreach (var (id, name, sys, pos) in new[] { ("to_biaveh", "The Veyra system  →", Sol, new Vector2(size.x * 0.40f, -size.y * 0.04f)), ("to_sol", "←  Our solar system", Bia, new Vector2(-size.x * 0.40f, -size.y * 0.04f)) })
             {
                 var rt = _sys[sys];
                 var b = new Body { Id = id, Name = name, Sys = sys, Gateway = true, Pos = pos, Size = 10f };
@@ -155,7 +163,7 @@ namespace Seven
             View = sys;
             foreach (var kv in _sys) { kv.Value.gameObject.SetActive(kv.Key == sys); _sysG[kv.Key].alpha = 1f; kv.Value.localScale = Vector3.one; }
             if (_overG != null) _overG.alpha = 0f;
-            _title.text = sys == Sol ? "STAR MAP  ·  OUR SOLAR SYSTEM" : "STAR MAP  ·  THE BIAVEH SYSTEM";
+            _title.text = sys == Sol ? "STAR MAP  ·  OUR SOLAR SYSTEM" : "STAR MAP  ·  THE VEYRA SYSTEM";
             PlaceShip();
         }
         void PlaceShip()
@@ -181,6 +189,7 @@ namespace Seven
                 b.Shown = shown.Contains(b.Id);
                 b.Selectable = b.Shown && selectable.Contains(b.Id);
                 b.Note = notes != null && notes.TryGetValue(b.Id, out var n) ? n : null;
+                if (b.Id == "biaveh" && b.Label != null) b.Label.text = WorldFlags.ContactName;   // QF22
                 b.Orbit.gameObject.SetActive(b.Shown); b.Halo.gameObject.SetActive(b.Shown); b.Dot.gameObject.SetActive(b.Shown); b.Label.gameObject.SetActive(b.Shown);
                 b.Label.color = b.Selectable ? new Color(0.88f, 0.88f, 0.88f) : new Color(0.5f, 0.5f, 0.5f);
                 if (b.Shown && b.Sys == Bia) BiavehOnMap = true;
@@ -298,14 +307,14 @@ namespace Seven
             if (b == null) { _name.text = ""; _note.text = ""; _action.text = ""; return; }
             if (b.Gateway)
             {
-                _name.text = b.Sys == Sol ? "The Biaveh system" : "Our solar system";
-                _note.text = b.Sys == Sol ? "Beyond this solar system - the route from the combined records leads there." : "Back across to the Sun and its worlds.";
+                _name.text = b.Sys == Sol ? "The Veyra system" : "Our solar system";
+                _note.text = b.Sys == Sol ? "Beyond this solar system - the old Biavian contact route from the combined records leads there." : "Back across to the Sun and its worlds.";
                 _action.text = "A  Show it   ·   B  Back";
                 return;
             }
-            _name.text = b.Name;
+            _name.text = b.Id == "biaveh" ? WorldFlags.ContactName : b.Name;
             _note.text = (b.Id == Here ? "The ship is here.  " : "") + (string.IsNullOrEmpty(b.Note) ? "Not visited yet." : b.Note);
-            _action.text = Confirming ? $"Set course for {b.Name}?   A  Yes   ·   B  No" : "A  Set course   ·   B  Back";
+            _action.text = Confirming ? $"Set course for {(b.Id == "biaveh" ? WorldFlags.ContactName : b.Name)}?   A  Yes   ·   B  No" : "A  Set course   ·   B  Back";
         }
 
         // ------------------------------------------------------------------------------ drawing helpers

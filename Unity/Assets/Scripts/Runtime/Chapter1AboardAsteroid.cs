@@ -281,7 +281,7 @@ namespace Seven
             {
                 if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_11B (the Cattalus lead) plays at {where}: {WorldFlags.Summary()}");
                 NavHand(true); CutPilot("ots");
-                if (con != null) con.ShowMap(null, "The Biaveh record  ·  the asteroid record");
+                if (con != null) con.ShowMap(null, "The Biavian record  ·  the asteroid record");
                 yield return SayA("AST_11B", 1, 2);                           // There. The part missing from the Biaveh record. / Hmm. Enlarge that mark.
                 Cat.LapNudge(-12f); CutPilot("lap");
                 yield return SayA("AST_11B", 3, 7);                           // You recognize it? / Yes. / Panther? / Cattalus. / Your home?
@@ -297,10 +297,10 @@ namespace Seven
                 CutPilot("two");
                 yield return SayA("AST_11A", 2, 5);                           // Right. Our actual destination. / You wanted a closer look. / I got one. / An exceptionally close look.
                 NavHand(true); CutPilot("ots");
-                if (con != null) con.ShowMap("biaveh", "Biaveh  ·  beyond this solar system");
+                if (con != null) con.ShowMap("biaveh", WorldFlags.ContactName + "  ·  beyond this solar system");
                 yield return SayA("AST_11A", 6, 7);                           // Biaveh. And something to eat on the way. / Now that is a plan.
                 yield return ShotV("aa15_biaveh_selected");
-                if (con != null) yield return con.ComingSoonCard("Biaveh (coming soon)");
+                if (con != null) yield return con.ComingSoonCard("The Biavian Mothership (coming soon)");
             }
             AsteroidHomeDone = true;
             if (DemoBoot.CaptureDir != null) Cap?.Log($"ASTEROID CHAPTER DONE: {AsteroidState.Summary()}; {WorldFlags.Summary()}");

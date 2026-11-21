@@ -194,7 +194,7 @@ No player-style run of the whole chapter this time; the player-style run covered
 10. The hall: a working foundry, no plain blocks.
 11. AST_09: the memory plays on the screen (the line stopping on AST_09_05); he stays still in the cradle; the arms open first.
 
-## Quick fix QF22: the Biavian contact is at Veyra, not Biaveh (Dan, 2026-11-21) — to do, AFTER QF21
+## Quick fix QF22: the Biavian contact is at Veyra, not Biaveh (Dan, 2026-11-21) — done, status below; release 0.16.2
 Commit first. Small, focused. Release **0.16.2**; "QF22 — status"; "For Dan to check (QF22)".
 **Dan's setting correction** (full text in `Docs/CHAPTER_BIAVEH.md`, "Setting correction"): the Biavian mothership is stationed
 among the rings of **Veyra**, a planet outside our solar system — **not the Biavian homeworld**. The combined Mars + Europa
@@ -220,6 +220,32 @@ Progression unchanged (mothership + asteroid in either order → Cattalus). Upda
    Search all dialogue data, the Log, the Field Guide and the specs for any other "Biaveh" that means the destination and list it.
 4. **Spelling:** Dan's latest scripts write **"Biavian"** (older docs: "Biaviian") — use "Biavian" everywhere in the game (Field
    Guide, Log, lines, labels).
+
+## QF22 — status (2026-11-21): done, exe-verified off-screen; release 0.16.2
+- **Star map** (`StarMap.cs`): the second system is **"THE VEYRA SYSTEM"** - Veyra's star, **Veyra with its rings** (two tilted
+  ellipses + a "VEYRA" tag) and the mothership's bright mark beside it, the asteroid there after TRV_AST; the gateway reads "The
+  Veyra system →"; the overview "VEYRA'S STAR". The destination's name = `WorldFlags.ContactName`: **"Biavian contact — Veyra"**
+  until the mothership chapter identifies it (`WorldFlags.MarkMothershipKnown`, set in Round 17), then **"Biavian Mothership"**.
+  Biaveh the homeworld is not on the map. The internal id stays `biaveh` (saves keep working).
+- **Window view** (`SaucerOutside`): open space at Veyra - its star, Veyra and its rings (a wide pale debris band + a fainter ring).
+- **Text**: TRV_AST's choice "Continue to the Biavian mothership"; the map caption in MAR_13C / AST_11A; the coming-soon card "The
+  Biavian Mothership (coming soon)"; the console's world name; the MAR_13C hologram's end node.
+- **Re-voiced** (spec tables edited, `make_mars_lines.py` / `make_asteroid_lines.py`, `--force --only`): MAR_13C_07 "Veyra.",
+  MAR_13C_08 "A Biavian contact. Beyond this solar system.", MAR_13C_13 "All right. Veyra. Together?", TRV_AST_07 "...or continue to
+  the Biavian mothership and return.", AST_11A_01 "The Biavian signal is still ahead of us." (Dan's), AST_11A_06 "The mothership.
+  And something to eat on the way.", AST_11B_01 "There. The part missing from the Biavian record." - Dan's / the chat's wording.
+- **Other "Biaveh" found** (searched dialogue data, Log, Field Guide, code, specs): none left in what the player sees or hears.
+  Still "Biaveh" only as internal ids / file names (`biaveh` star-map id, `Resources/Biaveh`, `biaveh_*.mp3`,
+  `CHAPTER_BIAVEH.md`) and in older docs (`STORY.md`, `VOICES.md`, `MUSIC.md` describe the files) - left as they are.
+- **Spelling**: "Biavian" everywhere the player reads it.
+- **Proof**: `-qf20check` (Dan's save, one X at the console): MAR_13C plays the new lines (`line MAR_13C_07 ... 'Veyra.'`, 08, 13),
+  the hologram's route "out to the Biavian contact at Veyra", TRV_AST_07 re-voiced, the choice on the Veyra map (capture
+  `qf20_02_trv_ast_the_choice`), `QF20 DISCOVERY CHECK: PASS`; muted, peak 0. Testing ≈ 5 game-min.
+
+## For Dan to check (QF22)
+1. The star map's second system: "The Veyra system", Veyra with its rings, "Biavian contact — Veyra".
+2. MAR_13C / TRV_AST / AST_11 lines say Veyra / the Biavian mothership; the choice reads "Continue to the Biavian mothership".
+3. The window view at Veyra shows the ringed planet.
 
 ## Round 17: Chapter "The Biavian Mothership (Veyra)", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do, AFTER QF22
 Commit a checkpoint first. Runs overnight — **never stop to ask**: make the reasonable call, list it under "Round 17 — decisions

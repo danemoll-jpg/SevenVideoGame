@@ -119,7 +119,7 @@ namespace Seven
     /// "seven_test_routes"), so they hold whichever chapter set them; a new game clears them.</summary>
     public static class WorldFlags
     {
-        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen; }
+        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen, mothershipKnown; }
         static string Key => DemoBoot.CaptureDir != null ? "seven_test_routes" : "seven_routes";
         static R Get() { var j = PlayerPrefs.GetString(Key, ""); return string.IsNullOrEmpty(j) ? new R() : JsonUtility.FromJson<R>(j) ?? new R(); }
         static void Put(R r) { PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
@@ -171,6 +171,12 @@ namespace Seven
         public static bool AsteroidDone => Get().asteroidDone || AsteroidState.OwnComplete;   // Round 16: the chapter's own save
         public static void MarkAsteroidDone() { var r = Get(); r.asteroidDone = true; Put(r); }
         public static bool BiavehDone => Get().biavehDone;
+        /// <summary>QF22: the Biavian contact is the MOTHERSHIP among the rings of Veyra (not the Biavian homeworld). The
+        /// internal id stays "biaveh" (saves); what the player reads is <see cref="ContactName"/>: "Biavian contact — Veyra"
+        /// until the mothership chapter identifies it, then "Biavian Mothership".</summary>
+        public static bool MothershipKnown => Get().mothershipKnown || Get().biavehDone;
+        public static void MarkMothershipKnown() { var r = Get(); r.mothershipKnown = true; Put(r); }
+        public static string ContactName => MothershipKnown ? "Biavian Mothership" : "Biavian contact — Veyra";
         /// <summary>Round 16 (AST_11B): the shared Cattalus lead - once, when the asteroid AND Biaveh are complete (whichever is
         /// second), and at the console whenever it is due and hasn't played (the QF20 lesson).</summary>
         public static bool CattalusDue => AsteroidDone && BiavehDone && !Get().cattalusSeen;

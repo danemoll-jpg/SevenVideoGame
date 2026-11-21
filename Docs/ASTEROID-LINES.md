@@ -189,19 +189,19 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 
 | id | speaker | line | direction |
 |---|---|---|---|
-| `AST_11A_01` | Panther | Biaveh is still ahead of us. |  |
+| `AST_11A_01` | Panther | The Biavian signal is still ahead of us. |  |
 | `AST_11A_02` | 7 | Right. Our actual destination. | Small chuckle |
 | `AST_11A_03` | Panther | You wanted a closer look. | Mildly pointed |
 | `AST_11A_04` | 7 | I got one. |  |
 | `AST_11A_05` | Panther | An exceptionally close look. |  |
-| `AST_11A_06` | 7 | Biaveh. And something to eat on the way. |  |
+| `AST_11A_06` | 7 | The mothership. And something to eat on the way. |  |
 | `AST_11A_07` | Panther | Now that is a plan. | Contented hum |
 
 ## AST_11B — Next destination (Biaveh complete: the Cattalus lead)
 
 | id | speaker | line | direction |
 |---|---|---|---|
-| `AST_11B_01` | 7 | There. The part missing from the Biaveh record. |  |
+| `AST_11B_01` | 7 | There. The part missing from the Biavian record. |  |
 | `AST_11B_02` | Panther | Hmm. Enlarge that mark. |  |
 | `AST_11B_03` | 7 | You recognize it? |  |
 | `AST_11B_04` | Panther | Yes. |  |

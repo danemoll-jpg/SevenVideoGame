@@ -246,7 +246,7 @@ namespace Seven
             yield return ShotV("ma15_two_records_side_by_side");
             yield return SayM("MAR_13C", 4, 5);                                  // They do... / They each kept a piece.
             if (holo != null) yield return holo.RouteCompletes();
-            if (con != null) con.ShowMap("biaveh", "Biaveh  ·  beyond this solar system");
+            if (con != null) con.ShowMap("biaveh", "Biavian contact — Veyra  ·  beyond this solar system");
             WorldFlags.MarkCombined();
             Log13("Biaveh unlocked (Mars + Europa records combined)");
             CutPilot("lap");
@@ -335,7 +335,7 @@ namespace Seven
             {
                 CutPilot("ots");
                 if (Auto) con.ScriptPick = DemoBoot.MarsPick ?? "asteroid";
-                yield return con.ChooseOnStarMap(new[] { "asteroid", "biaveh" }, new[] { "Investigate the asteroid", "Continue to Biaveh" }, p => pick = p);
+                yield return con.ChooseOnStarMap(new[] { "asteroid", "biaveh" }, new[] { "Investigate the asteroid", "Continue to the Biavian mothership" }, p => pick = p);
             }
             if (pick == null) pick = "asteroid";
             MarsChoice = pick;

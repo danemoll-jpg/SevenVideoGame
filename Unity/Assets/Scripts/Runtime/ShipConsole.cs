@@ -153,7 +153,7 @@ namespace Seven
             var ab = Chapter1Aboard.I;
             return ab != null && ab.Active && ab.MarsMode ? "mars" : ab != null && ab.Active && ab.EuropaMode ? "europa" : ab != null && ab.Active && ab.VenusMode ? "venus" : "moon";
         }
-        public static string WorldName(string id) => id == "moon" ? "The Moon" : id == "venus" ? "Venus" : id == "mars" ? "Mars" : id == "europa" ? "Europa" : id == "biaveh" ? "Biaveh" : id == "asteroid" ? "The asteroid" : id;
+        public static string WorldName(string id) => id == "moon" ? "The Moon" : id == "venus" ? "Venus" : id == "mars" ? "Mars" : id == "europa" ? "Europa" : id == "biaveh" ? WorldFlags.ContactName : id == "asteroid" ? "The asteroid" : id;
         /// <summary>One line from the Log for a visited world (its latest unlocked entry, first sentence); null = not visited.</summary>
         public static Dictionary<string, string> VisitedNotes()
         {
@@ -688,7 +688,7 @@ namespace Seven
             {
                 if (d != 0 || lr != 0) { _map.Step(lr != 0 ? lr : d); AudioKit.Play("console_move", null, 0.5f); Redraw(); }
                 if (back) { if (_map.Confirming) { _map.SetConfirm(false); AudioKit.Play("console_move", null, 0.5f); } else ShowPage(Page.Main, _mainSel); return; }
-                if (ok && _map.Selected != null && _map.IsGateway(_map.Selected)) { _map.SwitchSystem(); CapLog($"star map (QF18 22): through the gateway to the {(_map.View == StarMap.Sol ? "Biaveh system" : "solar system")}"); return; }   // QF18 (22)
+                if (ok && _map.Selected != null && _map.IsGateway(_map.Selected)) { _map.SwitchSystem(); CapLog($"star map (QF18 22): through the gateway to the {(_map.View == StarMap.Sol ? "Veyra system" : "solar system")}"); return; }   // QF18 (22)
                 if (ok && _map.Selected != null)
                 {
                     AudioKit.Play("console_select", null, 0.7f);

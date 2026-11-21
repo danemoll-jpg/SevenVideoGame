@@ -144,10 +144,10 @@ namespace Seven
             var g = new GameObject("RouteOut"); g.transform.SetParent(lineA, false); g.transform.localPosition = new Vector3(0.61f, 0f, 0f); g.transform.localRotation = Quaternion.Euler(0f, 90f, 0f) * Quaternion.Euler(-60f, 0f, 0f);
             var mf = g.AddComponent<MeshFilter>(); var mr = g.AddComponent<MeshRenderer>(); mr.sharedMaterial = Markers.Additive(1.4f);
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.8f) { mf.sharedMesh = Markers.RectMesh(0.006f, 0.3f * t); yield return null; }
-            var end = new GameObject("Biaveh"); end.transform.SetParent(lineA, false); end.transform.localPosition = new Vector3(0.91f, 0f, 0f); end.transform.localRotation = Quaternion.Euler(-60f, 0f, 0f);
+            var end = new GameObject("Veyra"); end.transform.SetParent(lineA, false); end.transform.localPosition = new Vector3(0.91f, 0f, 0f); end.transform.localRotation = Quaternion.Euler(-60f, 0f, 0f);
             end.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(0f, 0.04f, 0f); end.AddComponent<MeshRenderer>().sharedMaterial = Markers.Additive(2.4f); end.AddComponent<HoloPulse>();
             AudioKit.Play("console_select", null, 0.6f);
-            Log("hologram (QF18 2): the route completes - out to Biaveh");
+            Log("hologram (QF22): the route completes - out to the Biavian contact at Veyra");
         }
         static void Log(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) ChapterCapture.I?.Log(s); }
     }

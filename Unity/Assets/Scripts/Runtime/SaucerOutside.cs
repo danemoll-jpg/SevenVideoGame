@@ -161,7 +161,15 @@ namespace Seven
                 halo.transform.position = star.transform.position; halo.transform.localScale = Vector3.one * 1300f; halo.GetComponent<Renderer>().sharedMaterial = Markers.Additive(0.35f); halo.AddComponent<FaceCamera>();
                 var planet = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(planet.GetComponent<Collider>()); planet.transform.SetParent(_bia.transform, false);
                 planet.transform.position = new Vector3(-420f, -60f, 1500f); planet.transform.localScale = Vector3.one * 260f; planet.GetComponent<Renderer>().sharedMaterial = Markers.DarkGloss();
-                Debug.Log("[Seven] window view (QF18 22): open space in the Biaveh system - its star, Biaveh");
+                // QF22: Veyra and its rings - a wide pale debris band round the planet (tilted), a fainter outer ring
+                foreach (var (r0, r1, glow) in new[] { (175f, 265f, 0.55f), (285f, 330f, 0.25f) })
+                {
+                    var ring = new GameObject("VeyraRing"); ring.transform.SetParent(_bia.transform, false);
+                    ring.transform.position = planet.transform.position; ring.transform.rotation = Quaternion.Euler(14f, 0f, -18f);
+                    ring.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(r0, r1, 0f); ring.AddComponent<MeshRenderer>().sharedMaterial = Markers.Additive(glow);
+                }
+                planet.name = "Veyra";
+                Debug.Log("[Seven] window view (QF22): open space at Veyra - its star, Veyra and its rings");
             }
             if (_bia != null) _bia.SetActive(on);
         }
