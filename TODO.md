@@ -1,6 +1,18 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF19: the Viper fight's pylons actually work (Dan, 2026-11-20) — to do
+## Side task S3: the Machinist ready for Mixamo (Dan, 2026-11-20) — to do, small (on its own; doesn't change the game)
+Same as S1 / S2 with `Tools/Blender/cleanup_mixamo_body.py` — add a `machinist` preset (**~4.0 m**) — for Dan's Tripo model
+`Art/Source/machinist/machinist_v1.glb` (~60 MB; reference `Art/Reference/machinist_ref_front.png`, notes in
+`Docs/MODELS-NEEDED.md` "The Machinist"): weld, decimate to ~40–50 k tris keeping the visor, collar, exhaust stacks, chest core,
+gauges, the front plate's crescent / glyphs and the claw readable; A-pose upright, origin at the feet, texture embedded →
+**`Art/Export/machinist/machinist_for_mixamo.fbx`** + a preview sheet (front / side / back)
+`Docs/Previews/machinist/machinist_for_mixamo_sheet.png`. Make sure the **front plate isn't fused to the thighs** (a small gap)
+so Mixamo doesn't glue it to the legs; the right forearm ends in the claw tool (Mixamo will treat it as a hand — fine). Then tell
+Dan: upload to Mixamo's auto-rigger, download "FBX for Unity, with skin" to `Art/Mixamo/machinist/machinist_body_mixamo.fbx`.
+Commit + push. No release.
+
+
+## Quick fix QF19: the Viper fight's pylons actually work (Dan, 2026-11-20) — done, status below; release 0.15.4
 Commit first. Repeat item (QF17 → QF18 → still broken in Dan's play): say why QF18's check passed while Dan's presses did
 nothing, fix the cause, prove it with **real button presses** (the virtual gamepad pressing X like a player — never calling
 the pylon / channel code directly). Release **0.15.4**; "QF19 — status"; "For Dan to check (QF19)". Small, focused round.
@@ -23,6 +35,79 @@ button** in the fight (the press may go to a strike instead); and the counter sh
 5. Proof: a player-style run where the virtual gamepad walks to each pylon and **presses X once** under fire — both go down on
    the first press, the counter reads 1 / 2 then 2 / 2, the platform sinks; a capture of each pylon's shutdown; check the same
    for the Venus devices.
+
+
+## QF19 — status (2026-11-20): done, exe-verified off-screen; release 0.15.4 (`game-1504`)
+**Why QF18's check passed while Dan's presses did nothing.** The check measured the result ("pylon shut down" turned up in
+the log) and never how many presses that took. The pilot played the old design the way no person would:
+- It walked to 0.9 m from the pylon's centre and stood there.
+- It pressed X about every 6 frames while the 3-second channel ran. A repeat press on the same pylon did nothing
+  (`StartChannel` returned early), so mashing cost it nothing.
+- After every interruption (a dodge, a hop, a hit) it started again at once, until some 3-second gap between Viper's
+  attacks let a channel finish.
+The log counted the interruptions (`INTERRUPTED at n %`), but no check failed on them.
+
+Dan pressed once, as the prompt said. That only started a hold, shown as a small "Shutting it down… 0 %" in the prompt.
+Three things then undid it: stepping a little away (more than 2.1 m from the centre; the pylon's base already fills
+about 1.2 m of that), any dodge or hop, or Viper's next hit. A press that came while she was still in a strike or a
+flinch went to a strike instead, because the use only fired from Idle / Block. And the counter said 3 while 2 were
+required.
+
+**What changed** (items 1-5):
+1. **One press, instant.** The channel is gone from every boss objective (`BossFight.StartChannel / UpdateChannel /
+   ChannelProgress` removed; `objectiveTime` dropped from `boss_tuning.json`).
+   - X in reach (**3 m from the pylon's centre**) shuts it down at once. Nothing interrupts it, because there is nothing
+     left to interrupt.
+   - Prompt **"X: Shut down pylon"**, shown only in reach.
+   - `ChapterSevenFight`: in reach, X **always** uses the objective, whatever she is doing (mid-strike, block, dodge,
+     flinch; only not while she is down). It strikes only when no objective is in reach.
+   - Venus: the north device works the same way ("Shut down device", 3 m, one press). The ledge device and the crystal
+     were already RT.
+2. **The effect** (`MarsPylon`):
+   - While it is on, each pylon shows what it does: a flickering white **power beam** runs from its head to Viper's
+     platform.
+   - On the press, all at once: a bang (`land_hard` + `fight_block`) and a white flash, a burst of 260 sparks, and a
+     white shock ring.
+   - The beam snaps off, the head stutters and dies, and the panels blow open in 0.45 s. Then the power-down sound.
+   - The camera eases ~45 % toward it, with a small shake (`BossFight.NudgeCamera`). The prompt is gone.
+3. **The counter counts only what is required:** "Shut down his two pylons (X)" with "Pylons 0 / 2" on its own line, so
+   it no longer runs under Viper's bar. The third emitter is part of the platform: it dies when the platform sinks. The
+   energy sweep exists only while he is on the platform (removed from phases 2 / 3 in the table), so there is no optional
+   objective mid-fight.
+4. **Both down → the platform sinks**, he drops to the plaza → phase 2 (stun with TK → close in → hand to hand), as in
+   QF18. She now starts the fight **in the middle of the plaza** (`ViperFight.HerStart`). Before, she started 4 m from
+   pylon 1, so it went down 0.5 s in, before his first attack.
+5. **Proof: the virtual gamepad presses X once** (`BossPilot`):
+   - It walks toward the pylon until the X prompt shows, then sends **one** pad press (the pad never drops it any more).
+   - A second press at the same objective after 1 s is counted as a failure (`second presses`).
+   - Independently, `ChapterSevenFight` counts real pad X presses while an objective prompt showed, and how many of
+     those went to a strike.
+   - All runs muted, minimized, Below Normal; captures in the session scratchpad.
+
+   | run | result |
+   |---|---|
+   | Viper `-marsplay -marscp 5 -bosscheck` (final build) | pylon 1 down on press 1 at 3.0 m → **Pylons 1 / 2**; pylon 2 down on press 1 at 2.9 m while his energy sweep was recovering → **2 / 2** → platform sinks → phase 2 → pinned. `X OBJECTIVES (QF19): the pilot pressed X 2x, second presses 0; pad presses at a prompt 2, went to a strike 0`. Fight 1:14, hits 2, down 0× |
+   | Viper, the two runs before (same build except the objective text) | the same: 2 presses / 2 pylons / 0 to a strike / 0 second presses; one run shut pylon 2 during the sweep's **telegraph** (under fire). Fights 1:13 / 1:09 |
+   | Venus `-venusplay2 -bosscheck` (C06 → containment) | north device down on press 1 at 2.9 m: presses 1, second 0, to a strike 0; ledge + crystal (RT) → 3 / 3; fight 1:58 → containment, creatures harmed 0 |
+   | captures | `boss_viper_pylon1/2_shutdown(_side)`, `_after(_side)`; `boss_wormmaster_device1_shutdown / _after`; monochrome check over 47 images: max channel diff **0**; audio peak 0 in every run |
+
+   Testing time ≈ 14 game-minutes (four short Viper runs, one Venus run).
+
+   Not covered:
+   - A `-bossnovice` run: the fight is shorter now that phase 1 has no channel (phase 1 took 9-19 s with the expert pilot).
+     The first-time length (3-5 min target) is not re-measured; if it plays short, it is a table change.
+   - The first Viper run ended by itself at 107 s, mid-phase 3, with a clean shutdown and no quit request. The three
+     runs after it finished normally, and I didn't find the cause.
+   - A sound check of the new bang.
+
+## For Dan to check (QF19)
+1. Mars → the temple fight: walk up to a pylon. "X: Shut down pylon" shows from about 3 m. Press X **once**: it bangs,
+   sparks, the beam into his platform dies, the panels blow open, the counter goes 1 / 2. Do the same at the second
+   pylon, even while he is attacking: 2 / 2, the platform sinks and he comes down.
+2. Near a pylon X never throws a strike. Away from the pylons X strikes as before.
+3. The objective reads "Shut down his two pylons (X)" / "Pylons n / 2" and sits clear of Viper's bar.
+4. Venus control chamber: the north device goes down with one X press at about 3 m.
+5. Does phase 1 now feel too short? It's the gap numbers in `boss_tuning.json` (viper, phase "from his platform").
 
 
 ## Quick fix QF18: show it, don't write it + Dan's Mars review (Dan, 2026-11-20) — done, status below; release 0.15.3

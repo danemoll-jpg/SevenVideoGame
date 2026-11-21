@@ -150,13 +150,17 @@ namespace Seven
         {
             Speed = 0f; Context = null;
             _target = PickTarget();
+            bool autoAtk = AutoAttack;
             bool atk = AttackPressed, dodge = DodgePressed, takedown = TakedownPressed, block = BlockHeld;
             bool hop = FightHop && HopPressed, tk = TkAim != null && TkPressed, use = false;
             if (FightHop && !ScriptDriven && Input != null && Input.LockOn != null && Input.LockOn.WasPressedThisFrame()) { LockOn = !LockOn; FightEvent?.Invoke(LockOn ? "lock_on" : "lock_off"); }
             AutoAttack = AutoDodge = AutoTakedown = AutoHop = AutoTk = false;
-            // QF17: X next to a fight objective uses it instead of striking
+            // QF17: X next to a fight objective uses it instead of striking. QF19: in reach, X ALWAYS uses it - whatever she is
+            // doing (mid-strike, blocking, dodging, reeling from a hit) - never a strike; a strike only with no objective in reach.
             string useLabel = FightUseLabel?.Invoke();
-            if ((atk || AutoUse) && useLabel != null && (Act == FightAct.Idle || Act == FightAct.Block)) { atk = false; use = true; }
+            bool padX = atk && !autoAtk;
+            if ((atk || AutoUse) && useLabel != null && Act != FightAct.Down) { atk = false; use = true; }
+            if (padX && useLabel != null) { var bf = BossFight.Active; if (bf != null) { bf.PadUsePresses++; if (!use) bf.PadUseToStrike++; } }
             AutoUse = false;
             if (use) { Freeze(false); ToFightIdle(); FightUse?.Invoke(); FightEvent?.Invoke("use"); return; }
             if (atk) { _atkPressedAt = Time.time; _bufAtk = "attack"; }

@@ -30,7 +30,7 @@ namespace Seven
         public float throwFlight = 0.35f;     // the thrown debris' flight (s)
         public float debrisRespawn = 5f;      // a thrown piece comes back (dust, a new piece) after this
         public float tkRange = 12f;           // debris within this of her can be thrown
-        public float objectiveTime = 2f;      // an X objective (pylon / device) takes this long at it - a hit or stepping away interrupts it
+        public float objectiveTime = 0f;      // QF19: unused - an X objective is one press (no channel any more)
         // QF18 (19c) - Dan's loop: telekinesis only STUNS, her hand-to-hand strikes do the real damage
         public float stunTime = 3.6f;         // a thrown object that hits while he is open: stunned this long (reels, dazed sway)
         public float throwChip = 0.02f;       // the stun itself costs him a sliver of energy
@@ -140,30 +140,24 @@ namespace Seven
         protected virtual void ObjectiveTkFire() { }
         protected virtual string ObjectiveUseLabel() => null;
         protected virtual void ObjectiveUse() { }
-        // ---- an X objective takes a moment under fire (a hit or stepping away interrupts it)
-        public int ChanId { get; private set; } = -1;
-        float _chanT; Vector3 _chanAt; System.Action _chanDone;
-        public float ChannelProgress => ChanId < 0 ? 0f : _chanT / Mathf.Max(0.1f, Def.objectiveTime);
-        public int Interrupted { get; private set; }
-        protected void StartChannel(int id, Vector3 at, System.Action done)
+        // ---- QF19: an X objective is ONE press in reach - instant, no hold, nothing interrupts it (the QF17 3-s channel is gone)
+        /// <summary>QF19 proof: X presses on the pad (real input, not a script flag) while an objective prompt was showing,
+        /// and how many of them went to a strike instead (must be 0).</summary>
+        public int PadUsePresses, PadUseToStrike;
+        /// <summary>QF19 (2): the camera eases a little toward a thing she just shut down (and a small shake).</summary>
+        protected void NudgeCamera(Vector3 at) { StartCoroutine(Nudge(at)); }
+        IEnumerator Nudge(Vector3 at)
         {
-            if (ChanId == id) return;
-            ChanId = id; _chanT = 0f; _chanAt = at; _chanDone = done;
-            AudioKit.Play("mars_control_on", at, 0.6f, 0.05f, AudioKit.Bus.Sfx, 30f);
-            Log($"boss {Def.id}: she starts shutting objective {id} down ({Def.objectiveTime:0.0} s under fire)");
-        }
-        void UpdateChannel(float dt)
-        {
-            if (ChanId < 0) return;
-            bool ok = !Paused && Flat(Her - _chanAt).magnitude < 2.1f && Seven.Act != ChapterSeven.FightAct.Flinch && Seven.Act != ChapterSeven.FightAct.Down && Seven.Act != ChapterSeven.FightAct.Dodge && Seven.Act != ChapterSeven.FightAct.Hop;
-            if (!ok) { Interrupted++; Log($"boss {Def.id}: shutting objective {ChanId} down INTERRUPTED at {ChannelProgress * 100f:0}%"); ChanId = -1; return; }
-            _chanT += dt;
-            if (_chanT >= Def.objectiveTime) { var d = _chanDone; ChanId = -1; d?.Invoke(); }
+            CameraShake.Quake(0.35f, 0.35f);
+            if (Cam == null) yield break;
+            var to = Flat(at - Her); if (to.sqrMagnitude < 0.01f) yield break;
+            float want = Quaternion.LookRotation(to).eulerAngles.y, off = Mathf.DeltaAngle(Cam.Yaw, want), turn = Mathf.Clamp(off * 0.45f, -40f, 40f), done = 0f;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.45f) { float k = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t)); Cam.Yaw += turn * k - done; done = turn * k; yield return null; }
         }
         /// <summary>Things on the ground a player steps round (a surfaced creature).</summary>
         public virtual IEnumerable<Vector3> Hazards() { yield break; }
         /// <summary>The context prompt a player sees now (objective / throw / takedown).</summary>
-        public virtual string PromptLabel => Paused ? null : ChanId >= 0 ? $"Shutting it down... {ChannelProgress * 100f:0}%" : ObjectiveUseLabel() ?? (ObjectiveTk().HasValue ? "Telekinesis" : Open && DebrisNear ? "Telekinesis: throw" : State == St.Dazed ? "Takedown" : null);
+        public virtual string PromptLabel => Paused ? null : ObjectiveUseLabel() ?? (ObjectiveTk().HasValue ? "Telekinesis" : Open && DebrisNear ? "Telekinesis: throw" : State == St.Dazed ? "Takedown" : null);
         public bool PromptIsTk => PromptLabel != null && PromptLabel.StartsWith("Telekinesis");
         /// <summary>The phase was skipped (fairness): complete its objectives.</summary>
         protected virtual void SkipObjectives() { }
@@ -230,7 +224,8 @@ namespace Seven
             var per = new List<string>(); foreach (var kv in AttackCount) per.Add($"{kv.Key} {kv.Value}");
             return $"BOSS {Def.id}: fight length {Mathf.FloorToInt(len / 60f)}:{len % 60f:00} ({len:0} s), attacks {Attacks} ({Attacks / min:0.0}/min: {string.Join(", ", per)}), her presses: dodge {_herDodges}, jump {_herHops}, block {_herBlocks}, telekinesis {_herTk}, hits she took {HitsOnHer}, she went down {Knockdowns}x, " +
                    $"answered: dodged {Dodged}, blocked {Blocked}, jumped {Jumped}, out of reach {OutOfReach}; telekinetic throws {Throws} (deflected {Deflected}), stuns {Staggers}, strikes landed {Strikes} ({StunStrikes} while stunned, {OpenStrikes} while open); " +
-                   $"DAMAGE (QF18): dealt by her strikes {DamageByStrikes * 100f:0}%, by throws {DamageByThrows * 100f:0}% of a full bar (a retried phase counts again) - melee {(DamageByStrikes + DamageByThrows > 0f ? DamageByStrikes / (DamageByStrikes + DamageByThrows) * 100f : 0f):0}% of the damage; energy left {Energy * 100f:0}%; phases: {string.Join(" | ", PhaseLog)}";
+                   $"DAMAGE (QF18): dealt by her strikes {DamageByStrikes * 100f:0}%, by throws {DamageByThrows * 100f:0}% of a full bar (a retried phase counts again) - melee {(DamageByStrikes + DamageByThrows > 0f ? DamageByStrikes / (DamageByStrikes + DamageByThrows) * 100f : 0f):0}% of the damage; energy left {Energy * 100f:0}%; phases: {string.Join(" | ", PhaseLog)}; " +
+                   $"X OBJECTIVES (QF19): the pilot pressed X {BossPilot.UsePresses}x at objectives, second presses {BossPilot.UseRepeats} (must be 0); X presses on the pad while an objective prompt showed {PadUsePresses}, went to a strike {PadUseToStrike} (must be 0)";
         }
 
         // ---------------------------------------------------------------- the brain
@@ -242,7 +237,6 @@ namespace Seven
             float dt = Time.deltaTime;
             Arena(dt);
             UpdateDebris();
-            UpdateChannel(dt);
             if (Paused || PauseMenu.IsOpen) { Anim(State == St.Dazed || State == St.Pinned ? State : St.Idle, null, 0f, false, 0f); return; }
             if (Seven.FightDown) return;                    // the director runs the retry
             float u = StateLen > 0f ? Mathf.Clamp01(StateT / StateLen) : 1f;
@@ -792,7 +786,7 @@ namespace Seven
             if (_shot.Contains(key)) return; _shot.Add(key);
             StartCoroutine(Shoot($"boss_{Def.id}_{key}", when == "telegraph" ? 0.6f * StateLen : when == "active" ? Mathf.Min(0.12f, StateLen * 0.4f) : 0.3f));
         }
-        IEnumerator Shoot(string name, float delay)
+        protected IEnumerator Shoot(string name, float delay)
         {
             for (float t = 0f; t < delay; t += Time.deltaTime) yield return null;
             yield return Cap.Shot(name);

@@ -39,7 +39,7 @@ namespace Seven
             _held = I.Run ? 1u << (int)GamepadButton.LeftShoulder : 0u;
             if (I.Tk && _rtTap == 0) _rtTap = 5;
             GamepadButton? b = I.Dodge ? GamepadButton.East : I.Hop ? GamepadButton.South : (I.Attack || I.Use) ? GamepadButton.West : I.Takedown ? GamepadButton.North : (GamepadButton?)null;
-            if (b.HasValue && (_phase == 0 || I.Dodge || I.Hop)) { _presses.Clear(); _cur = b.Value; _phase = 1; }
+            if (b.HasValue && (_phase == 0 || I.Dodge || I.Hop || I.Use /* QF19: an objective press is never dropped */)) { _presses.Clear(); _cur = b.Value; _phase = 1; }
         }
         void Press(GamepadButton b) { if (_presses.Count < 3) _presses.Enqueue(b); }
         ChapterCapture Cap => ChapterCapture.I;

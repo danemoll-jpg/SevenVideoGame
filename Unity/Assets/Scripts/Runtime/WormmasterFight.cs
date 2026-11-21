@@ -69,8 +69,18 @@ namespace Seven
             if (Phase == 1 && !Off(2)) return (V.DeviceUse[2], "tk");
             return null;
         }
-        protected override string ObjectiveUseLabel() => Phase == 0 && !Off(0) && Flat(V.DeviceUse[0] - Her).magnitude < 1.8f ? "Shut it down" : null;
-        protected override void ObjectiveUse() { if (ObjectiveUseLabel() != null) StartChannel(0, V.DeviceUse[0], () => { DisableDevice?.Invoke(0); ObjectiveProgress(); }); }
+        // QF19: one press of X in reach (3 m), instant - no hold, nothing interrupts it
+        protected override string ObjectiveUseLabel() => Phase == 0 && !Off(0) && Flat(V.DeviceUse[0] - Her).magnitude < 3.0f ? "Shut down device" : null;
+        protected override void ObjectiveUse()
+        {
+            if (ObjectiveUseLabel() == null) return;
+            float dist = Flat(V.DeviceUse[0] - Her).magnitude;
+            DisableDevice?.Invoke(0);
+            NudgeCamera(V.DeviceAt[0] + Vector3.up * 1.2f);
+            Log($"boss wormmaster: DEVICE (QF19) 1 shut down by her X - X presses on the pad at a device so far {PadUsePresses} (went to a strike instead {PadUseToStrike}); she is {dist:0.0} m from it; his attack now: {(Cur != null && State != St.Idle ? Cur.id + " " + State : "none")}");
+            if (DemoBoot.CaptureDir != null && Cap != null) { StartCoroutine(Shoot("boss_wormmaster_device1_shutdown", 0.15f)); StartCoroutine(Shoot("boss_wormmaster_device1_after", 1.4f)); }
+            ObjectiveProgress();
+        }
         protected override Vector3? ObjectiveTk()
         {
             if (Phase == 0 && !Off(1) && Flat(V.DeviceAt[1] - Her).magnitude < 9.5f) return V.DeviceAt[1] + Vector3.up * 1.2f;

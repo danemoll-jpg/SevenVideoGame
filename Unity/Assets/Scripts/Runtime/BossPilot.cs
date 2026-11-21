@@ -19,7 +19,10 @@ namespace Seven
         static bool Novice => DemoBoot.BossNovice;
         static int _openSeen = -1; static bool _openTake;
         static int _decidedFor = -1; static string _answer; static bool _pressed;
-        static float _nextStrike, _tkAt;
+        static float _nextStrike, _tkAt, _useAt;
+        static Vector3 _useFor = new Vector3(1e6f, 0f, 0f);
+        /// <summary>QF19 proof: X presses the pilot made at objectives, and how many were second presses (must be 0).</summary>
+        public static int UsePresses, UseRepeats;
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
         public static Intent Think(BossFight f, ChapterSeven s)
@@ -118,8 +121,15 @@ namespace Seven
                 var (at, how) = obj.Value; var to = Flat(at - her); float od = to.magnitude;
                 I.Why = "objective " + how;
                 if (how == "tk" && od < 9f) { if (Time.time - _tkAt > 1.0f) { I.Tk = true; _tkAt = Time.time; } return I; }
-                if (how == "use" && od < 1.3f) { I.Use = true; I.Why = $"at the objective ({f.ChannelProgress * 100f:0}%)"; return I; }
-                I.Move = to.normalized; I.Run = true; return I;
+                // QF19: like a player - walk up until the X prompt shows, press X ONCE; it must go down on that press.
+                // (A second press at the same objective is counted as a failure in the log: UseRepeats must stay 0.)
+                if (how == "use" && f.PromptLabel != null && !f.PromptIsTk && f.PromptLabel != "Takedown")
+                {
+                    if (_useFor != at) { _useFor = at; _useAt = Time.time; I.Use = true; UsePresses++; I.Why = $"X once at '{f.PromptLabel}' ({od:0.0} m)"; return I; }
+                    if (Time.time - _useAt > 1.0f) { _useAt = Time.time; I.Use = true; UsePresses++; UseRepeats++; I.Why = $"X AGAIN at '{f.PromptLabel}' - the first press did nothing"; return I; }
+                    I.Why = "waits after the press"; return I;
+                }
+                I.Move = to.normalized; I.Run = od > 4f; return I;
             }
             // 8) otherwise: keep his distance, circle him, stay near something to throw
             {

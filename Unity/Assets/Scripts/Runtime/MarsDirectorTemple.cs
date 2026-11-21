@@ -80,7 +80,7 @@ namespace Seven
                 if (Viper != null && t > 0.35f) { float k = Mathf.Clamp01((t - 0.35f) / 0.4f); Viper.transform.position = Vector3.Lerp(from, ViperFight.DaisAt + Vector3.up * ViperFight.DaisTop * u, k) + Vector3.up * Mathf.Sin(k * Mathf.PI) * 1.2f; }
                 yield return null;
             }
-            if (PylonObjs != null) { foreach (var po in PylonObjs) if (po != null) po.Arm(true); } else if (Pylons != null) foreach (var pr in Pylons) Glow(pr, 1.4f);
+            if (PylonObjs != null) { foreach (var po in PylonObjs) if (po != null) { po.FeedTo = ViperFight.DaisAt + Vector3.up * (ViperFight.DaisTop - 0.4f); po.Arm(true); } } else if (Pylons != null) foreach (var pr in Pylons) Glow(pr, 1.4f);
             foreach (var g in new[] { BarrierWC, BarrierCE, BarrierCentre }) if (g != null) g.SetActive(false);
             if (FallenWalk != null) FallenWalk.gameObject.SetActive(false);
             if (SlideBlock != null) SlideBlock.gameObject.SetActive(false);
@@ -93,12 +93,13 @@ namespace Seven
             var rockMat = deck != null && deck.GetComponent<Renderer>() != null ? deck.GetComponent<Renderer>().sharedMaterial : Markers.DarkGloss();
             _viperFight.Setup(Viper, Dais, Pylons, rockMat);
             _viperFight.PylonObjs = PylonObjs;
-            _viperFight.PylonCount = n => { Objective((_viperFight.Phase == 0 ? "Viper attacks from his platform - shut his two pylons down (X) under fire" : "Shut the third pylon down (X) to stop its sweep - or fight him: stun him with debris (RT), then strike (X)") + $"  ·  Pylons {n} / 3"); UI.Hint($"Pylon shut down  ·  {n} / 3", 2.5f); };
+            _viperFight.PylonCount = n => { if (_viperFight.Phase == 0) Objective($"Shut down his two pylons (X)\nPylons {n} / {ViperFight.Required}"); UI.Hint($"Pylons {n} / {ViperFight.Required}", 2.5f); };
             _viperFight.PlaceStart();
-            if (Flat(P7 - ViperFight.HerStart).magnitude > 8f) Seven.Place(new Vector3(-9f, 0f, 132f), Flat(ViperFight.DaisAt - new Vector3(-9f, 0f, 132f)));
+            // QF19: she starts in the middle of the plaza - each pylon is a run of ~12 m under his fire, never a step away
+            if (Flat(P7 - ViperFight.HerStart).magnitude > 2f) Seven.Place(ViperFight.HerStart, Flat(ViperFight.DaisAt - ViperFight.HerStart));
             _viperFight.UI = UI; _viperFight.AutoPilot = Auto;
             _viperFight.Beat = ViperComesDown;
-            _viperFight.PhaseObjective = ph => ph == 0 ? $"Viper attacks from his platform - shut his two pylons down (X) under fire  ·  Pylons {_viperFight.PylonsDown} / 3"
+            _viperFight.PhaseObjective = ph => ph == 0 ? $"Shut down his two pylons (X)\nPylons {_viperFight.PylonsDown} / {ViperFight.Required}"
                                             : ph == 1 ? "He hunts you - when he wastes an attack, stun him with debris (RT), then close in and fight (X)"
                                             : "Enraged - dodge, stun him (RT), then hit him hard (X) until he falls";
             yield return Cutscene(false);

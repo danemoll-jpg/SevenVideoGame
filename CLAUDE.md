@@ -380,7 +380,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–15 + QF1–QF18 complete (2026-11-20), release 0.15.3.** QF18 = show it, don't write it + Dan's Mars review
+**Rounds 1–15 + QF1–QF19 complete (2026-11-20), release 0.15.4.** QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
 energy bars, visions, holograms, window views, the two-level star map). QF17 = real boss fights (the "Boss fights" rule
 above: Viper and the Wormmaster rebuilt), the Mars architecture kit, the ramp cut-away rule, the bike-hold rule on every
@@ -663,7 +663,19 @@ scene (Round 10).
     `FightDemoBuilderWorldViews.cs` after every level; `SaucerOutside.LevelView`), the shoulder perch (`PerchCat`).
   - **Star map** two levels (`StarMap.cs`: our solar system / the Biaveh system / the overview between them, gateways once
     Biaveh is unlocked); `SaucerLocation.System` ("sol" / "biaveh"; the windows show Biaveh's star while there).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.3** (QF18 status in `TODO.md`).
+- **QF19 (release 0.15.4)** — the Viper fight's pylons work (status + "For Dan to check (QF19)" in `TODO.md`):
+  - **Fight objectives are ONE press, instant** (no hold / channel - it is gone from `BossFight`): in reach (pylons /
+    the Venus north device: 3 m) X always uses the objective, never a strike, whatever she is doing (`ChapterSevenFight`);
+    a strike only with no objective in reach. Prompt "Shut down pylon" / "Shut down device" only in reach.
+  - Counters count only what is required (Viper: "Pylons n / 2"; the third emitter belongs to the platform and dies
+    with it; the energy sweep only while he is up there). She starts the fight in the plaza's middle (`HerStart`).
+  - `MarsPylon`: power beam to his platform while on; shutdown = bang + flash + sparks + shock ring, beam dies, panels
+    blow open; `BossFight.NudgeCamera` turns the camera toward it.
+  - **Proof rule for any X objective:** the pilot (`BossPilot`) walks up until the prompt shows and presses the pad
+    **once**; `X OBJECTIVES (QF19)` in the boss summary: second presses 0, pad presses that went to a strike 0. Never prove
+    an objective by mashing or by calling its code.
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.4** (QF19 status in `TODO.md`).
+**Before: Dan plays 0.15.3** (QF18 status in `TODO.md`).
 **Before: Dan plays 0.15.2** (QF17 status in `TODO.md`).
 **Before: Dan plays 0.15.1** (QF16 status in `TODO.md`).
 **Before: Dan plays 0.15.0** (Round 15 status in `TODO.md`).

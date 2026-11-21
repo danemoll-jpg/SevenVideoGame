@@ -50,3 +50,11 @@ before the Cetacean calls — fade the music out there and bring `europa_underwa
 | --- | --- |
 | `mars_kingdoms.mp3` | The plains, the settlements, the ravine, the maintenance route, the temple, the ride back |
 | `mars_viper.mp3` | Viper's intervention / the encounter at the temple approach |
+
+# Chapter — Asteroid (made by Dan in Suno, 2026-11-20, both ~3:00, saved in `Unity/Assets/Audio/Music/`)
+| File | Where it plays | Style prompt |
+| --- | --- | --- |
+| `asteroid_city.mp3` | The receiving chamber onward: the city cavern, the causeway ride, the factory controls, the archive (Dan: "should hit harder") | epic industrial cinematic, 105 bpm, a colossal machine city running at full power with no one left, massive driving drums and hammering anvil strikes, piston and steam-press rhythms, deep sub bass, huge brass swells, a soaring melancholy cello and celesta melody, relentless momentum, awe and loneliness, seamless loop |
+| `asteroid_machinist.mp3` | The Machinist encounter (AST_07) | driving cinematic boss encounter, 120 bpm, relentless mechanical ostinato, heavy pistons and anvil percussion, steam hisses, tense low strings and brass, a ticking clockwork motif that speeds up, a duty-bound machine that will not stop, seamless loop |
+Quiet moments (AST_06 the lost connection, the vision, AST_09, after the city falls silent, aboard): music fades out — the
+script wants the silence (the cavern quiet "for the first time").

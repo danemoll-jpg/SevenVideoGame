@@ -192,3 +192,15 @@ Mixamo → `Art/Mixamo/machinist/machinist_body_mixamo.fbx`. ~4 m tall. No face:
 precise head adjustments. Clips: reuse `tunneler_walk` / `tunneler_idle` / `tunneler_swipe` / YBot (slowed, deliberate).
 Code-built (hard-surface, scripted): the maintenance machine, the security machines, the mechanical bird, the arc blades
 (two curved crescent blades of light on short hilts), the cuboctahedron rune, the service-station clamps, the cradle.
+- **Reference in (Dan, 2026-11-20): `Art/Reference/machinist_ref_front.png`** — faithful to Kyle's sketch (dome helmet + slit
+  visor, flared collar, two exhaust stacks, chest core, gauge belt, the front plate with the crescent and glyphs, piston legs,
+  the claw / cutter tool arm on his right, a mechanical hand on his left). When rigging: **the long front plate hangs between
+  his legs** — give it its own hinge bone at the belt that swings forward with the stepping thigh (or shorten it to stop above
+  the knees) so it never passes through a leg (the guardian's cape lesson). The tool arm's claw on its own bone (opens / closes).
+
+## 7's arc-blade clips — in (Dan, 2026-11-20, Mixamo, animation only, on 7's rig) — `Art/Mixamo/7/blade/`
+`7_blade_fight_idle` ("Sword Fight One"), `7_blade_draw` ("Draw Sword 1"), `7_blade_draw_great` ("Draw A Great Sword 1"),
+`7_blade_sheath` ("Withdrawing Sword"), `7_blade_sheath_great` ("Sheath A Great Sword 2"), `7_blade_run` ("Run With Sword"),
+`7_blade_combo` ("One Hand Sword Combo"), `7_blade_slash_in` ("Stable Sword Inward Slash"), `7_blade_slash_out` ("Stable Sword
+Outward Slash"). They're single-sword clips; the arc blades are a pair (one curved blade per hand, spec: Kyle's
+`kyle_7_blades_sketch.jpg`) — the second blade rides the off hand; mirror clips where it helps the combos alternate hands.
