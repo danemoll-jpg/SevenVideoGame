@@ -119,7 +119,7 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
---- !u!1 &1115833264
+--- !u!1 &458811412
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -127,9 +127,9 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1115833267}
-  - component: {fileID: 1115833265}
-  - component: {fileID: 1115833266}
+  - component: {fileID: 458811415}
+  - component: {fileID: 458811413}
+  - component: {fileID: 458811414}
   m_Layer: 0
   m_Name: MenuCamera
   m_TagString: MainCamera
@@ -137,13 +137,13 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!20 &1115833265
+--- !u!20 &458811413
 Camera:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1115833264}
+  m_GameObject: {fileID: 458811412}
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
@@ -188,21 +188,21 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
---- !u!81 &1115833266
+--- !u!81 &458811414
 AudioListener:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1115833264}
+  m_GameObject: {fileID: 458811412}
   m_Enabled: 1
---- !u!4 &1115833267
+--- !u!4 &458811415
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1115833264}
+  m_GameObject: {fileID: 458811412}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -211,7 +211,7 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1238940540
+--- !u!1 &1806069555
 GameObject:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -219,8 +219,8 @@ GameObject:
   m_PrefabAsset: {fileID: 0}
   serializedVersion: 6
   m_Component:
-  - component: {fileID: 1238940542}
-  - component: {fileID: 1238940541}
+  - component: {fileID: 1806069557}
+  - component: {fileID: 1806069556}
   m_Layer: 0
   m_Name: DemoMenu
   m_TagString: Untagged
@@ -228,27 +228,27 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1238940541
+--- !u!114 &1806069556
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1238940540}
+  m_GameObject: {fileID: 1806069555}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 92436eea683384845af8ec86d0238209, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Seven.DemoMenu
-  Cam: {fileID: 1115833265}
+  Cam: {fileID: 458811413}
   Bank: {fileID: 11400000, guid: 8bbf0bb6233cfb542bb582e245408f7d, type: 2}
---- !u!4 &1238940542
+--- !u!4 &1806069557
 Transform:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1238940540}
+  m_GameObject: {fileID: 1806069555}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -261,5 +261,5 @@ Transform:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
-  - {fileID: 1115833267}
-  - {fileID: 1238940542}
+  - {fileID: 458811415}
+  - {fileID: 1806069557}

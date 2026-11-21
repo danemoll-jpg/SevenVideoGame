@@ -259,7 +259,7 @@ minimized and Below Normal.
 - **Vision 6** = `Art/Video/vision_06_mothership.mp4` (copied by Build everything; still fallback `Resources/Biaveh/vision_06_still.jpg`),
   with a soft hum as the light travels into the archive and a faint chime, no music.
 - **Ratwing** = the Round 4 model (`ratwing_v1_rigged.fbx`) with procedural flight (`RatwingRig`: his rig has no flight clips).
-- Voices: 162 of 165 lines voiced (Nela = premade "Bella", Ratwing = Dan's saved "ratwing", the resident = premade "Chris").
+- Voices: all 165 lines voiced (Nela = premade "Bella", Ratwing = Dan's saved "ratwing", the resident = premade "Chris").
 
 **Files:** `Runtime/BiavehLayout.cs` (numbers, zones, routes, checkpoints, the shell), `BiavehState.cs` (+ `BiavehDialogue`),
 `BiavehDirector.cs` / `BiavehDirectorFlow.cs` (BIA_03-08) / `BiavehDirectorTemple.cs` (BIA_09-11 + home), `RatwingFight.cs`,
@@ -311,9 +311,7 @@ Captures of the boss mid-attack: `boss_ratwing_swoop_telegraph / _active (+ _sid
     still plays the asteroid's AST_11B (same story beat), so the Cattalus lead is never missed.
 
 ## Not covered / known (Round 17)
-- **3 lines unvoiced - the ElevenLabs account ran out of credits**: BIA_13B_08 "There will be rules.", BIA_13B_09 "Oh, of course
-  there will.", BIA_13B_10 "Some of the boxes are occupied." (Branch B only; subtitles show). When the account is topped up:
-  `python Tools/Voice/generate_biaveh_voices.py --only BIA_13B_08 BIA_13B_09 BIA_13B_10`, then Build everything.
+- ~~3 lines unvoiced~~ - voiced after Dan upgraded ElevenLabs (2026-11-21): BIA_13B_08 / 09 / 10; all 165 lines voiced.
 - Visuals are a first pass: the city reads as smooth pale towers in mist; the exterior mothership is primitive-built.
 - The optional pursuit (above); residents don't greet her beyond the scripted ones.
 - **Testing time went far over the 20-minute rule** this round (several full player-style runs while the test driver was fixed: it
@@ -337,8 +335,7 @@ Captures of the boss mid-attack: `boss_ratwing_swoop_telegraph / _active (+ _sid
 9. Back aboard: she sits on the floor, he walks into her lap (no gap); then BIA_13.
 10. Nela's voice (premade "Bella") - keep it or name a saved voice.
 
-**Stand-ins: none for the Biavians or the vision** (Dan's real model and video are used). The only thing to add: the 3 unvoiced
-Branch-B lines above (ElevenLabs credits).
+**Stand-ins: none for the Biavians or the vision** (Dan's real model and video are used). Nothing left to add.
 
 ## Round 17: Chapter "The Biavian Mothership (Veyra)", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — done, status above; release 0.17.0
 Commit a checkpoint first. Runs overnight — **never stop to ask**: make the reasonable call, list it under "Round 17 — decisions
