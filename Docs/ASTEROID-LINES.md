@@ -33,6 +33,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `AST_02_P2` | 7 | More interesting than me. Rude. | Quiet laugh |
 | `AST_02_P3` | System | Material registered. Proceed to sorting. | Flat recorded announcement |
 | `AST_02_P4` | Panther | The door is free. Go, before it remembers you. | Dry |
+| `AST_02_P5` | Panther | Take the bike. Whatever's through there, it's a long way. | Practical |
 
 ## AST_03 — The city that still works
 
@@ -52,6 +53,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `AST_03_13` | 7 | The one you do when something small moves. | Quiet giggle |
 | `AST_03_P1` | Panther | The temple signal is past the far end of that causeway. The rail junctions are set for the carriers, not for you. |  |
 | `AST_03_P2` | 7 | Then I'll borrow them. | Light |
+| `AST_03_P3` | Panther | It's built for something with wheels. Or hover pads. | Dry |
 
 ## AST_04 — The Machinist
 

@@ -104,10 +104,14 @@ namespace Seven
             yield return Wait(1.0f);
             yield return ShotV("aa01_the_asteroid_through_the_window");
             CutPilot("two");
+            // QF21 (1): as they talk about the asteroid, the ship dissolves round them - the pilot's-chair effect (ShipReveal,
+            // the button that makes the ship see-through), started from her seat; the chair and his seat beside it stay solid
+            StartCoroutine(HullAway(true));
             yield return SayA("AST_01", 1, 1);                               // That's built into it? (she leans forward)
             Cat.LapNudge(-8f);                                               // his ears turn toward a faint mechanical sound
             yield return SayA("AST_01", 2, 2);                               // Through it, from what I can see.
-            WindowOnTheAsteroid();
+            OpenSpaceShot();
+            yield return ShotV("aa01b_the_hull_dissolves_round_them");
             yield return SayA("AST_01", 3, 4);                               // Someone really wanted a workshop. / ...every workshop.
             yield return ShotV("aa02_one_section_intact_one_stripped");
             _stroke = 0f;                                                    // her hand stops stroking his back
@@ -119,6 +123,10 @@ namespace Seven
             yield return ShotV("aa03_she_lifts_him_onto_the_adjoining_seat");
             yield return SayA("AST_01", 8, 10);                              // I was working. / Oh? At what? / Keeping you seated.
             yield return ShotV("aa04_keeping_you_seated");
+            // the scene ends: the hull rebuilds round them before she goes down to disembark
+            OpenSpaceShot();
+            yield return HullAway(false);
+            yield return ShotV("aa04b_the_hull_back");
             AsteroidState.CompleteScene("AST_01");
             AsteroidState.Reach(AsteroidLayout.CpReceiving);
             _ik.ReleaseAll("AST_01 ends");
@@ -126,6 +134,53 @@ namespace Seven
             yield return UI.Fade(1f, 1.2f);
             if (DemoBoot.CaptureDir != null) Cap?.Log("asteroid arrival aboard done -> the Asteroid scene (the docking recess, the receiving chamber)");
             UnityEngine.SceneManagement.SceneManager.LoadScene("Asteroid");
+        }
+        /// <summary>QF21 (1): the ship "invisible" while they talk - the existing reveal (ShipReveal, the pilot's-chair button)
+        /// run from her seat at the front window; her chair, the seat beside it (his) and the records on the arm stay solid;
+        /// slow, with the shimmer at the dissolving edge. away = false: the hull comes back (from the outside in).</summary>
+        IEnumerator HullAway(bool away)
+        {
+            var rev = Director != null ? Director.Reveal : null;
+            if (rev == null) { if (DemoBoot.CaptureDir != null) Cap?.Log("AST_01 (QF21 1): no ShipReveal in the scene - the hull stays"); yield break; }
+            if (away)
+            {
+                rev.CenterOverride = ShipConsole.I != null && ShipConsole.I.PilotSeat != null ? ShipConsole.I.PilotSeat : null;
+                var keep = new System.Collections.Generic.List<Renderer>();
+                if (ShipConsole.I != null && ShipConsole.I.PilotChair != null) keep.AddRange(ShipConsole.I.PilotChair.GetComponentsInChildren<Renderer>(true));
+                var catSeat = PilotHips + PilotFwd * 0.62f - PilotRight * 0.42f;
+                var ship = GameObject.Find("Ship");
+                if (ship != null)
+                    foreach (var r in ship.GetComponentsInChildren<Renderer>(true))
+                    {
+                        var b = r.bounds; if (b.size.magnitude > 2.6f) continue;               // never the floor, walls or the hull
+                        if ((b.ClosestPoint(catSeat) - catSeat).magnitude < 0.55f || (b.ClosestPoint(ArmRest) - ArmRest).magnitude < 0.3f) keep.Add(r);
+                    }
+                foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None)) if (r.name.StartsWith("AsteroidRecordCopy") || r.name.EndsWith("RecordCopy")) keep.Add(r);
+                rev.KeepSolid(keep);
+                float d0 = rev.Duration; rev.Duration = 6.5f;                                  // slow and elegant
+                rev.Set(true);
+                if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_01 (QF21 1): the hull dissolves round them - the ship-reveal effect from the pilot's seat, {rev.KeptCount} renderers kept solid (her chair, his seat, the records)");
+                for (float t = 0f; t < 10f && rev.Progress < 0.22f; t += Time.deltaTime) yield return null;
+                yield return ShotV("aa01a_mid_dissolve_the_shimmering_edge");
+                for (float t = 0f; t < 10f && rev.Progress < 0.999f; t += Time.deltaTime) yield return null;
+                rev.Duration = d0;
+                if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_01 (QF21 1): open space round them (reveal {rev.Progress:0.00})");
+            }
+            else
+            {
+                float d0 = rev.Duration; rev.Duration = 4.5f;
+                rev.Set(false);
+                for (float t = 0f; t < 10f && rev.Progress > 0.001f; t += Time.deltaTime) yield return null;
+                rev.Duration = d0; rev.ClearKeep();
+                if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_01 (QF21 1): the hull is back (reveal {rev.Progress:0.00}) before she goes to disembark");
+            }
+        }
+        /// <summary>The two of them in open space with the asteroid filling the view (wide, from behind and beside the chair).</summary>
+        void OpenSpaceShot()
+        {
+            // beside and a little ahead of the chair, looking back past her profile toward the asteroid (never the chair's back)
+            var wf = Flat(Polar(9f, WindowA, 0f)).normalized; var side = Vector3.Cross(Up, wf);
+            Cut(PilotHead + side * 2.6f + wf * 1.2f + Up * 0.15f, PilotHead + wf * 7f - side * 1.2f - Up * 0.9f, 60f);
         }
         /// <summary>AST_01_07: she gently lifts him off her lap onto the adjoining seat (the co-pilot pod beside the chair).</summary>
         IEnumerator LiftCatToSeat()

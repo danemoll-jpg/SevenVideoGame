@@ -91,6 +91,10 @@ namespace Seven
         /// <summary>Round 12: -novideo = the vision videos count as unavailable (the still fallback); -venusstopatship = the
         /// Venus check run ends at the saucer (no debrief); -venusquick2 = stop after C05 as Round 11 did.</summary>
         public static bool NoVideo { get; private set; }
+        /// <summary>QF21: -noqf21fix = 0.16.0's fixed shots (no automatic follow of a walker) - a repro switch; -qf21blades = the
+        /// arc-blade body check run (idle / walk / run / between strikes, from the player's camera).</summary>
+        public static bool NoQf21Fix { get; private set; }
+        public static bool Qf21Blades { get; private set; }
         public static bool VenusStopAtShip { get; private set; }
         public static bool Quick2 { get; private set; }
         /// <summary>Round 12: -venusplay2 = the player-style run of Venus part 2 (VenusPlaytest2), from the observation area to
@@ -192,6 +196,8 @@ namespace Seven
                 if (args[i] == "-venusselecttest") { VenusSelectTest = true; VenusSelect = "C01"; }
                 if (args[i] == "-menuvenusconfirm") MenuVenusConfirm = true;
                 if (args[i] == "-novideo") NoVideo = true;
+                if (args[i] == "-noqf21fix") NoQf21Fix = true;
+                if (args[i] == "-qf21blades") Qf21Blades = true;
                 if (args[i] == "-venusstopatship") VenusStopAtShip = true;
                 if (args[i] == "-venusquick2") Quick2 = true;
                 if (args[i] == "-r13" && i + 1 < args.Length)

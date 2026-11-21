@@ -50,13 +50,16 @@ namespace Seven
         bool _userShot;          // a cut shot set by the script (check-only views) is never reframed
 
         /// <summary>True when nothing solid lies between a and b (the last 0.3 m at b is ignored: the subject itself).</summary>
+        public static string LastBlocker;   // QF21: what the last blocked line hit (framing logs)
         public static bool ClearLine(Vector3 a, Vector3 b)
         {
             var d = b - a; float len = d.magnitude;
             if (len < 0.35f) return true;
-            if (Physics.Raycast(a, d / len, len - 0.3f, ~0, QueryTriggerInteraction.Ignore)) return false;
+            if (Physics.Raycast(a, d / len, out var rh, len - 0.3f, ~0, QueryTriggerInteraction.Ignore)) { LastBlocker = rh.collider != null ? rh.collider.name : "?"; return false; }
             // QF8: visual-only meshes (rock, ribs, columns, frames) block a framing too
-            return !CameraOccluders.Raycast(a, d, len - 0.3f, out _, CameraOccluders.AllMask);
+            bool clear = !CameraOccluders.Raycast(a, d, len - 0.3f, out var oh, CameraOccluders.AllMask);
+            if (!clear) LastBlocker = "visual mesh " + (oh.collider != null ? oh.collider.name : "?");
+            return clear;
         }
 
         bool SeesAll(Vector3 pos, Vector3 look, float fov, float margin = 0.97f)
@@ -149,6 +152,7 @@ namespace Seven
             c.fieldOfView = fov > 0f ? fov : _baseFov;
             _shot = true; _shotPos = pos; _shotLook = look; _shotEase = Mathf.Max(0.01f, ease);
             _userShot = cut && ease <= 0.05f; _nextCheck = 0f;
+            ShotBegan(pos, cut);   // QF21 (6)
             if (cut) { transform.position = pos; _look = look; transform.rotation = Quaternion.LookRotation(look - pos); }
         }
 
@@ -156,7 +160,7 @@ namespace Seven
         float _baseFov;
         public void Follow(bool behind = true)
         {
-            Subjects.Clear();
+            Subjects.Clear(); ShotFollow = null; ShotEnded();   // QF21 (6)
             if (_baseFov > 0f) GetComponent<Camera>().fieldOfView = _baseFov;
             _shot = false; _rideOn = false;
             if (behind && Target != null)
@@ -203,6 +207,7 @@ namespace Seven
                 if (_rideCut.Count > 0) RideUncutAll();
                 _rideOn = false;                                 // QF15 (1): back from a cutscene the ride camera eases on from here
                 if (Subjects.Count > 0 && !_userShot && (DialoguePlayer.AnyBusy || Time.time < TalkUntil) && Time.time >= _nextCheck) { _nextCheck = Time.time + 0.2f; Reframe(); }
+                ShotTrack(dt);   // QF21 (6): no shot holds on empty space
                 transform.position = Vector3.SmoothDamp(transform.position, _shotPos, ref _shotPosVel, _shotEase * 0.5f);
                 _look = Vector3.SmoothDamp(_look, _shotLook, ref _shotLookVel, _shotEase * 0.5f);
                 transform.rotation = Quaternion.LookRotation(_look - transform.position);

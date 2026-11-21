@@ -43,7 +43,7 @@ namespace Seven
         public AstShutter HallDoorShutter, HatchShutter, ArchiveShutter, WestShutter;
         public Transform Rune, RecordCubo; public Renderer MemoryScreen; public Transform StorageDoor; public Transform[] StoredPanels;
         public Light[] ProductionLights; public Renderer[] ProductionLamps;
-        public Material ScrapMat, CanisterMat; public Mesh CanisterMesh;
+        public Material ScrapMat, CanisterMat; public Mesh CanisterMesh; public Mesh[] DebrisMeshes;
         [Header("The factory area (AST_05 / 06)")]
         public Renderer AlcoveScreen; public Transform LockerDoor; public Renderer LockerLamp; public Transform LockerBlades;
         public Transform TransportLever; public Transform[] CargoPlatforms; public Vector3[] PlatformParked, PlatformAligned;
@@ -99,6 +99,8 @@ namespace Seven
             if (CargoPlatforms != null) foreach (var p in CargoPlatforms) if (p != null) ex.Add(p);
             if (Helmet != null && Helmet.Sphere != null) ex.Add(Helmet.Sphere);
             if (Helmet != null && Helmet.Collar != null) ex.Add(Helmet.Collar);
+            foreach (var sp in FindObjectsByType<AstSpin>(FindObjectsSortMode.None)) ex.Add(sp.transform);          // QF21: moving parts
+            foreach (var rc in FindObjectsByType<AstRailCarrier>(FindObjectsSortMode.None)) if (rc.Cars != null) foreach (var c in rc.Cars) if (c != null) ex.Add(c);
             CameraOccluders.IncludeHuge = true;
             CameraOccluders.Build(ex.ToArray());
             HoverBike.IgnoreRoots = ex.ToArray(); ChapterCamera.RideIgnore = ex.ToArray();
@@ -110,7 +112,8 @@ namespace Seven
             if (Machinist != null) { Machinist.Role = "machinist"; Machinist.CalmSway = false; }
             if (Security != null) foreach (var s in Security) if (s != null) { s.Seven = Seven; s.Paused = true; s.Caught = OnCaught; }
             Seven.SetBladesOwned(AsteroidState.BladesOwned);
-            StartCoroutine(Flow(startCp));
+            if (MRig != null) MRig.AfterPose += ClampCheck;
+            if (DemoBoot.Qf21Blades && Auto) StartCoroutine(BladeDemo(startCp)); else StartCoroutine(Flow(startCp));
         }
         void OnDestroy() { if (Dlg != null) Dlg.LineStarted -= OnLine; if (I == this) I = null; HoverBike.ZoneTest = VenusLayout.BikeZone; DialogueFraming.Speaker = null; MoonTraversal.UseMoon(); AstProduction.Rate = AstProduction.Target = 1f; }
         IEnumerator FirstFrame() { Cap.Log($"first frame (the Asteroid): fade {UI.FadeAlpha:0.00} (1 = black)"); yield return Cap.Shot("a00_first_frame"); }
@@ -133,7 +136,13 @@ namespace Seven
             if (Machinist != null) Machinist.Voice = null;
             if (MRig != null) MRig.Voice = null;
             if (l.Speaker == "machinist" && Machinist != null) { Machinist.Voice = VoiceSource(); if (MRig != null) MRig.Voice = VoiceSource(); }
-            if (l.Speaker == "system") AudioKit.Play("console_select", null, 0.25f);      // the announcement's chime
+            if (MaintBot != null) MaintBot.Voice = null;
+            if (l.Speaker == "system")
+            {
+                AudioKit.Play("console_select", null, 0.25f);      // the announcement's chime
+                // QF21 (2): System speaks visibly - its iris, grille and the wall horns follow the voice; a whistle of steam
+                if (MaintBot != null && MaintBot.gameObject.activeInHierarchy && Flat(MaintBot.transform.position - P7).magnitude < 40f) { MaintBot.Voice = VoiceSource(); MaintBot.Whistle(); }
+            }
         }
 
         // ------------------------------------------------------------------------------------------ helpers (as Mars)
@@ -256,13 +265,13 @@ namespace Seven
             yield return Until(() => Riding, "back on the bike", 30f, "Walk to the bike and press X", Bike.transform.position, () => PlaceRiding(Bike.transform.position));
             if (prev != null && prev != _objective) Objective(prev);
         }
-        bool _autoRide;
+        bool _autoRide; int _autoRideGen;
         IEnumerator AutoRide(Vector3[] pts, float r)
         {
-            _autoRide = true; Bike.ScriptDriven = true;
+            _autoRide = true; Bike.ScriptDriven = true; int gen = ++_autoRideGen;   // QF21: a newer AutoRide replaces this one
             foreach (var p in pts)
             {
-                for (float t0 = Time.time; Flat(Bike.transform.position - p).magnitude > r && Time.time - t0 < 40f && _autoRide;)
+                for (float t0 = Time.time; Flat(Bike.transform.position - p).magnitude > r && Time.time - t0 < 40f && _autoRide && gen == _autoRideGen;)
                 {
                     var f = Flat(p - Bike.transform.position);
                     float err = Vector3.SignedAngle(Flat(Bike.transform.forward), f, Vector3.up);
@@ -270,8 +279,9 @@ namespace Seven
                     Bike.ScriptThrottle = Mathf.Abs(err) > 70f ? 0.25f : Mathf.Clamp(f.magnitude / 10f, 0.35f, 1f);
                     yield return null;
                 }
-                if (!_autoRide) break;
+                if (!_autoRide || gen != _autoRideGen) break;
             }
+            if (gen != _autoRideGen) yield break;
             Bike.ScriptSteer = 0f; Bike.ScriptThrottle = 0f;
             _autoRide = false;
         }
@@ -316,18 +326,41 @@ namespace Seven
         bool GuideReached(Vector3[] pts, int k, float r) { for (int j = k + 1; j < pts.Length; j++) if (Flat(P7 - pts[j]).magnitude < r) return true; return false; }
 
         /// <summary>Walk up to a spot and press X (fromBike: X also works stopped on the bike within bikeReach - no dismount).</summary>
-        IEnumerator Interact(Vector3 spot, string label, string what, string hint, Vector3[] autoPath = null, Action skipped = null, float radius = 1.8f, bool fromBike = false, float bikeReach = 5f)
+        /// QF21 (4) - the wrong-state rule: bikeOnly (its text) = only from the saddle; on foot near it the prompt says so
+        /// ("Use the junction from your bike"), Panther says it once (bikeLine) and the marker points back at the bike. An X
+        /// pressed in the wrong state answers too - never a silent ignore.
+        IEnumerator Interact(Vector3 spot, string label, string what, string hint, Vector3[] autoPath = null, Action skipped = null, float radius = 1.8f, bool fromBike = false, float bikeReach = 5f, string bikeOnly = null, string bikeLine = null)
         {
             bool hit = false;
             IEnumerator P()
             {
+                bool told = false, guideBike = false;
                 while (!hit)
                 {
-                    bool foot = Flat(spot - P7).magnitude < radius && Mathf.Abs(Ground.Height(spot.x, spot.z) - P7.y) < 1.6f && (Seven.Current == ChapterSeven.Mode.Free || (Auto && !Riding));
+                    bool onFootClose = !Riding && Seven.Current == ChapterSeven.Mode.Free && Flat(spot - P7).magnitude < Mathf.Max(radius + 1.2f, 3.2f);
+                    bool foot = bikeOnly == null && Flat(spot - P7).magnitude < radius && Mathf.Abs(Ground.Height(spot.x, spot.z) - P7.y) < 1.6f && (Seven.Current == ChapterSeven.Mode.Free || (Auto && !Riding));
                     bool bike = fromBike && Riding && Bike.Speed < 1.6f && Flat(spot - Bike.transform.position).magnitude < bikeReach;
                     bool near = foot || bike;
-                    if (!_cut) SetPrompt(near ? label : (!fromBike && Riding && Bike.Speed < 1.2f && Flat(spot - P7).magnitude < 12f ? "Get off" : null));
-                    if (near && (Auto || Input.Interact.WasPressedThisFrame())) hit = true;
+                    bool wrong = bikeOnly != null && onFootClose;
+                    string want = near ? label : wrong ? bikeOnly : (!fromBike && Riding && Bike.Speed < 1.2f && Flat(spot - P7).magnitude < 12f ? "Get off" : null);
+                    // the free-riding prompts (Ride / Get off) belong to Update when this one has nothing to say
+                    if (!_cut && !(want == null && FreeBike && (Prompt == "Ride" || Prompt == "Get off"))) SetPrompt(want);
+                    if (wrong && (!told || (!Auto && Input.Interact.WasPressedThisFrame())))
+                    {
+                        if (!told)
+                        {
+                            WrongState++;
+                            Log($"WRONG STATE (QF21 4): '{what}' needs the bike - prompt '{bikeOnly}'{(bikeLine != null ? ", Panther " + bikeLine : "")}, marker back to the bike");
+                            StartCoroutine(Shot("a13w_wrong_state_" + what.Replace(' ', '_')));
+                            if (bikeLine != null) StartCoroutine(SayIds(bikeLine));
+                        }
+                        else UI.Hint(bikeOnly, 2.5f);
+                        told = true;
+                    }
+                    // the marker: back to the bike while she is on foot (bike-only), at the spot again once she rides
+                    bool wantBike = bikeOnly != null && !Riding;
+                    if (wantBike != guideBike) { guideBike = wantBike; ShowGuide(wantBike ? Bike.transform.position : spot); }
+                    if (near && ((Auto && !_inWrongDemo) || Input.Interact.WasPressedThisFrame())) hit = true;
                     else if (!near && !fromBike && Riding && Bike.Speed < 1.2f && !Auto && Input.Interact.WasPressedThisFrame()) { if (Bike.Dismount()) FollowCamera(); }
                     yield return null;
                 }
@@ -335,10 +368,32 @@ namespace Seven
             }
             StartCoroutine(P());
             ShowGuide(spot);
+            if (Auto && bikeOnly != null && !_wrongDemoDone) { _wrongDemoDone = true; yield return WrongStateDemo(spot); }
             if (Auto) { if (Riding && !fromBike) yield return GetOff(); if (!Riding) StartCoroutine(WalkPath(autoPath ?? new[] { spot }, 40f)); else StartCoroutine(AutoRide(new[] { spot }, bikeReach * 0.5f)); }
-            yield return Until(() => hit, what, 60f, hint, spot, () => { if (Riding && !fromBike) Bike.Dismount(true); if (!Riding) Seven.Place(spot, Flat(spot - P7)); hit = true; skipped?.Invoke(); });
+            yield return Until(() => hit, what, 60f, hint, spot, () => { if (Riding && !fromBike) Bike.Dismount(true); if (!Riding && bikeOnly != null) PlaceRiding(spot); else if (!Riding) Seven.Place(spot, Flat(spot - P7)); hit = true; skipped?.Invoke(); });
             hit = true; if (Auto) { StopWalks(); _autoRide = false; if (Riding) { Bike.ScriptThrottle = 0f; Bike.ScriptSteer = 0f; } }
             HideGuide();
+        }
+        public int WrongState { get; private set; }
+        bool _wrongDemoDone, _inWrongDemo;
+        /// <summary>QF21 (4) proof in check runs (once): she gets off short of a bike-only control and walks up to it on foot -
+        /// the prompt, Panther's line and the marker back to the bike show (captured from the player's camera) - then she
+        /// walks back and gets on again.</summary>
+        IEnumerator WrongStateDemo(Vector3 spot)
+        {
+            _inWrongDemo = true; _autoRide = false; _autoRideGen++;
+            if (Riding && Flat(spot - Bike.transform.position).magnitude > 7f) { yield return AutoRide(new[] { spot }, 6f); _autoRideGen++; }
+            if (Riding) { yield return StopBike(1.5f); if (!Bike.Dismount()) Bike.Dismount(true); FollowCamera(); }
+            for (float t = 0f; t < 1.5f && (Riding || Seven.Current != ChapterSeven.Mode.Free); t += Time.deltaTime) yield return null;
+            Log($"WRONG STATE (QF21 4) check: she got off at {Flat(spot - P7).magnitude:0.0} m from the control (riding {Riding}, mode {Seven.Current})");
+            yield return WalkSeven(spot + Flat(P7 - spot).normalized * 1.4f, 10f);
+            for (float t = 0f; t < 2.6f; t += Time.deltaTime) yield return null;
+            bool onBike = NextMarker.HasValue && Flat(NextMarker.Value - Bike.transform.position).magnitude < 1f;
+            Log($"WRONG STATE (QF21 4) check: on foot {Flat(spot - P7).magnitude:0.0} m from the control - prompt '{Prompt}', marker {(onBike ? "on the bike" : "NOT on the bike")}, Panther's line {(WrongState > 0 ? "played" : "not yet")}");
+            yield return Shot("a13x_wrong_state_on_foot_at_the_junction_player_camera");
+            yield return WalkSeven(Bike.transform.position - Bike.transform.right * 1.1f, 10f);
+            PlaceRiding(Bike.transform.position);
+            _inWrongDemo = false;
         }
 
         /// <summary>Telekinesis (RT) at something in range she (or the camera) looks at; its edges glow while it can be taken.</summary>
@@ -416,6 +471,7 @@ namespace Seven
         void Update()
         {
             AstProduction.Tick(Time.deltaTime);
+            CalmTick();
             FreeActions();
             if (Auto || _cut || PauseMenu.IsOpen || !FreeBike || Prompt != null && Prompt != "Get off" && Prompt != "Ride") return;
             if (Riding)
@@ -493,6 +549,7 @@ namespace Seven
             if (MaintBot != null) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(MaintBot.transform.position.x, MaintBot.transform.position.z), R = 0.9f });
             if (Container != null) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(Container.position.x, Container.position.z), R = 1.5f });
             foreach (var (c, r) in PropCircles) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(c.x, c.z), R = r });
+            foreach (var (c, r) in L.HallProps) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(c.x, c.z), R = r });   // QF21 (10)
             if (Stations != null) foreach (var st in Stations) if (st != null) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(st.transform.position.x, st.transform.position.z), R = 1.75f });
         }
         static readonly (Vector3 c, float r)[] PropCircles =

@@ -584,8 +584,9 @@ namespace Seven
             {
                 while (!hit)
                 {
-                    bool near = Flat(spot - P7).magnitude < radius && Mathf.Abs(spot.y - P7.y) < 1.2f && Seven.Current == ChapterSeven.Mode.Free;
-                    SetPrompt(near ? label : null);
+                    bool close = Flat(spot - P7).magnitude < radius && Mathf.Abs(spot.y - P7.y) < 1.2f;
+                    bool near = close && Seven.Current == ChapterSeven.Mode.Free;
+                    SetPrompt(near ? label : close && Riding ? "Leave the bike first" : null);   // QF21 (4): the wrong state says so
                     if (near && (Auto || Input.Interact.WasPressedThisFrame())) hit = true;
                     yield return null;
                 }

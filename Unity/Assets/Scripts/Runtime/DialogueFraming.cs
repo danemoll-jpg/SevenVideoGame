@@ -52,17 +52,57 @@ namespace Seven
             return t.position + Vector3.up * 1.2f * t.lossyScale.y;
         }
 
-        /// <summary>Is the speaker visible from a camera at pos looking at look (fov)?</summary>
+        /// <summary>QF21 (7): the share of the frame a character's body takes (its renderers' bounds projected, clipped to the
+        /// frame; 0..1). Behind the camera / straddling it counts as the whole frame.</summary>
+        public static float Coverage(Camera cam, Vector3 pos, Vector3 look, float fov, Transform t)
+        {
+            if (t == null) return 0f;
+            var rs = t.GetComponentsInChildren<Renderer>(); if (rs.Length == 0) return 0f;
+            Bounds b = default; bool any = false;
+            foreach (var r in rs) { if (!r.enabled || r is ParticleSystemRenderer) continue; if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
+            if (!any) return 0f;
+            var rot = Quaternion.LookRotation((look - pos).sqrMagnitude > 1e-6f ? look - pos : Vector3.forward); var inv = Quaternion.Inverse(rot);
+            float tanV = Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad), tanH = tanV * (cam != null ? cam.aspect : 16f / 9f);
+            float x0 = 1f, x1 = -1f, y0 = 1f, y1 = -1f; int front = 0;
+            if (b.Contains(pos)) return 1f;
+            bool near = b.SqrDistance(pos) < 2.5f * 2.5f;
+            for (int i = 0; i < 8; i++)
+            {
+                var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
+                var l = inv * (c - pos);
+                if (l.z < 0.15f) { if (near) return 0.85f; continue; }   // QF21: a body behind the camera, far away, covers nothing
+                front++;
+                float x = l.x / (l.z * tanH), y = l.y / (l.z * tanV);
+                x0 = Mathf.Min(x0, x); x1 = Mathf.Max(x1, x); y0 = Mathf.Min(y0, y); y1 = Mathf.Max(y1, y);
+            }
+            if (front == 0) return 0f;
+            x0 = Mathf.Max(x0, -1f); x1 = Mathf.Min(x1, 1f); y0 = Mathf.Max(y0, -1f); y1 = Mathf.Min(y1, 1f);
+            if (x1 <= x0 || y1 <= y0) return 0f;
+            return (x1 - x0) * (y1 - y0) / 4f;
+        }
+        static float HeightOf(Transform t) { var r = t.GetComponentInChildren<SkinnedMeshRenderer>(); return r != null ? r.bounds.size.y : 1.7f; }
+        public static int BigBodyRejects;
+        public static string LastFail;
+
+        /// <summary>Is the speaker visible from a camera at pos looking at look (fov)? QF21 (7): a big character (Machinist,
+        /// Tunneler, Viper, the keeper - over 2.4 m) who is not the speaker and fills more than half the frame fails the shot
+        /// (the frame filled by his armour, the listener / speaker hidden).</summary>
         public static bool Sees(Camera cam, Vector3 pos, Vector3 look, float fov, Transform who, Transform[] others)
         {
+            if (others != null)
+                foreach (var o in others)
+                {
+                    if (o == null || o == who || !o.gameObject.activeInHierarchy || HeightOf(o) < 2.4f) continue;
+                    if (Coverage(cam, pos, look, fov, o) > 0.5f) { BigBodyRejects++; LastFail = "big body " + o.name; return false; }
+                }
             var rot = Quaternion.LookRotation((look - pos).sqrMagnitude > 1e-6f ? look - pos : Vector3.forward);
             foreach (var p in new[] { Head(who), Chest(who) })
             {
                 var local = Quaternion.Inverse(rot) * (p - pos);
-                if (local.z < 0.3f) return false;
+                if (local.z < 0.3f) { LastFail = "behind the camera"; return false; }
                 float tanV = Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad), tanH = tanV * (cam != null ? cam.aspect : 16f / 9f);
-                if (Mathf.Abs(local.x / local.z) > tanH * 0.92f || Mathf.Abs(local.y / local.z) > tanV * 0.92f) return false;
-                if (!ChapterCamera.ClearLine(pos, p)) return false;
+                if (Mathf.Abs(local.x / local.z) > tanH * 0.92f || Mathf.Abs(local.y / local.z) > tanV * 0.92f) { LastFail = "out of frame"; return false; }
+                if (!ChapterCamera.ClearLine(pos, p)) { LastFail = "a wall / prop: " + ChapterCamera.LastBlocker; return false; }
                 // another person in the way
                 if (others != null)
                     foreach (var o in others)
@@ -70,7 +110,7 @@ namespace Seven
                         if (o == null || o == who || !o.gameObject.activeInHierarchy) continue;
                         var q = o.position + Vector3.up * 1.1f * o.lossyScale.y; var seg = p - pos;
                         float u = Mathf.Clamp01(Vector3.Dot(q - pos, seg) / seg.sqrMagnitude);
-                        if (u > 0.05f && u < 0.95f && (pos + seg * u - q).magnitude < 0.42f * Mathf.Max(0.8f, o.lossyScale.x)) return false;
+                        if (u > 0.05f && u < 0.95f && (pos + seg * u - q).magnitude < 0.42f * Mathf.Max(0.8f, o.lossyScale.x)) { LastFail = "person " + o.name; return false; }
                     }
             }
             return true;
@@ -89,6 +129,7 @@ namespace Seven
             var people = People();
             var pos = cc.ShotPos; var look = cc.ShotLook; float fov = cam.fieldOfView;
             if (Sees(cam, pos, look, fov, who, people)) { Visible++; return; }
+            string firstFail = LastFail;
             // pick another angle: over the listener's shoulder, side two-shots, a single from the front
             var listener = line.Speaker == "seven" ? Nearest(who, people) : Find("seven", "7");
             var h = Head(who);
@@ -117,7 +158,7 @@ namespace Seven
                 return;
             }
             Blocked++;
-            Log($"framing (QF18 7): line {line.Id} ({line.Label}) - STILL BLOCKED (no clear angle found)");
+            Log($"framing (QF18 7): line {line.Id} ({line.Label}) - STILL BLOCKED (no clear angle found; the shot failed on: {firstFail})");
         }
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
         static Transform[] People()
@@ -133,6 +174,6 @@ namespace Seven
             return best;
         }
         static void Log(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) ChapterCapture.I?.Log(s); }
-        public static string Summary() => $"DIALOGUE FRAMING (QF18 7): {Checked} lines in cutscene shots checked, speaker visible {Visible}, reframed {Reframed}, still blocked {Blocked} (must be 0){(Changes.Count > 0 ? "; changed: " + string.Join("; ", Changes) : "")}";
+        public static string Summary() => $"DIALOGUE FRAMING (QF18 7): {Checked} lines in cutscene shots checked, speaker visible {Visible}, reframed {Reframed}, still blocked {Blocked} (must be 0); QF21 (7): shots rejected for a big body filling over half the frame {BigBodyRejects}{(Changes.Count > 0 ? "; changed: " + string.Join("; ", Changes) : "")}";
     }
 }

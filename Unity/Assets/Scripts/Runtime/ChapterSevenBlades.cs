@@ -137,7 +137,8 @@ namespace Seven
                     var r = _bladeLight[bi]; if (r == null) continue;
                     r.enabled = show;
                     float flick = 0.88f + 0.12f * Mathf.PerlinNoise(Time.time * 23f, bi * 3.7f);
-                    r.transform.localScale = new Vector3(1f, 1f + 0.06f * (flick - 0.9f), Mathf.Max(0.001f, grow) * flick);
+                    float sk = ShrinkOf(r.transform.parent); if (sk < 0.99f) BladePullIns++;
+                    r.transform.localScale = new Vector3(1f, 1f + 0.06f * (flick - 0.9f), Mathf.Max(0.001f, grow) * flick * sk);
                 }
         }
 
@@ -148,9 +149,157 @@ namespace Seven
             EnsureBlades();
             if (AutoBlades) { AutoBlades = false; DrawBlades(!BladesDrawn); }
             _bladeGrow = Mathf.MoveTowards(_bladeGrow, BladesDrawn ? 1f : 0f, Time.deltaTime / 0.25f);
+            BladesHoldOut(Time.deltaTime);
             ApplyBladeVisual(_bladeGrow);
+            BladeBodyCheck();
             if (BladesDrawn && _bladeHum == null) _bladeHum = AudioKit.Loop("laser_hum", transform, null, 0.12f, AudioKit.Bus.Sfx, 2f, 12f);
             if (!BladesDrawn && _bladeHum != null) { StartCoroutine(AudioKit.Fade(_bladeHum, 0f, 0.3f, true)); _bladeHum = null; }
+        }
+
+        // ---------------------------------------------------------------- QF21 (9): held out and away from her body
+        /// <summary>QF21 (9) - Dan: "the blades sit curved into her body when she isn't using them". Drawn but not striking
+        /// (idle, walking, running, between strikes) her arms come slightly out from her sides and each blade angles OUTWARD
+        /// and away: tips down and out, the crescent's curve bowing away from her - never into her legs, hips or torso. A
+        /// strike uses the hand-held angle (the swing is the point). Sheathed: the hilts on her back, clear of her.</summary>
+        float _bladeOut; static readonly float ArmOut = 14f;
+        bool BladeStriking => (Current == Mode.Gesture) || (Current == Mode.Fight && Act != FightAct.Idle && Act != FightAct.Block);
+        void BladesHoldOut(float dt)
+        {
+            if (_bladeR == null || _bladeL == null) return;
+            float want = BladesDrawn && !BladeStriking ? 1f : 0f;
+            _bladeOut = Mathf.MoveTowards(_bladeOut, want, dt / 0.15f);
+            if (_bladeOut <= 0.001f && !_bladeHeldOut) return;
+            _bladeHeldOut = _bladeOut > 0.001f;
+            var fwd = transform.forward; var right = transform.right;
+            // the arms a little out from her sides (abduction about her forward axis), then the blades angled out and down
+            var ua = Bone(HumanBodyBones.RightUpperArm); var la = Bone(HumanBodyBones.LeftUpperArm);
+            // in the fight's guard the fists sit at her chin: with the blades drawn the guard opens wider (fists out to the sides)
+            float armOut = (Current == Mode.Fight ? 34f : ArmOut) * _bladeOut;
+            if (ua != null) ua.rotation = Quaternion.AngleAxis(armOut, fwd) * ua.rotation;
+            if (la != null) la.rotation = Quaternion.AngleAxis(-armOut, fwd) * la.rotation;
+            if (Current == Mode.Fight)
+            {
+                var lr = Bone(HumanBodyBones.RightLowerArm); var ll = Bone(HumanBodyBones.LeftLowerArm);
+                if (lr != null) lr.rotation = Quaternion.AngleAxis(20f * _bladeOut, fwd) * lr.rotation;
+                if (ll != null) ll.rotation = Quaternion.AngleAxis(-20f * _bladeOut, fwd) * ll.rotation;
+            }
+            foreach (var (blade, side) in new[] { (_bladeR, 1f), (_bladeL, -1f) })
+            {
+                var hand = blade.parent; if (hand == null) continue;
+                if (!_bladeBase.ContainsKey(blade)) _bladeBase[blade] = (blade.localPosition, blade.localRotation);
+                var (lp, lr) = _bladeBase[blade];
+                blade.localPosition = lp; blade.localRotation = lr;
+                var outward = right * side;
+                var baseRot = blade.rotation; var basePos = blade.position;
+                // the tip down and out (on foot); in the fight's guard the hands are high, so out and forward-down first.
+                // The first angle that clears her body by 4 cm wins (checked against her bone capsules this frame).
+                var tries = Current == Mode.Fight
+                    ? new[] { new Vector3(0.75f, -0.35f, 0.55f), new Vector3(0.9f, -0.2f, 0.4f), new Vector3(0.6f, -0.1f, 0.8f), new Vector3(1f, 0f, 0.1f), new Vector3(0.8f, 0.3f, 0.5f), new Vector3(0.7f, -0.5f, -0.3f), new Vector3(1f, 0.2f, -0.2f) }
+                    : new[] { new Vector3(0.58f, -0.8f, 0.15f), new Vector3(0.8f, -0.55f, 0.2f), new Vector3(0.95f, -0.25f, 0.2f), new Vector3(0.7f, -0.6f, -0.35f), new Vector3(1f, -0.1f, -0.1f) };
+                Vector3 hp = hand.position + outward * 0.08f;
+                Quaternion held = baseRot, best = baseRot; float bestGap = -9f;
+                for (int ti = 0; ti < tries.Length; ti++)
+                {
+                    var tv = tries[ti]; var dir = (outward * tv.x + Vector3.up * tv.y + fwd * tv.z).normalized;
+                    var bowAway = Vector3.ProjectOnPlane(outward * 0.8f + fwd * 0.2f, dir).normalized;   // the curve bows away from her
+                    held = Quaternion.LookRotation(dir, -bowAway);                                     // ribbon: +z along, bows toward -y
+                    blade.SetPositionAndRotation(hp, held);
+                    float g = BladeGap(blade);
+                    if (g > bestGap) { bestGap = g; best = held; }
+                    if (g > 0.04f) break;
+                }
+                held = best;
+                blade.rotation = Quaternion.Slerp(baseRot, held, _bladeOut);
+                blade.position = Vector3.Lerp(basePos, hp, _bladeOut);
+                // still too close (a fast stance change, the ease out of a strike): the light ribbon pulls in for that moment
+                {
+                    float k = 1f; while (k > 0.12f && BladeGap(blade, k) < 0.03f) k -= 0.11f;
+                    for (int push = 0; push < 4 && BladeGap(blade, k) < 0.03f; push++) blade.position += outward * 0.05f;   // the hilt end: out from her thigh
+                    _shrink[blade] = k;
+                }
+            }
+        }
+        bool _bladeHeldOut;
+        readonly Dictionary<Transform, float> _shrink = new Dictionary<Transform, float>();
+        float ShrinkOf(Transform blade) => blade != null && BladesDrawn && !BladeStriking && _shrink.TryGetValue(blade, out var k) ? k : 1f;
+        public static int BladePullIns;
+        readonly Dictionary<Transform, (Vector3, Quaternion)> _bladeBase = new Dictionary<Transform, (Vector3, Quaternion)>();
+
+        // the per-frame check: blade vs her body (capsules on her bones), by state
+        public static int BladeFrames;
+        static readonly string[] SegName = { "hips", "waist", "chest", "left thigh", "right thigh", "left shin", "right shin" };
+        static readonly Dictionary<string, int> _bladeTouch = new Dictionary<string, int>();
+        static readonly Dictionary<string, (int frames, int inside, float minGap)> _bladeStats = new Dictionary<string, (int, int, float)>();
+        Vector3 _bladeLastPos;
+        /// <summary>The smallest distance (m) from one blade's ribbon to her body capsules (negative = inside).</summary>
+        float BladeGap(Transform blade, float k = 1f)
+        {
+            var segs = BodyCapsules(); float gap = 9f;
+            float len = 0.78f, bow = 64f * Mathf.Deg2Rad, rr = len / bow;
+            for (int i = 3; i <= 12; i += 1)
+            {
+                float a = i / 12f * bow; var p = blade.TransformPoint(new Vector3(0f, -(rr - rr * Mathf.Cos(a)), rr * Mathf.Sin(a) * k));
+                foreach (var (sa, sb, r) in segs) { var ab = sb - sa; float u = Mathf.Clamp01(Vector3.Dot(p - sa, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude)); gap = Mathf.Min(gap, (p - (sa + ab * u)).magnitude - r); }
+            }
+            return gap;
+        }
+        readonly List<(Vector3, Vector3, float)> _caps = new List<(Vector3, Vector3, float)>();
+        List<(Vector3 a, Vector3 b, float r)> BodyCapsules()
+        {
+            var segs = new List<(Vector3 a, Vector3 b, float r)>();
+            void Seg(HumanBodyBones a, HumanBodyBones b, float r) { var ta = Bone(a); var tb = Bone(b); if (ta != null && tb != null) segs.Add((ta.position, tb.position, r)); }
+            Seg(HumanBodyBones.Hips, HumanBodyBones.Spine, 0.15f); Seg(HumanBodyBones.Spine, HumanBodyBones.Chest, 0.14f); Seg(HumanBodyBones.Chest, HumanBodyBones.Neck, 0.13f);
+            Seg(HumanBodyBones.Neck, HumanBodyBones.Head, 0.11f);
+            Seg(HumanBodyBones.LeftUpperLeg, HumanBodyBones.LeftLowerLeg, 0.085f); Seg(HumanBodyBones.RightUpperLeg, HumanBodyBones.RightLowerLeg, 0.085f);
+            Seg(HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftFoot, 0.065f); Seg(HumanBodyBones.RightLowerLeg, HumanBodyBones.RightFoot, 0.065f);
+            return segs;
+        }
+        void BladeBodyCheck()
+        {
+            if (!BladesDrawn || _bladeGrow < 0.95f || _bladeR == null || Anim == null || !Anim.isHuman) return;
+            string state;
+            float sp = Time.deltaTime > 0f ? new Vector2(transform.position.x - _bladeLastPos.x, transform.position.z - _bladeLastPos.z).magnitude / Time.deltaTime : 0f;
+            _bladeLastPos = transform.position;
+            if (BladeStriking) return;
+            if (Current == Mode.Fight) state = "between strikes";
+            else if (Current != Mode.Free) return;
+            else state = sp < 0.25f ? "idle" : sp < 3.2f ? "walk" : "run";
+            // her body as capsules
+            var segs = new List<(Vector3 a, Vector3 b, float r)>();
+            void Seg(HumanBodyBones a, HumanBodyBones b, float r) { var ta = Bone(a); var tb = Bone(b); if (ta != null && tb != null) segs.Add((ta.position, tb.position, r)); }
+            Seg(HumanBodyBones.Hips, HumanBodyBones.Spine, 0.15f); Seg(HumanBodyBones.Spine, HumanBodyBones.Chest, 0.14f); Seg(HumanBodyBones.Chest, HumanBodyBones.Neck, 0.13f);
+            Seg(HumanBodyBones.LeftUpperLeg, HumanBodyBones.LeftLowerLeg, 0.085f); Seg(HumanBodyBones.RightUpperLeg, HumanBodyBones.RightLowerLeg, 0.085f);
+            Seg(HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftFoot, 0.065f); Seg(HumanBodyBones.RightLowerLeg, HumanBodyBones.RightFoot, 0.065f);
+            float gap = 9f; int worstSeg = -1;
+            foreach (var blade in new[] { _bladeR, _bladeL })
+            {
+                if (blade == null) continue;
+                float len = 0.78f, bow = 64f * Mathf.Deg2Rad, rr = len / bow;
+                for (int i = 3; i <= 12; i++)      // from a quarter along: the first part is the hilt in her fist
+                {
+                    float a = i / 12f * bow;
+                    var p = blade.TransformPoint(new Vector3(0f, -(rr - rr * Mathf.Cos(a)), rr * Mathf.Sin(a) * ShrinkOf(blade)));
+                    for (int si = 0; si < segs.Count; si++)
+                    {
+                        var (sa, sb, r) = segs[si];
+                        var ab = sb - sa; float u = Mathf.Clamp01(Vector3.Dot(p - sa, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude));
+                        float g = (p - (sa + ab * u)).magnitude - r; if (g < gap) { gap = g; worstSeg = si; }
+                    }
+                }
+            }
+            if (gap < 0f && worstSeg >= 0) { _bladeTouch.TryGetValue(SegName[Mathf.Min(worstSeg, SegName.Length - 1)], out var n); _bladeTouch[SegName[Mathf.Min(worstSeg, SegName.Length - 1)]] = n + 1; }
+            BladeFrames++;
+            _bladeStats.TryGetValue(state, out var st);
+            if (st.frames == 0) st.minGap = 9f;
+            st.frames++; if (gap < 0f) st.inside++; st.minGap = Mathf.Min(st.minGap, gap);
+            _bladeStats[state] = st;
+        }
+        public static string BladeSummary()
+        {
+            var parts = new List<string>(); int inside = 0;
+            foreach (var kv in _bladeStats) { parts.Add($"{kv.Key} {kv.Value.frames} frames, inside her {kv.Value.inside}, smallest gap {kv.Value.minGap * 100f:0.0} cm"); inside += kv.Value.inside; }
+            var touch = new List<string>(); foreach (var kv in _bladeTouch) touch.Add($"{kv.Key} {kv.Value}");
+            return $"BLADE vs BODY (QF21 9): {string.Join("; ", parts)} - frames with a blade inside her body {inside} (must be 0){(touch.Count > 0 ? "; touched: " + string.Join(", ", touch) : "")}; the light pulled in to stay clear in {BladePullIns} blade-frames";
         }
 
         // ---------------------------------------------------------------- the blade chain in a boss fight (X while drawn)

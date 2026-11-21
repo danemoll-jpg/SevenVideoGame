@@ -32,6 +32,7 @@ namespace Seven
         Transform _spine, _chest, _armR, _armL;
         Animator _an;
 
+        public Mesh[] DebrisKit;
         public void Setup(MarsFolk folk, MachinistRig rig, AstClamp[] clamps, Transform terminal, Material scrapMat, Material canisterMat, Mesh canister)
         {
             Folk = folk; Rig = rig; StationClamps = clamps; Terminal = terminal;
@@ -48,9 +49,11 @@ namespace Seven
             {
                 var g = new GameObject("HallScrap" + i);
                 bool can = i % 3 == 0 && canister != null;
-                g.AddComponent<MeshFilter>().sharedMesh = can ? canister : Markers.Rock(60 + i, new Vector3(0.42f, 0.22f, 0.42f));
+                // QF21 (10): loose gears, pipe sections, gauge plates and small crates (clearly loose), canisters among them
+                var dm = DebrisKit != null && DebrisKit.Length > 0 ? DebrisKit[i % DebrisKit.Length] : null;
+                g.AddComponent<MeshFilter>().sharedMesh = can ? canister : dm != null ? dm : Markers.Rock(60 + i, new Vector3(0.42f, 0.22f, 0.42f));
                 g.AddComponent<MeshRenderer>().sharedMaterial = can ? canisterMat : scrapMat;
-                g.transform.position = spots[i] + Vector3.up * (can ? 0.02f : 0.2f); g.transform.rotation = Quaternion.Euler(can ? 0f : i * 37f, i * 71f, 0f);
+                g.transform.position = spots[i] + Vector3.up * (can ? 0.02f : dm != null ? 0.01f - dm.bounds.min.y : 0.2f); g.transform.rotation = Quaternion.Euler(can || dm != null ? 0f : i * 37f, i * 71f, 0f);
                 AddDebris(g.transform);
             }
         }

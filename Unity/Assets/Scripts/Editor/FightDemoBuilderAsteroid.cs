@@ -277,7 +277,7 @@ namespace Seven.EditorTools
             d.HallDoorShutter = hall.hallDoor; d.HatchShutter = hall.hatch; d.ArchiveShutter = hall.archiveDoor; d.WestShutter = hall.westDoor;
             d.Rune = rune; d.RecordCubo = recordCubo; d.MemoryScreen = hall.memory; d.StorageDoor = hall.storageDoor; d.StoredPanels = hall.stored;
             d.ProductionLights = cav.prodLights.Concat(hall.prodLights).ToArray(); d.ProductionLamps = cav.prodLamps.Concat(hall.prodLamps).ToArray();
-            d.ScrapMat = m.metalDark; d.CanisterMat = m.metal; d.CanisterMesh = canMesh;
+            d.ScrapMat = m.metalDark; d.CanisterMat = m.metal; d.CanisterMesh = canMesh; d.DebrisMeshes = HallDebrisMeshes();   // QF21 (10)
             d.AlcoveScreen = hall.alcoveScreen; d.LockerDoor = hall.lockerDoor; d.LockerLamp = hall.lockerLamp; d.LockerBlades = hall.lockerBlades;
             d.TransportLever = hall.transportLever; d.CargoPlatforms = hall.platforms; d.PlatformParked = hall.parked; d.PlatformAligned = hall.aligned;
             d.ClampPower = hall.clampPower; d.ClampJaw = hall.clampJaw; d.ValveWheel = hall.valveWheel; d.Coolant = hall.coolant; d.Steam = hall.steam;

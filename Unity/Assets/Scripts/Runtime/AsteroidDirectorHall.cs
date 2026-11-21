@@ -267,7 +267,7 @@ namespace Seven
             MusicSystem.Play("asteroid_machinist", 2f);
             yield return Line("AST_07_01");                       // You are interfering with restoration.
             yield return Line("AST_07_02");                       // I'm saving the archive.
-            if (Machinist != null) Machinist.Play(Machinist.HasState("point") ? "point" : "idle", 0.3f);   // he reaches past her toward the override
+            Gesture("point", 2.6f);                               // QF21 (8): his one restrained gesture - he reaches past her toward the override
             yield return Line("AST_07_03");                       // That material is required.
             yield return Line("AST_07_04");                       // For what? There's no one here using any of this.
             yield return Line("AST_07_05");                       // It must be ready when they return.
@@ -280,8 +280,10 @@ namespace Seven
             yield return Line("AST_07_08");                       // Stand aside.
             yield return Line("AST_07_09");                       // I can't let you destroy what they left.
             Complete("AST_07_lines");
+            _talkCalm = false; if (MRig != null) MRig.Calm = false;
             // the fight
             _fight = Machinist.GetComponent<MachinistFight>() ?? Machinist.gameObject.AddComponent<MachinistFight>();
+            _fight.DebrisKit = DebrisMeshes;
             _fight.Setup(Machinist, MRig, Stations, Terminal, ScrapMat != null ? ScrapMat : Markers.DarkGloss(), CanisterMat != null ? CanisterMat : Markers.DarkGloss(), CanisterMesh);
             _fight.PlaceStart();
             if (Flat(P7 - L.HerFightStart).magnitude > 2f) Seven.Place(L.HerFightStart, Vector3.forward);
@@ -355,8 +357,9 @@ namespace Seven
             if (MRig != null) MRig.LookAt = HerHead;
             MachinistUp();
             Machinist.Play("idle", 0.2f); yield return Wait(0.3f); Machinist.Play("dazed", 0.3f);      // he tries once to move, then stops
+            StartCoroutine(RestrainAfter(0.6f));                  // QF21 (11): from here he is held still in the cradle
             yield return SayIds("AST_07_14");                     // Maintenance interruption.
-            OverHerShoulderUp();
+            HerFromHisSide();                                     // QF21 (7): her line from his side, pulled back - not his armour
             yield return SayIds("AST_07_15");                     // Yes. You need one.
             MusicSystem.Play("asteroid_city", 4f);
             Complete("AST_07");
@@ -403,7 +406,7 @@ namespace Seven
             if (AsteroidState.BirdSeen) yield return Say("AST_08", 5, 6);                       // The one you found? / I think so.
             else yield return SayIds("AST_08_05S", "AST_08_05T");                               // A bird? / A toy. Someone loved it.
             Seven.transform.rotation = Quaternion.LookRotation(Vector3.right);                 // she looks back toward the workshop passage
-            Shoot(HerHead + Vector3.right * 1.1f + Vector3.down * 0.15f, HerHead, 34f, 0.6f);
+            Shoot(HerHead + Vector3.right * 2.4f + Vector3.forward * 0.7f + Vector3.down * 0.1f, HerHead - Vector3.up * 0.2f, 36f, 0.6f);   // QF21: a clear medium shot
             yield return Say("AST_08", 7, 7);                    // I knew what it would sound like. Before it moved.
             yield return Wait(1.6f);                              // hold the shot
             yield return Shot("a47_i_knew_what_it_would_sound_like");
@@ -469,14 +472,14 @@ namespace Seven
         IEnumerator Instruction()
         {
             MusicSystem.Stop(2f);
-            if (Machinist != null) { Machinist.Place(L.CradleAt, Vector3.back); Machinist.Play("dazed"); }
+            if (Machinist != null) { Machinist.Place(L.CradleAt, Vector3.back); Machinist.Play("dazed", 0f); }
             if (Cradle != null) Cradle.Set(true);
+            if (MRig != null && !MRig.Restrained) StartCoroutine(RestrainAfter(0.8f));   // QF21 (11b): locked in the cradle
             Objective("Back to the Machinist");
             yield return GuideWalk(new[] { L.ArchiveDoor + new Vector3(5f, 0f, 0f), L.CradleAt + new Vector3(-4.5f, 0f, -4f) }, "back to the restrained Machinist");
             yield return Cutscene(true);
             { var at = new Vector3(L.MemorySurface.x + 2.4f, 0f, L.MemorySurface.z - 3.6f); Seven.Place(at, Flat(L.MemorySurface - at)); Seven.Lock(true); }
-            if (Machinist != null) Machinist.Play("idle", 0.4f);
-            if (MRig != null) MRig.LookAt = L.MemorySurface;
+            if (MRig != null) MRig.LookAt = L.MemorySurface;     // QF21 (11b): no idle clip - only his head turns to the image
             // she shows the recovered workshop memory on the archive surface beside him
             yield return MemoryOn();
             // CAMERA: the enormous caretaker beside the tiny recorded bird
@@ -488,9 +491,12 @@ namespace Seven
             yield return Line("AST_09_03");                      // Replacement would have been more efficient.
             yield return Line("AST_09_04");                      // Mm. But they wanted that one.
             Shoot(L.MemorySurface + new Vector3(-1f, -0.4f, -4.5f), L.MemorySurface, 36f, 0.4f);
-            yield return Wait(2.4f);                             // AST_09_05: the recorded production line stops
+            MemoryPhase(1);                                      // AST_09_05: the recorded production line stops (on the surface)
+            yield return Wait(2.4f);
             yield return Shot("a49_the_recorded_line_stops");
             yield return Wait(0.8f);                             // a longer pause than before
+            MemoryPhase(2);                                      // the bird flutters on the surface while they talk
+            if (MRig != null) MRig.Twitch();                     // QF21 (11b): the claw twitches once
             yield return Line("AST_09_06");                      // They interrupted production.
             yield return Line("AST_09_07");                      // They were allowed to. It belonged to them.
             if (MRig != null) MRig.LookAt = HerHead;             // he turns from the image to her
@@ -499,6 +505,8 @@ namespace Seven
             yield return Line("AST_09_10");                      // And the restoration?
             yield return Line("AST_09_11");                      // Start there.
             Complete("AST_09_lines");
+            _talkCalm = false;
+            Log(ClampSummary());
             MemoryOff();
             yield return Cutscene(false);
             // GAMEPLAY: she sets the facility to preservation mode (essential power and the stabilizers stay; production stops)
@@ -516,9 +524,14 @@ namespace Seven
             MachinistUp();
             yield return SayIds("AST_09_P1");                    // Preservation mode. Essential systems only.
             // released only now, after he accepts the task: the cradle opens; he opens protected storage for the surviving panels
-            if (Cradle != null) { AudioKit.Play("ast_cradle", L.CradleAt, 0.9f, 0f, AudioKit.Bus.Sfx, 40f); Cradle.Set(false); }
-            Shoot(L.StorageAt + new Vector3(16f, 6f, -14f), (L.StorageAt + L.CradleAt) * 0.5f + Vector3.up * 2f, 54f, 0.3f);
-            if (Machinist != null) { var w = Machinist.WalkTo(L.StorageAt + new Vector3(4f, 0f, -3f), 1.1f); yield return w; Machinist.Face(L.StorageAt); Machinist.Play(Machinist.HasState("point") ? "point" : "idle", 0.3f); }
+            // QF21 (11): the padded arms open visibly first, then he moves; the camera goes with him to protected storage
+            // (keeping 7 in the shot where it can) - never a hold on the empty cradle
+            Shoot(L.CradleAt + new Vector3(7.5f, 2.8f, -8.5f), L.CradleAt + Vector3.up * 3f, 50f, 0.01f);
+            if (Cradle != null) yield return Cradle.OpenUp(1.4f);
+            yield return Shot("a49b_the_cradle_opens_first");
+            yield return Wait(0.5f);
+            if (MRig != null) MRig.Restrained = false;
+            if (Machinist != null) { yield return TrackWalk(Machinist, L.StorageAt + new Vector3(4f, 0f, -3f), 1.1f, "a49c_he_walks_to_protected_storage", P7, 6f, 7f); Machinist.Face(L.StorageAt); Gesture("point", 2.4f); }
             AudioKit.Play("ast_vault_open", L.StorageAt, 1f, 0f, AudioKit.Bus.Sfx, 80f);
             if (StorageDoor != null) StartCoroutine(SwingDoor(StorageDoor, -95f, 2.6f));
             yield return SayIds("AST_09_P2");                    // Protected storage is open.
@@ -575,28 +588,6 @@ namespace Seven
             }
             if (ArchiveLine != null) foreach (var p in ArchiveLine.Panels) if (p != null) p.gameObject.SetActive(false);
         }
-        UnityEngine.Video.VideoPlayer _mem; RenderTexture _memRT;
-        IEnumerator MemoryOn()
-        {
-            if (MemoryScreen == null) yield break;
-            Glow(MemoryScreen, 0.8f);
-            if (Vision5 == null || DemoBoot.NoVideo)
-            {
-                var still = Resources.Load<Texture2D>("Asteroid/vision_05_still");
-                if (still != null) { var m = MemoryScreen.material; m.SetColor("_BaseColor", Color.white); m.SetTexture("_BaseMap", still); m.SetTexture("_EmissionMap", still); m.SetColor("_EmissionColor", Color.white * 0.9f); }
-                yield break;
-            }
-            var go = new GameObject("MemoryVideo"); _mem = go.AddComponent<UnityEngine.Video.VideoPlayer>();
-            _mem.playOnAwake = false; _mem.isLooping = true; _mem.clip = Vision5; _mem.renderMode = UnityEngine.Video.VideoRenderMode.RenderTexture;
-            _memRT = new RenderTexture((int)Vision5.width, (int)Vision5.height, 0); _mem.targetTexture = _memRT;
-            _mem.audioOutputMode = UnityEngine.Video.VideoAudioOutputMode.None; _mem.timeUpdateMode = UnityEngine.Video.VideoTimeUpdateMode.GameTime;
-            _mem.Prepare(); for (float t = 0f; t < 3f && !_mem.isPrepared; t += Time.deltaTime) yield return null;
-            var mm = MemoryScreen.material; mm.SetColor("_BaseColor", Color.white); mm.SetTexture("_BaseMap", _memRT); mm.EnableKeyword("_EMISSION"); mm.SetTexture("_EmissionMap", _memRT); mm.SetColor("_EmissionColor", Color.white * 0.9f);
-            _mem.Play();
-            Log("AST_09: the workshop memory plays on the archive surface beside him");
-        }
-        void MemoryOff() { if (_mem != null) { _mem.Stop(); Destroy(_mem.gameObject); } if (MemoryScreen != null) { MemoryScreen.material.SetColor("_BaseColor", new Color(0.25f, 0.25f, 0.25f)); MemoryScreen.material.SetTexture("_BaseMap", null); } }
-
         // ------------------------------------------------------------------------------------------ home: the saucer comes in, the beam
         IEnumerator Home()
         {

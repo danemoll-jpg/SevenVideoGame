@@ -71,6 +71,18 @@ namespace Seven
         public static readonly Vector3 MachinistStart = new Vector3(-360f, 0f, 92f);  // the fight (he starts here)
         public static readonly Vector3 HerFightStart = new Vector3(-360f, 0f, 80f);
         public const float ArenaX0 = -398f, ArenaX1 = -322f, ArenaZ0 = 72f, ArenaZ1 = 116f;
+        /// <summary>QF21 (10): obstacle circles for the hall's foundry dressing (FightDemoBuilderAsteroidFoundry) - flywheel
+        /// casings, boiler drums, crate stacks, the cooling tower, the lane end drums. Outside the fight's open floor except the
+        /// two corner crate stacks (cover) and the lane drums at the arena's ends.</summary>
+        public static readonly (Vector3 c, float r)[] HallProps =
+        {
+            (new Vector3(-335.2f, 0f, 134f), 1.3f), (new Vector3(-332f, 0f, 134f), 1.3f), (new Vector3(-328.8f, 0f, 134f), 1.3f),
+            (new Vector3(-374.6f, 0f, 137.2f), 1.2f), (new Vector3(-372f, 0f, 137.2f), 1.2f), (new Vector3(-369.4f, 0f, 137.2f), 1.2f),
+            (new Vector3(-362.2f, 0f, 137.6f), 1.3f), (new Vector3(-360f, 0f, 137.6f), 1.3f), (new Vector3(-357.8f, 0f, 137.6f), 1.3f),
+            (new Vector3(-351f, 0f, 137.6f), 1.5f), (new Vector3(-337f, 0f, 120.5f), 1.5f), (new Vector3(-324f, 0f, 128f), 2.0f),
+            (new Vector3(-395.6f, 0f, 74.6f), 1.5f), (new Vector3(-324.4f, 0f, 74.6f), 1.5f),
+            (new Vector3(-322.4f, 0f, 116f), 1.1f), (new Vector3(-322.4f, 0f, 118f), 1.1f), (new Vector3(-322.4f, 0f, 120f), 1.1f),
+        };
         public static readonly Vector3 SaucerHome = new Vector3(-300f, 0f, 106f);      // the saucer comes in over the plaza (AST_09)
 
         // ---- the factory area (AST_05 / 06) - y 0; the pit with the feed line between east and middle

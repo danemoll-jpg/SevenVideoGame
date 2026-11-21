@@ -142,3 +142,30 @@ You have left the receiving route. State your function. Archive access is suspen
 ```
 The facility **System** announcer (AST_02): a premade ElevenLabs voice picked by Code (flat, recorded announcement) — no
 saved voice needed.
+
+## Ratwing — voice name `Ratwing` (Biaveh)
+Independent thief out to hold the Biavian archive for ransom (`Docs/CHAPTER_BIAVEH.md`). Sly, mocking, opportunistic — must
+sound clearly different from Viper (cold, hissing), Tunneler (grinding bass) and the Wormmaster (wet, slithering).
+Description:
+```
+A gaunt, winged creature with a thin, sly, slightly nasal mid-to-high male voice with a dry rasp and a hint of a chittering squeak at the edges. Mocking, opportunistic and quick-witted, a cocky thief who thinks everything has a price; casual, sneering amusement rather than menace, quick delivery with sudden sharp edges when crossed. Close to the microphone, studio-quality recording, no background noise.
+```
+Preview text:
+```
+They've found someone to run their errands. They can tidy up when we've agreed on a price. They seem very attached to it. Do you have any idea what's in there?
+```
+
+## Nela, the Guide (Biavian) — a premade voice picked by Code (the mothership)
+**Dan (2026-11-21): no saved voice — Code picks a premade ElevenLabs voice through the API that fits the description below
+(calm, gentle, androgynous, airy) and uses that same voice for every Nela line.** If Dan saves a `BiavianGuide` voice later, use it.
+Telepathic (Panther's "inside your head" treatment in Unity). Calm, kind, courteous; quiet anger about the theft. Gender left
+open (the script keeps "Guide" as a role until Kyle's design / a name arrive).
+Description:
+```
+A calm, gentle, androgynous voice with a soft, airy resonance, as if heard from inside your mind rather than through the air: warm, courteous and unhurried, clear and precise, with a quiet strength under the gentleness. Light, intimate delivery, close to the microphone, studio-quality recording, no background noise.
+```
+Preview text:
+```
+Welcome. Follow the lights beneath you. Forgive me. Was that too sudden? I will announce myself next time. These are memories people chose to leave with us.
+```
+Residents (BIA_03, BIA_06): premade voices picked by Code (telepathic treatment) — no saved voices needed.

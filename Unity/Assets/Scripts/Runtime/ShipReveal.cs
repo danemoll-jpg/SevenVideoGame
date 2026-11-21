@@ -40,6 +40,30 @@ namespace Seven
         ParticleSystem _motes;
 
         public void Toggle() => Target = Target > 0.5f ? 0f : 1f;
+
+        // ---- QF21 (1): the same effect from another seat (AST_01: the pilot's chair at the front window)
+        /// <summary>The wave starts here instead of the galley seat (null = the usual seat); the old chair does not tilt.</summary>
+        [System.NonSerialized] public Transform CenterOverride;
+        static readonly int DissolvableId = Shader.PropertyToID("_Dissolvable");
+        readonly List<Renderer> _kept = new List<Renderer>();
+        Vector3 CenterPos => CenterOverride != null ? CenterOverride.position : Center.position;
+        /// <summary>Keep these solid while the ship dissolves round them (her chair, the seat beside it, the records).</summary>
+        public void KeepSolid(IEnumerable<Renderer> rs)
+        {
+            var mpb = new MaterialPropertyBlock();
+            foreach (var r in rs)
+            {
+                if (r == null || _kept.Contains(r)) continue;
+                r.GetPropertyBlock(mpb); mpb.SetFloat(DissolvableId, 0f); r.SetPropertyBlock(mpb); _kept.Add(r);
+            }
+        }
+        public void ClearKeep()
+        {
+            var mpb = new MaterialPropertyBlock();
+            foreach (var r in _kept) { if (r == null) continue; r.GetPropertyBlock(mpb); mpb.SetFloat(DissolvableId, 1f); r.SetPropertyBlock(mpb); r.forceRenderingOff = false; }
+            _kept.Clear(); CenterOverride = null;
+        }
+        public int KeptCount => _kept.Count;
         public void Set(bool revealed) => Target = revealed ? 1f : 0f;
 
         void Awake()
@@ -79,8 +103,8 @@ namespace Seven
         void Apply()
         {
             float e = Mathf.SmoothStep(0f, 1f, Progress);
-            Radius = e <= 0.0005f ? -1f : Mathf.Lerp(0f, MaxRadius, e);
-            var c = Center.position;
+            Radius = e <= 0.0005f ? -1f : Mathf.Lerp(0f, MaxRadius + (CenterOverride != null ? 6f : 0f), e);   // QF21: from the front seat the far wall is further
+            var c = CenterPos;
             Shader.SetGlobalVector(DissolveId, new Vector4(c.x, c.y, c.z, Radius));
             Shader.SetGlobalVector(EdgeId, new Vector4(EdgeWidth, EdgeGlow, NoiseScale, NoiseAmplitude));
 
@@ -102,11 +126,11 @@ namespace Seven
             }
             foreach (var r in _solid)
             {
-                if (r == null) continue;
+                if (r == null || _kept.Contains(r)) continue;
                 float d = Vector3.Distance(r.bounds.ClosestPoint(c), c);
                 r.forceRenderingOff = Radius > d + 0.3f;
             }
-            ChairPivot.localRotation = _chairRest * Quaternion.Euler(TiltDegrees * e, 0f, 0f);
+            ChairPivot.localRotation = _chairRest * Quaternion.Euler(CenterOverride != null ? 0f : TiltDegrees * e, 0f, 0f);
         }
 
         static float Smooth(float a, float b, float x) => Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(a, b, x));
@@ -115,7 +139,7 @@ namespace Seven
         void EmitMotes()
         {
             if (Radius <= 0f) return;
-            var c = Center.position;
+            var c = CenterPos;
             int n = Mathf.CeilToInt(160f * Time.deltaTime);
             var ep = new ParticleSystem.EmitParams();
             for (int i = 0; i < n; i++)

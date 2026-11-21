@@ -93,7 +93,12 @@ namespace Seven.EditorTools
                 var jb = new GameObject("Cradle_ArmR").transform; jb.SetParent(cr, false); jb.localPosition = new Vector3(2.4f, 3.8f, 0.6f);
                 foreach (var (j, sx) in new[] { (ja, 1f), (jb, -1f) }) { var jk = new AK(); Riveted(jk, m.metal, m.metalDark, new Vector3(sx * 1.0f, 0f, 0f), new Vector3(2.0f, 0.8f, 0.9f)); var (pv, pt) = jk.Of(m.panel); Ellipsoid(pv, pt, new Vector3(sx * 1.9f, 0f, 0f), new Vector3(0.3f, 0.55f, 0.55f), 4, 8); foreach (var g in jk.Save(j.name + "_Mesh", j)) g.transform.localPosition = Vector3.zero; }
                 r.cradle = cr.gameObject.AddComponent<Seven.AstClamp>(); r.cradle.JawA = ja; r.cradle.JawB = jb; r.cradle.Open = 70f; r.cradle.Sound = "ast_cradle";
-                r.cradle.Lamp = GlowBlob("Cradle_Lamp", A.CradleAt + new Vector3(0f, 7.3f, 1.2f), 0.25f, m, cr);
+                r.cradle.Lamp = GlowBlob("Cradle_Lamp", A.CradleAt + new Vector3(0f, 7.3f, 1.2f), 0.25f, m, cr); r.cradle.Lamp.transform.position = Vector3.zero;   // QF21: the mesh is in world space (it sat at twice the offset)
+                // QF21 (10): the cradle framed and lit - an arch over it, two lamps on the uprights, a light ring on its floor plate
+                { var fk2 = new AK(); var (av, at2) = fk2.Of(m.metal); Sweep(av, at2, Enumerable.Range(0, 13).Select(i => { float a = Mathf.Lerp(0f, 180f, i / 12f) * Mathf.Deg2Rad; return A.CradleAt + new Vector3(Mathf.Cos(a) * 3.2f, 7.0f + Mathf.Sin(a) * 1.6f, 1.2f); }).ToList(), 0.2f, false, 8);
+                  var (gv3, gt3) = fk2.Of(m.glowSoft); Sweep(gv3, gt3, Enumerable.Range(0, 33).Select(i => A.CradleAt + new Vector3(Mathf.Cos(i / 32f * Mathf.PI * 2f) * 2.4f, 0.07f, 0.4f + Mathf.Sin(i / 32f * Mathf.PI * 2f) * 1.4f)).ToList(), 0.04f, true, 5);
+                  fk2.Save("RepairCradle_FrameLit", cr, false, false); foreach (Transform ch in cr) if (ch.name.StartsWith("RepairCradle_FrameLit")) ch.position = Vector3.zero; }
+                foreach (var sx in new[] { -2.6f, 2.6f }) AstLamp($"Cradle_SideLamp{(sx < 0 ? "L" : "R")}", A.CradleAt + new Vector3(sx, 5.6f, 0.4f), 9f, 1.1f, m.glow, m.metalDark, hall, 0.2f);
             }
             // ---- the archive conveyor into the cutting mechanism; the storage loop; the engraved panels
             {
@@ -103,6 +108,10 @@ namespace Seven.EditorTools
                 // the storage loop (a rail ring north of the line)
                 Pipe(ck, m.steel, new[] { new Vector3(-398f, 0.9f, 128f), new Vector3(-380f, 0.9f, 128f), new Vector3(-380f, 0.9f, 136f), new Vector3(-398f, 0.9f, 136f), new Vector3(-398f, 0.9f, 128f) }, 0.12f);
                 Pipe(ck, m.steel, new[] { new Vector3(-394f, 0.9f, 122.6f), new Vector3(-394f, 0.9f, 128f) }, 0.12f);
+                // QF21 (10): the cutter is a machine, not a block - a drive gear on its flank, two pistons and a flue on top
+                { var (fv, ft) = ck.Of(m.metal); Append(fv, ft, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.5f, 0f), new Vector2(0.4f, 2.6f), new Vector2(0.55f, 2.8f), new Vector2(0f, 2.8f) }, 0f, 360f, 14, null, A.CutterAt + new Vector3(1f, 4.8f, 0.8f)));
+                  foreach (var sz in new[] { -1.4f, 1.4f }) { Append(fv, ft, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.22f, 0f), new Vector2(0.22f, 1.4f), new Vector2(0f, 1.4f) }, 0f, 360f, 10, null, A.CutterAt + new Vector3(-1.2f, 4.8f, sz))); } }
+                Gear("Cutter_DriveGear", A.CutterAt + new Vector3(0.6f, 3.0f, 2.25f), Vector3.forward, 1.5f, 0.25f, 24, m.steel, hall).AddComponent<Seven.AstSpin>().Axis = Vector3.up;
                 ck.Save("ArchiveLine_Frame", hall);
                 var saw = Gear("Cutter_Saw", A.CutterAt + new Vector3(-2.3f, 1.4f, 0f), Vector3.forward, 1.3f, 0.12f, 36, m.steel, hall);
                 var sawLight = PointLight("Cutter_SawLight", A.CutterAt + new Vector3(-3f, 1.6f, 0f), 7f, 1.2f, hall);
@@ -142,12 +151,12 @@ namespace Seven.EditorTools
                 {
                     var c = A.Stations[i];
                     var sp = new GameObject($"ServiceStation{i + 1}").transform; sp.SetParent(hall, false); sp.position = c;
-                    var sk = new AK(); Riveted(sk, m.metalDark, m.metal, c + new Vector3(0f, 1.2f, 0f), new Vector3(2.2f, 2.4f, 2.2f)); Column(sk, m.metal, c, 2.4f, 4.6f, 0.4f); foreach (var g in sk.Save($"ServiceStation{i + 1}_Base", sp)) g.transform.position = Vector3.zero;
+                    var sk = new AK(); ClampRig(sk, m, c);   // QF21 (10): a clamp rig, not a block foreach (var g in sk.Save($"ServiceStation{i + 1}_Base", sp)) g.transform.position = Vector3.zero;
                     var ja = new GameObject("JawA").transform; ja.SetParent(sp, false); ja.localPosition = new Vector3(-0.5f, 4.8f, 0f);
                     var jb = new GameObject("JawB").transform; jb.SetParent(sp, false); jb.localPosition = new Vector3(0.5f, 4.8f, 0f);
                     foreach (var (j, sx) in new[] { (ja, 1f), (jb, -1f) }) { var jk = new AK(); Riveted(jk, m.steel, m.metalDark, new Vector3(sx * 0.1f, 0.7f, 0f), new Vector3(0.4f, 1.5f, 1.0f)); foreach (var g in jk.Save($"ServiceStation{i + 1}_{j.name}_Mesh", j)) g.transform.localPosition = Vector3.zero; }
                     var cl = sp.gameObject.AddComponent<Seven.AstClamp>(); cl.JawA = ja; cl.JawB = jb; cl.Open = 45f;
-                    cl.Lamp = GlowBlob($"ServiceStation{i + 1}_Lamp", c + new Vector3(0f, 2.6f, 1.15f), 0.14f, m, sp);
+                    cl.Lamp = GlowBlob($"ServiceStation{i + 1}_Lamp", c + new Vector3(0f, 4.45f, -1.05f), 0.16f, m, sp); cl.Lamp.transform.position = Vector3.zero;
                     sts.Add(cl);
                 }
                 r.stations = sts.ToArray();
@@ -161,19 +170,38 @@ namespace Seven.EditorTools
                 for (int i = 0; i < 3; i++) { var p = new GameObject("SurvivingPanel" + i).transform; p.SetParent(hall, false); var pk = new AK(); Riveted(pk, m.stone, null, Vector3.zero, new Vector3(1.2f, 1.6f, 0.2f)); foreach (var g in pk.Save("SurvivingPanel" + i + "_Slab", p)) g.transform.localPosition = Vector3.zero; p.position = A.StorageAt + new Vector3(4f + i * 1.6f, 0.95f, -4f); stored.Add(p); }
                 r.stored = stored.ToArray();
                 // the archive surface beside his cradle (the memory plays on it in AST_09)
-                var mv = new List<Vector3>(); var mt = new List<int>(); var mc = A.MemorySurface;
-                Quad(mv, mt, mc + new Vector3(-1.8f, -1.0f, 0f), mc + new Vector3(-1.8f, 1.0f, 0f), mc + new Vector3(1.8f, 1.0f, 0f), mc + new Vector3(1.8f, -1.0f, 0f));
-                var memMat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Ast_memory" }; memMat.SetColor("_BaseColor", Gray(0.25f));
+                // QF21 (11a): the memory screen. It was black: the quad had no UVs, so the video sampled one corner texel. Now a
+                // UV'd quad on Seven/GalleryScreen (unlit, double-sided, grayscale) - the vision video plays on it in the
+                // archive-glow style (a soft white rim round it), driven by AsteroidDirector.MemorySync.
+                var mc = A.MemorySurface;
+                var mm = new Mesh { name = "Ast_MemorySurface" };
+                mm.vertices = new[] { mc + new Vector3(-1.8f, -1.0f, 0f), mc + new Vector3(-1.8f, 1.0f, 0f), mc + new Vector3(1.8f, 1.0f, 0f), mc + new Vector3(1.8f, -1.0f, 0f) };
+                mm.uv = new[] { new Vector2(0f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(1f, 0f) };     // read from the hall side (looking +z: -x is on the left)
+                mm.triangles = new[] { 0, 1, 2, 0, 2, 3 }; mm.RecalculateNormals(); mm.RecalculateBounds();
+                var memMat = new Material(Shader.Find("Seven/GalleryScreen")) { name = "Ast_memory" };
+                memMat.SetVector("_RectA", new Vector4(1f, 1f, 0f, 0f)); memMat.SetVector("_RectB", new Vector4(1f, 1f, 0f, 0f)); memMat.SetFloat("_Bright", 1.35f); memMat.SetFloat("_Bg", 0.03f);
                 UnityEditor.AssetDatabase.CreateAsset(memMat, MatDir + "/Ast_memory.mat");
-                var mg = MeshObject("MemorySurface", SaveMesh(Finish(mv, mt), "Ast_MemorySurface"), memMat, hall, false);
-                var mfk = new AK(); Riveted(mfk, m.metalDark, m.metal, mc + new Vector3(0f, 0f, 0.15f), new Vector3(4.0f, 2.4f, 0.2f)); Column(mfk, m.metalDark, new Vector3(mc.x, 0f, mc.z + 0.2f), 0f, mc.y - 1.2f, 0.18f); mfk.Save("MemorySurface_Frame", hall);
+                var mg = MeshObject("MemorySurface", SaveMesh(mm, "Ast_MemorySurface"), memMat, hall, false);
+                mg.transform.position = Vector3.zero; mg.transform.Translate(0f, 0f, -0.02f);
+                var mfk = new AK(); Riveted(mfk, m.metalDark, m.metal, mc + new Vector3(0f, 0f, 0.15f), new Vector3(4.0f, 2.4f, 0.2f)); Column(mfk, m.metalDark, new Vector3(mc.x, 0f, mc.z + 0.2f), 0f, mc.y - 1.2f, 0.18f);
+                { var (rv2, rt2) = mfk.Of(m.glowSoft); Sweep(rv2, rt2, new[] { mc + new Vector3(-1.86f, -1.06f, -0.04f), mc + new Vector3(-1.86f, 1.06f, -0.04f), mc + new Vector3(1.86f, 1.06f, -0.04f), mc + new Vector3(1.86f, -1.06f, -0.04f), mc + new Vector3(-1.86f, -1.06f, -0.04f) }, 0.025f, false, 5); }
+                mfk.Save("MemorySurface_Frame", hall);
                 r.memory = mg.GetComponent<Renderer>();
                 // the floor lanes (conveyor belts across the arena - the lane surges) and the hoppers overhead (scrap rain)
                 var lk = new AK();
-                foreach (var z in new[] { 84f, 95f, 106f }) { var (lv, lt) = lk.Of(m.metalDark); MBox(lv, lt, new Vector3(-360f, 0.01f, z), new Vector3(74f, 0.02f, 2.6f), 0f, 0f); for (float x = -396f; x < -324f; x += 2f) { var (gv, gt) = lk.Of(m.steel); MBox(gv, gt, new Vector3(x, 0.025f, z), new Vector3(0.12f, 0.02f, 2.4f), 0f, 0f); } }
-                foreach (var x in new[] { -380f, -350f }) foreach (var z in new[] { 82f, 104f }) { Riveted(lk, m.metalDark, m.metal, new Vector3(x, H - 5f, z), new Vector3(4f, 3f, 4f)); var (hv, ht) = lk.Of(m.metal); Append(hv, ht, Lathe(new[] { new Vector2(2f, 0f), new Vector2(0.6f, -2.4f), new Vector2(0f, -2.4f) }, 0f, 360f, 4, null, new Vector3(x, H - 6.5f, z))); }
+                // QF21 (10): real belt conveyors (rails, end drums, slats) and turned, banded hoppers hung on chains
+                foreach (var z in new[] { 84f, 95f, 106f }) BeltConveyor(lk, m, -397f, -323f, z, 2.6f);
+                foreach (var x in new[] { -380f, -350f }) foreach (var z in new[] { 82f, 104f })
+                {
+                    var (hv, ht) = lk.Of(m.metal);
+                    Append(hv, ht, Lathe(new[] { new Vector2(0f, 1.6f), new Vector2(2.1f, 1.6f), new Vector2(2.1f, 0f), new Vector2(0.55f, -2.2f), new Vector2(0.4f, -2.6f), new Vector2(0f, -2.6f) }, 0f, 360f, 20, null, new Vector3(x, H - 6.5f, z)));
+                    var (bv2, bt2) = lk.Of(m.metalDark);
+                    foreach (var y in new[] { 0.2f, 1.4f }) Append(bv2, bt2, Lathe(new[] { new Vector2(2.16f, y - 0.12f), new Vector2(2.16f, y + 0.12f) }, 0f, 360f, 20, null, new Vector3(x, H - 6.5f, z)));
+                    for (int ci = 0; ci < 4; ci++) { var a = Quaternion.Euler(0f, 45f + ci * 90f, 0f) * new Vector3(1.9f, 0f, 0f); Sweep(bv2, bt2, new[] { new Vector3(x, H - 4.9f, z) + a, new Vector3(x, H + 2.5f, z) + a * 0.3f }, 0.05f, false, 5); }
+                }
                 lk.Save("Hall_FloorLanes", hall);
             }
+            BuildFoundry(hall, m, H);   // QF21 (10)
             // ---- the temple archive behind the west wall: a round chamber, the central mechanism round the rune, mountings
             {
                 var ak = new AK();
@@ -253,7 +281,8 @@ namespace Seven.EditorTools
             {
                 var gv = new List<Vector3>(); var gt = new List<int>(); Quad(gv, gt, new Vector3(-336.4f, 1.2f, 38.6f), new Vector3(-336.4f, 4f, 38.6f), new Vector3(-336.4f, 4f, 51f), new Vector3(-336.4f, 1.2f, 51f));
                 MeshObject("Alcove_Glass", SaveMesh(Finish(gv, gt), "Ast_AlcoveGlass"), m.glass, w, false);
-                var tk = new AK(); Riveted(tk, m.metal, m.metalDark, A.AlcoveTerminal + new Vector3(0f, 0.55f, 0f), new Vector3(1.6f, 1.1f, 1.0f)); tk.Save("Alcove_Terminal", w);
+                var tk = new AK(); Riveted(tk, m.metal, m.metalDark, A.AlcoveTerminal + new Vector3(0f, 0.55f, 0f), new Vector3(1.6f, 1.1f, 1.0f)); { var (dv, dt) = tk.Of(m.steel); for (int g = 0; g < 3; g++) Append(dv, dt, RotX(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.11f, 0f), new Vector2(0.11f, 0.04f), new Vector2(0f, 0.04f) }, 0f, 360f, 12), A.AlcoveTerminal + new Vector3(-0.45f + g * 0.45f, 0.75f, -0.52f))); Sweep(dv, dt, new[] { A.AlcoveTerminal + new Vector3(0.6f, 1.1f, 0.3f), A.AlcoveTerminal + new Vector3(0.6f, 1.5f, 0.1f) }, 0.03f, false, 5); }
+                tk.Save("Alcove_Terminal", w);   // QF21 (10): gauges + a lever on the console
                 var sv = new List<Vector3>(); var st = new List<int>(); var sc = A.AlcoveTerminal + new Vector3(0f, 1.45f, -0.3f);
                 Quad(sv, st, sc + new Vector3(0.7f, -0.35f, 0f), sc + new Vector3(0.7f, 0.35f, 0f), sc + new Vector3(-0.7f, 0.35f, 0f), sc + new Vector3(-0.7f, -0.35f, 0f));
                 Quad(sv, st, sc + new Vector3(-0.7f, -0.35f, 0.005f), sc + new Vector3(-0.7f, 0.35f, 0.005f), sc + new Vector3(0.7f, 0.35f, 0.005f), sc + new Vector3(0.7f, -0.35f, 0.005f));   // both faces
@@ -334,7 +363,9 @@ namespace Seven.EditorTools
                 fk.Save("FinalPlatform_Deck", fp);
                 r.finalPlat = fp;
                 var c = A.DiverterAt;
-                var pk = new AK(); Riveted(pk, m.metal, m.metalDark, c + new Vector3(0f, 0.6f, 0f), new Vector3(1.2f, 1.2f, 0.8f)); pk.Save("Diverter_Housing", w);
+                var pk = new AK(); Riveted(pk, m.metal, m.metalDark, c + new Vector3(0f, 0.6f, 0f), new Vector3(1.2f, 1.2f, 0.8f)); { var (dv, dt) = pk.Of(m.steel); for (int g = 0; g < 2; g++) Append(dv, dt, RotX(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.16f, 0f), new Vector2(0.16f, 0.05f), new Vector2(0f, 0.05f) }, 0f, 360f, 12), c + new Vector3(-0.3f + g * 0.6f, 0.9f, -0.42f))); }
+                pk.Save("Diverter_Housing", w);
+                Gear("Diverter_Gear", c + new Vector3(0.62f, 0.6f, 0f), Vector3.right, 0.45f, 0.1f, 14, m.steel, w).AddComponent<Seven.AstSpin>().Axis = Vector3.up;   // QF21 (10): a gearbox, not a block
                 r.diverterLever = new GameObject("Diverter_Lever").transform; r.diverterLever.SetParent(w, false); r.diverterLever.position = c + Vector3.up * 1.2f;
                 var lv = new List<Vector3>(); var lt = new List<int>(); Sweep(lv, lt, new[] { Vector3.zero, new Vector3(0f, 0.8f, 0.2f) }, 0.05f, false, 6); Ellipsoid(lv, lt, new Vector3(0f, 0.84f, 0.21f), Vector3.one * 0.09f, 4, 8);
                 MeshObject("Diverter_LeverArm", SaveMesh(SmoothFinish(lv, lt), "Ast_DLever"), m.steel, r.diverterLever).transform.localPosition = Vector3.zero;

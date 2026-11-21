@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF21: Dan's Asteroid review (Dan, 2026-11-21) — to do (Dan is still adding items — wait for the prompt)
+## Quick fix QF21: Dan's Asteroid review (Dan, 2026-11-21) — done, status below; release 0.16.1
 Commit first. All standing rules + the repeat-item rule. Release **0.16.1**; "QF21 — status"; "For Dan to check (QF21)".
 Dan: "happy overall" with the Asteroid.
 
@@ -98,6 +98,216 @@ Dan: "happy overall" with the Asteroid.
     **(c) His walk after the release has the same fixed-camera problem as item 6** — he steps out of the clamps and walks off
     screen while the camera stays put. Follow him (track / pan with him to the protected storage he opens), keeping 7 in the
     shot where possible; never hold on the empty clamps. Item 6's rule — check every scripted walk in every chapter.
+
+## QF21 — status (2026-11-21): done, exe-verified off-screen; release 0.16.1
+Every run muted (peak 0), minimized, Below Normal. Proof = captures from the player's / cutscene camera + the log lines below.
+
+**General rules applied across chapters (new standing rules in `CLAUDE.md`, "Cameras, prompts and the bike"):**
+- **No shot holds on empty space** (item 6) — every chapter: `ChapterCameraShots.cs`. `ChapterCamera.ShotFollow` = a scripted
+  tracking shot; automatic: a person seen in a held shot who walks to its edge with nobody else in frame makes the camera
+  follow them (Moon, Venus, Europa, Mars, Asteroid - all use ChapterCamera; MarsFolk / ElarimNpc / 7 / the cat are watched).
+  Measured in every check run: `EMPTY SHOTS (QF21 6)` (0 in every run of this fix) and `SHOT FOLLOW` lines. `-noqf21fix` = off.
+- **No frame filled by a big body that hides the other one** (item 7) — every chapter: `DialogueFraming.Sees` now rejects a framing
+  where a character over 2.4 m who is not the speaker covers more than half the frame (`DialogueFraming.Coverage`) - Machinist,
+  Tunneler, Viper, the keeper. The blocked-line log now says what failed ("big body", "wall / prop: name", "person", "out of frame").
+- **Wrong state says so** (item 4): Asteroid `Interact(bikeOnly:)` ("Use the junction from your bike", Panther once, marker to the
+  bike); Venus B03 slab on the bike ("Get off - the slab needs telekinesis on foot"); Europa interactions while riding ("Leave the
+  bike first"). Mars already dismounts on X; the Moon has no bike.
+- **Mount before a ride** (item 3): AST_02 reworked. Audit of the other chapters' "get back on the bike" steps: Mars MAR_03→4
+  (after the on-foot conversation at the checkpoint, the bike is beside her) and Europa EUR_11/12 (the base is on foot; the bike
+  waits at the dock) are story-needed - no change.
+- **Talking characters stand still** (item 8): `MachinistRig.Calm` (a held, damped idle while he talks; one gesture at most).
+- Camera occluders: moving parts (`AstSpin`, rail-carrier cars) are no longer frozen into the camera's line-of-sight copies
+  (their frozen copies blocked AST_08_07 - "STILL BLOCKED" since Round 16 - and it is 0 now).
+
+**Items:**
+1. **AST_01**: fade in already seated (pilot's chair at the front window, Panther in her lap). As they talk about the asteroid the
+   ship dissolves round them - the existing pilot's-chair effect (`ShipReveal`, run from the pilot's seat via `CenterOverride`,
+   slow 6.5 s, the shimmering edge + motes); her chair, the seat beside it (his) and the records on the arm stay solid
+   (`ShipReveal.KeepSolid`, 14 renderers). All of AST_01_01-10 kept; she lifts him onto the adjoining seat in open space; the hull
+   rebuilds before the scene leaves for the asteroid. Log: `AST_01 (QF21 1)`; captures `aa01a / aa01b / aa03 / aa04b`.
+2. **System**: rebuilt (`FightDemoBuilderAsteroidLevel.cs`, `AstMaintBot.cs`): squat rounded brass-and-steel body on **three jointed
+   spindly legs** (a tripod gait, one leg lifts at a time), one big lens-eye with an **8-blade iris** (narrows to scan, opens with
+   the words), a speaker grille that glows with its voice, a scanning fan of light swept over her, the floor-symbol projector (a
+   ring with an arrow), a steam stack that **whistles** on each announcement (new SFX `ast_steam_whistle`), gauges + a ticking dial
+   on its back; **four brass speaking-horns** in the chamber walls glow with each word. Head tilts at "Hello." and "Material?".
+3. **Bike first**: Panther's new line AST_02_P5 "Take the bike. Whatever's through there, it's a long way." → "Get on your bike" →
+   the scanner by telekinesis **from the saddle** → ride up to the door control, **X from the bike** → ride straight through.
+   Player-style run: mounted at 21 s, solved from the saddle, no soft-lock.
+4. **Junctions on foot**: prompt "Use the junction from your bike", Panther once (new line AST_03_P3 "It's built for something
+   with wheels. Or hover pads."), the marker points back at the bike; X on foot answers with the hint. Check-run demo:
+   `WRONG STATE (QF21 4) check: on foot 1.7 m from the control - prompt 'Use the junction from your bike', marker on the bike,
+   Panther's line played`; capture `a13x_wrong_state_on_foot_at_the_junction_player_camera`.
+5. **His footsteps**: new SFX `machinist_step_1..4` (never the same take twice in a row), `machinist_hiss`, `machinist_servo`; the
+   plant is read from his foot bones (lifted → down), positional (70 m), a light camera rumble within 14 m, servo whir on turns.
+   `MACHINIST STEPS (QF21 5)`: 39 steps in AST_04, 143 in the fight (+42 servo whirs), 67 in AST_09.
+6. **The camera follows him** (`TrackWalk`): AST_04 rise → walk to her (14.7 m, **out of frame 0 of ~2200 frames**), "he blocks her
+   path", AST_09 to protected storage (40 m, 0 of ~5000 frames), then the over-the-shoulder shot. Automatic follow in the fight
+   (`SHOT FOLLOW ... Machinist`). Empty shots 0.
+7. **His conversations**: every third line a wide two-shot (7 small at his feet), his lines from low angles, hers from his side
+   pulled back and out. `MACHINIST FRAMING (QF21 7)`: 17 lines (AST_04): 5 wide, 6 low on him, 6 her from his side; his body
+   6-19 % of the frame on her lines (38 % once), **7 hidden 0 times**.
+8. **Calm in conversation**: `MachinistRig.Calm` holds the idle pose (85 %, slow follow), one restrained gesture ("point") on
+   AST_07_03 and at the storage; big moves stay for work and the fight.
+9. **Arc blades**: drawn but not striking, her arms come a little out from her sides and each blade angles out and away (tips down
+   and out, the curve bowing away); in the fight's guard the guard opens wider and the angle is picked per frame from a few
+   candidates (the first that clears her body by 4 cm); a frame that still would touch her pulls the light ribbon in for that
+   moment. Sheathed: the crossed hilts on her back. `-qf21blades` (idle / walk / run, player camera + front + side): **0 frames
+   inside her, smallest gap 27-34 cm**. The fight (`-astcp 6 -bosscheck`): **8,825 frames between strikes, 0 inside her, smallest
+   gap 3 cm** (the light pulled in for 148 blade-frames in fast stance changes).
+10. **The hall** (`FightDemoBuilderAsteroidFoundry.cs` + the hall builder): service stations → clamp rigs (turned pedestal, four
+    pistons, riveted crossbeam, gauge); floor lanes → belt conveyors (rails, low end drums, slats); hoppers → turned banded hoppers
+    on chains; the cutter → drive gear, pistons, flue; the cradle → an arch, side lamps, a light ring; outside the arena: two
+    flywheel casings (turning spokes), two boiler drums (bands, gauges, valve wheel), crate stacks of archive panels, a cooling tower
+    venting steam; five wall flywheels, steam pipes with gauges; overhead gantries with trolleys + chain hoists, a rail carrier
+    crossing high up, hanging lamps on chains; throwables = loose gears, pipe sections, gauge plates, small crates. Works: the
+    diverter is a gearbox, the alcove console has gauges + a lever. Obstacles `AsteroidLayout.HallProps`; fight layout unchanged.
+    Build checks: holes 0, coplanar 0 left, NPC placement 0. Captures: fight shots `boss_machinist_*`, `a16b_*`, `a49c_*`.
+    (Found on the way: the station + cradle lamps sat at twice their offset - fixed.)
+11. **AST_09**: (a) the memory screen was black because the quad had **no UVs** (the video sampled one corner texel). Now a UV'd
+    double-sided screen on `Seven/GalleryScreen` with a soft white rim; the vision video plays synced to the lines (the workshop
+    + bird on 01-04, **the line stops on AST_09_05**, the bird flutters after). `MEMORY SURFACE (QF21 11a)`: average 0.75 brightness.
+    (b) restrained: `MachinistRig.Restrained` locks his body (no idle clip), only the head turns, the visor glows, the claw
+    twitches once; `CLAMPS (QF21 11b)`: 24,537 frames, a bone inside a pad 0, body moved 0.3 cm. The padded arms open visibly
+    (`AstClamp.OpenUp`) before he moves. (c) the walk to storage is a tracking shot (above).
+
+**Testing time:** about 60 game-minutes over 15 short runs (mostly `-testspeed 2`) - **over the 20-minute rule**: four rounds of
+fix → rebuild → re-run on the same items (the autopilot's ride after the door, the wrong-state demo, the fight blades, AST_08_07).
+No player-style run of the whole chapter this time; the player-style run covered AST_02-AST_04.
+
+**Not covered / known:**
+- Check runs that start at checkpoint 6 (`-astcp 6`) sit 40 s in the west passage before the hall ("back into the hall (3/4)") -
+  the same in Round 16's own runs (the autopilot walks back to the passage's first point); the player-style run never hits it.
+- Venus slab / Europa wrong-state prompts are code-only this round (no run reached them).
+- The SFX were not listened to (muted rule).
+
+## For Dan to check (QF21)
+1. AST_01: the ship dissolves round her chair as they talk, and comes back before she goes down.
+2. System in the receiving chamber: legs, the iris, the whistle, the wall horns glowing with its voice, the head tilts.
+3. AST_02: she takes the bike first; telekinesis on the scanner and X at the door work from the saddle.
+4. A junction on foot: the prompt, Panther's line, the marker back to the bike.
+5. The Machinist's footsteps (loud, heavy) in AST_04, in the hall and in the fight.
+6. AST_04 / AST_09: the camera goes with him when he walks; never an empty shot.
+7. His conversations: wide two-shots, low angles on him, her from his side - never a frame of his armour.
+8. He stands still while he talks.
+9. The arc blades drawn: out and away from her body; in the fight they pull in rather than touch her.
+10. The hall: a working foundry, no plain blocks.
+11. AST_09: the memory plays on the screen (the line stopping on AST_09_05); he stays still in the cradle; the arms open first.
+
+## Quick fix QF22: the Biavian contact is at Veyra, not Biaveh (Dan, 2026-11-21) — to do, AFTER QF21
+Commit first. Small, focused. Release **0.16.2**; "QF22 — status"; "For Dan to check (QF22)".
+**Dan's setting correction** (full text in `Docs/CHAPTER_BIAVEH.md`, "Setting correction"): the Biavian mothership is stationed
+among the rings of **Veyra**, a planet outside our solar system — **not the Biavian homeworld**. The combined Mars + Europa
+records identify an old Biavian contact route that leads to the mothership near Veyra. The asteroid is still found on the way.
+Progression unchanged (mothership + asteroid in either order → Cattalus). Update what's already in the game:
+1. **Star map:** the second system is **Veyra's** (its star, **Veyra with its rings**, the mothership's position, the asteroid) — not
+   "Biaveh's system"; Biaveh the homeworld is not on the map. Labels (Dan's wording): before arrival **"Biavian contact — Veyra"**,
+   after the mothership chapter's identification **"Biavian Mothership"**; the asteroid marked there after TRV_AST. The window
+   views / panoramas while there show Veyra and its rings.
+2. **Choice + navigation text (Dan's wording):** TRV_AST's choice "Continue to Biaveh" → **"Continue to the Biavian mothership"**;
+   any travel / coming-soon cards and menu chapter names that say "Biaveh" → "Veyra" / "The Biavian Mothership" as fits.
+3. **Lines already voiced that name Biaveh** — re-write + re-voice (Dan's wording where he gave it; the rest proposed by the chat,
+   Dan to confirm — otherwise use as written):
+   | id | who | old | new |
+   | --- | --- | --- | --- |
+   | `MAR_13C_07` | 7 | Biaveh. | **Veyra.** |
+   | `MAR_13C_08` | Panther | Home of the Biaviian. Beyond this solar system. | **A Biavian contact. Beyond this solar system.** |
+   | `MAR_13C_13` | 7 | All right. Biaveh. Together? | **All right. Veyra. Together?** |
+   | `TRV_AST_07` | Panther | …or continue to Biaveh and return. | **…or continue to the Biavian mothership and return.** |
+   | `AST_11A_01` | Panther | Biaveh is still ahead of us. | **The Biavian signal is still ahead of us.** (Dan's) |
+   | `AST_11A_06` | 7 | Biaveh. And something to eat on the way. | **The mothership. And something to eat on the way.** |
+   | `AST_11B_01` | 7 | There. The part missing from the Biaveh record. | **There. The part missing from the Biavian record.** |
+   Search all dialogue data, the Log, the Field Guide and the specs for any other "Biaveh" that means the destination and list it.
+4. **Spelling:** Dan's latest scripts write **"Biavian"** (older docs: "Biaviian") — use "Biavian" everywhere in the game (Field
+   Guide, Log, lines, labels).
+
+## Round 17: Chapter "The Biavian Mothership (Veyra)", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do, AFTER QF22
+Commit a checkpoint first. Runs overnight — **never stop to ask**: make the reasonable call, list it under "Round 17 — decisions
+made". **Every standing rule in `CLAUDE.md` applies from the first line** (as Round 16 — check each against your own captures;
+this chapter should arrive clean). Release **0.17.0**; "Round 17 — status"; "For Dan to check (Round 17)".
+
+**The Guide is named Nela** (Dan, 2026-11-21) — all Guide lines are Nela's (dialogue labels, Field Guide, Log); she introduces
+herself in BIA_02_01. Her voice: the premade voice you pick (a calm, gentle voice; Kyle's design reads as female).
+**The spec: `Docs/CHAPTER_BIAVEH.md`** — read **"Decisions (Dan, 2026-11-21)"** and **the setting correction (Veyra; revised
+BIA_01 / BIA_02)** first; then BIA_03–BIA_13 and the implementation essentials.
+
+**UPDATE (Dan, 2026-11-21 05:10): the real Biavian model is IN — `Art/Mixamo/biavian/biavian_body_mixamo.fbx`** (Kyle's
+design, Mixamo-rigged with skin; from S4's `Art/Export/biavian/biavian_for_mixamo.fbx`, reference `biavian_ref_front.png`). **Use it
+for Nela and the residents — no Zorp stand-in** (ignore the Zorp lines below). Vary residents by size / tone / medallion glyph.
+**Stand-ins (originally planned):** Build so they drop out cleanly:
+- **Biavians (the Guide, residents):** `Art/Source/biavian_placeholder/Zorp_meshy_rigged.fbx` (Dan's alien from his game Tee'd
+  Off; Meshy-rigged humanoid) — **plain monochrome material** (ignore its colour texture / golf clothes), sizes / tones varied,
+  calm idle / talk / walk clips (Humanoid retarget, reuse existing). Wrap it so swapping to the real Biavian model later is one
+  change (one prefab / one model path). Mark every stand-in in the status.
+- **The vision (BIA_11) is IN (Dan, 2026-11-21): `Art/Video/vision_06_mothership.mp4`** (12 s, 1920×1044; still fallback
+  `Resources/Biaveh/vision_06_still.jpg`) — the misty memory chamber with hanging crystal-like memory structures; a Biavian seated
+  on a stool places a small keepsake into the glowing hollow of a round table, light rises from it; the other comes close and
+  rests a hand on the table beside her. Silent — add a soft hum as the light travels into the archive and a faint chime; no
+  music. **Use it — no temporary in-engine vision needed** (ignore the stand-in note below for the vision). Wire the full rune-touch → vision sequence with a
+  **temporary in-engine render** of the spec's vision (the hazy earlier chamber, two stand-in figures turned away, the object
+  placed, the pattern of light travelling into the archive, the hand resting beside theirs — ~12 s, monochrome) so it plays
+  properly now; it's replaced by `Art/Video/vision_06_mothership.mp4` when Dan adds it (load it automatically if present).
+
+**What's ready:**
+- **Ratwing:** `Art/Source/ratwing/ratwing_v1.glb`, rigged with wing chains (`Art/Export/ratwing/ratwing_v1_rigged.fbx`, Round 4),
+  Kyle's art `kyle_ratwing.jpg` / `kyle_ratwing_sketch.jpg`. Voice: use the saved ElevenLabs voice **`Ratwing`** if it exists;
+  otherwise a premade voice that fits `Docs/VOICES.md` "Ratwing" (sly, nasal, raspy) — say which.
+- **The Guide's voice:** a premade voice picked by you (Dan, 2026-11-21) — same voice for every Guide line, telepathic treatment.
+  Residents: other premade voices.
+- **Music:** `biaveh_mothership.mp3`, `biaveh_ratwing.mp3` (`Docs/MUSIC.md`: quiet moments fade out — the quiet passage BIA_08
+  near-silent, the octahedron chamber + vision, BIA_12).
+- **Rune: octahedron** (eight triangular faces, readable from the establishing shot), generated in code.
+- **Code-built:** Veyra (a ringed planet, pale debris band), **the egg-shaped mothership** (26 miles across — a convincing sense of
+  scale: hull lights, traffic, recessed entrances), **the three guardian orbs** on separate orbital paths, **the mechanical iris
+  entrance** (overlapping segments rotating open just wider than the saucer, spiralling shut behind it), the interior city curving
+  up the shell (hanging gardens, smooth buildings, transit lights, bridges), the three relays, the suspended bridge, the garden
+  with its memory overlay, the shielded passage, the transfer chamber (platforms, partitions, the maintenance compartment), the
+  memory chamber with suspended structures — all in Kyle's misty monochrome, no plain boxes.
+- **Memory echoes** (BIA_03, BIA_07): translucent, shimmering, clearly distinct from solid structures and from her visions.
+
+**Items** (follow the spec):
+1. Getting there: MAR_13C's route / the star map's "Biavian contact — Veyra" (QF22); title card over black from frame one.
+2. BIA_01 + BIA_02 (revised): among Veyra's rings, the orbs, the Guide's telepathic welcome, the iris (front shot through it,
+   reverse shot as it closes), the guide lights.
+3. BIA_03: the receiving berth — **bike out of the bike hold, 7 down the beam**; the interior city reveal; the memory echo and the
+   disoriented resident; Ratwing named (Panther's attention).
+4. BIA_04: the temple route, the three relays (shown on a display — show, don't caption), the one-way route sharing (a navigation
+   impression distinct from visions); objective from the story.
+5. BIA_05: first sight of Ratwing (low angle under the bridge; Kyle's design), the exchange, the tail-twitch cut aboard; the
+   optional brief pursuit; repair the relay.
+6. BIA_06: the suspended bridge puzzle (real structures vs echoes), the residents crossing, the seedlings resident, the
+   partition closing one of Ratwing's routes (visible).
+7. BIA_07: the overlapping garden — the remembered doorway, the seam, the real release; Ratwing at the glass, Panther's read of
+   his feet, closing the upper opening.
+8. BIA_08: the quiet passage — park at the entrance (mount / dismount rules), Panther's line before, **no Panther voice inside**,
+   a short solo spatial puzzle, the reconnection lines, the Guide's alert.
+9. BIA_09 Ratwing per **the Decisions**: swoops and claw passes (dodge / block) → telekinesis knocks him out of the air, stunned →
+   close in: punches, kicks (Y), arc blades (stun-only) → **his stamina bar**; partitions shrink his flight space between phases;
+   she can lose, he keeps his damage on retry; exhausted, he flees → stage three: Panther's "Don't follow him…" / "Wait…" /
+   "Now." → seal the compartment (never on his body / wings; a mistimed try resets the chance) → contained alive; the pleased-noise
+   / purring / "the ship is vibrating" lines.
+10. BIA_10 restoring the archive (lights rippling through the city); BIA_11 the octahedron chamber, the shared rune-touch → vision
+    (stand-in render), the return lines, the record + octahedron awarded once (with the other records).
+11. BIA_12: the ride back through restored districts, the beam home, **the reunion straight from the beam-up, no gap** (she sits on
+    the floor, he walks into her lap), the full conversation — end there, no extra joke.
+12. BIA_13: Branch A (asteroid unfinished → the asteroid) / Branch B (asteroid complete → the Cattalus lead, once — the QF20 rule:
+    also at the console if due). Cattalus doesn't exist yet → a "coming soon" card.
+13. Progression + saves: the order (mothership + asteroid either order → Cattalus); checkpoints, chapter list + sections, Log +
+    Field Guide (the Biavians, the Guide, Ratwing, the mothership) growing with the story.
+
+**Checks + release:** targeted runs with captures; the boss proofs (player-run log: throws / punches / kicks / blades, stamina,
+the idle test, retry keeps his damage, the containment timing, a capture sequence); holes / z-fighting / collision checks; one
+player-style run from the star map to BIA_13. List every stand-in and exactly what Dan needs to add to replace it. Publish
+**0.17.0**; docs; commit + push.
+
+## Side task S4: Nela / the Biavians ready for Mixamo (Dan, 2026-11-21) — DONE (04:32); Dan's rigged body in: `Art/Mixamo/biavian/biavian_body_mixamo.fbx` — skip
+Only if Dan's Tripo model `Art/Source/biavian/biavian_v1.glb` exists (reference `Art/Reference/biavian_ref_front.png`, Kyle's
+design `kyle_biavian_nela.jpg`; notes in `Docs/MODELS-NEEDED.md` "Biavians"). If it isn't there yet, skip this and say so.
+Same as S1–S3 with `Tools/Blender/cleanup_mixamo_body.py` — add a `biavian` preset (**~1.8 m**): weld, decimate to ~30–40 k tris
+keeping the face (eyes, the crown ridge), the medallion and the belt buckle readable; A-pose, origin at the feet, texture embedded
+→ **`Art/Export/biavian/biavian_for_mixamo.fbx`** + a preview sheet `Docs/Previews/biavian/biavian_for_mixamo_sheet.png`. Then tell
+Dan: upload to Mixamo's auto-rigger, download "FBX for Unity, with skin" to `Art/Mixamo/biavian/biavian_body_mixamo.fbx`. Commit
++ push. No release.
 
 ## Quick fix QF20: the Biaveh discovery always plays + kicks + bosses don't reset (Dan, 2026-11-20) — done, status below; release 0.15.5
 Commit first. Small, focused. Release **0.15.5**; "QF20 — status"; "For Dan to check (QF20)". Prove with real button presses.

@@ -204,3 +204,12 @@ Code-built (hard-surface, scripted): the maintenance machine, the security machi
 `7_blade_combo` ("One Hand Sword Combo"), `7_blade_slash_in` ("Stable Sword Inward Slash"), `7_blade_slash_out` ("Stable Sword
 Outward Slash"). They're single-sword clips; the arc blades are a pair (one curved blade per hand, spec: Kyle's
 `kyle_7_blades_sketch.jpg`) — the second blade rides the off hand; mirror clips where it helps the combos alternate hands.
+
+## Biavians — the mothership (2026-11-21)
+Kyle's design in: `Art/Reference/kyle_biavian_nela.jpg` (file named "nela"): a smooth elongated bald head with a ridge along the
+crown, large dark almond eyes with heavy lids, a small nose, a calm face; slender; a pale fitted suit with **dark long sleeves**, a
+**dark V-shaped panel** down the centre of the chest narrowing to a point above the waist, a **round medallion with a glyph** on the
+left chest, a **wide dark belt with a square buckle** (a circle and four dots); the lower body isn't shown. One model for the Guide
+and residents (sizes / tones / medallion glyph vary). Pipeline: Dan generates a full-body A-pose reference (prompt in chat; fitted
+trousers, no robe / cape) → `Art/Reference/biavian_ref_front.png` → Tripo `Art/Source/biavian/biavian_v1.glb` → Code makes
+`..._for_mixamo.fbx` → Mixamo → `Art/Mixamo/biavian/biavian_body_mixamo.fbx` → replaces the Zorp stand-in (Round 17).

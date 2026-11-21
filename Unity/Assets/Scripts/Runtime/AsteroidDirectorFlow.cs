@@ -63,7 +63,8 @@ namespace Seven
                 Machinist.gameObject.SetActive(true);
                 if (cp <= L.CpMachinist) { Machinist.Place(L.CradleAt, Vector3.back); Machinist.Play(Machinist.HasState("dazed") ? "dazed" : "idle"); }
                 else if (cp < L.CpArchive) { Machinist.Place(L.CutterAt + new Vector3(4f, 0f, -3f), Vector3.left); Machinist.Play("idle"); }
-                else { Machinist.Place(L.CradleAt, Vector3.back); Machinist.Play("dazed"); }
+                else { Machinist.Place(L.CradleAt, Vector3.back); Machinist.Play("dazed", 0f); if (cp < L.CpHome) StartCoroutine(RestrainAfter(0.6f)); }   // QF21 (11b)
+                if (MRig != null) { MRig.Restrained = false; MRig.Calm = false; }
             }
             if (Saucer != null) Saucer.position = L.SaucerAt;
             if (MaintBot != null) { MaintBot.transform.position = L.MaintBotHome; MaintBot.Goal = L.MaintBotHome; MaintBot.ShowArrow(false); }
@@ -128,7 +129,7 @@ namespace Seven
             Log("AST_02: the chamber pressurized, then her helmet off");
             yield return Shot("a03_pressurized_helmet_off");
             // the maintenance machine approaches and scans her; the scanner on the wall finds her too
-            if (MaintBot != null) { MaintBot.Goal = P7 + new Vector3(0.6f, 0f, 2.3f); }
+            if (MaintBot != null) { MaintBot.Goal = P7 + new Vector3(0.6f, 0f, 2.3f); MaintBot.ScanTarget = Seven.transform; }   // QF21 (2): the lens narrows, the fan sweeps her
             if (Scanner != null) { Scanner.Target = Seven.transform; }
             AudioKit.Play("ast_servo_small", L.MaintBotHome, 1f, 0f, AudioKit.Bus.Sfx, 30f);
             Shoot(P7 + new Vector3(-2.6f, 1.2f, -1.2f), P7 + new Vector3(0.5f, 0.9f, 2f), 44f, 0.5f);
@@ -137,10 +138,14 @@ namespace Seven
             yield return Shot("a04_the_maintenance_machine_scans_her");
             var side = Vector3.right;
             TwoShot((P7 + (MaintBot != null ? MaintBot.transform.position : P7 + Vector3.forward * 2f)) * 0.5f, side, 3.2f, 1.2f, 1.0f, 44f, 0.4f);
+            if (MaintBot != null) MaintBot.ScanTarget = null;
             yield return Say("AST_02", 1, 1);                     // Hello.
+            if (MaintBot != null) { MaintBot.Tilt(26f, 1.0f); yield return Wait(0.5f); yield return Shot("a04b_system_tilts_its_head_at_hello"); }   // QF21 (2): a beat of mechanical curiosity
             yield return Say("AST_02", 2, 2);                     // Unregistered material. Proceed to sorting.
             if (MaintBot != null) MaintBot.ShowArrow(true, P7 + new Vector3(1.2f, 0f, 3.2f), new Vector3(0.4f, 0f, 1f));   // the projected symbol: toward the conveyor
-            yield return Say("AST_02", 3, 5);                     // Material? / You do contain quite a lot of it. / Thank you. Very helpful.
+            yield return Say("AST_02", 3, 3);                     // Material?
+            if (MaintBot != null) { MaintBot.Tilt(-22f, 0.9f); yield return Wait(0.35f); }
+            yield return Say("AST_02", 4, 5);                     // You do contain quite a lot of it. / Thank you. Very helpful.
             // the conveyor begins moving
             var belt = AudioKit.Loop("ast_conveyor", null, null, 0.5f, AudioKit.Bus.Sfx);
             yield return Say("AST_02", 6, 6);                     // Please remain intact during transport.
@@ -155,15 +160,27 @@ namespace Seven
             yield return SayIds("AST_02_P1", "AST_02_P2");        // ... Give it something more interesting. The marked container. / More interesting than me. Rude.
             yield return Cutscene(false);
             Complete("AST_02_lines");
+            // QF21 (3): no walking back and forth for the bike - Panther tells her to take it first; the intro puzzle is then
+            // solved from the saddle (telekinesis on the scanner, X at the door control) and she rides straight through.
+            yield return SayIds("AST_02_P5");                     // Take the bike. Whatever's through there, it's a long way.
+            Objective("Get on your bike (X) - then open the service entrance");
+            FreeBike = true;
+            ShowGuide(Bike.transform.position);
+            if (Auto) { yield return WalkSeven(Bike.transform.position - Bike.transform.right * 1.1f, 15f); PlaceRiding(Bike.transform.position, 270f); }
+            yield return Until(() => Riding, "on the bike", 60f, "Walk to the bike on its pad and press X", Bike.transform.position, () => PlaceRiding(Bike.transform.position, 270f));
+            HideGuide();
+            Log("AST_02 (QF21 3): she mounted the bike first - the scanner and the door control are worked from the saddle");
+            yield return Shot("a06b_on_the_bike_first");
             // THE INTRO PUZZLE: while the scanner holds her, the door control stays locked (its lamp dark) and the maintenance
             // machine keeps between her and it. Telekinesis turns the scanner to the marked container -> it processes the
             // container (the conveyor takes it to sorting, the machine escorts it) -> the control's lamp lights -> X.
-            Objective("Open the service entrance - first turn the scanner onto the marked container (RT)");
+            Objective("Open the service entrance - first turn the scanner onto the marked container (RT, from the bike)");
             var bot = StartCoroutine(BotGuards());
             var scannerHead = Scanner != null && Scanner.Head != null ? Scanner.Head : null;
-            yield return Telekinesis(L.ScannerAt, L.ScannerTkRange, "turn the scanner (telekinesis)", "Look at the scanner arm on the far wall and use telekinesis (RT)", Scanner != null ? Scanner.Cone : null, new[] { new Vector3(0f, 0f, 6f) }, true, scannerHead);
+            yield return Telekinesis(L.ScannerAt, L.ScannerTkRange, "turn the scanner (telekinesis)", "Look at the scanner arm on the far wall and use telekinesis (RT) - from the bike", Scanner != null ? Scanner.Cone : null, null, false, scannerHead);
             if (Scanner != null) yield return Scanner.SwingTo(Container, 1.0f);
             StopCoroutine(bot);
+            if (MaintBot != null) MaintBot.ScanTarget = Container;
             AudioKit.Play("ast_scanner", L.ContainerAt, 0.8f, 0f, AudioKit.Bus.Sfx, 30f);
             if (ContainerMarks != null) Glow(ContainerMarks, 1.8f);
             Shoot(L.ContainerAt + new Vector3(5f, 3f, -6f), L.ContainerAt + Vector3.up * 0.8f, 46f, 0.5f);
@@ -176,10 +193,11 @@ namespace Seven
             yield return Wait(1.2f);
             _cut = false; FollowCamera();
             yield return SayIds("AST_02_P4");                     // The door is free. Go, before it remembers you.
-            Objective("Open the service entrance (X at the door control)");
-            yield return Interact(L.DoorControlView, "Open the door", "open the service entrance", "The door control is the wheel on the post beside the door, west wall", new[] { new Vector3(-8f, 0f, -6f), L.DoorControlView });
+            Objective("Open the service entrance (ride up to the door control, X from the bike)");
+            yield return Interact(L.DoorControlView, "Open the door", "open the service entrance", "Ride up to the wheel on the post beside the door (west wall) and press X", new[] { new Vector3(-8f, 0f, -6f), L.DoorControlView }, null, 1.8f, true, 5.5f);
             // the payoff: the wheel turns, the door rolls up, light runs along its frame, the tunnel beyond is lit
             yield return Cutscene(true);
+            if (Riding) Bike.ScriptThrottle = 0f;
             Shoot(L.DoorAt + new Vector3(7f, 2.4f, -7f), L.DoorAt + Vector3.up * 2.4f, 50f, 0.01f);
             AudioKit.Play("ast_door_manual", L.DoorAt, 1f, 0f, AudioKit.Bus.Sfx, 50f);
             if (DoorWheel != null) StartCoroutine(Spin(DoorWheel, Vector3.forward, 720f, 1.6f));
@@ -192,14 +210,9 @@ namespace Seven
             if (belt != null) StartCoroutine(AudioKit.Fade(belt, 0f, 2f, true));
             yield return Cutscene(false);
             Complete("AST_02");
-            // to the bike, then through the entrance
-            Objective("Ride through the service entrance - get on the bike (X)");
-            FreeBike = true;
-            ShowGuide(Bike.transform.position);
-            if (Auto) { yield return WalkSeven(Bike.transform.position - Bike.transform.right * 1.1f, 15f); PlaceRiding(Bike.transform.position, 270f); }
-            yield return Until(() => Riding, "on the bike", 60f, "Walk to the bike on its pad and press X", Bike.transform.position, () => PlaceRiding(Bike.transform.position, 270f));
-            HideGuide();
-            yield return RideRoute(new[] { new Vector3(-12f, 0f, -4f), new Vector3(-40f, 0f, -4f), L.TunnelEnd }, "through the service tunnel", 6f);
+            Objective("Ride through the service entrance");
+            if (!Riding) yield return GetBackOn();
+            yield return RideRoute(new[] { new Vector3(-12f, 0f, -4f), new Vector3(-21f, 0f, -4f), new Vector3(-40f, 0f, -4f), L.TunnelEnd }, "through the service tunnel", 3.5f);   // QF21: through the door's middle (the bike now starts at the door control)
         }
         IEnumerator Spin(Transform t, Vector3 axis, float deg, float secs) { for (float k = 0f; k < secs; k += Time.deltaTime) { t.Rotate(axis, deg / secs * Time.deltaTime, Space.Self); yield return null; } }
         /// <summary>While the scanner holds her, the maintenance machine keeps itself between her and the door control.</summary>
@@ -306,7 +319,7 @@ namespace Seven
             {
                 if (AsteroidState.StepDone("junction" + (i + 1))) continue;
                 int n = AsteroidState.StepsDone("junction");
-                Objective($"Align the three rail junctions on the causeway\nJunctions {n} / 3");
+                Objective($"Align the three rail junctions on the causeway (from the bike)\nJunctions {n} / 3");
                 var route = i == 0 ? L.Ride1 : i == 1 ? L.Ride2 : L.Ride3;
                 yield return RideRoute(route, $"to junction {i + 1}", 7f);
                 yield return StopBike(1.0f);
@@ -318,10 +331,13 @@ namespace Seven
             StopCoroutine(bird); SetPrompt(null);
             Complete("AST_03");
         }
+        bool _junctionLine;
         IEnumerator Junction(int i)
         {
             var ctl = L.JunctionControls[i];
-            yield return Interact(ctl, "Align the rails", $"align junction {i + 1}", "The lever at the edge of the causeway, just before the turntable (X - from the bike too)", null, null, 1.8f, true, 5.5f);
+            // QF21 (4): worked from the bike; on foot the prompt says so, Panther once, the marker back to the bike
+            yield return Interact(ctl, "Align the rails", $"align junction {i + 1}", "Ride up to the lever at the edge of the causeway, just before the turntable, and press X from the bike", null, null, 1.8f, true, 5.5f, "Use the junction from your bike", _junctionLine ? null : "AST_03_P3");
+            _junctionLine = true;
             // the payoff: the lever throws, the turntable turns into line, the route lights run ahead, its lamp turns white
             yield return Cutscene(true);
             if (Riding) { Bike.ScriptThrottle = 0f; }
@@ -405,7 +421,8 @@ namespace Seven
             yield return Wait(0.8f);
             // he stops precisely in front of her; over-the-shoulder behind 7
             var stop = L.HallMeet + Flat(L.CutterAt - L.HallMeet).normalized * 4.2f;
-            if (m != null) { var w = m.WalkTo(stop, 1.0f); yield return w; m.Face(P7); }
+            // QF21 (6): the camera moves with him as he leaves the cradle and walks to her (low, his scale) - never an empty shot
+            if (m != null) { yield return TrackWalk(m, stop, 1.0f, "a16b_he_walks_to_her", P7); m.Face(P7); }
             OverHerShoulderUp();
             yield return Wait(0.4f);
             yield return Shot("a17_over_her_shoulder_his_scale");
@@ -435,7 +452,7 @@ namespace Seven
             yield return Line("AST_04_12");                    // Wait. That came from the archive.
             yield return Line("AST_04_13");                    // Unused material is being reassigned.
             yield return Line("AST_04_14");                    // There's writing on it.
-            if (m != null) { m.WalkTo(P7 + Flat(L.CutterAt - P7).normalized * 2.6f, 1.2f); }        // he blocks her path
+            if (m != null) { _talkCalm = false; yield return TrackWalk(m, P7 + Flat(L.CutterAt - P7).normalized * 2.6f, 1.2f, "a20b_he_blocks_her_path", P7, 5f, 6f); m.Face(P7); }   // he blocks her path (QF21 6: followed)
             yield return Line("AST_04_15");                    // There are no outstanding requests to read it.
             yield return Line("AST_04_16");                    // I'm requesting it.
             yield return Line("AST_04_17");                    // Request denied.
@@ -450,18 +467,12 @@ namespace Seven
             yield return Shot("a21_the_security_shutters_close");
             yield return SayIds("AST_04_P1");                  // Seven. The maintenance opening, on your right. Now.
             Complete("AST_04_lines");
+            _talkCalm = false;
             yield return Cutscene(false);
             yield return Escape();
             Complete("AST_04");
         }
         IEnumerator Line(string id) { yield return Frame(id); yield return SayIds(id); }
-        /// <summary>His lines: a low angle on him; hers: over her shoulder looking up at him (DialogueFraming checks both).</summary>
-        IEnumerator Frame(string id)
-        {
-            var l = AsteroidDialogue.All; string who = null; foreach (var x in l) if (x.id == id) { who = x.speaker; break; }
-            if (who == "machinist") MachinistUp(); else if (who == "seven") OverHerShoulderUp();
-            yield return null;
-        }
         Vector3 HeadOfM() { var an = Machinist != null ? Machinist.Anim : null; var h = an != null && an.isHuman ? an.GetBoneTransform(HumanBodyBones.Head) : null; return h != null ? h.position : (Machinist != null ? Machinist.transform.position : L.CradleAt) + Vector3.up * 3.7f; }
         Vector3 HerHead => Seven.Bone(HumanBodyBones.Head) != null ? Seven.Bone(HumanBodyBones.Head).position : P7 + Vector3.up * 1.6f;
         void MachinistUp()

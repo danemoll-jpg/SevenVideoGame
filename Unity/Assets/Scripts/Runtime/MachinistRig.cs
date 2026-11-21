@@ -49,9 +49,97 @@ namespace Seven
             _flare = 1f;
         }
 
+        // ---------------------------------------------------------------- QF21 (8) calm in conversation, (11) restrained
+        /// <summary>QF21 (8): while he talks he stands still and upright - the borrowed idle is held to a slow, damped pose
+        /// (arms mostly at rest); his acting is the head, the visor and at most one restrained gesture. Set by the director
+        /// for conversations; big arm movement stays for work and the fight.</summary>
+        [System.NonSerialized] public bool Calm;
+        /// <summary>QF21 (11): in the clamps / cradle his body is locked where it is (nothing passes through the pads); only the
+        /// head turns (LookAt), the visor glows with his voice, the claw twitches once (<see cref="Twitch"/>).</summary>
+        [System.NonSerialized] public bool Restrained;
+        float _holdW; Transform[] _holdBones; Quaternion[] _holdRot; Vector3 _hipsHold; bool _holdSnap;
+        float _twitch; Transform _handR;
+        public float HoldDrift { get; private set; }
+        /// <summary>Called at the end of his LateUpdate (his final pose this frame) - the QF21 clamp check reads it there.</summary>
+        public event System.Action AfterPose;
+        public void Twitch() { _twitch = 1f; AudioKit.Play("machinist_servo", transform.position + Vector3.up * 2.5f, 0.5f, 0.05f, AudioKit.Bus.Sfx, 30f); }
+        void HoldPose(float dt)
+        {
+            float want = Restrained ? 1f : Calm ? 0.85f : 0f;
+            _holdW = Restrained ? 1f : Mathf.MoveTowards(_holdW, want, dt * (want > _holdW ? 2.5f : 1.2f));
+            if (Anim == null || !Anim.isHuman) return;
+            if (_holdBones == null)
+            {
+                var l = new System.Collections.Generic.List<Transform>();
+                foreach (HumanBodyBones b in System.Enum.GetValues(typeof(HumanBodyBones)))
+                {
+                    if (b == HumanBodyBones.LastBone || b == HumanBodyBones.Head || b == HumanBodyBones.Neck || b == HumanBodyBones.Jaw || b == HumanBodyBones.LeftEye || b == HumanBodyBones.RightEye) continue;
+                    var t = Anim.GetBoneTransform(b); if (t != null) l.Add(t);
+                }
+                _holdBones = l.ToArray(); _holdRot = new Quaternion[_holdBones.Length];
+                _handR = Anim.GetBoneTransform(HumanBodyBones.RightHand);
+            }
+            if (_holdW <= 0.001f) { _holdSnap = false; return; }
+            if (!_holdSnap) { for (int i = 0; i < _holdBones.Length; i++) _holdRot[i] = _holdBones[i].localRotation; if (_hips != null) _hipsHold = _hips.localPosition; _holdSnap = true; }
+            // calm: the held pose follows the clip very slowly (a breath of life); restrained: locked
+            float follow = Restrained ? 0f : dt * 0.25f;
+            float drift = 0f;
+            for (int i = 0; i < _holdBones.Length; i++)
+            {
+                var b = _holdBones[i];
+                if (follow > 0f) _holdRot[i] = Quaternion.Slerp(_holdRot[i], b.localRotation, follow);
+                drift = Mathf.Max(drift, Quaternion.Angle(b.localRotation, _holdRot[i]));
+                b.localRotation = Quaternion.Slerp(b.localRotation, _holdRot[i], _holdW);
+            }
+            if (_hips != null) _hips.localPosition = Vector3.Lerp(_hips.localPosition, _hipsHold, _holdW);
+            HoldDrift = drift * (1f - _holdW);
+            // the one claw twitch (a small close-and-open of the tool hand)
+            if (_twitch > 0f && _handR != null) { _twitch = Mathf.MoveTowards(_twitch, 0f, dt * 2.2f); _handR.localRotation *= Quaternion.Euler(Mathf.Sin(_twitch * Mathf.PI) * 18f, 0f, 0f); }
+        }
+
+        // ---------------------------------------------------------------- QF21 (5) heavy steps, servos
+        /// <summary>QF21 (5): every planted foot lands with a heavy metallic clunk (four takes, never the same twice in a
+        /// row), positional and loud; a piston hiss now and then; a light camera rumble when the camera is close; servo whir
+        /// on turns. The plant is read from the clip's own foot motion (lifted -> back down), like 7's footsteps.</summary>
+        public static int Steps, Servos;
+        Transform _footL, _footR; float _footMinL = 99f, _footMinR = 99f; bool _upL, _upR; int _lastTake = -1; float _yawLast, _servoCd, _stepCd;
+        void StepSounds(float dt)
+        {
+            if (Anim == null || !Anim.isHuman) return;
+            if (_footL == null) { _footL = Anim.GetBoneTransform(HumanBodyBones.LeftFoot); _footR = Anim.GetBoneTransform(HumanBodyBones.RightFoot); _yawLast = transform.eulerAngles.y; }
+            if (_footL == null || _footR == null) return;
+            _stepCd -= dt;
+            float s = Mathf.Max(0.5f, transform.lossyScale.y);
+            Foot(_footL, ref _footMinL, ref _upL, s, dt);
+            Foot(_footR, ref _footMinR, ref _upR, s, dt);
+            // servos: on turns (yaw rate) and quick arm moves
+            _servoCd -= dt;
+            float yaw = transform.eulerAngles.y, rate = Mathf.Abs(Mathf.DeltaAngle(_yawLast, yaw)) / Mathf.Max(1e-4f, dt); _yawLast = yaw;
+            if (rate > 45f && _servoCd <= 0f && !Restrained) { _servoCd = 1.4f; Servos++; AudioKit.Play("machinist_servo", transform.position + Vector3.up * 2.4f, 0.7f, 0.08f, AudioKit.Bus.Sfx, 45f); }
+        }
+        void Foot(Transform f, ref float min, ref bool up, float s, float dt)
+        {
+            float h = f.position.y - transform.position.y;
+            min = Mathf.Min(min + dt * 0.02f, h);                   // the rest height (slowly forgets)
+            if (!up && h > min + 0.14f * s) up = true;
+            else if (up && h < min + 0.05f * s)
+            {
+                up = false;
+                if (_stepCd > 0f || Restrained) return;
+                _stepCd = 0.18f; Steps++;
+                int take; do take = Random.Range(1, 5); while (take == _lastTake); _lastTake = take;
+                AudioKit.Play("machinist_step_" + take, f.position, 1f, 0.07f, AudioKit.Bus.Sfx, 70f);
+                if (Random.value < 0.3f) AudioKit.Play("machinist_hiss", f.position + Vector3.up * 1.2f, 0.35f, 0.1f, AudioKit.Bus.Sfx, 30f);
+                var cam = Camera.main;
+                if (cam != null) { float d = Vector3.Distance(cam.transform.position, f.position); if (d < 14f) CameraShake.Quake(0.18f, 0.12f * (1f - d / 14f)); }
+            }
+        }
+
         void LateUpdate()
         {
             float dt = Time.deltaTime;
+            HoldPose(dt);
+            StepSounds(dt);
             // the plate: swings forward with the thigh that comes forward (the thighs' pitch against the hips' down)
             if (PlateHinge != null && _hips != null)
             {
@@ -96,6 +184,7 @@ namespace Seven
             if (Couplings != null)
                 for (int i = 0; i < Couplings.Length; i++)
                     if (Couplings[i] != null) Glowing.Set(Couplings[i], Mathf.Lerp(0.15f, 1.6f, Energy) * (Stunned ? 0.45f + 0.4f * Mathf.PerlinNoise(Time.time * 11f, i) : 1f) + (i == _flareI ? _flare * 4f : 0f));
+            AfterPose?.Invoke();
         }
 
         /// <summary>AST_07: a tool assembly is pulled off his forearm into a service-station clamp.</summary>

@@ -38,6 +38,24 @@ apply to every asset and scene:
 - **Text over the world is readable:** objectives, prompts, hints, subtitles and marker distances sit on a soft dark
   translucent panel with a text shadow (`ChapterUI` styles) — check captures against the brightest backgrounds.
 
+## Cameras, prompts and the bike — STANDING RULES (Dan, QF21, 2026-11-21; every chapter, now and later)
+- **No shot holds on empty space.** A character who walks in a cutscene stays in frame: track / pan with them, cut ahead
+  of them, or cut to the next shot when they exit. Scripted: `ChapterCamera.ShotFollow` (the held framing moves with a
+  transform; the Asteroid's `TrackWalk`). Automatic in every chapter (`ChapterCameraShots.cs`): a person seen in a held
+  shot who walks to its edge with nobody else in frame makes the camera follow them. Every check run logs
+  `EMPTY SHOTS (QF21 6)` (must be 0) and `TRACKING (QF21 6)` (out of frame 0 frames).
+- **No shot where a big body fills the frame and hides the other one.** `DialogueFraming.Sees` rejects a framing where a
+  character over 2.4 m (Machinist, Tunneler, Viper, the keeper) who is not the speaker covers more than half the frame
+  (`DialogueFraming.Coverage`). Big characters' conversations: her lines from his side but pulled back and out (her face
+  and body clear), his lines from low angles, wide two-shots often (7 small at his feet).
+- **Wrong state says so.** An interaction that needs the bike (or needs her on foot) shows what to do when she is in
+  the wrong state ("Use the junction from your bike", "Leave the bike first", "Get off - the slab needs telekinesis on
+  foot"), the marker points at what she needs (the bike), a companion may say it once - never a silent ignore.
+- **Mount before a ride.** Never make her walk back to the bike for no reason: if the next stretch is a ride, she mounts
+  first and does the step from the saddle (X / telekinesis from the bike).
+- **Talking characters stand still.** A big character in conversation is calm and upright (a held, damped idle - not a
+  borrowed gesturing talk clip); at most one restrained gesture on a key line. Restrained characters stay locked.
+
 ## Boss fights — STANDING RULE (Dan, QF17, 2026-11-20; every boss, now and later)
 Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing there." Never again:
 - **The boss moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: his pose, a
@@ -384,7 +402,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–16 + QF1–QF20 complete (2026-11-20), release 0.16.0.** Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–16 + QF1–QF21 complete (2026-11-21), release 0.16.1.** QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -716,7 +734,25 @@ scene (Round 10).
   - Switches: `-astcp <n>` (check run at checkpoint n; 0 = AST_01 aboard, 9 = home), `-asteroid` (as from the star map),
     `-astplay` (player-style run `AsteroidPlaytest.cs`: free aboard → console → Biaveh → TRV_AST → the chapter → AST_11; with
     `-astcp n` it starts there - the boss runs), `-astbird` (a check run takes the optional bird).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.16.0** (Round 16 status in `TODO.md`).
+- **QF21 (release 0.16.1)** — Dan's Asteroid review (status + "For Dan to check (QF21)" in `TODO.md`; standing rules "Cameras,
+  prompts and the bike" at the top of this file):
+  - Shots: `ChapterCameraShots.cs` (`ChapterCamera.ShotFollow`, automatic follow of a walker, `EMPTY SHOTS (QF21 6)`);
+    `AsteroidDirector.TrackWalk` (`TRACKING (QF21 6)`); `DialogueFraming.Coverage` + the big-body rule; blocked lines log why.
+    Moving parts (`AstSpin`, rail-carrier cars) are excluded from `CameraOccluders` (frozen copies blocked lines of sight).
+  - Machinist: `MachinistRig.Calm` / `Restrained` / `Twitch` / heavy steps (`machinist_step_1..4`, `machinist_hiss`,
+    `machinist_servo`; `MACHINIST STEPS (QF21 5)`), `AfterPose`; his framings `HerFromHisSide` / `WideTwoShot` / `MachinistUp`
+    (`AsteroidDirectorQF21.cs`; `MACHINIST FRAMING (QF21 7)`); the cradle `AstClamp.OpenUp`; `CLAMPS (QF21 11b)`.
+  - AST_01: `ShipReveal.CenterOverride` / `KeepSolid` / `ClearKeep` (the pilot's-chair effect from another seat).
+  - System = `AstMaintBot` (legs, iris, grille, fan, stack whistle `ast_steam_whistle`, wall horns, `Tilt`).
+  - Wrong state: `AsteroidDirector.Interact(... bikeOnly, bikeLine)`; AST_02_P5 / AST_03_P3 (new Panther lines).
+  - Blades: `ChapterSevenBlades` holds them out (arms out, angle per frame vs her bone capsules, the light pulls in rather than
+    touch her); `BLADE vs BODY (QF21 9)`; check `-astcp 5 -qf21blades` (idle / walk / run, three angles).
+  - The hall: `FightDemoBuilderAsteroidFoundry.cs` (`ClampRig`, `BeltConveyor`, `FlywheelCasing`, `BoilerDrum`, `CrateStack`,
+    `CoolingTower`, `Overhead`, `HallDebrisMeshes`), obstacles `AsteroidLayout.HallProps`. The memory screen = a UV'd
+    `Seven/GalleryScreen` quad (`MemoryPhase` syncs the video to AST_09; `MEMORY SURFACE (QF21 11a)`).
+  - Switches: `-noqf21fix` (no automatic shot follow), `-qf21blades`.
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.16.1** (QF21 status in `TODO.md`).
+**Before: Dan plays 0.16.0** (Round 16 status in `TODO.md`).
 **Before: Dan plays 0.15.5** (QF20 status in `TODO.md`).
 **Before: Dan plays 0.15.4** (QF19 status in `TODO.md`).
 **Before: Dan plays 0.15.3** (QF18 status in `TODO.md`).

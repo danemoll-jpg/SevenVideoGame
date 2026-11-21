@@ -894,7 +894,9 @@ namespace Seven
             if (Bike.Riding)
             {
                 bool stopped = Bike.Speed < 1.2f;
-                Legend.Context(ControlsLegend.Btn.Interact, stopped ? "Get off" : null);
+                // QF21 (4) wrong state: the slab needs her on foot - say so instead of nothing
+                bool slab = _slabReady && SlabInView();
+                Legend.Context(ControlsLegend.Btn.Interact, stopped ? (slab ? "Get off - the slab needs telekinesis on foot" : "Get off") : (slab ? "Stop and get off for the slab" : null));
                 if (stopped && !Auto && Input.Interact.WasPressedThisFrame()) { if (Bike.Dismount()) FollowCamera(); }
             }
             else if (canRide && Seven.Current == ChapterSeven.Mode.Free && Bike.CanMount(P7))

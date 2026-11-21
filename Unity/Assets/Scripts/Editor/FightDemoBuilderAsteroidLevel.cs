@@ -215,22 +215,114 @@ namespace Seven.EditorTools
                 var spot = new GameObject("ScannerSpot").AddComponent<Light>(); spot.transform.SetParent(head, false); spot.type = LightType.Spot; spot.spotAngle = 22f; spot.range = 30f; spot.intensity = 2.2f; spot.color = Color.white; spot.shadows = LightShadows.None;
                 r.scanner = sc.gameObject.AddComponent<Seven.AstScanner>(); r.scanner.Head = head; r.scanner.Cone = coneGo.GetComponent<Renderer>(); r.scanner.Spot = spot; r.scanner.TargetPoint = A.SevenDown;
             }
-            // the small maintenance machine: a riveted body on a hover ring, a scanning lens, the floor-arrow projector
+            // QF21 (2): "System" - the receiving chamber's maintenance machine, first contact with the Great Machine Age:
+            // a squat rounded brass-and-steel body trundling on three jointed spindly legs, one big round lens-eye with an
+            // iris shutter (dilates / narrows as it speaks and scans), a speaker grille under it, a fan of scanning light
+            // from the lens, a little projector for the guiding symbol, a steam stack that whistles on each announcement,
+            // gauges and a ticking dial on its back. Brass speaking-horns in the chamber walls glow with its words.
             {
                 var mb = new GameObject("MaintenanceMachine").transform; mb.SetParent(rc, false); mb.position = A.MaintBotHome;
-                var bv = new List<Vector3>(); var bt = new List<int>();
-                Append(bv, bt, Lathe(new[] { new Vector2(0f, 0.55f), new Vector2(0.5f, 0.55f), new Vector2(0.55f, 0.75f), new Vector2(0.5f, 1.25f), new Vector2(0.32f, 1.45f), new Vector2(0f, 1.5f) }, 0f, 360f, 16));
-                MeshObject("Maint_Body", SaveMesh(SmoothFinish(bv, bt), "Ast_MaintBody"), m.metal, mb).transform.localPosition = Vector3.zero;
-                var ring = new List<Vector3>(); var rt = new List<int>(); Append(ring, rt, Lathe(new[] { new Vector2(0.4f, 0.2f), new Vector2(0.62f, 0.22f), new Vector2(0.62f, 0.3f), new Vector2(0.4f, 0.32f) }, 0f, 360f, 18));
-                MeshObject("Maint_HoverRing", SaveMesh(Finish(ring, rt), "Ast_MaintRing"), m.glowSoft, mb, false).transform.localPosition = Vector3.zero;
-                var lensP = new GameObject("Maint_Lens").transform; lensP.SetParent(mb, false); lensP.localPosition = new Vector3(0f, 1.1f, 0.48f);
-                var lv = new List<Vector3>(); var lt2 = new List<int>(); Ellipsoid(lv, lt2, Vector3.zero, new Vector3(0.16f, 0.16f, 0.08f), 5, 10);
+                var bodyT = new GameObject("Maint_BodyPivot").transform; bodyT.SetParent(mb, false); bodyT.localPosition = Vector3.zero;
+                var bk = new AK();
+                {
+                    var (v, t) = bk.Of(m.metal);
+                    Append(v, t, Lathe(new[] { new Vector2(0f, 0.62f), new Vector2(0.38f, 0.64f), new Vector2(0.55f, 0.78f), new Vector2(0.62f, 1.0f), new Vector2(0.58f, 1.22f), new Vector2(0.44f, 1.36f), new Vector2(0f, 1.4f) }, 0f, 360f, 22));
+                    var (bv2, bt2) = bk.Of(m.metalDark);
+                    foreach (var y in new[] { 0.8f, 1.18f }) Append(bv2, bt2, Lathe(new[] { new Vector2(0.62f, y - 0.035f), new Vector2(0.64f, y), new Vector2(0.62f, y + 0.035f) }, 0f, 360f, 22));
+                    for (int i = 0; i < 18; i++) Ellipsoid(bv2, bt2, Quaternion.Euler(0f, i * 20f, 0f) * new Vector3(0.63f, 1.0f, 0f), Vector3.one * 0.022f, 3, 6);
+                    // the back: two gauges and the dial plate; the steam stack; the projector barrel under the chin
+                    var (sv, st) = bk.Of(m.steel);
+                    foreach (var gx in new[] { -0.2f, 0.2f }) Append(sv, st, RotX(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.11f, 0f), new Vector2(0.11f, 0.04f), new Vector2(0f, 0.04f) }, 0f, 360f, 14), new Vector3(gx, 1.15f, -0.6f)));
+                    Append(sv, st, RotX(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.17f, 0f), new Vector2(0.17f, 0.05f), new Vector2(0f, 0.05f) }, 0f, 360f, 16), new Vector3(0f, 0.88f, -0.58f)));
+                    Append(sv, st, Lathe(new[] { new Vector2(0f, 1.3f), new Vector2(0.07f, 1.3f), new Vector2(0.07f, 1.62f), new Vector2(0.1f, 1.66f), new Vector2(0.1f, 1.72f), new Vector2(0f, 1.72f) }, 0f, 360f, 10, null, new Vector3(-0.22f, 0f, -0.2f)));
+                    Append(sv, st, RotX(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.06f, 0f), new Vector2(0.08f, 0.16f), new Vector2(0f, 0.16f) }, 0f, 360f, 10), new Vector3(0f, 0.72f, 0.48f)));
+                }
+                foreach (var g in bk.Save("Maint_Body", bodyT, true)) g.transform.localPosition = Vector3.zero;
+                var dial = new GameObject("Maint_DialNeedle").transform; dial.SetParent(bodyT, false); dial.localPosition = new Vector3(0f, 0.88f, -0.64f); dial.localRotation = Quaternion.LookRotation(Vector3.back);
+                { var nv = new List<Vector3>(); var nt = new List<int>(); MBox(nv, nt, new Vector3(0f, 0.06f, 0f), new Vector3(0.015f, 0.13f, 0.01f), 0f, 0f); MeshObject("Maint_DialNeedleMesh", SaveMesh(Finish(nv, nt), "Ast_MaintNeedle"), m.metalDark, dial, false).transform.localPosition = Vector3.zero; }
+                // the head: the lens-eye in a brass ring, the iris shutter, the speaker grille - it tilts as a whole
+                var headT = new GameObject("Maint_Head").transform; headT.SetParent(bodyT, false); headT.localPosition = new Vector3(0f, 1.05f, 0.42f);
+                var hk = new AK();
+                {
+                    var (v, t) = hk.Of(m.metal); Append(v, t, RotX(Lathe(new[] { new Vector2(0.2f, -0.08f), new Vector2(0.36f, -0.1f), new Vector2(0.38f, 0.06f), new Vector2(0.3f, 0.12f), new Vector2(0.27f, 0.1f) }, 0f, 360f, 24), Vector3.zero));
+                    var (gv, gt) = hk.Of(m.metalDark); for (int i = 0; i < 12; i++) Ellipsoid(gv, gt, Quaternion.Euler(0f, 0f, i * 30f) * new Vector3(0.33f, 0f, 0.1f), Vector3.one * 0.022f, 3, 6);
+                }
+                foreach (var g in hk.Save("Maint_HeadRing", headT, true)) g.transform.localPosition = Vector3.zero;
+                var lensP = new GameObject("Maint_Lens").transform; lensP.SetParent(headT, false); lensP.localPosition = new Vector3(0f, 0f, 0.02f);
+                var lv = new List<Vector3>(); var lt2 = new List<int>(); Ellipsoid(lv, lt2, Vector3.zero, new Vector3(0.24f, 0.24f, 0.07f), 6, 14);
                 var lensGo = MeshObject("Maint_LensGlow", SaveMesh(SmoothFinish(lv, lt2), "Ast_MaintLens"), new Material(m.glow) { name = "Ast_maintlens" }, lensP, false); lensGo.transform.localPosition = Vector3.zero;
-                var av = new List<Vector3>(); var at = new List<int>();
-                Quad(av, at, new Vector3(-0.25f, 0f, -0.6f), new Vector3(-0.25f, 0f, 0.2f), new Vector3(0.25f, 0f, 0.2f), new Vector3(0.25f, 0f, -0.6f));
-                Quad(av, at, new Vector3(-0.6f, 0f, 0.2f), new Vector3(0f, 0f, 0.85f), new Vector3(0f, 0f, 0.85f), new Vector3(0.6f, 0f, 0.2f));
-                var arrow = MeshObject("Maint_FloorArrow", SaveMesh(Finish(av, at), "Ast_MaintArrow"), new Material(m.glowSoft) { name = "Ast_maintarrow" }, rc, false); arrow.SetActive(false);
+                var iris = new List<Transform>();
+                for (int i = 0; i < 8; i++)
+                {
+                    var b = new GameObject("Maint_IrisBlade" + i).transform; b.SetParent(headT, false); b.localPosition = new Vector3(0f, 0f, 0.085f); b.localRotation = Quaternion.Euler(0f, 0f, i * 45f);
+                    var iv = new List<Vector3>(); var it = new List<int>();
+                    Quad(iv, it, new Vector3(0.05f, 0.0f, 0f), new Vector3(0.05f, 0.27f, 0f), new Vector3(0.27f, 0.27f, 0f), new Vector3(0.24f, 0.0f, 0f));
+                    Quad(iv, it, new Vector3(0.24f, 0.0f, 0.004f), new Vector3(0.27f, 0.27f, 0.004f), new Vector3(0.05f, 0.27f, 0.004f), new Vector3(0.05f, 0.0f, 0.004f));
+                    MeshObject("Maint_IrisBladeMesh" + i, SaveMesh(Finish(iv, it), "Ast_MaintIris" + i), m.metalDark, b, false).transform.localPosition = Vector3.zero;
+                    iris.Add(b);
+                }
+                var grv = new List<Vector3>(); var grt = new List<int>();
+                for (int i = 0; i < 4; i++) MBox(grv, grt, new Vector3(0f, -0.2f - i * 0.045f, 0.06f), new Vector3(0.3f - i * 0.05f, 0.018f, 0.02f), 0f, 0f);
+                var grille = MeshObject("Maint_Grille", SaveMesh(Finish(grv, grt), "Ast_MaintGrille"), new Material(m.glowSoft) { name = "Ast_maintgrille" }, headT, false); grille.transform.localPosition = Vector3.zero;
+                // the scanning fan: a flat wedge of light from the lens (unit length along +z; swept up and down by the runtime)
+                var fanP = new GameObject("Maint_ScanFan").transform; fanP.SetParent(headT, false); fanP.localPosition = new Vector3(0f, 0f, 0.1f);
+                var fv = new List<Vector3>(); var ft = new List<int>();
+                for (int i = 0; i < 12; i++)
+                {
+                    float a0 = Mathf.Lerp(-22f, 22f, i / 12f) * Mathf.Deg2Rad, a1 = Mathf.Lerp(-22f, 22f, (i + 1) / 12f) * Mathf.Deg2Rad;
+                    Quad(fv, ft, Vector3.zero, new Vector3(Mathf.Sin(a0), 0f, Mathf.Cos(a0)), new Vector3(Mathf.Sin(a1), 0f, Mathf.Cos(a1)), Vector3.zero);
+                    Quad(fv, ft, Vector3.zero, new Vector3(Mathf.Sin(a1), 0f, Mathf.Cos(a1)), new Vector3(Mathf.Sin(a0), 0f, Mathf.Cos(a0)), Vector3.zero);
+                }
+                var fan = MeshObject("Maint_ScanFanMesh", SaveMesh(Finish(fv, ft), "Ast_MaintFan"), AdditiveMat("Ast_maint_fan", 0.12f), fanP, false); fan.transform.localPosition = Vector3.zero; fanP.gameObject.SetActive(false);
+                // three jointed spindly legs: hip (swing) -> thigh -> knee (bend) -> shin -> a round foot
+                var hips = new List<Transform>(); var knees = new List<Transform>();
+                for (int i = 0; i < 3; i++)
+                {
+                    float yaw = 60f + i * 120f;
+                    var hip = new GameObject("Maint_Hip" + i).transform; hip.SetParent(bodyT, false); hip.localPosition = Quaternion.Euler(0f, yaw, 0f) * new Vector3(0f, 0.7f, 0.4f); hip.localRotation = Quaternion.Euler(0f, yaw, 0f);
+                    var lk = new AK(); var (av, at2) = lk.Of(m.steel);
+                    Ellipsoid(av, at2, Vector3.zero, Vector3.one * 0.09f, 4, 8);
+                    Sweep(av, at2, new[] { Vector3.zero, new Vector3(0f, 0.12f, 0.36f) }, 0.035f, false, 6);
+                    foreach (var g in lk.Save("Maint_Thigh" + i, hip, true)) g.transform.localPosition = Vector3.zero;
+                    var knee = new GameObject("Maint_Knee" + i).transform; knee.SetParent(hip, false); knee.localPosition = new Vector3(0f, 0.12f, 0.36f);
+                    var sk2 = new AK(); var (kv, kt) = sk2.Of(m.metal);
+                    Ellipsoid(kv, kt, Vector3.zero, Vector3.one * 0.06f, 4, 8);
+                    Sweep(kv, kt, new[] { Vector3.zero, new Vector3(0f, -0.8f, 0.12f) }, 0.028f, false, 6);
+                    var (fv2, ft2) = sk2.Of(m.metalDark); Append(fv2, ft2, Lathe(new[] { new Vector2(0f, -0.84f), new Vector2(0.1f, -0.84f), new Vector2(0.07f, -0.78f), new Vector2(0f, -0.77f) }, 0f, 360f, 10, null, new Vector3(0f, 0f, 0.12f)));
+                    foreach (var g in sk2.Save("Maint_Shin" + i, knee, true)) g.transform.localPosition = Vector3.zero;
+                    hips.Add(hip); knees.Add(knee);
+                }
+                // the steam stack's puff (a whistle on each announcement)
+                var puff = new GameObject("Maint_StackSteam").AddComponent<ParticleSystem>(); puff.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+                puff.transform.SetParent(bodyT, false); puff.transform.localPosition = new Vector3(-0.22f, 1.74f, -0.2f); puff.transform.localRotation = Quaternion.LookRotation(Vector3.up);
+                {
+                    var mm = puff.main; mm.startLifetime = 1.2f; mm.startSpeed = 1.6f; mm.startSize = 0.35f; mm.startColor = new Color(1f, 1f, 1f, 0.45f); mm.maxParticles = 120; mm.loop = false; mm.playOnAwake = false; mm.duration = 0.5f;
+                    var em = puff.emission; em.rateOverTime = 0f; em.SetBursts(new[] { new ParticleSystem.Burst(0f, 40) }); var sh = puff.shape; sh.shapeType = ParticleSystemShapeType.Cone; sh.angle = 10f; sh.radius = 0.04f;
+                    puff.GetComponent<ParticleSystemRenderer>().sharedMaterial = AdditiveMatTex("Ast_maint_puff", 0.6f);
+                }
+                // the guiding symbol it projects on the floor: a ring with an arrow through it (the route mark), not a plain arrow
+                var av3 = new List<Vector3>(); var at3 = new List<int>();
+                Sweep(av3, at3, Enumerable.Range(0, 25).Select(i => new Vector3(Mathf.Cos(i / 24f * Mathf.PI * 2f) * 0.55f, 0f, Mathf.Sin(i / 24f * Mathf.PI * 2f) * 0.55f)).ToList(), 0.04f, true, 4);
+                Quad(av3, at3, new Vector3(-0.12f, 0.01f, -0.4f), new Vector3(-0.12f, 0.01f, 0.25f), new Vector3(0.12f, 0.01f, 0.25f), new Vector3(0.12f, 0.01f, -0.4f));
+                Quad(av3, at3, new Vector3(-0.32f, 0.01f, 0.2f), new Vector3(0f, 0.01f, 0.62f), new Vector3(0f, 0.01f, 0.62f), new Vector3(0.32f, 0.01f, 0.2f));
+                var arrow = MeshObject("Maint_FloorArrow", SaveMesh(Finish(av3, at3), "Ast_MaintArrow"), new Material(m.glowSoft) { name = "Ast_maintarrow" }, rc, false); arrow.SetActive(false);
+                // the brass speaking-horns in the chamber walls (their mouths glow with each word)
+                var horns = new List<Renderer>();
+                foreach (var (p, d) in new[] { (new Vector3(-17.6f, 6.5f, 2f), Vector3.right), (new Vector3(17.6f, 6.5f, 2f), Vector3.left), (new Vector3(-4f, 6.5f, 17.6f), Vector3.back), (new Vector3(10f, 6.5f, 17.6f), Vector3.back) })
+                {
+                    int hn = horns.Count;
+                    var hk2 = new AK(); var (hv, ht) = hk2.Of(m.metal);
+                    var hm = Lathe(new[] { new Vector2(0.08f, 0f), new Vector2(0.1f, 0.5f), new Vector2(0.2f, 0.9f), new Vector2(0.45f, 1.15f), new Vector2(0.5f, 1.2f) }, 0f, 360f, 16);
+                    var q = Quaternion.FromToRotation(Vector3.up, d); var hvv = hm.vertices; for (int i = 0; i < hvv.Length; i++) hvv[i] = q * hvv[i] + p; hm.vertices = hvv; Append(hv, ht, hm);
+                    Riveted(hk2, m.metalDark, m.metal, p - d * 0.1f, new Vector3(0.6f, 0.6f, 0.6f));
+                    hk2.Save($"SpeakingHorn{hn}", rc, true);
+                    var mv = new List<Vector3>(); var mt2 = new List<int>();
+                    Sweep(mv, mt2, Enumerable.Range(0, 21).Select(i => p + d * 1.18f + q * new Vector3(Mathf.Cos(i / 20f * Mathf.PI * 2f) * 0.44f, 0f, Mathf.Sin(i / 20f * Mathf.PI * 2f) * 0.44f)).ToList(), 0.035f, true, 5);
+                    horns.Add(MeshObject($"SpeakingHorn{hn}_Mouth", SaveMesh(SmoothFinish(mv, mt2), $"Ast_HornMouth{hn}"), new Material(m.glowSoft) { name = $"Ast_hornmouth{hn}" }, rc, false).GetComponent<Renderer>());
+                }
                 r.bot = mb.gameObject.AddComponent<Seven.AstMaintBot>(); r.bot.Lens = lensP; r.bot.LensGlow = lensGo.GetComponent<Renderer>(); r.bot.Arrow = arrow.GetComponent<Renderer>(); r.bot.Goal = A.MaintBotHome;
+                r.bot.Body = bodyT; r.bot.Head = headT; r.bot.Iris = iris.ToArray(); r.bot.Grille = grille.GetComponent<Renderer>(); r.bot.Fan = fanP; r.bot.Hips = hips.ToArray(); r.bot.Knees = knees.ToArray();
+                r.bot.Stack = puff; r.bot.Dial = dial; r.bot.Horns = horns.ToArray();
             }
             // pressure vents on the walls (they glow while the chamber pressurizes)
             var vents = new List<Renderer>();

@@ -111,6 +111,10 @@ namespace Seven
             if (FeetProbe.Frames > 0) Log(FeetProbe.Summary());                   // QF18 (16)
             Log($"collision on foot (QF18 10): she slid along walls / props {ChapterSeven.FootSlides} times");
             Log(DialogueFraming.Summary());                                        // QF18 (7)
+            Log(ChapterCamera.ShotSummary());                                      // QF21 (6)
+            if (MachinistRig.Steps > 0 || MachinistRig.Servos > 0) Log($"MACHINIST STEPS (QF21 5): {MachinistRig.Steps} heavy footfalls (four takes, never twice in a row), servo whirs {MachinistRig.Servos}");
+            if (AsteroidDirector.FramedLines > 0) Log($"MACHINIST FRAMING (QF21 7): {AsteroidDirector.FramedLines} lines framed - wide two-shots {AsteroidDirector.FramedWide}, low angles on him {AsteroidDirector.FramedHim}, her from his side {AsteroidDirector.FramedHer}; tracking shots {AsteroidDirector.Tracks}; worst armour share with her hidden {AsteroidDirector.ArmourWorst * 100f:0} % (must be 0)");
+            if (ChapterSeven.BladeFrames > 0) Log(ChapterSeven.BladeSummary());   // QF21 (9)
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");
             File.WriteAllText(Path.Combine(DemoBoot.CaptureDir, "capture_log.txt"), _log.ToString());

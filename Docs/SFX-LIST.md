@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-138 sounds.
+145 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -132,6 +132,13 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `ast_door_manual` | A large manual industrial door wheel being turned, ratchet clicks, then a heavy shutter rolling up. | 3 |  | Asteroid: the service entrance opens |
 | `ast_pressurize` | A sealed metal chamber pressurizing: rising air rush, valves hissing, a soft final clunk. | 3 |  | Asteroid: the receiving chamber pressurizes |
 | `ast_servo_heavy` | A huge machine's joint moving: deep hydraulic servo whine with metallic creak, precise and controlled. | 2 |  | Asteroid: the Machinist's servos |
+| `machinist_step_1` | One single heavy footstep of a four-metre iron machine on a metal floor: a deep metallic clunk with a short low boom, a brief piston hiss after it. | 1 |  | QF21: the Machinist's step (take 1) |
+| `machinist_step_2` | A single very heavy iron foot landing on a steel deck plate: deep resonant clank, faint rattle of loose armour plates, low thud. | 1 |  | QF21: the Machinist's step (take 2) |
+| `machinist_step_3` | One massive mechanical footfall on riveted metal flooring: a dull deep clunk, a short hydraulic sigh, metal plates rattling once. | 1 |  | QF21: the Machinist's step (take 3) |
+| `machinist_step_4` | A giant robot's single footstep on an iron floor in a large hall: low heavy metallic impact, slight ring, a hiss of pistons. | 1 |  | QF21: the Machinist's step (take 4) |
+| `machinist_servo` | Large industrial servo motors whirring as a heavy mechanical arm turns, smooth rising and falling whine, low gear hum. | 1.5 |  | QF21: the Machinist's servos on turns and arm moves |
+| `machinist_hiss` | A short burst of pressurised steam escaping from heavy hydraulic pistons, sharp hiss fading out. | 1 |  | QF21: his piston legs |
+| `ast_steam_whistle` | A small brass steam whistle giving one short cheerful toot with a puff of steam, old machinery. | 1 |  | QF21 (2): System's announcement whistle |
 | `ast_servo_small` | A small machine's servo motors whirring and ticking briefly. | 1 |  | Asteroid: the maintenance machine, the security machines |
 | `ast_cutter` | A large industrial cutting machine slicing metal plate: grinding, high metallic scream, sparks crackling. | 4 |  | Asteroid: the cutting mechanism (an archive panel) |
 | `ast_shutters` | Heavy steel security shutters descending one after another, rumbling rollers and loud locking thuds. | 4 |  | Asteroid: the hall's security shutters close (AST_04) |
