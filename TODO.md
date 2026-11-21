@@ -1,5 +1,294 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF23: Dan's mothership (Round 17) review (Dan, 2026-11-21) — to do (24 items; Dan: "we are getting so close to being done")
+Commit first. All standing rules + the repeat-item rule (why the last fix didn't hold, fix the cause, prove it in normal play
+from the player's camera, never "done" on a partial fix). Release **0.17.x** (next patch); "QF23 — status"; "For Dan to check (QF23)".
+
+
+1. **The mothership is white, and it sits within Veyra's rings.** (a) Its hull is **white** — smooth, pearly, luminous white (the
+   brightest object in the scene, soft highlights, faint seams and hull lights), not grey. (b) It's **stationed inside the ring
+   system**: the ring plane passes around / through its position — ring bands and drifting ice / debris visibly in front of and
+   behind it, the planet Veyra huge beyond — not floating off on its own outside the rings (the setting correction: "stationed
+   among the rings of Veyra"). Fix every view of it: BIA_01's extreme wide (the saucer above the debris band, the egg emerging
+   from the ring plane, an orb crossing the foreground for scale), the approach and the iris, the departure, the star map's
+   Veyra system, the window views. Captures of each.
+
+2. **New lines in BIA_01 + the lore (Dan, 2026-11-21):** after "Mm-hmm." (BIA_01_06), `BIA_01_06a–d` (in the spec): 7 — "I thought
+   their mothership was in the rings of Saturn." / Panther — "That one is. This is a sister ship." / 7 — "A sister ship. So… the aunt
+   ship?" / Panther — (a reluctant chuckle) "That was a terrible joke." Voice them (7 v3, Panther), add to the dialogue data.
+   Lore: the Biavians' main mothership is in Saturn's rings; Veyra's is a sister ship (Log / Field Guide may mention it).
+3. **New standing rule (Dan, 2026-11-21) — add to `CLAUDE.md`: the ARRIVAL / strategy conversations — when they first arrive at a
+   world and talk about it and what to do — happen in the chair at the front window with the "vanish ship" effect on** (the
+   see-through hull button from the pilot's chair, QF21 1), so they're floating there looking at the world they're planning for —
+   **every single time, every chapter**: Europa EUR_01, Mars MAR_01, the asteroid AST_01, the mothership BIA_01 (+ BIA_02 while still
+   aboard), Venus's arrival talk if any, and every later chapter. Seated, Panther in her lap (or on the adjoining seat where the script
+   says); the hull fades at the start of the talk and comes back at the end. **The recap / debrief conversations after a world keep
+   QF16's varied staging** (sofa, floor, galley, window — Venus C11, EUR_17, MAR_12, AST_10's later chat, BIA_12), and the
+   next-destination choices stay at the navigation console. List every scene changed.
+
+4. **Clean up the iris door entry (BIA_02).** The saucer **flies right up to the door** (a closed, seamless circular section of the
+   white hull with a fine spiral seam); the conversation about it (BIA_02_06–10: "That's the door?" … "Slowly sounds excellent.")
+   happens while they hover in front of it. Then the iris **snaps open just for a moment** — a clear **camera-shutter / aperture
+   effect**: the overlapping curved blades rotate together and retract in a spiral, a sharp mechanical whirr-click — only just wider
+   than the saucer; the saucer slips through in that instant; the blades **spiral shut again very quickly** behind it (a solid
+   clack). Show the shutter clearly: a front shot as the blades rotate open (so the spiral mechanism reads), the pass-through, and
+   the reverse shot from inside as they close (BIA_02_11 "There. Plenty of room."). Model the iris as real overlapping blades (8–12
+   curved leaves on a rotating ring), not a fading hole. Tidy everything else in the approach (the orb moving aside, timing, no
+   waiting on empty shots).
+
+5. **7's arms in the chair with Panther in her lap look wrong (repeat — QF12 10 / QF13 15).** One hand strokes him but awkwardly
+   (stiff, odd wrist / elbow, not following the curve of his back); the **other arm clips into her legs**. Fix the seated lap pose
+   for every chair scene (the front-window chair with the vanish effect is now used a lot — item 3):
+   - **The petting hand:** a natural, relaxed stroke — palm flat and soft on his back, fingers slightly spread, moving from his neck
+     toward his tail along the curve of his body, elbow bent comfortably and resting near her side; slow, unhurried, with small
+     pauses; occasional scratch behind his ear.
+   - **The other arm:** rests naturally — on the chair's armrest, or her hand resting lightly on his side / on her thigh **on top of**
+     her leg, never inside it.
+   - Measure it: per-frame hand / forearm vs her legs and body and vs Panther (0 frames inside anything, palm within ~1 cm of his
+     back while stroking); captures from the scene's actual camera angles (over the shoulder, the side two-shot, the wide).
+   Say why QF12 / QF13's fixes didn't cover this (they fixed *where* the hand goes and *releasing* it, not how the arms look while
+   seated).
+
+6. **The receiving berth: flat walls cutting straight through the parked saucer** (`Docs/Previews/qf23/dan_bia_berth_walls.png`:
+   the saucer on its round pad with a cross of plain grey wall slabs passing through it above and below — "these walls … don't
+   work. This makes no sense"). Find what they are (a docking clamp, the beam housing, a mis-placed berth structure) and replace
+   them with a berth that **holds the saucer without touching its hull**: a lit landing ring / cradle under it, maybe slim docking
+   arms that reach up to its rim, the beam's landing pad beneath — Biavian style (smooth, white, organic), no plain slabs. **Build
+   check for every scene: nothing intersects the saucer prefab's bounds** (where it hovers or docks) — fail the build if anything
+   does.
+
+7. **Dark strands hanging from 7** (`Docs/Previews/qf23/dan_bia_strands.png`: from behind, two thin dark lines run diagonally from her
+   right side / arm down toward the floor). New — "this hasn't been an issue previously", so it came in with the asteroid (Round 16)
+   or QF21: most likely **the sheathed arc blades** (QF21 9 gave them a mount on her back / hips — they may be hanging loose, scaled
+   wrong, or attached to the wrong bone so they trail), or stretched vertices / a hair or cloth piece stretched by a bad bone. Find
+   what it is, fix it, and check her from every side (front / back / sides, standing, walking, running, riding, seated) in every
+   chapter with and without the blades. Sheathed blades should read as two neat curved hilts / blades held close on her back,
+   following her body — never dangling or trailing.
+
+8. **Every walking character except 7 can't bend the LEFT knee — on every level, all game long** (Dan: "a consistent problem on
+   every level … I've had other games with the same walk animations and never had this problem"). This is a **systemic bug, not a
+   per-character one** — find the single cause before touching any character:
+   - **Measure first:** for every humanoid NPC (the guardian, Elarim, the Scree, Tunneler, Reptilians, Viper, the Machinist, Nela /
+     Biavians, Ratwing on foot), log **left vs right knee flexion over a full walk cycle** (angle between upper and lower leg, min /
+     max) — and compare with the *same clip* on Y Bot / 7. Write the table into the status.
+   - **Then check the shared things they have and 7 doesn't:** the Humanoid avatar each builder makes (`FightDemoBuilder*.cs` explicit
+     human maps — is `LeftLowerLeg` mapped to the right bone on each rig? Mixamo rigs name it `mixamorig:LeftLeg`), the avatar's
+     muscle / limit settings (a left-knee range clamped to ~0), the clips' import settings (Humanoid source avatar copied from a rig
+     with a bad left leg? "Mirror"? per-clip muscle curves), and **any runtime script that writes to the left leg every frame** (foot
+     placement / ground alignment / IK hints / the QF13 IK safety net / the cape or blade collision code that pushes the left thigh /
+     `SevenRestPose`-style poses applied to NPCs) — something only touching the left side is the strongest clue.
+   - **Fix the cause once** for all characters, then prove it: the knee table again (both knees bending equally, matching the clip on
+     Y Bot), and side-view capture sequences of each NPC walking. **Add a build / test check** that fails if any humanoid's left and
+     right knee ranges differ by more than a few degrees in its walk.
+   Say plainly what the cause was.
+
+9. **No long waits watching someone walk while 7 is frozen** (Dan: Nela walks over to the disoriented resident in BIA_03 and 7 is just
+   stuck standing there — "I don't like having these long animations where 7 can't move and we have to wait forever for someone to
+   walk"). New standing rule for `CLAUDE.md`: **never lock the player while an NPC walks somewhere.** Either (a) **cut** — skip the
+   walk with a cut or a quick time-skip so the NPC is already there (2 s max of walking on screen), or (b) **give control back** — the
+   player can move while the NPC walks (and the scene picks up when she's close, or the NPC waits for her), or (c) walk them
+   **together** (7 walks beside them, player-controlled or a brief shared walk with the camera on both). Go through **every chapter**
+   for scripted NPC walks that freeze 7 (the guardian's "Follow me", Nela's walks, the keeper, the caretaker, the Machinist, Viper,
+   residents) and fix each; list them with what you chose. Also shorten any other cutscene beat where nothing happens for more than a
+   couple of seconds.
+
+10. **Panther's cutaways aboard: show the real saucer interior, not an all-white void — and make them fun.** In the mothership he
+    appears in cutaways more than in earlier chapters (Dan: fine), but he's shown in a **blank white space**. Every cutaway to
+    Panther aboard (in every chapter) shows him **inside the actual saucer interior** (the console / navigation area, the chair, the
+    window with the view outside — QF16 / item 3), lit like the ship. Use the real interior (the Saucer scene's set or a prefab of it
+    loaded for cutaways), never an empty background.
+    **Show his cat side and his excitement about Ratwing** (the script's "a distinctly feline interest in him"): when Ratwing appears
+    or moves on the display, Panther is **glued to the screen** — crouched low, pupils wide, **butt wiggle before a pounce**, tail
+    lashing, **chattering / chittering at the screen** (that cat bird-watching sound), **pawing at Ratwing's moving marker** on the
+    display; between moments, **batting at a dangling cable / string** near the console, then snapping back to dignified composure
+    when he speaks ("Repair the relay." — sits up straight, tail curled neatly). Use it with the script's beats: BIA_03_10 ("Ratwing?" —
+    ears snap forward), BIA_04_06–08 (the tail-tip twitch), BIA_05 (the twitching tail cut that "stops"), BIA_06_06–08 (watching his
+    marker), BIA_07 (reading his feet), BIA_09 (eyes fixed, tail still on "Wait…"), BIA_09_16–17 (purring). New SFX: cat chatter,
+    small thumps / paw taps. Captures of each cutaway.
+
+11. **An audible, LOUD purr.** 7 mentions him purring (BIA_09_16 "You're purring." / "The ship is vibrating.", BIA_12, EUR_17, AST_10)
+    but **you never hear it** — the existing `cat_purr` loop is too quiet / mixed under everything / not playing. Make Panther's purr
+    **clearly audible and loud** (a rich, deep, rumbling real cat purr, close-miked, on the voice / dialogue bus so music never
+    buries it; duck the music while he purrs; a subtle low-frequency rumble). **Whenever a line mentions his purr, the purr is already
+    playing and clearly heard.** And **purring in general whenever they're close**: every lap / chair scene, petting, the reunions,
+    him pressing his head into her hand, curled beside her on the sofa — a purr that swells when she strokes him and fades when she
+    stops; plus a gentle purr layer in the free-roam ship when she sits by him or pets him (if there's a pet interaction). Make 2–3
+    purr variations (`cat_purr_a/b/c`, `generate_sfx.py`) so it never sounds looped. Check the mix in every scene that mentions or
+    shows it — log the purr's level vs dialogue / music.
+
+12. **Repeat of the Mars problem (QF18 9 / "objectives come from the story" in `CLAUDE.md`): in the mothership the player just
+    presses what the objective text says, with no idea why.** Every task (each relay, the bridge alignment, the garden's seam and
+    release, the quiet passage's puzzle, the routing control in BIA_10, the partition stations if they stay) must be **explained in
+    the story first — by Nela or by Panther, whoever would know** (Nela: how her ship works, what the relays do, what's at stake for
+    her people; Panther: what he sees from the saucer's instruments, Ratwing's movements). Before each objective appears, a short
+    line or two says **what's wrong, why it matters, and what she'll do about it**; when it's done, a line or a visible result shows
+    what it achieved. Where the script has no such line, **write short new ones in their voices** (Nela calm, courteous, precise;
+    Panther dry) — keep them brief, voice them with the saved voices (`Nela`, Panther), and **list every new line in the status for Dan
+    to review**. Say why Round 17 broke the standing rule despite it being in `CLAUDE.md`, and add a check to the chapter checklist:
+    every objective has a preceding story line or on-screen cause.
+
+13. **BIA_06, the bridge and the seedlings — unclear, slow, and a gliding resident** (`Docs/Previews/qf23/dan_bia_seedlings.png`).
+    (a) **What happened with the bridge isn't clear.** Before the puzzle, *show* the problem: the suspended bridge hanging out of line /
+    retracted with a gap, the stranded residents waiting on the far side (visible from where she arrives), and Nela (or Panther)
+    explaining — the relay that controls the bridge is down (item 12). Then the alignment reads as fixing *that*.
+    (b) **The resident's "seedlings" read as a grey box with crystal shapes** — nobody can tell what they are, so "Are those all yours?" /
+    "They were smaller when I left home." means nothing. Make them **unmistakably plants**: an open tray / basket of young Biavian
+    seedlings with soft leaves (gently glowing leaf tips, a few with tiny unfurling fronds), visibly **overgrown and spilling over the
+    sides** — so the joke lands (they've grown while she was stuck waiting); she holds it in her arms in front of her. If needed, let 7's
+    line point at them ("Are those all seedlings?").
+    (c) **The crossing is too slow** — the residents cross briskly (or cut so they're mostly across), no long wait (item 9's rule).
+    (d) **The resident carrying the tray glides with no leg movement.** She walks with a proper **carrying walk** (`elarim_carry` or a
+    walk with the arms held for the tray) — legs stepping. **Rule + check for every NPC in every chapter: nobody moves without a
+    walk / run animation playing at the matching speed** (log any NPC whose position changes while its feet don't — 0 allowed).
+    (e) **The resident's voice doesn't match the body:** every Biavian uses Nela's model, which reads as female, but the seedlings
+    resident speaks with a man's voice (premade "Chris"). Rule for every chapter: **a character's voice matches how they look.** For
+    the mothership: give the residents **some variety in the model** (a second Biavian variant that reads masculine — broader
+    shoulders, a squarer jaw, a different suit panel — made from the same model in Blender, plus height / tone differences) and match
+    each speaking resident's voice to their look (female residents female voices, male residents male voices). The seedlings resident
+    (BIA_06): use the female look with a female voice (re-voice BIA_06_01 / 03), or the male variant if you keep "Chris" — say which.
+
+14. **BIA_07, the garden: things shifting back and forth with no explanation** (Dan: "what are these things even? An in-game explanation
+    if they're supposed to be there"). They're meant to be the **memory echo** — the garden as it was long ago, leaking out of the
+    damaged archive and overlaying the real one (spec BIA_07; the leaking memories were introduced in BIA_03). Make it read:
+    - **Explain it in the story as she arrives** — Nela (proposed, write in her voice, list for Dan): "Careful. This garden is
+      remembering itself — the damaged relay is leaking an old memory of it into the present. Some of what you see isn't really
+      there." — and Panther if useful ("The old layout and the new one don't agree. Look for what's real.").
+    - **Make the echo look like a memory, not a glitch:** the remembered garden appears as soft, translucent, slightly brighter
+      ghost-forms (old trees, the old wall, the remembered doorway) that **fade slowly in and out** on a calm rhythm with a gentle
+      shimmer — no fast back-and-forth jitter or popping. Echo objects are clearly different from solid ones (translucent, no
+      shadows, a faint glow edge), the same look as BIA_03's echo and clearly different from her visions.
+    - **Tie it to the puzzle:** the echo shows where the old maintenance door was (the remembered doorway is the clue) → she finds the
+      real seam lower down (BIA_07_01–03) → when the relay is reconnected the echo **fades away for good** (the payoff — the garden is
+      just the garden again).
+    If the shifting is something else (z-fighting, objects snapping between positions), fix that too and say what it was.
+
+15. **How Panther sees — set it up — and fix the Ratwing moment after the garden (BIA_07_04–12).**
+    (a) **Panther watching from the saucer has never been explained** (Europa's transports, Mars, the mothership's Ratwing marker — the
+    scripts assume it). Establish it in the story:
+    - **Generally (once, early — the saucer's instruments):** the saucer's scanners can follow her and what's around her; Panther watches
+      on the console's display. Show it the first time he "sees" something in each chapter — a quick cutaway to **the console display
+      with her marker and the area around her** (QF23 10's real interior), so the player learns where his eyes are.
+    - **On the mothership specifically** — the ship's hull would block the saucer's scanners, so Nela links them (proposed, BIA_04, after
+      the relay routes light up; Dan to confirm / edit, otherwise use): **Nela** — "I've linked your ship to our inner sensors. Your
+      companion will be able to follow him." / **Panther** — "Delighted." *(far too pleased)*. Then his Ratwing marker / tracking lines
+      make sense. Note: the quiet passage (BIA_08) blocks it — that's why he loses her there.
+    (b) **BIA_07 — set up the threat before "Close it now":** when Ratwing lands beyond the glass partition, **show the upper service
+    opening** above the glass (a camera beat on it) and **the control for it near her** (lit, in reach); Panther points it out first
+    (proposed): "There's a service opening above the glass — he can get round through it. The control's beside you." Then **show Ratwing
+    glance up at the gap and gather his feet under him** (a clear close shot) before Panther's "He's looking at the upper opening." /
+    "Can he get through?" / "Yes. Close it now." — so his explanation afterwards ("He looked at the gap. Then he gathered his feet under
+    him.") describes what the player just saw. Give the player a clear moment to press the control (a prompt on it, a short window).
+    List the new lines for Dan.
+
+16. **BIA_08, the quiet passage — explain why they'll lose contact, and add Dan's "paws" joke.**
+    (a) Nobody explains how they know or why. Before Panther's "I'll lose you beyond that door.", **Nela explains** (proposed; Dan to
+    confirm / edit, otherwise use): "The relay beyond this door sits inside the archive's shielding. Nothing reaches through it — not
+    our sensors, not our thoughts. Not even yours." Then Panther's line follows naturally (he heard her). Inside, show the shielding
+    (a shimmering threshold, the marker / link icon dropping out) so the silence is visibly caused.
+    (b) **The "paws" joke (Dan, 2026-11-21)** — after BIA_08_06 (7: "You did the pause."), insert:
+    | id | who | line | direction |
+    | --- | --- | --- | --- |
+    | `BIA_08_06a` | Panther | My… paws? | genuinely confused; cutaway: he looks down at his front paws, then lifts one |
+    | `BIA_08_06b` | 7 | Pause. The silence. | a laugh she can't hold in |
+    and change `BIA_08_07` to Panther — "Ah. An expressive pause." (composure returning; the paw set back down very neatly). Voice them
+    (Panther, 7 v3), add to the spec and the dialogue data.
+
+17. **Remove the big controls pop-up at the start of boss fights** (Dan: "really pointless … they just block the middle of the
+    screen"; e.g. "Dodge B · Jump A · Block LT · Strike X · Telekinesis RT …" in `MarsDirectorTemple.cs`, `VenusDirectorPart2.cs`, the
+    asteroid and mothership fights). The player already knows telekinesis and the fight buttons. Instead: **only fight-specific
+    actions get a short contextual prompt, at the moment they matter**, small and out of the centre (bottom of the screen, like other
+    prompts) — e.g. "Dodge (B)" next to the floor line as a swoop telegraphs the first time, "Seal the barrier (X)" at the control when
+    he's inside, "Close the partition (X)" at the station, "Takedown (Y)" when he's dazed — each shown the first few times, then not
+    again. The full button list stays on the Controls page in the pause menu. Apply to every boss fight (Venus, Mars, the asteroid,
+    the mothership) and any other centre-screen help box.
+
+18. **Throwable "junk" must belong where it is** (Dan: random junk lying around — old gears don't belong on the mothership). The
+    telekinesis debris was reused from the asteroid. Rule for every chapter: **throwables fit the place and look like they'd be
+    there**, and there's a reason they're loose:
+    - **The mothership (BIA_09 transfer chamber, anywhere else):** Biavian things — smooth white maintenance canisters / cargo pods,
+      cracked panels and fittings Ratwing tore loose (scattered where he forced the entrance — the reason they're on the floor), small
+      planters, light-globe housings, segments of a damaged partition; organic, pearly, Biavian style.
+    - **The asteroid:** gears, pipe sections, gauge plates (fine there). **Mars:** fallen stonework, Reptilian crates, broken barrier
+      pieces. **Venus:** stones, root chunks, broken pottery. **Europa** (underwater): ice chunks, broken machinery from Tunneler's base.
+    - Placed with intent (near where they'd have fallen / been left), not a random scatter; clearly loose so the player knows they can
+      be thrown. Check every arena and puzzle area in every chapter and list what each now uses.
+
+19. **The Ratwing fight (BIA_09) — make it understandable (Dan's play: his bar stalled at a phase mark and he didn't know why; he
+    didn't know what the partitions were).** Keep the design (stun → close in → strikes; partitions shrink his flight space; the
+    compartment trap at the end), but explain and signal everything:
+    - **Explain the partitions before the fight** — Nela (proposed; Dan to confirm / edit): "Our partitions can wall off sections of
+      this shaft. Close them and he'll have less and less room to fly — and nowhere left to run." (Panther, dry, optional: "A smaller
+      room. My favourite kind of hunt.")
+    - **Panther calls the stun:** the first times Ratwing is knocked down — "He's stunned — hit him now!" (variations, then fewer
+      once the player has it).
+    - **Panther calls the partition:** when his stamina reaches a phase mark — "Close the partition!" (or "Now the partition — the
+      station's lit!") **and a bright beam of light shines down on the station to use** (and the partition it closes glows along its
+      edge), so there's no doubt where to go. The bar visibly shows it's waiting (the mark pulses) — never a silent stall.
+    - **The final stage must not be a long wait:** by the last phase the closed partitions leave him **very little room** — his only
+      flight path leads past / into the compartment, so he goes there within a few seconds of fleeing (no circling around for ages).
+      Panther's "Wait…" / "Now." still carry the timing, with a short, clear window to seal it.
+    - Proof: a player-style run with the time between "he flees" and "sealed" logged (target well under ~15 s), and captures of the
+      beam over the station and the stun call.
+
+20. **Ratwing moves very stiffly.** He's the Round 4 Blender rig (Rigify + wing chains) driven mostly procedurally. Make him feel like
+    a fast, agile, wiry flier and a sly talker:
+    - **Body:** use real animation for the humanoid part — retarget existing clips through Humanoid where the rig allows (idle, talk,
+      point, hit, knocked down, get up — the reused tunneler / YBot / elarim set, damped to his gaunt build), with a hunched, twitchy
+      idle (head cocks, shoulders roll, claws flex) instead of a rigid stance. (Item 8's left-knee bug may be part of the stiffness —
+      check his knees too.)
+    - **Wings:** procedural but alive — overlapping motion and follow-through along each wing chain (the tips lag and settle), a real
+      flap cycle in flight (power stroke down, fold-and-lift up), glides with wings spread and small corrections, wings that fold
+      neatly when he lands / clings, a snap-open before a dive.
+    - **Flight:** banking into turns (body rolls with the turn), anticipation before a swoop (he rears back, gathers, then dives on an
+      arc), easing on landings (a crouch and wing-brace), never constant-speed straight lines.
+    - Talking: head and shoulders move with his voice's loudness (like Viper), a sneering head tilt on taunts.
+    Capture sequences of him idling, talking, swooping and landing.
+
+21. **The arc blades in the Ratwing fight — they shock him** (Dan). If she has them (the asteroid was done first), they're a clear,
+    fun part of this fight:
+    - **Blade hits shock him:** every arc-blade strike crackles with visible white electric arcs across his body and wings, a sharp
+      zap sound, and he **seizes / twitches** for a moment (stun-only — 7 never kills; against living beings the blades shock and stun,
+      they don't cut).
+    - **A counter for his swoops:** a well-timed blade slash as he dives past (a short window when he's close) **shocks him out of the
+      air** — he tumbles down, stunned (an alternative to the telekinesis knock-down, rewarding timing). Charged / combo hits add a
+      little more shock time.
+    - Make sure the blades are actually **drawn and usable** in the fight (draw on the button, the prompt the first time: "Arc blades
+      (…)" small at the bottom), and Panther or 7 can react once ("He doesn't like those." / "Good.").
+    - If she doesn't have them yet (mothership before the asteroid), the fight works fully without them (telekinesis + punches /
+      kicks) — no reference to blades.
+    Log blade hits / shock stuns in the proof run.
+
+22. **She doesn't actually touch the octahedron before the vision (BIA_11) — repeat of QF18 20** (the shared rune-touch → vision →
+    return sequence, a standing rule). Use the shared sequence here: a close insert of **her hand reaching out and her fingertips
+    meeting the octahedron's face** (hand IK onto the actual surface — no gap, no clipping), the rune answering (its glow surging, light
+    running up her hand and arm, her forehead energy point lighting), the push-in to her eyes, white bloom → `vision_06_mothership.mp4`,
+    and back: her hand still on it, then the insert of her fingers lifting away (the spec's "fingers lift slowly from the octahedron").
+    Say why Round 17 didn't use the shared sequence, and **check every rune-touch in every chapter** (Moon, Venus, Europa, Mars, the
+    asteroid, the mothership) uses it — a capture of the moment of contact for each.
+
+23. **The octahedron is missing from her records when they discuss Cattalus (BIA_13B / AST_11B).** With the mothership and the
+    asteroid both done she should have **six** — cube (Venus), dodecahedron (Moon), icosahedron (Europa), tetrahedron (Mars),
+    cuboctahedron (asteroid), **octahedron (mothership)** — but only the earlier five show. Fix the collection so **every awarded record
+    appears wherever the records are shown** (the chair arm / side table, the display when "the two records" are brought together, the
+    console's Log / Field Guide) right after it's awarded — driven by one saved list of collected records, not per-scene placement.
+    Check every combination of finishing order (mothership first / asteroid first) and every scene that shows them.
+
+24. **Old cutscenes popping up out of place when revisiting finished worlds** (Dan: after "Cattalus — coming soon" he set course to
+    other planets and got cutscenes that belong inside chapters he'd finished — ones added in later rounds, so his save had never
+    played them). Story scenes must **always make sense in context and never appear later when they shouldn't**:
+    - **A completed chapter's story never replays on a revisit.** Travelling to a finished world gives the short arrival (the
+      sacred-geometry passage → the world in the window, the vanish view if they talk about it) and free exploration / a "visited"
+      card — **no** arrival strategy talk, no first-visit scenes, no mid-chapter beats. (Replaying a chapter is only via the main
+      menu's chapter list / Scene Select.)
+    - **Save migration:** when a save from an older build has a chapter marked complete, mark **every** scene of that chapter as
+      seen — including scenes added by later rounds — so they never trigger after the fact.
+    - **Only progression-critical "due" beats may play later**, and only where they make sense (e.g. the combined-records discovery
+      MAR_13C → the mothership route, the Cattalus lead — at the console, per QF20); list them explicitly. Everything else is
+      chapter-scoped.
+    - Test with Dan-like saves: (a) every chapter finished in an older build, then visit each world from the star map; (b) finishing
+      chapters in different orders; nothing out of place plays. List what you found playing wrongly and why (was it the missing
+      "seen" flags from older saves, or a real trigger bug?).
+
 ## Quick fix QF21: Dan's Asteroid review (Dan, 2026-11-21) — done, status below; release 0.16.1
 Commit first. All standing rules + the repeat-item rule. Release **0.16.1**; "QF21 — status"; "For Dan to check (QF21)".
 Dan: "happy overall" with the Asteroid.

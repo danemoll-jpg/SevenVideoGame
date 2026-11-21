@@ -64,6 +64,10 @@ Three smaller orbs move around it on distinct orbital paths. One crosses the for
 | BIA_01_04 | Panther | Their mothership. Twenty-six miles across. | Looks up from the display. |
 | BIA_01_05 | 7 | Across? | Quiet, astonished laugh. |
 | BIA_01_06 | Panther | Mm-hmm. | Watches the approaching silhouette. |
+| BIA_01_06a | 7 | I thought their mothership was in the rings of Saturn. | Studies it; puzzled. *(Dan, 2026-11-21)* |
+| BIA_01_06b | Panther | That one is. This is a sister ship. | Matter-of-fact. |
+| BIA_01_06c | 7 | A sister ship. So… the aunt ship? | Deadpan, looking down at him. |
+| BIA_01_06d | Panther | That was a terrible joke. | A reluctant chuckle first. |
 | BIA_01_07 | 7 | And those three things moving around it? | Indicates the orbs. |
 | BIA_01_08 | Panther | Let’s wait to be invited before we find out. | Sits a little straighter. |
 
@@ -300,7 +304,9 @@ The third relay lies beyond a shielded passage that blocks external communicatio
 | BIA_08_04 | 7 | I know. I’ll be careful. | Softens. |
 | BIA_08_05 | Panther | I hadn’t said anything. | Gentle protest. |
 | BIA_08_06 | 7 | You did the pause. | Small laugh. |
-| BIA_08_07 | Panther | An expressive pause. | Sits beside the console. |
+| BIA_08_06a | Panther | My… paws? | Genuinely confused; looks down at his front paws, lifts one. *(Dan, 2026-11-21)* |
+| BIA_08_06b | 7 | Pause. The silence. | A laugh she can't hold in. |
+| BIA_08_07 | Panther | Ah. An expressive pause. | Composure returning; sets the paw down very neatly; sits beside the console. |
 | BIA_08_08 | 7 | See you on the other side. | Opens the door. |
 
 **Gameplay:** a short solo spatial puzzle. The absence of Panther’s voice is noticeable, but this is not a horror sequence.
@@ -572,6 +578,8 @@ If Biaveh is completed first, the equivalent combined-record discovery happens a
   script). When his stamina is spent he flees — **the script's stage three**: Panther reads him ("Don't follow him. Watch the
   opening on your right." … "Wait…" … "Now."), she seals the outer barrier once he's inside the empty compartment; barriers
   never close on his body or wings; a mistimed attempt resets that chance. Ratwing ends contained, alive.
+- **Lore (Dan, 2026-11-21):** the Biavians' main mothership is in the rings of Saturn (7 knew of it); the one at Veyra is a
+  **sister ship** (BIA_01_06a–d).
 - **The Guide is named Nela** (she introduces herself in BIA_02_01); the speaker column keeps "Guide", the line labels say "Nela".
 - **The Biavians / the Guide:** Kyle is sending art — the model waits for it. Everything else is prepared meanwhile.
 - **BIA_12 reunion:** keep it, straight from the beam-up, no gap (as the asteroid).
