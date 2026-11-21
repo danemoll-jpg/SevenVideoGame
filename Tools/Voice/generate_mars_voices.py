@@ -6,7 +6,7 @@ Reads Unity/Assets/Resources/Mars/mars_dialogue.json (make_mars_lines.py) and wr
 Unity/Assets/Resources/MarsVoice/<id>.mp3 (a missing file = subtitles only).
 Voices by name in Dan's library: "Seven" (eleven_v3; the spec's delivery directions become audio tags), "Cat" (Panther;
 multilingual v2, or v3 when the line has a direction), "Viper" (Dan's saved voice). The guard, the worker and the caretaker
-use PREMADE ElevenLabs voices picked here (Dan: no new saved voices), clearly different from each other:
+use Dan's SAVED voices "marsguard" / "marsworker" / "caretaker" (2026-11-21); if one is missing, a premade picked here:
   guard     - a firm, clipped middle-aged male voice (labels: male + middle aged / authoritative / deep / firm)
   worker    - a warm, earnest female voice (labels: female + young / warm / friendly)
   caretaker - an older, calm, considered male voice (labels: male + old / calm / wise / grandfather)
@@ -63,7 +63,10 @@ def main():
     allv = json.loads(req("/voices"))["voices"]
     voices = {v["name"].strip().lower(): v["voice_id"] for v in allv}
     taken = set()
+    saved = {v["name"].strip().lower(): v for v in allv if v.get("category") != "premade"}
     for role in ("guard", "worker", "caretaker"):
+        sv = saved.get({"guard": "marsguard", "worker": "marsworker", "caretaker": "caretaker"}[role])   # Dan's saved voices win
+        if sv: voices[role] = sv["voice_id"]; taken.add(sv["voice_id"]); print(f'{role}: saved voice "{sv["name"]}"'); continue
         v = pick(allv, role, taken)
         if v: voices[role] = v["voice_id"]; taken.add(v["voice_id"]); print(f'{role}: premade voice "{v["name"]}" {json.dumps(v.get("labels"))}')
     if "--list" in sys.argv: return

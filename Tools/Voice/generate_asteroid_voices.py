@@ -4,7 +4,7 @@ Usage (repo root): python Tools/Voice/generate_asteroid_voices.py [--force] [--o
 Key: ELEVENLABS_API_KEY environment variable only (never printed or written anywhere).
 Reads Unity/Assets/Resources/Asteroid/asteroid_dialogue.json (make_asteroid_lines.py) and writes
 Unity/Assets/Resources/AsteroidVoice/<id>.mp3 (a missing file = subtitles only).
-Voices: "Seven" (v3 + tags), "Cat" (Panther), "Machinist" (Dan's saved voice). The facility System announcer = a PREMADE
+Voices: "Seven" (v3 + tags), "Cat" (Panther), "Machinist" (Dan's saved voice). The facility System announcer = Dan's SAVED voice "system" (2026-11-21); if missing, a PREMADE
 voice picked here: a flat, clear, neutral recorded-announcement voice (labels: female + calm / clear / neutral / news).
 """
 import json, os, sys, urllib.request
@@ -54,7 +54,10 @@ def main():
     allv = json.loads(req("/voices"))["voices"]
     voices = {v["name"].strip().lower(): v["voice_id"] for v in allv}
     taken = set()
+    saved = {v["name"].strip().lower(): v for v in allv if v.get("category") != "premade"}
     for role in ("system",):
+        sv = saved.get("system")   # Dan's saved voice wins
+        if sv: voices[role] = sv["voice_id"]; taken.add(sv["voice_id"]); print(f'{role}: saved voice "{sv["name"]}"'); continue
         v = pick(allv, role, taken)
         if v: voices[role] = v["voice_id"]; taken.add(v["voice_id"]); print(f'{role}: premade voice "{v["name"]}" {json.dumps(v.get("labels"))}')
     if "--list" in sys.argv: return

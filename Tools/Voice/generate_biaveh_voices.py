@@ -5,7 +5,7 @@ Key: ELEVENLABS_API_KEY environment variable only (never printed or written anyw
 Reads Unity/Assets/Resources/Biaveh/biaveh_dialogue.json (make_biaveh_lines.py) and writes
 Unity/Assets/Resources/BiavehVoice/<id>.mp3 (a missing file = subtitles only).
 Voices: "Seven" (v3 + tags), "Cat" (Panther), "Ratwing" (Dan's saved voice; a premade sly male fallback if it is missing).
-Nela (the Guide) = a PREMADE calm, gentle, warm female voice (a saved "BiavianGuide" voice wins if Dan makes one), the same
+Nela (the Guide) = a PREMADE calm, gentle, warm female voice (Dan's saved "Nela" voice wins (2026-11-21)), the same
 voice for every Nela line. Each resident (resident1, resident2, ...) = its own premade voice. Nela's and the residents'
 speech is telepathic in game (Unity's treatment) - nothing special in the files.
 Premade picks: a preference list by name (stable between runs), then the label score as a fallback; never a voice another

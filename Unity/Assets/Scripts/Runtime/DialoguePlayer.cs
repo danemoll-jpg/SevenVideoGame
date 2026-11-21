@@ -123,7 +123,7 @@ namespace Seven
             StopReactionsUnder(line);
             Current = line;
             Played.Add(line.Id);
-            var src = line.IsCat ? (far ? _catFar : _cat) : _seven;
+            var src = line.IsCat ? (far ? _catFar : _cat) : line.Speaker == "nela" ? _cat : _seven;   // Nela (the mothership) speaks telepathically too: Panther's treatment
             UI?.ShowSubtitle(line.Label ?? (line.IsCat ? "Cat" : "7"), line.Text, line.IsCat, far);
             LineStarted?.Invoke(line);
             DialogueFraming.Check(line);          // QF18 (7): the speaker must be visible in a dialogue shot

@@ -117,7 +117,7 @@ namespace Seven
         {
             if (Nela != null) Nela.Voice = null; if (RRig != null) RRig.Voice = null;
             if (Crossers != null) foreach (var c in Crossers) if (c != null) c.Voice = null;
-            if (l.Speaker == "nela" && Nela != null && Flat(Nela.transform.position - P7).magnitude < 25f) Nela.Voice = VoiceSource();
+            if (l.Speaker == "nela" && Nela != null && Flat(Nela.transform.position - P7).magnitude < 25f) { var tg = GameObject.Find("Voice_Cat_Telepathy"); Nela.Voice = tg != null ? tg.GetComponent<AudioSource>() : VoiceSource(); }   // her lines play on the telepathy source
             if (l.Speaker == "ratwing" && RRig != null) RRig.Voice = VoiceSource();
             if (l.Speaker == "resident1" && Crossers != null && Crossers.Length > 0 && Crossers[0] != null) Crossers[0].Voice = VoiceSource();
         }

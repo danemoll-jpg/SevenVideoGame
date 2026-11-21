@@ -88,13 +88,10 @@ Preview text:
 You followed the old approach. Then someone still remembers the route. Our young travel through here. Our calls guide them. That is how much of our history travelled. One voice teaching another.
 ```
 
-## Scree worker — premade voice (picked by Code)
-One freed worker in Europa (Tunneler's base). Tired, wary, slowly finding courage. Speaks aloud.
-**No saved voice needed (Dan, 2026-11-19):** Dan has limited voice slots and the Scree aren't one character, so Code
-picks a suitable **premade** ElevenLabs voice through the API (`Tools/Voice/generate_voices.py`, key from
-`ELEVENLABS_API_KEY`) — tired, hoarse, mid-pitched — and generates the Scree lines with it. Don't create or save a new
-voice. Small differences between workers are fine. In Unity: lay Dan's existing Scree noise (from scene 1) under / just
-before each line and pitch-shift slightly so it reads as Scree.
+## Scree worker — voice name `ScreeWorker` (Europa)
+**Status: created and saved by Dan in ElevenLabs (2026-11-21)** - every Scree worker line re-voiced with it
+(`Tools/Voice/generate_europa_voices.py`; replaces the premade take). One freed worker in Europa (Tunneler's base). Tired,
+wary, slowly finding courage. Speaks aloud. In Unity: Dan's existing Scree noise is layered under each line (EuropaDirector).
 Description:
 ```
 A small, weary humanoid creature with a quiet, slightly hoarse mid-pitched voice, worn down by hard labor. Cautious and hesitant at first, speaking in short sentences, with a growing note of hope. Gender-neutral, a faint raspy texture, no accent, close to the microphone, studio-quality recording, no background noise.
@@ -140,8 +137,10 @@ Preview text:
 ```
 You have left the receiving route. State your function. Archive access is suspended. Restoration is ongoing. It must be ready when they return.
 ```
-The facility **System** announcer (AST_02): a premade ElevenLabs voice picked by Code (flat, recorded announcement) — no
-saved voice needed.
+## The facility System announcer — voice name `System` (asteroid)
+**Status: created and saved by Dan in ElevenLabs (2026-11-21)** - AST_02's System lines re-voiced with it
+(`Tools/Voice/generate_asteroid_voices.py`; replaces the premade take). Flat, recorded announcement; in Unity the chime, the
+machine's brass speaking-horns and grille pulse with the voice, and the steam whistle (AsteroidDirector / AstMaintBot).
 
 ## Ratwing — voice name `Ratwing` (Biaveh)
 Independent thief out to hold the Biavian archive for ransom (`Docs/CHAPTER_BIAVEH.md`). Sly, mocking, opportunistic — must
@@ -155,11 +154,11 @@ Preview text:
 They've found someone to run their errands. They can tidy up when we've agreed on a price. They seem very attached to it. Do you have any idea what's in there?
 ```
 
-## Nela, the Guide (Biavian) — a premade voice picked by Code (the mothership)
-**Dan (2026-11-21): no saved voice — Code picks a premade ElevenLabs voice through the API that fits the description below
-(calm, gentle, androgynous, airy) and uses that same voice for every Nela line.** If Dan saves a `BiavianGuide` voice later, use it.
-Telepathic (Panther's "inside your head" treatment in Unity). Calm, kind, courteous; quiet anger about the theft. Gender left
-open (the script keeps "Guide" as a role until Kyle's design / a name arrive).
+## Nela, the Guide (Biavian) — voice name `Nela` (the mothership)
+**Status: created and saved by Dan in ElevenLabs (2026-11-21)** - every Nela line re-voiced with it
+(`Tools/Voice/generate_biaveh_voices.py`; replaces the premade "Bella" take).
+Telepathic (Panther's "inside your head" treatment in Unity: her lines play on the telepathy source). Calm, kind, courteous;
+quiet anger about the theft.
 Description:
 ```
 A calm, gentle, androgynous voice with a soft, airy resonance, as if heard from inside your mind rather than through the air: warm, courteous and unhurried, clear and precise, with a quiet strength under the gentleness. Light, intimate delivery, close to the microphone, studio-quality recording, no background noise.
@@ -169,3 +168,7 @@ Preview text:
 Welcome. Follow the lights beneath you. Forgive me. Was that too sudden? I will announce myself next time. These are memories people chose to leave with us.
 ```
 Residents (BIA_03, BIA_06): premade voices picked by Code (telepathic treatment) — no saved voices needed.
+
+## Mars: the caretaker, the worker, the guard — voice names `Caretaker`, `MarsWorker`, `MarsGuard`
+**Status: created and saved by Dan in ElevenLabs (2026-11-21)** - every caretaker / worker / guard line re-voiced with them
+(`Tools/Voice/generate_mars_voices.py`; replaces the premade Bill / Sarah / Daniel takes). Each line keeps its direction.

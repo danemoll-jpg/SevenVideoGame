@@ -6,7 +6,7 @@ Reads Unity/Assets/Resources/Europa/europa_dialogue.json (make_europa_lines.py) 
 Unity/Assets/Resources/EuropaVoice/<id>.mp3 (a missing file = subtitles only).
 Voices by name in Dan's library: "Seven" (eleven_v3; the spec's delivery directions become audio tags), "Cat" (Panther;
 multilingual v2, or v3 when the line has a direction), "Keeper" (Dan's saved voice; slow, calm), "Tunneler" (his existing
-voice). The Scree worker uses a PREMADE ElevenLabs voice picked here (Dan, 2026-11-19: no new voice is created or saved):
+voice). The Scree worker = Dan's SAVED voice "screeworker" (2026-11-21); if it is missing, a PREMADE voice picked here:
 the first premade voice whose labels/description say hoarse / raspy / gravelly, else "Callum". Unity layers Dan's Scree
 noise under each Scree line and a soft whale call under each Keeper line (EuropaDirector).
 """
@@ -49,8 +49,9 @@ def main():
     d = json.load(open(os.path.join(ROOT, "Unity/Assets/Resources/Europa/europa_dialogue.json"), encoding="utf-8"))
     allv = json.loads(req("/voices"))["voices"]
     voices = {v["name"].strip().lower(): v["voice_id"] for v in allv}
-    sc = pick_scree(allv)
-    if sc: voices["scree"] = sc["voice_id"]; print(f'Scree worker: premade voice "{sc["name"]}" ({json.dumps(sc.get("labels"))})')
+    sv = next((v for v in allv if v.get("category") != "premade" and v["name"].strip().lower() == "screeworker"), None)   # Dan's saved voice wins
+    sc = sv or pick_scree(allv)
+    if sc: voices["scree"] = sc["voice_id"]; print(f'Scree worker: {"saved" if sv else "premade"} voice "{sc["name"]}"')
     os.makedirs(OUT, exist_ok=True)
     made, kept, waiting = 0, 0, []
     for l in d["lines"]:
