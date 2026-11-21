@@ -379,6 +379,13 @@ namespace Seven
         public void Use()
         {
             if (Current != State.Off || Seven == null) return;
+            // QF20 (1): the combined-records discovery can never be missed - due = she goes to the pilot's chair instead
+            var ab = Chapter1Aboard.I;
+            if (WorldFlags.CombinedDue && ab != null && ab.Active && ab.Explored && !ab.InGalleyScene)
+            {
+                CapLog("used while the combined-records discovery is due -> MAR_13C in the pilot's chair");
+                _busy++; StartCoroutine(DueDiscovery(ab)); return;
+            }
             Current = State.Entering;
             _ik = Seven.GetComponent<SevenTableIK>();
             if (_ik == null) _ik = Seven.gameObject.AddComponent<SevenTableIK>();
@@ -391,6 +398,8 @@ namespace Seven
             CapLog($"used: 7 at {Seven.transform.position}, stand spot {StandSpot.position}");
             StartCoroutine(StepIn());
         }
+
+        IEnumerator DueDiscovery(Chapter1Aboard ab) { yield return ab.CombinedAtConsole(); _busy--; }
 
         IEnumerator StepIn()
         {

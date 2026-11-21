@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -128,6 +128,8 @@ namespace Seven
         public static bool MarsPlay { get; private set; }
         /// <summary>QF16: -qf16check = aboard free exploration: every ambient cat moment, then the passage to each world + window views.</summary>
         public static bool QF16Check { get; private set; }
+        /// <summary>QF20 (1): Dan's save rebuilt on the test keys, free exploration aboard, one real X press at the console.</summary>
+        public static bool QF20Check { get; private set; }
         public static string MarsPick { get; private set; }
         public static string Routes { get; private set; }
         /// <summary>QF15 (2): -europawalltest = the automated wall test (EuropaWallTest; starts at checkpoint 2 unless -europacp is given).</summary>
@@ -138,6 +140,8 @@ namespace Seven
         public static bool BossCheck { get; private set; }
         /// <summary>QF17: -bossnovice = the pilot plays like a first-time player (the first-time fight length).</summary>
         public static bool BossNovice { get; private set; }
+        /// <summary>QF20 (3): the pilot lets her go down once mid-fight (the retry keeps his energy).</summary>
+        public static bool BossDownOnce { get; private set; }
         /// <summary>QF17 (5): -holdcheck = the bike-hold check only (the run stops once she is down the beam on the bike).</summary>
         public static bool HoldCheck { get; private set; }
         /// <summary>QF17 (4): -rampcheck = ride every ramp of the world with the riding camera (RampCheck).</summary>
@@ -202,12 +206,14 @@ namespace Seven
                 if (args[i] == "-mars") Mars = true;
                 if (args[i] == "-marsplay") { MarsPlay = true; Mars = true; }
                 if (args[i] == "-qf16check") { QF16Check = true; Chapter1 = true; }
+                if (args[i] == "-qf20check") { QF20Check = true; Chapter1 = true; }
                 if (args[i] == "-marspick" && i + 1 < args.Length) MarsPick = args[i + 1];
                 if (args[i] == "-routes" && i + 1 < args.Length) Routes = args[i + 1];
                 if (args[i] == "-europawalltest") EuropaWallTest = true;
                 if (args[i] == "-bossidle") { BossIdle = true; BossCheck = true; }
                 if (args[i] == "-bosscheck") BossCheck = true;
                 if (args[i] == "-bossnovice") BossNovice = true;
+                if (args[i] == "-bossdownonce") BossDownOnce = true;
                 if (args[i] == "-holdcheck") HoldCheck = true;
                 if (args[i] == "-rampcheck") RampCheck = true;
                 if (args[i] == "-landwalltest") LandWallTest = true;

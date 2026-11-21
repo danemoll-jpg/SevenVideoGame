@@ -61,7 +61,7 @@ namespace Seven
         public int Blocks { get; private set; }
         public int Dodges { get; private set; }
         /// <summary>Script (check run) presses: set to true for one frame.</summary>
-        [System.NonSerialized] public bool AutoAttack, AutoBlockHeld, AutoDodge, AutoTakedown;
+        [System.NonSerialized] public bool AutoAttack, AutoBlockHeld, AutoDodge, AutoTakedown, AutoKick;
         public event System.Action<string> FightEvent;
 
         // ---- feel (QF10)
@@ -78,11 +78,27 @@ namespace Seven
         static readonly float[] ComboHit = { 0.32f, 0.36f, 0.42f };
         // QF18 (19c): in a boss fight her full chain - jab, cross, hook, the MMA kick, the roundhouse (her Mixamo clips; hit
         // moments measured in Round 1: mma kick 0.40, roundhouse 0.43)
-        static readonly string[] BossChain = { "jab", "cross", "hook", "mma_kick", "roundhouse" };
-        static readonly float[] BossChainHit = { 0.32f, 0.36f, 0.42f, 0.40f, 0.43f };
-        string[] Chain => FightHop && HasState("mma_kick") && HasState("roundhouse") ? BossChain : Combo;
-        float[] ChainHit => Chain == BossChain ? BossChainHit : ComboHit;
-        int ChainMax => Chain.Length - 1;
+        // QF20 (2): in a boss fight the kicks have their own button - X = punches (jab -> cross -> hook, round again),
+        // Y = kicks (the MMA kick / the roundhouse, alternating; Y is the takedown only when he is dazed); mixing X and Y
+        // chains one combo (each blow cancels into the next after its active frame).
+        static readonly string[] Punches = { "jab", "cross", "hook" };
+        static readonly string[] KickSet = { "mma_kick", "roundhouse" };
+        static float HitOf(string s) => s == "jab" ? 0.32f : s == "cross" ? 0.36f : s == "hook" ? 0.42f : s == "mma_kick" ? 0.40f : s == "roundhouse" ? 0.43f : 0.4f;
+        public static bool IsKick(string s) => s == "mma_kick" || s == "roundhouse";
+        /// <summary>QF20: the boss kit (kicks on Y) - every boss fight; the chapter scenes all carry the kick states (build check).</summary>
+        bool BossKit => FightHop && HasState("mma_kick") && HasState("roundhouse");
+        int ChainMax => BossKit ? 99 : Combo.Length - 1;
+        int _punch, _kickN; string _curBlow = "jab"; float _curHit = 0.32f;
+        public int PunchesThrown { get; private set; }
+        public int KicksThrown { get; private set; }
+        /// <summary>The next blow of the chain: chained = it follows the last blow inside the combo window.</summary>
+        string PickBlow(string kind, bool chained)
+        {
+            if (!BossKit) { _combo = chained && _combo < Combo.Length - 1 ? _combo + 1 : 0; return Combo[_combo]; }
+            if (!chained) { _combo = 0; _punch = 0; _kickN = 0; } else _combo++;
+            if (kind == "kick") { KicksThrown++; return KickSet[_kickN++ % KickSet.Length]; }
+            PunchesThrown++; return Punches[_punch++ % Punches.Length];
+        }
         /// <summary>QF18 (19): the blow that is landing now (jab / cross / hook / mma_kick / roundhouse / finisher).</summary>
         public string LastBlow { get; private set; }
         /// <summary>QF18 (19a): optional lock-on (R3 / Tab) - off by default: in a boss fight she moves and faces freely.</summary>
@@ -113,12 +129,12 @@ namespace Seven
             Play("idle", 0.4f);
         }
         /// <summary>Back on her feet at the start of the fight (after being knocked down).</summary>
-        public void ResetFight() { Freeze(false); Act = FightAct.Idle; _hopY = 0f; _invulnUntil = Time.time + 1.5f; HitsTaken = 0; _combo = 0; _fightVel = Vector3.zero; _bufAtk = null; Play("fight_idle", 0.2f); }
+        public void ResetFight() { Freeze(false); Act = FightAct.Idle; _hopY = 0f; _invulnUntil = Time.time + 1.5f; HitsTaken = 0; _combo = 0; _punch = _kickN = 0; _fightVel = Vector3.zero; _bufAtk = null; Play("fight_idle", 0.2f); }
 
         bool AttackPressed => AutoAttack || !ScriptDriven && Input != null && Input.Attack.WasPressedThisFrame();
         bool BlockHeld => AutoBlockHeld || !ScriptDriven && Input != null && Input.Block.IsPressed();
         bool DodgePressed => AutoDodge || !ScriptDriven && Input != null && Input.Dodge.WasPressedThisFrame();
-        bool TakedownPressed => AutoTakedown || !ScriptDriven && Input != null && Input.Takedown.WasPressedThisFrame();
+        bool TakedownPressed => AutoTakedown || AutoKick || !ScriptDriven && Input != null && Input.Takedown.WasPressedThisFrame();
         bool HopPressed => AutoHop || !ScriptDriven && Input != null && Input.Jump.WasPressedThisFrame();
         bool TkPressed => AutoTk || !ScriptDriven && Input != null && Input.Telekinesis.WasPressedThisFrame();
         bool RunHeld => ScriptDriven ? ScriptRun : Input != null && Input.Run.IsPressed();
@@ -154,7 +170,10 @@ namespace Seven
             bool atk = AttackPressed, dodge = DodgePressed, takedown = TakedownPressed, block = BlockHeld;
             bool hop = FightHop && HopPressed, tk = TkAim != null && TkPressed, use = false;
             if (FightHop && !ScriptDriven && Input != null && Input.LockOn != null && Input.LockOn.WasPressedThisFrame()) { LockOn = !LockOn; FightEvent?.Invoke(LockOn ? "lock_on" : "lock_off"); }
-            AutoAttack = AutoDodge = AutoTakedown = AutoHop = AutoTk = false;
+            AutoAttack = AutoDodge = AutoTakedown = AutoHop = AutoTk = AutoKick = false;
+            // QF20 (2): Y in a boss fight = a kick, unless he is dazed and in reach (then it is the takedown)
+            bool kick = false;
+            if (takedown && BossKit && !(_target != null && _target.Dazed && Dist(_target) < 2.4f)) { takedown = false; kick = true; }
             // QF17: X next to a fight objective uses it instead of striking. QF19: in reach, X ALWAYS uses it - whatever she is
             // doing (mid-strike, blocking, dodging, reeling from a hit) - never a strike; a strike only with no objective in reach.
             string useLabel = FightUseLabel?.Invoke();
@@ -165,6 +184,7 @@ namespace Seven
             if (use) { Freeze(false); ToFightIdle(); FightUse?.Invoke(); FightEvent?.Invoke("use"); return; }
             if (atk) { _atkPressedAt = Time.time; _bufAtk = "attack"; }
             if (takedown) { _atkPressedAt = Time.time; _bufAtk = "takedown"; }
+            if (kick) { _atkPressedAt = Time.time; _bufAtk = "kick"; }
             if (dodge) _dodgePressedAt = Time.time;
             bool wantAtk = _bufAtk != null && Time.time - _atkPressedAt <= Buffer;
             bool wantDodge = Time.time - _dodgePressedAt <= Buffer;
@@ -201,7 +221,7 @@ namespace Seven
                 {
                     FaceTarget(FightTurn);
                     bool fin = State == "finisher";
-                    float hitAt = fin ? FinisherHit : ChainHit[Mathf.Clamp(_combo, 0, ChainMax)];
+                    float hitAt = fin ? FinisherHit : _curHit;
                     if (!_hitDone && Tn >= hitAt) { _hitDone = true; _activeAt = Time.time; LandBlow(fin); }
                     bool recovering = _hitDone && Time.time - _activeAt >= ChainAfter / AttackSpeed * 1.0f;
                     if (recovering && !fin)
@@ -211,7 +231,7 @@ namespace Seven
                         if (hop) { StartHop(); return; }
                         if (tk && TkAim() is Vector3 tkA) { StartThrow(tkA); return; }
                         if (block) { Timing("recovery->block"); StartBlock(); return; }
-                        if (wantAtk && _bufAtk == "attack" && _combo < ChainMax) { Timing("recovery->next"); _combo++; StartBlow(Chain[_combo]); return; }
+                        if (wantAtk && (_bufAtk == "attack" || _bufAtk == "kick" && BossKit) && _combo < ChainMax) { Timing("recovery->next"); StartBlow(PickBlow(_bufAtk, true)); return; }
                         if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
                     }
                     if (Tn >= (fin ? 0.92f : 0.72f)) { _combo = wantAtk && !fin ? _combo : 0; ToFightIdle(); break; }
@@ -235,7 +255,7 @@ namespace Seven
             if (block) { StartBlock(); return; }
             if (wantDodge) { StartDodge(); return; }
             if (wantAtk && _bufAtk == "takedown" && _target != null && _target.Dazed && Dist(_target) < 1.9f) { _combo = 0; StartBlow("finisher"); FightEvent?.Invoke("takedown"); return; }
-            if (wantAtk && _bufAtk == "attack") { _combo = Act == FightAct.Idle && Time.time - _activeAt < 0.6f && _combo < ChainMax ? _combo + 1 : 0; StartBlow(Chain[_combo]); return; }
+            if (wantAtk && (_bufAtk == "attack" || _bufAtk == "kick" && BossKit)) { StartBlow(PickBlow(_bufAtk, Act == FightAct.Idle && Time.time - _activeAt < 0.6f && _combo < ChainMax)); return; }
             var v = MoveInput(out _);
             // light movement: quick to start and stop, turns fast, no slide
             float spd = FightMoveSpeed * FightMoveScale * (FightMoveScale > 1f && RunHeld ? 1.5f : 1f);
@@ -348,7 +368,8 @@ namespace Seven
                 transform.rotation = Quaternion.AngleAxis(Mathf.Clamp(ang, -AssistCone, AssistCone), Vector3.up) * transform.rotation;
                 float d = to.magnitude; if (d > 1.15f && d < AssistRange) Slide(to.normalized, Mathf.Min(d - 1.05f, 1.2f), 0.12f);
             }
-            float hit = state == "finisher" ? FinisherHit : ChainHit[Mathf.Clamp(_combo, 0, ChainMax)];
+            float hit = state == "finisher" ? FinisherHit : HitOf(state);
+            _curBlow = state; _curHit = hit;
             Play(state, 0.05f, AttackSpeed, true, StartTn(state, hit));
             _blowStart = Time.time;
             FightEvent?.Invoke(state);
@@ -356,11 +377,11 @@ namespace Seven
 
         void LandBlow(bool takedown)
         {
-            LastBlow = takedown ? "finisher" : Chain[Mathf.Clamp(_combo, 0, ChainMax)];
+            LastBlow = takedown ? "finisher" : _curBlow;
             FightTimings.Add($"{LastBlow} button->active {Time.time - _blowPressed:0.000}s");
             if (_target == null) return;
             var to = Flat(_target.transform.position - transform.position);
-            if (to.magnitude > (Chain == BossChain && _combo >= 3 ? 2.2f : 1.9f)) return;      // whiffed - out of reach (kicks reach a little further)
+            if (to.magnitude > (IsKick(LastBlow) ? 2.2f : 1.9f)) return;      // whiffed - out of reach (kicks reach a little further)
             if (_target.TakeBlow(to.normalized, takedown))
             {
                 HitsLanded++; FightEvent?.Invoke(takedown ? "takedown_landed" : "hit");

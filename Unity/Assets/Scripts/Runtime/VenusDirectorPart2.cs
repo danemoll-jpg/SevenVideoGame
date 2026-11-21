@@ -309,10 +309,10 @@ namespace Seven
             _wmFight.Beat = WormmasterComesDown;
             _wmFight.UI = UI; _wmFight.AutoPilot = Auto;
             _wmFight.PhaseObjective = ph => ph == 0 ? "He fights from his dais - shut the north device (X) and the ledge device (RT from below) down under attack"
-                                         : ph == 1 ? "He comes down - make him waste an attack, throw root debris at him (RT); pull the signal crystal (RT)"
-                                         : "His signal fails - read him, dodge, counter: three more staggers";
+                                         : ph == 1 ? "He comes down - make him waste an attack, throw root debris at him (RT), then punch (X) and kick (Y); pull the signal crystal (RT)"
+                                         : "His signal fails - read him, dodge, stun him (RT), then punch (X) and kick (Y)";
             _encounterOn = true;
-            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Strike X  ·  Telekinesis RT: throw debris when he is open", 9f);
+            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Punch X  ·  Kick Y (mix them)  ·  Telekinesis RT: throw debris when he is open  ·  R3 / Tab: lock on", 9f);
             _wmFight.Begin(BossFight.Load("wormmaster"), Seven, Cam);
             StartCoroutine(FightPrompts());
             yield return _wmFight.Run(Objective);

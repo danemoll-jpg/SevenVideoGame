@@ -8,7 +8,7 @@ namespace Seven
     // QF17 — real boss fights (CLAUDE.md "Boss fights"). One system for every boss: the boss MOVES and ATTACKS her with
     // several telegraphed attacks (a clear wind-up: his pose, a sound, a white light, a white marker on the ground where it
     // will land); she answers with her own moves (dodge, block, jump, telekinesis, her strikes); hits knock her back and
-    // cost her; enough hits = she goes down -> a quick retry from the start of the current phase. 2-3 phases escalate
+    // cost her; enough hits = she goes down -> a quick retry - QF20: he keeps his energy and progress. 2-3 phases escalate
     // (faster, a new attack, the arena changes). He is beaten by countering him: an attack he wastes (dodged, blocked,
     // jumped, out of reach) leaves him OPEN for a moment - a telekinetic throw of debris then (or three strikes) STAGGERS
     // him; enough staggers end the phase; in the last one he is left dazed and her takedown (Y) pins him. Nonlethal for
@@ -109,6 +109,10 @@ namespace Seven
         // QF18 (19): his energy (1 = full) and where it went
         public float Energy { get; private set; } = 1f;
         public float DamageByStrikes, DamageByThrows; public int StunStrikes, OpenStrikes;
+        /// <summary>QF20 (2): her melee damage split - punches (X), kicks (Y), the finisher, and (Round 16) the arc blades.</summary>
+        public float DamageByPunches, DamageByKicks, DamageByBlades; public int KicksLanded, PunchesLanded, BladeHits;
+        /// <summary>QF20 (3): his energy just before she went down and just after the retry (must be identical).</summary>
+        public readonly List<string> RetryEnergy = new List<string>();
         public bool Stunned => State == St.Staggered;
         public float[] PhaseMarks { get { var m = new float[Def.phases.Length]; for (int i = 0; i < m.Length; i++) m[i] = Def.phases[i].endAt; return m; } }
         float _phaseFloor => P.endAt >= 0f ? P.endAt : Energy;
@@ -190,6 +194,7 @@ namespace Seven
         {
             Def = def; Seven = seven; Cam = cam; Active = this;
             Phase = 0; _phaseStaggers = 0; Over = false; Paused = false; Energy = 1f; _phaseStartEnergy = 1f; _endPending = false; DamageByStrikes = DamageByThrows = 0f; StunStrikes = OpenStrikes = 0;
+            DamageByPunches = DamageByKicks = DamageByBlades = 0f; KicksLanded = PunchesLanded = BladeHits = 0; RetryEnergy.Clear();
             FightStart = _phaseStart = Time.time; _next = Time.time + 2.0f;
             SetState(St.Idle, 0f);
             Seven.BeginFight();
@@ -207,7 +212,8 @@ namespace Seven
             Seven.FightEvent -= OnSeven; Seven.FightEvent += OnSeven;
         }
         int _herDodges, _herHops, _herBlocks, _herTk;
-        void OnSeven(string e) { if (e == "dodge") _herDodgeAt = Time.time; if (e == "hop") _herHopAt = Time.time; if (e == "dodge") _herDodges++; else if (e == "hop") _herHops++; else if (e == "block") _herBlocks++; else if (e == "tk") _herTk++; }
+        public int LockToggles;
+        void OnSeven(string e) { if (e == "lock_on" || e == "lock_off") { LockToggles++; Log($"boss {Def.id}: LOCK-ON (QF20) toggled {(e == "lock_on" ? "ON" : "OFF")} by a real R3 / Tab press"); } if (e == "dodge") _herDodgeAt = Time.time; if (e == "hop") _herHopAt = Time.time; if (e == "dodge") _herDodges++; else if (e == "hop") _herHops++; else if (e == "block") _herBlocks++; else if (e == "tk") _herTk++; }
         public void End()
         {
             UI?.HideBossBar();
@@ -224,8 +230,10 @@ namespace Seven
             var per = new List<string>(); foreach (var kv in AttackCount) per.Add($"{kv.Key} {kv.Value}");
             return $"BOSS {Def.id}: fight length {Mathf.FloorToInt(len / 60f)}:{len % 60f:00} ({len:0} s), attacks {Attacks} ({Attacks / min:0.0}/min: {string.Join(", ", per)}), her presses: dodge {_herDodges}, jump {_herHops}, block {_herBlocks}, telekinesis {_herTk}, hits she took {HitsOnHer}, she went down {Knockdowns}x, " +
                    $"answered: dodged {Dodged}, blocked {Blocked}, jumped {Jumped}, out of reach {OutOfReach}; telekinetic throws {Throws} (deflected {Deflected}), stuns {Staggers}, strikes landed {Strikes} ({StunStrikes} while stunned, {OpenStrikes} while open); " +
-                   $"DAMAGE (QF18): dealt by her strikes {DamageByStrikes * 100f:0}%, by throws {DamageByThrows * 100f:0}% of a full bar (a retried phase counts again) - melee {(DamageByStrikes + DamageByThrows > 0f ? DamageByStrikes / (DamageByStrikes + DamageByThrows) * 100f : 0f):0}% of the damage; energy left {Energy * 100f:0}%; phases: {string.Join(" | ", PhaseLog)}; " +
-                   $"X OBJECTIVES (QF19): the pilot pressed X {BossPilot.UsePresses}x at objectives, second presses {BossPilot.UseRepeats} (must be 0); X presses on the pad while an objective prompt showed {PadUsePresses}, went to a strike {PadUseToStrike} (must be 0)";
+                   $"DAMAGE (QF18): dealt by her strikes {DamageByStrikes * 100f:0}%, by throws {DamageByThrows * 100f:0}% of a full bar - melee {(DamageByStrikes + DamageByThrows > 0f ? DamageByStrikes / (DamageByStrikes + DamageByThrows) * 100f : 0f):0}% of the damage; energy left {Energy * 100f:0}%; " +
+                   $"MELEE (QF20): punches {PunchesLanded} landed = {DamageByPunches * 100f:0}%, kicks {KicksLanded} landed = {DamageByKicks * 100f:0}%{(BladeHits > 0 ? $", arc blades {BladeHits} = {DamageByBlades * 100f:0}%" : "")}; " +
+                   $"RETRY (QF20): {(RetryEnergy.Count == 0 ? "she never went down" : string.Join(", ", RetryEnergy))}; phases: {string.Join(" | ", PhaseLog)}; " +
+                   $"lock-on toggles (R3 / Tab) {LockToggles}; X OBJECTIVES (QF19): the pilot pressed X {BossPilot.UsePresses}x at objectives, second presses {BossPilot.UseRepeats} (must be 0); X presses on the pad while an objective prompt showed {PadUsePresses}, went to a strike {PadUseToStrike} (must be 0)";
         }
 
         // ---------------------------------------------------------------- the brain
@@ -560,18 +568,26 @@ namespace Seven
             if (State == St.Staggered || State == St.Dazed)
             {
                 Strikes++; StunStrikes++; AudioKit.Play("fight_hit", Centre, 0.9f, 0.06f);
-                if (State == St.Staggered) Damage(dmg, true, blow);
+                if (State == St.Staggered) Tally(blow, Damage(dmg, true, blow));
                 return true;
             }
             if (Open)
             {
                 Strikes++; OpenStrikes++; _openStrikes++; AudioKit.Play("fight_hit", Centre, 0.8f, 0.06f);
-                Damage(dmg * Def.openStrikeScale, true, blow + " (open)");
+                Tally(blow, Damage(dmg * Def.openStrikeScale, true, blow + " (open)"));
                 return true;
             }
             // not open: he turns the blow aside
             AudioKit.Play("fight_block", Centre, 0.7f, 0.06f);
             return false;
+        }
+
+        /// <summary>QF20 (2): who did the damage - punches, kicks (and the first kick that lands is captured), blades.</summary>
+        protected void Tally(string blow, float took)
+        {
+            if (ChapterSeven.IsKick(blow)) { KicksLanded++; DamageByKicks += took; if (DemoBoot.CaptureDir != null && Cap != null && !_shot.Contains("kick_hit_" + blow)) { _shot.Add("kick_hit_" + blow); StartCoroutine(Shoot($"boss_{Def.id}_kick_hit_{blow}", 0f)); } }
+            else if (blow != null && blow.StartsWith("blade")) { BladeHits++; DamageByBlades += took; }
+            else if (blow != "finisher") { PunchesLanded++; DamageByPunches += took; }
         }
 
         Vector3? TkAim()
@@ -646,9 +662,9 @@ namespace Seven
         bool _counter;
         /// <summary>QF18 (19c): energy goes down; at the phase's mark the phase ends (overkill never skips a phase); in the
         /// last phase at dazedAt he is dazed - the finisher / takedown.</summary>
-        void Damage(float d, bool melee, string how)
+        protected float Damage(float d, bool melee, string how)
         {
-            if (d <= 0f || Over) return;
+            if (d <= 0f || Over) return 0f;
             float floor = P.endAt >= 0f ? P.endAt : Energy;
             bool last = Phase >= Def.phases.Length - 1;
             if (last) floor = 0f;
@@ -659,6 +675,7 @@ namespace Seven
             if (DemoBoot.CaptureDir != null) Log($"boss {Def.id}: {how} -{took * 100f:0.0}% -> energy {Energy * 100f:0}%");
             if (!last && P.endAt >= 0f && Energy <= P.endAt + 1e-4f && ObjectiveDone) { _endPending = true; }
             if (last && Energy <= Def.dazedAt && State != St.Dazed) { _endPending = true; }
+            return took;
         }
         bool _endPending;
         /// <summary>The subclass calls this when an objective completes (phase.staggers = 0: the objective ends the phase).</summary>
@@ -692,16 +709,20 @@ namespace Seven
         }
         static string Clock(float s) => $"{Mathf.FloorToInt(s / 60f)}:{s % 60f:00}";
 
-        /// <summary>She went down: the director fades; this puts the phase back (her hits, his staggers in this phase).</summary>
+        /// <summary>She went down: the director fades; she is back on her feet with her own health full. QF20 (3, Dan): he
+        /// KEEPS the damage she did - his energy stays exactly where it was, the objectives already done stay done, his
+        /// stuns in this phase still count, the fight goes on in the phase he is in; he backs off to his side and gives her a
+        /// moment before he attacks again.</summary>
         public void Retry()
         {
             Knockdowns++;
+            float before = Energy;
             Markers.Hide(); _puddles.Clear(); Markers.ClearPuddles(); CageUntil = 0f; _comboNext = null;
-            _phaseStaggers = 0; Energy = _phaseStartEnergy; _endPending = false;      // QF18: the retry restores the energy the phase began with
-            ResetPhase();                                   // (Place puts her in free mode)
+            ResetPhase();                                   // positions only: he backs off to his side of the arena (Place puts her in free mode)
             Seven.BeginFight(); Seven.ResetFight(); ArmSeven();
-            SetState(St.Idle, 0f); _next = Time.time + 2.2f;
-            Log($"boss {Def.id}: she went down ({Knockdowns}x) - retry from the start of phase {Phase + 1}");
+            SetState(St.Idle, 0f); _next = Time.time + 2.6f;
+            RetryEnergy.Add($"down {Knockdowns}: his energy {before * 100f:0.0}% before -> {Energy * 100f:0.0}% after ({(Mathf.Approximately(before, Energy) ? "identical" : "CHANGED")}), phase {Phase + 1}");
+            Log($"boss {Def.id}: she went down ({Knockdowns}x) - she gets up, health full; he keeps his damage: energy {before * 100f:0.0}% -> {Energy * 100f:0.0}% (phase {Phase + 1}, stuns this phase {_phaseStaggers}, objectives kept)");
         }
 
         // ---------------------------------------------------------------- the director's loop
@@ -733,7 +754,7 @@ namespace Seven
                         yield break;
                     }
                     Paused = true; DownsThisPhase++;
-                    Log($"boss {Def.id}: she is down ({Seven.HitsTaken} hits) - the phase restarts");
+                    Log($"boss {Def.id}: she is down ({Seven.HitsTaken} hits) - she gets back up; he keeps his damage (QF20)");
                     if (DemoBoot.CaptureDir != null && Knockdowns == 0 && Cap != null) yield return Cap.Shot($"boss_{Def.id}_she_is_down");
                     for (float t = 0f; t < 0.9f; t += Time.deltaTime) yield return null;
                     if (UI != null) yield return UI.Fade(1f, 0.4f, 1f);
@@ -745,7 +766,7 @@ namespace Seven
                 }
                 if (DownsThisPhase >= 3 && !offered && !Paused && State != St.Dazed)
                 {
-                    offered = true; UI?.Hint("Y / Enter: skip this part of the fight", 8f);
+                    offered = true; UI?.Hint("View / Enter: skip this part of the fight", 8f);   // QF20: Y is the kick now
                     Log($"boss {Def.id}: SKIP OFFERED after 3 knockdowns in phase {Phase + 1} (fairness)");
                 }
                 if (offered && !Paused && State != St.Dazed && (SkipPressed() || AutoSkip)) { SkipTaken = true; offered = false; Log($"boss {Def.id}: phase {Phase + 1} skipped"); SkipObjectives(); StartCoroutine(NextPhase()); }
@@ -759,7 +780,7 @@ namespace Seven
         static bool SkipPressed()
         {
             var kb = UnityEngine.InputSystem.Keyboard.current; var gp = UnityEngine.InputSystem.Gamepad.current;
-            return (kb != null && kb.enterKey.wasPressedThisFrame) || (gp != null && gp.buttonNorth.wasPressedThisFrame);
+            return (kb != null && kb.enterKey.wasPressedThisFrame) || (gp != null && gp.selectButton.wasPressedThisFrame);
         }
 
         // ---------------------------------------------------------------- the fight camera: keep him in the picture

@@ -100,10 +100,10 @@ namespace Seven
             _viperFight.UI = UI; _viperFight.AutoPilot = Auto;
             _viperFight.Beat = ViperComesDown;
             _viperFight.PhaseObjective = ph => ph == 0 ? $"Shut down his two pylons (X)\nPylons {_viperFight.PylonsDown} / {ViperFight.Required}"
-                                            : ph == 1 ? "He hunts you - when he wastes an attack, stun him with debris (RT), then close in and fight (X)"
-                                            : "Enraged - dodge, stun him (RT), then hit him hard (X) until he falls";
+                                            : ph == 1 ? "He hunts you - when he wastes an attack, stun him with debris (RT), then close in: punch (X), kick (Y)"
+                                            : "Enraged - dodge, stun him (RT), then punch (X) and kick (Y) until he falls";
             yield return Cutscene(false);
-            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Strike X (keep pressing: a combo)  ·  Telekinesis RT: stun him when he is open  ·  R3 / Tab: lock on", 10f);
+            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Punch X  ·  Kick Y (mix them: a combo)  ·  Telekinesis RT: stun him when he is open  ·  R3 / Tab: lock on", 10f);
             _viperFight.Begin(BossFight.Load("viper"), Seven, Cam);
             StartCoroutine(FightPrompts(_viperFight));
             yield return _viperFight.Run(Objective);

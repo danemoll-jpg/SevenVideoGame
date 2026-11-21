@@ -43,14 +43,16 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
 - **The boss moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: his pose, a
   sound, a white light, a white marker on the ground where it lands) that she reads and answers with her own moves
   (**dodge, block, jump, telekinesis, her strikes**).
-- **She can lose:** hits knock her back and cost her; enough hits = she goes down → a quick retry from the start of the
-  current phase. Still nonlethal for everyone (7 never kills; the boss is subdued / pinned / contained, alive).
+- **She can lose:** hits knock her back and cost her; enough hits = she goes down → a quick retry. **The retry keeps his
+  energy and progress (QF20, Dan):** his bar stays exactly where it was, objectives done stay done, the fight goes on in
+  his current phase; she gets up with full health and he backs off for a moment. Still nonlethal for everyone (7 never
+  kills; the boss is subdued / pinned / contained, alive).
 - **2–3 phases that escalate** (faster, a new attack, the arena changes). Objectives (switches, pylons, devices) only
   *while* he is attacking — never the whole fight.
 - **He is beaten by her countering him — the loop (QF18, Dan's design):** an attack he wastes (dodged, blocked, jumped)
   leaves him open → **telekinesis only stuns** (a thrown object that hits = he is stunned ~3–4 s: reels, dazed sway, a
-  clear visual + sound) → **she closes in and fights hand to hand** (jab, cross, hook, MMA kick, roundhouse, the
-  finisher — her real strikes do the real damage) → he recovers and fights back, she backs off, dodges / blocks and sets
+  clear visual + sound) → **she closes in and fights hand to hand** (QF20: **X = punches** jab → cross → hook, **Y = kicks**
+  MMA kick / roundhouse alternating, mixing them chains one combo; the finisher — her real strikes do the real damage) → he recovers and fights back, she backs off, dodges / blocks and sets
   up the next stun. The last phase ends with the finisher → her takedown (Y / E) pins him. Never by flipping switches
   while he waits. Proof logs damage by strikes vs throws: **melee does most of the damage.**
 - **Energy bars:** the boss's bar on screen during the fight (top centre, his name, drains with her hits, a notch /
@@ -63,7 +65,8 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   which answers work). Dan's feedback = a number change there, no code.
 - **Proof every time** (a boss is not done without all four):
   (a) a player-style run that plays the fight → `BOSS <id>: fight length …, attacks N (X/min), hits she took, she went
-  down N×, dodged / blocked / jumped, throws, strikes, staggers; phases: …` in `capture_log.txt`;
+  down N×, dodged / blocked / jumped, throws, strikes, staggers; MELEE (QF20) punches / kicks (/ blades); RETRY (QF20)
+  energy before -> after; phases: …` in `capture_log.txt` (`-bossdownonce` = the pilot lets her go down once mid-fight);
   (b) the **idle test** `-bossidle` (nobody presses anything): `BOSS IDLE TEST (<id>): … knocked down after N s` — must be
   within ~60 s;
   (c) a capture sequence of the boss mid-attack (`boss_<id>_<attack>_telegraph / _active (+ _side)`, staggers);
@@ -381,7 +384,8 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–15 + QF1–QF19 complete (2026-11-20), release 0.15.4.** QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
+**Rounds 1–15 + QF1–QF20 complete (2026-11-20), release 0.15.5.** QF20 = the Biaveh discovery can't be missed, kicks on Y,
+bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
 energy bars, visions, holograms, window views, the two-level star map). QF17 = real boss fights (the "Boss fights" rule
 above: Viper and the Wormmaster rebuilt), the Mars architecture kit, the ramp cut-away rule, the bike-hold rule on every
@@ -675,7 +679,17 @@ scene (Round 10).
   - **Proof rule for any X objective:** the pilot (`BossPilot`) walks up until the prompt shows and presses the pad
     **once**; `X OBJECTIVES (QF19)` in the boss summary: second presses 0, pad presses that went to a strike 0. Never prove
     an objective by mashing or by calling its code.
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.4** (QF19 status in `TODO.md`).
+- **QF20 (release 0.15.5)** — the Biaveh discovery can't be missed + kicks + bosses keep their damage (status + "For Dan to
+  check (QF20)" in `TODO.md`):
+  - `WorldFlags.CombinedSeen` (set only at the END of MAR_13C + MAR_13B; the old `combined` flag was set halfway and shared by
+    every save path); due = Mars + Europa complete and not seen. Whenever due, X at the console plays it in the pilot's chair
+    (`ShipConsole.Use` → `Chapter1Aboard.CombinedAtConsole`), then the journey + TRV_AST; also at the second debrief.
+    Proof `-qf20check` (`QF20Check.cs`: Dan's save rebuilt on the test keys, one real X press) → `QF20 DISCOVERY CHECK: PASS`.
+  - Boss fights: **Y = kick** (`ChapterSevenFight.PickBlow`; takedown only when dazed), X = punches; build check
+    `KICK STATES CHECK (QF20 2)` on every chapter scene; Controls page "Fight:" rows; the fairness skip = View / Enter.
+  - `BossFight.Retry` keeps his energy / objectives / stuns. `ChapterInput.LockOn` is enabled now (it never was).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.5** (QF20 status in `TODO.md`).
+**Before: Dan plays 0.15.4** (QF19 status in `TODO.md`).
 **Before: Dan plays 0.15.3** (QF18 status in `TODO.md`).
 **Before: Dan plays 0.15.2** (QF17 status in `TODO.md`).
 **Before: Dan plays 0.15.1** (QF16 status in `TODO.md`).

@@ -265,11 +265,30 @@ namespace Seven
             yield return SayM("MAR_13C", 14, 14);                                // Mm-hmm.
             _ik.LookW = 0f;
             yield return Closing();
+            WorldFlags.MarkCombinedSeen();                                       // QF20 (1): seen to its end - only now
+            Log13($"MAR_13C seen to its end ({where}) - {WorldFlags.Summary()}");
             // the first journey toward Biaveh: the warp into its system, then a quiet navigation chime
             yield return TowardBiaveh();
             CutPilot("ots");
             yield return UI.Fade(0f, 0.9f);
             yield return TravelAsteroid();
+        }
+        /// <summary>QF20 (1): the discovery is due (Mars + Europa complete, MAR_13C never seen to its end - finished in an
+        /// older build, via Scene Select, a quit mid-scene ...) and she goes to the console: she takes the pilot's chair with
+        /// Panther instead, MAR_13C + MAR_13B play, then the journey toward Biaveh and TRV_AST after the warp.</summary>
+        public IEnumerator CombinedAtConsole()
+        {
+            ShipConsole.StoryLock = true; InGalleyScene = true;
+            Seven.Frozen = true; Seven.Cutscene = true; Director.Cam.Hold = true;
+            Director.ExtraPrompt = null; Objective(null);
+            Log13($"QF20: the combined-records discovery is due at the console - {WorldFlags.Summary()}");
+            yield return UI.Fade(1f, 0.8f);
+            yield return EnterStaging("MAR_13");
+            PlaceRecordsOnArmMars();
+            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
+            CutPilot("two");
+            yield return UI.Fade(0f, 1.0f);
+            yield return CombinedRecords("the console (due: both worlds complete, not seen yet)");
         }
         /// <summary>Biaveh chosen on the star map before the asteroid was found (e.g. after a Continue): the first journey -
         /// she takes the pilot's chair, Panther in her lap, the warp, then the asteroid discovery (TRV_AST).</summary>

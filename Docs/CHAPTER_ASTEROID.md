@@ -451,3 +451,29 @@ If the asteroid is completed first, play this shared discovery after Biaveh inst
 - **Rune shape:** open (cube Venus, dodecahedron Moon, icosahedron Europa, tetrahedron Mars).
 - **The Machinist's look:** Kyle's "Terminator-type" sketch (`Art/Reference/kyle_terminator_villain.jpg`) — the asteroid's
   assigned antagonist in the concept docs — fits him. Decision needed (asked in chat).
+
+## Proposed lines (Round 16, chat — for Dan to approve; every objective follows from a line or a sight)
+
+The script's tables plus these, voiced with the existing voices (`Tools/Voice/make_asteroid_lines.py` reads every row).
+
+| ID | Speaker | Dialogue | Performance |
+|---|---|---|---|
+| AST_02_P1 | Panther | That scanner won't take its eye off you. Give it something more interesting. The marked container. | Practical. |
+| AST_02_P2 | 7 | More interesting than me. Rude. | Quiet laugh. |
+| AST_02_P3 | System | Material registered. Proceed to sorting. | Flat recorded announcement. |
+| AST_02_P4 | Panther | The door is free. Go, before it remembers you. | Dry. |
+| AST_03_P1 | Panther | The temple signal is past the far end of that causeway. The rail junctions are set for the carriers, not for you. | Studying the system aboard. |
+| AST_03_P2 | 7 | Then I'll borrow them. | Light. |
+| AST_04_P1 | Panther | Seven. The maintenance opening, on your right. Now. | Urgent, controlled. |
+| AST_05_P1 | Panther | The bypass wants a maintenance tool. The locker beside the terminal. | Practical. |
+| AST_05_10 | Panther | You've done that before. | Quiet; she handles the blades as if familiar. |
+| AST_05_11 | 7 | I… don't know. | Looking at her hands. |
+| AST_05_P2 | Panther | Security machines. They want to escort you somewhere. | Wry. |
+| AST_05_P3 | 7 | I'll pass. | Under her breath. |
+| AST_05_P4 | Panther | The coolant valve is held by a powered clamp. Your new tool cuts power lines. | Practical. |
+| AST_07_P1 | Panther | When he overreaches, he's open. Stun him, then go for the glowing couplings. | Focused; the hint, only if needed. |
+| AST_08_05S | Panther | A bird? | Curious (she skipped the bird). |
+| AST_08_05T | 7 | A toy. Someone loved it. | Soft. |
+| AST_09_P1 | Machinist | Preservation mode. Essential systems only. | Even; the first slow word. |
+| AST_09_P2 | Machinist | Protected storage is open. | A small head adjustment. |
+| AST_09_P3 | Panther | I'm bringing the ship in. | Warm. |

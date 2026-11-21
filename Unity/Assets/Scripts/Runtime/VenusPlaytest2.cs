@@ -51,7 +51,7 @@ namespace Seven
             _lt = I.Block ? 1f : 0f; _rt = 0f;
             _held = I.Run ? 1u << (int)GamepadButton.LeftShoulder : 0u;
             if (I.Tk && _rtTap == 0) _rtTap = 5;
-            GamepadButton? b = I.Dodge ? GamepadButton.East : I.Hop ? GamepadButton.South : (I.Attack || I.Use) ? GamepadButton.West : I.Takedown ? GamepadButton.North : (GamepadButton?)null;
+            GamepadButton? b = I.Dodge ? GamepadButton.East : I.Hop ? GamepadButton.South : (I.Attack || I.Use) ? GamepadButton.West : (I.Takedown || I.Kick) ? GamepadButton.North : I.Skip ? GamepadButton.Select : (GamepadButton?)null;   // QF20: Y = kick / takedown, View = the fairness skip
             if (b.HasValue && (_phase == 0 || I.Dodge || I.Hop || I.Use /* QF19: an objective press is never dropped */)) { _presses.Clear(); _cur = b.Value; _phase = 1; }
         }
 

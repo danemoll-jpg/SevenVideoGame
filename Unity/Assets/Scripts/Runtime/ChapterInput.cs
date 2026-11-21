@@ -12,7 +12,7 @@ namespace Seven
     /// </summary>
     public class ChapterInput : MonoBehaviour
     {
-        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown, LockOn;
+        public InputAction Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown, LockOn, Blades;
 
         static InputAction Button(string name, params string[] paths)
         {
@@ -49,10 +49,12 @@ namespace Seven
             Takedown = Button("takedown", "<Gamepad>/buttonNorth", "<Keyboard>/e");
             LockOn = Button("lockon", "<Gamepad>/rightStickPress", "<Keyboard>/tab");     // QF18 (19a): optional lock-on in boss fights
             Restart = Button("restart", "<Gamepad>/dpad/down", "<Keyboard>/backspace");
+            Blades = Button("blades", "<Gamepad>/rightShoulder", "<Keyboard>/g");            // Round 16: draw / sheathe the arc blades
             foreach (var a in All()) a.Enable();
         }
 
-        InputAction[] All() => new[] { Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown };
+        // QF20: LockOn was created but never enabled (R3 / Tab did nothing in the boss fights) - every action is in this list now
+        InputAction[] All() => new[] { Move, Look, Recenter, Run, Interact, Telekinesis, Menu, Restart, Jump, Crouch, LetGo, Attack, Block, Dodge, Takedown, LockOn, Blades };
 
         void OnDestroy()
         {

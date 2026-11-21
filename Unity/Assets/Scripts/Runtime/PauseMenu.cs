@@ -308,6 +308,10 @@ namespace Seven
             ("Bike: steer · accelerate · brake", "Left stick · RT · LT", "A/D · W (or right mouse) · S / Q"),
             ("Bike under water: steer · dive / climb", "Left stick (push forward = dive)", "A/D · W dive / S climb"),
             ("Bike under water: forward · brake", "RT · LT", "Shift / right mouse · Q"),
+            // QF20 (2): fighting - kicks have their own button (in boss fights); mixing X and Y chains one combo
+            ("Fight: punch · kick (mix them: a combo)", "X · Y", "Left mouse / F · E"),
+            ("Fight: block · dodge · jump", "LT · B · A", "Q · Ctrl · Space"),
+            ("Fight: takedown (he is dazed) · lock-on", "Y · R3", "E · Tab"),
         };
 
         void BuildControlsTable()
@@ -327,7 +331,7 @@ namespace Seven
             Cell("", -150, 132, 16, head, 420); Cell("XBOX", 170, 132, 16, head, 230); Cell("KEYBOARD / MOUSE", 400, 132, 16, head, 260);
             for (int i = 0; i < ControlMap.Length; i++)
             {
-                float y = 108 - i * 21;
+                float y = 108 - i * Mathf.Min(21f, 306f / Mathf.Max(1, ControlMap.Length - 1));   // QF20: more rows - closer, same bottom
                 Cell(ControlMap[i].what, -150, y, 17, ink, 420);
                 Cell(ControlMap[i].pad, 170, y, 17, ink, 230);
                 Cell(ControlMap[i].keys, 400, y, 17, ink, 260);

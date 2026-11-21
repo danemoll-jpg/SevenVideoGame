@@ -142,6 +142,20 @@ namespace Seven.EditorTools
             var people = Object.FindObjectsByType<Animator>().Where(a => a.gameObject.activeInHierarchy && a.isHuman && a.name != "7" && a.GetComponentInParent<Seven.ChapterSeven>() == null).Select(a => a.transform).ToList();
             if (wg != null && wg.Shape == Seven.Ground.Shape.Zones) HolesCheck(scene, wg, z => z.Name != "Valley", prepare, restore, failHoles, 1f, people);
             else Log($"HOLES CHECK (QF18 13) {scene}: not a zone level - skipped");
+            KickStatesCheck(scene);
+        }
+
+        /// <summary>QF20 (2): 7's animator in every chapter scene carries the kick states (Y = kick in boss fights).</summary>
+        static void KickStatesCheck(string scene)
+        {
+            var seven = Object.FindObjectsByType<Seven.ChapterSeven>(FindObjectsInactive.Include).Select(c => c.GetComponentInChildren<Animator>(true)).FirstOrDefault(a => a != null);
+            if (seven == null) { Log($"KICK STATES CHECK (QF20 2) {scene}: no ChapterSeven - skipped"); return; }
+            var ac = seven.runtimeAnimatorController as UnityEditor.Animations.AnimatorController;
+            var names = ac != null ? ac.layers[0].stateMachine.states.Select(s => s.state.name).ToList() : new List<string>();
+            var missing = new[] { "jab", "cross", "hook", "mma_kick", "roundhouse", "finisher" }.Where(n => !names.Contains(n)).ToList();
+            var line = $"KICK STATES CHECK (QF20 2) {scene}: 7's animator '{(ac != null ? ac.name : "none")}' - " + (missing.Count == 0 ? "punches + mma_kick + roundhouse + finisher present" : "MISSING " + string.Join(", ", missing));
+            Log(line);
+            if (missing.Count > 0) BuildFailures.Add(line);
         }
     }
 }

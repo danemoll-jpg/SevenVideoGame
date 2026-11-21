@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF20: the Biaveh discovery always plays + kicks + bosses don't reset (Dan, 2026-11-20) — to do
+## Quick fix QF20: the Biaveh discovery always plays + kicks + bosses don't reset (Dan, 2026-11-20) — done, status below; release 0.15.5
 Commit first. Small, focused. Release **0.15.5**; "QF20 — status"; "For Dan to check (QF20)". Prove with real button presses.
 
 1. **The combined-records discovery (MAR_13C → Biaveh) must not be missable.** Dan finished both Mars and Europa and never saw
@@ -24,6 +24,79 @@ Commit first. Small, focused. Release **0.15.5**; "QF20 — status"; "For Dan to
    rule in `CLAUDE.md` ("retry from the start of the current phase" → "retry keeps his energy and progress"). Same for every
    boss (Wormmaster, the Machinist later). Proof: a run where she goes down mid-fight — his energy before and after the retry
    logged identical.
+
+
+## QF20 — status (2026-11-20): done, exe-verified off-screen; release 0.15.5 (`game-1505`, Latest, published)
+**1. Why the discovery never played for Dan (his real save).**
+- His registry save (`seven_routes`) reads `combined: true, asteroidFound: true`. Mars and Europa are both complete (`cp 9`).
+- His own `Player.log` from today (20:01) shows him finishing Mars (`Mars checkpoint -> 9`). The debrief then took the
+  "already played" branch: there is no "Biaveh unlocked" line. So the flag was already true **before** today's Mars run.
+- That run itself started with "Mars started fresh" (`Player-prev.log`). "Start Mars over" clears the Mars save but never
+  the shared route flags; only a new game does that.
+- The older logs are overwritten (Unity keeps two), so the moment the flag was set isn't recorded. The code shows how it
+  could be set without him seeing the scene:
+  - The flag was set **halfway** through MAR_13C (after line 5), not at its end.
+  - It lives in one shared key that Scene Select runs write too. His save shows he played Europa's ending from Scene Select
+    (`seven_europa_select`: EUR_17 done).
+  - Any earlier pass through a Mars / Europa ending (0.15.0–0.15.2, a Scene Select ending, a quit mid-scene) set it, and
+    from then on every debrief skipped it.
+
+**The fix:**
+- A second flag, `combinedSeen`, is set **only at the end** of MAR_13C + MAR_13B. "Due" now means both worlds complete and
+  not seen to the end.
+- Saves that have only the old flag (Dan's) play it once more.
+- Whenever it is due, X at the ship's console plays it in the pilot's chair instead of opening the console: MAR_13C +
+  MAR_13B, the journey toward Biaveh, TRV_AST, the star map choice (`ShipConsole.Use` → `Chapter1Aboard.CombinedAtConsole`).
+  It also still plays at the second debrief, as before.
+
+**2. Kicks.**
+- In boss fights **Y = kick** (the MMA kick and the roundhouse, alternating) and **X = punches** (jab → cross → hook, round
+  again). Y is the takedown only when he is dazed and in reach.
+- Mixing X and Y chains one combo: each blow cancels into the next after its active frame (`ChapterSevenFight.PickBlow`).
+- Every chapter scene's animator has the states: build check `KICK STATES CHECK (QF20 2)`, passing on Chapter1 / Venus /
+  Europa / Mars.
+- Hints, objectives and the Controls page show it (three new "Fight:" rows). The fairness skip moved from Y to View / Enter.
+
+**3. The boss keeps his damage.**
+- `BossFight.Retry` no longer restores the phase's starting energy. His energy, the objectives done and his stuns this
+  phase all stay.
+- She gets up with full health, and he backs off to his side with a 2.6 s pause before his next attack.
+- The summary logs `RETRY (QF20): his energy before -> after (identical)`.
+
+**Found on the way: the lock-on toggle never worked.**
+- `ChapterInput.LockOn` (R3 / Tab) was created but never enabled, so the toggle in the fight hints did nothing.
+- It is enabled now, and a real R3 press toggles it (`LOCK-ON (QF20) toggled ON / OFF` in the log).
+
+**Proof.** Real presses on a virtual gamepad on the real input actions. Every run was muted (peak 0), minimized and
+Below Normal.
+
+| run | result |
+|---|---|
+| `-qf20check` (new, `QF20Check.cs`): Dan's save rebuilt on the test keys, free exploration aboard | walks to the console, **one X press** → MAR_13C in the chair (all 14 lines) → MAR_13B → the journey → TRV_AST → d-pad + A, A on the star map → free exploration; flags `seen`, due `false`; a **second X** opens the console normally. `QF20 DISCOVERY CHECK: PASS` (twice; the first run's driver read the prompt text, which the galley-seat watcher rewrites in player-sim runs - it now reads the console's own "near") |
+| Viper `-marsplay -marscp 5 -bosscheck -bossdownonce` (the final 0.15.5 build) | R3 pressed → `LOCK-ON toggled ON`, again → `OFF`; `MELEE (QF20): punches 21 landed = 35 %, kicks 20 landed = 52 %`; she went down once mid-phase 2: `energy 83.9 % before -> 83.9 % after (identical)`; fight 1:20, pinned; X objectives 2 presses, 0 second presses, 0 to a strike |
+| Viper, earlier build (same fight code) | punches 37 % / kicks 49 %, retry 83.9 → 83.9 % (identical), fight 1:38 |
+| Wormmaster `-venusplay2 -bosscheck -bossdownonce` | punches 40 % / kicks 44 %; retry `84.6 % -> 84.6 % (identical)`; fight 2:19, pinned, containment |
+| captures | `boss_viper_kick_hit_mma_kick(_side)`, `boss_viper_kick_hit_roundhouse(_side)`, `boss_wormmaster_kick_hit_mma_kick(_side)` |
+
+Testing time ≈ 9 game-minutes (`-testspeed 2`).
+
+Not covered:
+- The QF20 check's screenshots: the player-sim aboard run had no capture camera attached. The driver now attaches one,
+  but that build is the next one.
+- The kick captures land at the kick's contact frame with her very close to him. The kick reads, but not as a full
+  leg extension; the hit moment is in `ChapterSevenFight.HitOf`.
+- A first-time-player (`-bossnovice`) fight length with the kept damage. Fights get shorter when a knockdown no longer
+  costs him nothing.
+
+## For Dan to check (QF20)
+1. Your own save: **Continue** (lands aboard), walk to the ship's console and press X. Instead of the console, she takes
+   the pilot's chair with Panther: MAR_13C, MAR_13B, the journey toward Biaveh, TRV_AST and the choice. After that the
+   console opens normally.
+2. Viper / the Wormmaster: when he's stunned, press **Y** for kicks (MMA kick, roundhouse) and **X** for punches, mixed
+   freely. Y is still the takedown when he's dazed at the end.
+3. Let him knock you down mid-fight: you get up with full health, and **his bar stays exactly where it was**.
+4. R3 / Tab in a boss fight: lock-on now toggles (it never did before).
+5. The fairness skip after three knockdowns is now **View / Enter** (Y is the kick).
 
 
 ## Round 16: Chapter "The Asteroid — the Great Machine Age", first playable pass (Dan, 2026-11-20) — to do, AFTER QF20

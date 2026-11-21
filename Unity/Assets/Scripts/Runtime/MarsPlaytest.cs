@@ -31,14 +31,19 @@ namespace Seven
         const GamepadButton X = GamepadButton.West, Y = GamepadButton.North, A = GamepadButton.South;
         uint _held; int _rtTap;
         /// <summary>QF17: a boss fight - the pilot's read of what a player sees, as pad input (timed presses go at once).</summary>
+        float _fightT0 = -1f; int _lockPresses;
         void FightPad(BossFight f, ChapterSeven s)
         {
+            // QF20: the lock-on toggle with the real R3 - on 3 s into the fight, off again 6 s later (a player trying it)
+            if (_fightT0 < 0f) _fightT0 = Time.time;
+            if (_lockPresses == 0 && Time.time - _fightT0 > 3f && _phase == 0) { _lockPresses++; _cur = GamepadButton.RightStick; _phase = 1; Log("R3 pressed (lock-on)"); return; }
+            if (_lockPresses == 1 && Time.time - _fightT0 > 9f && _phase == 0) { _lockPresses++; _cur = GamepadButton.RightStick; _phase = 1; Log("R3 pressed again (lock-on off)"); return; }
             var I = BossPilot.Think(f, s);
             _stick = BossPilot.Stick(I.Move);
             _lt = I.Block ? 1f : 0f; _rt = 0f; _holdRT = false;
             _held = I.Run ? 1u << (int)GamepadButton.LeftShoulder : 0u;
             if (I.Tk && _rtTap == 0) _rtTap = 5;
-            GamepadButton? b = I.Dodge ? GamepadButton.East : I.Hop ? GamepadButton.South : (I.Attack || I.Use) ? GamepadButton.West : I.Takedown ? GamepadButton.North : (GamepadButton?)null;
+            GamepadButton? b = I.Dodge ? GamepadButton.East : I.Hop ? GamepadButton.South : (I.Attack || I.Use) ? GamepadButton.West : (I.Takedown || I.Kick) ? GamepadButton.North : I.Skip ? GamepadButton.Select : (GamepadButton?)null;   // QF20: Y = kick / takedown, View = the fairness skip
             if (b.HasValue && (_phase == 0 || I.Dodge || I.Hop || I.Use /* QF19: an objective press is never dropped */)) { _presses.Clear(); _cur = b.Value; _phase = 1; }
         }
         void Press(GamepadButton b) { if (_presses.Count < 3) _presses.Enqueue(b); }

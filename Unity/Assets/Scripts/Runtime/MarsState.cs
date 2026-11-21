@@ -119,7 +119,7 @@ namespace Seven
     /// "seven_test_routes"), so they hold whichever chapter set them; a new game clears them.</summary>
     public static class WorldFlags
     {
-        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone; }
+        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen; }
         static string Key => DemoBoot.CaptureDir != null ? "seven_test_routes" : "seven_routes";
         static R Get() { var j = PlayerPrefs.GetString(Key, ""); return string.IsNullOrEmpty(j) ? new R() : JsonUtility.FromJson<R>(j) ?? new R(); }
         static void Put(R r) { PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
@@ -133,6 +133,13 @@ namespace Seven
             if (what == "europa") { EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c); }
             if (what == "none") { EuropaState.ClearTestSave(); EuropaState.ResetForTest(); }
             if (what == "mars") { MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true); }
+            // QF20 (1): Dan's 0.15.4 save - Mars + Europa complete, the old flags set (Biaveh unlocked, asteroid found), never seen
+            if (what == "dansave")
+            {
+                MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true);
+                EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c);
+                Put(new R { combined = true, asteroidFound = true });
+            }
             Debug.Log("[Seven] -routes " + what + ": " + Summary());
         }
         public static bool VenusDone => VenusState.SceneDone("VEN_C12");
@@ -141,8 +148,14 @@ namespace Seven
         /// <summary>MAR_13C has played (in the Mars debrief or at the end of Europa) - once.</summary>
         public static bool CombinedPlayed => Get().combined;
         public static void MarkCombined() { var r = Get(); r.combined = true; Put(r); }
-        /// <summary>The combined-record discovery is due: both worlds done and it has not played yet.</summary>
-        public static bool CombinedDue => MarsDone && EuropaDone && !CombinedPlayed;
+        /// <summary>QF20 (1): the discovery was SEEN to its end (MAR_13C through MAR_13B, set only then). The old flag
+        /// ("combined", Biaveh unlocked) was set halfway through the scene and is shared by every save path, so a save could
+        /// carry it without the player ever having watched it (Dan's 0.15.4 save) - saves without this flag play it once more.</summary>
+        public static bool CombinedSeen => Get().combinedSeen;
+        public static void MarkCombinedSeen() { var r = Get(); r.combined = true; r.combinedSeen = true; Put(r); }
+        /// <summary>The combined-record discovery is due: both worlds done and it has not been seen yet. QF20: it plays at
+        /// the second debrief AND, whenever it is due, the next time she is aboard and uses the console - never missable.</summary>
+        public static bool CombinedDue => MarsDone && EuropaDone && !CombinedSeen;
         public static bool BiavehUnlocked => CombinedPlayed;
         public static bool AsteroidFound => Get().asteroidFound;
         public static void MarkAsteroid() { var r = Get(); r.asteroidFound = true; Put(r); }
@@ -150,7 +163,7 @@ namespace Seven
         public static bool BiavehDone => Get().biavehDone;
         public static bool CattalusUnlocked => VenusDone && MarsDone && EuropaDone && AsteroidDone && BiavehDone;
         public static bool FinalMoonUnlocked => false;
-        public static string Summary() => $"world flags: Venus {VenusDone}, Mars {MarsDone}, Europa {EuropaDone}, combined records {(CombinedPlayed ? "played" : "not yet")} -> Biaveh {(BiavehUnlocked ? "unlocked" : "locked")}, asteroid {(AsteroidFound ? "found" : "undiscovered")}, Cattalus {(CattalusUnlocked ? "unlocked" : "locked")}, final Moon {(FinalMoonUnlocked ? "unlocked" : "locked")}";
+        public static string Summary() => $"world flags: Venus {VenusDone}, Mars {MarsDone}, Europa {EuropaDone}, combined records {(CombinedSeen ? "seen" : CombinedPlayed ? "flag set, never seen to the end" : "not yet")} -> Biaveh {(BiavehUnlocked ? "unlocked" : "locked")}, asteroid {(AsteroidFound ? "found" : "undiscovered")}, Cattalus {(CattalusUnlocked ? "unlocked" : "locked")}, final Moon {(FinalMoonUnlocked ? "unlocked" : "locked")}";
     }
     /// <summary>Round 15: Mars's dialogue (Resources/Mars/mars_dialogue.json, from Tools/Voice/make_mars_lines.py) and its
     /// voices (Resources/MarsVoice/&lt;id&gt;.mp3, Tools/Voice/generate_mars_voices.py).</summary>

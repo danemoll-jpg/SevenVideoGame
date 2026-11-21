@@ -124,7 +124,8 @@ namespace Seven
             if (DemoBoot.Gallery) GalleryTV.Preload();      // the gallery check run exercises the preload path
             if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }
             if (DemoBoot.Continue) { SaveGame.Continue(); return; }
-            if (DemoBoot.QF16Check) { Chapter1State.StartAt(Chapter1State.CpExplore); return; }   // QF16 check run: free exploration aboard
+            if (DemoBoot.QF16Check) { Chapter1State.StartAt(Chapter1State.CpExplore); return; }
+            if (DemoBoot.QF20Check) { WorldFlags.FakeForTest("dansave"); Chapter1State.StartAt(Chapter1State.CpExplore); return; }   // QF20 (1)   // QF16 check run: free exploration aboard
             if (DemoBoot.Chapter1Aboard) { Chapter1State.StartAboard(); return; }
             if (DemoBoot.EuropaCp >= 0 && DemoBoot.CaptureDir != null) { SceneManager.LoadScene("Europa"); return; }     // Round 14 check runs
             if (DemoBoot.MarsCp >= 0 && DemoBoot.CaptureDir != null) { if (DemoBoot.MarsCp >= MarsLayout.CpHome) { MarsState.ResetForTest(); MarsState.Fake(DemoBoot.MarsCp, true); MarsState.HomeAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else SceneManager.LoadScene("Mars"); return; }

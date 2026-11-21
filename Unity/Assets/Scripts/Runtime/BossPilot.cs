@@ -12,7 +12,11 @@ namespace Seven
     /// </summary>
     public static class BossPilot
     {
-        public struct Intent { public Vector3 Move; public bool Run, Dodge, Hop, Tk, Attack, Use, Takedown, Block, Skip; public string Why; }
+        public struct Intent { public Vector3 Move; public bool Run, Dodge, Hop, Tk, Attack, Kick, Use, Takedown, Block, Skip; public string Why; }
+        /// <summary>QF20 (2): a player mixes the buttons - X, X, Y, X, Y, Y ... (punch, punch, kick ...): one combo.</summary>
+        static int _seq;
+        static readonly bool[] KickAt = { false, false, true, false, true, true };
+        static void Strike(ref Intent I) { if (KickAt[_seq++ % KickAt.Length]) I.Kick = true; else I.Attack = true; }
         public static float Skill = 0.82f;
         /// <summary>-bossnovice: a first-time player - reads fewer attacks in time, misses many of his openings, keeps
         /// pressing on an objective while being shot at (the fight length a new player gets).</summary>
@@ -24,13 +28,17 @@ namespace Seven
         /// <summary>QF19 proof: X presses the pilot made at objectives, and how many were second presses (must be 0).</summary>
         public static int UsePresses, UseRepeats;
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+        static Vector3 boss0(BossFight f) => f.transform.position;
 
         public static Intent Think(BossFight f, ChapterSeven s)
         {
             var I = new Intent();
             if (f == null || s == null || f.Over || f.Paused || s.FightDown || DemoBoot.BossIdle) return I;
             // stuck: after five knockdowns in one part a player takes the offered skip (Y) - counted in the log
-            if (f.DownsThisPhase >= 5 && f.State != BossFight.St.Dazed) { I.Skip = true; I.Takedown = Time.frameCount % 20 < 3; I.Why = "takes the skip"; return I; }
+            if (f.DownsThisPhase >= 5 && f.State != BossFight.St.Dazed) { I.Skip = Time.frameCount % 20 < 3; I.Why = "takes the skip"; return I; }
+            // QF20 (3) proof (-bossdownonce): once, mid-fight (phase 2+, some damage done), the pilot stops answering him
+            // until she goes down - then plays on (his energy before / after the retry is logged)
+            if (DemoBoot.BossDownOnce && f.Knockdowns == 0 && f.Phase >= 1 && f.Energy < 0.85f && f.State != BossFight.St.Dazed) { I.Move = Flat(boss0(f) - s.transform.position).normalized * 0.3f; I.Why = "lets him hit her (the retry test)"; return I; }
             var her = s.transform.position; var boss = f.transform.position;
             var toB = Flat(boss - her); float d = toB.magnitude; var toBn = d > 0.01f ? toB / d : Vector3.forward;
 
@@ -97,7 +105,7 @@ namespace Seven
             {
                 I.Why = "strikes while he reels";
                 if (d > 1.5f) { I.Move = toBn; I.Run = true; }
-                else if (Time.time >= _nextStrike) { I.Attack = true; _nextStrike = Time.time + 0.28f; }
+                else if (Time.time >= _nextStrike) { Strike(ref I); _nextStrike = Time.time + 0.28f; }
                 return I;
             }
             // 6) open: the telekinetic throw (debris in reach), else close in for three strikes
@@ -111,7 +119,7 @@ namespace Seven
                 if (f.DebrisNear && Time.time - _tkAt > 1.2f) { I.Tk = true; _tkAt = Time.time; I.Why = "he is open - throw"; return I; }
                 var deb = f.NearestDebrisAt;
                 if (deb.HasValue && Flat(deb.Value - her).magnitude < 9f && Flat(deb.Value - her).magnitude > f.Def.tkRange - 1f) { I.Move = Flat(deb.Value - her).normalized; I.Run = true; I.Why = "toward debris"; return I; }
-                if (d < 1.6f && Time.time >= _nextStrike) { I.Attack = true; _nextStrike = Time.time + 0.28f; I.Why = "strike while open"; return I; }
+                if (d < 1.6f && Time.time >= _nextStrike) { Strike(ref I); _nextStrike = Time.time + 0.28f; I.Why = "strike while open"; return I; }
                 if (d < 6f) { I.Move = toBn; I.Run = true; I.Why = "close in while open"; return I; }
             }
             // 7) an objective of this phase (a pylon, a device)
@@ -151,7 +159,7 @@ namespace Seven
             s.ScriptDriven = true;
             s.ScriptMove = I.Move; s.ScriptRun = I.Run;
             if (I.Dodge) s.AutoDodge = true; if (I.Hop) s.AutoHop = true; if (I.Tk) s.AutoTk = true;
-            if (I.Attack) s.AutoAttack = true; if (I.Takedown) s.AutoTakedown = true; if (I.Use) s.AutoUse = true;
+            if (I.Attack) s.AutoAttack = true; if (I.Kick) s.AutoKick = true; if (I.Takedown) s.AutoTakedown = true; if (I.Use) s.AutoUse = true;
             s.AutoBlockHeld = I.Block;
         }
 

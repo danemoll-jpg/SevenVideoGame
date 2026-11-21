@@ -146,7 +146,36 @@ SFX = [
     ("mars_control_on", "An ancient control mechanism engaging: a deep stone clunk, then a resonant rising tone.", 2, False, "Mars: a control / relay restored"),
     ("mars_restraint", "A containment field closing around someone: soft electric shimmer tightening into a steady quiet hum.", 2.5, False, "Mars: Viper is contained"),
     ("mars_vision_stone", "Soft stone grinding slowly on stone, a gentle distant wind, very quiet, no music.", 12, False, "Mars: the vision (its video is nearly silent)"),
-    ("mars_transport_hum", "A heavy cargo hover-transport moving slowly, low steady engine hum with a soft whine.", 6, True, "Mars: the supply transport")
+    ("mars_transport_hum", "A heavy cargo hover-transport moving slowly, low steady engine hum with a soft whine.", 6, True, "Mars: the supply transport"),
+    # Round 16 - the asteroid, the Great Machine Age (riveted steam-age machinery)
+    ("ast_amb_factory", "A vast enclosed factory cavern full of old steam-age machinery working on its own: rhythmic pistons, turning gear wheels, distant hissing steam, conveyors rattling, deep metallic echo, no people.", 20, True, "Asteroid: the city that still works (the cavern)"),
+    ("ast_amb_quiet", "A vast metal cavern almost silent after machinery has stopped: a faint low electrical hum, a slow drip, distant settling metal ticks.", 20, True, "Asteroid: preservation mode (the cavern falls quiet)"),
+    ("ast_steam_hiss", "A short strong burst of steam venting from a pressure valve, hiss fading.", 1.5, False, "Asteroid: steam vents, machines venting"),
+    ("ast_conveyor", "A heavy industrial conveyor belt running steadily, rollers clattering, chain links ticking.", 8, True, "Asteroid: the receiving conveyor, the archive conveyor"),
+    ("ast_rail_carrier", "A suspended rail carrier gliding past overhead on a steel rail, rolling wheels and a soft mechanical whir, passing by.", 4, False, "Asteroid: the rail carriers in the cavern"),
+    ("ast_junction_turn", "A huge riveted steel turntable rotating on its bearing, deep grinding rumble, gears engaging, then a heavy locking clank.", 4, False, "Asteroid: a rail junction aligning (AST_03)"),
+    ("ast_route_lights", "A row of electric route lamps switching on one after another down a long line, soft relay clicks and a faint rising hum.", 2.5, False, "Asteroid: the route lights run ahead"),
+    ("ast_scanner", "A mechanical scanner arm humming while it scans, a soft oscillating electronic tone and small servo ticks.", 4, True, "Asteroid: the receiving scanner"),
+    ("ast_scanner_turn", "A heavy mechanical arm swivelling on its joint, servo whine and a clunk as it stops.", 1.5, False, "Asteroid: the scanner redirected (telekinesis)"),
+    ("ast_door_manual", "A large manual industrial door wheel being turned, ratchet clicks, then a heavy shutter rolling up.", 3, False, "Asteroid: the service entrance opens"),
+    ("ast_pressurize", "A sealed metal chamber pressurizing: rising air rush, valves hissing, a soft final clunk.", 3, False, "Asteroid: the receiving chamber pressurizes"),
+    ("ast_servo_heavy", "A huge machine's joint moving: deep hydraulic servo whine with metallic creak, precise and controlled.", 2, False, "Asteroid: the Machinist's servos"),
+    ("ast_servo_small", "A small machine's servo motors whirring and ticking briefly.", 1, False, "Asteroid: the maintenance machine, the security machines"),
+    ("ast_cutter", "A large industrial cutting machine slicing metal plate: grinding, high metallic scream, sparks crackling.", 4, False, "Asteroid: the cutting mechanism (an archive panel)"),
+    ("ast_shutters", "Heavy steel security shutters descending one after another, rumbling rollers and loud locking thuds.", 4, False, "Asteroid: the hall's security shutters close (AST_04)"),
+    ("ast_alarm", "A low old-fashioned mechanical alarm horn sounding twice in a big metal hall, echoing.", 2.5, False, "Asteroid: the hall seals (AST_04)"),
+    ("ast_static", "A radio communicator link breaking up: crackling static, distorted fragments, then dropping into silence.", 3, False, "Asteroid: the lost connection (AST_06)"),
+    ("ast_platform_retract", "A heavy metal platform suddenly retracting on rails with a loud clank and a scraping slide.", 1.5, False, "Asteroid: the platform retracts (AST_06)"),
+    ("ast_clamp", "A massive mechanical clamp slamming shut on steel: hydraulic hiss and a deep, final clang.", 2, False, "Asteroid: a service-station clamp locks a tool arm (AST_07)"),
+    ("ast_cradle", "A large maintenance cradle closing its padded arms around a machine: servo whir, soft heavy locking clunks.", 3, False, "Asteroid: the cradle immobilizes the Machinist (AST_07)"),
+    ("ast_blade_draw", "Two blades of energy igniting: a soft rising electric hum with a ribbon-like shimmer.", 1.2, False, "Asteroid: 7 draws the arc blades"),
+    ("ast_blade_sheath", "Two energy blades switching off: a soft descending electric hum fading.", 1, False, "Asteroid: 7 sheathes the arc blades"),
+    ("ast_blade_swing", "A quick swish of a humming energy blade through the air.", 0.6, False, "Asteroid: an arc blade swing"),
+    ("ast_blade_hit", "An energy blade cutting a power line: a sharp electric crack, sparks fizzing, a short power-down whine.", 1.2, False, "Asteroid: an arc blade severs a power coupling / line"),
+    ("ast_power_down", "A large machine losing power: lights buzzing out, a long descending electric whine, motors winding down.", 3, False, "Asteroid: a machine's power severed, preservation mode"),
+    ("ast_coolant", "Coolant rushing through big pipes, a deep liquid flow, valves opening, steam dying down.", 4, False, "Asteroid: the cooling control (AST_05)"),
+    ("ast_bird_chirp", "A small clockwork toy bird: a tiny wind-up ratchet, one uneven mechanical chirp, and a little tin wing flap.", 2.5, False, "Asteroid: the mechanical bird (AST_03_08; the vision)"),
+    ("ast_vault_open", "A heavy protected storage vault unlocking: bolts withdrawing one after another, a big door swinging open with a deep groan.", 4, False, "Asteroid: protected storage opens (AST_09)")
 ]
 
 
