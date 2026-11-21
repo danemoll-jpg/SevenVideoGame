@@ -414,6 +414,30 @@ If the asteroid is completed first, play this shared discovery after Biaveh inst
 
 ---
 
+## Decisions (Dan, 2026-11-20)
+
+- **The Machinist's look:** Kyle's "Terminator-type" sketch (`Art/Reference/kyle_terminator_villain.jpg`), **adapted**: no
+  cape; the arm cannon becomes a **heavy maintenance tool arm** (cutter / clamp). Riveted steam-age machine, narrow dome
+  helmet with a slit visor, flared collar with two exhaust stacks, glowing round chest core, belt of gauges and canisters,
+  the front tabard as a stiff riveted plate with glyphs and the crescent emblem, piston-jointed legs.
+- **Rune: cuboctahedron** (squares and triangles around one centre — "vector equilibrium"), generated in code like the others.
+- **AST_10 reunion: keep it, but no gap / lock-up** — cut straight from the beam-up into it (no walking, no waiting), a few
+  seconds, then into the chair scene.
+- **The fight + a new weapon (Dan: "earlier we discussed an energy weapon … kind of like a light saber but not quite"):**
+  7 gets **arc blades** here — chat's proposal, Dan to confirm the details:
+  - a pair of **curved, crescent-shaped blades of white light** (Kyle's sketch `kyle_7_blades_sketch.jpg`: 7 with two long
+    curved blades crossed behind her), flickering / ribbon-like, a soft hum — not straight lightsabers;
+  - the Machinists' **repair tools for cutting and re-joining energy lines**: against machines they sever power and short
+    out systems; against living beings they only **stun** (7 never kills);
+  - found in **AST_05**: a sealed maintenance locker by the terminal; she handles them as if familiar. Proposed lines:
+    `AST_05_10` Panther — "You've done that before." / `AST_05_11` 7 — "I… don't know." (looking at her hands);
+  - **the Machinist fight** follows the "Boss fights" rule: telekinesis to stun him (throw scrap / cargo) → close in →
+    the arc blades on his exposed **power couplings** (disabling, not destroying) → his energy bar drains; he recovers and
+    attacks (tool-arm swings, clamps, conveyor lanes, his restraint attempts); the three service-station clamps can lock a
+    tool arm at the end of each phase; the maintenance cradle immobilizes him at the end (AST_07_14 / 15). Panther's
+    "enormous arm" lines stay;
+  - she keeps the blades for later chapters (her kit grows).
+
 ## Notes from the chat (2026-11-20) — standing rules this script meets or needs to be adjusted for
 
 - **AST_02 — the bike:** the script has the beam lowering 7 *and the bike*. Saucer rule (Dan, 2026-11-19): **the bike always

@@ -129,6 +129,7 @@ Someone who understands what happens when we become careless. Then they can acce
 ```
 
 ## The Machinist — voice name `Machinist` (asteroid)
+**Status: created and saved by Dan in ElevenLabs (2026-11-20).**
 The asteroid city's last caretaker (`Docs/CHAPTER_ASTEROID.md`): not evil — dutiful, literal, certain; a hint of
 something almost sad under the precision. No mouth: the visor slit glows with his voice.
 Description (main pick):

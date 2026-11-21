@@ -1,6 +1,107 @@
 # Active Development Plan — 7: The Observer
 
-## Side task S3: the Machinist ready for Mixamo (Dan, 2026-11-20) — DONE (export ready for Dan's Mixamo upload)
+## Quick fix QF20: the Biaveh discovery always plays + kicks + bosses don't reset (Dan, 2026-11-20) — to do
+Commit first. Small, focused. Release **0.15.5**; "QF20 — status"; "For Dan to check (QF20)". Prove with real button presses.
+
+1. **The combined-records discovery (MAR_13C → Biaveh) must not be missable.** Dan finished both Mars and Europa and never saw
+   it. Today it plays only at the debrief of whichever world is finished second (`WorldFlags.CombinedDue` in
+   `Chapter1AboardMars.cs` / `Chapter1AboardEuropa.cs`), so finishing one in an older build, via Scene Select, or any other path
+   skips it. Fix: **whenever both are complete and it hasn't played** (`CombinedDue`), play MAR_13C + MAR_13B the next time she
+   is aboard and goes to the console / pilot's chair (and at the second debrief as now), then the journey toward Biaveh with
+   TRV_AST after the warp. Also check Dan's real save (`seven_mars` / `seven_europa` flags) to see why it didn't trigger, and
+   say. The asteroid stays undiscovered until TRV_AST.
+2. **Kicks in boss fights.** In the Viper fight Dan only gets punches. QF18 put the MMA kick and the roundhouse at the 4th–5th
+   press of the X chain, and only if the scene's animator has those states (`ChapterSevenFight.Chain`: `FightHop &&
+   HasState("mma_kick") && HasState("roundhouse")`) — a 3–4 s stun rarely reaches them, and Mars may lack the states. Fix:
+   **kicks get their own button in boss fights — Y = kick** (alternating MMA kick / roundhouse; Y is still the takedown when
+   he's dazed), X = punches (jab → cross → hook); mixing X and Y chains combos. Every chapter scene's animator has the kick
+   states (build check). Update the controls hint / Controls page. Same in the Wormmaster fight. Proof: a player-style Viper
+   fight log showing kicks landing (damage by punches vs kicks), with captures of a kick hitting him.
+3. **The boss keeps the damage you've done when she goes down** (Dan: "I didn't like how Viper reset to half health every time
+   I 'died' — let's make it so he doesn't reset"). When 7 is knocked out and retries, **the boss's energy stays exactly where it
+   was** (no refill to the phase's start), the pylons / objectives already done stay done, and the fight resumes in the phase
+   he's in; she gets back up with her own health full, a moment to recover (he backs off briefly). Change the "Boss fights"
+   rule in `CLAUDE.md` ("retry from the start of the current phase" → "retry keeps his energy and progress"). Same for every
+   boss (Wormmaster, the Machinist later). Proof: a run where she goes down mid-fight — his energy before and after the retry
+   logged identical.
+
+
+## Round 16: Chapter "The Asteroid — the Great Machine Age", first playable pass (Dan, 2026-11-20) — to do, AFTER QF20
+Commit a checkpoint first. If Dan is away, **never stop to ask**: make the most reasonable call, list it under "Round 16 —
+decisions made". **All standing rules from `CLAUDE.md` apply from the first line** — monochrome + Kyle's fog / glow (but
+readable: thin the fog around the action), non-sexual, 7 never kills, the one saucer prefab (bike always via the bike hold,
+beam only for 7 / Panther), the fast bike, one smooth riding camera, complete collision on land and on foot, the holes and
+z-fighting build checks, no plain boxes, show-don't-caption, objectives come from the story, no filler tasks, characters shown
+talking have lines, every dialogue shot shows the speaker, hand IK released, the boss-fight rule (attacks, can lose,
+**telekinesis to stun → close in → strikes, energy bars, the boss keeps his damage on retry**), the shared rune-touch → vision
+sequence, the staging variety + Panther's cat moments aboard. **Check each against your own captures before calling it done
+— Dan has had to send back every chapter for these; this one should arrive clean.** Release **0.16.0**; "Round 16 — status";
+"For Dan to check (Round 16)".
+
+**The spec: `Docs/CHAPTER_ASTEROID.md`** (Dan's script AST_01–AST_11 + implementation notes + **"Decisions (Dan, 2026-11-20)"**
++ the chat's notes). Read the Decisions section first.
+
+**Everything Dan made for it is in the repo:**
+- **The Machinist:** Kyle's sketch `Art/Reference/kyle_terminator_villain.jpg` (adapted: no cape; the arm cannon → a maintenance
+  claw / cutter arm), reference `machinist_ref_front.png`, Tripo `Art/Source/machinist/machinist_v1.glb`, **rigged body
+  `Art/Mixamo/machinist/machinist_body_mixamo.fbx`** (~4 m). The front plate on its own hinge bone (never through his legs);
+  the claw on its own bone; no face — the visor slit glows with his voice; small precise head adjustments; deliberate,
+  economical movement. Clips: reuse tunneler / YBot (slowed). Voice: **Dan's saved `Machinist`**. The facility **System**
+  announcer: a premade voice you pick.
+- **7's arc blades** (Decisions): a pair of curved crescent blades of white light (Kyle's `kyle_7_blades_sketch.jpg`), found in
+  AST_05's locker with the proposed lines `AST_05_10` / `AST_05_11`; they sever power in machines, only stun living beings; she
+  keeps them for later chapters (a draw / sheath on a button, shown on the controls). Clips: `Art/Mixamo/7/blade/` (9 clips,
+  single-sword — the second blade rides the off hand; mirror for alternating combos).
+- **Music:** `asteroid_city.mp3` (the city onward), `asteroid_machinist.mp3` (the encounter — 1:34, loop cleanly) —
+  `Docs/MUSIC.md` (quiet moments fade out: AST_06, the vision, AST_09, the silent cavern, aboard).
+- **Vision:** `Art/Video/vision_05_asteroid.mp4` + still `Resources/Asteroid/vision_05_still.jpg` (silent — the machine winding
+  down, tool sounds, the bird's uneven chirp + wing flap = the same sound as AST_03_08).
+- **Rune: cuboctahedron**, generated in code like the others; the small counterpart awarded once, beside the other records.
+- **Code-built** (scripted hard-surface): the maintenance machine, the security machines (escort / restrain — evaded, trapped,
+  disabled, never destroyed), the mechanical bird (one repaired mismatched wing; wind-up; uneven chirp + flap), the cargo
+  container + receiving scanner, the conveyor, the three factory controls (transport / cooling / archive diverter), the archive
+  panels, the cutting mechanism, the service-station clamps, the maintenance cradle — all real, readable, in the Great Machine
+  Age style (riveted, steam-age, wheels and pistons, like the vision), with clear feedback when they work.
+- Voice every line with an id from the script (`AST_..`), 7 on v3 with the performance notes, Panther telepathic; SFX for the
+  chapter (machinery, steam, conveyors, rails, the lost-connection static, the Machinist's servos) → `Docs/SFX-LIST.md`.
+
+**Items** (follow the script; key points):
+1. **Getting there:** only after TRV_AST's "Investigate the asteroid" (or later from the star map's Biaveh system, where it's
+   marked); main menu chapter list + Scene Select sections; title card over black from the first frame.
+2. **AST_01** aboard (the window view: the asteroid with its silver structures, turning rings, white route lights, one intact
+   section, one stripped to the frame; Panther's cat moment of being lifted off her lap is in the script).
+3. **AST_02 receiving:** the bike out of the hold onto its pad, 7 down the beam onto hers (spec correction), pressurizing, helmet
+   off; the maintenance machine scanning her, the System lines; the intro puzzle (redirect the scanner to the container, cross to
+   the manual door) — a real little puzzle with a clear payoff.
+4. **AST_03 the city that still works:** the wide reveal (factory terraces, rail carriers, repetitive machinery, empty
+   workstations); the causeway ride with **three rail-alignment junctions** (each visibly changes the route); the optional bird.
+5. **AST_04 the Machinist:** the unfolding reveal, the conversation, the archive panel going into the cutter (insert), the
+   shutters closing — escape through the maintenance opening (a short tense run, not a fight).
+6. **AST_05:** the observation alcove, the terminal, **the arc blades from the locker** (new lines), then the three controls in a
+   compact factory area — each visibly changes the central hall, security machines in the way (blades / telekinesis / dodge;
+   nonlethal).
+7. **AST_06 the missed answer:** the platform retracts, she drops to the ledge, the connection breaks (static, silence), the
+   player climbs while Panther calls; the full exchange unhurried — no combat.
+8. **AST_07 the Machinist fight** per the Decisions and the boss rule: his attacks (claw swings, grabs / restraint attempts,
+   conveyor lanes, his override runs at the terminal), telekinesis to stun → close in → arc-blade strikes on his **power
+   couplings** + punches / kicks → his energy bar; the service-station clamps lock a tool arm at each phase end; the cradle at the
+   end; Panther's "enormous arm" lines; he keeps his damage on retry.
+9. **AST_08 the archive + vision** (the shared rune-touch sequence; the bird-skipped variant of AST_08_05).
+10. **AST_09:** the memory shown on the archive surface beside the restrained Machinist; preservation mode — most lines slow to
+    a stop, essential lights stay on, the cavern falls quiet; he opens protected storage; the record + cuboctahedron awarded.
+11. **AST_10 back aboard:** the reunion **straight from the beam-up, no gap or wait** (Dan: keep it, but it must not feel like a
+    lock-up), forehead to forehead, the purr; then the chair conversation (staging variety rules apply).
+12. **AST_11 next destination:** Branch A (Biaveh unfinished) / Branch B (Biaveh complete → the Cattalus lead, once, whichever is
+    finished second — the QF20 lesson: also play it at the console if it's due and hasn't played). Biaveh doesn't exist yet →
+    Branch A ends on the "coming soon" card for Biaveh.
+13. **Progression + saves:** the implementation notes' order, checkpoints for Continue, Log + Field Guide (the Machinist, the
+    Machinists, the city, the bird) growing with the story.
+
+**Checks + release:** targeted runs per section with captures you look at; the boss proofs (player-run log with blade / punch /
+kick damage, the idle test, the retry keeping his energy, a capture sequence); the holes / z-fighting / collision checks on the
+new scene; one player-style run from TRV_AST to AST_11. Publish **0.16.0**; docs; commit + push.
+
+## Side task S3: the Machinist ready for Mixamo (Dan, 2026-11-20) — DONE; Dan's rigged body in: `Art/Mixamo/machinist/machinist_body_mixamo.fbx`
 Same as S1 / S2 with `Tools/Blender/cleanup_mixamo_body.py` — add a `machinist` preset (**~4.0 m**) — for Dan's Tripo model
 `Art/Source/machinist/machinist_v1.glb` (~60 MB; reference `Art/Reference/machinist_ref_front.png`, notes in
 `Docs/MODELS-NEEDED.md` "The Machinist"): weld, decimate to ~40–50 k tris keeping the visor, collar, exhaust stacks, chest core,
