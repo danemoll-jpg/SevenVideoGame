@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Side task S3: the Machinist ready for Mixamo (Dan, 2026-11-20) — to do, small (on its own; doesn't change the game)
+## Side task S3: the Machinist ready for Mixamo (Dan, 2026-11-20) — DONE (export ready for Dan's Mixamo upload)
 Same as S1 / S2 with `Tools/Blender/cleanup_mixamo_body.py` — add a `machinist` preset (**~4.0 m**) — for Dan's Tripo model
 `Art/Source/machinist/machinist_v1.glb` (~60 MB; reference `Art/Reference/machinist_ref_front.png`, notes in
 `Docs/MODELS-NEEDED.md` "The Machinist"): weld, decimate to ~40–50 k tris keeping the visor, collar, exhaust stacks, chest core,
@@ -10,6 +10,23 @@ gauges, the front plate's crescent / glyphs and the claw readable; A-pose uprigh
 so Mixamo doesn't glue it to the legs; the right forearm ends in the claw tool (Mixamo will treat it as a hand — fine). Then tell
 Dan: upload to Mixamo's auto-rigger, download "FBX for Unity, with skin" to `Art/Mixamo/machinist/machinist_body_mixamo.fbx`.
 Commit + push. No release.
+
+**S3 — status (2026-11-20): done.**
+- **Ready:** `Art/Export/machinist/machinist_for_mixamo.fbx` (5.3 MB; texture embedded, grayscale 2048 also in `Textures/`).
+  Preview sheet `Docs/Previews/machinist/machinist_for_mixamo_sheet.png` (front / side / back), plus q34, head and three
+  plate close-ups (`_plate_front / _plate_low / _plate_side`); log in `machinist_mixamo_metrics.txt`.
+- **The mesh:** Tripo's 1.94 M tris, 990 loose pieces welded (0.6 mm) into one shell, decimated to 45,000 tris. 4.00 m,
+  feet at 0, facing −Y in Blender (+Z in Unity / Mixamo). A-pose, arms 56–58° below horizontal.
+- **Centring:** new for this preset, he is centred on his legs at knee height. A mid-height median would have put the
+  root 15 cm to the side, pulled by the claw arm.
+- **Front plate (`plate_check`):** below the belt it is its own piece at every height (1.3–1.85 m). Gaps to the thighs:
+  11 / 11, 13 / 12, 16 / 17, 5 / 8 and 7 / 14 cm; the smallest is 5 cm, just under the belt. It is joined to the body only
+  at the belt, so it was not fused and needed no cutting.
+- **Readable at 45k:** the visor, collar, exhaust stacks, chest core, gauges, the plate's crescent and glyphs, the claw
+  and the mechanical hand.
+- **Dan:** upload the FBX to Mixamo's auto-rigger (place the markers; the claw counts as his right hand), then download
+  "FBX for Unity, with skin" to `Art/Mixamo/machinist/machinist_body_mixamo.fbx`. In Unity the plate still wants its own
+  hinge bone at the belt (MODELS-NEEDED note); that is for when he goes into the game.
 
 
 ## Quick fix QF19: the Viper fight's pylons actually work (Dan, 2026-11-20) — done, status below; release 0.15.4

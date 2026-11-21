@@ -1,6 +1,7 @@
 """Side tasks S1 / S2: a Tripo character made ready for Mixamo's auto-rigger - the same recipe as the guardian's
 elarim_body_for_mixamo.fbx (cleanup_r11.py elarim_mixamo). Presets: viper (Mars antagonist, 2.3 m), reptilian (Mars
-townspeople, 1.9 m).
+townspeople, 1.9 m). S3: machinist (the asteroid's Machinist, 4.0 m, 45 k tris; centred on his legs - the claw arm
+pulls a mid-height median off-centre - and plate_check: the long front plate must hang free of the thighs).
 
 Usage (repo root):
   F:\\blender\\blender.exe --background --factory-startup --python Tools/Blender/cleanup_mixamo_body.py -- <repo root> <viper|reptilian> [target tris] [preview dir]
@@ -19,9 +20,11 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 ROOT = os.path.abspath(argv[0]) if argv else os.getcwd()
 NAME = argv[1] if len(argv) > 1 else "viper"
 PRESETS = {"viper": 2.3,        # Docs/MODELS-NEEDED.md "Viper": ~2.3 m
-           "reptilian": 1.9}    # "Reptilians": ~1.9 m
+           "reptilian": 1.9,    # "Reptilians": ~1.9 m
+           "machinist": 4.0}    # S3: "The Machinist" (asteroid): ~4 m
+TARGETS = {"machinist": 45000}
 HEIGHT = PRESETS[NAME]
-TARGET = int(argv[2]) if len(argv) > 2 else 36000
+TARGET = int(argv[2]) if len(argv) > 2 else TARGETS.get(NAME, 36000)
 PREVIEW = os.path.abspath(argv[3]) if len(argv) > 3 else os.path.join(ROOT, "Docs", "Previews", NAME)
 WELD = 0.0006           # metres
 CRUMB = 50              # loose parts with fewer vertices than this are deleted
@@ -98,6 +101,37 @@ def hip_check(ob, need=0.015):
         + (" - WARNING: too close" if g < need else " (ok)"))
 
 
+def plate_check(ob, need=0.02):
+    """S3: the Machinist's long front plate hangs from the gauge belt between his legs. Below the belt it must be its own
+    piece with a clear gap to each thigh, or Mixamo's skinning glues it to a leg (the guardian's cape lesson). Per height
+    band: the connected pieces inside the band; the plate = the thin front piece between the two leg pieces."""
+    P = co(ob); H = HEIGHT
+    E = np.empty(len(ob.data.edges) * 2, dtype=np.int64); ob.data.edges.foreach_get("vertices", E); E = E.reshape(-1, 2)
+    worst = 9.0
+    for z0 in (0.33, 0.36, 0.40, 0.43, 0.46):
+        band = (P[:, 2] > z0 * H) & (P[:, 2] < (z0 + 0.025) * H)
+        par = np.arange(len(P))
+        def f(i):
+            while par[i] != i: par[i] = par[par[i]]; i = par[i]
+            return i
+        for a, b in E[band[E[:, 0]] & band[E[:, 1]]]:
+            ra, rb = f(a), f(b)
+            if ra != rb: par[ra] = rb
+        r = np.full(len(P), -1); idx = np.nonzero(band)[0]; r[idx] = [f(i) for i in idx]
+        u, c = np.unique(r[band], return_counts=True)
+        parts = [P[r == k] for k, cc in zip(u, c) if cc > 15]
+        if len(parts) < 3: log(f"plate at z {z0*H:.2f} m: only {len(parts)} pieces - WARNING: plate fused to a leg?"); worst = 0.0; continue
+        parts.sort(key=lambda Q: np.ptp(Q[:, 0]) * np.ptp(Q[:, 1]), reverse=True)
+        legs = sorted(parts[:2], key=lambda Q: Q[:, 0].mean())
+        mids = [Q for Q in parts[2:] if Q[:, 0].mean() > legs[0][:, 0].max() and Q[:, 0].mean() < legs[1][:, 0].min()]
+        if not mids: log(f"plate at z {z0*H:.2f} m: no piece between the legs"); continue
+        pl = min(mids, key=lambda Q: Q[:, 1].mean())          # the front-most piece between the legs (front = -Y)
+        gl, gr = pl[:, 0].min() - legs[0][:, 0].max(), legs[1][:, 0].min() - pl[:, 0].max()
+        worst = min(worst, gl, gr)
+        log(f"plate at z {z0*H:.2f} m: its own piece x {pl[:,0].min():+.2f}..{pl[:,0].max():+.2f}; gap to the thighs {gl*100:.0f} / {gr*100:.0f} cm")
+    log(f"front plate vs thighs: smallest gap {worst*100:.0f} cm" + (" - WARNING: too close" if worst < need else " (ok - not fused; joined to the body only at the belt)"))
+
+
 def main():
     out = os.path.join(ROOT, "Art", "Export", NAME); os.makedirs(out, exist_ok=True); os.makedirs(PREVIEW, exist_ok=True)
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -119,6 +153,12 @@ def main():
     mid = P[(P[:, 2] > zmin + 0.5 * H0) & (P[:, 2] < zmin + 0.6 * H0)]
     P = (P - np.array([np.median(mid[:, 0]), np.median(mid[:, 1]), zmin])) * s
     set_co(ob, P)
+    if NAME == "machinist":
+        # centre on his legs (the midpoint of the two legs at knee height), not on a mid-height median the claw arm pulls over
+        knee = P[(P[:, 2] > 0.33 * HEIGHT) & (P[:, 2] < 0.36 * HEIGHT)]
+        P = P - np.array([(knee[:, 0].min() + knee[:, 0].max()) / 2, (knee[:, 1].min() + knee[:, 1].max()) / 2, 0.0])
+        set_co(ob, P)
+        log(f"centred on the legs at knee height (x {knee[:,0].min():+.2f}..{knee[:,0].max():+.2f})")
     log(f"source height {H0:.3f} -> scaled x{s:.4f}: height {np.ptp(P[:,2]):.3f} m, width {np.ptp(P[:,0]):.3f} m (arms), depth {np.ptp(P[:,1]):.3f} m")
 
     # weld the loose pieces
@@ -163,6 +203,7 @@ def main():
         log(f"arm {nm}: hand at (x {hand[0]:.2f}, z {hand[2]:.2f}) -> {ang:.0f} deg below horizontal")
     log(f"final: {tris(ob)} tris, {len(ob.data.vertices)} vertices, height {np.ptp(P[:,2]):.3f} m, feet at z {P[:,2].min():.3f}")
     if NAME == "reptilian": hip_check(ob)
+    if NAME == "machinist": plate_check(ob)
 
     # texture: grayscale (the game is monochrome), 2048
     mat = ob.material_slots[0].material if ob.material_slots else None
@@ -193,11 +234,15 @@ def main():
     views = (("front", (0, -1, 0.04)), ("side", (1, 0, 0.04)), ("back", (0, 1, 0.04)), ("q34", (0.7, -0.7, 0.3)), ("head", (0.35, -1, 0.15)))
     if NAME == "reptilian":   # the satchel and the sash tail at the left hip (character's left = +X)
         views += (("hipL_front", (0, -1, 0.0)), ("hipL_side", (1, 0, 0.0)), ("hipL_back", (0, 1, 0.0)), ("hipL_low", (0.5, -0.6, -0.6)))
+    if NAME == "machinist":   # the front plate between the legs (must hang free of the thighs)
+        views += (("plate_front", (0, -1, 0.0)), ("plate_low", (0.35, -0.6, -0.55)), ("plate_side", (1, 0, 0.0)))
     shots = []
     for vn, dv in views:
         c = Vector((0, 0, HEIGHT / 2)); d = Vector(dv).normalized()
         if vn == "head":
             cd.ortho_scale = HEIGHT * 0.32; c = Vector((0, 0, HEIGHT * 0.88))
+        elif vn.startswith("plate"):
+            cd.ortho_scale = HEIGHT * 0.36; c = Vector((0, 0, HEIGHT * 0.42))
         elif vn.startswith("hipL"):
             cd.ortho_scale = HEIGHT * 0.36; c = Vector((HEIGHT * 0.08, 0, HEIGHT * 0.45))
         else:
