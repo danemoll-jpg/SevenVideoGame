@@ -66,7 +66,8 @@ namespace Seven
         void Start()
         {
             // QF16 (1): the saucer is where this aboard part happens (the windows show that world)
-            SaucerLocation.Set(EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
+            SaucerLocation.Set(AsteroidState.ArrivalAboard || AsteroidState.HomeAboard ? "asteroid" : EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
+            if (AsteroidState.ArrivalAboard || AsteroidState.HomeAboard) { StartAsteroid(); return; } // Round 16: the asteroid's aboard scenes
             if (EuropaState.ArrivalAboard || EuropaState.HomeAboard) { StartEuropa(); return; }      // Round 14: Europa's aboard scenes
             if (MarsState.ArrivalAboard || MarsState.HomeAboard) { StartMars(); return; }            // Round 15: Mars's aboard scenes
             if (VenusState.VenusAboardStart) { VenusState.VenusAboardStart = false; StartVenus(); return; }   // Round 12: the Venus debrief / destinations

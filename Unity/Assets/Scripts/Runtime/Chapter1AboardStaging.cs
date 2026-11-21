@@ -27,6 +27,8 @@ namespace Seven
             { "MAR_01", Stage.WindowShoulder },    // Mars arrival: at the window, Panther on her shoulder
             { "MAR_12", Stage.Sofa },              // Mars, what she remembers: both lying on the sofa
             { "MAR_13", Stage.ChairCatConsole },   // the route display: the chair, Panther on the console
+            { "AST_01", Stage.Chair },             // the asteroid: at the controls, Panther in her lap (he is lifted onto the adjoining seat)
+            { "AST_10", Stage.Chair },             // after the asteroid: the navigation chair, Panther in her lap
         };
         public static Stage StageOf(string scene) => Table.TryGetValue(scene, out var s) ? s : Stage.Chair;
         public Stage CurrentStage { get; private set; } = Stage.Chair;

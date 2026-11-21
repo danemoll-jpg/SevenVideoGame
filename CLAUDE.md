@@ -384,7 +384,8 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–15 + QF1–QF20 complete (2026-11-20), release 0.15.5.** QF20 = the Biaveh discovery can't be missed, kicks on Y,
+**Rounds 1–16 + QF1–QF20 complete (2026-11-20), release 0.16.0.** Round 16 = Chapter "The Asteroid — the Great Machine Age"
+(first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
 energy bars, visions, holograms, window views, the two-level star map). QF17 = real boss fights (the "Boss fights" rule
@@ -688,7 +689,35 @@ scene (Round 10).
   - Boss fights: **Y = kick** (`ChapterSevenFight.PickBlow`; takedown only when dazed), X = punches; build check
     `KICK STATES CHECK (QF20 2)` on every chapter scene; Controls page "Fight:" rows; the fairness skip = View / Enter.
   - `BossFight.Retry` keeps his energy / objectives / stuns. `ChapterInput.LockOn` is enabled now (it never was).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.15.5** (QF20 status in `TODO.md`).
+- **Round 16 — The Asteroid (release 0.16.0)** (spec `Docs/CHAPTER_ASTEROID.md` incl. Dan's Decisions + the chat's proposed
+  lines; status, decisions made, "For Dan to check" in `TODO.md`):
+  - Scene `Asteroid`: `Editor/FightDemoBuilderAsteroid.cs` (setup, the Machinist, wiring) + `...AsteroidLevel.cs` (the kit:
+    `Riveted`, `PlateWall`, `Gear`, `AstLamp`, `LightRun`; the receiving chamber) + `...AsteroidCavern.cs` (tunnel, cavern
+    shell, causeway + junction spans, terraces, rail carriers, flywheels, workstations, the bird) + `...AsteroidHall.cs`
+    (the hall, the temple archive, the factory area, the security machines); numbers + zones + checkpoints
+    `Runtime/AsteroidLayout.cs`; `Atmosphere_Asteroid`. Machinery at runtime `Runtime/AsteroidMachines.cs` (`AstProduction`
+    = preservation mode, `AstSpin`, `AstPiston`, `AstRailCarrier`, `AstArchiveLine`, `AstTurntable`, `AstScanner`,
+    `AstMaintBot`, `AstSecurity`, `AstBird`, `AstShutter`, `AstClamp`). Rune = `Cuboctahedron` (code).
+  - Flow `AsteroidDirector.cs` (helpers as Mars + security machines + `BladeCut`) + `AsteroidDirectorFlow.cs` (AST_02-04)
+    + `AsteroidDirectorHall.cs` (AST_05-09 + home). Saves `AsteroidState.cs` (`seven_asteroid`, select `seven_asteroid_select`;
+    the blades are kept on the player's own save). Aboard: `Chapter1AboardAsteroid.cs` (AST_01, AST_10 reunion straight from
+    the beam-up, the chair talk, AST_11A / 11B; the Cattalus lead also at the console when due - `WorldFlags.CattalusDue`).
+    TRV_AST "Investigate the asteroid" and the star map's asteroid start the chapter; `ChapterList` "The Asteroid".
+  - **7's arc blades** `ChapterSevenBlades.cs` (partial of ChapterSeven): RB / G draw / sheathe (`ChapterInput.Blades`),
+    X cuts while drawn (on foot: `BladeSwing`; in a boss fight the blade chain, `BossDef.bladeDamage`); her Mixamo clips
+    `Art/Mixamo/7/blade/` (+ mirrored slashes); visuals built on her hand bones at runtime; they only stun the living.
+  - **The Machinist**: Dan's Mixamo rig via `SetupMixamoFolk("machinist")` (`Machinist.controller`); `MachinistExtras`
+    re-skins the front plate onto a `PlateHinge` bone (`MachinistRig` swings it with the thighs), the visor slit glows with
+    his voice, power couplings flare on blade hits, two tool assemblies taken into the service-station clamps;
+    `MachinistFight.cs` (boss "machinist" in `boss_tuning.json`).
+  - Lines: `python Tools/Voice/make_asteroid_lines.py` (every `| AST_.. |` row of the spec) → `Resources/Asteroid/asteroid_dialogue.json`
+    + `Docs/ASTEROID-LINES.md`; voices `python Tools/Voice/generate_asteroid_voices.py` (Machinist = Dan's saved voice, System =
+    premade) → `Resources/AsteroidVoice/`. SFX `ast_*` in `Tools/Audio/generate_sfx.py`.
+  - Switches: `-astcp <n>` (check run at checkpoint n; 0 = AST_01 aboard, 9 = home), `-asteroid` (as from the star map),
+    `-astplay` (player-style run `AsteroidPlaytest.cs`: free aboard → console → Biaveh → TRV_AST → the chapter → AST_11; with
+    `-astcp n` it starts there - the boss runs), `-astbird` (a check run takes the optional bird).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.16.0** (Round 16 status in `TODO.md`).
+**Before: Dan plays 0.15.5** (QF20 status in `TODO.md`).
 **Before: Dan plays 0.15.4** (QF19 status in `TODO.md`).
 **Before: Dan plays 0.15.3** (QF18 status in `TODO.md`).
 **Before: Dan plays 0.15.2** (QF17 status in `TODO.md`).

@@ -73,7 +73,7 @@ namespace Seven.EditorTools
             var avatar = AssetDatabase.LoadAllAssetsAtPath(path).OfType<Avatar>().FirstOrDefault();
             Log($"{path}: {kind} avatar human={avatar?.isHuman} valid={avatar?.isValid}");
             if (avatar == null || !avatar.isHuman) return null;
-            mat = TexturedMat("Mars_" + kind, texPath, kind == "viper" ? 0.55f : 0.35f, 0f);
+            mat = TexturedMat((kind == "machinist" ? "Ast_" : "Mars_") + kind, texPath, kind == "viper" ? 0.55f : kind == "machinist" ? 0.6f : 0.35f, kind == "machinist" ? 0.45f : 0f);
             mat.SetFloat("_Rim", 0.35f); EditorUtility.SetDirty(mat);
             // the clips: (state, source fbx, loop)
             var list = new List<(string state, string file, bool loop)>();
@@ -97,7 +97,7 @@ namespace Seven.EditorTools
                 var kp = Path.Combine(RepoRoot, "Art", "Export", "anim", "elarim_kneel_pose.fbx");
                 list.Add(("kneel", File.Exists(kp) ? kp : E("elarim_kneel.fbx"), true));
             }
-            var cpath = AnimDir + "/" + (kind == "viper" ? "Viper" : "Reptilian") + ".controller";
+            var cpath = AnimDir + "/" + (kind == "viper" ? "Viper" : kind == "machinist" ? "Machinist" : "Reptilian") + ".controller";   // Round 16: the Machinist's own
             AssetDatabase.DeleteAsset(cpath);
             ctl = AnimatorController.CreateAnimatorControllerAtPath(cpath);
             var sm = ctl.layers[0].stateMachine;

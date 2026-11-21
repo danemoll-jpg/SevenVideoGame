@@ -26,7 +26,7 @@ Commit first. Small, focused. Release **0.15.5**; "QF20 — status"; "For Dan to
    logged identical.
 
 
-## QF20 — status (2026-11-20): done, exe-verified off-screen; release 0.15.5 (`game-1505`, Latest, published)
+## QF20 — status (2026-11-20): done, exe-verified off-screen; release 0.15.5 (`game-1505`, published)
 **1. Why the discovery never played for Dan (his real save).**
 - His registry save (`seven_routes`) reads `combined: true, asteroidFound: true`. Mars and Europa are both complete (`cp 9`).
 - His own `Player.log` from today (20:01) shows him finishing Mars (`Mars checkpoint -> 9`). The debrief then took the
@@ -99,7 +99,7 @@ Not covered:
 5. The fairness skip after three knockdowns is now **View / Enter** (Y is the kick).
 
 
-## Round 16: Chapter "The Asteroid — the Great Machine Age", first playable pass (Dan, 2026-11-20) — to do, AFTER QF20
+## Round 16: Chapter "The Asteroid — the Great Machine Age", first playable pass (Dan, 2026-11-20) — done, status below; release 0.16.0
 Commit a checkpoint first. If Dan is away, **never stop to ask**: make the most reasonable call, list it under "Round 16 —
 decisions made". **All standing rules from `CLAUDE.md` apply from the first line** — monochrome + Kyle's fog / glow (but
 readable: thin the fog around the action), non-sexual, 7 never kills, the one saucer prefab (bike always via the bike hold,
@@ -173,6 +173,220 @@ sequence, the staging variety + Panther's cat moments aboard. **Check each again
 **Checks + release:** targeted runs per section with captures you look at; the boss proofs (player-run log with blade / punch /
 kick damage, the idle test, the retry keeping his energy, a capture sequence); the holes / z-fighting / collision checks on the
 new scene; one player-style run from TRV_AST to AST_11. Publish **0.16.0**; docs; commit + push.
+
+
+## Round 16 — status (2026-11-21): first playable pass done, exe-verified off-screen; release 0.16.0 (`game-1600`, Latest, published)
+**The chapter (items 1-13):**
+1. **Getting there.**
+   - TRV_AST's "Investigate the asteroid" starts the chapter straight away. The star map's asteroid in the Biaveh system
+     does too, once it has been found.
+   - Main menu chapter list "The Asteroid" with 10 Scene Select sections. Continue covers it.
+   - The title card "THE ASTEROID — THE GREAT MACHINE AGE" shows over black from the first frame.
+2. **AST_01:**
+   - The pilot's chair, Panther in her lap.
+   - The window shows the asteroid: dark rock, silver structures, two rings turning round the recessed opening, white
+     route lights, the intact section and the one stripped to its frame.
+   - She lifts him off her lap.
+3. **AST_02:**
+   - The outer gate closes behind the saucer in the receiving chamber.
+   - The bike comes out of the hold onto its marked pad, and 7 comes down the beam onto hers.
+   - The chamber pressurizes (vents, sound), then her helmet comes off.
+   - The maintenance machine scans her, with the System lines.
+   - The scanner puzzle (telekinesis turns it onto the marked container → sorting) opens the manual door; the door
+     rolls up and light runs round its frame.
+4. **AST_03:**
+   - The tunnel ride, then the reveal: the camera rises past her shoulder onto the cavern (terraces, rail carriers,
+     flywheels, hammers).
+   - Three junction spans on piers turn into line, with route lights running ahead; the counter shows "Junctions n / 3".
+   - The optional bird at the workstations: picked up, wound, one uneven chirp, the patched wing flaps, put back.
+5. **AST_04:**
+   - The Machinist rises from his repair cradle (low angle), then over-the-shoulder shots for his scale.
+   - The conversation; a panel goes into the cutter, and the insert matches its markings to the temple signal on the
+     hall's face.
+   - The shutters close. Panther's line sends her to the maintenance opening, which shuts behind her.
+6. **AST_05:**
+   - Her hand on the alcove glass over the feed line; the terminal shows the bypass route.
+   - The locker holds **the arc blades**: AST_05_10 / 11, the first draw.
+   - The three controls, each with a look at the hall:
+     - control 1: the platforms line up across the pit, and the feed halts;
+     - control 2: the blades cut the clamp's power line, the valve turns, the coolant runs, the steam dies, and the
+       cutter goes dark;
+     - control 3, after AST_06: the diverter turns the panels onto the storage loop.
+   - Security machines escort her if they catch her. The blades cut their power and telekinesis pushes them away. They
+     are never destroyed.
+7. **AST_06:**
+   - The assembly retracts and she drops to the ledge.
+   - Static, then silence.
+   - She climbs the wall herself (A); Panther's lines play over the climb, and the full exchange follows once she is up,
+     with no combat.
+   - The assembly slides back out.
+8. **AST_07:** the dialogue (with the held beat on her), then the boss fight (rule below). Her takedown engages the
+   cradle; AST_07_14 / 15.
+9. **AST_08:** the archive's turning gimbal round the cuboctahedron, the empty mounting points, the shared touch →
+   vision → return (vision_05 video), and the lines. The bird-skipped variant `05S / 05T` played in the release run.
+10. **AST_09:**
+    - The memory plays on the archive surface beside his cradle, and the line stops on it.
+    - X at the terminal sets preservation mode: production eases to a stop, the lights dim, and the ambience goes quiet.
+    - "Preservation mode. Essential systems only." Then the cradle opens and protected storage opens; the surviving
+      panels go in.
+    - The record + cuboctahedron insert (awarded once), then the wide of the quiet cavern.
+    - The saucer comes into the cavern, the bike goes into the hold, and she boards in the beam.
+11. **AST_10:** straight from the beam-up into the reunion, then the chair talk with the asteroid in the window and an
+    archive light switching on out there.
+12. **AST_11A:** the lines, then the Biaveh "coming soon" card, then free exploration. Branch B (the Cattalus lead) is
+    built: once, and also at the console when due.
+13. **Saves, Log and Field Guide:**
+    - Checkpoints 0-10, Continue, Scene Select. The blades are kept on the player's save.
+    - Log: 9 entries. Field Guide: the Machinist (named from AST_04), the Machinists, the city, the bird; the entries grow
+      with the story.
+
+**Assets:**
+- 151 voiced lines (`Docs/ASTEROID-LINES.md`): the Machinist = Dan's saved voice; System = the premade "Lily".
+- 28 new SFX (`ast_*`).
+- Both music tracks are cued: the city onward, and the encounter. The music fades out for AST_06, the vision, AST_09 and
+  aboard.
+- The Machinist on Dan's Mixamo rig: his own controller; the front plate re-skinned onto a `PlateHinge` bone
+  (722 vertices); the visor slit, power couplings and tool assemblies are built in code.
+- The blade clips are imported, with mirrored slashes.
+
+**The boss rule (AST_07):**
+- He moves and attacks: the cutter / clamp swing, the restraint grab (a lunge), the floor slam (a ring), the lane surge
+  (a wave), scrap rain from the hoppers, and the override sweep from the terminal. Each is telegraphed (pose, sound,
+  white marker).
+- Three phases: at each phase end he reels into a service station and its clamp locks a tool arm. Then he is dazed, and
+  the Y takedown engages the cradle.
+- He keeps his damage on a retry. Energy bar + her bar on screen.
+
+| proof | result |
+|---|---|
+| player-style run `-astplay` (the release check: real pad presses from free aboard → console → star map → TRV_AST → the whole chapter → AST_11) | **`ASTEROID PLAYTEST: 1/1, soft-locks 0`**, 17.3 game-min; skips 1 (the passage after the escape - she stopped inside the opening's own zone, which then closed; fixed after, verified by the escape run below); RIDE CAMERA all 0, BIKE vs GEOMETRY ON LAND 0 / 0, FEET body inside geometry 0, DIALOGUE FRAMING 63 lines, still blocked 0; record awarded once; audio peak 0 |
+| first-time-player boss run (`-astplay -astcp 6 -bosscheck -bossnovice -bossdownonce`, pad) | **fight 4:29**, attacks 69 (15.4/min), she went down 3x; `RETRY (QF20)`: 66.0 → 66.0 %, 33.0 → 33.0 %, 33.0 → 33.0 % (identical); `MELEE`: arc blades 35 = 51 %, kicks 34 = 35 %, punches 0 (she fights with the blades drawn); melee 90 % of the damage; stuns 9 |
+| idle test `-astcp 6 -bossidle` | `BOSS IDLE TEST (machinist): knocked down after 28.5 s` - PASS |
+| capture sequence | `boss_machinist_<attack>_telegraph / _active (+ _side)` for every attack, `_stagger_1-3`, `_kick_hit_mma_kick / _roundhouse`, `_station1/2_clamp_locks`, the cradle |
+| Auto check runs `-astcp 1 -astbird` (x2) | the whole chapter AST_02 → AST_11 incl. the bird scene: `ASTEROID CHECK RUN DONE`; they found the bend railings, the alcove wall, the clamp reach, the rune walk, the fog, a dozen camera framings - all fixed |
+| escape run `-astplay -astcp 3 -stopafter 150` (final build) | out through the maintenance opening (a walking pad pilot on its 2nd, longer try; a runner makes the first), on into the alcove without a skip |
+| aboard `-astcp 0`, `-astcp 9` (final build) | the asteroid in the window, Panther onto the desk, the reunion, the chair, AST_11A + "Biaveh (coming soon)"; hand IK released at the end |
+| build checks (final build) | `HOLES CHECK (QF18 13) Asteroid: 9945 rays, 0 holes`, `COPLANAR CHECK 0` (61 objects nudged), `NPC PLACEMENT 0`, `SAUCER CHECK (QF13 16) Asteroid: the one prefab, unchanged`, `KICK STATES CHECK (QF20 2) Asteroid` ok; `QF18 build checks: all passed` |
+| monochrome | max channel difference **0** over every capture (118 checked in the first run) |
+
+**Testing time: over the 20-minute rule, about 68 game-minutes.**
+- Two full Auto check runs (about 21 min) and four tries of the player-style run (about 38 min). The first three tries
+  each stopped on a real problem: a stale "Get off" prompt at the hall plaza; the Machinist, then a service station,
+  standing in the escape line; and the escape's guide light short of the line that counted as "out".
+- The rest were short boss and aboard runs.
+- Each fix needed a full rebuild (about 10 min).
+
+**Not covered / known:**
+- The reunion is forehead-near-forehead: she bends down to him, she does not lift him to her face (the cat's lift reads
+  poorly on his rig). The chair scenes use the Chair staging both times, as the script asks.
+- The cavern wide still leans on Kyle's bright haze: the terraces fade into it at their distance (the fog is thinned for
+  the reveal).
+- The Machinist's front-plate swing is built and logged (722 vertices on `PlateHinge`). I did not take a close-up of it
+  while he walks.
+- The bird scene was checked in the Auto runs only (the release run skips optional bits). The Branch B / Cattalus lead
+  cannot play until Biaveh exists.
+- No sound check of the new SFX / voices (every run muted); the SFX were generated and are listed in `Docs/SFX-LIST.md`.
+
+## For Dan to check (Round 16)
+1. **Getting in:** from Mars + Europa done, take the console's star map → Biaveh. TRV_AST plays; choose "Investigate the
+   asteroid". Or use the main menu → "The Asteroid".
+2. **AST_01:** the asteroid in the window (rings turning, route lights, the stripped frame). She lifts Panther onto the
+   desk: "I was working."
+3. **The receiving chamber:** the bike out of the hold onto its pad, her down the beam, the helmet coming off after the
+   pressurizing. The scanner's light on her; RT on the scanner arm turns it onto the marked crate; the door control
+   lights; X opens the door.
+4. **The causeway:** the three junction levers work from the bike, stopped beside them. Each span turns into line and the
+   lights run ahead. Optional: get off at the empty workstations (after junction 2) for the little bird.
+5. **The Machinist:** his scale, his visor glowing as he speaks, the panel into the cutter. Then run for the
+   maintenance opening.
+6. **The blades:** RB / G to draw and sheathe; X cuts the clamp's power line, and cuts the security machines' drive (they
+   sag, then recover). Do they read as crescents of light, not sabers?
+7. **AST_06:** the drop, the silence, then press A at the wall to climb. Is the exchange unhurried enough?
+8. **The fight:**
+   - Stun him with RT when he overreaches.
+   - Cut his glowing couplings with X (blades drawn) and kick with Y.
+   - Each phase end clamps a tool arm into a station.
+   - Let him knock you down: his bar stays.
+   - About 4½ min for a first try; `boss_tuning.json` "machinist" is the knob.
+9. **AST_08 / AST_09:** the vision, the memory on the screen beside his cradle, preservation mode (the cavern goes
+   quiet), the record.
+10. **AST_10:** straight from the beam-up into the reunion. Does it still feel like a lock-up, at about 15 s?
+11. The Log and Field Guide entries for the chapter.
+
+## Round 16 — decisions made (Dan away; easy to change)
+1. **AST_01's approach to the docking recess** is shown, not flown: the window frames the asteroid in the chair scene. The
+   Asteroid scene then opens inside the receiving chamber as the outer gate closes behind the saucer. There is no saucer
+   flying anywhere else in the game.
+2. **The intro puzzle (AST_02).**
+   - While the receiving scanner's cone of light holds her, the door control's lamp is dark, and the maintenance machine
+     keeps itself between her and the control. It is an obstacle, never hit.
+   - Telekinesis (RT) on the scanner head turns it onto the marked container, and the container rides the conveyor into
+     sorting. The maintenance machine escorts it, and the control's lamp lights.
+   - X at the wheel then opens the door: the wheel spins, the door rolls up and light runs round its frame.
+3. **Proposed lines so every objective follows from the story:** `AST_02_P1-P4`, `AST_03_P1-P2`, `AST_04_P1`, `AST_05_P1-P4`
+   (+ Dan's proposed `AST_05_10 / 11`), `AST_07_P1` (the fight hint, only after 35 s without a stun), `AST_08_05S / 05T` (the
+   bird-skipped variant from the script), `AST_09_P1-P3`. All are listed in the spec's new table and voiced.
+4. **The junctions:** each is a riveted span on a central pier, set across the causeway for the carriers' rails, so the gap
+   is visible. The lever works from the bike when she is stopped beside it, or on foot. The span turns into line, the
+   route lights run ahead to the next stop, and its lamp turns white. A counter shows "Junctions n / 3".
+5. **AST_04's escape:** the maintenance opening's shutter comes down over 16 s. If she is too slow, a white fade puts her
+   back with 4 s more each time; there is no fail screen. The hall stays sealed until AST_07, and nothing she needs is
+   inside it.
+6. **AST_05:**
+   - Panther's line points her to the locker, where she takes the arc blades.
+   - The security machines escort her: if they catch her she is walked back to the works' entry, under a fade. After
+     three escorts they stand down (fairness).
+   - Answers: X with the blades drawn cuts a machine's drive power (disabled 25 s, never destroyed), RT pushes it away
+     (stunned 4 s), or she steps out of reach.
+   - Control 2's valve is held by a powered clamp, and the blades cut its power line. That gives them a real job right
+     away.
+   - Each control's change in the central hall is shown by a short look at the hall:
+     - control 1: the feed to the cutter halts;
+     - control 2: the cutter cools, its saw goes dark;
+     - control 3: the panels turn onto the storage loop.
+7. **AST_06:**
+   - The final assembly retracts under her, and she drops to the maintenance ledge.
+   - Static, then silence.
+   - She climbs a real wall (A at its foot), and AST_06_05 plays as she hauls herself up. The unhurried exchange follows
+     once she is up: she sits back for 07, then gets to her feet.
+   - The assembly slides back out afterwards, so she can go back.
+8. **The fight (AST_07):**
+   - Three phases end at his energy marks (0.66 / 0.33 / dazed). At the end of phases 1 and 2 he reels into a service
+     station, whose clamp slams shut on a tool arm: first the cutter, then the clamp tool. These are beats, not X switches:
+     the rule says no objectives while he waits.
+   - Panther's "enormous arm" lines: 10 / 11 as the fight opens, 12 / 13 at the first clamp.
+   - The final takedown (Y) engages his repair cradle.
+9. **AST_09:**
+   - The memory plays on an archive surface beside his cradle; it is the vision video.
+   - X at the terminal sets preservation mode. The cradle opens only after he says "Preservation mode. Essential systems
+     only."
+   - Then: protected storage, the record, and the wide of the quiet cavern.
+   - The way home: Panther brings the saucer down into the cavern over the hall plaza. The bike goes into the hold, and
+     she boards in the beam.
+10. **AST_10:**
+    - It opens already in the reunion: she is kneeling at the boarding area and he walks the last steps.
+    - She bends to him, forehead to forehead. The lines and the purr follow, about 15 s, with no walking and no waiting.
+    - Then the chair talk (the asteroid through the window, an archive light switching on out there) and AST_11.
+11. **AST_11:**
+    - Branch A ends on the Biaveh "coming soon" card, then free exploration.
+    - Branch B (the Cattalus lead) is built: once, whichever of the asteroid / Biaveh is finished second, and also at the
+      console when it is due. It can only play once Biaveh exists.
+12. **The arc blades:**
+    - RB / G draws and sheathes them; the sheathed hilts are crossed on her back.
+    - X cuts while they are drawn.
+    - In boss fights X becomes the blade chain: in → out → (mirrored) in → out → the combo. Y still kicks.
+    - Dan's clips are single-sword; the second blade rides the off hand, and the mirrored slashes alternate.
+13. **The System announcer** is the premade ElevenLabs voice "Lily" (clear, British, middle-aged); its lines are flat
+    recorded announcements with a soft chime.
+14. **The rune** is a cuboctahedron, 0.42 m, on a turned pedestal inside three slowly turning riveted rings, which keep
+    turning in preservation mode. Its small copy (6 cm) joins the records on the chair arm.
+15. **AST_01_07 "the adjoining seat":** the saucer has no seat beside the pilot's chair, so she lifts him onto the console
+    desk beside her. That is where he sits in the route scenes.
+16. **The Machinist during the escape:** after "Request denied" he turns back to his work at the cutter and lets the
+    shutters do the rest. When he walked toward her he stood in her way.
+17. **First-fight length:** his damage numbers are tuned so a first-time player's fight is about 4½ min. The table is
+    `boss_tuning.json` "machinist": `strikeDamage 0.0075 / kickDamage 0.011 / bladeDamage 0.0155`, `stunTime 3.2`.
+18. **Service station 2** stands at (-372, 84), out of the line from the meeting spot to the maintenance opening.
 
 ## Side task S3: the Machinist ready for Mixamo (Dan, 2026-11-20) — DONE; Dan's rigged body in: `Art/Mixamo/machinist/machinist_body_mixamo.fbx`
 Same as S1 / S2 with `Tools/Blender/cleanup_mixamo_body.py` — add a `machinist` preset (**~4.0 m**) — for Dan's Tripo model

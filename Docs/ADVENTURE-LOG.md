@@ -124,3 +124,16 @@ entry covers the rescue, the beam and the larger interior (checkpoints 7-8) and 
 - **Viper's intervention** (`mar_viper`, unlock `mars>=6`): He divided the crossing with barriers and moving sections. He is secured now - what happens to him is for the people here to decide.
 - **History that belongs to both** (`mar_temple`, unlock `mars>=7`): Their two symbols were halves of one design. In the vision both banks built the bridge together. The temple's records show a route out from Mars - and it stops.
 - **What she remembers** (`mar_home`, unlock `mars>=9`): They were both so certain. What if she is doing the same? Keep asking, Panther said. He would mention it.
+
+
+## Chapter — The Asteroid: the Great Machine Age (Round 16)
+
+- **Something on the rock** (`ast_arrival`, unlock `asteroid>=1`): Silver structures through dark rock, rings turning round an opening, small white lights. Something out here is still working.
+- **Receiving** (`ast_receiving`, unlock `asteroid>=2`): A scanner called me unregistered material and tried to send me to sorting. It preferred a marked crate in the end. Panther found the service entrance.
+- **The city that still works** (`ast_city`, unlock `asteroid>=3`): Factory terraces up the walls, rail carriers between them, machines repeating their work. Empty stations. Nobody at all.
+- **Request denied** (`ast_machinist`, unlock `asteroid>=4`): Its caretaker keeps the city ready for its people. He is cutting up the archive to do it. Restoration is ongoing.
+- **The arc blades** (`ast_blades`, unlock `asteroid>=5`): Two curved blades of light from a maintenance locker. They cut power lines and stun what lives. I held them as if I knew them. I don't know why.
+- **A missed answer** (`ast_drop`, unlock `asteroid>=6`): The platform went, and the connection with it. Panther went very quiet. So did I. I'll keep talking.
+- **Maintenance interruption** (`ast_fight`, unlock `asteroid>=7`): He was waiting for them. His tools are locked away and his cradle holds him; nothing of him is broken.
+- **A little bird** (`ast_archive`, unlock `asteroid>=8`): They stopped the whole line to mend one small bird. I knew what it would sound like before it moved.
+- **Something left for them** (`ast_home`, unlock `asteroid>=10`): He keeps what is left safe now. Preservation mode: the essential lights stay on, and for the first time the cavern is quiet.

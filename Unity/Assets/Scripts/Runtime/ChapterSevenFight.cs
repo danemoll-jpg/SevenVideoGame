@@ -83,7 +83,8 @@ namespace Seven
         // chains one combo (each blow cancels into the next after its active frame).
         static readonly string[] Punches = { "jab", "cross", "hook" };
         static readonly string[] KickSet = { "mma_kick", "roundhouse" };
-        static float HitOf(string s) => s == "jab" ? 0.32f : s == "cross" ? 0.36f : s == "hook" ? 0.42f : s == "mma_kick" ? 0.40f : s == "roundhouse" ? 0.43f : 0.4f;
+        static float HitOf(string s) => s == "jab" ? 0.32f : s == "cross" ? 0.36f : s == "hook" ? 0.42f : s == "mma_kick" ? 0.40f : s == "roundhouse" ? 0.43f
+                                      : s.StartsWith("blade_slash_in") ? 0.36f : s.StartsWith("blade_slash_out") ? 0.38f : s == "blade_combo" ? 0.30f : 0.4f;
         public static bool IsKick(string s) => s == "mma_kick" || s == "roundhouse";
         /// <summary>QF20: the boss kit (kicks on Y) - every boss fight; the chapter scenes all carry the kick states (build check).</summary>
         bool BossKit => FightHop && HasState("mma_kick") && HasState("roundhouse");
@@ -97,6 +98,7 @@ namespace Seven
             if (!BossKit) { _combo = chained && _combo < Combo.Length - 1 ? _combo + 1 : 0; return Combo[_combo]; }
             if (!chained) { _combo = 0; _punch = 0; _kickN = 0; } else _combo++;
             if (kind == "kick") { KicksThrown++; return KickSet[_kickN++ % KickSet.Length]; }
+            if (BladeKit) return PickBladeBlow(chained);        // Round 16: X with the arc blades drawn = the blade chain
             PunchesThrown++; return Punches[_punch++ % Punches.Length];
         }
         /// <summary>QF18 (19): the blow that is landing now (jab / cross / hook / mma_kick / roundhouse / finisher).</summary>
@@ -171,6 +173,7 @@ namespace Seven
             bool hop = FightHop && HopPressed, tk = TkAim != null && TkPressed, use = false;
             if (FightHop && !ScriptDriven && Input != null && Input.LockOn != null && Input.LockOn.WasPressedThisFrame()) { LockOn = !LockOn; FightEvent?.Invoke(LockOn ? "lock_on" : "lock_off"); }
             AutoAttack = AutoDodge = AutoTakedown = AutoHop = AutoTk = AutoKick = false;
+            BladeInput();                                // Round 16: RB / G - the arc blades in a fight too
             // QF20 (2): Y in a boss fight = a kick, unless he is dazed and in reach (then it is the takedown)
             bool kick = false;
             if (takedown && BossKit && !(_target != null && _target.Dazed && Dist(_target) < 2.4f)) { takedown = false; kick = true; }
@@ -381,7 +384,7 @@ namespace Seven
             FightTimings.Add($"{LastBlow} button->active {Time.time - _blowPressed:0.000}s");
             if (_target == null) return;
             var to = Flat(_target.transform.position - transform.position);
-            if (to.magnitude > (IsKick(LastBlow) ? 2.2f : 1.9f)) return;      // whiffed - out of reach (kicks reach a little further)
+            if (to.magnitude > (IsKick(LastBlow) ? 2.2f : IsBlade(LastBlow) ? 2.5f : 1.9f)) return;      // the blades reach further      // whiffed - out of reach (kicks reach a little further)
             if (_target.TakeBlow(to.normalized, takedown))
             {
                 HitsLanded++; FightEvent?.Invoke(takedown ? "takedown_landed" : "hit");

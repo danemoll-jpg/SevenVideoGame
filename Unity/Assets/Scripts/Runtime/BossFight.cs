@@ -36,6 +36,7 @@ namespace Seven
         public float throwChip = 0.02f;       // the stun itself costs him a sliver of energy
         public float strikeDamage = 0.045f;   // a jab / cross / hook while he is stunned (fraction of his energy)
         public float kickDamage = 0.065f;     // the MMA kick / roundhouse while he is stunned
+        public float bladeDamage = 0.075f;    // Round 16: an arc-blade strike (on a machine's power couplings) while he is stunned
         public float openStrikeScale = 0.3f;  // a strike while he is merely open (not stunned): this share of it
         public float dazedAt = 0.06f;         // last phase: at or under this energy he is dazed -> the finisher / takedown
         public PhaseDef[] phases;
@@ -173,6 +174,8 @@ namespace Seven
         protected virtual void AttackFx(AttackDef a, float u) { }
         protected virtual void AttackStarted(AttackDef a) { }
         protected virtual void Arena(float dt) { }
+        /// <summary>Round 16: a strike of hers reached him (the Machinist's power couplings flare / dim on a blade hit).</summary>
+        protected virtual void StrikeLanded(string blow, bool counted) { }
         /// <summary>Where he stands at the start of a phase / may walk (clamped by the subclass).</summary>
         protected virtual Vector3 ClampBoss(Vector3 p) => p;
 
@@ -564,7 +567,8 @@ namespace Seven
             }
             // QF18 (19c): her strikes do the real damage - in full while he is stunned, a little while he is merely open
             string blow = Seven != null ? Seven.LastBlow : "jab";
-            float dmg = blow == "mma_kick" || blow == "roundhouse" ? Def.kickDamage : blow == "finisher" ? Def.kickDamage * 1.4f : Def.strikeDamage;
+            float dmg = blow == "mma_kick" || blow == "roundhouse" ? Def.kickDamage : blow == "finisher" ? Def.kickDamage * 1.4f : ChapterSeven.IsBlade(blow) ? Def.bladeDamage : Def.strikeDamage;
+            StrikeLanded(blow, State == St.Staggered || State == St.Dazed || Open);
             if (State == St.Staggered || State == St.Dazed)
             {
                 Strikes++; StunStrikes++; AudioKit.Play("fight_hit", Centre, 0.9f, 0.06f);

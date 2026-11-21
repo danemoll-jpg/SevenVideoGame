@@ -129,3 +129,33 @@ Keeps the approach to the temple on the east bank. Careful, honest about what bo
 Profits from the division between the two kingdoms; tells each bank the other means to seize the temple. He noticed the records I carry.
 
 *From `mars>=6`:* Subdued and contained at the temple approach, left for local custody. “They'll turn on each other again.” That is their choice.
+
+### The Machinist
+
+`machinist` · unlock `asteroid>=3` · named from `asteroid>=4` (before: “A caretaker” — Something in the central hall keeps this city running.)
+
+The asteroid's last caretaker: a huge articulated machine with a slit visor and a heavy tool arm. Deliberate, economical, certain. He keeps the city ready for its people's return.
+
+*From `asteroid>=9`:* Immobilized in his own maintenance cradle, then released once he accepted a different instruction: keep what is left safe. The records. The things they made.
+
+### The Machinists
+
+`machinists` · unlock `asteroid>=3`
+
+The people of the Great Machine Age. Their workstations stand empty; stools, lockers, a small repaired bird. Nobody has found them yet.
+
+*From `asteroid>=8`:* In the memory the rune held, they stopped a great production line to mend a little bird. They were allowed to. It belonged to them.
+
+### The city in the asteroid
+
+`ast_city` · unlock `asteroid>=3`
+
+Foundries, transport tunnels, rail carriers and enormous moving assemblies, with a temple built into the central engine. Recycling the archive kept it running.
+
+*From `asteroid>=9`:* Preservation mode: production stopped, the stabilizers and the essential lights kept. The surviving archive panels are in protected storage.
+
+### The mechanical bird
+
+`ast_bird` · unlock `asteroid>=3`
+
+A small wind-up bird; one wing repaired several times with mismatched pieces. Wound, it gives one uneven chirp and flaps a wing.

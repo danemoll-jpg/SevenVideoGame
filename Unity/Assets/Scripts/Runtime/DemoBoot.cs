@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || AstPlay;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -126,6 +126,12 @@ namespace Seven
         public static int MarsCp { get; private set; } = -1;
         public static bool Mars { get; private set; }
         public static bool MarsPlay { get; private set; }
+        /// <summary>Round 16 - the Asteroid: -astcp n (a check run at checkpoint n; 9 = aboard), -asteroid (as from the star
+        /// map), -astplay (the player-style run AsteroidPlaytest: from TRV_AST on the console to AST_11).</summary>
+        public static int AstCp { get; private set; } = -1;
+        public static bool Asteroid { get; private set; }
+        public static bool AstPlay { get; private set; }
+        public static bool AstBird { get; private set; }      // -astbird: the check run takes the optional bird scene
         /// <summary>QF16: -qf16check = aboard free exploration: every ambient cat moment, then the passage to each world + window views.</summary>
         public static bool QF16Check { get; private set; }
         /// <summary>QF20 (1): Dan's save rebuilt on the test keys, free exploration aboard, one real X press at the console.</summary>
@@ -205,6 +211,10 @@ namespace Seven
                 if (args[i] == "-marscp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var mcp)) MarsCp = mcp;
                 if (args[i] == "-mars") Mars = true;
                 if (args[i] == "-marsplay") { MarsPlay = true; Mars = true; }
+                if (args[i] == "-astcp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var acp)) AstCp = acp;
+                if (args[i] == "-asteroid") Asteroid = true;
+                if (args[i] == "-astbird") AstBird = true;
+                if (args[i] == "-astplay") { AstPlay = true; Asteroid = true; }
                 if (args[i] == "-qf16check") { QF16Check = true; Chapter1 = true; }
                 if (args[i] == "-qf20check") { QF20Check = true; Chapter1 = true; }
                 if (args[i] == "-marspick" && i + 1 < args.Length) MarsPick = args[i + 1];

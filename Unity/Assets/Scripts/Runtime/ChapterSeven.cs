@@ -99,6 +99,7 @@ namespace Seven
             if (_dotLevel != _dotTarget) { _dotLevel = Mathf.MoveTowards(_dotLevel, _dotTarget, _dotRate * Time.deltaTime); }
             ApplyDot();
             RideLateUpdate();                             // Round 11: leaning forward on the bike
+            BladesLateUpdate();                           // Round 16: the arc blades (grow / flicker / hum)
             if (Current != Mode.Ride) WallClearance();    // QF8: keep her whole body out of walls
             if (Current != Mode.Float) return;
             _floatT += Time.deltaTime;
@@ -216,6 +217,7 @@ namespace Seven
 
         void UpdateFree()
         {
+            BladeInput();                                 // Round 16: RB / G draws / sheathes the arc blades
             var v = MoveInput(out bool run);
             bool jump = PressedJump(), crouch = PressedCrouch();
             if (crouch)

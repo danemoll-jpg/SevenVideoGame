@@ -25,6 +25,7 @@ namespace Seven
 
         public const string NewGameLabel = "Start new game";
         enum Page { Main, Chapter, Settings, Controls }
+        const string ContinueAst = "@continueasteroid";
         const string ContinueCh1 = "@continue", ContinueVenus = "@continuevenus", ContinueEuropa = "@continueeuropa", ContinueMars = "@continuemars", NewKey = "@new",
                      ChapterKey = "@ch:", SettingsKey = "@settings", ControlsKey = "@controls", QuitKey = "@quit", BackKey = "@back",
                      StartKey = "@start", SectionKey = "@sec:", SettingKey = "@set:";
@@ -67,8 +68,10 @@ namespace Seven
         static (string, string)[] MainItems()
         {
             var l = new List<(string, string)>();
-            VenusState.UseOwnSave(); EuropaState.UseOwnSave(); MarsState.UseOwnSave();
-            if (MarsState.Reached && !MarsState.Complete)                // Round 15: a Mars game in progress
+            VenusState.UseOwnSave(); EuropaState.UseOwnSave(); MarsState.UseOwnSave(); AsteroidState.UseOwnSave();
+            if (AsteroidState.Reached && !AsteroidState.Complete)        // Round 16: an asteroid game in progress
+                l.Add(("Continue  —  " + AsteroidLayout.CpNames[AsteroidState.Checkpoint], ContinueAst));
+            else if (MarsState.Reached && !MarsState.Complete)           // Round 15: a Mars game in progress
                 l.Add(("Continue  —  " + MarsLayout.CpNames[MarsState.Checkpoint], ContinueMars));
             else if (EuropaState.Reached && !EuropaState.Complete)       // Round 14: the furthest chapter first
                 l.Add(("Continue  —  " + EuropaLayout.CpNames[EuropaState.Checkpoint], ContinueEuropa));
@@ -111,7 +114,7 @@ namespace Seven
             I = this;
             if (DemoBoot.CaptureDir != null && DemoBoot.Routes != null && !_routesDone) { _routesDone = true; WorldFlags.FakeForTest(DemoBoot.Routes); }   // Round 15 routing checks
             if (DemoBoot.MenuPick != null && DemoBoot.CaptureDir != null) { ChapterList.UnlockAllForTest(); Build(); gameObject.AddComponent<MenuPilot>(); return; }   // QF12: a run that starts in the real menu (QF14: every chapter open, test keys)
-            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay && !DemoBoot.VenusPlay2 && !DemoBoot.EuropaPlay && !(DemoBoot.MarsPlay && DemoBoot.MenuPick == null)) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
+            if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay && !DemoBoot.VenusPlay2 && !DemoBoot.EuropaPlay && !(DemoBoot.MarsPlay && DemoBoot.MenuPick == null) && !DemoBoot.AstPlay) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuPages) { StartCoroutine(Pages()); return; }
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot && DemoBoot.MenuVenusConfirm)
             {
@@ -130,6 +133,10 @@ namespace Seven
             if (DemoBoot.EuropaCp >= 0 && DemoBoot.CaptureDir != null) { SceneManager.LoadScene("Europa"); return; }     // Round 14 check runs
             if (DemoBoot.MarsCp >= 0 && DemoBoot.CaptureDir != null) { if (DemoBoot.MarsCp >= MarsLayout.CpHome) { MarsState.ResetForTest(); MarsState.Fake(DemoBoot.MarsCp, true); MarsState.HomeAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else SceneManager.LoadScene("Mars"); return; }
             if (DemoBoot.Mars && DemoBoot.CaptureDir != null && DemoBoot.MenuPick == null) { MarsState.ResetForTest(); MarsState.StartFresh(); return; }
+            // Round 16: the Asteroid
+            if (DemoBoot.AstPlay && DemoBoot.CaptureDir != null && DemoBoot.AstCp < 0) { WorldFlags.FakeForTest("trvast"); Chapter1State.StartAt(Chapter1State.CpExplore); return; }   // free aboard: console -> Biaveh -> TRV_AST
+            if (DemoBoot.AstCp >= 0 && DemoBoot.CaptureDir != null) { AsteroidState.ResetForTest(); AsteroidState.Fake(DemoBoot.AstCp, true); if (DemoBoot.AstCp >= AsteroidLayout.CpHome) { AsteroidState.HomeAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else if (DemoBoot.AstCp <= AsteroidLayout.CpArrival) { AsteroidState.ArrivalAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else SceneManager.LoadScene("Asteroid"); return; }
+            if (DemoBoot.Asteroid && DemoBoot.CaptureDir != null) { AsteroidState.ResetForTest(); AsteroidState.StartFresh(); return; }
             if (DemoBoot.Europa && DemoBoot.CaptureDir != null && !DemoBoot.EuropaPlay) { EuropaState.ResetForTest(); EuropaState.StartFresh(); return; }
             if (DemoBoot.VenusSelect != null) { VenusState.StartAt(DemoBoot.VenusSelect); return; }
             if (DemoBoot.Chapter2) { SceneManager.LoadScene("Venus"); return; }
@@ -299,6 +306,7 @@ namespace Seven
             if (key == ContinueVenus) { Chapter1State.Reset(); VenusState.ContinueOwn(); return; }
             if (key == ContinueEuropa) { Chapter1State.Reset(); EuropaState.ContinueOwn(); return; }
             if (key == ContinueMars) { Chapter1State.Reset(); MarsState.ContinueOwn(); return; }
+            if (key == ContinueAst) { Chapter1State.Reset(); AsteroidState.ContinueOwn(); return; }
             // Round 13 (0c) / QF14: "Start new game" = Chapter 1 from the start, every chapter's progress reset (ask once if
             // there is any); a chapter page's "Play from the start" = that chapter fresh (asks when its progress would go)
             if (key == NewKey || key == StartKey)

@@ -34,11 +34,12 @@ namespace Seven.EditorTools
         static string ProjectRoot => Path.GetFullPath(Path.Combine(Application.dataPath, ".."));
         public static string ExePath => Path.Combine(ProjectRoot, "Builds", "Seven", "SevenDemo.exe");   // QF2
         /// <summary>Build order: the demo picker first.</summary>
-        static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath, VenusScenePath, EuropaScenePath, MarsScenePath };
+        static string[] AllScenes => new[] { MenuScenePath, Chapter1ScenePath, ScenePath, RoomScenePath, SaucerScenePath, RatwingScenePath, VenusScenePath, EuropaScenePath, MarsScenePath, AsteroidScenePath };
 
         static readonly string[] Loops = { "idle", "walk", "run", "fight_idle", "dazed", "sitting_idle", "sneak_walk", "float",
                                            "hang_idle", "shimmy", "shimmy_mirror", "crouch_idle", "fall_idle",     // Round 9 traversal loops
-                                           "talking", "thinking", "sad_idle", "sit_idle", "sit_talking" };            // QF7 emotion clips
+                                           "talking", "thinking", "sad_idle", "sit_idle", "sit_talking",               // QF7 emotion clips
+                                           "blade_fight_idle", "blade_run" };                                       // Round 16 arc blades
         // Round 9: running_jump carries the root 4.3 m forward - extracted (and ignored: the arc is scripted), not baked.
         static readonly string[] RootMotion = { "finisher", "dodge", "knocked_down", "get_up", "running_jump" };
 
@@ -89,6 +90,7 @@ namespace Seven.EditorTools
             BuildRound11(sevenCtl, atmo, bank);        // Round 11: Chapter 2 "Venus", part 1
             BuildRound14(sevenCtl, atmo, bank);        // Round 14: Chapter "Europa — Beneath the Ice"
             BuildRound15(sevenCtl, atmo, bank);        // Round 15: Chapter "Mars — The Divided Kingdoms"
+            BuildRound16(sevenCtl, atmo, bank);        // Round 16: Chapter "The Asteroid — the Great Machine Age"
             BuildWorldViews();                         // QF18 (2, 3): the window views + the holograms, from the real levels
             EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
             ConfigurePlayer();
@@ -111,6 +113,7 @@ namespace Seven.EditorTools
             }
             CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "7"), SevenDir, "7_*.fbx");
             CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "7", "emotion"), SevenDir, "7_*.fbx");   // QF7: Dan's body-language clips
+            CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "7", "blade"), SevenDir, "7_*.fbx");     // Round 16: the arc blades (single-sword clips)
             // Round 3 sit clips: Dan's Mixamo downloads keep Mixamo's names; copy them under the 7_ state names.
             foreach (var (from, to) in new[] { ("Stand To Sit.fbx", "7_stand_to_sit.fbx"), ("Seated Idle.fbx", "7_sitting_idle.fbx"),
                                                ("Sitting Idle.fbx", "7_sitting_idle.fbx"), ("Sit To Stand.fbx", "7_sit_to_stand.fbx") })
@@ -123,7 +126,9 @@ namespace Seven.EditorTools
             CopyDir(Path.Combine(RepoRoot, "Art", "Mixamo", "YBot"), BotDir, "*.fbx");
             CopyDir(Path.Combine(RepoRoot, "Art", "Video"), "Assets/Video", "*.mp4");     // Round 9: the first vision
             // Round 9: Dan's alternates used as their own states, and the one-direction shimmy mirrored for the other side.
-            foreach (var (from, to) in new[] { (Path.Combine("alt", "7_jumping_up.fbx"), "7_jumping_up.fbx"), ("7_shimmy.fbx", "7_shimmy_mirror.fbx") })
+            foreach (var (from, to) in new[] { (Path.Combine("alt", "7_jumping_up.fbx"), "7_jumping_up.fbx"), ("7_shimmy.fbx", "7_shimmy_mirror.fbx"),
+                                               // Round 16: the second blade rides the off hand - the mirrored slashes alternate with the originals
+                                               (Path.Combine("blade", "7_blade_slash_in.fbx"), "7_blade_slash_in_mirror.fbx"), (Path.Combine("blade", "7_blade_slash_out.fbx"), "7_blade_slash_out_mirror.fbx") })
             {
                 var f = Path.Combine(RepoRoot, "Art", "Mixamo", "7", from);
                 var dst = Path.Combine(ProjectRoot, SevenDir, to);

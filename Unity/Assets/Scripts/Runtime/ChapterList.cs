@@ -69,6 +69,15 @@ namespace Seven
                 PlayFromStart = () => { Chapter1State.Reset(); MarsState.StartFresh(); },
                 Sections = MarsSections,
             },
+            new ChapterDef
+            {
+                Id = "asteroid", Name = "The Asteroid",
+                // Round 16: the asteroid was reached, or the travel event (TRV_AST) has found it
+                Reached = () => AsteroidState.OwnReached || WorldFlags.AsteroidFound,
+                HasProgress = () => AsteroidState.OwnHasProgress, Confirm = "Start the Asteroid over? Your progress there will be reset.",
+                PlayFromStart = () => { Chapter1State.Reset(); AsteroidState.StartFresh(); },
+                Sections = AsteroidSections,
+            },
         };
 
         static (string label, System.Action start)[] MoonSections()
@@ -98,6 +107,13 @@ namespace Seven
         {
             var l = new List<(string label, System.Action start)>();
             foreach (var (label, cp) in MarsState.SelectEntries) { int c = cp; l.Add((label, () => { Chapter1State.Reset(); MarsState.StartAt(c); })); }
+            return l.ToArray();
+        }
+
+        static (string label, System.Action start)[] AsteroidSections()
+        {
+            var l = new List<(string label, System.Action start)>();
+            foreach (var (label, cp) in AsteroidState.SelectEntries) { int c = cp; l.Add((label, () => { Chapter1State.Reset(); AsteroidState.StartAt(c); })); }
             return l.ToArray();
         }
 

@@ -312,6 +312,7 @@ namespace Seven
             ("Fight: punch · kick (mix them: a combo)", "X · Y", "Left mouse / F · E"),
             ("Fight: block · dodge · jump", "LT · B · A", "Q · Ctrl · Space"),
             ("Fight: takedown (he is dazed) · lock-on", "Y · R3", "E · Tab"),
+            ("Arc blades: draw / sheathe · cut (drawn)", "RB · X", "G · Left mouse / F"),
         };
 
         void BuildControlsTable()
@@ -452,7 +453,7 @@ namespace Seven
         public static void NewGame()
         {
             PlayerPrefs.DeleteKey(Key); PlayerPrefs.DeleteKey(OldKey); PlayerPrefs.DeleteKey(FurthestKey);
-            VenusState.ClearOwnSave(); EuropaState.ClearOwnSave(); MarsState.ClearOwnSave(); WorldFlags.Clear();
+            VenusState.ClearOwnSave(); EuropaState.ClearOwnSave(); MarsState.ClearOwnSave(); AsteroidState.ClearOwnSave(); WorldFlags.Clear();
             PlayerPrefs.Save();
             Debug.Log("[Seven] new game: Chapter 1 checkpoint, Venus save and console progress reset");
         }

@@ -44,6 +44,11 @@ namespace Seven
     public class SaucerOutside : MonoBehaviour
     {
         public GameObject Moon, Venus, Europa, Mars, Space, City;
+        /// <summary>Round 16: the asteroid outside (AST_01 / AST_10): dark rock with silver structures through it, rings turning
+        /// round a recessed opening, white route lights; one section intact, one stripped to its frame. ArchiveLight switches on
+        /// in AST_10 ("an archive light switches on").</summary>
+        public GameObject Asteroid; public Light ArchiveLight; public Renderer ArchiveLamp;
+        public void ArchiveLightOn() { if (ArchiveLight != null) ArchiveLight.enabled = true; if (ArchiveLamp != null) Glowing.Set(ArchiveLamp, 2.4f); Debug.Log("[Seven] the asteroid outside: an archive light switches on"); }
         public GameObject DiscMoon, DiscVenus, DiscEuropa, DiscMars;     // the galley porthole's view
         public Atmosphere Atmo;
         public static SaucerOutside I { get; private set; }
@@ -57,6 +62,7 @@ namespace Seven
             { "venus",  new Haze { valleyD = 0.0012f, noise = 0.35f, fogStart = 30f, groundD = 0.006f, groundBase = -200f, groundFall = 25f, groundRange = 500f, distD = 0.0009f, hazeH = 150f, maxFog = 0.55f, near = 0.45f, far = 0.75f, brightDist = 600f, zenith = 0.85f, glow = 0.35f } },
             { "europa", new Haze { valleyD = 0.0007f, noise = 0.25f, fogStart = 40f, groundD = 0.004f, groundBase = -200f, groundFall = 12f, groundRange = 400f, distD = 0.0006f, hazeH = 120f, maxFog = 0.5f, near = 0.3f, far = 0.6f, brightDist = 700f, zenith = 0.2f, glow = 0.3f } },
             { "mars",   new Haze { valleyD = 0.0005f, noise = 0.3f, fogStart = 60f, groundD = 0.0025f, groundBase = -230f, groundFall = 20f, groundRange = 500f, distD = 0.00045f, hazeH = 150f, maxFog = 0.45f, near = 0.35f, far = 0.65f, brightDist = 600f, zenith = 0.6f, glow = 0.35f } },
+            { "asteroid", new Haze { valleyD = 0.0f, noise = 0.1f, fogStart = 140f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0004f, hazeH = 60f, maxFog = 0.25f, near = 0.03f, far = 0.12f, brightDist = 500f, zenith = 0.03f, glow = 0.4f } },
             { "space",  new Haze { valleyD = 0.0f, noise = 0.0f, fogStart = 200f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0002f, hazeH = 10f, maxFog = 0.15f, near = 0.02f, far = 0.04f, brightDist = 900f, zenith = 0.02f, glow = 0.2f } },
         };
         Haze _saved; bool _savedSet;
@@ -89,13 +95,14 @@ namespace Seven
             if (Venus != null) Venus.SetActive(w == "venus");
             if (Europa != null) Europa.SetActive(w == "europa");
             if (Mars != null) Mars.SetActive(w == "mars");
-            if (Space != null) Space.SetActive(w == "space");             // open space (stars) only while travelling
+            if (Space != null) Space.SetActive(w == "space" || w == "asteroid");   // open space (stars) while travelling, and round the asteroid
+            if (Asteroid != null) Asteroid.SetActive(w == "asteroid");
             if (DiscMoon != null) DiscMoon.SetActive(w == "moon");
             if (DiscVenus != null) DiscVenus.SetActive(w == "venus");
             if (DiscEuropa != null) DiscEuropa.SetActive(w == "europa");
             if (DiscMars != null) DiscMars.SetActive(w == "mars");
             ShowLevel(w);                                                   // QF18 (3): the real level under the ship
-            ShowBiavehSpace(w == "space" && SaucerLocation.System == StarMap.Bia);   // QF18 (22)
+            ShowBiavehSpace(w == "space" && SaucerLocation.System == StarMap.Bia);   // QF18 (22) (round the asteroid: the asteroid fills the window)
             if (Atmo != null)
             {
                 if (!_savedSet) { _saved = Read(Atmo); _savedSet = true; }

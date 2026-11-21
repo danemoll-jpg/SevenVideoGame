@@ -100,10 +100,11 @@ namespace Seven
             if (u == "never") return false;
             if (u.StartsWith("ch1>=")) return int.TryParse(u.Substring(5), out var n) && SaveGame.Furthest >= n;
             if (u.StartsWith("venus>=")) return System.Enum.TryParse<VenusState.Stage>(u.Substring(7), out var st) && VenusState.AtLeast(st);
-            if (u.StartsWith("scene:")) return u.Substring(6).StartsWith("EUR_") ? EuropaState.SceneDone(u.Substring(6)) : u.Substring(6).StartsWith("MAR_") ? MarsState.SceneDone(u.Substring(6)) : VenusState.SceneDone(u.Substring(6));
+            if (u.StartsWith("scene:")) return u.Substring(6).StartsWith("EUR_") ? EuropaState.SceneDone(u.Substring(6)) : u.Substring(6).StartsWith("MAR_") ? MarsState.SceneDone(u.Substring(6)) : u.Substring(6).StartsWith("AST_") ? AsteroidState.SceneDone(u.Substring(6)) : VenusState.SceneDone(u.Substring(6));
             if (u.StartsWith("mars>=")) return int.TryParse(u.Substring(6), out var mc) && MarsState.Reached && MarsState.Checkpoint >= mc;   // Round 15: MarsLayout.Cp*
             if (u == "biaveh") return WorldFlags.BiavehUnlocked;
             if (u == "asteroid") return WorldFlags.AsteroidFound;
+            if (u.StartsWith("asteroid>=")) return int.TryParse(u.Substring(10), out var ac) && AsteroidState.Reached && AsteroidState.Checkpoint >= ac;   // Round 16: AsteroidLayout.Cp*
             if (u.StartsWith("europa>=")) return int.TryParse(u.Substring(8), out var ec) && EuropaState.Reached && EuropaState.Checkpoint >= ec;   // Round 14: EuropaLayout.Cp*
             return false;
         }
@@ -386,6 +387,11 @@ namespace Seven
                 CapLog("used while the combined-records discovery is due -> MAR_13C in the pilot's chair");
                 _busy++; StartCoroutine(DueDiscovery(ab)); return;
             }
+            if (WorldFlags.CattalusDue && ab != null && ab.Active && ab.Explored && !ab.InGalleyScene)
+            {
+                CapLog("used while the Cattalus lead is due -> AST_11B in the pilot's chair");
+                _busy++; StartCoroutine(DueCattalus(ab)); return;
+            }
             Current = State.Entering;
             _ik = Seven.GetComponent<SevenTableIK>();
             if (_ik == null) _ik = Seven.gameObject.AddComponent<SevenTableIK>();
@@ -400,6 +406,7 @@ namespace Seven
         }
 
         IEnumerator DueDiscovery(Chapter1Aboard ab) { yield return ab.CombinedAtConsole(); _busy--; }
+        IEnumerator DueCattalus(Chapter1Aboard ab) { yield return ab.CattalusAtConsole(); _busy--; }
 
         IEnumerator StepIn()
         {
@@ -753,9 +760,20 @@ namespace Seven
                 _busy--;
                 yield break;
             }
+            if (id == "asteroid" && WorldFlags.AsteroidFound)
+            {
+                // Round 16: the asteroid is playable (as Mars: done = a short card, else the chapter where it left off)
+                if (AsteroidState.OwnComplete) { yield return ComingSoonCard("The asteroid — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                ReleaseForTravel();
+                yield return TravelPassage.Run("asteroid");
+                if (UI != null) yield return UI.Fade(1f, 0.8f);
+                if (AsteroidState.HasProgress) AsteroidState.ContinueOwn(); else AsteroidState.StartFresh();
+                _busy--;
+                yield break;
+            }
             if (id == "biaveh" || id == "asteroid")
             {
-                // the asteroid is found on the first journey toward Biaveh (TRV_AST); neither chapter exists yet
+                // the asteroid is found on the first journey toward Biaveh (TRV_AST); Biaveh's chapter does not exist yet
                 var ab0 = Chapter1Aboard.I;
                 if (id == "biaveh" && !WorldFlags.AsteroidFound && ab0 != null && ab0.Active) { ReleaseForTravel(); yield return ab0.TravelToBiaveh(); _busy--; yield break; }
                 yield return ComingSoonCard($"{WorldName(id)} (coming soon)");

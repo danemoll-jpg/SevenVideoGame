@@ -72,8 +72,8 @@ namespace Seven
                 if (con != null && con.Choosing && con.Map != null)
                 {
                     if (!shotMap) { shotMap = true; yield return Cap.Shot("qf20_02_trv_ast_the_choice"); }
-                    if (con.Map.Selected != "asteroid") { if (_phase == 0) { Press(GamepadButton.DpadRight); yield return WaitR(0.4f); } }
-                    else { Log("star map: the asteroid highlighted - A, A"); Press(GamepadButton.South); yield return WaitR(0.6f); Press(GamepadButton.South); yield return WaitR(1.5f); }
+                    if (con.Map.Selected != "biaveh") { if (_phase == 0) { Press(GamepadButton.DpadRight); yield return WaitR(0.4f); } }
+                    else { Log("star map: Biaveh highlighted - A, A (the asteroid now starts its chapter)"); Press(GamepadButton.South); yield return WaitR(0.6f); Press(GamepadButton.South); yield return WaitR(1.5f); }
                     continue;
                 }
                 if (sawSeen && !ShipConsole.StoryLock && Ab != null && Ab.Explored && !Ab.InGalleyScene && (con == null || !con.Busy)) break;

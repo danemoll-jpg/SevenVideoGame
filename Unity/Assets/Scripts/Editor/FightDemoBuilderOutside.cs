@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -208,6 +209,77 @@ namespace Seven.EditorTools
                 var sm = Lit("Outside_stars", Gray(1f), 0f); Emissive(sm, 2.2f); sm.SetFloat("_Cull", 0f); EditorUtility.SetDirty(sm);
                 Obj("Outside_Stars", Finish(v, t), sm, g, false);
                 so.Space = g.gameObject;
+            }
+            // ---- Round 16: the asteroid (AST_01 / AST_10) - irregular dark rock with silver structures built into it, rings
+            // turning round a recessed industrial opening, small white route lights; one section intact, one stripped to its frame
+            {
+                var g = new GameObject("Outside_Asteroid").transform; g.SetParent(root, false);
+                var c = new Vector3(0f, -22f, 165f);
+                var rock = Lit("Outside_asteroid_rock", Gray(0.2f), 0.15f); rock.SetFloat("_Cull", 0f); EditorUtility.SetDirty(rock);
+                var silver = Lit("Outside_asteroid_silver", Gray(0.78f), 0.8f, 0.85f);
+                var lights = Lit("Outside_asteroid_lights", Gray(1f), 0f); Emissive(lights, 2.4f);
+                var dark = Lit("Outside_asteroid_dark", Gray(0.05f), 0.2f);
+                {
+                    var v = new List<Vector3>(); var t = new List<int>(); int lat = 28, lon = 48;
+                    for (int i = 0; i <= lat; i++) for (int j = 0; j <= lon; j++)
+                    {
+                        float th = i / (float)lat * Mathf.PI, ph = j / (float)lon * Mathf.PI * 2f;
+                        var n = new Vector3(Mathf.Sin(th) * Mathf.Cos(ph), Mathf.Cos(th), Mathf.Sin(th) * Mathf.Sin(ph));
+                        float h = 1f + 0.22f * (Fbm(n.x * 2.2f + 3f, n.z * 2.2f + n.y * 1.7f) - 0.5f) * 2f;
+                        v.Add(c + Vector3.Scale(n, new Vector3(95f, 62f, 70f)) * h);
+                    }
+                    for (int i = 0; i < lat; i++) for (int j = 0; j < lon; j++) { int a0 = i * (lon + 1) + j, b0 = a0 + lon + 1; t.AddRange(new[] { a0, b0, a0 + 1, a0 + 1, b0, b0 + 1 }); }
+                    Obj("Asteroid_Rock", SmoothFinish(v, t), rock, g, false);
+                }
+                // the recessed opening facing the saucer, two rings turning round it
+                var mouth = c + new Vector3(-8f, 6f, -66f);
+                { var v = new List<Vector3>(); var t = new List<int>(); Append(v, t, RotX(Lathe(new[] { new Vector2(0f, 4f), new Vector2(15f, 4f), new Vector2(17f, 0f) }, 0f, 360f, 32), mouth)); Obj("Asteroid_Mouth", Finish(v, t), dark, g, false); }
+                foreach (var (rr, sp, tilt) in new[] { (24f, 9f, 0f), (31f, -6f, 12f) })
+                {
+                    var v = new List<Vector3>(); var t = new List<int>();
+                    Sweep(v, t, Enumerable.Range(0, 49).Select(i => new Vector3(Mathf.Cos(i / 48f * Mathf.PI * 2f) * rr, Mathf.Sin(i / 48f * Mathf.PI * 2f) * rr, 0f)).ToList(), 1.3f, true, 8);
+                    for (int i = 0; i < 12; i++) { float a = i * 30f * Mathf.Deg2Rad; Ellipsoid(v, t, new Vector3(Mathf.Cos(a) * rr, Mathf.Sin(a) * rr, -1.2f), Vector3.one * 0.9f, 3, 6); }
+                    var ring = Obj($"Asteroid_Ring{(int)rr}", SmoothFinish(v, t), silver, g, false);
+                    ring.transform.position = mouth; ring.transform.rotation = Quaternion.Euler(tilt, 0f, 0f);
+                    var spin = ring.AddComponent<Seven.AstSpin>(); spin.Axis = Vector3.forward; spin.Speed = sp; spin.Essential = true;
+                }
+                // the intact section (towers, domes, gantries) and the section stripped to its framework
+                {
+                    var v = new List<Vector3>(); var t = new List<int>();
+                    for (int i = 0; i < 14; i++)
+                    {
+                        float ax = -70f + i * 4.5f + R() * 2f, h = 14f + 26f * R();
+                        var b = c + new Vector3(ax, 30f + R() * 14f, -42f - R() * 10f);
+                        Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(2.2f, 0f), new Vector2(1.6f, h * 0.7f), new Vector2(2.4f, h * 0.75f), new Vector2(1.2f, h), new Vector2(0f, h + 2f) }, 0f, 360f, 10, null, b));
+                    }
+                    for (int i = 0; i < 5; i++) Ellipsoid(v, t, c + new Vector3(-50f + i * 12f, 40f, -30f), new Vector3(7f, 5f, 7f), 6, 10, p => p.y < c.y + 39f);
+                    Obj("Asteroid_IntactSection", SmoothFinish(v, t), silver, g, false);
+                    var fv = new List<Vector3>(); var ft = new List<int>();
+                    for (int i = 0; i < 7; i++) for (int j = 0; j < 4; j++)
+                    {
+                        var b = c + new Vector3(30f + i * 7f, 22f + j * 8f, -50f + j * 3f);
+                        Sweep(fv, ft, new[] { b, b + Vector3.up * 8f }, 0.35f, false, 4); Sweep(fv, ft, new[] { b + Vector3.up * 8f, b + new Vector3(7f, 8f, 0f) }, 0.3f, false, 4);
+                        if ((i + j) % 2 == 0) Sweep(fv, ft, new[] { b, b + new Vector3(7f, 8f, 0f) }, 0.25f, false, 4);
+                    }
+                    Obj("Asteroid_StrippedFrame", Finish(fv, ft), silver, g, false);
+                }
+                // small white route lights along the surface
+                {
+                    var v = new List<Vector3>(); var t = new List<int>();
+                    for (int r2 = 0; r2 < 4; r2++) for (int i = 0; i < 26; i++)
+                    {
+                        float a = (i / 26f) * 220f - 110f + r2 * 9f;
+                        var p = c + Quaternion.Euler(0f, a, 0f) * new Vector3(0f, 18f + r2 * 9f - Mathf.Abs(a) * 0.05f, -78f + Mathf.Abs(a) * 0.12f);
+                        Ellipsoid(v, t, p, Vector3.one * 0.5f, 3, 6);
+                    }
+                    Obj("Asteroid_RouteLights", Finish(v, t), lights, g, false);
+                }
+                // the archive light (switches on in AST_10)
+                var al = new GameObject("Asteroid_ArchiveLight").AddComponent<Light>(); al.transform.SetParent(g, false); al.transform.position = mouth + new Vector3(18f, 10f, -6f); al.type = LightType.Point; al.range = 60f; al.intensity = 6f; al.color = Color.white; al.enabled = false;
+                { var v = new List<Vector3>(); var t = new List<int>(); Ellipsoid(v, t, mouth + new Vector3(18f, 10f, -2f), Vector3.one * 1.4f, 5, 8); var lm = Lit("Outside_asteroid_archivelamp", Gray(0.4f), 0.2f); Emissive(lm, 0.2f); so.ArchiveLamp = Obj("Asteroid_ArchiveLamp", SmoothFinish(v, t), lm, g, false).GetComponent<Renderer>(); }
+                so.ArchiveLight = al;
+                so.Asteroid = g.gameObject;
+                g.gameObject.SetActive(false);
             }
             // ---- the galley porthole's discs (the Moon disc exists since Round 10)
             if (ch != null && ch.Moon != null)

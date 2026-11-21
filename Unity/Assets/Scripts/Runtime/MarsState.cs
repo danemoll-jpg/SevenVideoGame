@@ -119,7 +119,7 @@ namespace Seven
     /// "seven_test_routes"), so they hold whichever chapter set them; a new game clears them.</summary>
     public static class WorldFlags
     {
-        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen; }
+        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen; }
         static string Key => DemoBoot.CaptureDir != null ? "seven_test_routes" : "seven_routes";
         static R Get() { var j = PlayerPrefs.GetString(Key, ""); return string.IsNullOrEmpty(j) ? new R() : JsonUtility.FromJson<R>(j) ?? new R(); }
         static void Put(R r) { PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
@@ -133,6 +133,15 @@ namespace Seven
             if (what == "europa") { EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c); }
             if (what == "none") { EuropaState.ClearTestSave(); EuropaState.ResetForTest(); }
             if (what == "mars") { MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true); }
+            // Round 16 (-astplay): Mars + Europa complete, the combined records seen, the asteroid not found yet - the run starts
+            // free aboard, chooses Biaveh on the star map, the first journey finds the asteroid (TRV_AST)
+            if (what == "trvast")
+            {
+                MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true);
+                EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c);
+                AsteroidState.ClearTestSave(); AsteroidState.ResetForTest();
+                Put(new R { combined = true, combinedSeen = true });
+            }
             // QF20 (1): Dan's 0.15.4 save - Mars + Europa complete, the old flags set (Biaveh unlocked, asteroid found), never seen
             if (what == "dansave")
             {
@@ -159,8 +168,13 @@ namespace Seven
         public static bool BiavehUnlocked => CombinedPlayed;
         public static bool AsteroidFound => Get().asteroidFound;
         public static void MarkAsteroid() { var r = Get(); r.asteroidFound = true; Put(r); }
-        public static bool AsteroidDone => Get().asteroidDone;   // the chapter does not exist yet
+        public static bool AsteroidDone => Get().asteroidDone || AsteroidState.OwnComplete;   // Round 16: the chapter's own save
+        public static void MarkAsteroidDone() { var r = Get(); r.asteroidDone = true; Put(r); }
         public static bool BiavehDone => Get().biavehDone;
+        /// <summary>Round 16 (AST_11B): the shared Cattalus lead - once, when the asteroid AND Biaveh are complete (whichever is
+        /// second), and at the console whenever it is due and hasn't played (the QF20 lesson).</summary>
+        public static bool CattalusDue => AsteroidDone && BiavehDone && !Get().cattalusSeen;
+        public static void MarkCattalusSeen() { var r = Get(); r.cattalusSeen = true; Put(r); }
         public static bool CattalusUnlocked => VenusDone && MarsDone && EuropaDone && AsteroidDone && BiavehDone;
         public static bool FinalMoonUnlocked => false;
         public static string Summary() => $"world flags: Venus {VenusDone}, Mars {MarsDone}, Europa {EuropaDone}, combined records {(CombinedSeen ? "seen" : CombinedPlayed ? "flag set, never seen to the end" : "not yet")} -> Biaveh {(BiavehUnlocked ? "unlocked" : "locked")}, asteroid {(AsteroidFound ? "found" : "undiscovered")}, Cattalus {(CattalusUnlocked ? "unlocked" : "locked")}, final Moon {(FinalMoonUnlocked ? "unlocked" : "locked")}";

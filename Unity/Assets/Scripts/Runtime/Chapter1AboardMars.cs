@@ -342,6 +342,14 @@ namespace Seven
             MarsDebriefDone = true;
             if (DemoBoot.CaptureDir != null) Cap?.Log($"TRV_AST choice: {pick}; MARS / ROUTES DONE: {MarsState.Summary()}; {WorldFlags.Summary()}");
             EndChairMoment("the departure routing ends");
+            if (pick == "asteroid")
+            {
+                // Round 16: "Investigate the asteroid" - the chapter begins (AST_01 in the pilot's chair)
+                yield return UI.Fade(1f, 1.0f);
+                ShipConsole.StoryLock = false;
+                if (AsteroidState.HasProgress) AsteroidState.ContinueOwn(); else AsteroidState.StartFresh();
+                yield break;
+            }
             if (con != null) yield return con.ComingSoonCard($"{ShipConsole.WorldName(pick)} (coming soon)");
             yield return ExitStaging("the Mars departure routing ends");
             ShipConsole.StoryLock = false;

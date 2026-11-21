@@ -162,3 +162,19 @@ investigating a bug.
 
 Every Mars wait is `MarsDirector.Until` (hint 45 s / 25 s riding, skip 2 min / 60 s riding); riding / walking steps fire at
 or past their place (route points ahead count).
+
+## The Asteroid (Round 16)
+
+| # | Place | One-way? | Verdict |
+|---|---|---|---|
+| A1 | The service entrance (receiving chamber → tunnel) | closed until the scanner is turned and the door control used; both ways after | ok (the way forward stays closed until done) |
+| A2 | The three causeway junctions | each span is closed (turned for the carriers) until she aligns it; both ways after | ok |
+| A3 | The hall seals (AST_04): the shutters close, she leaves through the maintenance opening, which shuts behind her | the hall is closed until AST_07 | ok - nothing she needs is behind her (the bike waits at the hall plaza; she returns through the hall after the fight); a slow escape is a white fade back with more time, never a fail |
+| A4 | The cargo platforms across the pit (control 1) | closed until control 1; both ways after | ok |
+| A5 | The foundry passage (control 2) | closed by steam until control 2; both ways after | ok |
+| A6 | The final transport assembly (AST_06): it retracts, she drops 4.4 m to the maintenance ledge | the ledge's only way out is the wall climb (A) up to the west works; the assembly slides back out once she is up (both ways after); a climb that takes over 150 s is helped up (the skip) | ok |
+| A7 | The west passage back to the hall (AST_07) | closed until the diverter (control 3); both ways after | ok |
+| A8 | The temple archive | shuttered until the fight is won; both ways after | ok |
+
+Every asteroid wait is `AsteroidDirector.Until` (hint 45 s / 25 s riding, skip 2 min / 60 s riding); riding / walking
+steps fire at or past their place (route points ahead count); the junction levers work from the bike too.
