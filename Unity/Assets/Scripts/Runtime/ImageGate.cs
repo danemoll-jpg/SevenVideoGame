@@ -32,12 +32,14 @@ namespace Seven
         static readonly List<string> _failNames = new List<string>();
 
         // ---- the subject the next shots must show (a director declares it before a view of a place / thing)
-        static Transform _subject; static Vector3? _subjectPoint; static string _subjectLabel; static float _subjectUntil;
-        /// <summary>The next shot(s) are of this (until <paramref name="seconds"/> pass, default: the next shot only).</summary>
-        public static void Expect(Transform t, string label, float seconds = 0f) { _subject = t; _subjectPoint = null; _subjectLabel = label; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
+        static Transform _subject; static Vector3? _subjectPoint; static string _subjectLabel, _subjectFor; static float _subjectUntil;
+        /// <summary>The next shot(s) are of this (until <paramref name="seconds"/> pass, default: the next shot only). QF27:
+        /// <paramref name="forShot"/> = only a shot whose file name contains it (two captures in one frame never take each other's).</summary>
+        public static void Expect(Transform t, string label, float seconds = 0f, string forShot = null) { _subject = t; _subjectPoint = null; _subjectLabel = label; _subjectFor = forShot; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
         /// <summary>A view of a place: the point must be in frame and unblocked (the city, the transit tower, the meadow).</summary>
-        public static void ExpectPoint(Vector3 p, string label, float seconds = 0f) { _subject = null; _subjectPoint = p; _subjectLabel = label; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
-        static void SubjectUsed() { if (_subjectUntil < 0f || Time.time > _subjectUntil) { _subject = null; _subjectPoint = null; _subjectLabel = null; } }
+        public static void ExpectPoint(Vector3 p, string label, float seconds = 0f, string forShot = null) { _subject = null; _subjectPoint = p; _subjectLabel = label; _subjectFor = forShot; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
+        static bool SubjectFor(string name) => _subjectFor == null || name.Contains(_subjectFor);
+        static void SubjectUsed() { if (_subjectUntil < 0f || Time.time > _subjectUntil) { _subject = null; _subjectPoint = null; _subjectLabel = null; _subjectFor = null; } }
 
         public static RenderTexture NewRT(int w = 1280, int h = 720) => new RenderTexture(w, h, 24, RenderTextureFormat.ARGBHalf) { antiAliasing = 4, name = "ImageGateRT" };
 
@@ -131,10 +133,11 @@ namespace Seven
                 // "nothing to see": little detail AND little contrast (a smooth, strongly lit shape - the cave mouth, the asteroid - is fine)
                 if (!insert && ((r.Edges < EdgesMin && r.Range < RangeStrong) || r.Edges < EdgesHard)) why.Add($"edges {r.Edges * 100f:0.0} % < {EdgesMin * 100f:0} % with range {r.Range:0.00} < {RangeStrong:0.00} (or < {EdgesHard * 100f:0} %)");
                 if (r.Black > BlackMax) why.Add($"black {r.Black * 100f:0} % > {BlackMax * 100f:0} %");
-                if (!SubjectInFrame(cam, out r.Subject)) why.Add("no subject at a readable size (" + r.Subject + ")");
+                bool mine = SubjectFor(ln);
+                if (!SubjectInFrame(cam, out r.Subject, mine)) why.Add("no subject at a readable size (" + r.Subject + ")");
             }
             else r.Subject = "exempt shot (fade / title / video / menu)";
-            SubjectUsed();
+            if (SubjectFor(ln)) SubjectUsed();
             r.Pass = why.Count == 0; r.Why = string.Join("; ", why);
             return r;
         }
@@ -142,17 +145,17 @@ namespace Seven
 
         // ------------------------------------------------------------------ the subject
         static readonly List<Renderer> _rs = new List<Renderer>();
-        static bool SubjectInFrame(Camera cam, out string what)
+        static bool SubjectInFrame(Camera cam, out string what, bool useDeclared = true)
         {
             what = "no camera";
             if (cam == null) return true;
-            if (_subjectPoint.HasValue)
+            if (useDeclared && _subjectPoint.HasValue)
             {
                 bool ok = PointVisible(cam, _subjectPoint.Value, out float off);
                 what = $"'{_subjectLabel}' (a place) {(ok ? "in frame, unblocked" : off > 0f ? "blocked" : "out of frame")}";
                 return ok;
             }
-            if (_subject != null)
+            if (useDeclared && _subject != null)
             {
                 float a = Area(cam, _subject, out bool vis);
                 what = $"'{_subjectLabel}' {a * 100f:0.0} % of the frame{(vis ? "" : ", blocked")}";

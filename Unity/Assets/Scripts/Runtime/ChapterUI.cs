@@ -279,6 +279,9 @@ namespace Seven
             float w = Mathf.Min(1f, screen / Mathf.Max(0.1f, srcAspect)), h = Mathf.Min(1f, srcAspect / Mathf.Max(0.1f, screen));
             _video.uvRect = new Rect((1f - w) * 0.5f, (1f - h) * 0.5f, w, h);
             _video.color = new Color(1f, 1f, 1f, alpha);
+            // QF27: the lines are read over a video (the meadow): the subtitle panel draws ABOVE the video layer (it was created first,
+            // so the video covered every subtitle)
+            if (_subPanel != null) _subPanel.transform.SetAsLastSibling();
         }
 
         public IEnumerator Title(string text, float fadeIn, float hold, float fadeOut)

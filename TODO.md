@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF27: Dan's 0.18.1 review (Dan, 2026-11-22) — to do
+## Quick fix QF27: Dan's 0.18.1 review (Dan, 2026-11-22) — item 1 done, status below; release 0.18.2
 
 1. **The meadow cinematic is IN (Dan, 2026-11-22): `Art/Video/cattalus_meadow.mp4`** (one edited clip, 78.8 s, 1920×1044,
    grayscale, silent; still `Art/Video/cattalus_meadow_still.jpg`). Replace the temporary in-engine meadow with it (one video, not
@@ -39,6 +39,48 @@ left; hills and ground flat gray).
    giant blank surfaces; no buildings reduced to specks in the reveal. The meadow and the leaning tree match vision 7.
 4. **Re-prove the whole chapter** (both race outcomes) with before / after captures of every scene from the player's camera, all
    passing the new gate.
+
+## QF27 — status (2026-11-22): item 1 done; release 0.18.2 (`game-1802`)
+- **The meadow is Dan's clip now.** CAT_10 after "That's it / I used to come here often / I can see why" fades into
+  `Art/Video/cattalus_meadow.mp4` (78.8 s, 1920x1044, grayscale) - one video, full screen; the in-engine stand-in only plays if the clip
+  is missing (or `-novideo`). Builder: `MeadowClips()` copies the one clip (`MEADOW CLIP (QF27)` in the build log).
+- **Timed to the picture** (`CattalusDirectorEnd.MeadowCues`, one table): 04-06 "Go on. Nobody's watching / You are / I'll be discreet"
+  at 1.5 / 4.0 / 5.8 s while small Panther eyes the seedhead (her face small in the wide); grass rustle, a paw, the grass run as he
+  bounds off (13.4 s); two heavy footfalls as the giant Panther walks in, 07 "Oh!" at 20.0 s as he appears; 08-12 while her hand
+  reaches and rests on his face (22.6-32.4 s), the giant purr under it; her soft laugh and his chuckle after "Ha! No." (34.6 / 35.6 s);
+  the grass run as they walk away side by side, 13 "Oh, really?" at 44 s (both seen from behind); her breathing settling (57 s); the
+  rustle and soft thud as he lies down, his purr from 63 s; 14-15 at 66 / 68.5 s with her face buried in his fur; 16-18 at 71 / 73.8 /
+  75.8 s over the final hold. Proof at real speed: every line started on its cue (latest 0 ms late), voice overlap 0; the automatic
+  reactions are held off during the clip so nothing drifts.
+- **Music:** `cattalus_meadow` starts with the clip's first frame (it used to start at the walk in) and fades out over the clip's last
+  6 s (from 72.8 s); the city theme carries the walk and CAT_10_01-03; after the cinematic the guard brings the city theme back (music
+  silence with control 0.0 s).
+- **Found while capturing: the subtitles were hidden under every full-screen video** (the subtitle panel was created before the video
+  layer on the same canvas, so the video drew over it - in the meadow the lines were heard, never seen). The subtitle panel now draws
+  above the video (`ChapterUI.SetVideo`). Also: the gate's declared subjects are bound to the shot they are for (two captures in one
+  frame took each other's), and the build log names the one clip.
+- **Captures from the player's camera with the lines over them:** `Docs/Previews/qf27/` - one frame per line (`c5_meadow_video_frame_
+  CAT_10_04 ... _18`) + the small Panther bounding off and the walk side by side.
+  What they show: 04-06 she stands by the leaning tree, small Panther at her boots, "Go on. Nobody's watching" / PANTHER "You are." /
+  "I'll be discreet."; he bounds off right; 07 "Oh!" as the giant Panther's head enters the frame; 08 he stands beside her; 09-12 her
+  hand on his face ("There's more room here" ... "Ha! No."); the two of them from behind walking through the grass, 13 "Oh, really?";
+  14-15 she sits against him under the tree, her face in his fur; 16-18 the final hold ("When we're finished, can we come back?" / "I'd
+  like that." / "Good."). Every subtitle on its soft dark band, readable over the picture. The run's only gate failure is a diagnostic
+  shot of the check-run autopilot stalling 40 s on its way to the meadow (`-catcp 5`; the watchdog moved it on; the player-style runs
+  never hit it) - noted, not a player path. Release gate `gate_0.18.2.txt`: PASS (Cattalus 0, NaN 0, no new failures).
+- **The colour master** `Art/Video/color/cattalus_meadow_color.mov` (221 MB) is untouched and kept **out of git** (`.gitignore`:
+  `Art/Video/color/*.mov`) - the repo already carries ~2.4 GB of LFS and the game does not use it yet; Dan keeps the original. It is
+  outside every build path and the monochrome check. When the heaven ending is built, its 1920x1044 h264 copy goes beside it.
+- Decisions: the line times are mine from the picture (contact sheet of the clip every 2 s); the laughter / breathing use the existing
+  reaction takes (seven laugh_soft / sigh, cat chuckle), the footfalls `land_hard` / `land_soft` at low volume (no dedicated giant-paw
+  sound); the clip plays at game time (pauses with the game).
+
+## For Dan to check (QF27)
+- Cattalus -> the meadow (Scene Select "Cattalus: the meadow" or play on from the vision): after "I can see why" the screen fades into
+  your clip; every line is subtitled over the picture and lands on its moment (the "Oh!" as the giant Panther appears, "There's more
+  room here" with her hand on his face, the last three over the final hold).
+- The meadow track from the clip's first frame, gone by its last frame; the laugh after "Ha! No.", the purr once he lies down.
+- Other videos with lines (the vision clips) now show their subtitles too.
 
 ## QF26 — status (2026-11-22): done; release 0.18.1 (`game-1801`)
 

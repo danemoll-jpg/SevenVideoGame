@@ -551,7 +551,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–18 + QF1–QF26 complete (2026-11-22), release 0.18.1.** QF26 = the Cattalus white-out (NaN normals + bloom, captures were LDR): the image-quality gate (standing rules above). Round 18 = Chapter "Cattalus — Panther's homeworld" (first playable pass; the meadow cinematic in-engine until Dan's clips are in). QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–18 + QF1–QF27 complete (2026-11-22), release 0.18.2.** QF27 = Dan's meadow clip in, timed. QF26 = the Cattalus white-out (NaN normals + bloom, captures were LDR): the image-quality gate (standing rules above). Round 18 = Chapter "Cattalus — Panther's homeworld" (first playable pass; the meadow cinematic in-engine until Dan's clips are in). QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -981,7 +981,12 @@ scene (Round 10).
   `HeightOffset` (`_SevenFogYOff`), `FightDemoBuilderQF26Checks.cs` (`NORMALS`, `IMAGE GATE` paths), `SaveMesh` ->
   `UnshareZeroNormals`, the Cattalus city blocks (`CityBlocks`, 307 homes / cat trees / posts) + sunny `Atmosphere_Cattalus`,
   `Tools/image_gate.py`, `Tools/Run-ImageGate.ps1`. Before / after captures: `Docs/Previews/qf26/before|after*`.
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.18.1** (QF26 status in `TODO.md`).
+- **QF27 (release 0.18.2)** — the meadow is Dan's clip `Art/Video/cattalus_meadow.mp4` (`CattalusDirectorEnd.MeadowVideo` +
+  `MeadowCues`: lines, reactions and sounds by clip time; the meadow track from the first frame, faded over the last 6 s); subtitles
+  draw above full-screen video (`ChapterUI.SetVideo`); `ImageGate.Expect(..., forShot)`. Colour masters `Art/Video/color/*.mov` stay out
+  of git, untouched (the heaven ending later).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.18.2** (QF27 status in `TODO.md`).
+**Before: Dan plays 0.18.1** (QF26 status in `TODO.md`).
 **Before: Dan plays 0.18.0** (Round 18 status in `TODO.md`).
 **Before: Dan plays 0.17.4** (QF25 status in `TODO.md`).
 **Before: Dan plays 0.17.3** (QF24 status in `TODO.md`).

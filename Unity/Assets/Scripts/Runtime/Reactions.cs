@@ -38,9 +38,11 @@ namespace Seven
             get
             {
                 if (_off == null) _off = System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-noreactions") >= 0;
-                return !_off.Value;
+                return !_off.Value && !Suppress;
             }
         }
+        /// <summary>QF27: off while a cinematic places its own laughter / breathing on the picture.</summary>
+        public static bool Suppress;
 
         /// <summary>Number of placements loaded (for logs).</summary>
         public static int Count { get { Load(); return _byLine.Count; } }

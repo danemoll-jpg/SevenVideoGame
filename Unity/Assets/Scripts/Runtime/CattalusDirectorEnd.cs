@@ -334,7 +334,8 @@ namespace Seven
             if (Race != null) CattalusCourse.Around(-1);
             yield return GuideWalk(L.WalkToMeadow, "following Panther to the meadow", 3f);
             yield return Cutscene(true);
-            MusicSystem.Play("cattalus_meadow", 3f);
+            bool video = MeadowClips != null && MeadowClips.Length > 0 && MeadowClips[0] != null && !DemoBoot.NoVideo;
+            if (!video) MusicSystem.Play("cattalus_meadow", 3f);   // QF27: with the video, the meadow track starts WITH the clip
             if (_amb != null) StartCoroutine(AudioKit.Fade(_amb, 0f, 2f));
             var breeze = AudioKit.Loop("cat_meadow_breeze", null, null, 0f, AudioKit.Bus.Ambience); if (breeze != null) StartCoroutine(AudioKit.Fade(breeze, 0.5f, 2f));
             // the city path opens onto the meadow: the leaning tree, older and larger, the low hills
@@ -348,50 +349,79 @@ namespace Seven
             TwoShot((P7 + (Cat != null ? Cat.transform.position : P7)) * 0.5f, side, 2.4f, 0.9f, 0.8f, 42f, 0.4f);
             yield return Say("CAT_10", 2, 3);                     // I used to come here often. / I can see why.
             Complete("CAT_10a");
-            // the six-segment cinematic: Dan's clips if they are in (grayscale copies), else the in-engine version
-            bool clips = MeadowClips != null && MeadowClips.Length == 6 && System.Array.TrueForAll(MeadowClips, c => c != null) && !DemoBoot.NoVideo;
-            Log($"CAT_10 cinematic: {(clips ? "Dan's six clips (grayscale copies)" : "the TEMPORARY in-engine version (the clips are not in yet)")}");
-            if (clips) yield return MeadowVideos(); else yield return MeadowInEngine();
+            // QF27: Dan's edited clip (Art/Video/cattalus_meadow.mp4); the in-engine stand-in only if it is missing / -novideo
+            Log($"CAT_10 cinematic: {(video ? "Dan's meadow clip (78.8 s), the lines and sounds timed to it" : "the in-engine stand-in (no clip)")}");
+            if (video) yield return MeadowVideo(); else yield return MeadowInEngine();
             if (breeze != null) StartCoroutine(AudioKit.Fade(breeze, 0f, 3f, true));
-            MusicSystem.Stop(3.5f);                               // the meadow track fades out at the end of the cinematic
+            if (!video) MusicSystem.Stop(3.5f);                   // (with the video the track has already faded over the clip's last 6 s)
             yield return UI.Fade(1f, 2.2f);
             Complete("CAT_10");
             yield return Cutscene(false);
         }
 
-        /// <summary>The six segments as video (Art/Video/cattalus_meadow_01..06.mp4, grayscale copies of Dan's colour masters), with
-        /// the lines, laughter, breathing, purring, footfalls and grass laid over them.</summary>
-        IEnumerator MeadowVideos()
+        // QF27: what is on screen when (Dan's clip, 78.8 s): 0-13 she stands by the leaning tree, small Panther chases a seedhead,
+        // 13-17 he bounds off; 18-23 the giant Panther walks in; 24-35 her hand on his face; 36-58 they walk away side by side through
+        // the grass; 59-65 he lies down, she sits against him; 66-79 the final hold, her head on his fur, his lowered to hers.
+        // Each line on its action; 7's lines where her face is small, turned away or hidden; CAT_10_16-18 over the final hold.
+        static readonly (float t, string what)[] MeadowCues =
         {
+            (1.5f, "line:CAT_10_04"), (2.2f, "sfx:grass_rustle:0.35"), (4.0f, "line:CAT_10_05"), (5.8f, "line:CAT_10_06"),
+            (8.5f, "sfx:paw_1:0.3"), (10.0f, "sfx:grass_rustle:0.4"), (13.4f, "sfx:grass_run:0.55"), (16.5f, "shot:small_panther_bounds_off"),
+            (19.2f, "sfx:land_hard:0.28"), (20.0f, "line:CAT_10_07"), (21.3f, "sfx:land_hard:0.3"), (22.6f, "line:CAT_10_08"),
+            (24.4f, "sfx:giant_purr:0.45"), (25.4f, "line:CAT_10_09"), (27.4f, "line:CAT_10_10"), (30.0f, "line:CAT_10_11"),
+            (32.4f, "line:CAT_10_12"), (34.6f, "react:seven:laugh_soft"), (35.6f, "react:cat:chuckle"),
+            (38.0f, "sfx:grass_run:0.7"), (41.0f, "shot:side_by_side_through_the_grass"), (44.0f, "line:CAT_10_13"), (46.0f, "sfx:grass_run:0.6"),
+            (52.0f, "sfx:grass_run:0.5"), (57.2f, "react:seven:sigh"), (60.5f, "sfx:grass_rustle:0.5"), (62.0f, "sfx:land_soft:0.4"),
+            (63.0f, "purr"), (64.5f, "react:seven:sigh"), (66.0f, "line:CAT_10_14"), (68.5f, "line:CAT_10_15"),
+            (71.0f, "line:CAT_10_16"), (73.8f, "line:CAT_10_17"), (75.8f, "line:CAT_10_18"),
+        };
+        /// <summary>QF27: the meadow as Dan's one clip; the meadow track from its first frame, faded out over its last 6 s.</summary>
+        IEnumerator MeadowVideo()
+        {
+            var clip = MeadowClips[0];
             yield return UI.Fade(1f, 0.8f);
             DialogueFraming.VoiceOver = "the meadow cinematic (video)";
-            var seg = new[] { new[] { "CAT_10_04", "CAT_10_05", "CAT_10_06" }, new[] { "CAT_10_07", "CAT_10_08", "CAT_10_09", "CAT_10_10", "CAT_10_11", "CAT_10_12" }, new[] { "CAT_10_13" }, new string[0], new[] { "CAT_10_14", "CAT_10_15" }, new[] { "CAT_10_16", "CAT_10_17", "CAT_10_18" } };
-            var start = new[] { 2.5f, 3.5f, 6.5f, 0f, 6.0f, 4.0f };
-            for (int i = 0; i < 6; i++)
+            Reactions.Suppress = true;       // the laughter / breathing are placed on the picture
+            var go = new GameObject("MeadowVideo"); var vp = go.AddComponent<UnityEngine.Video.VideoPlayer>();
+            vp.playOnAwake = false; vp.clip = clip; vp.renderMode = UnityEngine.Video.VideoRenderMode.RenderTexture; vp.audioOutputMode = UnityEngine.Video.VideoAudioOutputMode.None; vp.timeUpdateMode = UnityEngine.Video.VideoTimeUpdateMode.GameTime;
+            var rt = new RenderTexture((int)clip.width, (int)clip.height, 0); vp.targetTexture = rt;
+            vp.Prepare(); for (float w = 0f; w < 4f && !vp.isPrepared; w += Time.deltaTime) yield return null;
+            float len = (float)clip.length;
+            MusicSystem.Play("cattalus_meadow", 0.4f);                         // from the start of the clip
+            vp.Play(); UI.SetVideo(rt, clip.width / (float)clip.height, 1f);
+            StartCoroutine(UI.Fade(0f, 1.0f));
+            AudioSource purr = null; bool fading = false; int ci = 0; float t0 = Time.time, drift = 0f; int lines = 0;
+            Log($"MEADOW VIDEO (QF27): {len:0.0} s, {MeadowCues.Length} cues, the meadow track from the first frame");
+            while (true)
             {
-                var clip = MeadowClips[i];
-                var go = new GameObject("MeadowVideo" + i); var vp = go.AddComponent<UnityEngine.Video.VideoPlayer>();
-                vp.playOnAwake = false; vp.clip = clip; vp.renderMode = UnityEngine.Video.VideoRenderMode.RenderTexture; vp.audioOutputMode = UnityEngine.Video.VideoAudioOutputMode.None; vp.timeUpdateMode = UnityEngine.Video.VideoTimeUpdateMode.GameTime;
-                var rt = new RenderTexture((int)clip.width, (int)clip.height, 0); vp.targetTexture = rt;
-                vp.Prepare(); for (float t = 0f; t < 3f && !vp.isPrepared; t += Time.deltaTime) yield return null;
-                vp.Play(); UI.SetVideo(rt, clip.width / (float)clip.height, 1f);
-                if (i == 0) yield return UI.Fade(0f, 1.0f);
-                if (i == 1) AudioKit.Play("giant_purr", null, 0.4f);
-                if (i == 3) AudioKit.Play("grass_run", null, 0.8f);
-                if (i == 4) Purr.Loop(Seven.transform, 0.8f);
-                float len = (float)clip.length; bool said = false;
-                for (float t = 0f; t < len - 0.05f; t += Time.deltaTime)
+                float t = vp.isPlaying ? (float)vp.time : Time.time - t0;
+                while (ci < MeadowCues.Length && t >= MeadowCues[ci].t)
                 {
-                    if (!said && t > start[i] && seg[i].Length > 0) { said = true; StartCoroutine(SayIds(seg[i])); }
-                    if (t > len * 0.5f && t - Time.deltaTime <= len * 0.5f) yield return Shot($"c5{i + 1}_meadow_clip_{i + 1:00}");
-                    yield return null;
+                    var (ct, what) = MeadowCues[ci++]; var part = what.Split(':');
+                    if (part[0] == "line") { lines++; StartCoroutine(SayIds(part[1])); StartCoroutine(MeadowShot($"c5_meadow_video_frame_{part[1]}", 0.6f)); drift = Mathf.Max(drift, t - ct); Log($"meadow cue {ct:0.0} s: {part[1]} at {t:0.00} s of the clip"); }
+                    else if (part[0] == "sfx") AudioKit.Play(part[1], null, float.Parse(part[2], System.Globalization.CultureInfo.InvariantCulture), 0.03f, AudioKit.Bus.Sfx);
+                    else if (part[0] == "react") MeadowReaction(part[1], part[2]);
+                    else if (part[0] == "purr") { purr = Purr.Loop(Seven.transform, 0.8f); }
+                    else if (part[0] == "shot") StartCoroutine(MeadowShot($"c5_meadow_video_frame_{part[1]}", 0f));
                 }
-                while (Dlg.Busy && i < 5) yield return null;
-                vp.Stop(); Destroy(go); rt.Release();
+                if (!fading && t >= len - 6f) { fading = true; MusicSystem.Stop(6f); Log($"meadow track fading out over the clip's last 6 s (from {t:0.0} s)"); }
+                if (t >= len - 0.05f || (!vp.isPlaying && Time.time - t0 > len + 1f)) break;
+                yield return null;
             }
+            Log($"MEADOW VIDEO (QF27): {lines} lines placed on the picture (latest start {drift * 1000f:0} ms after its cue), the music faded over the last 6 s");
             while (Dlg.Busy) yield return null;
+            if (purr != null) StartCoroutine(AudioKit.Fade(purr, 0f, 2f, true));
+            Reactions.Suppress = false;
             DialogueFraming.VoiceOver = null;
+            vp.Stop(); Destroy(go); rt.Release();
             UI.SetVideo(null, 1f, 0f);
+        }
+        IEnumerator MeadowShot(string name, float after) { for (float w = 0f; w < after; w += Time.deltaTime) yield return null; yield return Shot(name); }
+        void MeadowReaction(string who, string kind)
+        {
+            var c = Reactions.Pick(who, kind, out _); if (c == null) return;
+            var go = new GameObject("MeadowReaction_" + who + "_" + kind); var a = go.AddComponent<AudioSource>(); a.spatialBlend = 0f; a.clip = c; a.volume = 0.8f * AudioKit.Gain(AudioKit.Bus.Voice); a.Play();
+            Destroy(go, c.length + 0.2f); Log($"meadow reaction: {who} {kind}");
         }
 
         /// <summary>The TEMPORARY in-engine version of the six segments (until Dan's clips are in): giant Panther = his model scaled

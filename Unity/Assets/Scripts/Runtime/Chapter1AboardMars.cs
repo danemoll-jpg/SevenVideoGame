@@ -405,6 +405,7 @@ namespace Seven
             yield return null; yield return null;
             if (_recordShots++ > 3) yield break;
             var d = RecordDisplayTop();
+            if (_recordDisplay != null) ImageGate.Expect(_recordDisplay.transform, "the records on their display", 0f, "qf24_02_records");   // QF27: its own subject
             yield return Cap.ShotFrom($"qf24_02_records_{_recordShots}_{StagedScene ?? "aboard"}", d + PilotRight * 0.55f + PilotFwd * 0.65f + Up * 0.35f, d + Up * 0.05f, 36f);
             yield return Cap.ShotFrom($"qf24_02_records_{_recordShots}_{StagedScene ?? "aboard"}_with_her", PilotHips + PilotFwd * 1.9f + PilotRight * 1.2f + Up * 0.9f, (PilotHips + d) * 0.5f + Up * 0.15f, 44f);
         }

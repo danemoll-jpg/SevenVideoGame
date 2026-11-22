@@ -91,9 +91,9 @@ namespace Seven
         /// <summary>QF26 (2): what a window view must show - the real level under the ship (the point it faces), else the world's group.</summary>
         public void ExpectOutside()
         {
-            if (_levelGo != null && _levelGo.activeInHierarchy && LevelView.TryGetValue(Showing, out var v)) { ImageGate.ExpectPoint(_levelGo.transform.TransformPoint(v.S + (v.aim - v.S) * 0.35f), $"the {Showing} level outside"); return; }
+            if (_levelGo != null && _levelGo.activeInHierarchy && LevelView.TryGetValue(Showing, out var v)) { ImageGate.ExpectPoint(_levelGo.transform.TransformPoint(v.S + (v.aim - v.S) * 0.35f), $"the {Showing} level outside", 0f, "window_view"); return; }
             foreach (var g in new[] { Venus, Europa, Mars, Moon, City, Asteroid, Space, _bia })
-                if (g != null && g.activeInHierarchy) { ImageGate.Expect(g.transform, $"the view outside ({Showing})"); return; }
+                if (g != null && g.activeInHierarchy) { ImageGate.Expect(g.transform, $"the view outside ({Showing})", 0f, "window_view"); return; }
         }
         /// <summary>Show the world (or space) now.</summary>
         public void Apply() => Show(SaucerLocation.Current);

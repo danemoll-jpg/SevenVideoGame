@@ -46,25 +46,15 @@ namespace Seven.EditorTools
             BuildCattalusScene(sevenCtl, bank, atmo, catCtl, catFur, catWhisker, duchess, dCtl, dMat, racer, trophy, bike, meadow);
         }
 
-        /// <summary>The meadow cinematic: Dan's colour masters Art/Video/color/cattalus_meadow_01..06.mp4 -> grayscale 1920x1044 h264
-        /// copies Art/Video/cattalus_meadow_0N.mp4 (ffmpeg; the masters are never touched) -> Assets/Video. Missing = the in-engine version.</summary>
+        /// <summary>QF27: the meadow cinematic = Dan's ONE edited clip Art/Video/cattalus_meadow.mp4 (78.8 s, 1920x1044, grayscale,
+        /// silent) -> Assets/Video. (Round 18 expected six colour masters; the colour master Art/Video/color/cattalus_meadow_color.mov
+        /// is for the heaven ending later and is never read, changed or copied here.) Missing = the in-engine stand-in.</summary>
         static UnityEngine.Video.VideoClip[] MeadowClips()
         {
-            var clips = new UnityEngine.Video.VideoClip[6]; int have = 0;
-            string ffmpeg = FindFfmpeg();
-            for (int i = 1; i <= 6; i++)
-            {
-                var master = Path.Combine(RepoRoot, "Art", "Video", "color", $"cattalus_meadow_{i:00}.mp4");
-                var gray = Path.Combine(RepoRoot, "Art", "Video", $"cattalus_meadow_{i:00}.mp4");
-                if (File.Exists(master) && (!File.Exists(gray) || File.GetLastWriteTimeUtc(gray) < File.GetLastWriteTimeUtc(master)) && ffmpeg != null)
-                {
-                    var p = System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ffmpeg, $"-y -loglevel error -i \"{master}\" -vf \"format=gray,scale=1920:1044:force_original_aspect_ratio=increase,crop=1920:1044,format=yuv420p\" -c:v libx264 -crf 18 -an \"{gray}\"") { UseShellExecute = false, CreateNoWindow = true });
-                    p.WaitForExit(); Log($"meadow clip {i}: grayscale copy made ({(p.ExitCode == 0 ? "ok" : "ffmpeg exit " + p.ExitCode)})");
-                }
-                if (File.Exists(gray)) { CopyVideo($"cattalus_meadow_{i:00}.mp4"); clips[i - 1] = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>($"Assets/Video/cattalus_meadow_{i:00}.mp4"); if (clips[i - 1] != null) have++; }
-            }
-            Log($"MEADOW CLIPS (Round 18): {have} / 6 in - {(have == 6 ? "the video cinematic plays" : "the temporary in-engine version plays until all six are in")}");
-            return clips;
+            var clip = (UnityEngine.Video.VideoClip)null;
+            if (File.Exists(Path.Combine(RepoRoot, "Art", "Video", "cattalus_meadow.mp4"))) { CopyVideo("cattalus_meadow.mp4"); clip = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/cattalus_meadow.mp4"); }
+            Log($"MEADOW CLIP (QF27): {(clip != null ? $"Art/Video/cattalus_meadow.mp4 in ({clip.length:0.0} s, {clip.width}x{clip.height}) - the video cinematic plays" : "MISSING - the in-engine stand-in plays")}");
+            return new[] { clip };
         }
         static string FindFfmpeg()
         {
@@ -581,7 +571,7 @@ namespace Seven.EditorTools
             AddProbe(new Vector3(-200f, 10f, 160f), new Vector3(220f, 40f, 240f), Vector3.zero);
             QF18SceneChecks("Cattalus", true);
             EditorSceneManager.SaveScene(scene, CattalusScenePath);
-            Log("scene saved " + CattalusScenePath + $" (Duchess {(duchessModel != null ? "Dan's model, rigged" : "stand-in")}, racer {(racerModel != null ? "Dan's model" : "stand-in")}, trophy {(trophyModel != null ? "Dan's model" : "stand-in")}, vision 7 {(dir.Vision7 != null ? "in" : "MISSING")}, meadow clips {meadowClips.Count(c => c != null)}/6, course {K.Length:0} m, {gidx.Count} gates, {toys.Count} toys)");
+            Log("scene saved " + CattalusScenePath + $" (Duchess {(duchessModel != null ? "Dan's model, rigged" : "stand-in")}, racer {(racerModel != null ? "Dan's model" : "stand-in")}, trophy {(trophyModel != null ? "Dan's model" : "stand-in")}, vision 7 {(dir.Vision7 != null ? "in" : "MISSING")}, meadow clip {(meadowClips != null && meadowClips.Length > 0 && meadowClips[0] != null ? "in" : "MISSING")}, course {K.Length:0} m, {gidx.Count} gates, {toys.Count} toys)");
         }
         [System.Serializable] class TrophyRing { public float[] centre; public float inner_radius, height; }
     }
