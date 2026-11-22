@@ -26,6 +26,7 @@ namespace Seven.EditorTools
             KneeCheck(scene);
             SaucerClearanceCheck(scene);
             RidePoseCheck(scene);          // QF24 (15)
+            QF26SceneChecks(scene);        // QF26 (1): zero / NaN normals
         }
 
         static float KneeAngle(Animator a, bool left)

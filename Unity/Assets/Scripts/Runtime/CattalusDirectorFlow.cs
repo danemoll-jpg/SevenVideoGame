@@ -69,6 +69,7 @@ namespace Seven
             Shoot(new Vector3(18f, 8f, -18f), new Vector3(0f, 2.5f, 6f), 54f, 0.01f);
             StartCoroutine(UI.Fade(0f, 1.6f));
             yield return Wait(1.4f);
+            if (Saucer != null) ImageGate.Expect(Saucer, "the saucer at the public berth");   // QF26 (2)
             yield return Shot("c01_the_public_berth");
             yield return HoldBikeOut(L.BikePad, 90f);
             Shoot(L.SaucerAt + new Vector3(9f, 2.4f, -9f), L.SaucerAt + new Vector3(0f, 2.2f, 0f), 46f, 0.01f);
@@ -222,6 +223,7 @@ namespace Seven
             if (Screen != null) Screen.Show(CatatronScreen.Mode.Mark);
             Shoot(L.ScreenView + new Vector3(0.6f, 1.3f, -1.6f), L.ScreenAt + Vector3.down * 1.5f, 26f, 0.4f);
             yield return DialogueFraming.Over("the mark on the trophy's setting, on the screen (QF24 7)", Say("CAT_04", 5, 5));   // The setting. That mark…
+            if (Screen != null) ImageGate.Expect(Screen.transform, "the Cat-a-tron screen (the mark)");
             yield return Shot("c13_the_mark_on_the_setting");
             TwoShot((P7 + Cat.transform.position) * 0.5f, Vector3.right, 2.4f, 0.9f, 0.8f, 42f, 0.4f);
             yield return Say("CAT_04", 6, 8);                     // The last piece. / In a racing trophy? / Apparently.
@@ -252,8 +254,16 @@ namespace Seven
             Seven.Place(L.DeskView, Vector3.forward); Seven.Lock(true);
             if (Cat != null) { Cat.Place(L.DeskView + new Vector3(1.1f, 0f, 0.2f), Vector3.forward); Cat.Hold(L.StewardAt, "sit"); }
             if (Steward != null) { Steward.Face(P7); Steward.Play("sit"); }
-            TwoShot((P7 + L.StewardAt) * 0.5f, Vector3.right, 2.8f, 1.1f, 1.0f, 42f, 0.01f);
+            // QF26 (2): an explicit two-shot across the desk from the side with a clear line (the 0.18.0 TwoShot ended up facing
+            // away from both of them - the gate's "no subject" caught it)
+            { var mid = (P7 + L.StewardAt) * 0.5f + Vector3.up * 0.7f; var dd = L.StewardAt - P7; dd.y = 0f; var dn = dd.sqrMagnitude > 0.01f ? dd.normalized : Vector3.forward; var pp = Vector3.Cross(Vector3.up, dn);
+              var best = mid + pp * 3.4f + Vector3.up * 0.7f - dn * 0.6f;
+              foreach (var sg in new[] { 1f, -1f }) { var c = mid + pp * sg * 3.6f + Vector3.up * 1.1f; /* a side view across the desk: her in front, the steward behind it */ var to = mid - c; if (!CameraOccluders.Ready || !CameraOccluders.AnyRay(c, to.normalized, to.magnitude - 0.6f, CameraOccluders.AllMask, out _)) { best = c; break; } }
+              if (Steward != null) { var sp = Steward.transform.position; var back = sp - P7; back.y = 0f; back = back.sqrMagnitude > 0.01f ? back.normalized : Vector3.forward; var sx = Vector3.Cross(Vector3.up, back);
+                  best = sp + back * 1.9f + sx * 0.9f + Vector3.up * 1.15f; mid = Vector3.Lerp(sp, P7, 0.55f) + Vector3.up * 0.9f; }   // from behind the steward: him in the foreground, her across the desk
+              Shoot(best, mid, 46f, 0.01f); }
             yield return Wait(0.5f);
+            if (Steward != null) ImageGate.Expect(Steward.transform, "the steward at his desk");
             yield return Shot("c16_the_stewards_desk");
             yield return Say("CAT_05", 1, 5);                     // The sphere in the trophy... / A very old, very beautiful ball. / It's more than that. / You'll have to speak to its owner after the race. / And until then?
             if (Steward != null) Steward.Play("stretch", 0.3f);   // he turns the registration screen toward her

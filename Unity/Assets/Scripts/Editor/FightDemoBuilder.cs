@@ -683,9 +683,39 @@ namespace Seven.EditorTools
             var path = GenDir + "/" + name + ".asset";
             AssetDatabase.DeleteAsset(path);
             m.name = name;
+            UnshareZeroNormals(m);                       // QF26 (1)
             m.RecalculateBounds();
             AssetDatabase.CreateAsset(m, path);
             return m;
+        }
+
+        public static int ZeroNormalMeshesFixed;
+        /// <summary>QF26 (1): a mesh whose two windings share vertices (a two-sided sheet built as front + back triangles on the same
+        /// points) gets zero normals from RecalculateNormals; lit, normalize(0) = NaN -> black specks + a bloom white-out. Any mesh
+        /// with a zero normal on a real triangle is rebuilt with every triangle on its own vertices (flat normals, both sides lit).</summary>
+        static void UnshareZeroNormals(Mesh m)
+        {
+            if (m == null || m.subMeshCount != 1 || m.GetTopology(0) != MeshTopology.Triangles) return;
+            var n = m.normals; var v = m.vertices; if (n == null || n.Length != v.Length || v.Length == 0) return;
+            var t = m.triangles; bool bad = false;
+            for (int i = 0; i + 2 < t.Length && !bad; i += 3)
+            {
+                if (Vector3.Cross(v[t[i + 1]] - v[t[i]], v[t[i + 2]] - v[t[i]]).sqrMagnitude < 1e-14f) continue;
+                for (int k = 0; k < 3; k++) { float l = n[t[i + k]].sqrMagnitude; if (float.IsNaN(l) || l < 0.25f) { bad = true; break; } }
+            }
+            if (!bad) return;
+            var uv = m.uv; bool hasUv = uv != null && uv.Length == v.Length;
+            var nv = new List<Vector3>(t.Length); var nn = new List<Vector3>(t.Length); var nu = new List<Vector2>(t.Length); var nt = new int[t.Length];
+            for (int i = 0; i + 2 < t.Length; i += 3)
+            {
+                var a = v[t[i]]; var b = v[t[i + 1]]; var c = v[t[i + 2]];
+                var fn = Vector3.Cross(b - a, c - a); fn = fn.sqrMagnitude > 1e-20f ? fn.normalized : Vector3.up;
+                for (int k = 0; k < 3; k++) { nt[i + k] = nv.Count; nv.Add(v[t[i + k]]); nn.Add(fn); if (hasUv) nu.Add(uv[t[i + k]]); }
+            }
+            m.Clear(); m.indexFormat = nv.Count > 65000 ? UnityEngine.Rendering.IndexFormat.UInt32 : UnityEngine.Rendering.IndexFormat.UInt16;
+            m.SetVertices(nv); m.SetNormals(nn); if (hasUv) m.SetUVs(0, nu); m.SetTriangles(nt, 0);
+            ZeroNormalMeshesFixed++;
+            Log($"QF26 zero normals: '{m.name}' had faces sharing vertices with their back faces - split onto their own vertices ({nv.Count} vertices)");
         }
 
         static GameObject MeshObject(string name, Mesh mesh, Material mat, Transform parent, bool shadows = true)

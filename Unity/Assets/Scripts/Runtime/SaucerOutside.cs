@@ -64,6 +64,9 @@ namespace Seven
             { "mars",   new Haze { valleyD = 0.0005f, noise = 0.3f, fogStart = 60f, groundD = 0.0025f, groundBase = -230f, groundFall = 20f, groundRange = 500f, distD = 0.00045f, hazeH = 150f, maxFog = 0.45f, near = 0.35f, far = 0.65f, brightDist = 600f, zenith = 0.6f, glow = 0.35f } },
             { "asteroid", new Haze { valleyD = 0.0f, noise = 0.1f, fogStart = 140f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0004f, hazeH = 60f, maxFog = 0.25f, near = 0.03f, far = 0.12f, brightDist = 500f, zenith = 0.03f, glow = 0.4f } },
             { "biaveh", new Haze { valleyD = 0.0f, noise = 0.1f, fogStart = 140f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0004f, hazeH = 60f, maxFog = 0.25f, near = 0.03f, far = 0.12f, brightDist = 500f, zenith = 0.03f, glow = 0.4f } },
+            // QF26 (3): Cattalus had no entry and fell back to the Moon city's look (white haze, near 0.8 / far 1.02) over its window
+            // view; the level sits 95 m below the ship (Outside_cattalus): sun-lit, haze only far off
+            { "cattalus", new Haze { valleyD = 0.0f, noise = 0.1f, fogStart = 90f, groundD = 0.0005f, groundBase = -96f, groundFall = 5f, groundRange = 500f, distD = 0.0003f, hazeH = 70f, maxFog = 0.26f, near = 0.5f, far = 0.84f, brightDist = 500f, zenith = 0.72f, glow = 0.12f } },
             { "space",  new Haze { valleyD = 0.0f, noise = 0.0f, fogStart = 200f, groundD = 0f, groundBase = -500f, groundFall = 10f, groundRange = 10f, distD = 0.0002f, hazeH = 10f, maxFog = 0.15f, near = 0.02f, far = 0.04f, brightDist = 900f, zenith = 0.02f, glow = 0.2f } },
         };
         Haze _saved; bool _savedSet;
@@ -79,11 +82,19 @@ namespace Seven
             {
                 yield return new WaitForSeconds(1.5f);
                 // QF16 (1) check: the view from inside, through the window band, at this world
+                ExpectOutside();   // QF26 (2): the subject of a window view
                 yield return ChapterCapture.I.ShotFrom($"qf16_01_window_view_{Showing}", new Vector3(0f, 1.6f, 4.2f), new Vector3(0f, -14f, 60f), 58f);
                 ChapterCapture.I.Log($"window view (QF16 1): the saucer is at '{SaucerLocation.Saved}', showing '{Showing}'");
             }
         }
 
+        /// <summary>QF26 (2): what a window view must show - the real level under the ship (the point it faces), else the world's group.</summary>
+        public void ExpectOutside()
+        {
+            if (_levelGo != null && _levelGo.activeInHierarchy && LevelView.TryGetValue(Showing, out var v)) { ImageGate.ExpectPoint(_levelGo.transform.TransformPoint(v.S + (v.aim - v.S) * 0.35f), $"the {Showing} level outside"); return; }
+            foreach (var g in new[] { Venus, Europa, Mars, Moon, City, Asteroid, Space, _bia })
+                if (g != null && g.activeInHierarchy) { ImageGate.Expect(g.transform, $"the view outside ({Showing})"); return; }
+        }
         /// <summary>Show the world (or space) now.</summary>
         public void Apply() => Show(SaucerLocation.Current);
         public void Show(string w)

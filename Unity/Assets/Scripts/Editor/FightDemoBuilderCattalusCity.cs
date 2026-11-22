@@ -19,11 +19,18 @@ namespace Seven.EditorTools
     {
         struct CtMats { public Material card, cardDark, cardLight, tape, sisal, carpet, carpetDark, fabric, wood, stone, metal, glow, glowSoft, grass, grassDark, leaf, bark, hill, road, rail, paper, ground; }
 
+        /// <summary>A quad (a, b, c, d); two-sided = a back face on its OWN four vertices. QF26 (1): the back winding used to share
+        /// the front's vertices, so RecalculateNormals summed opposite face normals to zero, the shader's normalize(0) gave NaN and
+        /// every flap, tape strip, cut window and door arch in the city lit as NaN - black specks, and bloom (its clamp turns NaN
+        /// into 65472) whited out the screen. Degenerate quads (a == b: the round windows' fan) are emitted as one triangle.</summary>
         static void Q(List<Vector3> v, List<int> t, Vector3 a, Vector3 b, Vector3 c, Vector3 d, bool twoSided = true)
         {
+            bool tri = (a - b).sqrMagnitude < 1e-10f;
             int i = v.Count; v.Add(a); v.Add(b); v.Add(c); v.Add(d);
-            t.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
-            if (twoSided) t.AddRange(new[] { i, i + 2, i + 1, i, i + 3, i + 2 });
+            if (tri) t.AddRange(new[] { i, i + 2, i + 3 }); else t.AddRange(new[] { i, i + 1, i + 2, i, i + 2, i + 3 });
+            if (!twoSided) return;
+            int j = v.Count; v.Add(a); v.Add(b); v.Add(c); v.Add(d);
+            if (tri) t.AddRange(new[] { j, j + 3, j + 2 }); else t.AddRange(new[] { j, j + 2, j + 1, j, j + 3, j + 2 });
         }
 
         /// <summary>A cardboard box home: the box (a slightly soft-edged body), corrugated ribs on its long faces, four folded
@@ -129,7 +136,7 @@ namespace Seven.EditorTools
                 var c = at + Quaternion.Euler(0f, ang, 0f) * Vector3.forward * (pr * 0.45f) + Vector3.up * y;
                 var (pv, pt) = k.Of(i % 2 == 0 ? m.carpet : m.carpetDark);
                 Append(pv, pt, Lathe(new[] { new Vector2(0f, -0.25f), new Vector2(pr, -0.25f), new Vector2(pr + 0.12f, -0.1f), new Vector2(pr + 0.12f, 0.08f), new Vector2(pr, 0.15f), new Vector2(0f, 0.15f) }, 0f, 360f, 18, null, c));
-                if (i % 3 == 1) CardboardBox(k, m, c + Vector3.up * 0.15f + Quaternion.Euler(0f, ang + 90f, 0f) * Vector3.forward * 0.6f, new Vector3(2.2f, 1.6f, 1.8f), ang, seed * 13 + i, true, false);
+                if (i % 3 == 1) CardboardBox(k, m, c + Vector3.up * 0.17f + Quaternion.Euler(0f, ang + 90f, 0f) * Vector3.forward * 0.6f, new Vector3(2.2f, 1.6f, 1.8f), ang, seed * 13 + i, true, false);
                 if (i % 2 == 0)
                 {
                     // a toy dangling on a cord from the platform's rim

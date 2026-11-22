@@ -23,7 +23,7 @@ namespace Seven
             _d = d;
             _dir = DemoBoot.CaptureDir;
             Directory.CreateDirectory(_dir);
-            _rt = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            _rt = ImageGate.NewRT();
             var cam = _d.Cam.GetComponent<Camera>();
             cam.targetTexture = _rt;
             _d.Bot.AutoPunch = false;
@@ -44,14 +44,7 @@ namespace Seven
         IEnumerator Shot(string name)
         {
             yield return new WaitForEndOfFrame();
-            var prev = RenderTexture.active;
-            RenderTexture.active = _rt;
-            var tex = new Texture2D(_rt.width, _rt.height, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, _rt.width, _rt.height), 0, 0);
-            tex.Apply();
-            RenderTexture.active = prev;
-            File.WriteAllBytes(Path.Combine(_dir, name + ".png"), tex.EncodeToPNG());
-            Destroy(tex);
+            Log(ImageGate.Save(_rt, Camera.main, _dir, name + ".png"));   // QF26 (2): HDR like the screen + the image-quality gate
             Log($"shot {name}: seven={_d.Seven.State}/{_d.Seven.Current} bot={_d.Bot.State}/{_d.Bot.Current} " +
                 $"sep={Sep():0.00}m");
         }
@@ -322,7 +315,7 @@ namespace Seven
             if (_finished) return;
             _finished = true;
             Log($"capture {why}");
-            File.WriteAllText(Path.Combine(_dir, "capture_log.txt"), _log.ToString());
+            Log(ImageGate.Summary(_dir)); File.WriteAllText(Path.Combine(_dir, "capture_log.txt"), _log.ToString());
             Application.Quit();
         }
     }

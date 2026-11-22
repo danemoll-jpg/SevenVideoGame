@@ -176,6 +176,35 @@ apply to every asset and scene:
   check `DUPLICATE LINES (QF25 3)` scans every chapter's code and dialogue data. Remove old lines and their audio when a script
   changes.
 
+## Image quality — STANDING RULES (Dan, QF26, 2026-11-22; every chapter, now and later)
+- **Captures see what the screen sees.** Every capture renders in HDR (`ImageGate.NewRT`, half-float) - URP renders the WHOLE
+  frame in a camera target texture's format, so the old 8-bit ARGB32 captures were LDR: HDR blow-outs and NaN could never show
+  (the 0.18.0 Cattalus white-out passed every capture). Build check `IMAGE GATE (QF26 2)` fails on a capture path that bypasses it.
+- **The image-quality gate runs on every capture of every check run** (`ImageGate.Save`; same picture measures in
+  `Tools/image_gate.py`): near-white share ≤ 20 % (white-out), tonal range p95-p5 ≥ 0.30 (fog bank / one flat tone), edge density
+  ≥ 6 % unless the range is ≥ 0.45 (nothing to see / a blank slab; a smooth, strongly lit shape is fine) and never < 1 %, near-black
+  ≤ 85 %, **no NaN / Inf pixels** (counted in a render WITHOUT post-processing:
+  the tonemapper turns NaN into a black speck while bloom's clamp turns it into a 65472-bright source), and **a subject in frame**
+  at a readable size, unblocked (the declared one - `ImageGate.Expect(transform, what)` / `ExpectPoint(point, what)` before a
+  view of a place or thing - else any character). Fades, title cards, video frames and menus are exempt by name; an `_insert_`
+  (a minimal close-up of one thing) skips range / edges but must show its declared subject. Each shot logs
+  `IMAGE GATE <file>: PASS / FAIL ...` (+ the fog colour ahead / at the horizon); every run ends `IMAGE GATE (QF26 2): N shots,
+  failed F` and writes `image_gate.txt`; a frame with NaN runs `NAN SOURCE (QF26 1)` (re-renders with halves of the renderers
+  off and names the meshes). **Control coming back** always takes one gated frame (`ctl_control_back_*`).
+- **Every release passes the gate in every chapter:** `powershell -File Tools/Run-ImageGate.ps1` (one short run per chapter /
+  scene) -> `Builds/ImageGate/gate_<version>.txt` ending `IMAGE GATE RELEASE (QF26 2): PASS`; `Prepare-ComponentUpdate.py` refuses a
+  version without it. PASS = no NaN anywhere, nothing failing in Cattalus, and no failure in another chapter that is not in
+  `Tools/image_gate_baseline.json` - the shots that already failed when the gate came in (QF26). **The baseline only shrinks:**
+  fix those shots chapter by chapter, never add to it (`-WriteBaseline` was for QF26's introduction only).
+- **Look at the captures yourself** before calling anything done, and describe in the status what the key shots show.
+- **No zero normals:** a two-sided sheet is built with its back face on its own vertices (`SaveMesh` splits any mesh with a zero
+  normal; the Cattalus kit's `Q`); `DissolveLit` never normalizes a zero normal. Build check `NORMALS (QF26 1)` on every scene and
+  the window views fails on any.
+- **Fog stays below white:** `SevenHeightFog` clamps the fog colour at 1.25; a world's fog colour (tone + the in-fog glows) stays ≤ ~1.0 - glows are a few soft sources
+  (radius = `GlowRadius` x child scale.x, intensity = `GlowIntensity` x scale.y); 0.18.0's eight 400-800 m glows summed to ~10.
+  Every world shown through the saucer's window has its own haze preset (`SaucerOutside.Looks`); a level staged far from the
+  deck sets `Atmosphere.HeightOffset`.
+
 ## Boss fights — STANDING RULE (Dan, QF17, 2026-11-20; every boss, now and later)
 Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing there." Never again:
 - **The boss moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: his pose, a
@@ -522,7 +551,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–18 + QF1–QF25 complete (2026-11-22), release 0.18.0.** Round 18 = Chapter "Cattalus — Panther's homeworld" (first playable pass; the meadow cinematic in-engine until Dan's clips are in). QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–18 + QF1–QF26 complete (2026-11-22), release 0.18.1.** QF26 = the Cattalus white-out (NaN normals + bloom, captures were LDR): the image-quality gate (standing rules above). Round 18 = Chapter "Cattalus — Panther's homeworld" (first playable pass; the meadow cinematic in-engine until Dan's clips are in). QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -947,7 +976,13 @@ scene (Round 10).
     masters into `Art/Video/color/cattalus_meadow_01..06.mp4`; Build everything makes the grayscale copies (ffmpeg) and plays them.
   - Switches: `-catcp <n>` (0 = CAT_01 aboard, 3 = the race, 6 = home), `-cattalus` (as from the star map), `-catplay` (player-style
     run `CattalusPlaytest.cs`; with `-catcp 3 -catlose` the runner-up path), `-catlose` (a sloppy rider: Duchess wins).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.18.0** (Round 18 status in `TODO.md`).
+- **QF26 (release 0.18.1)** — Cattalus white-out (status + "For Dan to check (QF26)" in `TODO.md`; standing rules "Image
+  quality" above): `ImageGate.cs` (HDR captures, the gate, the NaN hunt, subjects), `Atmosphere.FogColourAlong` / `Report` /
+  `HeightOffset` (`_SevenFogYOff`), `FightDemoBuilderQF26Checks.cs` (`NORMALS`, `IMAGE GATE` paths), `SaveMesh` ->
+  `UnshareZeroNormals`, the Cattalus city blocks (`CityBlocks`, 307 homes / cat trees / posts) + sunny `Atmosphere_Cattalus`,
+  `Tools/image_gate.py`, `Tools/Run-ImageGate.ps1`. Before / after captures: `Docs/Previews/qf26/before|after*`.
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.18.1** (QF26 status in `TODO.md`).
+**Before: Dan plays 0.18.0** (Round 18 status in `TODO.md`).
 **Before: Dan plays 0.17.4** (QF25 status in `TODO.md`).
 **Before: Dan plays 0.17.3** (QF24 status in `TODO.md`).
 **Before: Dan plays 0.17.2** (QF23 status in `TODO.md`).

@@ -1,6 +1,21 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF26: Cattalus is unplayable, a white-out (Dan, 2026-11-22) — to do, URGENT
+## Quick fix QF27: Dan's 0.18.1 review (Dan, 2026-11-22) — to do
+
+1. **The meadow cinematic is IN (Dan, 2026-11-22): `Art/Video/cattalus_meadow.mp4`** (one edited clip, 78.8 s, 1920×1044,
+   grayscale, silent; still `Art/Video/cattalus_meadow_still.jpg`). Replace the temporary in-engine meadow with it (one video, not
+   six clips). What happens, roughly: 0–14 s she stands in the grass by the leaning tree, small Panther beside her chasing a
+   seedhead, he bounds off; ~14–36 s the giant Panther beside her, she reaches out to his face, he settles; ~36–57 s they walk / run
+   away from the camera side by side through the grass; ~57–79 s at the tree he lies down, she sits against him, her head on his
+   fur, his head lowered to hers. **Time CAT_10_04–18 to the picture** (each line where its action is on screen; 7's lines where her
+   face is turned or not in close-up; CAT_10_16–18 over the final hold), plus laughter, breathing, the giant purr, footfalls and the
+   grass. **Music:** `cattalus_meadow.mp3` (3:00) from the start of the clip, faded out over its last ~6 s; no extra track needed.
+   **Colour master IN (Dan, 2026-11-22, "Heaven"): `Art/Video/color/cattalus_meadow_color.mov`** (Dan's original, the same 78.8 s
+   edit in full colour, 3972×2160 h264, 221 MB). When the heaven ending is built, make a 1920×1044 h264 copy for the game alongside
+   it; the .mov stays as the master. Check git can take a 221 MB file (use LFS or keep it out of git and note it if not). For the heaven ending later; not
+   used in Cattalus. Never alter or delete it, and keep it out of the monochrome check (it's the one sanctioned colour asset).
+
+## Quick fix QF26: Cattalus is unplayable, a white-out (Dan, 2026-11-22) — done, status below; release 0.18.1
 Dan: "What is this overpowering glow? You literally can't see anything. I played this through the opening cut scene but had to
 bail since it stayed like this even after you got control. This is unplayable." Screenshot: `Docs/Previews/qf26/dan_cattalus_whiteout.png`
 (a huge white glow covering most of the screen; the city reduced to scattered black specks inside it; the meadow tree tiny at the
@@ -24,6 +39,135 @@ left; hills and ground flat gray).
    giant blank surfaces; no buildings reduced to specks in the reveal. The meadow and the leaning tree match vision 7.
 4. **Re-prove the whole chapter** (both race outcomes) with before / after captures of every scene from the player's camera, all
    passing the new gate.
+
+## QF26 — status (2026-11-22): done; release 0.18.1 (`game-1801`)
+
+### 1. What caused the white-out, and why it stayed after control came back
+- **The cause: NaN normals in the city, bloomed.** The Cattalus kit's quad helper `Q(..., twoSided: true)` put the back winding on
+  the SAME four vertices as the front. `RecalculateNormals` summed the two opposite face normals to **zero**, and `Seven/DissolveLit`
+  did `normalize(0)` = **NaN**. Every box flap, tape strip, cut window and door arch in the cardboard quarter shaded as NaN. URP's
+  tonemapper `saturate()`s NaN to 0 (the black specks in Dan's screenshot - the window grids and flap dashes), while bloom's
+  prefilter clamp turns the same pixel into a 65 472-bright source: hundreds of them bloomed into the soft white mass over the
+  whole city. Proven: an HDR capture of 0.18.0 reproduces Dan's frame exactly (`Docs/Previews/qf26/before/07_ca05_*`,
+  `16_ctl_control_back_*`); 31 of its 34 shots fail the gate at 57-91 % near-white.
+- **Two contributors made it worse:** `Atmosphere_Cattalus` had `GlowRadius` 80 x child scales 5-10 = **eight in-fog glows 400-800 m
+  wide**, summing to a fog colour of roughly 10x white wherever there was fog; and the saucer's window view had **no Cattalus haze
+  preset**, so it fell back to the Moon city's white haze (near 0.8 / far 1.02) - the pale window / exterior shots.
+- **Why it stayed after control returned:** it was never a cutscene effect - it was the city's own geometry, so there was nothing
+  for a cutscene to restore. QF24's POST FX check only watches the close-up depth-of-field switch (`CloseUpFocus`) and never looks
+  at the picture. **Fixed:** every time control comes back the run now takes a gated frame (`ctl_control_back_<scene>`), so a
+  persistent picture problem with control is measured, whatever causes it.
+- **Fixes:** `Q` gives the back face its own vertices; `SaveMesh` now splits ANY generated mesh with a zero normal
+  (`UnshareZeroNormals` - it also fixed Venus's 22 birds / flyers (lit: NaN specks in the sky), the mothership's two barrier panes
+  and the Panther-cutaway map marks in five scenes); `DissolveLit` never normalizes a zero normal; build check **`NORMALS (QF26 1)`**
+  on every scene and the window views: 0 everywhere (it fails the build otherwise).
+
+### 2. Why my captures passed, and the image-quality gate
+- **The captures could not show it.** Every capture rendered into an 8-bit ARGB32 texture, and URP renders the WHOLE frame in a
+  camera target texture's format (`UniversalRenderPipelineCore.CreateRenderTextureDescriptor`: the intermediate colour buffer
+  inherits the external texture's format). So captures were LDR: NaN was written as 0, nothing exceeded 1, bloom saw nothing - the
+  white-out rendered as pale fog. And I did not judge those pale, near-empty frames (`06_ca04`, `10_c01`) as failures: there was no
+  picture measure, and I didn't look hard enough.
+- **The gate (`Runtime/ImageGate.cs`, every capture of every check run, all chapters):** captures render in HDR like the screen
+  (half-float); per shot it measures near-white share (fail > 20 %), tonal range p95-p5 (fail < 0.30), edge density (fail < 6 %),
+  near-black (fail > 85 %), NaN / Inf pixels in a render WITHOUT post-processing (fail > 0; a frame with NaN runs `NAN SOURCE`, which
+  re-renders with halves of the renderers off and names the meshes), and a subject in frame at a readable size, unblocked (declared
+  with `ImageGate.Expect / ExpectPoint` for views of places / things, else any character). Fades, titles, video frames and menus are
+  exempt by name. Same picture measures in `Tools/image_gate.py`. Each run ends `IMAGE GATE (QF26 2): N shots, failed F` +
+  `image_gate.txt`; build check `IMAGE GATE (QF26 2)` fails on a capture path that bypasses it; `Tools/Run-ImageGate.ps1` runs it in
+  every chapter and `Prepare-ComponentUpdate.py` refuses to package a version whose report is not clean.
+- The gate at once caught real bugs beyond the fog that my 0.18.0 captures had "passed": vision step 2 an empty dark frame (camera
+  inside a planter), vision step 4 a flat gray frame (shot through the fading white), the CAT_12 records shot filled by the console's
+  rim band, the registration two-shot facing away from both of them, Duchess "climbing into the box" after she had vanished inside,
+  and **the vision insert: 1.1 s of pure white on screen instead of the mark** (the vision's white fade stayed up under the video).
+  All fixed.
+
+### 3. The look
+- `Atmosphere_Cattalus`: sunny - the sun high (47°) with soft shadows (strength 0.72), ambient 0.36, haze only far off (fog from
+  70 m, max 0.62), three small sun-glows low in the far haze. The measured fog colour ahead / at the horizon in every shot is now
+  0.79-1.03 (0.18.0: ~10 in the city).
+- The window view has its own Cattalus haze; the CAT_01 exterior (staged 2.9 km up) gets the same haze at its own height
+  (`Atmosphere.HeightOffset`).
+- **The city is dense:** 307 more homes, cat-tree towers and post-and-terrace groups fill every block round the avenue, the square and
+  the berth approach (never on the course, a walkable zone, the transit tower or the meadow); citizens 8 -> 20, sun patches 6 -> 10.
+- The city reveal is framed on the city (over her shoulder down onto the avenue, the quarter and the square), not the meadow.
+- The meadow: grass on its rising rim too, the ground under the blades darker.
+
+### 4. Proof (0.18.1, muted, off-screen, `-testspeed 2`)
+- **Before** (0.18.0's game with the HDR gate, `Docs/Previews/qf26/before/`): the run from free aboard through CAT_01 to the
+  square - 34 shots, **31 fail**, 57-91 % of each frame near-white; `07_ca05` and `16_ctl_control_back_Cattalus` are Dan's screenshot
+  (the city a white mass with black window specks, 7 herself invisible except her shadow).
+- **After, runner-up** (`-catplay -catlose`, from free aboard -> the star map -> CAT_01 ... CAT_12, 14.0 game-min):
+  `CATTALUS PLAYTEST: 1/1, soft-locks 0`, runner-up 2:57.4 vs Duchess 2:18.5, the trade; 74 shots, NaN 0 - **IMAGE GATE: 74 shots, failed 0**.
+- **After, the win** (`-catplay -catcp 3`, 8.4 game-min): champion 2:09.3 vs Duchess 2:12.8; 39 shots, NaN 0 - **IMAGE GATE: 39 shots, failed 0**.
+- Both: voice repeat 0 / overlap 0, empty shots 0, post FX 0, NPC glide 0, riding camera inside geometry 0, the bike hold PASS, audio peak 0 (muted).
+- **The gate in every chapter** (`Tools/Run-ImageGate.ps1`, `Builds/ImageGate/gate_0.18.1.txt`): `IMAGE GATE RELEASE (QF26 2): PASS` -
+  NaN 0 everywhere; Cattalus 0 failures; the baseline (known failures to fix, `Tools/image_gate_baseline.json`): fight demo 1, saucer 4,
+  Ratwing cave 2, Moon 12 of 52, Venus 20 of 43, Europa 35 of 51, Mars 11 of 31, asteroid 21 of 47, mothership 24 of 50. (The
+  other chapters' runs are on build 10; build 11 only changed one Cattalus framing.)
+- Build checks: `NORMALS (QF26 1)` 0 in all 8 scenes + the window views (Venus 22 meshes, Europa / Mars / asteroid 2, mothership 4 were
+  zero-normal meshes before), `IMAGE GATE` capture paths 4 / 4, coplanar 0, every earlier check unchanged.
+- Captures: `Docs/Previews/qf26/before/`, `Docs/Previews/qf26/after_lose/`, `Docs/Previews/qf26/after_win/`.
+
+### What the key shots show (I looked at every capture)
+- **CAT_01 aboard:** the window view (`qf16_01`) - the dense city 95 m below in sun, the square and the screen, the course winding off,
+  light haze only at the hills. `ca02h` the hull dissolving round her, Panther on her lap, the subtitle readable. `ca03` over her
+  shoulder to the transit tower and its ball. **`ca04` the reveal** - her shoulder and the egg chair's rim, the whole quarter below:
+  hundreds of cardboard homes, cat-tree towers, the square with the Cat-a-tron, the course ribbon. `ca05` the saucer over the city
+  with the berth's beam and ring, "Left stick: steer". `ca06` docked at the berth, the ring, the avenue behind.
+- **At the berth / the avenue:** `c01` the saucer on its pad, cat trees and the gate arch beyond, real sun shadows. The hold shots - the
+  hatch opening on the silver hull, the bike lowering out. `c02` 7 and Panther in the beam. `ctl_control_back` (each time control
+  returns): 7 from behind on sunlit paving, her shadow crisp, the quarter and towers ahead - nowhere white. `c03-c08` the gate cat,
+  Juniper approaching, kneeling, the quiet two-shot - medium shots, the cardboard walls and towers behind.
+- **The square:** `c11-c15` the Cat-a-tron with the race highlights / the trophy / the mark / the Deluxe Retreat, Panther watching the
+  box. `c16` the steward's desk from behind him, 7 across it. `c35` Duchess at the Retreat's entry, the box and the square round her. `c17-c18` Duchess inspecting the trophy and peering into the Retreat, citizens in the background.
+- **The race:** the riding camera on the road through the city (cat trees and homes either side), Panther's lines as subtitles, the
+  finish line, the rider beside the fairing.
+- **The trophy and the vision:** `c40` the sphere in the trophy by the planters; vision 1 her reach (her hand on the ring), 2 the light
+  running up her arm (her, the trophy, the glow), 3 the push-in to her eyes, the vision-7 video frame, **the insert: the box with the
+  mark** (was pure white), 4 her hand still on it, 5 her hand leaving it, `c43` the sphere between her hands with its lines.
+- **The meadow (in-engine stand-in, until QF27):** the leaning tree over the grass; Panther small then giant; running side by side
+  past the city's edge; lying down under the tree - grass now out to the rim.
+- **CAT_12 aboard:** `ca10` the records on their display with Panther; `ca11-ca13` the console, the marks aligning, the Moon route;
+  `ca14` the saucer rising over the dense city, the meadow beyond.
+- Weak spots I see and leave for Dan's eye: the berth and square paving are wide plain areas (sun and shadow, but little on them);
+  the meadow's far hills are smooth shapes; Panther is out of frame in `c19` (checking the bike); in `c35` Duchess is small
+  against the Retreat's long display platform.
+
+### Decisions made (Dan said: never stop to ask)
+- Gate thresholds: white ≤ 20 %, range ≥ 0.30, edges ≥ 6 % unless the range is ≥ 0.45 (and never < 1 %), black ≤ 85 %, NaN 0, subject
+  ≥ 0.4 % of the frame, unblocked by solid geometry - calibrated on the Round 18 captures, then the edge rule relaxed for smooth,
+  strongly lit shapes after running it in every chapter (the Ratwing cave mouth, the asteroid through the window and the egg chair
+  are strong frames with few edges). Exempt by name: first frames (fade-in), titles, cards, video frames, menus. An `_insert_` (the
+  mark on the box) skips range / edges but must show its declared subject.
+- **The other chapters fail the gate in places, and that is recorded, not hidden.** Running it everywhere showed real problems
+  outside Cattalus too - fog banks and near-empty wides (Mars's opening from high over the plain, Europa's ice-field wide, Venus's
+  descent under the clouds), in-fog glows summing to 5-8x white (Biaveh, the asteroid, Mars) and some framings without a subject.
+  Fixing every chapter's look is a quick fix of its own: the fog colour is now clamped at 1.25 in `SevenHeightFog` (every world;
+  the HDR blow-out source), and the shots that still fail are the **baseline** (`Tools/image_gate_baseline.json`): a release fails on
+  any NaN, any Cattalus failure or any NEW failure elsewhere; the baseline only shrinks. Proposed as the next quick fix: bring every
+  chapter through the gate.
+- Fixed on the way: the city blocks first measured the course in 3D and stood under the elevated spiral - a sloppy rider could hit a
+  cat tree through the road (one stalled run); they keep clear of the course in plan now.
+- The gallery TV and menu shots keep their 8-bit capture (they are UI checks; the menu is exempt) - every chapter / saucer / ratwing /
+  fight-demo capture goes through the gate.
+- No URP "Stop NaN" pass: the root is fixed, the shader can't make NaN from a zero normal any more and the build check fails on any
+  zero normal; Stop NaN would only hide a future one from the gate.
+- The city fill is procedural (`CityBlocks`, the existing kit pieces); a hand-dressed pass can follow Dan's look.
+- The meadow cinematic stays in-engine (Dan's six clips are still not in `Art/Video/color/`).
+- **Testing time went over the 20-minute rule** (about two game-hours across eight builds): the white-out had to be reproduced first
+  (`before`), then each round of fixes proved through both race outcomes as asked, plus the gate in every chapter. No 25-run tests.
+
+## For Dan to check (QF26)
+- Cattalus from the star map: CAT_01's window and the hull-away reveal (the dense city over her shoulder, sunlit, no white), then
+  steer the saucer down - the city stays clear with control.
+- At the berth and along the avenue: sun and soft shadows, the cardboard quarter, cat trees, posts and terraces on every block, cats
+  in the sun patches and strolling; nothing washes out wherever the camera turns.
+- The vision at the trophy: her reach, the light up her arm, her hand still on it after - and the in-engine insert of the mark on the
+  box (it was a second of pure white).
+- The registration shot at the steward's desk, and Duchess in the Deluxe Retreat.
+- The meadow: grass out to its rim; the leaning tree against vision 7.
+- Other chapters: Venus's birds no longer flash; nothing else should look different.
 
 ## Quick fix QF25: Dan's 0.17.3 review (Dan, 2026-11-22) — done, status below; release 0.17.4
 

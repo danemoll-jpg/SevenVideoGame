@@ -60,8 +60,10 @@ namespace Seven
         }
         IEnumerator Shots()
         {
+            if (_saucer != null) ImageGate.Expect(_saucer, "the saucer and its bike hold"); else if (_hold != null) ImageGate.Expect(_hold.transform, "the bike hold");     // QF26 (2)
             yield return ChapterCapture.I.Shot($"hold_{_world}_hatch_opens");
             for (float t = 0f; t < 3f; t += Time.deltaTime) yield return null;
+            if (_bike != null) ImageGate.Expect(_bike.transform, "the bike"); else if (_hold != null) ImageGate.Expect(_hold.transform, "the bike hold");
             yield return ChapterCapture.I.Shot($"hold_{_world}_bike_lowers_out");
             if (DemoBoot.HoldCheck)
             {

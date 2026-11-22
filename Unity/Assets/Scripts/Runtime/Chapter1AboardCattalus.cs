@@ -68,7 +68,15 @@ namespace Seven
             var beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder); Destroy(beam.GetComponent<Collider>()); beam.transform.SetParent(_berthRing, false); beam.transform.localPosition = Vector3.up * 40f; beam.transform.localScale = new Vector3(1.2f, 40f, 1.2f); beam.GetComponent<Renderer>().sharedMaterial = Markers.Additive(0.35f);
             if (DemoBoot.CaptureDir != null) Cap?.Log($"CAT_01 exterior: the real Cattalus level {(pf != null ? $"({_catWorld.transform.childCount} pieces)" : "MISSING Resources/Outside/Outside_cattalus")} under the saucer; the public berth's guide ring");
         }
-        void CatWin(bool on) { if (_win == null) _win = GameObject.Find("Outside_cattalus_Level") ?? GameObject.Find("Outside_cattalus_Level(Clone)"); if (_catWorld != null) _catWorld.SetActive(!on); }
+        void CatWin(bool on)
+        {
+            if (_win == null) _win = GameObject.Find("Outside_cattalus_Level") ?? GameObject.Find("Outside_cattalus_Level(Clone)");
+            if (_catWorld != null) _catWorld.SetActive(!on);
+            // QF26 (3): the exterior copy is staged ~2.9 km up; its haze is the window view's (ground 95 m below the ship) shifted up
+            // to it - with no offset it had no haze at all (flat gray), the window view the Moon city's white fog
+            var a = SaucerOutside.I != null ? SaucerOutside.I.Atmo : null;
+            if (a != null) a.HeightOffset = !on && _catWorld != null ? _catWorld.transform.position.y + 95f : 0f;
+        }
 
         // ------------------------------------------------------------------------------------------ CAT_01
         IEnumerator CattalusArrival()
@@ -91,7 +99,8 @@ namespace Seven
             CatWin(false);
             for (float t = 0f; t < 0.2f; t += Time.deltaTime) { Cut(p0 + new Vector3(-30f, 14f, -40f), berth + new Vector3(0f, 10f, 120f), 56f); yield return null; }
             yield return UI.Fade(0f, 1.4f);
-            for (float t = 0f; t < 3.4f; t += Time.deltaTime) { if (saucer != null) saucer.position = p0 + Vector3.forward * t * 7f + Vector3.down * t * 1.5f; Cut(p0 + new Vector3(-30f, 14f, -40f) + Vector3.forward * t * 5f, berth + new Vector3(0f, 10f, 120f), 56f); yield return null; }
+            for (float t = 0f; t < 3.4f; t += Time.deltaTime) { if (saucer != null) saucer.position = p0 + Vector3.forward * t * 7f + Vector3.down * t * 1.5f; Cut(p0 + new Vector3(-30f, 14f, -40f) + Vector3.forward * t * 5f, berth + new Vector3(0f, 6f, 90f), 40f); yield return null; }   // QF26 (3): on the city
+            ImageGate.ExpectPoint(berth + Vector3.up * 4f, "the city round the public berth");   // QF26 (2)
             yield return ShotV("ca01_the_approach_over_cattalus");
             if (saucer != null) saucer.position = p0;
             // INTERIOR: 7's EGG chair facing the window, Panther in her lap (he has been watching the window for some time)
@@ -108,12 +117,18 @@ namespace Seven
             else WindowOnTheAsteroid();
             if (_catPose != null) _catPose.EarToward = tw ?? (PilotHead + PilotFwd * 20f);
             yield return DialogueFraming.Over("the old transit tower and its hanging ball through the window (QF24 7)", SayC("CAT_01", 4, 6));   // That's the old transit tower. / The one with the ball hanging from it? / Yes.
+            if (tw.HasValue) ImageGate.ExpectPoint(tw.Value, "the old transit tower");
             yield return ShotV("ca03_the_old_transit_tower_its_hanging_ball");
             CutPilot("two");
             yield return SayC("CAT_01", 7, 7);                   // Of course.
             // the city reveal: tiered cat-tree residences over decorated cardboard neighbourhoods, transit routes between the columns
             OpenSpaceShot();
             for (float t = 0f; t < 8f && Director.Reveal != null && Director.Reveal.Progress < 0.99f; t += Time.deltaTime) yield return null;
+            // QF26 (3): the reveal is OF THE CITY - from behind her shoulder, down over the avenue, the cardboard quarter and the square
+            // (the window's own direction looked over the meadow's bare terrain: 0.18.0's "fog with a giant blank slab")
+            { var cityP = SaucerOutside.I != null ? SaucerOutside.I.LevelPoint(new Vector3(0f, 6f, 100f)) : null;
+              if (cityP.HasValue) { var dc = Flat(cityP.Value - PilotHead).normalized; var sd = Vector3.Cross(Up, dc).normalized; Cut(PilotHead - dc * 1.5f + sd * 1.3f + Up * 0.55f, cityP.Value, 50f); } }
+            { var cityP = SaucerOutside.I != null ? SaucerOutside.I.LevelPoint(new Vector3(0f, 4f, 90f)) : null; if (cityP.HasValue) ImageGate.ExpectPoint(cityP.Value, "the city below (the avenue)"); }
             yield return ShotV("ca04_the_city_reveal_the_hull_gone");
             var cardboard = SaucerOutside.I != null ? SaucerOutside.I.LevelPoint(new Vector3(-20f, 6f, 60f)) : null;
             if (cardboard.HasValue) Cut(PilotHead - PilotFwd * 0.5f - PilotRight * 0.3f + Up * 0.2f, cardboard.Value, 36f);
@@ -168,9 +183,9 @@ namespace Seven
                 pos.y = Mathf.MoveTowards(pos.y, wantY + st.y * 6f, 9f * Time.deltaTime);
                 saucer.SetPositionAndRotation(pos, Quaternion.Euler(0f, yaw, 0f) * Quaternion.Euler(0f, 0f, -st.x * 8f));
                 if (_berthRing != null) foreach (var r in _berthRing.GetComponentsInChildren<Renderer>()) Glowing.Set(r, 1f + 0.5f * Mathf.Sin(Time.time * 4f));
-                var cam = pos - fw * 34f + Vector3.up * 12f;
+                var cam = pos - fw * 26f + Vector3.up * 10f;   // QF26 (3): closer - the saucer over the city, less haze between
                 Cut(cam, pos + fw * 20f - Vector3.up * 6f, 52f);
-                if (Time.time - t0 > 2.0f && Time.time - t0 < 2.05f) yield return ShotV("ca05_guiding_the_saucer_down_to_the_berth");
+                if (Time.time - t0 > 2.0f && Time.time - t0 < 2.05f) { ImageGate.Expect(saucer, "the saucer"); yield return ShotV("ca05_guiding_the_saucer_down_to_the_berth"); }
                 if (d < 10f) break;
                 if (d > 900f || Time.time - t0 > (Auto ? 90f : 240f)) { if (Auto && Cap != null) { Cap.Soft++; Cap.Log("SOFT-LOCK? guiding the saucer to the berth"); } pos = target + Vector3.back * 9f + Vector3.up * 8f; }
                 yield return null;
@@ -185,9 +200,27 @@ namespace Seven
                 Cut(target + new Vector3(-22f, 9f, -26f), saucer.position, 46f);
                 yield return null;
             }
+            ImageGate.Expect(saucer, "the saucer at the berth");
             yield return ShotV("ca06_docked_at_the_public_berth");
             UI.SetObjective(null);
             if (DemoBoot.CaptureDir != null) Cap?.Log($"CAT_01 gameplay: the saucer guided down to the public berth in {Time.time - t0:0.0} s ({(Auto ? "check-run steering" : "the player's stick")})");
+        }
+
+        /// <summary>QF26 (2): the records on their display, from the first spot round it with a clear line to the ring and room for
+        /// the camera (the "objects" framing stood behind the console's rim band at the pilot's chair).</summary>
+        void RecordsShotClear()
+        {
+            var d = RecordDisplayTop() + Up * 0.06f; var buf = new Collider[4];
+            for (int i = 0; i < 12; i++)
+            {
+                var dir = Quaternion.AngleAxis(i * 30f, Up) * (PilotRight * 0.7f + PilotFwd * 0.4f).normalized;
+                foreach (var hgt in new[] { 0.38f, 0.6f })
+                {
+                    var c = d + dir * 0.75f + Up * hgt; var to = d - c;
+                    if (CameraOccluders.Ready && (CameraOccluders.AnyRay(c, to.normalized, to.magnitude - 0.12f, CameraOccluders.SolidMask, out _) || CameraOccluders.OverlapSphere(c, 0.15f, buf, CameraOccluders.SolidMask) > 0)) continue;
+                    Cut(c, d, 36f); if (DemoBoot.CaptureDir != null) Cap?.Log($"records shot (QF26 2): clear view of the display from {i * 30}deg, {hgt:0.00} m above it"); return;
+                }
+            }
         }
 
         // ------------------------------------------------------------------------------------------ CAT_12
@@ -205,6 +238,8 @@ namespace Seven
             yield return UI.Fade(0f, 1.2f);
             if (DemoBoot.CaptureDir != null) Cap?.Log($"CAT_12: the records on the display: {RecordSet.Names()} ({RecordSet.Collected().Count} of 7)");
             CutPilot("objects");
+            RecordsShotClear();                                  // QF26 (2): 0.18.0's framing was filled by the console's rim band
+            if (_recordDisplay != null) ImageGate.Expect(_recordDisplay.transform, "the seven records on their display");
             yield return ShotV("ca10_the_seven_records_the_sphere_among_them");
             var con = ShipConsole.I;
             NavHand(true); CutPilot("ots");
@@ -266,7 +301,7 @@ namespace Seven
                 if (saucer != null) saucer.position = p0 + Vector3.up * t * t * 3.2f;
                 var sp = saucer != null ? saucer.position : p0;
                 Cut(berth + new Vector3(60f, 18f + t * 4f, -40f), Vector3.Lerp(sp, meadow + Vector3.up * 8f, 0.35f), 52f);
-                if (t > 3.4f && t - Time.deltaTime <= 3.4f) yield return ShotV("ca14_the_saucer_rises_above_cattalus_the_meadow_beyond");
+                if (t > 3.4f && t - Time.deltaTime <= 3.4f) { if (saucer != null) ImageGate.Expect(saucer, "the saucer rising over the city"); yield return ShotV("ca14_the_saucer_rises_above_cattalus_the_meadow_beyond"); }
                 yield return null;
             }
             yield return UI.Fade(1f, 1.0f);

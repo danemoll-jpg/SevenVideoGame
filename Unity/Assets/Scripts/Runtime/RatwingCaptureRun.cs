@@ -32,7 +32,7 @@ namespace Seven
             _d = d;
             _dir = DemoBoot.CaptureDir;
             Directory.CreateDirectory(_dir);
-            _rt = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            _rt = ImageGate.NewRT();
             _d.Cam.targetTexture = _rt;
             Physics.queriesHitBackfaces = true;
             _t0 = Time.realtimeSinceStartup;
@@ -57,14 +57,7 @@ namespace Seven
         IEnumerator Shot(string name)
         {
             yield return new WaitForEndOfFrame();
-            var prev = RenderTexture.active;
-            RenderTexture.active = _rt;
-            var tex = new Texture2D(_rt.width, _rt.height, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, _rt.width, _rt.height), 0, 0);
-            tex.Apply();
-            RenderTexture.active = prev;
-            File.WriteAllBytes(Path.Combine(_dir, name + ".png"), tex.EncodeToPNG());
-            Destroy(tex);
+            Log(ImageGate.Save(_rt, _d.Cam, _dir, name + ".png"));   // QF26 (2): HDR like the screen + the image-quality gate
             Log($"shot {name}: T={_d.T:0.00}s state={(_d.Anim.GetCurrentAnimatorStateInfo(0).IsName("sequence") ? "sequence" : "idle")}");
         }
 
@@ -186,7 +179,7 @@ namespace Seven
             Log($"skip: T={_d.T:0.00}s, state idle={_d.Anim.GetCurrentAnimatorStateInfo(0).IsName("idle")}, finished={_d.Finished}");
             yield return Shot("11_after_skip");
             LogAudio();
-            File.WriteAllText(Path.Combine(_dir, "capture_log.txt"), _log.ToString());
+            Log(ImageGate.Summary(_dir)); File.WriteAllText(Path.Combine(_dir, "capture_log.txt"), _log.ToString());
             Application.Quit();
         }
 
@@ -194,7 +187,7 @@ namespace Seven
         {
             yield return new WaitForSecondsRealtime(90f);
             Log("WATCHDOG: run took too long, quitting");
-            File.WriteAllText(Path.Combine(_dir, "capture_log.txt"), _log.ToString());
+            Log(ImageGate.Summary(_dir)); File.WriteAllText(Path.Combine(_dir, "capture_log.txt"), _log.ToString());
             Application.Quit();
         }
     }

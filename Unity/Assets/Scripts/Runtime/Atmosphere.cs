@@ -54,6 +54,10 @@ namespace Seven
         [Header("Soft light sources inside the fog (up to 8; uses child transforms named Glow*)")]
         public float GlowIntensity = 0.35f;
         public float GlowRadius = 18f;
+        /// <summary>QF26 (3): where "ground level" is for the fog (0 = the world origin); a level staged far above / below the
+        /// deck (the CAT_01 exterior 2.9 km up) gets its haze at its own height.</summary>
+        [System.NonSerialized] public float HeightOffset;
+        static readonly int YOffId = Shader.PropertyToID("_SevenFogYOff");
 
         static readonly int OnId = Shader.PropertyToID("_SevenFogOn");
         static readonly int StartId = Shader.PropertyToID("_SevenFogStart");
@@ -94,6 +98,7 @@ namespace Seven
             Shader.SetGlobalVector(GroundId, new Vector4(GroundDensity, GroundBase, GroundFalloff, GroundRange));
             Shader.SetGlobalVector(ValleyId, new Vector4(ValleyDensity, ValleyBase, ValleyFalloff, 0));
             Shader.SetGlobalFloat(StartId, FogStart);
+            Shader.SetGlobalFloat(YOffId, HeightOffset);
             Shader.SetGlobalVector(DistId, new Vector4(DistanceDensity, MaxFog, SkyDistance, HazeHeight));
             Shader.SetGlobalVector(ToneId, new Vector4(NearBrightness, FarBrightness, BrightnessDistance, ZenithBrightness));
             Shader.SetGlobalVector(NoiseId, new Vector4(NoiseTexture != null ? NoiseStrength : 0f, NoiseScale, NoiseSpeed, NoiseFadeDistance));
@@ -112,6 +117,32 @@ namespace Seven
             Shader.SetGlobalVectorArray(GlowPosId, _glowPos);
             Shader.SetGlobalVectorArray(GlowIntId, _glowInt);
             Shader.SetGlobalFloat(GlowCountId, n);
+        }
+
+        // ---- QF26 (1): what the fog adds along a view - the same sums as SevenHeightFog (tone + in-fog glow). Above ~1.2 the fog
+        // itself is HDR-bright and bloom whites the frame out (Cattalus 0.18.0: 8 glows 400-800 m wide summed to ~10).
+        public float FogColourAlong(Vector3 cam, Vector3 dir, float dist)
+        {
+            float tone = Mathf.Lerp(NearBrightness, FarBrightness, Mathf.Clamp01(dist / Mathf.Max(BrightnessDistance, 1f)));
+            tone = Mathf.Lerp(tone, ZenithBrightness, Mathf.Clamp01(dir.y * 3f));
+            float glow = 0f; int n = 0;
+            foreach (Transform c in transform)
+            {
+                if (n >= 8) break;
+                if (!c.gameObject.activeInHierarchy || !c.name.StartsWith("Glow")) continue;
+                var L = c.position - cam; float t = Mathf.Clamp(Vector3.Dot(L, dir), 0f, dist);
+                float d = (L - dir * t).magnitude / Mathf.Max(GlowRadius * c.localScale.x, 1e-3f);
+                glow += GlowIntensity * c.localScale.y * (Mathf.Exp(-d * d) + 0.12f / (1f + d * d)); n++;
+            }
+            return Mathf.Min(tone + glow, 1.25f);   // the shader clamps the same (QF26)
+        }
+        /// <summary>The fog colour at the horizon of a camera (its forward, levelled, out to the sky distance).</summary>
+        public static string Report(Camera cam)
+        {
+            var a = Object.FindFirstObjectByType<Atmosphere>();
+            if (a == null || cam == null) return "no atmosphere";
+            var f = cam.transform.forward; var flat = new Vector3(f.x, 0f, f.z).normalized;
+            return $"fog colour ahead {a.FogColourAlong(cam.transform.position, f, a.SkyDistance):0.00}, at the horizon {a.FogColourAlong(cam.transform.position, flat, a.SkyDistance):0.00} (1 = white; glow {a.GlowIntensity:0.00} x radius {a.GlowRadius:0}, max fog {a.MaxFog:0.00})";
         }
     }
 }

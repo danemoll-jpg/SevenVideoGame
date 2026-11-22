@@ -183,15 +183,20 @@ namespace Seven
             if (Duchess == null || Retreat == null) yield break;
             var door = Retreat.position + Retreat.forward * -0.9f;
             Duchess.Place(door - Retreat.forward * -1.2f, Retreat.position - door); Duchess.Pose.LookAt = null;
-            Shoot(Retreat.position + new Vector3(2.4f, 1.1f, -2.6f), Retreat.position + Vector3.up * 0.5f, 38f, 0.01f);
+            // QF26 (2): from the door's side, so she is seen going in (0.18.0's angle had the box between the camera and her)
+            { var outw = (door - Retreat.position); outw.y = 0f; outw = outw.sqrMagnitude > 0.01f ? outw.normalized : -Retreat.forward; var sd = Vector3.Cross(Vector3.up, outw);
+              Shoot(door + outw * 2.8f + sd * 0.9f + Vector3.up * 1.25f, door + Vector3.up * 0.35f - outw * 0.3f, 42f, 0.01f); }   // outside the entry: her at the threshold, the box behind her
             Duchess.WalkTo(door, 0.35f);
             for (float t = 0f; t < 2.5f && Duchess.Busy; t += Time.deltaTime) yield return null;
+            // QF26 (2): the shot is of her going in, at the threshold (0.18.0 took it after she had vanished inside: an empty box;
+            // inside, the covered Retreat hides her from every angle)
+            ImageGate.Expect(Duchess.transform, "Duchess at the Deluxe Retreat's entry");
+            yield return Shot("c35_duchess_climbs_into_the_box");
             yield return Duchess.Hop(Retreat.position + Vector3.up * 0.15f, 0.7f, 0.35f);
             AudioKit.Play("cardboard_rustle", Retreat.position, 0.9f); AudioKit.Play("paper_crinkle", Retreat.position, 0.7f);
             Duchess.Play("sleep", 0.5f);
             if (RetreatPaper != null) StartCoroutine(Crinkle());
             yield return Wait(1.2f);
-            yield return Shot("c35_duchess_climbs_into_the_box");
             Log("CAT_08: Duchess climbs into the Deluxe Retreat (arranges the paper)");
         }
         IEnumerator Crinkle() { var p0 = RetreatPaper.localPosition; for (float t = 0f; t < 2f; t += Time.deltaTime) { RetreatPaper.localPosition = p0 + new Vector3(Mathf.Sin(t * 13f) * 0.01f, 0f, Mathf.Cos(t * 11f) * 0.01f); yield return null; } RetreatPaper.localPosition = p0; }
@@ -298,9 +303,14 @@ namespace Seven
                     var was = (Cam.transform.position, Cam.transform.rotation, cam.fieldOfView);
                     VisionInsert.gameObject.SetActive(true);
                     var face = VisionInsert.Find("Mark") != null ? VisionInsert.Find("Mark") : VisionInsert;
-                    Shoot(face.position + face.forward * 0.55f + Vector3.up * 0.05f, face.position, 24f, 0.01f);
+                    Shoot(face.position - face.forward * 1.1f + Vector3.right * 0.35f + Vector3.up * 0.3f, face.position + Vector3.down * 0.08f, 30f, 0.01f);   // QF26 (2): the mark's side (a Quad faces -z; +z looked through the box), the box and its setting round it
+                    // QF26 (2): the vision's white fade is still up under the video - lift it for the insert (0.18.0 showed 1.1 s of
+                    // pure white here instead of the mark), put it back for the rest of the clip
+                    float fadeWas = UI.FadeAlpha; UI.SetFade(0f, 1f);
+                    ImageGate.Expect(face, "the dodecahedron's mark on the box");
                     yield return null; yield return Shot("c42_vision_insert_the_dodecahedrons_mark_on_the_box");
                     for (float t = 0f; t < 1.1f; t += Time.deltaTime) yield return null;
+                    UI.SetFade(fadeWas, 1f);
                     VisionInsert.gameObject.SetActive(false);
                     Log("vision 7: the in-engine insert - the Moon dodecahedron's mark on the open box (1.1 s)");
                     if (_vp != null) { _vp.Play(); UI.SetVideo(_vpRT, aspect, 1f); } else if (still != null) UI.SetVideo(still, still.width / (float)still.height, 1f);
@@ -594,6 +604,7 @@ namespace Seven
             yield return Wait(0.8f);
             yield return Hold.Open(null, s => { if (s > 0.02f) ShowBike(true); });
             ShowBike(true);
+            if (Saucer != null) ImageGate.Expect(Saucer, "the saucer's open bike hold");   // QF26 (2)
             yield return Shot("c01b_the_bike_hold_open");
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
             {

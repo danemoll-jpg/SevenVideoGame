@@ -110,7 +110,8 @@ Shader "Seven/DissolveLit"
             {
                 UNITY_SETUP_INSTANCE_ID(i);
                 half edge = DissolveClip(i.positionWS);
-                float3 n = normalize(i.normalWS);
+                // QF26 (1): never normalize(0) (= NaN): a zero normal lights as facing the camera instead
+                float3 n = dot(i.normalWS, i.normalWS) > 1e-12 ? normalize(i.normalWS) : GetWorldSpaceNormalizeViewDir(i.positionWS);
                 if (!front) n = -n;    // two-sided surfaces (Cull Off) light correctly from both sides
 
                 half4 tex = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, i.uv);

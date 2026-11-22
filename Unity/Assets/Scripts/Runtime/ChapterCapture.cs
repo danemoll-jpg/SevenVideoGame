@@ -30,7 +30,7 @@ namespace Seven
             I = go.AddComponent<ChapterCapture>();
             I._t0 = Time.realtimeSinceStartup;
             Directory.CreateDirectory(DemoBoot.CaptureDir);
-            I._rt = new RenderTexture(1280, 720, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            I._rt = ImageGate.NewRT();   // QF26 (2): HDR like the screen (an ARGB32 target made URP render the whole frame in LDR)
             I.Log($"chapter 1 capture start, muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume}, paused={AudioListener.pause}");
             return I;
         }
@@ -53,6 +53,7 @@ namespace Seven
         void Update()
         {
             if (!_stopped && DemoBoot.StopAfter > 0f && Time.time > DemoBoot.StopAfter) { _stopped = true; Finish($"stopped after {DemoBoot.StopAfter:0} s of game time (-stopafter)"); }
+            if (_cam != null) WatchControl();
             AudioListener.GetOutputData(_buf, 0);
             foreach (var v in _buf) _peak = Mathf.Max(_peak, Mathf.Abs(v));
         }
@@ -63,17 +64,24 @@ namespace Seven
         {
             yield return new WaitForEndOfFrame();
             if (_cam == null) yield break;
-            var prev = RenderTexture.active;
-            RenderTexture.active = _rt;
-            var tex = new Texture2D(_rt.width, _rt.height, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, _rt.width, _rt.height), 0, 0);
-            tex.Apply();
-            RenderTexture.active = prev;
             Chapter1State.ShotCount++;
             var file = $"{Chapter1State.ShotCount:00}_{name}.png";
-            File.WriteAllBytes(Path.Combine(DemoBoot.CaptureDir, file), tex.EncodeToPNG());
-            Destroy(tex);
+            var gate = ImageGate.Save(_rt, _cam, DemoBoot.CaptureDir, file);   // QF26 (2): every capture is gated
             Log($"shot {file}  audioPeak={_peak:0.000000}  cursorVisible={Cursor.visible}");
+            Log(gate);
+        }
+
+        // ---- QF26 (1): control came back -> one gated frame a moment later (the white-out stayed on after control returned and
+        // QF24's POST FX check only looked at the depth-of-field switch, never at the picture)
+        bool _hadControl; float _noControlFor, _ctlAt = -1f; int _ctlShots;
+        void WatchControl()
+        {
+            bool control = false; try { control = MusicSystem.HasControl != null && MusicSystem.HasControl(); } catch { }
+            if (!control) { _noControlFor += Time.unscaledDeltaTime; _hadControl = false; return; }
+            if (!_hadControl && _noControlFor > 1.0f && _ctlShots < 40) _ctlAt = Time.unscaledTime + 0.8f;
+            _hadControl = true; _noControlFor = 0f;
+            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && ChapterUI.Live != null && ChapterUI.Live.FadeAlpha > 0.05f) _ctlAt = Time.unscaledTime + 0.3f;   // still fading in: the frame the player first sees clearly
+            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt) { _ctlAt = -1f; _ctlShots++; StartCoroutine(Shot($"ctl_control_back_{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}")); }
         }
 
         /// <summary>QF13: the same frame from a second, fixed angle (a side view) without moving the player's camera - a
@@ -87,19 +95,16 @@ namespace Seven
             var src = _cam.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             var dst = c.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>() ?? go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             if (src != null) { dst.renderPostProcessing = src.renderPostProcessing; dst.antialiasing = src.antialiasing; }
-            var rt = new RenderTexture(_rt.width, _rt.height, 24, RenderTextureFormat.ARGB32) { antiAliasing = 4 };
+            var rt = ImageGate.NewRT(_rt.width, _rt.height);
             var req = new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest { destination = rt };
             if (UnityEngine.Rendering.RenderPipeline.SupportsRenderRequest(c, req)) UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(c, req);
             else { c.targetTexture = rt; c.Render(); c.targetTexture = null; }
-            var prev = RenderTexture.active; RenderTexture.active = rt;
-            var tex = new Texture2D(rt.width, rt.height, TextureFormat.RGB24, false);
-            tex.ReadPixels(new Rect(0, 0, rt.width, rt.height), 0, 0); tex.Apply();
-            RenderTexture.active = prev;
             Chapter1State.ShotCount++;
             var file = $"{Chapter1State.ShotCount:00}_{name}.png";
-            File.WriteAllBytes(Path.Combine(DemoBoot.CaptureDir, file), tex.EncodeToPNG());
-            Destroy(tex); rt.Release(); Destroy(rt); Destroy(go);
+            var gate = ImageGate.Save(rt, c, DemoBoot.CaptureDir, file);       // QF26 (2)
+            rt.Release(); Destroy(rt); Destroy(go);
             Log($"shot {file} (second angle)");
+            Log(gate);
         }
 
         public void Finish(string summary)
@@ -121,6 +126,7 @@ namespace Seven
             if (RidePose.Checks > 0) Log(RidePose.Summary());                      // QF24 (15)
             Log($"POST FX (QF24 24): close-up depth of field found still on when control returned {CloseUpFocus.Releases}x - each released within a frame (longest {CloseUpFocus.LongestOnWithControl * 1000f:0} ms)");
             if (MothershipInterior.Shown > 0 || RecordDisplay.Built > 0) Log($"QF24 (2/4): record displays built {RecordDisplay.Built}, the mothership's interior shown {MothershipInterior.Shown}x");
+            Log(ImageGate.Summary(DemoBoot.CaptureDir));                          // QF26 (2)
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");
             File.WriteAllText(Path.Combine(DemoBoot.CaptureDir, "capture_log.txt"), _log.ToString());

@@ -21,6 +21,21 @@ namespace Seven
         static void Log(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) Cap?.Log(s); }
         static IEnumerator Shot(string n) { if (DemoBoot.CaptureDir != null && Cap != null) yield return Cap.Shot(n); }
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+        /// <summary>QF26 (2): the first candidate camera position with a clear line to <paramref name="look"/> and room round it (the
+        /// 0.18.0 step-2 shot stood inside a planter - an empty dark frame); the first one if none is clear.</summary>
+        static Vector3 ClearCam(Vector3 look, params Vector3[] cands)
+        {
+            if (!CameraOccluders.Ready) return cands[0];
+            var buf = new Collider[4];
+            foreach (var c in cands)
+            {
+                var d = look - c; float len = d.magnitude; if (len < 0.05f) continue;
+                if (CameraOccluders.AnyRay(c, d / len, Mathf.Max(0f, len - 0.25f), CameraOccluders.SolidMask, out _)) continue;
+                if (CameraOccluders.OverlapSphere(c, 0.18f, buf, CameraOccluders.SolidMask) > 0) continue;
+                return c;
+            }
+            return cands[0];
+        }
 
         /// <summary>Up to the white. reach = her hand goes onto the shape (false while she rides: a reaching gesture).</summary>
         public static IEnumerator Into(string tag, ChapterSeven s, ChapterCamera cam, ChapterUI ui, Vector3 shape, float radius, System.Action<float> glow, bool reach = true, System.Action<Vector3> floatTo = null)
@@ -114,7 +129,9 @@ namespace Seven
             var runner = new GameObject("VisionArmLight"); var l = runner.AddComponent<Light>(); l.type = LightType.Point; l.color = Color.white; l.range = 0.9f; l.intensity = 0f; l.shadows = LightShadows.None;
             var dot = new GameObject("VisionArmGlow"); dot.AddComponent<MeshFilter>().sharedMesh = Markers.Rock(11, Vector3.one * 0.035f); var dr = dot.AddComponent<MeshRenderer>(); dr.sharedMaterial = Markers.Additive(2.2f); dr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             var path = new[] { HumanBodyBones.RightHand, HumanBodyBones.RightLowerArm, HumanBodyBones.RightUpperArm, HumanBodyBones.RightShoulder, HumanBodyBones.Neck, HumanBodyBones.Head };
-            cam.Shot(touch + side * 1.5f - fwd * 0.9f + Vector3.up * 0.35f, (touch + s.transform.position + Vector3.up * 1.4f) * 0.5f, 0.01f, true, 40f);
+            { var look2 = (touch + s.transform.position + Vector3.up * 1.4f) * 0.5f;
+              cam.Shot(ClearCam(look2, touch + side * 1.5f - fwd * 0.9f + Vector3.up * 0.35f, touch - side * 1.5f - fwd * 0.9f + Vector3.up * 0.35f, touch + side * 1.1f - fwd * 1.6f + Vector3.up * 0.6f, touch - side * 1.1f - fwd * 1.6f + Vector3.up * 0.6f, touch - fwd * 2.2f + Vector3.up * 0.9f), look2, 0.01f, true, 40f);
+              ImageGate.Expect(s.transform, "7 - the light running up her arm"); }
             bool shotMid = false;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.3f)
             {
@@ -177,7 +194,13 @@ namespace Seven
             MusicBack(tag);
             var fwd = Flat(shape - s.transform.position).normalized; if (fwd.sqrMagnitude < 0.01f) fwd = s.transform.forward;
             var side = Vector3.Cross(Vector3.up, fwd);
+            // QF26 (2): back from the vision - her hand still on the shape, seen from a clear side (0.18.0 shot this from the push-in's
+            // camera 34 cm from her eyes, through the fading white: a flat gray frame)
+            { var touch0 = shape - fwd * (radius + 0.07f); var look4 = Vector3.Lerp(touch0, s.transform.position + Vector3.up * 1.3f, 0.45f);
+              cam.Shot(ClearCam(look4, touch0 + side * 1.4f - fwd * 0.7f + Vector3.up * 0.3f, touch0 - side * 1.4f - fwd * 0.7f + Vector3.up * 0.3f, touch0 + side * 0.9f - fwd * 1.5f + Vector3.up * 0.5f, touch0 - side * 0.9f - fwd * 1.5f + Vector3.up * 0.5f), look4, 0.01f, true, 40f); }
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.2f) { glow?.Invoke(Mathf.Lerp(4.5f, 1f, t)); s.SetEnergyPoint(Mathf.Lerp(2.8f, 1f, t), 0.1f); yield return null; }
+            for (float t = 0f; t < 3f && ChapterUI.Live != null && ChapterUI.Live.FadeAlpha > 0.08f; t += Time.deltaTime) yield return null;   // the white has cleared
+            ImageGate.Expect(s.transform, "7 - her hand still on the shape");
             yield return Shot($"vision_{tag}_4_back_her_hand_still_on_it");
             var touch = shape - fwd * (radius + 0.07f);
             HideRuneFromFace(s, shape);                                                 // QF24 (20): never over her face afterwards

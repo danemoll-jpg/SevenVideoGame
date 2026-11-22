@@ -23,6 +23,12 @@ def main():
     if catalog['type']!='catalog' or previous['type']!='game' or a.build<=previous['build']:raise ValueError('Correct previous catalog/manifest and an increasing build required')
     if a.out.exists():raise ValueError('Use a fresh immutable output directory')
     r.check_version(a.game,a.version)
+    # QF26 (2): never package a build whose image-quality gate is not clean (Tools/Run-ImageGate.ps1 writes the report)
+    gate=pathlib.Path(__file__).resolve().parent.parent/'Builds'/'ImageGate'/f'gate_{a.version}.txt'
+    if not gate.exists(): raise SystemExit(f'IMAGE GATE (QF26 2): no report for {a.version} ({gate}) - run Tools/Run-ImageGate.ps1 on this build first')
+    txt=gate.read_text(encoding='utf-8-sig')
+    if 'IMAGE GATE RELEASE (QF26 2): PASS' not in txt: raise SystemExit('IMAGE GATE (QF26 2) not clean for '+a.version+' - see '+str(gate))
+    print(f'IMAGE GATE (QF26 2): release gate PASS for {a.version}')
     tag=f'game-{a.build}';base=a.base_url or f'https://github.com/{r.REPO}/releases/download/{tag}'
     a.out.mkdir(parents=True);assets=a.out/'assets';assets.mkdir()
     runtime=a.out/'runtime';files=r.stage_runtime(a.game,runtime,a.launcher)

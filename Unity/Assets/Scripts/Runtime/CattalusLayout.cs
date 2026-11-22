@@ -94,7 +94,8 @@ namespace Seven
         };
         public static readonly Vector3 FountainAt = new Vector3(-20f, 0f, 136f);
         /// <summary>Carefully occupied patches of sunlight (bright soft pools on the paving; a citizen lies in most of them).</summary>
-        public static readonly Vector3[] SunPatches = { new Vector3(8f, 0f, 52f), new Vector3(-9f, 0f, 88f), new Vector3(10f, 0f, 120f), new Vector3(-12f, 0f, 156f), new Vector3(22f, 0f, 150f), new Vector3(-4f, 0f, 30f) };
+        public static readonly Vector3[] SunPatches = { new Vector3(8f, 0f, 52f), new Vector3(-9f, 0f, 88f), new Vector3(10f, 0f, 120f), new Vector3(-12f, 0f, 156f), new Vector3(22f, 0f, 150f), new Vector3(-4f, 0f, 30f),
+            new Vector3(-10f, 0f, 46f), new Vector3(11f, 0f, 74f), new Vector3(-6f, 0f, 104f), new Vector3(26f, 0f, 132f) };   // QF26 (3): a citizen in most of them
         /// <summary>The elevated transit route: a loop over the avenue and round the square between the scratching-post columns.</summary>
         public static readonly Vector3[] TransitLoop = { new Vector3(-20f, 8f, 30f), new Vector3(-20f, 8f, 118f), new Vector3(-44f, 8.5f, 150f), new Vector3(-20f, 9f, 186f), new Vector3(20f, 9f, 186f), new Vector3(30f, 8.5f, 150f), new Vector3(20f, 8f, 118f), new Vector3(20f, 8f, 30f), new Vector3(0f, 7.5f, 18f) };
 

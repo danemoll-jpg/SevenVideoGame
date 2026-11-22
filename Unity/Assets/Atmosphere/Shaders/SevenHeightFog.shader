@@ -25,6 +25,7 @@ Shader "Seven/HeightFog"
             float4 _SevenFogTone;     // x near brightness, y far brightness, z distance (m) to reach far, w zenith brightness
             float4 _SevenFogNoise;    // x strength, y world scale, z speed, w fade distance
             float _SevenFogStart;     // metres from the camera before any fog accumulates (keeps the foreground dark)
+            float _SevenFogYOff;      // QF26 (3): the fog's ground level (a world staged far above the deck: the CAT_01 exterior)
             float4 _SevenGlowPos[8];  // xyz position, w radius
             float4 _SevenGlowInt[8];  // x intensity
             float _SevenGlowCount;
@@ -65,6 +66,7 @@ Shader "Seven/HeightFog"
                 float fullDist = dist;
                 float start = min(_SevenFogStart, dist);
                 float3 o = cam + dir * start;          // fog starts accumulating here
+                o.y -= _SevenFogYOff;
                 dist -= start;
 
                 float tau = LayerIntegral(_SevenFogGround, o.y, dir.y, min(dist, _SevenFogGround.w));
@@ -100,7 +102,9 @@ Shader "Seven/HeightFog"
                 }
 
                 float3 scene = col.rgb;
-                float3 outc = lerp(scene, (tone + glow).xxx, fog);
+                // QF26: the fog itself never goes far past white - glows summed to 5-10x white in several worlds (Cattalus 0.18.0:
+                // ~10), and on the HDR screen that is a bloom white-out; 1.25 still lets the soft glows bloom
+                float3 outc = lerp(scene, min(tone + glow, 1.25).xxx, fog);
                 return half4(outc, col.a);
             }
             ENDHLSL

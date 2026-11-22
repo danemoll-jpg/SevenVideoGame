@@ -112,26 +112,25 @@ namespace Seven.EditorTools
         {
             var inst = (GameObject)PrefabUtility.InstantiatePrefab(atmoPrefab);
             var a = inst.GetComponent<Seven.Atmosphere>();
-            // Kyle's look: dark near silhouettes, a bright glowing misty distance, strong ground fog, soft lights in the fog
-            a.FogStart = 28f;
-            a.GroundDensity = 0.006f; a.GroundBase = -2f; a.GroundFalloff = 6f; a.GroundRange = 220f;
+            // QF26 (3): a SUNNY, warm, lived-in cat city (Dan): clear sunlight and soft shadows, real contrast, haze only in the far
+            // distance (Kyle's monochrome look: detail silhouetted against light haze). 0.18.0 had GlowRadius 80 x child scales 5-10
+            // = eight glows 400-800 m wide at ~1.1 each: summed, the fog colour was ~10x white - with the NaN quads, the white-out.
+            a.FogStart = 70f;
+            a.GroundDensity = 0.0016f; a.GroundBase = -1f; a.GroundFalloff = 5f; a.GroundRange = 420f;
             a.ValleyDensity = 0f;
-            a.DistanceDensity = 0.0012f; a.HazeHeight = 140f; a.MaxFog = 0.72f;
-            a.NearBrightness = 0.16f; a.FarBrightness = 0.7f; a.BrightnessDistance = 320f; a.ZenithBrightness = 0.5f;
-            a.NoiseStrength = 0.32f; a.NoiseScale = 0.03f; a.NoiseSpeed = 0.02f; a.NoiseFadeDistance = 90f;
-            a.GlowIntensity = 0.38f; a.GlowRadius = 80f;
-            var glows = new[]
-            {
-                (new Vector3(0f, 30f, 200f), new Vector3(8f, 3f, 1f)), (new Vector3(-220f, 26f, 180f), new Vector3(10f, 3f, 1f)), (new Vector3(260f, 40f, 260f), new Vector3(9f, 3f, 1f)),
-                (new Vector3(-90f, 60f, 70f), new Vector3(5f, 2f, 1f)), (new Vector3(500f, 30f, 150f), new Vector3(7f, 3f, 1f)), (new Vector3(80f, 20f, -60f), new Vector3(6f, 2f, 1f)),
-                (new Vector3(200f, 50f, 600f), new Vector3(9f, 3f, 1f)), (new Vector3(-300f, 40f, 40f), new Vector3(8f, 3f, 1f)),
-            };
+            a.DistanceDensity = 0.0009f; a.HazeHeight = 70f; a.MaxFog = 0.62f;
+            a.NearBrightness = 0.6f; a.FarBrightness = 0.84f; a.BrightnessDistance = 420f; a.ZenithBrightness = 0.74f;
+            a.NoiseStrength = 0.12f; a.NoiseScale = 0.02f; a.NoiseSpeed = 0.01f; a.NoiseFadeDistance = 160f;
+            a.GlowIntensity = 0.12f; a.GlowRadius = 40f;
+            // three soft sun-glows low in the far haze (radius 40 x scale.x, intensity 0.12 x scale.y: at most ~0.25 over the haze)
+            var glows = new[] { (new Vector3(60f, 45f, 640f), new Vector3(3f, 1.6f, 1f)), (new Vector3(-420f, 40f, 260f), new Vector3(2.5f, 1.2f, 1f)), (new Vector3(480f, 40f, 300f), new Vector3(2.5f, 1.2f, 1f)) };
             int gi = 0;
             foreach (Transform c in inst.transform)
             {
-                if (c.name.StartsWith("Glow") && gi < glows.Length) { c.position = glows[gi].Item1; c.localScale = glows[gi].Item2; gi++; }
-                if (c.name == "BackLight") { c.rotation = Quaternion.Euler(38f, 210f, 0f); var l = c.GetComponent<Light>(); l.intensity = 0.95f; l.shadowStrength = 0.6f; }
-                if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(42f, 30f, 0f); c.GetComponent<Light>().intensity = 0.45f; }
+                if (c.name.StartsWith("Glow")) { if (gi < glows.Length) { c.position = glows[gi].Item1; c.localScale = glows[gi].Item2; } else c.gameObject.SetActive(false); gi++; }
+                // the sun: high, from behind-left of the berth -> the avenue, the square and the course in sun with soft shadows
+                if (c.name == "BackLight") { c.rotation = Quaternion.Euler(47f, 215f, 0f); var l = c.GetComponent<Light>(); l.intensity = 1.55f; l.shadows = LightShadows.Soft; l.shadowStrength = 0.72f; }
+                if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(30f, 40f, 0f); c.GetComponent<Light>().intensity = 0.32f; }
             }
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoCattalusPath);
             Object.DestroyImmediate(inst);
@@ -223,7 +222,7 @@ namespace Seven.EditorTools
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
             RenderSettings.skybox = null; RenderSettings.fog = false;
-            RenderSettings.ambientMode = AmbientMode.Flat; RenderSettings.ambientLight = new Color(0.4f, 0.4f, 0.4f);
+            RenderSettings.ambientMode = AmbientMode.Flat; RenderSettings.ambientLight = new Color(0.36f, 0.36f, 0.36f);   // QF26 (3): the sun does the work; shadows stay readable
             var shs = new SphericalHarmonicsL2(); shs.AddAmbientLight(RenderSettings.ambientLight); RenderSettings.ambientProbe = shs;
             var atmo = (GameObject)PrefabUtility.InstantiatePrefab(atmoP); atmo.name = "Atmosphere_Cattalus";
             var world = new GameObject("Cattalus").transform;
@@ -233,7 +232,7 @@ namespace Seven.EditorTools
                 tape = Dissolve("Cat_tape", Gray(0.86f), 0.55f, false), sisal = Dissolve("Cat_sisal", Gray(0.52f), 0.04f, false), carpet = Dissolve("Cat_carpet", Gray(0.44f), 0.02f, false),
                 carpetDark = Dissolve("Cat_carpet_dark", Gray(0.3f), 0.02f, false), fabric = Dissolve("Cat_fabric", Gray(0.66f), 0.1f, false), wood = Dissolve("Cat_wood", Gray(0.38f), 0.25f, false),
                 stone = Dissolve("Cat_stone", Gray(0.7f), 0.3f, false), metal = Dissolve("Cat_metal", Gray(0.62f), 0.65f, false, 0.8f), glow = Dissolve("Cat_glow", Color.white, 0.5f, false),
-                glowSoft = Dissolve("Cat_glow_soft", Gray(0.55f), 0.4f, false), grass = Dissolve("Cat_grass", Gray(0.5f), 0.1f, false), grassDark = Dissolve("Cat_grass_dark", Gray(0.34f), 0.1f, false),
+                glowSoft = Dissolve("Cat_glow_soft", Gray(0.55f), 0.4f, false), grass = Dissolve("Cat_grass", Gray(0.4f), 0.1f, false), grassDark = Dissolve("Cat_grass_dark", Gray(0.34f), 0.1f, false),
                 leaf = Dissolve("Cat_leaf", Gray(0.42f), 0.15f, false), bark = Dissolve("Cat_bark", Gray(0.3f), 0.1f, false), hill = Dissolve("Cat_hill", Gray(0.56f), 0.1f, false),
                 road = Dissolve("Cat_road", Gray(0.36f), 0.3f, false), rail = Dissolve("Cat_rail", Gray(0.5f), 0.1f, false), paper = Dissolve("Cat_paper", Gray(0.9f), 0.2f, false), ground = Dissolve("Cat_ground", Gray(0.46f), 0.2f, false),
             };
@@ -253,6 +252,10 @@ namespace Seven.EditorTools
                 for (int j = 0; j < nz; j++) for (int i = 0; i < nx; i++) { int a = j * (nx + 1) + i, bb = a + nx + 1; t.AddRange(new[] { a, bb, a + 1, a + 1, bb, bb + 1 }); }
                 MeshObject("MeadowTerrain", SaveMesh(SmoothFinish(v, t), "Cat_MeadowTerrain"), m.grass, world, false);
                 var grass = new List<GrassPatch> { new GrassPatch { Name = "the meadow", Area = new Rect(C.MeadowX0, C.MeadowZ0, C.MeadowX1 - C.MeadowX0, C.MeadowZ1 - C.MeadowZ0), Density = 3.2f, MinH = 0.35f, MaxH = 0.8f, Height = (x, z) => Mathf.Abs(x - C.TreeView.x) < 3f && Mathf.Abs(z - C.TreeView.z) < 3f ? float.NaN : C.MeadowHeight(x, z) } };
+                // QF26 (3): the rising rim of the meadow carries grass too (0.18.0 left it a bare, flat-shaded slope - a giant blank surface
+                // behind the running shots); thinner than the meadow itself
+                foreach (var (nm, rc) in new[] { ("the meadow rim west", new Rect(x0, z0, C.MeadowX0 - x0, z1 - z0)), ("the meadow rim south", new Rect(C.MeadowX0, z0, C.MeadowX1 - C.MeadowX0, C.MeadowZ0 - z0)), ("the meadow rim north", new Rect(C.MeadowX0, C.MeadowZ1, C.MeadowX1 - C.MeadowX0, z1 - C.MeadowZ1)) })
+                    grass.Add(new GrassPatch { Name = nm, Area = rc, Density = 0.45f, MinH = 0.4f, MaxH = 1.0f, Height = (x, z) => C.MeadowHeight(x, z) });
                 Log($"meadow grass: {BuildGrass(world, grass, 18)} blades");
                 var hk = new AK();
                 { var (hv, ht) = hk.Of(m.hill); var hr = new System.Random(4); for (int i = 0; i < 22; i++) { float a = Mathf.Lerp(100f, 260f, i / 21f) * Mathf.Deg2Rad, r = 300f + (i % 3) * 90f + (float)hr.NextDouble() * 40f; var c = new Vector3(-220f, 0f, 160f) + new Vector3(Mathf.Cos(a) * r, 0f, Mathf.Sin(a) * r); float w = 110f + (float)hr.NextDouble() * 80f; Ellipsoid(hv, ht, c + Vector3.down * 18f, new Vector3(w, 34f + (i % 3) * 16f, w * 0.7f), 10, 20); } }
@@ -311,6 +314,36 @@ namespace Seven.EditorTools
                 if (i % 3 == 0) CatTree(sk, m, p, 30f + (float)srnd.NextDouble() * 40f, 100 + i, 2.2f); else CardboardMansion(sk, m, p, (float)srnd.NextDouble() * 360f, 3 + i % 4, 200 + i);
             }
             sk.Save("Skyline", city, false, false);
+            // QF26 (3): the city reads dense and full at the scale of the shots (Dan: "no buildings reduced to specks"): every block
+            // round the avenue, the square and the berth approach is built up - stacked cardboard mansions, cat-tree towers and
+            // scratching-post columns, tallest toward the square - never on the course, a walkable zone, the transit tower or the meadow
+            {
+                var fk = new AK(); var frnd = new System.Random(57); int built = 0;
+                bool Free(Vector3 p, float r)
+                {
+                    foreach (var z in C.Zones) if (p.x > z.X0 - r - 3f && p.x < z.X1 + r + 3f && p.z > z.Z0 - r - 3f && p.z < z.Z1 + r + 3f) return false;
+                    // in PLAN: the circuit climbs tens of metres (the spiral) - nothing may stand under an elevated section either
+                    for (int ci = 0; ci < K.Count; ci += 2) { var cp = K.At(ci); if (new Vector2(cp.x - p.x, cp.z - p.z).sqrMagnitude < (r + 14f) * (r + 14f)) return false; }
+                    if (new Vector2(p.x - C.TransitTower.x, p.z - C.TransitTower.z).magnitude < r + 10f) return false;
+                    if (p.x < C.MeadowX1 + 6f && p.z > C.MeadowZ0 - 10f) return false;
+                    if (new Vector2(p.x, p.z).magnitude < 40f) return false;                                   // the berth's apron + the saucer's way in
+                    return true;
+                }
+                for (float z = -110f; z <= 250f; z += 15f)
+                    for (float x = -105f; x <= 150f; x += 15f)
+                    {
+                        var p = new Vector3(x + ((float)frnd.NextDouble() - 0.5f) * 6f, 0f, z + ((float)frnd.NextDouble() - 0.5f) * 6f);
+                        float roll = (float)frnd.NextDouble(); float r = roll < 0.7f ? 6f : 4f;
+                        if (!Free(p, r)) continue;
+                        float nearSquare = Mathf.Clamp01(1f - new Vector2(p.x, p.z - 146f).magnitude / 160f);
+                        if (roll < 0.62f) CardboardMansion(fk, m, p, (float)frnd.NextDouble() * 360f, 2 + (int)(nearSquare * 3f) + frnd.Next(0, 2), 900 + built);
+                        else if (roll < 0.84f) CatTree(fk, m, p, 16f + nearSquare * 14f + (float)frnd.NextDouble() * 8f, 1300 + built, 1.4f);
+                        else { if (!Free(p + new Vector3(3.5f, 0f, 0f), 5f)) continue; ScratchPost(fk, m, p, 0.8f + (float)frnd.NextDouble() * 0.4f, 8f + (float)frnd.NextDouble() * 6f, 1700 + built); Terrace(fk, m, p + new Vector3(3.5f, 0f, 0f), (float)frnd.NextDouble() * 360f, 7f, 4.4f, 2 + frnd.Next(0, 2)); }
+                        built++;
+                    }
+                fk.Save("CityBlocks", city, false, true);
+                Log($"QF26 (3) city blocks: {built} homes, cat trees and post-and-terrace groups filling the blocks round the avenue, the square and the berth approach");
+            }
 
             // ---------------------------------------------------------------- the square: the Cat-a-tron, the prizes, the desk, the podium
             var sq = new GameObject("Square").transform; sq.SetParent(world, false);
@@ -484,7 +517,7 @@ namespace Seven.EditorTools
             // the meeting's other members (sit round the table), citizens strolling the avenue, the spectators in the stands
             var citizens = new List<Seven.CatFolk>();
             for (int i = 0; i < 3; i++) { var p = C.Vignettes[5].at + Quaternion.Euler(0f, 100f + i * 85f, 0f) * Vector3.forward * 1.1f; var c2 = SpawnFolk("Meeting" + i, p, C.Vignettes[5].at - p, 0.9f + i * 0.08f, catCtl, F(vv[(i + 3) % vv.Length]), catWhisker, folk, "sit"); c2.Anim.Play("sit"); citizens.Add(c2); }
-            for (int i = 0; i < 8; i++) citizens.Add(SpawnFolk("Citizen" + i, new Vector3((i % 2 == 0 ? -1f : 1f) * (6f + i), 0f, 36f + i * 9f), Vector3.forward, 0.9f + (i % 3) * 0.15f, catCtl, F(vv[i % vv.Length]), catWhisker, folk));
+            for (int i = 0; i < 20; i++) citizens.Add(SpawnFolk("Citizen" + i, new Vector3((i % 2 == 0 ? -1f : 1f) * (6f + i), 0f, 36f + i * 9f), Vector3.forward, 0.9f + (i % 3) * 0.15f, catCtl, F(vv[i % vv.Length]), catWhisker, folk));
             var spectators = new List<Seven.CatFolk>();
             for (int i = 0; i < 12; i++) { var p = new Vector3(37.2f + (i % 3) * 1.2f, 0.55f + (i % 3) * 0.55f, 120f + (i / 3) * 7f + (i % 2) * 1.5f); spectators.Add(SpawnFolk("Spectator" + i, p, Vector3.right, 1f, catCtl, F(vv[(i + 2) % vv.Length]), catWhisker, folk, "sit")); }
             // the props the vignettes move: the delivered carton, the dangling ornament, the object on the counter
