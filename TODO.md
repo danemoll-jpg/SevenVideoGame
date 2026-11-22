@@ -1,5 +1,211 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF24: Dan's 0.17.2 review (Dan, 2026-11-21) — to do
+Commit first. All standing rules + the repeat-item rule. Release the next patch; "QF24 — status"; "For Dan to check (QF24)".
+
+1. **The arrival / strategy talks happen in 7's EGG LOUNGE CHAIR by the window — not the pilot's chair at the console.** The saucer
+   has two chairs: **7's sculpted egg lounge chair on the tulip pedestal, facing the window** (`FightDemoBuilderSaucer.cs`, "7's chair",
+   `ChairPivot` — the original chair, the one the "vanish ship" reveal was built around: "after the reveal only 7, her chair and the
+   cat remain") and the **pilot's chair at the console** (Round 13). Dan asked specifically for the chair closest to the window; the
+   chat's QF21 wording ("the pilot's chair at the front window") merged the two, which is why every arrival talk ended up at the
+   console. Fix: **all arrival / strategy talks (EUR_01, MAR_01, AST_01, BIA_01 + BIA_02 aboard, and the standing rule in `CLAUDE.md`)
+   use the egg lounge chair facing the window**, Panther in her lap, the vanish effect on (so it's 7, her egg chair and the cat floating
+   in front of the world). The pilot's chair at the console stays only for the next-destination choices at the star map (C13, MAR_13,
+   AST_11, BIA_13). Correct the rule's wording in `CLAUDE.md` so it can't be read as the console chair again. Captures of each arrival.
+
+2. **The records shown are still wrong — repeat of QF23 23** (`Docs/Previews/qf24/dan_records_four.png`: BIA_02 aboard, only **four**
+   shapes, floating in a crooked stack beside her knees; Dan had finished the asteroid first, so she should have **five** — cube,
+   dodecahedron, icosahedron, tetrahedron, cuboctahedron). QF23 added `RecordSet` but this scene still shows four: find out why (does
+   BIA_02 / the chair scene still place records itself? does Dan's real save lack the asteroid record in `RecordSet` — older-save
+   migration again? does Scene Select fake a progress state?) and fix the cause. Rules: **the records shown always equal what she has
+   actually collected in this save** — every scene, every start path (Continue, star map, Scene Select uses the save's real collection).
+   **Where they sit:** the egg chair (item 1) has no armrest — give them a small, elegant **side table / floating display ring** beside
+   the chair where they rest neatly in a row or circle, each in its place (not stacked or hovering at her knees). Check with Dan's actual
+   save, and with saves for each finishing order.
+
+3. **Voices overlapping at the iris door (BIA_02):** as they pass through the mothership's door, several lines play at once (likely
+   BIA_02_11–14 — "There. Plenty of room." / "Then you can stop holding yours." / "Heh. You noticed." / Nela's "Follow the lights…" —
+   or the new QF23 lines, a reaction, or a line fired by the passage timing while the previous one still plays). Fix the cause, and make
+   it a guarantee for the whole game: **only one dialogue line plays at a time** — every line waits for the one before it (and its
+   reaction) to finish; lines triggered by events / timers queue instead of starting over another; skipping a line stops its audio.
+   Add a check to every chapter's test run: log any moment two voice lines overlap (0 allowed) and list where it happened.
+
+4. **After the iris closes, they're inside the mothership — show that, from outside the saucer.** Today, after passing through the
+   door, the scene still shows the "vanish ship" view from the cabin with **Veyra's rings / space outside the mothership** behind them —
+   wrong place. From the moment the saucer is through the iris: **cut to exterior shots of the saucer itself flying inside the
+   mothership** — gliding along the interior approach, the guide lights rippling ahead (BIA_02's "Interior guide lights illuminate a route
+   toward the receiving berth"), the vast interior beyond, then settling into the receiving berth — **no cabin / saucer-interior shots in
+   this stretch**. Nela's BIA_02_14 and any remaining lines play over those exterior shots. The vanish effect ends (hull back) before /
+   as they pass through the iris. And generally: **whatever is outside the saucer (window views, the vanish view, backgrounds) always
+   matches where the saucer actually is at that moment** — never the previous location.
+
+5. **A berth docking arm sits right in front of the bike hold** (the mothership's receiving berth, QF23 6's new arms). Rotate the arm
+   set around the saucer so **no arm or pole is in front of the bike hold** (or the beam's path / landing pad) — the hold opening and the
+   bike's route out of it stay completely clear. Make it a rule + a check for every docking / landing structure in every chapter: keep
+   clear a corridor in front of the bike hold (the hatch's width, out to where the bike lands) and the beam column; fail the build if
+   anything stands in it. Capture the bike leaving the hold at the berth.
+
+6. **Sheathed arc blades: invisible** (Dan: "I just don't like the way the arc blades are placed … leave them invisible until she
+   unsheathes them"). Remove the back / hip mount entirely: when sheathed, nothing shows on her. **Drawing them** = the blades **ignite
+   out of thin air in her hands** (a quick crackle of white light forming the curved crescents, a rising hum) as the draw clip plays;
+   **sheathing** = they fade / collapse into a brief flicker of light and vanish. That also removes the hanging-strands problem (QF23 7)
+   for good. Update the Field Guide / Log wording if it mentions where she carries them.
+
+7. **BIA_03_06 "What was that?" — she's looking away from the memory echo she's asking about.** Dan's fix: **cut to the memory itself**
+   (the fading echo of the seated figures in the room that no longer exists, the disoriented resident) and play her line **over that
+   shot** (her voice off-screen). General rule for every chapter: when a line refers to something on screen ("What was that?", "Look at
+   this", "There"), the shot shows **the thing**, or her clearly looking at it — never her facing elsewhere. Check the dialogue camera for
+   every such line and list what changed.
+
+8. **Panther's cutaways aboard (QF23 10) — two fixes.** (a) **Remove the dangling ball** (the string / toy added for him to bat at): it
+   doesn't read as a toy and it was never on the ship before. His cat-ness comes from how he watches the screen (crouch, butt wiggle,
+   chattering, tail lashing) — no props — and **he bats at the screen sometimes** (Dan): a quick paw swipe or two at Ratwing's moving
+   marker / image on the display, a tap-tap on the glass, then pulling the paw back and sitting up very properly as if nothing happened. (b) **He's half hanging off the console.** Place him properly:
+   either fully **on** the console top (all four paws on it, his body supported, sitting / crouching within its edges), or — Dan's
+   suggestion, preferred — **sitting in the pilot's chair in one of his larger forms** (he changes size), so he fits it naturally and is
+   right in front of the display, at eye level with it. Measure his body against the surface (no paw or body part off the edge or inside
+   it) and capture each cutaway.
+
+9. **Close-ups of Ratwing when he talks** (BIA_05, BIA_07, BIA_09 — like Viper's, QF18 8): for each of his lines a close-up / medium
+   close-up of **Ratwing himself** — his bat-like face, eyes and teeth readable, the head tilt / sneer with his voice (item 20 of QF23),
+   wings framing him where they fit, enough contrast against the white fog / mothership that his face reads clearly; low angle when he's
+   above her (clinging under the bridge, on the platform), 7's replies over her shoulder looking up at him; nothing between camera and him.
+
+10. **The relay switches look awkward** (the three communication relays + their controls on the mothership). Redesign them so they
+    read as Biavian technology for a telepathic people and look good up close: a slender, pearly-white pedestal / pylon rising from the
+    floor with a **glowing crystal or lens node** at the top inside a ring of smooth petals / fins; **damaged** = the node dark and
+    cracked, the petals jammed half-open, faint sparks (Ratwing's work); **using it** = 7 places her palm on a resonance plate / lifts the
+    node back into its ring with telekinesis — a natural hand pose (IK onto the plate, no clipping), not an awkward reach; **restored** = the
+    node lights, the petals open, and a wave of light runs out along channels in the floor toward the district it reconnects (the payoff,
+    item 12 of QF23). Check her pose and the device from the gameplay camera and close up. (If Dan meant something more specific, his
+    screenshot will pin it down.)
+
+11. **BIA_06, the seedlings exchange still makes no sense** (repeat of QF23 13b — the plants now look like plants, but "Are those all
+    yours?" is an odd question when nobody knows what they are or why she's carrying them). **Rewrite the exchange** (proposed by the
+    chat; Dan to confirm / edit — otherwise use as written), keeping Dan's joke line:
+    | id | who | line | direction |
+    | --- | --- | --- | --- |
+    | `BIA_06_01` | Resident | Thank you. We thought we might be here all day. | adjusts the tray (unchanged) |
+    | `BIA_06_02` | 7 | What are you carrying? | looking at the overflowing tray (replaces "Are those all yours?") |
+    | `BIA_06_02a` | Resident | Seedlings for the upper gardens. Every district grows a few for the others. | new — explains them + the connected-people theme |
+    | `BIA_06_02b` | 7 | They look ready to plant themselves. | new — a small smile |
+    | `BIA_06_03` | Resident | They were smaller when I left home. | weary amusement (unchanged) |
+    | `BIA_06_04` | 7 | Heh. Good luck. | steps aside (unchanged) |
+    The camera shows the tray clearly on "What are you carrying?" (item 7's rule). The resident's voice matches her look (QF23 13e).
+    Re-voice, update the spec + dialogue data.
+
+12. **The mothership's garden (BIA_07) and other planted areas look blocky — use the real vegetation from Venus.** Reuse Venus's trees,
+    grass, bushes and flowers (the same assets / shaders / wind sway as the Venus gardens and terraces), styled as a Biavian indoor garden:
+    curving beds edged in smooth white, flowering trees, soft grass that moves gently, hanging plants from the terraces, the seedlings'
+    species (item 11) growing here. The memory echo (QF23 14) shows the *old* garden as translucent versions of the same plants. Apply
+    to every garden / planted area in the mothership (the hanging gardens of the interior city, the BIA_03 reveal, the districts). No
+    blocky placeholder plants anywhere. Captures from the gameplay camera.
+
+13. **BIA_08, after the quiet passage — "How was the silence?" / "Overrated.": a long shot of just a wall.** Repeat of the QF18 7
+    visibility rule (and QF21's no-empty-shots rule): the check only tests that a *speaker* is in frame, and Panther's telepathic lines are
+    exempt — so a telepathic exchange can sit on whatever the camera happens to face. Fix this exchange: **7's face** for her lines
+    (a warm close-up as she steps out — the relief, the small smile on "Overrated."), **cutaways to Panther aboard** (QF23 10 / QF24 8 —
+    real interior, in the pilot's chair) for his. Extend the check: **for telepathic lines, 7 must be in frame (or the cutaway to Panther
+    aboard)** — never a wall / empty set. Run it over every telepathic exchange in every chapter and list what changed.
+
+14. **Telekinesis on the floor coupling does nothing visible** (mothership — the coupling she lifts with telekinesis; likely the quiet
+    passage's puzzle or a relay): she does the telekinesis pose, the step completes, but **the coupling never moves**. The object must
+    **visibly move**: rise off the floor in her telekinetic glow, turn / float to where it belongs, and slot in with a clunk and a light
+    pulse — then the effect it causes. Probably the object being animated isn't the visible one (a hidden collider / placeholder moves,
+    or the visible mesh is static / the wrong reference). Fix it, then **check every telekinesis interaction in every chapter** (slabs,
+    spans, conduits, the drawbridge, debris throws, the sentries, sections, couplings): log that the visible object actually moved (start
+    vs end position) — 0 that complete without moving — and list them.
+
+15. **Her riding position on the bike broke — a regression** (`Docs/Previews/qf24/dan_bike_pose_broken.png`: she's slumped forward into
+    the front fairing with her head inside it, one leg hanging off the side, hips too high; a dark shape floats near her back). It was
+    right before (QF10: seated on the saddle, palms in the grips 1.5 / 1.2 cm, the `7_ride` clip + `ChapterSevenRide` IK). Find which
+    recent change broke it — QF23's IK safety net / hand release (item 5), the left-knee avatar fix (item 8), the arc-blade mount
+    (QF21 9 / QF23 7), the vanish / chair changes — and fix it. Then **add a regression check that runs every build**: mount the bike in each
+    chapter scene and verify the ride pose (hips on the seat point within a few cm, both palms in the grips, both feet on the foot
+    positions, head above the fairing, no body part inside the bike), plus a capture from the riding camera and the side. Never ship a
+    build where it fails. (The dark shape: the sheathed blades / strands — item 6 makes them invisible.)
+
+16. **More visual detail across the mothership — especially the boss area (BIA_09's transfer chamber), which reads as a big empty
+    room.** Not clutter — purposeful detail in the Biavian style (smooth, pearly white, organic curves, soft light, the archive's
+    memory glow), so every space reads as a real place in a living ship:
+    - **The transfer chamber:** the tall shaft's walls with ribbed, curving structure and inset light channels; service platforms with
+      railings and soft floor lights at different heights; the partitions as visible machinery (tracks, housings, warning glow) waiting
+      above; maintenance openings with frames; the sealed archive entrance as a grand carved door with memory light pulsing behind it,
+      **damaged where Ratwing forced it** (scorch / claw marks, torn panels — the source of the throwables, QF23 18); cables / conduits
+      running up the shaft; hanging light globes; a view of the interior city far below / beyond through openings.
+    - **Elsewhere:** the receiving berth and corridors, the districts (residents' things — planters, seating, signage glyphs, small
+      shrines of memory crystals), the relay areas, the quiet passage (the shielding's structure), the octahedron chamber (the suspended
+      memory structures, empty positions). Use the Venus vegetation (item 12) where there are gardens.
+    - Keep it readable in Kyle's misty monochrome — detail that silhouettes against the fog, light sources that give the spaces depth.
+    Before / after captures of each area from the gameplay camera.
+
+17. **Boss fight prompts: only the partition prompt, controller buttons only (repeat of QF23 17 — say why it didn't hold).** Dan:
+    "I explained earlier we don't [want] the general controls we already know on screen, just the context controls … it was showing
+    keyboard keys along with the controller buttons which I forbade long ago. I think the only context keys actually needed for the
+    fight are for the ones shutting the partitions." Likely cause: QF23 replaced the box with `BossFight.Tip` first-use tips for
+    dodge / jump / block / punch / kick / takedown / "Arc blades (RB / G)" — still the general controls, and with a keyboard key.
+    - **Ratwing fight:** remove every general-control tip (dodge, jump, block, telekinesis, punch / kick, takedown, arc blades). The
+      only button prompt is **"Close the partition (X)"** at a partition station while it's in reach. Nela's lines and the lit station
+      (QF23 19) still say where to go.
+    - **Every boss fight (Venus, Mars, the asteroid, the mothership) and every chapter:** on-screen prompts only for actions unique
+      to that place (a station, a seal, a switch), never for moves the player already knows. The full list stays on the pause menu's
+      Controls page.
+    - **Controller buttons only, game-wide:** no keyboard keys anywhere in prompts or hints (no "RB / G", "X / E", etc.). Keyboard
+      still works; it just isn't shown. Add a build check that fails on any prompt / hint string containing a keyboard key or a
+      general-control tip in a boss fight.
+    - Fix the CLAUDE.md "No help boxes" rule to say this (it currently lists the dodge / block / punch / arc-blade tips and "G").
+
+18. **The boss music starts too soon.** Dan: "The mother ship music should continue until we actually start the Ratwing fight."
+    Keep the mothership theme playing through the approach, the archive door, Ratwing's reveal and his opening lines; switch to the
+    boss track only on the fight's first moment (when he attacks / control returns with his bar on screen), with a short crossfade.
+    Same rule for every boss fight: the boss track starts when the fight starts, not on entering the area or at the pre-fight talk.
+    Add it to CLAUDE.md's music rules.
+
+19. **A window in the final partition, so we see Ratwing trapped, plus a closing quip from him.** The sealing partition (and the
+    compartment's other exit) gets a clear pane, a curved Biavian viewing window with a soft rim light, so after it closes the camera
+    can hold on Ratwing inside: he strikes the barrier, tests the other exit, then lands and presses up to the glass. Shot order:
+    7 and the pane (her reflection faint on it) → Ratwing close up through the glass for his line (item 9 close-ups) → back to 7 for
+    BIA_09_12 onward. Voice it with his existing voice. Proposed line (Dan to confirm; use it unless he changes it):
+    - **BIA_09_11a Ratwing** (to the glass, sulky, still smug): "Fine. But this whole ship remembers everything. You'll never live
+      this down. And neither will I."
+    Then BIA_09_12 "Ha! Got him." and the rest as written. Add the line to Docs/CHAPTER_BIAVEH.md and the project spec.
+
+20. **The octahedron rune touch: size, contact, framing and music (repeat of QF23 22 and QF18 20; say why it didn't hold).** Dan: "the
+    rune is too large and her hand passes through instead of touching it. It also covers 1/3 of the screen during the memory and
+    covers 7 during the speech afterwards. Also the music stops at this point and never starts back up again."
+    - **Size:** scale the octahedron down to match the other runes (the Venus cube / Mars tetrahedron), so it's about hand-span to
+      forearm-size against her, not a giant shape.
+    - **Contact:** her fingertips / palm stop on a face of the octahedron's real mesh surface (IK target from the collider, not the
+      pivot), with no penetration. Add a build check measuring hand-to-surface distance at the touch frame for every rune (all six).
+    - **Vision framing:** during the vision (vision_06) the rune never covers the frame; hide it or keep it small at the edge.
+      Afterwards, the post-vision talk frames 7's face clear of the rune (move the camera or the rune out of the line of sight).
+      Extend the "speaker visible" check to fail when any prop covers the speaker's face.
+    - **Music:** the chapter music fades down for the vision and **comes back afterwards** (the mothership theme, or the next
+      scene's track), and never goes silent for the rest of the chapter. Check every chapter's rune vision returns the music the same way
+      (the shared rune-touch → vision → return sequence), with a build check that music is playing after each vision ends.
+
+21. **The saucer music didn't start when they were back aboard after the mothership.** On boarding (the beam / return to the
+    cabin) the saucer theme must start every time, from any chapter, with a short fade in, whatever state the music was left in
+    (including after a vision or a silenced cut). Likely linked to item 20 (the music stopping after the vision and never restarting),
+    so fix the cause in the music manager, not with a patch per scene. Add a build check: every scene / area has a track
+    playing within a few seconds of control returning (no silent stretches except a deliberate, short dramatic pause).
+
+22. **Wrong saucer conversation after the mothership: the asteroid detour talk played although the asteroid is done.** Dan had
+    completed the asteroid, so on return from the mothership the Cattalus conversation should have fired; instead they talked about
+    detouring to the asteroid. Make the post-chapter talk come from the save's real state: after the asteroid and the mothership are
+    both done (either order), it's the Cattalus talk; after only one, it's the talk that points to the other. Check the
+    save flags / migration (QF23 24) for an asteroid completion that isn't being read. Add a build check that walks every completion
+    combination (Mars + Europa, then asteroid-first / mothership-first, both, then Cattalus) and asserts the right talk and
+    the right star-map destinations.
+23. **The star map keeps defaulting back to our solar system.** It should **always open on the system the saucer is in** (Veyra when
+    they're at the mothership, the Sun's system at home), with the other system one click away, and stay on whatever the player last
+    selected while the map is open. Check it in every location the saucer can be.
+24. **The screen goes blurry after that conversation** (screenshot `Docs/Previews/qf24/dan_blurry_after_talk.png`: "Set course",
+    gameplay in the cabin, everything soft). Likely the talk's depth-of-field / cutscene post-processing isn't released when control
+    returns. Every cutscene / talk must restore the gameplay camera's post-processing on exit (including when it's skipped or
+    interrupted), game-wide. Add a build check that the gameplay camera's volume / depth of field is back to normal within a frame of
+    control returning after every talk.
+
 ## Quick fix QF23: Dan's mothership (Round 17) review (Dan, 2026-11-21) — done, status below; release 0.17.2 (Dan: "we are getting so close to being done")
 Commit first. All standing rules + the repeat-item rule (why the last fix didn't hold, fix the cause, prove it in normal play
 from the player's camera, never "done" on a partial fix). Release **0.17.x** (next patch); "QF23 — status"; "For Dan to check (QF23)".
