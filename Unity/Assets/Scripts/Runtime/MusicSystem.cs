@@ -77,6 +77,7 @@ namespace Seven
                 case "Mars": return "mars_kingdoms";
                 case "Asteroid": return "asteroid_city";
                 case "Biaveh": return "biaveh_mothership";
+                case "Cattalus": return "cattalus_city";
                 case "Menu": return "main_theme";
                 default: return null;
             }

@@ -87,6 +87,15 @@ namespace Seven
                 PlayFromStart = () => { Chapter1State.Reset(); BiavehState.StartFresh(); },
                 Sections = BiavehSections,
             },
+            new ChapterDef
+            {
+                Id = "cattalus", Name = "Cattalus",
+                // Round 18: reached, or the asteroid AND the mothership are done (the Cattalus lead)
+                Reached = () => CattalusState.OwnReached || WorldFlags.CattalusUnlocked,
+                HasProgress = () => CattalusState.OwnHasProgress, Confirm = "Start Cattalus over? Your progress there will be reset.",
+                PlayFromStart = () => { Chapter1State.Reset(); CattalusState.StartFresh(); },
+                Sections = CattalusSections,
+            },
         };
 
         static (string label, System.Action start)[] MoonSections()
@@ -119,6 +128,12 @@ namespace Seven
             return l.ToArray();
         }
 
+        static (string label, System.Action start)[] CattalusSections()
+        {
+            var l = new List<(string label, System.Action start)>();
+            foreach (var (label, cp) in CattalusState.SelectEntries) { int c = cp; l.Add((label, () => { Chapter1State.Reset(); CattalusState.StartAt(c); })); }
+            return l.ToArray();
+        }
         static (string label, System.Action start)[] BiavehSections()
         {
             var l = new List<(string label, System.Action start)>();

@@ -83,9 +83,11 @@ namespace Seven
             float Gap() { if (tip == null) return -1f; float g = 1f; foreach (var pt in new[] { tip, idx, palmB }) { if (pt == null) continue; foreach (var sm in surfs) g = Mathf.Min(g, SurfaceGap(sm, pt.position, fwd)); } return g < 0.99f ? g : Vector3.Dot(shape - tip.position, fwd) - radius; }
             float gap0 = Gap(), gap = gap0;
             if (tik != null && tip != null)
-                for (int k = 0; k < 3 && Mathf.Abs(gap) > 0.006f; k++)
+                for (int k = 0; k < 6 && Mathf.Abs(gap) > 0.006f; k++)
                 {
                     tik.RightPos += fwd * Mathf.Clamp(gap, -0.1f, 0.1f);
+                    // R18: the arm at full stretch and still short - she leans in from the waist a little more
+                    if (k >= 2 && gap > 0.01f) { tik.Lean = Mathf.Min(38f, tik.Lean + Mathf.Asin(Mathf.Clamp01(gap / 0.5f)) * Mathf.Rad2Deg * 1.3f); tik.LeanDir = fwd; }
                     for (float t = 0f; t < 0.3f; t += Time.deltaTime) yield return null;
                     gap = Gap();
                 }

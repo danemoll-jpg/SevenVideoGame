@@ -200,6 +200,8 @@ namespace Seven
 
         /// <summary>Self-check of the rules above (forward-only stages, exactly-once scenes and record, reload keeps
         /// everything). Runs with -venusstatetest in a check run; returns the failures (empty = all good).</summary>
+        /// <summary>Round 18 (-routes cattalus): Venus finished on the test key (VEN_C12 done, the record awarded).</summary>
+        public static void FakeDoneForTest() { if (!Test) return; ResetForTest(); CompleteScene("VEN_C12"); AwardRecord(); }
         public static List<string> SelfTest()
         {
             var fail = new List<string>();

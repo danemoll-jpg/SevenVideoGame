@@ -105,6 +105,8 @@ namespace Seven
             if (u == "biaveh") return WorldFlags.BiavehUnlocked;
             if (u == "asteroid") return WorldFlags.AsteroidFound;
             if (u.StartsWith("asteroid>=")) return int.TryParse(u.Substring(10), out var ac) && AsteroidState.Reached && AsteroidState.Checkpoint >= ac;   // Round 16: AsteroidLayout.Cp*
+            if (u == "cattalus") return WorldFlags.CattalusUnlocked || CattalusState.OwnReached;
+            if (u.StartsWith("cattalus>=")) return int.TryParse(u.Substring(10), out var cc) && CattalusState.Reached && CattalusState.Checkpoint >= cc;   // Round 18: CattalusLayout.Cp*
             if (u.StartsWith("biaveh>=")) return int.TryParse(u.Substring(8), out var bc) && BiavehState.Reached && BiavehState.Checkpoint >= bc;   // Round 17: BiavehLayout.Cp*
             if (u.StartsWith("europa>=")) return int.TryParse(u.Substring(8), out var ec) && EuropaState.Reached && EuropaState.Checkpoint >= ec;   // Round 14: EuropaLayout.Cp*
             return false;
@@ -115,8 +117,14 @@ namespace Seven
             var ta = Resources.Load<TextAsset>("Console/adventure_log");
             var f = ta != null ? JsonUtility.FromJson<LogFile>(ta.text) : null;
             var l = new List<LogEntry>();
-            if (f?.entries != null) foreach (var e in f.entries) if (Unlocked(e.unlock)) l.Add(e);
+            if (f?.entries != null) foreach (var e in f.entries) if (Unlocked(e.unlock)) { if (e.text != null && e.text.Contains("{race}")) e.text = e.text.Replace("{race}", RaceLine()); l.Add(e); }
             return l;
+        }
+        /// <summary>Round 18: the Log's race result, as it really went (the player's own save): won, or runner-up and the trade.</summary>
+        static string RaceLine()
+        {
+            var r = CattalusState.OwnResult;
+            return r == CattalusState.Result.Won ? "I won. Duchess got the box she wanted anyway." : r == CattalusState.Result.RunnerUp ? "I came second. Duchess traded me the trophy for the box - she has trophies." : "";
         }
 
         public static List<GuideEntry> GuideEntries()
@@ -145,16 +153,17 @@ namespace Seven
             if (EuropaAvailable) l.Add("europa");
             if (WorldFlags.BiavehUnlocked) l.Add("biaveh");          // Round 15: only after Mars + Europa (the combined records)
             if (WorldFlags.AsteroidFound) l.Add("asteroid");         // only after the travel event on the way to Biaveh
+            if (WorldFlags.CattalusUnlocked || CattalusState.OwnReached) l.Add("cattalus");   // Round 18: after the asteroid AND the mothership
             return l;
         }
         /// <summary>Where the saucer is now: at Venus in the Venus aboard mode, otherwise at the Moon (Chapter 1).</summary>
         public static string Here()
         {
-            if (SaucerLocation.System == StarMap.Bia) return SaucerLocation.Saved == "biaveh" ? "biaveh" : SaucerLocation.Saved == "asteroid" ? "asteroid" : "biaveh_space";   // QF18 (22)
+            if (SaucerLocation.System == StarMap.Bia) return SaucerLocation.Saved == "biaveh" ? "biaveh" : SaucerLocation.Saved == "asteroid" ? "asteroid" : SaucerLocation.Saved == "cattalus" ? "cattalus" : "biaveh_space";   // QF18 (22)
             var ab = Chapter1Aboard.I;
             return ab != null && ab.Active && ab.MarsMode ? "mars" : ab != null && ab.Active && ab.EuropaMode ? "europa" : ab != null && ab.Active && ab.VenusMode ? "venus" : "moon";
         }
-        public static string WorldName(string id) => id == "moon" ? "The Moon" : id == "venus" ? "Venus" : id == "mars" ? "Mars" : id == "europa" ? "Europa" : id == "biaveh" ? WorldFlags.ContactName : id == "asteroid" ? "The asteroid" : id;
+        public static string WorldName(string id) => id == "moon" ? "The Moon" : id == "venus" ? "Venus" : id == "mars" ? "Mars" : id == "europa" ? "Europa" : id == "biaveh" ? WorldFlags.ContactName : id == "asteroid" ? "The asteroid" : id == "cattalus" ? "Cattalus" : id;
         /// <summary>One line from the Log for a visited world (its latest unlocked entry, first sentence); null = not visited.</summary>
         public static Dictionary<string, string> VisitedNotes()
         {
@@ -294,6 +303,8 @@ namespace Seven
             var notes = VisitedNotes();
             if (extraNotes != null) foreach (var kv in extraNotes) notes[kv.Key] = kv.Value;
             if (selectable != null) foreach (var id in selectable) if (!shown.Contains(id)) shown.Add(id);
+            // Round 18: after CAT_12 the star map offers only the Moon (the finale: a 'to be continued' card in this build)
+            if (selectable == null && CattalusState.OwnComplete) selectable = new List<string> { "moon" };
             _map.Configure(shown, selectable ?? shown, notes, Here(), select);
             LastStarMapLog = $"star map: shown [{string.Join(", ", _map.ShownIds())}], selectable [{string.Join(", ", _map.SelectableIds())}], ship at {Here()}, selected {_map.Selected}";
         }
@@ -795,6 +806,25 @@ namespace Seven
                 yield return TravelPassage.Run("asteroid");
                 if (UI != null) yield return UI.Fade(1f, 0.8f);
                 if (AsteroidState.HasProgress) AsteroidState.ContinueOwn(); else AsteroidState.StartFresh();
+                _busy--;
+                yield break;
+            }
+            if (id == "cattalus")
+            {
+                // Round 18: Cattalus (done = only the Moon is offered; else the chapter where it left off)
+                if (CattalusState.OwnComplete) { yield return Revisit("cattalus", "Cattalus"); _busy--; yield break; }
+                ReleaseForTravel();
+                yield return TravelPassage.Run("cattalus");
+                if (UI != null) yield return UI.Fade(1f, 0.8f);
+                if (CattalusState.OwnHasProgress) CattalusState.ContinueOwn(); else CattalusState.StartFresh();
+                _busy--;
+                yield break;
+            }
+            if (id == "moon" && CattalusState.OwnComplete)
+            {
+                // the way back to the Moon is set (CAT_12) - the finale isn't built yet
+                yield return ComingSoonCard("The Moon  —  to be continued");
+                _map.SetConfirm(false); Redraw();
                 _busy--;
                 yield break;
             }

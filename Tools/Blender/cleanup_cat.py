@@ -28,13 +28,19 @@ argv = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
 ROOT = os.path.abspath(argv[0]) if len(argv) > 0 else os.getcwd()
 TARGET_TRIS = int(argv[1]) if len(argv) > 1 else 18000
 PREVIEW = os.path.abspath(argv[2]) if len(argv) > 2 else None
-SHOULDER_HEIGHT = 0.25          # real house cat (Unity scales the roaming cat up)
-
-SRC = os.path.join(ROOT, "Art", "Source", "cat", "cat_v1.glb")
-OUT_DIR = os.path.join(ROOT, "Art", "Export", "cat")
+SHOULDER_HEIGHT = float(os.environ.get("CAT_SHOULDER", "0.25"))   # real house cat (Unity scales the roaming cat up)
+# Round 18: another cat on the same rig + clips (Duchess): CAT_NAME (file prefix, default cat_v1), CAT_SRC (the source GLB),
+# CAT_OUT (the export folder), CAT_PRE_ROTZ (degrees about Z so the cat faces -Y like cat_v1), CAT_PRE_HEIGHT (scale the source
+# to this height first, cat_v1 = 0.98 units, so the slab / head / neck thresholds below fit), CAT_NO_LAP=1 (skip the lap mesh).
+NAME = os.environ.get("CAT_NAME", "cat_v1")
+# Round 18: CAT_FLUFF=1 - a long-haired cat (Duchess): the ruff, the high fluffy rump and the raised plumed tail sit higher
+# relative to the shoulder, so the torso / tail / head searches look higher (factors on H below).
+FLUFF = os.environ.get("CAT_FLUFF", "0") == "1"
+SRC = os.environ.get("CAT_SRC") or os.path.join(ROOT, "Art", "Source", "cat", "cat_v1.glb")
+OUT_DIR = os.environ.get("CAT_OUT") or os.path.join(ROOT, "Art", "Export", "cat")
 TEX_DIR = os.path.join(OUT_DIR, "Textures")
-FBX = os.environ.get("CAT_FBX_OUT") or os.path.join(OUT_DIR, "cat_v1_rigged.fbx")   # env override = experiments
-TEX = os.path.join(TEX_DIR, "cat_v1_basecolor.jpg")
+FBX = os.environ.get("CAT_FBX_OUT") or os.path.join(OUT_DIR, NAME + "_rigged.fbx")   # env override = experiments
+TEX = os.path.join(TEX_DIR, NAME + "_basecolor.jpg")
 os.makedirs(TEX_DIR, exist_ok=True)
 FPS = 30
 
@@ -67,6 +73,17 @@ for o in list(bpy.data.objects):
     if o != cat:
         bpy.data.objects.remove(o)
 cat.name = "cat_body"
+# Round 18: normalise another source into cat_v1's frame (faces -Y, feet at z 0, centred, 0.98 units tall)
+_rz = float(os.environ.get("CAT_PRE_ROTZ", "0")); _ph = float(os.environ.get("CAT_PRE_HEIGHT", "0"))
+if abs(_rz) > 1e-3 or _ph > 0:
+    _R = Matrix.Rotation(math.radians(_rz), 3, "Z")
+    _co = [_R @ v.co for v in cat.data.vertices]
+    _mn = Vector((min(c.x for c in _co), min(c.y for c in _co), min(c.z for c in _co))); _mx = Vector((max(c.x for c in _co), max(c.y for c in _co), max(c.z for c in _co)))
+    _k = _ph / max(1e-6, _mx.z - _mn.z) if _ph > 0 else 1.0
+    _c = Vector(((_mn.x + _mx.x) / 2, (_mn.y + _mx.y) / 2, _mn.z))
+    for v, c in zip(cat.data.vertices, _co): v.co = (c - _c) * _k
+    cat.data.update()
+    log(f"pre-transform: rotated {_rz:.0f} deg about Z, scaled x{_k:.3f} (height {(_mx.z - _mn.z) * _k:.3f}), centred on the feet")
 log("source", len(cat.data.vertices), "verts", tris(cat), "tris")
 
 # ------------------------------------------------------------------ weld + islands (whiskers)
@@ -356,7 +373,7 @@ yF, yH = body_y(True), body_y(False)
 def body_centre(y0, half=0.012):
     """Centre of the torso cross-section at y0 (above the legs): mid of the top/bottom extents of |x| < 3 cm."""
     # |x| < 1.5 cm keeps the legs out; behind the hips the tail rises above the back, so cap z there.
-    zcap = 0.98 * H if y0 > 0 else 1.2 * H
+    zcap = (1.45 if FLUFF else 0.98) * H if y0 > 0 else (1.5 if FLUFF else 1.2) * H
     sl = [c for c in co if abs(c.y - y0) < half and abs(c.x) < 0.015 * H / 0.25 and 0.36 * H < c.z < zcap]
     if len(sl) < 6:
         return None
@@ -385,9 +402,18 @@ for n in ("FL", "FR", "HL", "HR"):
     legs[n]["top"].z = min(legs[n]["top"].z, ref.z - 0.03 * H / 0.25)
 tail_pts = []
 # Tail: march from the base (behind the hind legs, just above the back line) upward along the tail's vertices.
-tail_v = [c for c in co if c.y > yH - 0.01 and c.z > 0.8 * H]
-base_pts = [c for c in tail_v if c.z < 0.92 * H]
-upper = [c for c in tail_v if 0.98 * H < c.z < 1.1 * H]
+tail_v = [c for c in co if c.y > yH - 0.01 and c.z > (1.05 if FLUFF else 0.8) * H]
+if FLUFF:
+    # the plumed tail: the base = the rump's points behind the hind legs in the lower third of their heights, the direction
+    # toward the highest points behind the hips (the raised plume) - percentiles, not fixed heights
+    _zs = sorted(c.z for c in tail_v)
+    _z30 = _zs[int(len(_zs) * 0.3)] if _zs else H; _z85 = _zs[int(len(_zs) * 0.85)] if _zs else H
+    _behind = [c for c in tail_v if c.y > yH + 0.04 * H / 0.25]
+    base_pts = [c for c in _behind if c.z <= _z30] or [c for c in tail_v if c.z <= _z30]
+    upper = [c for c in _behind if c.z >= _z85] or [c for c in tail_v if c.z >= _z85]
+else:
+    base_pts = [c for c in tail_v if c.z < 0.92 * H]
+    upper = [c for c in tail_v if 0.98 * H < c.z < 1.1 * H]
 p = sum(base_pts, Vector()) / len(base_pts)
 u = sum(upper, Vector()) / len(upper)
 dirv = (u - p).normalized()
@@ -395,7 +421,7 @@ step = 0.02
 tail_pts.append(p.copy())
 for i in range(60):
     q = p + dirv * step
-    near = [c for c in tail_v if (c - q).length < 0.018]
+    near = [c for c in tail_v if (c - q).length < (0.03 if FLUFF else 0.018)]
     if len(near) < 6:
         break
     # Centre of the tail's cross-section at q (verts in a thin slab across the march direction).
@@ -416,8 +442,8 @@ for i in range(60):
 log("tail points", len(tail_pts), "tip", tuple(round(x, 3) for x in tail_pts[-1]))
 
 tip_y = min(c.y for c in co)
-muzzle, _ = band(lambda c: c.y < tip_y + 0.02 and c.z > 0.8 * H)
-skull, _ = band(lambda c: c.y < tip_y + 0.09 and c.z > 0.95 * H)
+muzzle, _ = band(lambda c: c.y < tip_y + (0.05 if FLUFF else 0.02) and c.z > (1.0 if FLUFF else 0.8) * H)
+skull, _ = band(lambda c: c.y < tip_y + (0.12 if FLUFF else 0.09) and c.z > (1.15 if FLUFF else 0.95) * H)
 
 def shift(guess, r, it=8, pred=None):
     """Mean-shift: centroid of the verts within r of the guess (repeated)."""
@@ -438,7 +464,7 @@ def yz_centre(y0, zmin, half=0.006):
     return (max(c.z for c in sl) + min(c.z for c in sl)) / 2
 
 
-head_c = shift(Vector((0, skull.y + 0.01, skull.z)), 0.032, pred=lambda c: c.z > 0.8 * H)
+head_c = shift(Vector((0, skull.y + 0.01, skull.z)), 0.032 * (1.4 if FLUFF else 1.0), pred=lambda c: c.z > (1.0 if FLUFF else 0.8) * H)
 head_c.x = 0.0
 head_base = Vector((0, head_c.y + 0.022 * H / 0.25, head_c.z - 0.016 * H / 0.25))   # atlas: behind/below the skull centre
 neck_base = Vector((0, yF - 0.035 * H / 0.25, sp_f.z + 0.015 * H / 0.25))           # front of the chest, base of the neck
@@ -1014,7 +1040,7 @@ log(f"final size x{dims[0]:.3f} y{dims[1]:.3f} z{dims[2]:.3f} m (shoulder {SHOUL
 # dedicated static mesh, shaped once from the rest mesh: legs squashed flat under the belly (paws tucked), the tail laid
 # down onto the lap, the head lowered and turned a little, then body + tail bent around a vertical axis beside the neck
 # into a ring around the head. Unity swaps it in on landing and only breathes it (a slow scale pulse).
-LAP_FBX = os.environ.get("CAT_LAP_OUT") or os.path.join(OUT_DIR, "cat_v1_lap.fbx")
+LAP_FBX = os.environ.get("CAT_LAP_OUT") or os.path.join(OUT_DIR, NAME + "_lap.fbx")
 LAP_CURL_DEG = float(os.environ.get("LAP_CURL_DEG", "290"))     # ring angle from the neck to the tail tip
 LAP_LEG_K = float(os.environ.get("LAP_LEG_K", "0.06"))          # leg height kept (fraction) below the belly line
 LAP_BELLY = float(os.environ.get("LAP_BELLY", "0.56"))          # belly line (x shoulder height; torso bottom ~0.53)

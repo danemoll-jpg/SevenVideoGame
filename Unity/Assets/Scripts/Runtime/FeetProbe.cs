@@ -23,7 +23,7 @@ namespace Seven
                 var o = f.position + Vector3.up * 0.9f;
                 float best = float.NegativeInfinity;
                 int n = CameraOccluders.RaycastAll(o, Vector3.down, 2.4f, _h);
-                for (int i = 0; i < n; i++) if (_h[i].collider != null && _h[i].point.y > best) { var r = CameraOccluders.RendererOf(_h[i].collider); if (r != null && r.transform.IsChildOf(s.transform)) continue; best = _h[i].point.y; }
+                for (int i = 0; i < n; i++) if (_h[i].collider != null && _h[i].point.y > best) { var r = CameraOccluders.RendererOf(_h[i].collider); if (r != null && (r.transform.IsChildOf(s.transform) || r.name.Contains("Grass"))) continue; /* her own body; grass blades are not the ground */ best = _h[i].point.y; }
                 if (Physics.Raycast(o, Vector3.down, out var ph, 2.4f, ~((1 << 20) | (1 << 22) | (1 << 5) | (1 << 2)), QueryTriggerInteraction.Ignore) && !ph.collider.transform.IsChildOf(s.transform)) best = Mathf.Max(best, ph.point.y);
                 if (float.IsNegativeInfinity(best)) continue;
                 any = true;

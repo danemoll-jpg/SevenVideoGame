@@ -16,7 +16,7 @@ namespace Seven
         static void Hook() { SceneManager.sceneLoaded += (s, m) => Attach(); Attach(); }
         static void Attach() { if (DemoBoot.CaptureDir == null || FindAnyObjectByType<NpcGlideProbe>() != null) return; new GameObject("NpcGlideProbe").AddComponent<NpcGlideProbe>(); }
 
-        static readonly string[] Moving = { "walk", "run", "jog", "carry", "swim", "fly", "sneak", "strafe", "step", "walk_v2" };
+        static readonly string[] Moving = { "walk", "run", "jog", "carry", "swim", "fly", "sneak", "strafe", "step", "walk_v2", "jump" };   // Round 18: a cat's hop is a jump
         readonly Dictionary<Animator, (Vector3 p, int samples, int glides)> _seen = new Dictionary<Animator, (Vector3, int, int)>();
         float _next, _report; List<Animator> _anims = new List<Animator>(); float _refind;
         public static int Glides { get; private set; }
@@ -24,11 +24,12 @@ namespace Seven
         void Update()
         {
             if (Time.time < _next) return; float dt = 0.2f; _next = Time.time + dt;
-            if (Time.time > _refind) { _refind = Time.time + 3f; _anims.Clear(); foreach (var a in FindObjectsByType<Animator>(FindObjectsSortMode.None)) if (a.isHuman && a.GetComponentInParent<ChapterSeven>() == null && a.GetComponentInParent<SaucerSeven>() == null && a.name != "7") _anims.Add(a); }
+            if (Time.timeSinceLevelLoad < 3f) { _seen.Clear(); return; }   // Round 18: the scene placing its people at the start is not walking
+            if (Time.time > _refind) { _refind = Time.time + 3f; _anims.Clear(); foreach (var a in FindObjectsByType<Animator>(FindObjectsSortMode.None)) if ((a.isHuman || a.GetComponentInParent<CatFolk>() != null) && a.GetComponentInParent<ChapterSeven>() == null && a.GetComponentInParent<SaucerSeven>() == null && a.name != "7") _anims.Add(a); }
             foreach (var a in _anims)
             {
                 if (a == null || !a.isActiveAndEnabled) continue;
-                var root = a.transform.parent != null && a.GetComponentInParent<MarsFolk>() != null ? a.GetComponentInParent<MarsFolk>().transform : a.transform;
+                var root = a.transform.parent != null && a.GetComponentInParent<MarsFolk>() != null ? a.GetComponentInParent<MarsFolk>().transform : a.GetComponentInParent<CatFolk>() != null ? a.GetComponentInParent<CatFolk>().transform : a.transform;   // Round 18: the city cats too
                 var p = root.position;
                 if (!_seen.TryGetValue(a, out var e)) { _seen[a] = (p, 0, 0); continue; }
                 var d = p - e.p; d.y = 0f; float v = d.magnitude / dt;

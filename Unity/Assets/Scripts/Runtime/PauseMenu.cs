@@ -453,7 +453,7 @@ namespace Seven
         public static void NewGame()
         {
             PlayerPrefs.DeleteKey(Key); PlayerPrefs.DeleteKey(OldKey); PlayerPrefs.DeleteKey(FurthestKey);
-            VenusState.ClearOwnSave(); EuropaState.ClearOwnSave(); MarsState.ClearOwnSave(); AsteroidState.ClearOwnSave(); BiavehState.ClearOwnSave(); WorldFlags.Clear();   // QF23 (24): the mothership's save too
+            VenusState.ClearOwnSave(); EuropaState.ClearOwnSave(); MarsState.ClearOwnSave(); AsteroidState.ClearOwnSave(); BiavehState.ClearOwnSave(); CattalusState.ClearOwnSave(); WorldFlags.Clear();   // QF23 (24): the mothership's save too
             PlayerPrefs.Save();
             Debug.Log("[Seven] new game: Chapter 1 checkpoint, Venus save and console progress reset");
         }

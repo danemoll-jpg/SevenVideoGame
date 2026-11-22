@@ -149,6 +149,37 @@ namespace Seven
             AudioKit.Play("console_select", null, 0.6f);
             Log("hologram (QF22): the route completes - out to the Biavian contact at Veyra");
         }
+        // ---- Round 18 (CAT_12): the seven records' marks - one ring of glyph fragments per record, side by side; they align and
+        // join into one structure (a single ring of seven, a pulse runs round it)
+        readonly List<Transform> _frags = new List<Transform>();
+        public IEnumerator MarksAlign(int n)
+        {
+            gameObject.SetActive(true); if (_modelGo != null) _modelGo.SetActive(false);
+            ClearMarks(); _frags.Clear(); _spinOn = false; _spin = 0f; _focus = Vector3.zero; _zoom = 1f; _scale = 1f; Apply();
+            StartCoroutine(FadeLight(1.4f));
+            var root = new GameObject("RecordMarks").transform; root.SetParent(_marks, false); root.localPosition = Vector3.zero;
+            n = Mathf.Clamp(n, 1, 7);
+            for (int i = 0; i < n; i++)
+            {
+                var g = new GameObject("Mark" + i); g.transform.SetParent(root, false); g.transform.localPosition = new Vector3(-0.45f + i * 0.15f, 0.12f + (i % 2) * 0.08f, 0f); g.transform.localRotation = Quaternion.Euler(-60f, i * 40f, 0f);
+                g.AddComponent<MeshFilter>().sharedMesh = Markers.SectorMesh(0.05f, 200f + i * 20f, 0.035f); var mr = g.AddComponent<MeshRenderer>(); mr.sharedMaterial = Markers.Additive(i == n - 1 ? 2.2f : 1.4f); mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                _frags.Add(g.transform); AudioKit.Play("console_move", null, 0.25f); for (float t = 0f; t < 0.14f; t += Time.deltaTime) yield return null;
+            }
+            Log($"hologram (Round 18): CAT_12 - the {n} records' marks side by side (the sphere's last)");
+        }
+        public IEnumerator MarksJoin()
+        {
+            int n = _frags.Count; if (n == 0) yield break;
+            var from = new List<Vector3>(); var r0 = new List<Quaternion>(); foreach (var f in _frags) { from.Add(f.localPosition); r0.Add(f.localRotation); }
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                for (int i = 0; i < n; i++) { var to = new Vector3(0f, 0.16f, 0f); _frags[i].localPosition = Vector3.Lerp(from[i], to, u); _frags[i].localRotation = Quaternion.Slerp(r0[i], Quaternion.Euler(-60f, i * 360f / n, 0f), u); _frags[i].localScale = Vector3.one * Mathf.Lerp(1f, 2.2f, u); }
+                yield return null;
+            }
+            for (int i = 0; i < n; i++) { _frags[i].localScale = Vector3.one * 2.6f; AudioKit.Play("console_select", null, 0.3f); for (float t = 0f; t < 0.12f; t += Time.deltaTime) yield return null; _frags[i].localScale = Vector3.one * 2.2f; }
+            Log("hologram (Round 18): the markings align - the separate fragments join into one structure");
+        }
         static void Log(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) ChapterCapture.I?.Log(s); }
     }
 }

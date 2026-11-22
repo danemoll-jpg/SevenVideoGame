@@ -761,3 +761,25 @@ Give the player time to explore, laugh, race and sit with the characters. The em
   **Duchess** gets her own model if Dan makes one (prompt in `Docs/MODELS-NEEDED.md`); until then she's a long-haired white variant.
 - City vignette animation (drinking from a trickle, a paw pushing an object, eyes following an ornament): Panther's clips plus head
   look-at and paw IK, done in code. Any clip that still can't be made goes on the "for Dan" list.
+
+## Proposed lines (Round 18, Code — for Dan to review; the standing rules need them)
+Objectives come from the story, the steward offers the practice lap, a crash and a wrong state are said once, the presentation
+is spoken by the people shown doing it. Same voices; ids with `_P` are additions (play in order after their scene's lines where
+noted). Race call-outs (`_CALL`) may repeat (a restart, a second crash).
+
+| ID | Speaker | Dialogue | Performance / trigger |
+|---|---|---|---|
+| CAT_01_P1 | Panther | The public berths are below the transit tower. Bring us in slowly. | Before guiding the saucer down (the objective). |
+| CAT_01_P2 | 7 | Slowly. Got it. | Takes the controls. |
+| CAT_02_P1 | Panther | The square with the big screen is that way. Everyone ends up there eventually. | After the gate joke: where to go (exploring is free). |
+| CAT_04_P1 | Panther | Registration is at the steward's desk, under the screen. | After CAT_04_13: the objective "Register for the Grand Circuit". |
+| CAT_05_P1 | Steward | The course is open for a practice lap, if you'd like one. Same gates, nobody to beat. | After CAT_05_13: the optional practice lap. |
+| CAT_05_P2 | Steward | Your vehicle will be brought to the start line, beside the square. Whenever you're ready. | Points to the start (why the bike is waiting there). |
+| CAT_06_P1 | Panther | You'll want the bike for that. | Wrong state: at the start line on foot. |
+| CAT_07_CALL1 | Panther | Up again. Three seconds, not the race. | After a crash (back at the last gate). |
+| CAT_07_CALL2 | Announcer | And they're off! | The lights go green. |
+| CAT_07_CALL3 | Announcer | Over the line! What a finish! | Either racer finishes first. |
+| CAT_08W_P1 | Steward | The Grand Circuit trophy. Congratulations, champion. | Presents the trophy with its sphere. |
+| CAT_08W_P2 | Steward | And for our runner-up, the Deluxe Retreat. | Slides the box toward Duchess. |
+| CAT_08L_P1 | Steward | Our champion, Duchess! And our runner-up takes home the Deluxe Retreat. | Presents both prizes. |
+| CAT_09_P1 | Panther | Somewhere quieter. Over there, by the planters. | After the trophy: why she goes to the quiet corner. |

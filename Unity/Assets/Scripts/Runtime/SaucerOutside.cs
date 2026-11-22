@@ -119,8 +119,12 @@ namespace Seven
             { "mars", (new Vector3(-170f, 0f, -330f), new Vector3(-70f, 0f, 260f), 230f) },     // over the plain south of the settlement: the ravine, the crossing, the temple, both cities, the Face
             { "venus", (new Vector3(0f, 0f, -70f), new Vector3(0f, 0f, 200f), 150f) },
             { "europa", (new Vector3(0f, 0f, -90f), new Vector3(-30f, 0f, 160f), 140f) },
+            { "cattalus", (new Vector3(-10f, 0f, -150f), new Vector3(0f, 0f, 160f), 95f) },   // Round 18: over the berth's approach: the cardboard quarter, the cat trees, the transit tower, the square, the course, the meadow beyond
         };
         GameObject _levelGo; string _levelW;
+        /// <summary>Round 18: where a point of the real level appears in the window view (cabin shots frame it: "That's the old
+        /// transit tower"); null while no level is shown.</summary>
+        public Vector3? LevelPoint(Vector3 levelPos) => _levelGo != null && _levelGo.activeInHierarchy ? _levelGo.transform.TransformPoint(levelPos) : (Vector3?)null;
         public bool LevelShown => _levelGo != null && _levelGo.activeSelf;
         void ShowLevel(string w)
         {

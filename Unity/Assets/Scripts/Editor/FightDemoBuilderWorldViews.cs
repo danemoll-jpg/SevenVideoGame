@@ -52,6 +52,8 @@ namespace Seven.EditorTools
                 ("mars", MarsScenePath, 2600f, new Vector4(-600f, -130f, 600f, 230f), 3f),
                 ("venus", VenusScenePath, 1400f, new Vector4(-260f, -140f, 260f, 420f), 2f),
                 ("europa", EuropaScenePath, 1400f, new Vector4(-260f, -180f, 260f, 420f), 2f),
+                ("cattalus", CattalusScenePath, 1300f, new Vector4(-340f, -60f, 760f, 900f), 3f),   // Round 18: the window over Cattalus, CAT_01 / CAT_12's exterior
+                ("moon", Chapter1ScenePath, 900f, new Vector4(-450f, -450f, 450f, 450f), 4f),        // Round 18: CAT_12's lunar interior (the hologram)
             };
             foreach (var (w, path, radius, region, minSize) in worlds)
             {

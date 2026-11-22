@@ -104,6 +104,18 @@ namespace Seven
                 RideHipsGap = err.magnitude;
                 _rideOffset += Quaternion.Inverse(b.Seat.rotation) * err;
                 transform.position += err; _rideCal = true;
+                // R18: a hard start / braking - the hips snap back onto the saddle moves her whole body, feet included, off the
+                // panels the IK put them on: re-pin each leg (two-bone, knee toward the same hint the IK pass uses)
+                if (err.sqrMagnitude > 0.0004f)
+                    foreach (var (up, lo, ft, pt, sgn) in new[] { (HumanBodyBones.LeftUpperLeg, HumanBodyBones.LeftLowerLeg, HumanBodyBones.LeftFoot, b.FootL, -1f),
+                                                                  (HumanBodyBones.RightUpperLeg, HumanBodyBones.RightLowerLeg, HumanBodyBones.RightFoot, b.FootR, 1f) })
+                    {
+                        var u = Bone(up); var l = Bone(lo); var f = Bone(ft); if (u == null || l == null || f == null || pt == null) continue;
+                        var keep = f.rotation;
+                        var pole = b.Seat.position + b.transform.forward * 0.40f + b.transform.right * sgn * (b.KneeWidth + 0.10f) - b.transform.up * 0.12f;
+                        RideTwoBone(u, l, f, pt.position + b.transform.up * 0.06f, pole);
+                        f.rotation = keep;
+                    }
             }
             // her arms are at full reach in the tuck: roll each shoulder (collarbone) forward the few degrees that put the
             // palm centre on its grip, as a rider does (after the IK, so the whole arm comes along; at most 25 degrees)
@@ -135,6 +147,17 @@ namespace Seven
             RideGaps = new Vector4(G(HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal, b.GripL), G(HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal, b.GripR),
                                    F(HumanBodyBones.LeftFoot, b.FootL), F(HumanBodyBones.RightFoot, b.FootR));
             RidePose.Sample(this, b);                                                  // QF24 (15): the regression check, every check run that rides
+        }
+        static void RideTwoBone(Transform a, Transform b, Transform c, Vector3 target, Vector3 pole)
+        {
+            float la = Vector3.Distance(a.position, b.position), lb = Vector3.Distance(b.position, c.position);
+            var toT = target - a.position; float d = Mathf.Clamp(toT.magnitude, 0.01f, (la + lb) * 0.999f);
+            var dir = toT.normalized;
+            var pn = Vector3.ProjectOnPlane(pole - a.position, dir).normalized; if (pn.sqrMagnitude < 1e-4f) pn = Vector3.forward;
+            float ang = Mathf.Acos(Mathf.Clamp((la * la + d * d - lb * lb) / (2f * la * d), -1f, 1f));
+            var knee = a.position + dir * (Mathf.Cos(ang) * la) + pn * (Mathf.Sin(ang) * la);
+            a.rotation = Quaternion.FromToRotation(b.position - a.position, knee - a.position) * a.rotation;
+            b.rotation = Quaternion.FromToRotation(c.position - b.position, a.position + dir * d - b.position) * b.rotation;
         }
     }
 }

@@ -265,7 +265,122 @@ Commit first. All standing rules + the repeat-item rule. Release the next patch;
 - The iris approach and entry: the subtitles stay perfectly still.
 - BIA_06 at the bridge: "What are you carrying?" and the seedlings lines play once each.
 
-## Round 18: Chapter "Cattalus — Panther's homeworld", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do after QF25
+## Round 18 — status (2026-11-22): first playable pass done, exe-verified off-screen; release 0.18.0 (`game-1800`, published)
+Cattalus is in the game: on the star map (in Veyra's system) once the asteroid and the mothership are both done; CAT_01 → CAT_12
+plays through, both race outcomes, the Moon route ends this build at "To be continued". Code map in `CLAUDE.md` ("Round 18").
+1. **Getting there** — the title card over black from frame one; CAT_01 in 7's egg chair facing the window, Panther in her lap, the
+   hull vanishing as they talk (`HullAway`); the exterior approach over the real Cattalus level (the baked `Outside_cattalus` copy:
+   the transit tower's ball, the cardboard quarter, the cat trees); the lines that point at things play over them (the tower, the
+   cardboard, the tree); CAT_01_P1/P2 set up the gameplay; **the player steers the saucer down to the public berth** (guide ring +
+   beam; ~21 s in both runs); docking arms clear of the bike hold (`HOLD CORRIDOR` 0).
+2. **The city** (code-built, no plain boxes): cardboard homes (corrugated ribs, folded flaps, tape, cut cat-doors and windows,
+   printed paw glyphs, stacked mansions joined by tubes), cat-tree towers (sisal trunks wrapped in a helix, carpeted rimmed platforms,
+   box rooms, hammocks, toys on cords), rope-wrapped clawed scratching-post columns, upholstered tufted terraces, the fountain with
+   its maintenance trickle, the elevated transit loop with a moving pod, the old transit tower with its swaying ball, sunlit patches
+   (with cats in them), the Cat-a-tron square and screen, the stands; a skyline of towers fading into the haze; the meadow west of the
+   city (rolling ground, tall grass, the leaning tree and low rounded hills after `vision_07_still.jpg`).
+3. **CAT_02** — the bike out of the hold, 7 and Panther down the beam; the gate joke; free walk with **all seven vignettes looping**
+   (the mansion's tiny box, the fountain trickle, the carton occupied at once, three cats in one patch of sun, the narrow ledge, the
+   meeting and the dangling ornament, the paw pushing the cup) + citizens strolling / lying in the sun; the optional box inspection
+   (he shrinks to fit).
+4. **CAT_03** — Juniper (a short walk-in cut), she kneels; the low quiet two-shot on the step (the street sound drops, shallow focus),
+   he leans into her hand, the hold.
+5. **CAT_04** — the Cat-a-tron films the real level (`CatatronScreen`): race highlights behind a ghost racer on the actual course,
+   the trophy turning, the mark on its setting, the Deluxe Retreat ad, the announcer at his desk; Panther's eyes follow the box.
+6. **CAT_05 + CAT_06** — registration (X at the desk); Duchess inspects the trophy, then peers into the retreat; the steward offers the
+   practice lap (A at the grid, once) and says the bike will be at the start; CAT_06 beside the bike, Panther on the low wall, nose to
+   her fingers; she mounts.
+7. **CAT_07 the Grand Circuit** (`CattalusRace`) — one lap of **2,512 m** through the six sections (cardboard quarter, a 450° spiral
+   round a monumental scratching post, the cat-tree heights, the raised toy boulevard with 5 swinging toys on a fixed rhythm, the
+   garden descent, the finish straight past the stands), 17 gates + the line (the next one glows), the open hovercraft class limit
+   (20 m/s for both racers); Duchess's pace from the course itself (a clean full-speed lap 126.5 s ×1.05 = 132.9 s), ±3 % catch-up,
+   she keeps her side of the road near 7; crash = a toy hit → white flash, back behind the toy at the last gate, +3 s, Panther's
+   line; `ChapterCamera.RaceMode`; the race track starts with the lights; Panther's lines by position (the spiral, the heights,
+   leading / behind). **Measured: clean run WON 2:09.0 vs Duchess 2:12.8 (0 crashes); sloppy run RUNNER-UP 3:05.4 vs 2:19.2.**
+8. **CAT_08W / CAT_08L** — both branches; the result saved as it happened (`CattalusState.RaceResult`, the Log shows it); the trade
+   only on a loss (Duchess's paw nudges the trophy, Panther's approving nod); Duchess climbs into the box in both.
+9. **CAT_09** — "Somewhere quieter" (Panther), the trophy on the planter; the shared rune touch (she steps into reach, the palm on the
+   sphere, the lines light), **vision 7 = Dan's video** with the in-engine insert of the dodecahedron's mark on the box (~1 s at 4.2 s),
+   breeze + shimmer, no music; the cradle releases, the sphere (20 cm) between her hands; the return lines; the record awarded once.
+10. **CAT_10** — Panther leads her to the meadow on foot; CAT_10_01-03 in-engine; **the six-segment cinematic: the TEMPORARY
+    in-engine version** (Dan's clips aren't in): the seedhead, giant Panther (×7.2, shoulder 1.8 m) out from behind the rise, her palm on
+    his cheek, running together side-on, he lies down at the tree, she sits against his shoulder - lines, grass, giant purr, the meadow
+    track fading out at the end.
+11. **CAT_11 + CAT_12** — travel size at the berth, the bike back into the hold, the beam; CAT_12 in the pilot's chair: the seven
+    records on the display ring, the marks align and join (hologram), the Moon level's hologram with a chamber below the city, the
+    Moon route selected, the saucer rising above Cattalus with the meadow beyond, "TO BE CONTINUED"; afterwards the star map offers
+    only the Moon ("The Moon — to be continued").
+12. **Log + Field Guide** (7 + 5 entries; the race result in the Log), `ChapterList` "Cattalus" + 7 sections, Continue, switches
+    `-cattalus`, `-catcp n`, `-catplay`, `-catlose`.
+- **Assets:** Duchess = Dan's model rigged with `cleanup_cat.py` (Panther's rig + clips; a new "fluffy" mode); racer + trophy = Dan's
+  models (`cleanup_prop.py`; the trophy's ring measured so the sphere sits in it); vision 7 = Dan's video; the three Cattalus tracks;
+  176 lines voiced (saved voices seven / cat / juniper / Duchess / steward; the announcer = "TeedOff Barker"); 15 new SFX.
+- **Stand-ins still in:** the meadow cinematic (in-engine until `Art/Video/color/cattalus_meadow_01..06.mp4` are in - Build everything
+  converts them); `cattalus_meadow_color_ref.png` (absent: matched to vision 7's still); Duchess plays idle for sit / wash / lie-down /
+  sleep (her auto-rig shears the ruff in those).
+- **Proof:** every build check passes (holes 0, coplanar 0, NPC placement, saucer + hold corridor + clearance, ride pose, knee, kick
+  states, next talk, prompts, rune touch, music, post-processing, Veyra scale, subtitle still, duplicate lines). Player-style runs on
+  the release exe (`-catplay`, muted, `-testspeed 2`): **A** `-catplay -catlose` from free aboard → the star map → CAT_01 … CAT_12
+  (13.7 game-min): `CATTALUS PLAYTEST: 1/1, soft-locks 0, skips taken 0`, the sloppy rider RUNNER-UP 3:05.4 vs Duchess 2:19.2 (1 crash,
+  +3 s), the trade, 159 lines; **B** `-catplay -catcp 3` (8.2 game-min): WON 2:08.8 vs Duchess 2:12.8, 0 crashes. Both: voice repeat 0 /
+  overlap 0, dialogue framing still blocked 0, empty shots 0, subtitle move 0.00 px, music silence ≤ 0.3 s, post FX 0, NPC glide 0, feet
+  sinking 0 / floating 0 / inside 0, the bike hold PASS, the rune touch ends +0.1 cm (both), ride pose off 1 (A) / 0 (B), audio peak 0.
+  Logs: `Docs/Previews/r18/capture_log_lose.txt` / `capture_log_win.txt`. Captures from the player's camera in `Docs/Previews/r18/` (all grayscale).
+
+## For Dan to check (Round 18)
+- From the console's star map (Veyra's system): Cattalus → CAT_01 in the egg chair, then steer the saucer down to the berth.
+- The city: the gate joke, the seven vignettes along the avenue and in the square, the box Panther inspects (optional).
+- Juniper's scene and the quiet two-shot; the Cat-a-tron (it shows the real course / trophy / box).
+- The race: try a clean lap (Duchess ~2:13) and a sloppy one; the toys; a crash puts you back behind the toy with +3 s; A at the grid
+  for a practice lap.
+- Both endings (win: the trophy presented; lose: the trade), the sphere touch + vision 7 with the mark insert, the meadow
+  (temporary in-engine cinematic), CAT_12's seven records, "To be continued", then the star map offers only the Moon.
+- Duchess's look on her rig; the new lines (`_P` / `_CALL` in `Docs/CATTALUS-LINES.md`).
+
+## Round 18 — decisions made (Dan away; easy to change)
+1. **Where Cattalus is on the star map:** in Veyra's system (the far system, reached through the gateway), the outermost body - the
+   lead comes from the asteroid's and the mothership's records, which are both there. Shown once the asteroid AND the mothership are
+   done (`WorldFlags.CattalusUnlocked`). After CAT_12 the map offers only the Moon; choosing it shows "The Moon — to be continued".
+2. **Scale:** the city is built so 7 can walk it (streets, the square, buildings several metres tall), but it is a cats' city - doors
+   are cat-sized cut holes, the cats are house-cat size (Panther ×1; citizens ×0.85-1.25; Duchess's shoulder 0.30 m ×1.25).
+3. **The bike in the city:** it comes out of the bike hold onto its pad at the berth and waits there; she explores on foot with
+   Panther (he can't keep up with a bike). The steward's line CAT_05_P2 (changed and re-voiced: "Your vehicle will be brought to the
+   start line, beside the square") says why it is waiting at the start; CAT_06 happens beside it there; she mounts before the race.
+4. **The practice lap:** offered by the steward (CAT_05_P1); at the grid X = race, A = a practice lap first (only the first time).
+   Panther's CAT_06_01 plays as the tip on the first practice.
+5. **Proposed lines (14, Code):** objectives and wrong states need them - listed in `Docs/CHAPTER_CATTALUS.md` "Proposed lines (Round 18,
+   Code)" (`_P` / `_CALL` ids), voiced with the same voices.
+6. **The course:** see the status for its length / gates / toys. Crashes come only from the toys (the rails keep her on the road); a toy
+   only hits near the centre line - at the edges its swing passes overhead, so a rider can also go round it.
+7. **Duchess's pace:** a clean lap at the bike's full speed through every corner ×1.05 (computed from the course itself), a mild
+   invisible catch-up ±3 %. She never cheats; she finishes her lap even when 7 is ahead.
+8. **Duchess's clips:** her rig is Panther's 24-bone rig fitted by `cleanup_cat.py` (new "fluffy" mode for her ruff and plumed tail);
+   idle, walk and jump look right, but sit / wash / lie-down / sleep still shear her ruff - she plays idle for those (`CatFolk.ClipMap`).
+   **For Dan:** a hand-tuned rig (or Mixamo-style) would let her sit and curl up in the box.
+9. **Long-haired fur shells:** not built - Duchess's own model carries the long fur; the city cats are short-haired variants of
+   Panther with baked markings (tabby, tuxedo, white, gray, spotted, cream).
+10. **The meadow:** `Art/Reference/cattalus_meadow_color_ref.png` isn't in - the leaning tree (root on the left, the trunk leaning hard
+    right, the long low branch almost level) and the layered low hills follow `vision_07_still.jpg`.
+11. **The meadow cinematic:** the temporary in-engine version runs (giant Panther = his model ×7.2, shoulder 1.8 m, above her head; the
+    transformation hidden behind the rise). Dan's six clips replace it automatically (Build everything converts the colour masters).
+12. **CAT_12's lunar interior:** the Moon level's hologram (Chapter 1, baked like the window views) with a chamber marked below the city.
+13. **CAT_01's gameplay:** the stick steers the saucer (it flies on and glides down by itself); the guide ring + beam mark the berth.
+14. **Cats' voices:** Juniper, Duchess and the steward play on the telepathy source (Panther's treatment); the announcer is the plain PA.
+15. **Race class:** both racers ride the open hovercraft class at 20 m/s (the bike's own 24 m/s land speed is limited for the race), so the
+    course and Duchess's pace are the same for every save.
+16. **CAT_09's quiet corner:** the trophy stands on the near rim of a planter (the planters are 2.4 m across and are obstacles now - she
+    walked through one before); the walk there goes round them.
+
+## Not covered / known (Round 18)
+- `RIDE POSE (QF24 15)` in play: 1 (A) / 0 (B) sampled frames of ~1,200-1,900 still off (hips 6.5 cm from the seat in that one drawn
+  frame; earlier builds had 1-2 such frames on the garden descent at 21-48 cm; 17-21 per run before this round's fixes: the probe now measures the drawn pose and the legs are
+  re-pinned after the hips snap). The cause of the rare off frame is not found yet.
+- The vision 7 video frame differs from pure gray by 2/255 (the decoded video's chroma rounding); everything rendered is gray.
+- The meadow cinematic is the temporary in-engine version until Dan's six clips are in (they drop in with Build everything).
+- Duchess's sit / wash / lie-down / sleep play idle (her rig shears the ruff in those clips); she climbs into the box with her jump + idle.
+- No long-haired fur shells; the colour reference for the meadow is absent (matched to vision 7's still).
+
+## Round 18: Chapter "Cattalus — Panther's homeworld", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — done, status above; release 0.18.0
 Commit a checkpoint first. Runs overnight. **Never stop to ask**: make the reasonable call and list it under "Round 18 — decisions
 made". **Every standing rule in `CLAUDE.md` applies from the first line, including the ones QF24 adds** (check each against your
 own captures; this chapter should arrive clean). Release **0.18.0**; "Round 18 — status"; "For Dan to check (Round 18)".

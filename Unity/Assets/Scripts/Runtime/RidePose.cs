@@ -21,8 +21,11 @@ namespace Seven
             if (Time.time - _since < 1.0f || b.Speed > 30f) return;
             if (Time.frameCount % 15 != 0) return;
             Checks++;
-            var g = s.RideGaps; float hips = s.RideHipsGap;
-            if (hips > 0.6f) return;                                          // mounting / dismounting (the beam, a teleport): not a ride pose yet
+            var g = s.RideGaps;
+            if (s.RideHipsGap > 0.6f) return;                                 // mounting / dismounting (the beam, a teleport): not a ride pose yet
+            // R18: the hips as RENDERED (measured when the camera draws the frame, after every script has moved the bike and her) -
+            // RideHipsGap is the drift the frame's correction removes before anything is drawn (hard starts / braking showed 6-40 cm)
+            Hook(s, b); float hips = _rendered >= 0f ? _rendered : s.RideHipsGap;
             float palm = Mathf.Max(g.x, g.y), foot = Mathf.Max(g.z, g.w);
             var head = s.Bone(HumanBodyBones.Head); var chest = s.Bone(HumanBodyBones.UpperChest) ?? s.Bone(HumanBodyBones.Chest);
             float headOver = 99f; bool inside = false;
@@ -58,6 +61,18 @@ namespace Seven
             }
         }
         public static string Summary() => $"RIDE POSE (QF24 15): {Checks} riding samples (seated, not mounting), off {Bad} (must be 0) - worst: hips {_worstHips * 100f:0.0} cm, palm {_worstPalm * 100f:0.0} cm, foot {_worstFoot * 100f:0.0} cm, head lowest {(_worstHead > 90f ? "-" : $"{_worstHead * 100f:0} cm")} over the saddle";
+        static ChapterSeven _s; static HoverBike _b; static float _rendered = -1f; static bool _hooked;
+        static void Hook(ChapterSeven s, HoverBike b)
+        {
+            _s = s; _b = b;
+            if (_hooked) return; _hooked = true;
+            UnityEngine.Rendering.RenderPipelineManager.beginContextRendering += (ctx, cams) =>
+            {
+                if (_s == null || _b == null || _b.Seat == null || _s.Current != ChapterSeven.Mode.Ride) { _rendered = -1f; return; }
+                var h = _s.Bone(HumanBodyBones.Hips); if (h == null) { _rendered = -1f; return; }
+                _rendered = Vector3.Distance(_b.Seat.position + _b.Seat.up * 0.11f, h.position);
+            };
+        }
         static void Log(string s) { Debug.Log("[Seven] " + s); ChapterCapture.I?.Log(s); }
     }
 }

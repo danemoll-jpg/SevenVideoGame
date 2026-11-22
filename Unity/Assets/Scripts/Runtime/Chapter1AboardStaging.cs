@@ -35,6 +35,8 @@ namespace Seven
             { "AST_01", Stage.Chair },             // QF24 (1): the asteroid arrival - the egg chair at the window, Panther in her lap
             { "BIA_01", Stage.Chair },             // QF23 (3): the mothership arrival (BIA_01 + BIA_02 while aboard) - the chair, the vanish view among Veyra's rings
             { "AST_10", Stage.Pilot },             // after the asteroid (a debrief): the navigation chair, Panther in her lap
+            { "CAT_01", Stage.Chair },             // Round 18: the Cattalus arrival - the egg chair at the window, the hull vanishing, Panther in her lap
+            { "CAT_12", Stage.Pilot },             // Round 18: the way back to the Moon (the destination choice) - the pilot's chair at the console
         };
         public static Stage StageOf(string scene) => Table.TryGetValue(scene, out var s) ? s : Stage.Pilot;
         public Stage CurrentStage { get; private set; } = Stage.Pilot;

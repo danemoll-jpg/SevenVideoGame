@@ -27,6 +27,7 @@ namespace Seven
             new Rec { Name = "tetrahedron", World = "Mars", Has = () => MarsState.OwnRecordAwarded || MarsState.OwnComplete, Mesh = r => Tetrahedron.Mesh(r) },
             new Rec { Name = "cuboctahedron", World = "the asteroid", Has = () => AsteroidState.OwnRecordAwarded || AsteroidState.OwnComplete, Mesh = r => Cuboctahedron.Mesh(r) },
             new Rec { Name = "octahedron", World = "the mothership", Has = () => BiavehState.OwnRecordAwarded || BiavehState.OwnComplete, Mesh = r => Octahedron.Mesh(r) },
+            new Rec { Name = "sphere", World = "Cattalus", Has = () => CattalusState.OwnRecordAwarded || CattalusState.OwnComplete, Mesh = r => CattalusSphere.Mesh(r) },
         };
         public static List<Rec> Collected() { var l = new List<Rec>(); foreach (var r in All) { bool h = false; try { h = r.Has(); } catch { } if (h) l.Add(r); } return l; }
         public static string Names() { var n = new List<string>(); foreach (var r in Collected()) n.Add(r.Name); return string.Join(", ", n); }

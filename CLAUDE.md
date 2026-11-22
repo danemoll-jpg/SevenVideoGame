@@ -522,7 +522,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–17 + QF1–QF25 complete (2026-11-22), release 0.17.4.** QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–18 + QF1–QF25 complete (2026-11-22), release 0.18.0.** Round 18 = Chapter "Cattalus — Panther's homeworld" (first playable pass; the meadow cinematic in-engine until Dan's clips are in). QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -922,7 +922,33 @@ scene (Round 10).
   - `ApplyMixamoHumanMap(..., squareLegs)`: the QF23 leg / spine squaring only for Mixamo downloads (never `7_ride`).
   - Switches: `-routes biaveh_astdone` (Dan's order: the asteroid finished first). `Tools/Run-Check.ps1` = the muted, minimized,
     Below Normal check-run launcher (`-Exe <path> -Out <dir> -Args "<switches>"`).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.17.4** (QF25 status in `TODO.md`).
+- **Round 18 — Cattalus, Panther's homeworld (release 0.18.0)** (spec `Docs/CHAPTER_CATTALUS.md` incl. "Decisions and reconciliations"
+  + "Proposed lines (Round 18, Code)"; status, decisions made, "For Dan to check" in `TODO.md`):
+  - Scene `Cattalus`: `Editor/FightDemoBuilderCattalus.cs` (setup: Duchess / racer / trophy / videos, the atmosphere, the cats with
+    baked fur variants `CatVariant`, the square, the prizes, the screen + studio, the course, the director wiring) +
+    `...CattalusCity.cs` (the kit: `CardboardBox` / `CardboardMansion` / `CatTree` / `ScratchPost` / `Terrace` / `Fountain` /
+    `TransitTower` / `LeaningTree` / `HillLine`, `CourseRoad` / `CourseGate` / `CourseToy`); numbers + zones + checkpoints
+    `Runtime/CattalusLayout.cs`; the Grand Circuit `CattalusCourse` (one closed spline, 60 m zone pieces switched on round the racer
+    so the 450° spiral can pass over itself; gates, toys, corner speeds); `Atmosphere_Cattalus`.
+  - Flow `CattalusDirector.cs` (helpers as the mothership) + `CattalusDirectorFlow.cs` (CAT_02-06, the vignettes start) +
+    `CattalusDirectorEnd.cs` (the race wrapper, CAT_08W / 08L, CAT_09 + vision 7 with the in-engine mark insert, CAT_10 + the meadow
+    cinematic: Dan's clips if in, else `MeadowInEngine`, CAT_11, the vignettes, the bike hold); the race `CattalusRace.cs` (lights,
+    gates, Duchess's AI paced from the course, toys, crashes +3 s, positions, Panther's lines); `CatatronScreen.cs` (the screen films
+    the real level); `CatFolk.cs` (a city cat: clips at their real speed, `ClipMap`, voice-driven head / ears); `CattalusSphere.cs`
+    (the rune + its lines); saves `CattalusState.cs` (`seven_cattalus`, select `seven_cattalus_select`; `RaceResult` kept as it was) +
+    `CattalusDialogue`; aboard `Chapter1AboardCattalus.cs` (CAT_01 egg chair + the guided descent to the berth, CAT_12 pilot's chair +
+    `HoloDisplay.MarksAlign / MarksJoin` + the Moon hologram + the rise above Cattalus + "To be continued").
+  - Models: Duchess = `cleanup_cat.py` with `CAT_NAME=duchess_v1 CAT_SRC=Art/Source/duchess/duchess_v1.glb CAT_OUT=Art/Export/duchess
+    CAT_PRE_ROTZ=-90 CAT_PRE_HEIGHT=0.98 CAT_SHOULDER=0.30 CAT_FLUFF=1` (~5 min); racer / trophy = `Tools/Blender/cleanup_prop.py --
+    <repo> cat_racer 24000 1.5 -90` / `cat_trophy 30000 1.0 0` (the trophy's ring -> `cat_trophy_ring.json`). Before the Unity build.
+  - Lines: `python Tools/Voice/make_cattalus_lines.py` -> `Resources/Cattalus/cattalus_dialogue.json` + `Docs/CATTALUS-LINES.md`;
+    voices `python Tools/Voice/generate_cattalus_voices.py [--speaker who --force]` (saved voices seven / cat / juniper / Duchess /
+    steward / "TeedOff Barker") -> `Resources/CattalusVoice/`. SFX `cat_*` etc. in `generate_sfx.py`. The meadow clips: drop the colour
+    masters into `Art/Video/color/cattalus_meadow_01..06.mp4`; Build everything makes the grayscale copies (ffmpeg) and plays them.
+  - Switches: `-catcp <n>` (0 = CAT_01 aboard, 3 = the race, 6 = home), `-cattalus` (as from the star map), `-catplay` (player-style
+    run `CattalusPlaytest.cs`; with `-catcp 3 -catlose` the runner-up path), `-catlose` (a sloppy rider: Duchess wins).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.18.0** (Round 18 status in `TODO.md`).
+**Before: Dan plays 0.17.4** (QF25 status in `TODO.md`).
 **Before: Dan plays 0.17.3** (QF24 status in `TODO.md`).
 **Before: Dan plays 0.17.2** (QF23 status in `TODO.md`).
 **Before: Dan plays 0.17.0** (Round 17 status in `TODO.md`).

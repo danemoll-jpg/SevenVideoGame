@@ -15,6 +15,8 @@ namespace Seven
     {
         /// <summary>The mothership's octahedron, vertex radius (was 0.45 m: a 0.9 m shape that filled a third of the screen).</summary>
         public const float OctaR = 0.22f;
+        /// <summary>Round 18: Cattalus's sphere, radius (20 cm across: hand-sized, it rests between her hands).</summary>
+        public const float SphereR = 0.10f;
         public const float MaxSpan = 0.5f;
         public struct Rune { public string name, world; public float size, face; public bool handHeld, touched; public System.Func<Mesh> mesh; }
         public static List<Rune> Table() => new List<Rune>
@@ -25,6 +27,7 @@ namespace Seven
             new Rune { name = "tetrahedron", world = "Mars (a temple piece)", size = 1.8f, face = 0.32f, handHeld = false, touched = true, mesh = () => Tetrahedron.Mesh(0.9f) },
             new Rune { name = "cuboctahedron", world = "the asteroid", size = 0.84f, face = 0.32f, handHeld = false, touched = true, mesh = () => Cuboctahedron.Mesh(0.42f) },
             new Rune { name = "octahedron", world = "the mothership", size = OctaR * 2f, face = OctaR * 0.7071f, handHeld = true, touched = true, mesh = () => Octahedron.Mesh(OctaR) },
+            new Rune { name = "sphere", world = "Cattalus", size = SphereR * 2f, face = SphereR, handHeld = true, touched = true, mesh = () => CattalusSphere.Mesh(SphereR) },
         };
         /// <summary>The real surface along 8 horizontal directions at the touch height (a little above the centre): min / max.</summary>
         public static (float min, float max) FaceRange(Mesh m, float lift = 0.02f)

@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || QF23Revisit || AstPlay || BiaPlay;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || QF23Revisit || AstPlay || BiaPlay || CatPlay;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -138,6 +138,13 @@ namespace Seven
         public static int BiaCp { get; private set; } = -1;
         public static bool Bia { get; private set; }
         public static bool BiaPlay { get; private set; }
+        /// <summary>Round 18: -catcp n (check run at Cattalus checkpoint n; 0 = CAT_01 aboard, 6 = home), -cattalus (as from the star map),
+        /// -catplay (the player-style run), -catrace (the check run's autopilot races; on by default in check runs), -catlose (the runner-up path).</summary>
+        public static int CatCp { get; private set; } = -1;
+        public static bool Cattalus { get; private set; }
+        public static bool CatPlay { get; private set; }
+        public static bool CatLose { get; private set; }
+        public static bool CatRace { get; private set; }
         public static bool Asteroid { get; private set; }
         public static bool AstPlay { get; private set; }
         public static bool AstBird { get; private set; }
@@ -228,6 +235,11 @@ namespace Seven
                 if (args[i] == "-biacp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var bcp)) BiaCp = bcp;
                 if (args[i] == "-bia") Bia = true;
                 if (args[i] == "-biaplay") BiaPlay = true;
+                if (args[i] == "-catcp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var ccp)) CatCp = ccp;
+                if (args[i] == "-cattalus") Cattalus = true;
+                if (args[i] == "-catplay") CatPlay = true;
+                if (args[i] == "-catlose") CatLose = true;
+                if (args[i] == "-catrace") CatRace = true;
                 if (args[i] == "-asteroid") Asteroid = true;
                 if (args[i] == "-astbird") AstBird = true;
                 if (args[i] == "-biablades") BiaBlades = true;

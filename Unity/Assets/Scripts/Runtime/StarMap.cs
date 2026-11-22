@@ -37,6 +37,7 @@ namespace Seven
             ("europa", "Europa", 0.45f, 134f, 9f, "sol"),
             ("biaveh", "Biavian contact — Veyra", 0.24f, 214f, 17f, "biaveh"),   // QF22: the mothership among Veyra's rings (id kept for saves)
             ("asteroid", "The asteroid", 0.40f, 318f, 7f, "biaveh"),    // found after the warp into Veyra's system (TRV_AST)
+            ("cattalus", "Cattalus", 0.52f, 96f, 12f, "biaveh"),         // Round 18: Panther's homeworld (once the asteroid AND the mothership are done)
         };
         public const string Sol = "sol", Bia = "biaveh";
         public static string SystemOf(string id) { foreach (var d in Defs) if (d.id == id) return d.sys; return id == "biaveh_space" ? Bia : Sol; }

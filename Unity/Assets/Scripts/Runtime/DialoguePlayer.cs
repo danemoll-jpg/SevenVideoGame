@@ -181,7 +181,7 @@ namespace Seven
             Current = line;
             Played.Add(line.Id);
             NoteRepeat(line);
-            var src = line.IsCat ? (far ? _catFar : _cat) : line.Speaker == "nela" ? _cat : _seven;   // Nela (the mothership) speaks telepathically too: Panther's treatment
+            var src = line.IsCat ? (far ? _catFar : _cat) : line.Speaker == "nela" || line.Speaker == "juniper" || line.Speaker == "duchess" || line.Speaker == "steward" ? _cat : _seven;   // Round 18: every Cattalus cat speaks telepathically (Panther's treatment); the announcer is the square's PA   // Nela (the mothership) speaks telepathically too: Panther's treatment
             UI?.ShowSubtitle(line.Label ?? (line.IsCat ? "Cat" : "7"), line.Text, line.IsCat, far);
             LinesStarted++;
             LineStarted?.Invoke(line);

@@ -126,7 +126,7 @@ namespace Seven
         static R Get() { var j = PlayerPrefs.GetString(Key, ""); return string.IsNullOrEmpty(j) ? new R() : JsonUtility.FromJson<R>(j) ?? new R(); }
         /// <summary>QF23 (24): a Scene Select session never writes the player's real route flags (it could unlock or consume
         /// real story beats - e.g. mark Cattalus seen from a replayed BIA_13).</summary>
-        static bool SelectRun => VenusState.SceneSelectRun || EuropaState.SceneSelectRun || MarsState.SceneSelectRun || AsteroidState.SceneSelectRun || BiavehState.SceneSelectRun;
+        static bool SelectRun => VenusState.SceneSelectRun || EuropaState.SceneSelectRun || MarsState.SceneSelectRun || AsteroidState.SceneSelectRun || BiavehState.SceneSelectRun || CattalusState.SceneSelectRun;
         static void Put(R r) { if (SelectRun && DemoBoot.CaptureDir == null) { Debug.Log("[Seven] world flags: not written during a Scene Select session (QF23 24)"); return; } PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
         public static void Clear() { PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); }
         /// <summary>Check runs (-routes): "europa" = Europa already complete (the Mars debrief plays MAR_13C);
@@ -167,6 +167,19 @@ namespace Seven
             // QF23 (24): an old save - every chapter finished in builds before the newer flags existed (combinedSeen, asteroidDone,
             // biavehDone, cattalusSeen all unset)
             if (what == "oldsave") Put(new R { combined = true, asteroidFound = true });
+            // Round 18 (-catcp / -cattalus / -catplay): every world before it done - Venus (VEN_C12), Mars, Europa, the asteroid, the
+            // mothership; the Cattalus lead seen; the saucer in Veyra's system; a fresh Cattalus
+            if (what == "cattalus")
+            {
+                VenusState.FakeDoneForTest();
+                MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true);
+                EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c);
+                AsteroidState.ClearTestSave(); AsteroidState.ResetForTest(); AsteroidState.Fake(AsteroidLayout.CpDone, true);
+                BiavehState.ClearTestSave(); BiavehState.ResetForTest(); BiavehState.Fake(BiavehLayout.CpDone, true);
+                CattalusState.ClearTestSave(); CattalusState.ResetForTest();
+                Put(new R { combined = true, combinedSeen = true, asteroidFound = true, asteroidDone = true, biavehDone = true, mothershipKnown = true, cattalusSeen = true });
+                SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("biaveh");
+            }
             // QF24 (22): Dan's order - the asteroid finished first, then the mothership (BIA_13 must be the Cattalus talk, B)
             if (what == "biaveh_astdone")
             {
@@ -218,6 +231,8 @@ namespace Seven
         public static string NextTalk(string finished) => NextTalk(finished, AsteroidDone || finished == "asteroid", BiavehDone || finished == "biaveh");
         public static void MarkCattalusSeen() { var r = Get(); r.cattalusSeen = true; Put(r); }
         public static bool CattalusUnlocked => VenusDone && MarsDone && EuropaDone && AsteroidDone && BiavehDone;
+        /// <summary>Round 18: Cattalus finished (CAT_12 played) - the star map then offers only the Moon.</summary>
+        public static bool CattalusDone => CattalusState.OwnComplete;
         public static bool FinalMoonUnlocked => false;
         public static string Summary() => $"world flags: Venus {VenusDone}, Mars {MarsDone}, Europa {EuropaDone}, combined records {(CombinedSeen ? "seen" : CombinedPlayed ? "flag set, never seen to the end" : "not yet")} -> Biaveh {(BiavehUnlocked ? "unlocked" : "locked")}, asteroid {(AsteroidFound ? "found" : "undiscovered")}, Cattalus {(CattalusUnlocked ? "unlocked" : "locked")}, final Moon {(FinalMoonUnlocked ? "unlocked" : "locked")}";
     }
