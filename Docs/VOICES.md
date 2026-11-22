@@ -181,5 +181,7 @@ picks premade voices) and lists which in the status. Voices match the looks.
 - **Duchess** (the script's "Champion"): a large, fluffy white champion. Languid, gracious, a little sleepy and posh; a low,
   velvety older female voice; gets genuinely delighted about boxes.
 - **Steward**: the race steward, a neat tuxedo cat. Precise, polite, professional, slightly prim; a crisp middle-aged male voice.
-- **Announcer**: the Cat-a-tron's sports announcer. Big, warm, theatrical, enthusiastic; a male sporting-announcer voice with a
-  stadium PA treatment (slight echo).
+- **Announcer**: the Cat-a-tron's sports announcer **and every Cat-a-tron advert / TV line** (CAT_04_01, 02, 09, CAT_07_01 and any
+  race calls). **Dan (2026-11-22): use the "Barker" voice from his game Tee'd Off** (repo `C:\Users\danmo\Tee-dOff`: find the
+  Barker's ElevenLabs voice ID in its voice tools / config, or Dan's saved ElevenLabs voice named Barker). Stadium PA treatment
+  (slight echo) in the square; the plain voice when heard through the screen close up. Don't design a new announcer voice.

@@ -705,7 +705,8 @@ Give the player time to explore, laugh, race and sit with the characters. The em
    (never gliding), hopping onto low walls / benches where the script seats him. He's always in frame for his lines. During the
    race he waits at the race square; his race lines are telepathic and the race camera stays on 7 (never a cut to an empty shot).
 5. **Cats speak telepathically:** no lip-sync. Ears, tails, posture and head turns carry the performance; the speaker is framed.
-   The Announcer is heard over the square's speakers and shown on the Cat-a-tron screen when on camera.
+   The Announcer is heard over the square's speakers and shown on the Cat-a-tron screen when on camera. **The Announcer and all
+   Cat-a-tron advertising use the "Barker" voice from Dan's game Tee'd Off** (Dan, 2026-11-22).
 6. **Show, don't caption:** the city jokes (CAT_02) are ambient vignettes the player walks past, looping, with no prompts or text.
 7. **Objectives come from the story:** "Find a way to the trophy" after CAT_04, "Register for the Grand Circuit" after CAT_04_13,
    "Race the Grand Circuit" after CAT_06 (practice lap optional, offered by the Steward), "Follow Panther" in CAT_09_12 → CAT_10.

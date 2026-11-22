@@ -76,4 +76,7 @@ Made by Dan in Suno, instrumental. Spec: `Docs/CHAPTER_CATTALUS.md`.
 | `cattalus_race.mp3` | The Grand Circuit | The race only, from the starting lights to the finish (practice lap too) | upbeat retro-futurist racing theme, driving synth bass arpeggio, bright brass stabs, fast brushed drums, playful whistled lead melody, festival crowd energy, cheeky and fun, 140 bpm, seamless loop |
 | `cattalus_meadow.mp3` | The Leaning Tree | CAT_10, the meadow cinematic (about 72 s); kept for the heaven ending | tender cinematic piano and warm strings, soft wordless female hum, gentle acoustic guitar, golden afternoon, joyful lift as they run, then settling into stillness and peace, hopeful not sad, no drums, 70 bpm, about 90 seconds with a soft ending |
 
+**Status:** all three made by Dan in Suno and saved in `Unity/Assets/Audio/Music/` (2026-11-22), each ~3:00. The meadow track is
+longer than the ~72 s cinematic: start it with the cinematic and fade it out gently over the last seconds of segment 6.
+
 The vision (CAT_09) has no music: the city track fades out and comes back after (QF24 item 20).

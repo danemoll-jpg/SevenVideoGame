@@ -1,5 +1,26 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF25: Dan's 0.17.3 review (Dan, 2026-11-22) — to do (run before Round 18)
+
+1. **Veyra is far too small next to the mothership, and the shots favour the planet.** Dan: "The mothership is way large in
+   comparison to the planet, the planet should be much bigger. Also, the emphasis should be on the mothership, so not sure why it
+   kept showing the planet and not the mothership when it isn't part of the story."
+   - **Scale:** Veyra is a planet and the mothership is a ship (26 miles across). The planet must read as vastly bigger: a huge
+     ringed curve filling the far background or the lower part of the frame, the mothership a large object in front of it,
+     clearly much smaller. Use parallax and haze so the distance reads.
+   - **Emphasis:** every BIA_01 / BIA_02 shot (and the window views, and any return to the mothership) is framed on the mothership:
+     the egg, the three orbs, the iris. Veyra and its rings are only backdrop, at the edge or behind. No shot is mainly the planet.
+     The establishing shot can open on the rings for a moment, then settle on the ship.
+   - Before / after captures of each exterior shot.
+2. **Shaky subtitles while entering the mothership** (the iris approach / entry). Find the cause (likely the subtitle canvas
+   following a shaking or moving camera, or being parented to it with camera shake / the iris motion) and fix it at the root:
+   subtitles, objectives and prompts are screen-space and never move with camera shake or motion, game-wide. Add a build check that
+   the subtitle rect stays still during camera shake.
+3. **Duplicate lines in the seedlings exchange (BIA_06).** The resident and 7 repeat lines. Likely the old QF23 lines and QF24
+   item 11's new lines (BIA_06_02 / 02a / 02b) both play, or a trigger fires twice. Make the exchange play exactly once, in order:
+   BIA_06_01, 02, 02a, 02b, 03, 04. Remove any old line or audio that's no longer in the script. Extend the voice checks: no line ID
+   plays twice in one scene unless the script repeats it, and no two lines with the same text play in a scene. Check every chapter.
+
 ## Quick fix QF24: Dan's 0.17.2 review (Dan, 2026-11-21) — done, status below; release 0.17.3
 Commit first. All standing rules + the repeat-item rule. Release the next patch; "QF24 — status"; "For Dan to check (QF24)".
 
@@ -206,7 +227,7 @@ Commit first. All standing rules + the repeat-item rule. Release the next patch;
     interrupted), game-wide. Add a build check that the gameplay camera's volume / depth of field is back to normal within a frame of
     control returning after every talk.
 
-## Round 18: Chapter "Cattalus — Panther's homeworld", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do after QF24
+## Round 18: Chapter "Cattalus — Panther's homeworld", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do after QF25
 Commit a checkpoint first. Runs overnight. **Never stop to ask**: make the reasonable call and list it under "Round 18 — decisions
 made". **Every standing rule in `CLAUDE.md` applies from the first line, including the ones QF24 adds** (check each against your
 own captures; this chapter should arrive clean). Release **0.18.0**; "Round 18 — status"; "For Dan to check (Round 18)".
@@ -221,16 +242,37 @@ each must drop in by file name with no other change. Mark every stand-in in the 
   tuxedo, white, gray, spotted), long-haired fur shells, sizes / proportions, small accessories; his clips plus head look-at /
   paw IK for the vignettes. **Duchess:** `Art/Source/duchess/duchess_v1.glb` if present, else a long-haired white variant.
   Panther's greatest form = his model scaled (shoulder above 7's head).
+- **Dan's three models are IN (2026-11-22), use them, not stand-ins:** `Art/Source/duchess/duchess_v1.glb`,
+  `Art/Source/cat_racer/cat_racer_v1.glb`, `Art/Source/cat_trophy/cat_trophy_v1.glb` (Tripo, ~58 MB each, single mesh, **no rig**).
+  **Duchess:** rig her the way Panther was rigged: run `Tools/Blender/cleanup_cat.py` (or a `cleanup_duchess` variant) for the same
+  24-bone rig + clips (idle / walk / sit / wash / jump / sleep, stretch / lie_down) so she shares Panther's animation set;
+  keep her long fur, ruff and plumed tail, scale her larger than Panther (heavy build), grayscale texture, decimate sensibly.
+  The racer and trophy: decimate / clean, grayscale texture; the sphere sits in the trophy's top ring.
+- **Dan's references are in** (`duchess_ref_34.png`, `cat_racer_ref.png`, `cat_trophy_ref.png`; Tripo was down, models later):
+  build the stand-ins to match them closely (Duchess's fur, ruff, plumed tail and leg band; the racer's teardrop hull, round
+  padded bed, windscreen, two rear fan pods, number 8; the trophy's paw-print base, rope columns, urn with the rope bow, cat-tail
+  handles, four prongs over the open ring that holds the sphere).
 - **Duchess's racer** `Art/Source/cat_racer/cat_racer_v1.glb`, else procedural. **Trophy** `Art/Source/cat_trophy/cat_trophy_v1.glb`,
   else procedural. **The sphere** in code from Kyle's `Art/Reference/kyle_7_sphere.jpg` (pale, smooth; the crescent arc and band
   lines appear at the touch). **The Deluxe Retreat** in code (entry hole, inner shelf, crinkled paper).
-- **Vision 7** `Art/Video/vision_07_cattalus.mp4`, else a temporary in-engine render (grayscale, ~12 s, per the spec) plus the
-  in-engine insert of the dodecahedron's mark on the container.
+- **Vision 7 is IN (Dan, 2026-11-22): `Art/Video/vision_07_cattalus.mp4`** (12 s, 1920×1044, grayscale, silent; still fallback
+  `Art/Video/vision_07_still.jpg` → copy to `Resources/Cattalus/`). The misty meadow, the leaning tree with its long low branch, a
+  hooded traveler kneeling at an open box with the pale sphere in it; a cat walks up, sniffs it, comes to the traveler, who strokes
+  it; the cat settles against them. No temporary render needed. Cut in the in-engine insert of the dodecahedron's mark on the box
+  (a short close-up around 4–5 s, matching the box), add a soft shimmer / breeze, no music. **Match the in-game meadow's leaning
+  tree and hill line to this video** (CAT_10 must read as the same place, older and larger).
+- **The meadow clips are NOT in yet** (Dan makes them 2026-11-22): build the temporary in-engine version of the six segments now,
+  wired so the clips replace it automatically when they appear.
 - **The meadow cinematic:** `Art/Video/color/cattalus_meadow_01…06.mp4` (colour masters). Make grayscale 1920×1044 h264 copies in
   `Art/Video/` and play them with the lines, laughter, breathing, purring, footfalls, grass and music over them. Else a temporary
   in-engine version of the six segments. Never alter or delete the colour masters.
-- **Music:** `cattalus_city.mp3`, `cattalus_race.mp3`, `cattalus_meadow.mp3` (missing = an existing track, noted).
-- **Voices:** Juniper, Duchess, Steward, Announcer per `VOICES.md` (ElevenLabs Voice Design or premade; say which). 7 and Panther
+- **Music: IN** (Dan, 2026-11-22): `cattalus_city.mp3`, `cattalus_race.mp3`, `cattalus_meadow.mp3` (~3:00 each; fade the meadow
+  track out at the end of the ~72 s cinematic).
+- **Voices:** if Dan has saved ElevenLabs voices named **Duchess**, **Juniper** or **Steward**, use them; otherwise design them from
+  `VOICES.md` (Dan has the Voice Design prompts and may add them later: make swapping a voice one re-generation).
+- **Voices:** Juniper, Duchess, Steward per `VOICES.md` (ElevenLabs Voice Design or premade; say which). **The Announcer and all
+  Cat-a-tron advertising = the "Barker" voice from Dan's Tee'd Off** (find its voice ID in `C:\Users\danmo\Tee-dOff` or Dan's
+  saved ElevenLabs voices; Dan, 2026-11-22). 7 and Panther
   as always. Voice every line. **SFX:** the Cattalus list.
 
 **Items** (follow the spec):

@@ -269,3 +269,9 @@ characters, tree, hill line and light direction. Shared style line, put at the s
 5. `They reach the leaning tree. She slows to a walk, catching her breath, smiling. The enormous cat turns and lowers himself onto his belly in the grass, forelegs stretched out in front. She rests a hand on his shoulder and sits down beside him. Their breathing settles.`
 6. `Low intimate three-quarter view, wide enough to show his size. She sits against his shoulder with her knees loosely drawn up and rests the side of her head against his fur, one hand on his foreleg. He lowers his head beside hers; his tail curves loosely through the grass near her feet. Her eyes close. Very still: only breathing, a small ear twitch and the breeze moving the grass.`
 Negative for all: `bared teeth, aggression, hunting, extra limbs, extra fingers, saddle, collar, other people, other animals, text, watermark`.
+
+**Cattalus references in (Dan, 2026-11-22):** `Art/Reference/duchess_ref_34.png` (long-haired white cat, ruff, plumed tail, a band on
+the front left foreleg), `Art/Reference/cat_racer_ref.png` (teardrop hover racer, round padded bed, windscreen, two rear fan pods,
+number 8), `Art/Reference/cat_trophy_ref.png` (paw-print base, rope-wrapped columns, urn with a rope bow, fluffy cat-tail handles,
+four curved prongs over an open ring). Next: Dan makes the Tripo models (`Art/Source/duchess/duchess_v1.glb` rigged quadruped,
+`cat_racer/cat_racer_v1.glb`, `cat_trophy/cat_trophy_v1.glb`). The sphere sits in the trophy's top ring, held between the prongs.
