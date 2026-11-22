@@ -80,3 +80,23 @@ Made by Dan in Suno, instrumental. Spec: `Docs/CHAPTER_CATTALUS.md`.
 longer than the ~72 s cinematic: start it with the cinematic and fade it out gently over the last seconds of segment 6.
 
 The vision (CAT_09) has no music: the city track fades out and comes back after (QF24 item 20).
+
+# Ending credits (the Moon finale, later)
+
+| File | Title | Where it plays | Made how |
+| --- | --- | --- | --- |
+| `credits_theme.mp3` | The Observer (Reprise) | The closing credits over Kyle's original art, after the heaven meadow (Dan, 2026-11-22) | Suno **Cover** of `main_theme.mp3` (Dan: "especially since you only hear it in the menu"): fuller, warmer, resolved; ~3–4 min with a real ending, not a loop |
+
+Style prompt for the cover: warm cinematic orchestral reprise, the same melody, soft wordless female vocal carried by full strings and gentle piano, glassy bells, slow and tender, opening intimate then swelling to a wide hopeful peak, a sense of homecoming and peace, ending softly on a held final chord, not loopable
+
+**Status:** made by Dan in Suno ("Seven - Closing Credits", 3:00) and saved as `Unity/Assets/Audio/Music/credits_theme.mp3` (2026-11-22). Pace the credits to the track (~3:00) so the last card lands as the music ends.
+
+# The Moon finale (proposed 2026-11-22; the chapter isn't scripted yet)
+
+Chapter 1's `moon_prison.mp3` stays for the mine / prison if the finale passes through it. New tracks:
+
+| File | Title | Where it plays | Style prompt |
+| --- | --- | --- | --- |
+| `moon_descent.mp3` | Beneath the City | The return to the Moon and the descent to the chamber below the lunar city | dark ambient orchestral, slow 65 bpm, low strings and deep drones, distant soft choir, faint echo of the main theme melody on glassy bells, ancient and vast, a sense of arrival and destiny, cavernous reverb, building quietly, loopable |
+| `moon_tunneler.mp3` | Tunneler | The final confrontation with Tunneler | dark driving industrial orchestral, heavy low percussion and machinery rhythm, grinding metallic textures, urgent low brass, tense string ostinato, minor key, relentless but not heroic, loopable |
+| `moon_transfer.mp3` | Seven Ages | After the sacrifice: 7 completes the transfer, the light through the seven temples, her ascension | tender and grieving then luminous, solo piano and soft strings, wordless female vocal rising, the main theme melody slowly emerging, swelling into a bright transcendent peak, glassy bells, then fading into white silence, about 3 minutes, not loopable |

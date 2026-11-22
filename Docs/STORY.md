@@ -114,6 +114,13 @@ Her responsibility is fulfilled.
 
 There, she is reunited with the cat. The final scene shows them playing together.
 
+**Ending and credits (Dan, 2026-11-22):** the game ends on the heaven meadow, the first and only full colour in the game: Dan's
+colour master `Art/Video/color/cattalus_meadow_color.mov` (the Cattalus meadow footage, per the Cattalus spec's "Heavenly ending
+callback": a short arrival, "Panther?" / "Hello.", the selected moments, ending held on the resting composition under the tree).
+No post-credits scene. **The closing credits roll over Kyle's original art** (`Art/Reference/kyle_*.jpg`, his concept pieces in
+turn, slow fades / gentle drift), after the final held image.
+The credits music is `credits_theme.mp3`, a Suno cover of the menu theme (`Docs/MUSIC.md`).
+
 **The cat's name — Panther (Dan, 2026-11-18):** he has no name in Chapter 1. On Venus, as 7 is about to ride off on the hover bike, she asks what to call him: "Panther." (She looks the small cat up and down; he notices.) From then on he is Panther — subtitles and dialogue labels use "Panther" from that line on.
 
 **Panther changes size (Dan, 2026-11-18):** anywhere from a normal house cat up to elephant size. The player first sees it in the same scene: he stretches and grows smoothly into a large, powerful cat ("You were saying?"), then lies down by the ramp to guard the ship.
