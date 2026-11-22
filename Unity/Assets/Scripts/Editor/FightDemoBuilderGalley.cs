@@ -237,7 +237,7 @@ namespace Seven.EditorTools
 
         /// <summary>Round 10: a plain renderer (no SevenHeightFog full-screen pass, no features) for the subtitle overlay
         /// camera, added to both pipeline assets' renderer lists; returns its index (-1 = not available).</summary>
-        static int EnsureUiRenderer()
+        internal static int EnsureUiRenderer()
         {
             const string path = "Assets/Settings/UI_Renderer.asset";
             var rd = AssetDatabase.LoadAssetAtPath<UnityEngine.Rendering.Universal.UniversalRendererData>(path);
@@ -263,6 +263,10 @@ namespace Seven.EditorTools
             }
             AssetDatabase.SaveAssets();
             Log($"UI renderer (no fog pass) at renderer index {index}");
+            // QF25 (2): the shared UI overlay camera reads the index at runtime (every scene, not only the saucer)
+            System.IO.Directory.CreateDirectory("Assets/Resources/UI");
+            System.IO.File.WriteAllText("Assets/Resources/UI/ui_renderer.txt", index.ToString());
+            AssetDatabase.ImportAsset("Assets/Resources/UI/ui_renderer.txt");
             return index;
         }
 

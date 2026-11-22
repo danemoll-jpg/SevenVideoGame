@@ -20,12 +20,19 @@ namespace Seven
         public string Objective { get; private set; }
         public float FadeAlpha => _fade != null ? _fade.color.a : 0f;
         public bool SubtitleVisible => _subPanel != null && _subPanel.activeSelf;
+        /// <summary>QF25 (2): the subtitle panel (its position on screen is measured in check runs).</summary>
+        public RectTransform SubtitleRect => _subPanel != null ? _subPanel.transform as RectTransform : null;
         public string SubtitleText => _subText != null ? _subText.text : "";
 
         void Awake() { if (Cam != null) Build(); }
 
+        /// <summary>QF25 (2): the chapter UI of the scene in play (the check runs measure its subtitle).</summary>
+        public static ChapterUI Live;
+        void OnEnable() { Live = this; }
+        void Start() { UiOverlay.EnsureNow(); }                 // QF25 (2): onto the UI camera at the world origin before the first frame
         public void Build()
         {
+            Live = this;
             if (_font != null) return;
             _font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             var canvasGo = new GameObject("ChapterCanvas");

@@ -157,6 +157,25 @@ apply to every asset and scene:
 - **The talk after a chapter comes from the save's completion state** (QF24 22): `WorldFlags.NextTalk` - both the asteroid
   and the mothership done (either order) = the Cattalus talk; one = the talk pointing to the other. Build check `NEXT TALK`.
 
+## Scale, screen text and lines — STANDING RULES (Dan, QF25, 2026-11-22; every chapter, now and later)
+- **Planets are planet-sized; shots are framed on the story's subject.** A planet behind a ship / station is vastly bigger
+  (Veyra: angular radius ≥ 2× the mothership's in every view, far behind it in the haze, a bright limb, broad rings) and is only
+  backdrop: every exterior / window shot is framed on what the story is about (the mothership: the egg, the orbs, the iris). An
+  establishing shot may open on the backdrop for a moment, then settles on the subject. One builder per composition
+  (`VeyraScene.Build(..., eggDir, farClip)`: the subject straight along the view, the planet's distance capped by the camera's far
+  clip with the same angular size). Check runs log `EMPHASIS (QF25 1)` per shot (+ summary: mainly the planet must be 0); build
+  check `VEYRA SCALE (QF25 1)`.
+- **Screen text never moves with the camera.** Subtitles, objectives, prompts, hints and menus render through ONE overlay camera at
+  the world origin (`UiOverlay`: never parented to the gameplay camera, stacked on whatever camera is main, the plain UI renderer
+  `Resources/UI/ui_renderer`); every Screen-Space-Camera canvas is moved onto it. (A canvas 0.11 m in front of a camera kilometres
+  out jitters by float precision - the 0.17.3 shaky subtitles at the iris.) Check runs log `SUBTITLE STILL (QF25 2)` (largest move
+  < 0.5 px); build check `SUBTITLE STILL (QF25 2)` shakes a camera 4 km out.
+- **No line plays twice.** A numbered range that also takes inserted lines (the mothership's `Say(scene, 2, 2)` takes 02a / 02b)
+  never sits beside an explicit id call for the same lines - name such lines by id. Check runs log `VOICE REPEAT (QF25 3)` (an id
+  twice in one scene, or two ids with the same text: both 0 unless the line is marked `repeat` - race call-outs, barks); build
+  check `DUPLICATE LINES (QF25 3)` scans every chapter's code and dialogue data. Remove old lines and their audio when a script
+  changes.
+
 ## Boss fights — STANDING RULE (Dan, QF17, 2026-11-20; every boss, now and later)
 Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing there." Never again:
 - **The boss moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: his pose, a
@@ -503,7 +522,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–17 + QF1–QF24 complete (2026-11-21), release 0.17.3.** QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–17 + QF1–QF25 complete (2026-11-22), release 0.17.4.** QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -903,7 +922,8 @@ scene (Round 10).
   - `ApplyMixamoHumanMap(..., squareLegs)`: the QF23 leg / spine squaring only for Mixamo downloads (never `7_ride`).
   - Switches: `-routes biaveh_astdone` (Dan's order: the asteroid finished first). `Tools/Run-Check.ps1` = the muted, minimized,
     Below Normal check-run launcher (`-Exe <path> -Out <dir> -Args "<switches>"`).
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.17.3** (QF24 status in `TODO.md`).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.17.4** (QF25 status in `TODO.md`).
+**Before: Dan plays 0.17.3** (QF24 status in `TODO.md`).
 **Before: Dan plays 0.17.2** (QF23 status in `TODO.md`).
 **Before: Dan plays 0.17.0** (Round 17 status in `TODO.md`).
 **Before: Dan plays 0.16.2** (QF21 + QF22 status in `TODO.md`).

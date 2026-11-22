@@ -1,0 +1,5 @@
+SUBTITLE STILL (QF25 2): PASS - subtitles, objectives and prompts never move with the camera
+camera 4.1 km from the origin, shaken (0.22 m / 3 deg peak) and travelling 0.9 m per frame for 120 frames:
+  subtitle through the shared UI camera (UiOverlay, at the origin): largest move on screen 0.000 px (must be under 0.5)
+  the 0.17.3 setup for reference - a canvas 0.12 m in front of the camera 4.1 km out: one float step there = 1.8 px of jitter per rounding (at the UI camera: 0.0001 px)
+  UiOverlay: the UI camera at the world origin, not parented to the gameplay camera: yes

@@ -205,7 +205,23 @@ SFX = [
     ("ast_power_down", "A large machine losing power: lights buzzing out, a long descending electric whine, motors winding down.", 3, False, "Asteroid: a machine's power severed, preservation mode"),
     ("ast_coolant", "Coolant rushing through big pipes, a deep liquid flow, valves opening, steam dying down.", 4, False, "Asteroid: the cooling control (AST_05)"),
     ("ast_bird_chirp", "A small clockwork toy bird: a tiny wind-up ratchet, one uneven mechanical chirp, and a little tin wing flap.", 2.5, False, "Asteroid: the mechanical bird (AST_03_08; the vision)"),
-    ("ast_vault_open", "A heavy protected storage vault unlocking: bolts withdrawing one after another, a big door swinging open with a deep groan.", 4, False, "Asteroid: protected storage opens (AST_09)")
+    ("ast_vault_open", "A heavy protected storage vault unlocking: bolts withdrawing one after another, a big door swinging open with a deep groan.", 4, False, "Asteroid: protected storage opens (AST_09)"),
+    # Round 18: Cattalus (Docs/SFX-LIST.md "Cattalus")
+    ("cat_crowd_cheer", "A large outdoor crowd of cats cheering at a race: excited chirps, trills and happy meows over a festive crowd roar.", 5, False, "Round 18: CAT_07 finish, CAT_08"),
+    ("cat_crowd_ambience", "A busy, relaxed outdoor plaza of cats: soft chirps, distant meows, padding feet, a gentle breeze, far-off chimes.", 10, True, "Round 18: Cattalus streets (loop)"),
+    ("cardboard_rustle", "A cat climbing into a cardboard box: cardboard creaking and flexing, soft thumps, paws shuffling.", 2.5, False, "Round 18: the boxes, the Deluxe Retreat"),
+    ("paper_crinkle", "Packing paper being pawed and arranged: crisp crinkling and rustling.", 2.5, False, "Round 18: CAT_08"),
+    ("race_start_lights", "Race starting lights: three short low beeps and one long high beep.", 4, False, "Round 18: CAT_07_01"),
+    ("cat_racer_hover", "A small hover racing vehicle passing: a smooth rising and falling electric whine with a soft air rush.", 3, False, "Round 18: Duchess's racer"),
+    ("sphere_lines", "A smooth stone sphere awakening: a soft rising glassy shimmer with faint ringing harmonics.", 2.5, False, "Round 18: CAT_09 touch"),
+    ("cradle_release", "A small ornate metal cradle opening: a soft precise click and a gentle metallic sigh.", 1.5, False, "Round 18: CAT_09"),
+    ("giant_purr", "An enormous cat purring deeply and contentedly: a low, warm, rumbling purr.", 6, False, "Round 18: CAT_10"),
+    ("grass_run", "Running through tall dry grass: swishing stalks and light footfalls with heavier soft thuds alongside.", 6, False, "Round 18: CAT_10 segment 4"),
+    ("cat_gate_open", "A small ornate garden gate swinging open on a squeaky hinge, a light metal latch click.", 1.5, False, "Round 18: CAT_02 the public gate"),
+    ("cat_screen_jingle", "A short bright cheerful sports television jingle with a whoosh, upbeat brass stab, two seconds.", 2.5, False, "Round 18: the Cat-a-tron (highlights, the prize ad)"),
+    ("cat_meadow_breeze", "A warm open meadow: a soft steady breeze through tall grass, a few distant birds, insects humming gently.", 12, True, "Round 18: CAT_10 the meadow (loop)"),
+    ("cat_toy_swing", "A large soft hanging toy swinging past on a rope: a whoosh and a creak of the rope, a little jingle bell.", 1.5, False, "Round 18: the toy boulevard's swinging obstacles"),
+    ("cat_gate_chime", "A small bright chime as a racer passes through a glowing gate, a soft sparkle.", 1, False, "Round 18: a race gate passed")
 ]
 
 

@@ -124,6 +124,7 @@ namespace Seven
             var baseData = main != null ? main.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>() : null;
             UI.Build();
             var canvas = UI.GetComponentInChildren<Canvas>(true);
+            if (!UiOverlay.Off && UiOverlay.RendererIndex >= 0) { UiOverlay.EnsureNow(); ChapterCapture.I?.Log("subtitle overlay camera (QF25 2): the shared UI camera at the world origin (never moves with the gameplay camera)"); return; }
             if (main == null || baseData == null || canvas == null || UiRendererIndex < 0) { ChapterCapture.I?.Log("subtitle overlay camera: not set up (no UI renderer) - subtitles stay on the main camera"); return; }
             var go = new GameObject("SubtitleCamera"); go.transform.SetParent(main.transform, false);
             var ui = go.AddComponent<Camera>();

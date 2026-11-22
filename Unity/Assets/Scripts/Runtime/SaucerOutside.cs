@@ -151,6 +151,8 @@ namespace Seven
         }
         // ---- QF18 (22): open space in Biaveh's system - its star large and bright, Biaveh itself a dark disc
         GameObject _bia; VeyraScene _veyraView;
+        /// <summary>QF25 (1): the window view's mothership (the cabin shots frame it).</summary>
+        public Transform VeyraEgg => _veyraView != null ? _veyraView.Egg : null;
         void LateUpdate() { if (_bia != null && _bia.activeSelf && _veyraView != null) _veyraView.Tick(); }
         void ShowBiavehSpace(bool on)
         {
@@ -162,7 +164,7 @@ namespace Seven
                 // QF23 (1): no halo quad (an untextured additive quad drew as a square)
                 // QF23 (1): the SAME composition as BIA_01 (VeyraScene, scaled to the Saucer scene's 2.5 km camera): the saucer
                 // among Veyra's rings, the white mothership in the ring plane, ice drifting in front of it and behind it
-                _veyraView = VeyraScene.Build(_bia.transform, new Vector3(0f, 1.5f, 0f), 0.24f, 23);
+                _veyraView = VeyraScene.Build(_bia.transform, new Vector3(0f, 1.5f, 0f), 0.24f, 23, true, new Vector3(0f, -0.06f, 1f), 2500f);   // QF25 (1): the egg straight out of the front window (WindowA = +z), the planet inside the 2.5 km camera
                 Debug.Log("[Seven] window view (QF22): open space at Veyra - its star, Veyra and its rings");
             }
             if (_bia != null) _bia.SetActive(on);

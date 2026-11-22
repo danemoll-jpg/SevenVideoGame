@@ -20,6 +20,8 @@ namespace Seven
             public bool IsCat => Speaker == "cat";
             /// <summary>Round 11: the subtitle name when it is not "7" / "Cat" ("Panther", "Guardian", "Attendant").</summary>
             [System.NonSerialized] public string Label;
+            /// <summary>QF25 (3): the script repeats this line on purpose (race call-outs, barks) - the repeat check allows it.</summary>
+            [System.NonSerialized] public bool Repeat;
         }
 
         public List<Line> Lines = new List<Line>();

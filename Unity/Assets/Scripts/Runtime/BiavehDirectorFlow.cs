@@ -376,7 +376,7 @@ namespace Seven
                 // resident explains (seedlings for the upper gardens: every district grows a few for the others)
                 var tray = Seedlings != null ? Seedlings.position : (r1 != null ? r1.transform.position + Vector3.up * 1.1f : P7);
                 { var d = Flat(tray - P7).normalized; var sd = Vector3.Cross(Vector3.up, d); Shoot(P7 + Vector3.up * 1.55f - d * 0.55f + sd * 0.45f, tray, 34f, 0.01f); }
-                yield return DialogueFraming.Over("the overflowing tray of seedlings (QF24 11)", Say("BIA_06", 2, 2));   // What are you carrying?
+                yield return DialogueFraming.Over("the overflowing tray of seedlings (QF24 11)", SayIds("BIA_06_02"));   // What are you carrying? (QF25 3: the id alone - Say(2, 2) also took the inserted 02a / 02b, which then played again)
                 yield return Shot("qf24_11_what_are_you_carrying_the_tray");
                 if (r1 != null) TwoShot((P7 + r1.transform.position) * 0.5f, Vector3.Cross(Vector3.up, Flat(r1.transform.position - P7).normalized), 3.0f, 1.2f, 1.2f, 42f, 0.4f);
                 yield return SayIds("BIA_06_02a", "BIA_06_02b"); yield return Say("BIA_06", 3, 4);   // (02a) Seedlings for the upper gardens... / (02b) They look ready to plant themselves. / They were smaller when I left home. / Heh. Good luck.

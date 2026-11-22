@@ -91,7 +91,23 @@ namespace Seven
         bool _orbHold;
         /// <summary>QF23 (1): the ship's own window view (a small Veyra round the deck) is hidden while the camera is out at the
         /// exterior stage (from up there it showed as a second, small Veyra far below).</summary>
-        void Win(bool on) { if (_win == null) _win = GameObject.Find("Outside_SpaceBiaveh"); if (_win != null) _win.SetActive(on); }
+        void Win(bool on)
+        {
+            if (_win == null) _win = GameObject.Find("Outside_SpaceBiaveh"); if (_win != null) _win.SetActive(on);
+            // QF25 (1): the exterior Veyra (30 km of planet) only for exterior shots - from the cabin the window view shows it
+            if (_veyra != null && _veyra.Root != null && !_insideShip) _veyra.Root.gameObject.SetActive(!on);
+        }
+        bool _insideShip;
+        /// <summary>QF25 (1): the open-space shot round the chair framed on the mothership - from behind and beside her, over her
+        /// shoulder at the white egg straight out ahead (the window view's ship), her profile at the edge of the frame.</summary>
+        void OpenSpaceOnTheShip()
+        {
+            var wf = Flat(Polar(9f, WindowA, 0f)).normalized; var side = Vector3.Cross(Up, wf);
+            var cam = PilotHead - wf * 1.5f + side * 1.15f + Up * 0.35f;
+            var egg = SaucerOutside.I != null && SaucerOutside.I.VeyraEgg != null ? SaucerOutside.I.VeyraEgg.position : PilotHead + wf * 400f;
+            var look = cam + ((egg - cam).normalized * 0.8f + (PilotHead - cam).normalized * 0.2f).normalized * 10f;
+            Cut(cam, look, 60f);
+        }
         GameObject _win;
 
         // ------------------------------------------------------------------------------------------ BIA_01 + BIA_02
@@ -106,16 +122,20 @@ namespace Seven
             var stage = TravelStage.I; Transform saucer = null; Vector3 p0 = new Vector3(0f, 400f, 0f);
             if (stage != null && stage.Saucer != null) { saucer = stage.Saucer; var holder = saucer.parent != null ? saucer.parent.gameObject : saucer.gameObject; holder.SetActive(true); p0 = saucer.position; }
             BuildExterior(p0); Approach(false); Win(false);
-            var mainCam = Director.Cam != null ? Director.Cam.GetComponent<Camera>() : Camera.main; if (mainCam != null) { _far0 = mainCam.farClipPlane; mainCam.farClipPlane = 12000f; }
+            var mainCam = Director.Cam != null ? Director.Cam.GetComponent<Camera>() : Camera.main; if (mainCam != null) { _far0 = mainCam.farClipPlane; mainCam.farClipPlane = 60000f; }   // QF25 (1): Veyra is a planet (30 km out at this scale)
             MusicSystem.Play("biaveh_mothership", 3f);
             // EXTREME WIDE: Veyra huge beyond, its rings crossing the frame; the saucer above the band of ice; the white egg
             // rising out of the ring plane among the drifting ice
             var n = _veyra.RingNormal; var toEgg = (_veyra.EggPos - p0).normalized; var side = Vector3.Cross(n, toEgg).normalized;
             var camA = p0 - toEgg * 70f + side * 26f + n * 34f;
-            var lookA = Vector3.Lerp(_veyra.EggPos, _veyra.Planet.position, 0.3f);
-            for (float t = 0f; t < 0.2f; t += Time.deltaTime) { ExteriorTick(); Cut(camA, lookA, 58f); yield return null; }
+            // QF25 (1): it opens on Veyra's rings for a moment (looking down past the ship at the planet's curve), then settles
+            // on the mothership - the white egg in front of the vast ringed planet
+            var toPlanet = (_veyra.Planet.position - camA).normalized;
+            var lookRings = camA + Vector3.Slerp(toEgg, toPlanet, 0.55f) * 1700f;
+            for (float t = 0f; t < 0.2f; t += Time.deltaTime) { ExteriorTick(); Cut(camA, lookRings, 58f); yield return null; }
             yield return UI.Fade(0f, 1.4f);
-            for (float t = 0f; t < 3.2f; t += Time.deltaTime) { ExteriorTick(); if (saucer != null) saucer.position = p0 + toEgg * t * 6f; Cut(camA + toEgg * t * 5f, lookA, 58f); yield return null; }
+            yield return ShotV("ba01a_opens_on_veyras_rings");
+            for (float t = 0f; t < 3.2f; t += Time.deltaTime) { ExteriorTick(); if (saucer != null) saucer.position = p0 + toEgg * t * 6f; float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 2.4f)); Cut(camA + toEgg * t * 5f, Vector3.Lerp(lookRings, _veyra.EggPos, u), Mathf.Lerp(58f, 50f, u)); yield return null; }
             yield return ShotV("ba01_extreme_wide_the_white_mothership_in_veyras_rings");
             // one orb crosses the foreground: the mothership is still far away
             if (_orbs != null && _orbs[1] != null) { var o = _orbs[1]; for (float t = 0f; t < 2.4f; t += Time.deltaTime) { ExteriorTick(); o.position = camA + toEgg * 220f + side * Mathf.Lerp(-160f, 160f, t / 2.4f) + n * 10f; Cut(camA + toEgg * 16f, _veyra.EggPos - n * 120f, 50f); yield return null; } }
@@ -134,7 +154,7 @@ namespace Seven
             WindowOnTheAsteroid();
             yield return ShotV("ba03_the_window_veyra_the_white_mothership");
             yield return SayB("BIA_01", 3, 4);                   // That's the station? / Their mothership. Twenty-six miles across.
-            OpenSpaceShot();
+            OpenSpaceOnTheShip();
             for (float t = 0f; t < 8f && Director.Reveal != null && Director.Reveal.Progress < 0.99f; t += Time.deltaTime) yield return null;   // the dissolve has finished
             yield return ShotV("ba03b_open_space_round_the_chair_veyras_rings");
             CutPilot("lap");
@@ -221,6 +241,7 @@ namespace Seven
             _ik.ReleaseAll("BIA_02 ends");
             if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
             yield return UI.Fade(1f, 1.2f);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"EMPHASIS (QF25 1) summary: {QF25Emphasis.Shots} shots with Veyra in them, framed on the mothership {QF25Emphasis.Shots - QF25Emphasis.Planet}, mainly the planet {QF25Emphasis.Planet} (must be 0)");
             if (DemoBoot.CaptureDir != null) Cap?.Log("mothership arrival aboard done -> the Biaveh scene (the receiving berth)");
             UnityEngine.SceneManagement.SceneManager.LoadScene("Biaveh");
         }
@@ -232,6 +253,7 @@ namespace Seven
         IEnumerator InsideTheMothership(Transform saucer)
         {
             if (_inside == null || saucer == null) { yield return SayB("BIA_02", 11, 14); yield break; }
+            _insideShip = true;
             if (_veyra != null && _veyra.Root != null) _veyra.Root.gameObject.SetActive(false);   // the outside matches where they are
             if (_hullSection != null) _hullSection.SetActive(false);
             Approach(false); Win(false);

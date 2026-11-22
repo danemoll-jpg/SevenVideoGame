@@ -137,8 +137,31 @@ namespace Seven
             return null;
         }
         /// <summary>QF24 (3): the summary line for the check run (scene end).</summary>
+        // ---- QF25 (3): no line plays twice in one scene unless the script repeats it, and no two lines with the same text
+        static string _repScene; static readonly Dictionary<string, int> _repIds = new Dictionary<string, int>(); static readonly Dictionary<string, string> _repText = new Dictionary<string, string>();
+        public static int RepeatIds, RepeatTexts, RepeatAllowed;
+        static readonly List<string> _repAt = new List<string>();
+        static readonly System.Text.RegularExpressions.Regex Bark = new System.Text.RegularExpressions.Regex(@"_(T|POS|LEAD|BEHIND|BARK|AD|CALL)\d", System.Text.RegularExpressions.RegexOptions.Compiled);
+        static void NoteRepeat(VoiceBank.Line line)
+        {
+            var sc = UnityEngine.SceneManagement.SceneManager.GetActiveScene().name + "#" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().handle;
+            if (sc != _repScene) { _repScene = sc; _repIds.Clear(); _repText.Clear(); }
+            bool allowed = line.Repeat || (line.Id != null && Bark.IsMatch(line.Id));
+            string key = line.Id ?? line.Text;
+            _repIds.TryGetValue(key, out int n); _repIds[key] = n + 1;
+            if (n > 0)
+            {
+                if (allowed) RepeatAllowed++;
+                else { RepeatIds++; if (_repAt.Count < 16) _repAt.Add($"{line.Id} again in {sc}"); LogCapture($"VOICE REPEAT (QF25 3): {line.Id} played a second time in {sc} - '{line.Text}'"); }
+            }
+            var tk = (line.Speaker ?? "") + "|" + (line.Text ?? "").Trim().ToLowerInvariant();
+            if (!string.IsNullOrEmpty(line.Text) && _repText.TryGetValue(tk, out var other) && other != line.Id && !allowed)
+            { RepeatTexts++; if (_repAt.Count < 16) _repAt.Add($"{line.Id} = {other} (same text)"); LogCapture($"VOICE REPEAT (QF25 3): {line.Id} has the same text as {other} (already played in {sc}) - '{line.Text}'"); }
+            else _repText[tk] = line.Id;
+        }
         public static void ReportOverlaps(string where)
         {
+            LogCapture($"VOICE REPEAT (QF25 3) {where}: a line id played twice {RepeatIds}, two ids with the same text {RepeatTexts} (both must be 0); repeats the script asks for {RepeatAllowed}{(_repAt.Count > 0 ? " - " + string.Join("; ", _repAt) : "")}");
             LogCapture($"VOICE OVERLAP (QF24 3) {where}: lines {LinesTimed}, queued behind another {Queued}, overlapping {Overlaps} (must be 0){(_overlapAt.Count > 0 ? " - " + string.Join("; ", _overlapAt) : "")}");
         }
 
@@ -157,6 +180,7 @@ namespace Seven
             StopReactionsUnder(line);
             Current = line;
             Played.Add(line.Id);
+            NoteRepeat(line);
             var src = line.IsCat ? (far ? _catFar : _cat) : line.Speaker == "nela" ? _cat : _seven;   // Nela (the mothership) speaks telepathically too: Panther's treatment
             UI?.ShowSubtitle(line.Label ?? (line.IsCat ? "Cat" : "7"), line.Text, line.IsCat, far);
             LinesStarted++;

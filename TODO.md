@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF25: Dan's 0.17.3 review (Dan, 2026-11-22) — to do (run before Round 18)
+## Quick fix QF25: Dan's 0.17.3 review (Dan, 2026-11-22) — done, status below; release 0.17.4
 
 1. **Veyra is far too small next to the mothership, and the shots favour the planet.** Dan: "The mothership is way large in
    comparison to the planet, the planet should be much bigger. Also, the emphasis should be on the mothership, so not sure why it
@@ -226,6 +226,44 @@ Commit first. All standing rules + the repeat-item rule. Release the next patch;
     returns. Every cutscene / talk must restore the gameplay camera's post-processing on exit (including when it's skipped or
     interrupted), game-wide. Add a build check that the gameplay camera's volume / depth of field is back to normal within a frame of
     control returning after every talk.
+
+## QF25 — status (2026-11-22): done, exe-verified off-screen; release 0.17.4 (`game-1704`, published)
+1. **Veyra's scale and the mothership emphasis** — `VeyraScene.Build` rewritten (one builder for the BIA_01 exterior and the window
+   view): the mothership lies straight along the view (`eggDir`: the window's direction, +z; before it was turned 22° aside and the
+   planet sat in the middle); Veyra is a planet - a fine 160-segment sphere with dark grey bands and a bright limb, radius 21.6 km at
+   30 km (angular radius 46° = 2.4× the ship's), its centre 33° below the ship so its curve fills the lower background and the white
+   egg stands in front of it with its top against space; broad pale rings round it; the ring ice the ship is stationed among drifts in
+   a band round the egg. The planet's distance is capped by the camera's far clip (the window view: 1.25 km, same angular size); BIA_01's
+   camera reaches 60 km while the exterior is shown, and the exterior Veyra is hidden during cabin shots (the window view shows it).
+   BIA_01's establishing shot opens on the rings / the planet's curve for a moment (`ba01a`) and settles on the ship; the "open space
+   round the chair" shot is now over her shoulder at the ship (it showed only the planet). Every shot with Veyra in it logs
+   `EMPHASIS (QF25 1)` (ship in frame, share of the frame for the ship / the planet): **16 shots, mainly the planet 0** (before: the
+   chair shot was all planet). Build check `VEYRA SCALE (QF25 1)`: PASS (both scales: planet 2.4× the ship, behind it, inside the far
+   clip, the view framed on the ship). Before / after: `Docs/Previews/qf25/before_*.png` / `after_*.png`.
+2. **Shaky subtitles at the iris** — the cause: every screen canvas was Screen-Space-Camera 0.11 m in front of the gameplay camera (or a
+   UI camera parented to it); during the approach that camera is ~4 km from the world origin (the passage stage), where a float step
+   is ~0.5 mm = ~2-4 px at the canvas plane, so the subtitle quad's corners rounded differently every frame as the camera moved. Fix at
+   the root, game-wide: `UiOverlay` - ONE overlay camera at the world origin (never parented to the gameplay camera), only the UI layer,
+   the plain UI renderer (index written by the builder to `Resources/UI/ui_renderer`), stacked on whatever camera is main; every
+   Screen-Space-Camera canvas that pointed at the main camera moves onto it (subtitles, objectives, prompts, hints, markers, the pause
+   menu, the menus). Check runs log `SUBTITLE STILL (QF25 2)`: **3,326 frames with a subtitle, the camera moving in 1,286 - largest move
+   0.00 px**. Build check `SUBTITLE STILL (QF25 2)`: a camera 4.1 km out, shaken (0.22 m / 3°) and travelling - the subtitle through the
+   UI camera moves 0.000 px (the old setup: 1.8 px per float step). `-noqf25fix` = the 0.17.3 canvases.
+3. **Duplicate seedlings lines (BIA_06)** — the cause: `Say("BIA_06", 2, 2)` also takes the inserted lines 02a / 02b (the mothership's
+   numbered ranges include lines that share a number), and the next call named them again - 02a and 02b played twice. "What are you
+   carrying?" is now played by its id. The exchange plays once, in order: 01, 02, 02a, 02b, 03, 04 (check run `-biacp 2`). No stale
+   line or audio is left (every chapter's voice folder matches its script; the Venus taunts are used by code). Checks, every chapter:
+   runtime `VOICE REPEAT (QF25 3)` (an id twice in one scene, or two ids with the same text - both 0 unless marked `repeat`): 0 / 0;
+   build check `DUPLICATE LINES (QF25 3)` (a range that takes inserted lines + the same lines named by id, in any chapter's code; two ids
+   with the same text in any dialogue data): PASS, 0 / 0.
+- Standing rules added to `CLAUDE.md` ("Scale, screen text and lines — QF25").
+- Testing: two builds (the first's captures showed the planet washed out by the haze - darker bands, a limb and brighter rings in the
+  second), three check runs (~5 game-minutes).
+
+## For Dan to check (QF25)
+- BIA_01 from the start: the white mothership in front of a huge ringed planet in every exterior shot; the planet only backdrop.
+- The iris approach and entry: the subtitles stay perfectly still.
+- BIA_06 at the bridge: "What are you carrying?" and the seedlings lines play once each.
 
 ## Round 18: Chapter "Cattalus — Panther's homeworld", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do after QF25
 Commit a checkpoint first. Runs overnight. **Never stop to ask**: make the reasonable call and list it under "Round 18 — decisions

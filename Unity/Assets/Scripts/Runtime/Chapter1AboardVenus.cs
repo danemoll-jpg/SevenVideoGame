@@ -88,7 +88,19 @@ namespace Seven
             }
         }
 
-        IEnumerator ShotV(string name) { if (DemoBoot.CaptureDir != null && Cap != null) yield return Cap.Shot(name); }
+        IEnumerator ShotV(string name)
+        {
+            if (DemoBoot.CaptureDir == null || Cap == null) yield break;
+            // QF25 (1): every shot with Veyra in it says what it is framed on (the mothership, never mainly the planet)
+            var cam = Director.Cam != null ? Director.Cam.GetComponent<Camera>() : Camera.main;
+            foreach (var v in VeyraScene.All)
+                if (v != null && v.Root != null && v.Root.gameObject.activeInHierarchy)
+                {
+                    bool ok = v.Emphasis(cam, out var info); QF25Emphasis.Count(ok);
+                    Cap.Log($"EMPHASIS (QF25 1) {name} ({(v.Scale < 0.5f ? "window view" : "exterior")}): {info} -> {(ok ? "on the mothership" : "MAINLY THE PLANET")}");
+                }
+            yield return Cap.Shot(name);
+        }
 
         IEnumerator VenusDebrief()
         {
