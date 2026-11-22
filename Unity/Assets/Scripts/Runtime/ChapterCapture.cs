@@ -115,6 +115,12 @@ namespace Seven
             if (MachinistRig.Steps > 0 || MachinistRig.Servos > 0) Log($"MACHINIST STEPS (QF21 5): {MachinistRig.Steps} heavy footfalls (four takes, never twice in a row), servo whirs {MachinistRig.Servos}");
             if (AsteroidDirector.FramedLines > 0) Log($"MACHINIST FRAMING (QF21 7): {AsteroidDirector.FramedLines} lines framed - wide two-shots {AsteroidDirector.FramedWide}, low angles on him {AsteroidDirector.FramedHim}, her from his side {AsteroidDirector.FramedHer}; tracking shots {AsteroidDirector.Tracks}; worst armour share with her hidden {AsteroidDirector.ArmourWorst * 100f:0} % (must be 0)");
             if (ChapterSeven.BladeFrames > 0) Log(ChapterSeven.BladeSummary());   // QF21 (9)
+            if (TkAudit.Done > 0) Log(TkAudit.Summary());                          // QF24 (14)
+            DialoguePlayer.ReportOverlaps("the whole run");                        // QF24 (3)
+            MusicSystem.Report();                                                  // QF24 (21)
+            if (RidePose.Checks > 0) Log(RidePose.Summary());                      // QF24 (15)
+            Log($"POST FX (QF24 24): close-up depth of field found still on when control returned {CloseUpFocus.Releases}x - each released within a frame (longest {CloseUpFocus.LongestOnWithControl * 1000f:0} ms)");
+            if (MothershipInterior.Shown > 0 || RecordDisplay.Built > 0) Log($"QF24 (2/4): record displays built {RecordDisplay.Built}, the mothership's interior shown {MothershipInterior.Shown}x");
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");
             File.WriteAllText(Path.Combine(DemoBoot.CaptureDir, "capture_log.txt"), _log.ToString());

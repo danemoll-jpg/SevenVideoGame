@@ -206,7 +206,7 @@ namespace Seven
             }
             Confirming = false;
             var first = select != null && Find(select) != null && Find(select).Selectable ? select : null;
-            string sys = first != null ? SystemOf(first) : SystemOf(here);
+            string sys = first != null ? Find(first).Sys : SystemOf(here);       // QF24 (23): a gateway keeps its own side
             if (sys == Bia && !BiavehOnMap) sys = Sol;
             ShowSystem(sys);
             if (first == null) foreach (var b in Bodies) if (b.Selectable && !b.Gateway && b.Sys == View && b.Id != here) { first = b.Id; break; }

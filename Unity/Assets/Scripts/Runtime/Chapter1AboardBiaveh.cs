@@ -53,7 +53,8 @@ namespace Seven
         IEnumerator SayB(string scene, int from, int to = -1) { yield return SayLines(BiavehDialogue.Scene(scene, from, to < 0 ? from : to), true); }
 
         // ------------------------------------------------------------------------------------------ the exterior (runtime)
-        Transform _ext, _iris; Vector3 _irisAt, _irisN; VeyraScene _veyra; IrisAperture _ap;
+        Transform _ext, _iris; Vector3 _irisAt, _irisN; VeyraScene _veyra; IrisAperture _ap; MothershipInterior _inside;
+        static IEnumerator Then(IEnumerator e, System.Action done) { yield return e; done(); }
         Transform _egg => _veyra != null ? _veyra.Egg : null;
         Transform[] _orbs => _veyra != null ? _veyra.Orbs : null;
         /// <summary>QF23 (1): Veyra, its rings and the WHITE mothership stationed among them (the shared VeyraScene - the same
@@ -77,8 +78,9 @@ namespace Seven
             Material Leaf(string n2, float g, float e) { var m = new Material(VeyraScene.Pearl()) { name = n2 }; if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", new Color(g, g, g)); if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", new Color(e, e, e)); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.85f); return m; }
             var leafA = Leaf("Veyra_iris_leaf_a", 0.62f, 0.10f); var leafB = Leaf("Veyra_iris_leaf_b", 0.50f, 0.07f);
             _ap = IrisAperture.Build(_iris, HoleR, 7.6f, 10, leafA, leafB, Markers.DarkGloss());
-            // inside: the guide lights toward the receiving berth
-            for (int i = 0; i < 16; i++) { var g = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(g.GetComponent<Collider>()); g.name = "GuideLights"; g.transform.SetParent(_ext, false); g.transform.position = _irisAt + fwd * (12f + i * 8f) + Vector3.down * 10f; g.transform.localScale = Vector3.one * 1.2f; g.GetComponent<Renderer>().sharedMaterial = Markers.Additive(1.4f); }
+            // QF24 (4): inside - the mothership's interior behind the iris (the hall, the guide lights, the receiving berth);
+            // hidden until the iris has shut behind the saucer
+            _inside = MothershipInterior.Build(_ext, _irisAt);
             if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_01 exterior (QF23 1): the mothership WHITE (pearl hull, emission) in Veyra's ring plane; iris (QF23 4): {IrisInfo()}");
         }
         const float HoleR = 8.2f;
@@ -124,8 +126,10 @@ namespace Seven
             yield return EnterStaging("BIA_01");
             PlaceRecordsOnArmAsteroid();
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
+            CutPilot("ots");                                     // QF24 (7): "Is that Biaveh?" over her shoulder at the world she asks about
+            yield return DialogueFraming.Over("Veyra through the window, past her shoulder (QF24 7)", SayB("BIA_01", 1, 1));
             CutPilot("two");
-            yield return SayB("BIA_01", 1, 2);                   // Is that Biaveh? / Veyra. The route leads to a Biavian station here.
+            yield return SayB("BIA_01", 2, 2);                   // Veyra. The route leads to a Biavian station here.
             StartCoroutine(HullAway(true, "BIA_01", "ba02h"));
             WindowOnTheAsteroid();
             yield return ShotV("ba03_the_window_veyra_the_white_mothership");
@@ -147,6 +151,11 @@ namespace Seven
             yield return ShotV("ba05_an_orb_holds_position_near_their_approach");
             Win(true); CutPilot("two");
             yield return SayB("BIA_02", 1, 5);                   // Welcome to Veyra. I am Nela... / Oh-hello. / Forgive me... / A little... / A considerable improvement...
+            // QF24 (4): the vanish effect ends here, before the door - the hull comes back round them while they are still
+            // in the cabin; from the door on, everything is shown from outside the saucer
+            CutPilot("wide");
+            yield return HullAway(false, "BIA_01");
+            yield return ShotV("ba05b_the_hull_back_before_the_door");
             // QF23 (4): EXTERIOR - the orb moves aside; the saucer flies right up to the door (a closed, seamless circle of white
             // hull, the fine spiral seam) and HOVERS in front of it while they talk about it
             Approach(true); _ap.Set(0f); Win(false);
@@ -165,8 +174,11 @@ namespace Seven
             }
             yield return ShotV("ba06_the_saucer_hovers_at_the_closed_door");
             // the conversation about the door, hovering in front of it (a slow drift round the saucer, the door behind it)
-            var talk = StartCoroutine(SayB("BIA_02", 6, 10));    // That's the door? / Apparently. / All that ship... / You have sufficient clearance... / Slowly sounds excellent.
-            for (float t = 0f; Dlg.Busy || t < 0.5f; t += Time.deltaTime)
+            // QF24 (3): the door talk runs beside the hover shot; the scene waits for the TALK to finish (before, it waited on
+            // Dlg.Busy, which is false in the pause between two lines - the scene moved on and lines 11-13 started over 7-10)
+            bool doorTalkDone = false;
+            StartCoroutine(Then(SayB("BIA_02", 6, 10), () => doorTalkDone = true));   // That's the door? / Apparently. / All that ship... / You have sufficient clearance... / Slowly sounds excellent.
+            for (float t = 0f; !doorTalkDone || t < 0.5f; t += Time.deltaTime)
             {
                 ExteriorTick();
                 if (saucer != null) saucer.position = hover + Vector3.up * Mathf.Sin(t * 1.3f) * 0.25f;
@@ -194,6 +206,7 @@ namespace Seven
                 yield return null;
             }
             // REVERSE from inside: the leaves spiral shut very quickly behind them - a solid clack; the ringed planet disappears
+            if (_inside != null) _inside.gameObject.SetActive(true);      // QF24 (4): the interior round the reverse shot
             var inside = _irisAt + Vector3.forward * 46f + Vector3.up * -3f + Vector3.right * 4f;
             AudioKit.Play("bia_iris_snap_shut", null, 1f);
             for (float t = 0f; t < 0.35f; t += Time.deltaTime) { ExteriorTick(); _ap.Set(1f - Mathf.SmoothStep(0f, 1f, t / 0.35f)); Cut(inside, _irisAt, 44f); if (t > 0.15f && t < 0.19f) yield return ShotV("ba08_reverse_the_leaves_spiral_shut"); yield return null; }
@@ -201,13 +214,8 @@ namespace Seven
             yield return Wait(0.5f);
             yield return ShotV("ba08b_shut_the_planet_gone");
             if (_seamR != null) Glowing.Set(_seamR, 0f);
+            yield return InsideTheMothership(saucer);
             if (mainCam != null && _far0 > 0f) mainCam.farClipPlane = _far0;
-            Win(true); CutPilot("lap");
-            yield return SayB("BIA_02", 11, 13);                 // There. Plenty of room. / Then you can stop holding yours. / Heh. You noticed.
-            CutPilot("two");
-            yield return SayB("BIA_02", 14, 14);                 // Follow the lights to the receiving berth... We have an intruder in the inner districts.
-            yield return ShotV("ba09_follow_the_lights");
-            yield return HullAway(false, "BIA_01");              // QF23 (3): the hull back as the talk ends
             BiavehState.CompleteScene("BIA_01"); BiavehState.CompleteScene("BIA_02");
             BiavehState.Reach(BiavehLayout.CpBerth);
             _ik.ReleaseAll("BIA_02 ends");
@@ -217,13 +225,66 @@ namespace Seven
             UnityEngine.SceneManagement.SceneManager.LoadScene("Biaveh");
         }
 
+        /// <summary>QF24 (4) - after the iris: they are INSIDE the mothership, shown from outside the saucer only (no cabin
+        /// shots). Veyra, its rings and the orbs are behind the shut iris, so they are gone from every view; the saucer glides
+        /// along the interior approach over the rippling guide lights, the vast interior fading into the bright haze, and
+        /// settles into the receiving berth. BIA_02_11-14 play over these shots (declared voice-overs).</summary>
+        IEnumerator InsideTheMothership(Transform saucer)
+        {
+            if (_inside == null || saucer == null) { yield return SayB("BIA_02", 11, 14); yield break; }
+            if (_veyra != null && _veyra.Root != null) _veyra.Root.gameObject.SetActive(false);   // the outside matches where they are
+            if (_hullSection != null) _hullSection.SetActive(false);
+            Approach(false); Win(false);
+            _inside.gameObject.SetActive(true);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_02 inside (QF24 4): the iris shut behind them - Veyra / rings / orbs hidden {(_veyra != null && _veyra.Root != null && !_veyra.Root.gameObject.activeSelf)}, the interior shown ({_inside.LightCount} guide lights rippling toward the berth), window view off, no cabin shots from here");
+            DialogueFraming.VoiceOver = "the saucer flying inside the mothership (QF24 4: exterior only)";
+            bool done = false;
+            StartCoroutine(Then(SayB("BIA_02", 11, 14), () => done = true));   // There. Plenty of room. / ... / Follow the lights to the receiving berth...
+            var berth = _inside.Berth.position;
+            float z0 = 24f, z1 = MothershipInterior.BerthZ - 30f;
+            // 1) tracking beside and below: the saucer glides in, the hall opening up ahead, the lights rippling forward
+            float glide = 0f; const float Speed = 16f;
+            System.Func<Vector3> P = () => saucer.position;
+            for (float t = 0f; t < 7f; t += Time.deltaTime)
+            {
+                glide += Speed * Time.deltaTime; float z = Mathf.Min(z0 + glide, z1);
+                saucer.position = _inside.Route(z) + Vector3.up * Mathf.Sin(t * 1.1f) * 0.2f;
+                Cut(P() + new Vector3(-26f, -7f, -14f), P() + Vector3.forward * 26f + Vector3.down * 4f, 50f);
+                if (t > 2.5f && t < 2.55f) yield return ShotV("ba09_inside_the_saucer_glides_in_the_guide_lights_ripple");
+                yield return null;
+            }
+            // 2) ahead and low over the route: the lights run toward the camera, the saucer following them
+            for (float t = 0f; t < 6f; t += Time.deltaTime)
+            {
+                glide += Speed * Time.deltaTime; float z = Mathf.Min(z0 + glide, z1);
+                saucer.position = _inside.Route(z);
+                var cam = _inside.Route(Mathf.Min(z + 70f, z1 + 20f)) + new Vector3(9f, -30f, 0f);
+                Cut(cam, P() + Vector3.down * 2f, 44f);
+                if (t > 2f && t < 2.05f) yield return ShotV("ba09b_inside_ahead_the_lights_lead_to_the_berth");
+                yield return null;
+            }
+            // 3) high and wide: the saucer settles into the receiving berth, the docking arms round it
+            var from = saucer.position;
+            for (float t = 0f; t < 5f || !done; t += Time.deltaTime)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 5f));
+                saucer.position = Vector3.Lerp(from, berth, u);
+                Cut(berth + new Vector3(-48f, 26f, -40f), Vector3.Lerp(from, berth, 0.7f), 46f);
+                if (t > 4.6f && t < 4.65f) yield return ShotV("ba09c_inside_the_saucer_settles_into_the_receiving_berth");
+                if (t > 25f) break;                                   // watchdog
+                yield return null;
+            }
+            DialogueFraming.VoiceOver = null;
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_02 inside (QF24 4): the saucer settled in the receiving berth ({Vector3.Distance(saucer.position, berth):0.00} m from the pad); BIA_02_11-14 played over exterior shots; cabin shots in this stretch 0");
+        }
+
         // ------------------------------------------------------------------------------------------ BIA_12 + BIA_13
         IEnumerator BiavehHome()
         {
             ShipConsole.StoryLock = true; InGalleyScene = true;
             Seven.Frozen = true; Seven.Cutscene = true; Director.Cam.Hold = true;
             Cat.ForceTarget = null; Cat.enabled = false;
-            MusicSystem.Stop(0.2f);
+            MusicSystem.Board();                                 // QF24 (21): back aboard = the saucer theme, every time (it was stopped here until the chair talk)
             if (!BiavehState.SceneDone("BIA_12"))
             {
                 // straight from the beam-up: she sits on the floor at the arrival point; he walks into her lap
@@ -271,7 +332,7 @@ namespace Seven
                 BiavehState.CompleteScene("BIA_12");
                 yield return UI.Fade(1f, 1.2f);                  // end the scene here - no extra joke
             }
-            // LATER: the navigation chair, Panther in her lap
+            // LATER: the navigation chair, Panther in her lap (the saucer theme already playing since boarding)
             MusicSystem.Play("aboard_saucer", 3f);
             yield return EnterStaging("AST_10");
             PlaceRecordsOnArmAsteroid();
@@ -281,7 +342,9 @@ namespace Seven
             BiavehState.Reach(BiavehLayout.CpDone);
             WorldFlags.MarkBiavehDone();
             var con = ShipConsole.I;
-            if (WorldFlags.AsteroidDone && WorldFlags.CattalusDue)
+            var nextTalk = WorldFlags.NextTalk("biaveh");                          // QF24 (22): both done = the Cattalus talk, whatever was seen before
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"NEXT TALK (QF24 22): the mothership finished, asteroid done {WorldFlags.AsteroidDone}, mothership done {WorldFlags.BiavehDone} -> {nextTalk}");
+            if (nextTalk == "BIA_13B")
             {
                 if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_13B (the Cattalus lead) plays: {WorldFlags.Summary()}");
                 NavHand(true); CutPilot("ots");

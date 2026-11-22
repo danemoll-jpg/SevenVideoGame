@@ -57,12 +57,40 @@ apply to every asset and scene:
   borrowed gesturing talk clip); at most one restrained gesture on a key line. Restrained characters stay locked.
 
 ## Staging, pacing and the world — STANDING RULES (Dan, QF23, 2026-11-21; every chapter, now and later)
-- **Arrival / strategy talks happen in the pilot's chair at the front window with the "vanish ship" effect on.** When they
-  first arrive at a world and talk about it and what to do, 7 sits in the pilot's chair (Panther in her lap, or on the
-  adjoining seat where the script says) and the hull fades away round them as the talk starts and comes back as it ends
-  (`Chapter1Aboard.HullAway(true/false, tag, shot)`, staging table entry = `Stage.Chair`). Every chapter: EUR_01, MAR_01,
-  AST_01, BIA_01 + BIA_02. **Recaps / debriefs keep QF16's varied staging** (sofa, floor, galley, window); next-destination
-  choices stay at the navigation console.
+- **Arrival / strategy talks happen in 7's EGG LOUNGE CHAIR facing the window, with the "vanish ship" effect on (QF24 1).**
+  The saucer has TWO chairs - never mix them up: **7's sculpted egg lounge chair on the tulip pedestal by the window**
+  (`FightDemoBuilderSaucer.cs` "7's chair", `ChairPivot` / `SeatPoint`: the original chair the vanish reveal was built round)
+  and **the pilot's chair at the console** (Round 13, `ShipConsole.PilotSeat`). When they first arrive at a world and talk
+  about it and what to do, 7 sits in the EGG chair, Panther in her lap, and the hull fades away round them as the talk starts
+  and comes back as it ends (`Chapter1Aboard.HullAway(true/false, tag, shot)`, centred on the egg seat; staging table entry =
+  `Stage.Chair` = the egg chair; `_eggSeat` / `SeatT` move every framing, the lap, the stroke and the records display with
+  it). Every chapter: EUR_01, MAR_01, AST_01, BIA_01 + BIA_02. **The pilot's chair at the console is only for the
+  next-destination choices at the star map** (C13, MAR_13, AST_11, BIA_13: `Stage.ChairCatConsole` / `Stage.Pilot`) and the
+  debriefs that use it; **recaps / debriefs keep QF16's varied staging** (sofa, floor, galley, window).
+- **Her records are what she has really collected (QF24 2):** `RecordSet` reads the player's OWN saves (+ a completed chapter
+  counts), every scene, every start path (Scene Select shows the save's real collection); they rest on `RecordDisplay` (a
+  side table with a display ring beside the seat in use), each in its own place - never stacked, never at her knees.
+- **One dialogue line at a time, game-wide (QF24 3):** `DialoguePlayer.PlayOne` waits for any line (any player) and its
+  reaction to finish; lines fired by events / timers queue; a skipped line's audio stops. Scenes that run a talk beside a
+  shot wait for the TALK coroutine, never `Dlg.Busy` (false in the pause between lines). Check runs log `VOICE QUEUE` and
+  `VOICE OVERLAP (QF24 3)` (must be 0).
+- **What is outside always matches where the saucer is (QF24 4):** window views, the vanish view and every backdrop show the
+  saucer's current place, never the previous one; once inside a structure (the mothership after its iris) the story is shown
+  from outside the saucer (no cabin shots with the wrong world behind them).
+- **The bike's way out stays clear (QF24 5):** nothing stands in front of the bike hold (the hatch's width, out to where the
+  bike lands) or in the beam column - build check `HOLD CORRIDOR (QF24 5)` on every scene, fails the build.
+- **A line that points at something shows the thing (QF24 7):** "What was that?", "Look at this", "There." - the shot shows
+  the thing (her voice over it: `DialogueFraming.Over(...)`) or her clearly looking at it, never her facing elsewhere.
+- **Telepathic lines are never over an empty set (QF24 13):** the speaker check exempts Panther's (and an unseen Nela's) lines
+  from "the speaker in frame" but not from "something in frame": 7 must be in the shot, or the cutaway to Panther aboard
+  (`AboardCut`), or a declared voice-over shot. Exchanges with him: her face for her lines, the cutaway for his.
+- **Telekinesis visibly moves what it acts on (QF24 14):** the object rises in her glow, floats and lands / slots in, then the
+  effect. Every telekinesis interaction logs `TK MOVED (QF24 14)`; the summary `TK AUDIT` must show 0 completed without moving.
+- **Her riding pose is checked every build (QF24 15):** `RIDE POSE (QF24 15)` - her "ride" state vs the pose as made (fails
+  the build on a mismatch); in play: hips on the seat, palms in the grips, feet on the panels, head above the fairing. The
+  QF23 leg / spine squaring in `ApplyMixamoHumanMap` is ONLY for Mixamo downloads (`squareLegs`), never her own poses.
+- **Talking bosses get close-ups (QF24 9):** every line of a boss / villain in a cutscene: a close-up / medium close-up of HIS
+  face (low angle when he is above her), a soft white key light so it reads against the fog; her replies over her shoulder.
 - **Never lock the player while an NPC walks somewhere.** Either cut (the NPC is already there; at most ~2 s of walking on
   screen - `AsteroidDirector.TrackWalk` cuts longer walks itself), give control back (she can move; the scene picks up when
   she's close), or walk together briefly. Shorten any cutscene beat where nothing happens for more than a couple of seconds.
@@ -79,10 +107,14 @@ apply to every asset and scene:
 - **Throwables belong where they lie:** they fit the place (the mothership: Biavian canisters, torn hull panels, planters,
   light-globe housings, partition segments; the asteroid: gears, pipes, gauge plates; Mars: fallen stonework; Venus: stones /
   root chunks) and are placed where they'd have fallen or been left, clearly loose.
-- **No help boxes over the middle of the screen.** Hints sit at the bottom, above the subtitles (`ChapterUI.Hint`). Boss fights
-  have no controls box at the start: each fight-specific action gets a small prompt at the moment it matters, the first few
-  times only (`BossFight.Tip`: dodge / jump / block on the first telegraphs, "Close in: Punch (X) · Kick (Y)" on a stun,
-  "Takedown (Y)" when dazed, "Arc blades (RB / G)" once); the full list stays on the Controls page.
+- **No help boxes over the middle of the screen; prompts only for what is unique to the place; controller buttons only
+  (QF24 17).** Hints sit at the bottom, above the subtitles (`ChapterUI.Hint`). On-screen prompts are only for actions unique
+  to that place (a station, a seal, a switch, a device, an objective's telekinesis) - **never for moves the player already
+  knows** (dodge, jump, block, punch, kick, takedown, throw, the arc blades): no general-control tips in any boss fight or
+  chapter; the full list stays on the pause menu's Controls page. The Ratwing fight's only button prompt is "Close the
+  partition (X)" at a station in reach. **Controller buttons only, game-wide:** no keyboard keys in any prompt, hint, objective
+  or menu hint (`ControlsLegend.KeyboardPrompts = false`; the keyboard still works). Build check `PROMPTS (QF24 17)` fails on a
+  keyboard key in a player-visible string or a general-control tip in a boss fight.
 - **A boss bar never stalls silently:** when his energy waits at a phase mark for an objective, the mark pulses
   (`ChapterUI.PulseMark`, `BossFight.WaitingOnObjective`), the place to go is lit (the mothership: a beam over the station)
   and a companion calls it.
@@ -106,6 +138,24 @@ apply to every asset and scene:
   knee range differs by more than 8° in its walk.
 - **A rune touch really touches** (`VisionTouch.Into`): she steps into reach, the palm faces the shape, the fingertip gap is
   measured and corrected (logged before / after, must end within 1 cm).
+
+## Music and post-processing — STANDING RULES (Dan, QF24, 2026-11-21; every chapter, now and later)
+- **The boss track starts when the fight starts** - its first moment (control back, his bar on screen: `BossFight.Begin` ->
+  `MusicSystem.BossTrack`, a short cross-fade), never on entering the area, at the reveal or at the pre-fight talk; the
+  area's theme carries the approach.
+- **A vision fades the music down and brings it back.** The shared rune touch -> vision -> return sequence owns it
+  (`VisionTouch.Into` suspends, `Back` -> `MusicBack` resumes - or the area's theme); never `MusicSystem.Stop` before a vision.
+- **Never silent while she has control.** Boarding the saucer starts the saucer theme every time (`MusicSystem.Board`), from
+  any chapter, whatever state the music was in; a stale suspension never survives a scene load; the manager's guard brings
+  the area's theme back after ~3.5 s of silence with control (`MUSIC GUARD`) unless a director declared a deliberate, short
+  silence (`MusicSystem.Silence(why, seconds)` - the quiet passage). Check runs log `MUSIC (QF24 21)` per scene; build check
+  `MUSIC (QF24 18/20/21)`.
+- **Every talk gives the gameplay camera back clean.** A cutscene's close-up depth of field (`CloseUpFocus`) is forced off
+  within a frame whenever the player has control - skipped or interrupted talks included (`POST FX (QF24 24)`); depth of
+  field is only ever driven through `CloseUpFocus` (build check `POST-PROCESSING (QF24 24)`).
+- **The star map opens on the system the saucer is in** (QF24 23) and keeps the player's selection while open.
+- **The talk after a chapter comes from the save's completion state** (QF24 22): `WorldFlags.NextTalk` - both the asteroid
+  and the mothership done (either order) = the Cattalus talk; one = the talk pointing to the other. Build check `NEXT TALK`.
 
 ## Boss fights — STANDING RULE (Dan, QF17, 2026-11-20; every boss, now and later)
 Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing there." Never again:
@@ -453,7 +503,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–17 + QF1–QF23 complete (2026-11-21), release 0.17.2.** QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–17 + QF1–QF24 complete (2026-11-21), release 0.17.3.** QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with
@@ -841,7 +891,20 @@ scene (Round 10).
     brace, `Seize`, `LookUp` / `Gather`). Hints sit at the bottom of the screen (`ChapterUI.Hint`).
   - Moving doors / partitions are offsets from their built home (`BiavehDirector.Home/Off`).
   - Switches: `-biablades` (the mothership with the arc blades owned), `-qf23revisit`.
-History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.17.2** (QF23 status in `TODO.md`).
+- **QF24 (release 0.17.3)** — Dan's 0.17.2 review (status + "For Dan to check (QF24)" in `TODO.md`):
+  - Staging: `Chapter1Aboard._eggSeat` / `SeatT` (`Stage.Chair` = 7's egg chair, `Stage.Pilot` = the pilot's chair); `RecordDisplay`
+    (the records' side table); `MothershipInterior` (BIA_02 after the iris); `RelayDevice` + `FightDemoBuilderBiavehQF24.RelayPylon`
+    / `BiaGarden` / `BiaDetail`; `RuneSizes` (the six runes, `OctaR`); `TkAudit`; `RidePose`; `DialogueFraming.Over` / `VoiceOver` /
+    `Props`; `MusicSystem.Board` / `Silence` / `Theme` / `BossTrack` + the guard; `CloseUpFocus` releases on control;
+    `WorldFlags.NextTalk`; `ControlsLegend.KeyboardPrompts`.
+  - Build checks (`FightDemoBuilderQF24Checks.cs`): `HOLD CORRIDOR (QF24 5)`, `RIDE POSE (QF24 15)`, `NEXT TALK (QF24 22)`, `PROMPTS
+    (QF24 17)`, `RUNE TOUCH (QF24 20)`, `MUSIC (QF24 18/20/21)`, `POST-PROCESSING (QF24 24)`, `PANTHER PLACE (QF24 8)`; check-run lines
+    `VOICE OVERLAP / VOICE QUEUE (QF24 3)`, `TK AUDIT (QF24 14)`, `MUSIC (QF24 21)`, `POST FX (QF24 24)`, `STAR MAP (QF24 23)`.
+  - `ApplyMixamoHumanMap(..., squareLegs)`: the QF23 leg / spine squaring only for Mixamo downloads (never `7_ride`).
+  - Switches: `-routes biaveh_astdone` (Dan's order: the asteroid finished first). `Tools/Run-Check.ps1` = the muted, minimized,
+    Below Normal check-run launcher (`-Exe <path> -Out <dir> -Args "<switches>"`).
+History in `TODO-ARCHIVE.md`. **Next: Dan plays 0.17.3** (QF24 status in `TODO.md`).
+**Before: Dan plays 0.17.2** (QF23 status in `TODO.md`).
 **Before: Dan plays 0.17.0** (Round 17 status in `TODO.md`).
 **Before: Dan plays 0.16.2** (QF21 + QF22 status in `TODO.md`).
 **Before: Dan plays 0.16.0** (Round 16 status in `TODO.md`).

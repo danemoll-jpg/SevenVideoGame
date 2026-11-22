@@ -296,7 +296,7 @@ namespace Seven
                         float dNow = Vector3.Distance(Bike.transform.position, at.Value);
                         if (dNow > best + 30f && Time.time > _wayHintAt) { _wayHintAt = Time.time + 12f; var wh = WhichWay(at.Value); UI.Hint(wh, 6f); Hints++; Log($"OFF COURSE (QF13 9): {dNow:0} m from the light (best {best:0}) -> \"{wh}\""); }
                     }
-                    if (!SkipOffered && skip != null && Time.time - since > SkipAfter) { SkipOffered = true; UI.Hint("Y / Enter: skip this step", 6f); Log($"SKIP OFFERED: '{what}'"); }
+                    if (!SkipOffered && skip != null && Time.time - since > SkipAfter) { SkipOffered = true; UI.Hint("Y: skip this step", 6f); Log($"SKIP OFFERED: '{what}'"); }
                     if (SkipOffered && SkipButton())
                     {
                         Skips++; Log($"SKIP taken: '{what}'");

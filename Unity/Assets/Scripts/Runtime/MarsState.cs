@@ -52,6 +52,8 @@ namespace Seven
         public static bool SceneDone(string id) => D.done.Contains(id);
         public static bool CompleteScene(string id) { if (D.done.Contains(id)) return false; D.done.Add(id); Save(); return true; }
         public static bool RecordAwarded => D.recordAwarded;
+        /// <summary>QF24 (2): the record on the PLAYER'S OWN save (what she has really collected - shown in every scene, Scene Select included).</summary>
+        public static bool OwnRecordAwarded => PeekOwn().recordAwarded;
         public static int RecordAwards => D.recordAwards;
         public static bool AwardRecord() { if (D.recordAwarded) return false; D.recordAwarded = true; D.recordAwards++; Save(); return true; }
         public static void SendRoute() { if (D.route) return; D.route = true; Save(); }
@@ -165,6 +167,16 @@ namespace Seven
             // QF23 (24): an old save - every chapter finished in builds before the newer flags existed (combinedSeen, asteroidDone,
             // biavehDone, cattalusSeen all unset)
             if (what == "oldsave") Put(new R { combined = true, asteroidFound = true });
+            // QF24 (22): Dan's order - the asteroid finished first, then the mothership (BIA_13 must be the Cattalus talk, B)
+            if (what == "biaveh_astdone")
+            {
+                MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true);
+                EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c);
+                BiavehState.ClearTestSave(); BiavehState.ResetForTest();
+                AsteroidState.ClearTestSave(); AsteroidState.ResetForTest(); AsteroidState.Fake(AsteroidLayout.CpDone, true);
+                Put(new R { combined = true, combinedSeen = true, asteroidFound = true, asteroidDone = true, cattalusSeen = true });   // cattalusSeen: Dan's save had seen it once
+                SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("asteroid");
+            }
             Debug.Log("[Seven] -routes " + what + ": " + Summary());
         }
         public static bool VenusDone => VenusState.SceneDone("VEN_C12");
@@ -197,6 +209,13 @@ namespace Seven
         /// <summary>Round 16 (AST_11B): the shared Cattalus lead - once, when the asteroid AND Biaveh are complete (whichever is
         /// second), and at the console whenever it is due and hasn't played (the QF20 lesson).</summary>
         public static bool CattalusDue => AsteroidDone && BiavehDone && !Get().cattalusSeen;
+        /// <summary>QF24 (22) - the ONE decision for the talk at the end of the asteroid / the mothership, from the save's real
+        /// completion state (never from "the Cattalus lead not seen yet": Dan's save had seen it once already, so the old test
+        /// fell through to the asteroid-detour talk although the asteroid was done). Both done (either order) = the Cattalus
+        /// talk; only the one just finished = the talk that points to the other.</summary>
+        public static string NextTalk(string finished, bool asteroidDone, bool biavehDone) =>
+            asteroidDone && biavehDone ? (finished == "asteroid" ? "AST_11B" : "BIA_13B") : (finished == "asteroid" ? "AST_11A" : "BIA_13A");
+        public static string NextTalk(string finished) => NextTalk(finished, AsteroidDone || finished == "asteroid", BiavehDone || finished == "biaveh");
         public static void MarkCattalusSeen() { var r = Get(); r.cattalusSeen = true; Put(r); }
         public static bool CattalusUnlocked => VenusDone && MarsDone && EuropaDone && AsteroidDone && BiavehDone;
         public static bool FinalMoonUnlocked => false;

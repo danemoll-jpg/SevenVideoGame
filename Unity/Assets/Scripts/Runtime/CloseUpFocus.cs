@@ -41,6 +41,25 @@ namespace Seven
         public void Focus(float focus) => _dof.focusDistance.Override(focus);
         public bool On => _target > 0.5f;
 
-        void Update() { if (_target > 0f) _v.weight = Mathf.MoveTowards(_v.weight, _target, Time.deltaTime * 6f); }
+        /// <summary>QF24 (24) - Dan's blurry "Set course" screen: a talk's close-up depth of field (the lap / objects inserts)
+        /// stayed on after the talk ended, so free play aboard was soft. ReleaseOnControl: whenever the player has control (no
+        /// cutscene shot, no camera hold, no talk) the focus is forced off within a frame - every talk, skipped or interrupted,
+        /// game-wide. Check runs log POST FX (QF24 24) for every release.</summary>
+        public static int Releases; public static float LongestOnWithControl;
+        float _onWithControl;
+        void Update()
+        {
+            if (_target > 0f) _v.weight = Mathf.MoveTowards(_v.weight, _target, Time.deltaTime * 6f);
+            bool control = false; try { control = MusicSystem.HasControl != null && MusicSystem.HasControl(); } catch { }
+            if (control && (_v.weight > 0f || _target > 0f))
+            {
+                _onWithControl += Time.deltaTime;
+                LongestOnWithControl = Mathf.Max(LongestOnWithControl, _onWithControl);
+                _target = 0f; _v.weight = 0f; Releases++;
+                if (DemoBoot.CaptureDir != null) ChapterCapture.I?.Log($"POST FX (QF24 24): control returned with the close-up depth of field still on - released ({_onWithControl * 1000f:0} ms after control came back; must be within a frame)");
+                _onWithControl = 0f;
+            }
+            else if (!control) _onWithControl = 0f;
+        }
     }
 }

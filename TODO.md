@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF24: Dan's 0.17.2 review (Dan, 2026-11-21) — to do
+## Quick fix QF24: Dan's 0.17.2 review (Dan, 2026-11-21) — done, status below; release 0.17.3
 Commit first. All standing rules + the repeat-item rule. Release the next patch; "QF24 — status"; "For Dan to check (QF24)".
 
 1. **The arrival / strategy talks happen in 7's EGG LOUNGE CHAIR by the window — not the pilot's chair at the console.** The saucer
@@ -205,6 +205,211 @@ Commit first. All standing rules + the repeat-item rule. Release the next patch;
     returns. Every cutscene / talk must restore the gameplay camera's post-processing on exit (including when it's skipped or
     interrupted), game-wide. Add a build check that the gameplay camera's volume / depth of field is back to normal within a frame of
     control returning after every talk.
+
+## Round 18: Chapter "Cattalus — Panther's homeworld", first playable pass — WITH STAND-INS (Dan, 2026-11-21) — to do after QF24
+Commit a checkpoint first. Runs overnight. **Never stop to ask**: make the reasonable call and list it under "Round 18 — decisions
+made". **Every standing rule in `CLAUDE.md` applies from the first line, including the ones QF24 adds** (check each against your
+own captures; this chapter should arrive clean). Release **0.18.0**; "Round 18 — status"; "For Dan to check (Round 18)".
+
+**The spec: `Docs/CHAPTER_CATTALUS.md`.** Read **"Decisions and reconciliations"** at the end first (names Juniper / Duchess,
+the egg chair for CAT_01, the bike hold, Panther on foot, telepathic cats, the race rules, the videos, the cats from Panther's
+rig), then CAT_01–CAT_12.
+
+**Assets** (`Docs/MODELS-NEEDED.md` "Cattalus", `MUSIC.md`, `VOICES.md`, `SFX-LIST.md`). Use each if it's in, otherwise the stand-in;
+each must drop in by file name with no other change. Mark every stand-in in the status.
+- **Cats:** citizens, Juniper, the Steward and the Announcer from Panther's rigged cat (`cat_v1`): fur textures / markings (tabby,
+  tuxedo, white, gray, spotted), long-haired fur shells, sizes / proportions, small accessories; his clips plus head look-at /
+  paw IK for the vignettes. **Duchess:** `Art/Source/duchess/duchess_v1.glb` if present, else a long-haired white variant.
+  Panther's greatest form = his model scaled (shoulder above 7's head).
+- **Duchess's racer** `Art/Source/cat_racer/cat_racer_v1.glb`, else procedural. **Trophy** `Art/Source/cat_trophy/cat_trophy_v1.glb`,
+  else procedural. **The sphere** in code from Kyle's `Art/Reference/kyle_7_sphere.jpg` (pale, smooth; the crescent arc and band
+  lines appear at the touch). **The Deluxe Retreat** in code (entry hole, inner shelf, crinkled paper).
+- **Vision 7** `Art/Video/vision_07_cattalus.mp4`, else a temporary in-engine render (grayscale, ~12 s, per the spec) plus the
+  in-engine insert of the dodecahedron's mark on the container.
+- **The meadow cinematic:** `Art/Video/color/cattalus_meadow_01…06.mp4` (colour masters). Make grayscale 1920×1044 h264 copies in
+  `Art/Video/` and play them with the lines, laughter, breathing, purring, footfalls, grass and music over them. Else a temporary
+  in-engine version of the six segments. Never alter or delete the colour masters.
+- **Music:** `cattalus_city.mp3`, `cattalus_race.mp3`, `cattalus_meadow.mp3` (missing = an existing track, noted).
+- **Voices:** Juniper, Duchess, Steward, Announcer per `VOICES.md` (ElevenLabs Voice Design or premade; say which). 7 and Panther
+  as always. Voice every line. **SFX:** the Cattalus list.
+
+**Items** (follow the spec):
+1. **Getting there:** Cattalus on the star map only once the asteroid and the mothership are both done; the title card over black
+   from frame one; CAT_01 in the egg chair with the hull vanishing; the exterior approach and city reveal; guide the saucer to the
+   public berth (the mothership's berth approach, docking arms clear of the bike hold).
+2. **The city (Code-built, Kyle's misty monochrome, no plain boxes):** the cardboard quarter (corrugated, flapped, taped, cut
+   windows, printed glyphs, stacked mansions), cat-tree apartment towers (sisal trunks, carpeted platforms, hammocks, dangling toys),
+   rope-wrapped scratching-post columns, upholstered terraces, transit routes, the old transit tower with its hanging ball, sunlit
+   patches, the fountain, the Cat-a-tron square and screen; the meadow beyond the city with the leaning tree and the hill line
+   matching the colour reference (`Art/Reference/cattalus_meadow_color_ref.png` if present).
+3. **CAT_02:** beam down (bike from the hold), the gate joke, free exploration with **all seven vignettes** as ambient loops; the
+   optional box inspection (Panther shrinks to fit).
+4. **CAT_03:** Juniper; then the low, quiet two-shot with Panther (hold the moment).
+5. **CAT_04:** the Cat-a-tron: race highlights, the rotating trophy and sphere, the mark, the Deluxe Retreat ad, Panther's eyes.
+6. **CAT_05 + CAT_06:** registration with the Steward; Duchess inspects the box; before the start with Panther on the low wall;
+   the optional practice lap.
+7. **CAT_07:** the Grand Circuit (spec's Decisions: one lap ~2½ min, six sections, readable obstacles, Duchess's fair AI, crash
+   → last gate + 3 s, restart, `ChapterCamera.RaceMode`), Panther's position / leading / behind lines, the race music from the
+   starting lights.
+8. **CAT_08W / CAT_08L:** both branches, the result saved; the trade only on a loss; Duchess climbs into the box.
+9. **CAT_09:** the sphere touch (the shared sequence; hand-sized, real contact, lines appear, the cradle releases), vision 7, the
+   return lines; music fades and returns.
+10. **CAT_10:** follow Panther to the meadow (on foot), CAT_10_01–03 in-engine, then the six-segment cinematic with its lines.
+11. **CAT_11 + CAT_12:** travel size, the beam home (bike into the hold); CAT_12 at the pilot's chair: the seven records, the marks
+    aligning, the lunar chamber below the city; the Moon route selected; the exterior rising above Cattalus with the meadow beyond.
+    The Moon finale isn't built: the Moon route ends this build at a "To be continued" card. No other destination after Cattalus.
+12. **Log + Field Guide** entries (Cattalus, Juniper, Duchess, the Grand Circuit, the sphere); the race result in the Log; a
+    chapter-select / checkpoint switch set like the other chapters (`-cattalus`, `-catcp <n>`, `-catrace` autopilot race,
+    `-catplay` player-style run) and a race-loss path for the test runs (`-catlose`).
+
+**Proof:** a player-style run from the star map to CAT_12 with both race outcomes (win and lose), 0 soft-locks; every build check
+(holes, coplanar, NPC placement, saucer / bike hold, dialogue framing, empty shots, voice overlap, prompts, music, post-processing,
+rune contact, ride pose) passing; captures of every scene from the player's camera, all monochrome.
+
+## QF24 — status (2026-11-21): done, exe-verified off-screen; release 0.17.3 (game-1703)
+Proof runs (muted, minimized, Below Normal, `-testspeed 2`): one player-style mothership run (`-biaplay -biablades`: free aboard →
+star map → BIA_01 … BIA_13A, 1/1, soft-locks 0), then short targeted runs (`-biacp 2` relays + ride, `-biacp 5` the chamber + the
+fight + the window, `-biacp 6` the octahedron, `-biacp 7 -routes biaveh_astdone` = Dan's order, `-europa` / `-mars` / `-asteroid`
+arrivals) and two re-checks after the last fixes. Every build check passes (log `QF18 build checks: all passed`). **Testing time
+went over the 20-minute rule this round** (~45 game-minutes: the full player-style run alone was ~23) - noted, not repeated.
+Captures + check reports: `Docs/Previews/qf24/` (before / after pairs under `before_after/`).
+
+**The repeats - why the earlier fix didn't hold, and the real cause:**
+- **(2) The records (QF23 23).** Dan's real save (read from his PlayerPrefs on this PC) *has* all five - the asteroid's record
+  included - so the list was not short. QF23 laid the copies in a 42 cm row along the pilot chair's armrest; in the chair the row
+  ran back into the chair shell / her thigh, so one was hidden and the rest read as a crooked stack at her knees. And `RecordSet`
+  read each chapter's *current* slot (a Scene Select slot while one was open). Now: the player's **own** saves (+ a completed
+  chapter counts as its record), and every record rests in its own place on `RecordDisplay` - a small tulip side table with a
+  glowing display ring beside the seat she is in. Run lines: `RECORDS (QF24 2) … 6 records (dodecahedron, cube, icosahedron,
+  tetrahedron, cuboctahedron, octahedron) on the display ring, each in its place: closest two 17.0 cm apart`.
+- **(11) The seedlings (QF23 13b).** QF23 fixed how the plants *look*; the exchange's logic was never touched ("Are those all
+  yours?" when nobody knows what they are). Rewritten with the chat's lines (below), the tray shown on "What are you carrying?".
+- **(13) "How was the silence?" over a wall (QF18 7 / QF21 6).** The speaker check only tested a *speaker*; Panther's telepathic
+  lines were exempt, so a telepathic exchange could sit on any set. Now the check (`DialogueFraming.Check`) requires 7 in the frame
+  for a telepathic line (or Panther's aboard cutaway, or a declared voice-over shot) and reframes to her otherwise; BIA_08: her
+  warm close-ups for her lines, cutaways to him in the pilot's chair for his. Over every telepathic line in the mothership run:
+  58 checked, 20 reframed to her (listed in the run's `DIALOGUE FRAMING` line), still blocked 0.
+- **(17) The fight prompts (QF23 17).** QF23 swapped the controls box for first-use `BossFight.Tip`s - but they were still the
+  *general* controls (dodge / jump / block / punch / kick / takedown / blades), each with a keyboard key; and `ControlsLegend`
+  switched every prompt to keyboard glyphs whenever a key was pressed. Now: no general-control tips in any boss fight (all four),
+  objectives name only the place's own actions, the Ratwing fight's one button prompt is "Close the partition (X)" at a station
+  in reach; controller buttons only, game-wide (`ControlsLegend.KeyboardPrompts = false`, every "X / E", "RB / G", "Y / Enter"
+  string cleaned). Build check `PROMPTS (QF24 17)`: 194 runtime files, 0.
+- **(20) The octahedron (QF23 22 + QF18 20).** (a) Size: it was 0.9 m across - now 0.44 m (`RuneSizes.OctaR` 0.22), hovering
+  over its plinth. (b) Contact: the gap was measured to a constant, and QF23's constant (r/√3, a *face* along a diagonal) is
+  deeper than the octahedron's surface at hand height (an *edge*, r/√2) - the build check measured her fingertips 1.6 cm inside;
+  and the measured fingertip, with the fingers up, sat above the small rune's centre. Now the touch is measured on the rune's
+  **real mesh** (every mesh of it, the closest point of her hand: fingertips + palm) and corrected; the hovering octahedron drifts the last centimetres to meet her fingers (as the Moon's floating shape does):
+  `vision touch … biaveh: her fingertips +0.6 cm from the shape's face` (was +16.5 cm in this round's first run). Build check
+  `RUNE TOUCH (QF24 20)` measures all six runes' surfaces vs the constants (0 off). (c) The "third of the screen": the push-in to her eyes came
+  straight in front of her face - where the rune is; it now swings round until the line to her eyes passes clear (`vision
+  push-in … 10 cm clear of the rune`); the post-vision talk is framed from her side and the rune is a registered prop the speaker
+  check refuses over a face. (d) Music: BIA_11 called `MusicSystem.Stop` right before the vision, so the vision's suspend had no
+  track to keep and nothing resumed - the chapter stayed silent to its end. The shared sequence owns the music now (Into
+  suspends, Back resumes or plays the area's theme): `MUSIC AFTER VISION (QF24 20) biaveh: 'biaveh_mothership' playing again`.
+
+**Item by item:**
+1. **Egg chair.** Arrival talks (EUR_01, MAR_01, AST_01, BIA_01 + BIA_02) seat her in 7's egg lounge chair facing the window
+   (`Stage.Chair` = the egg chair; `Stage.Pilot` = the pilot's chair; one `SeatT` moves every framing, the lap, the stroke, the
+   records display and the vanish centre with it), Panther in her lap, the hull dissolving round the egg seat. `EGG CHAIR (QF24
+   1): … seated (sit_idle), hips 0.000 m from the seat point` in all four. AST_01's "adjoining seat" = the deck beside the chair.
+   CLAUDE.md's rule rewritten (two chairs, named, never mixed). A stray "X Sit" prompt during those talks is gone.
+2. See the repeats.
+3. **Overlapping voices at the iris.** The door talk ran beside the hover shot and the scene waited on `Dlg.Busy` - false in the
+   pause between two lines - so it moved on and BIA_02_11-13 started over 07-10. It waits for the talk now; and game-wide
+   `DialoguePlayer.PlayOne` queues behind any playing line / reaction, a skipped line's audio stops. `VOICE OVERLAP (QF24 3)` in
+   every run: overlapping 0 (199 lines in the full run).
+4. **Inside the mothership.** The hull comes back before the door (in the cabin); after the iris shuts Veyra, its rings and the
+   orbs are gone from every view and the rest is exterior: the saucer glides along a vast misty hall (towers, terraces, hanging
+   light globes), two rows of guide lights ripple ahead, it settles into the receiving berth; BIA_02_11-14 over those shots
+   (`MothershipInterior.cs`). Cabin shots in that stretch: 0.
+5. **The berth arms** turned 70 / 140 / 220 / 290° from the hold (the 45° arm stood in front of it). Build check `HOLD
+   CORRIDOR (QF24 5)` on every scene (the hatch's width out to 12 m + the beam column): 0 everywhere.
+6. **Blades:** the back / hip mount is gone - sheathed = nothing on her; drawn = they ignite in her hands (a crackle as the light
+   forms, the hum rising), sheathed = a brief flicker. Off-camera proof shots `qf24_06_*`.
+7. **"What was that?"** plays over the memory itself (the echo of the seated figures, the resident); she turns toward it. Every
+   such line checked: BIA_03_06, AST_03_05 (the bird), EUR_01_05 (the passage on the display), BIA_01_01 (Veyra past her
+   shoulder) now play over the thing (`DialogueFraming.Over`); BIA_02_11 over the interior flight; the rest already showed it.
+8. **Panther's cutaways:** no toy. Watching / talking / composed: in the pilot's chair in a larger form (x2.1, sitting on the
+   cushion, his head at the display); batting = on the navigation desk in front of the display (tap-tap on the glass, then he sits
+   up very properly). Both spots built from the console's shape and ray-confirmed at build; his paw soles measured in every cut
+   (`PANTHER PLACE (QF24 8)`: paw soles 0.0 cm sitting / composed / batting; his "watch" crouch lifted the front paws ~8 cm in
+   the chair - he now watches sitting upright there; that last change is built but was not re-measured in a cut).
+9. **Ratwing close-ups** on every line of his in a cutscene (BIA_05 / 07 / 09): his face, low angle when above her, a soft white
+   key light; her replies over her shoulder looking up at him.
+10. **The relays** redesigned (`RelayDevice` + `RelayPylon`): pearly pylon, crystal node in six petals, a resonance plate; damaged
+    = node dark and cracked, petals jammed, sparks; her palm on the plate (IK, measured: relay 1 +0.0 cm, relay 2 +0.0 cm - relay 1
+    first measured 27 cm short: an old 0.7 m obstacle circle of the removed cabinet kept her out of reach; relay 3's 0.8 m one
+    shrank the same way, not re-measured); restored = the node lights, petals open, light runs out along a floor channel.
+    BIA_05_N1 rewritten to match (re-voiced, Nela).
+11. See the repeats. 12. **The garden**: Venus's trees / shrubs / swaying grass (14 400 blades), white-rimmed curving beds,
+    flowering trees, hanging plants, the seedlings' nursery; the memory echo shows the same plants, translucent.
+13. See the repeats. 14. **The coupling** was baked into the passage's static mesh - it is its own object now: it rises in her
+    telekinesis, floats, turns, slots into the socket (moved 1.71 m). `TK AUDIT (QF24 14)` over every telekinesis interaction
+    (the mothership, Mars, the asteroid, the Moon, Venus): completed without the visible object moving 0.
+15. **The riding pose (regression).** Cause: QF23's knee fix squared the legs + spine of *every* avatar's reference - including
+    7's own `7_ride.fbx`, whose rest pose IS the riding pose (knees 133°); the clip then added a deep bend and a forward slump on top
+    of the IK tuck (Dan's screenshot). The squaring is now for Mixamo downloads only. Build check `RIDE POSE (QF24 15)` on every
+    chapter scene; in play: hips 0.6-1.1 cm from the saddle point, palms 1.1-1.5 cm from the grips, feet 0.6-1.1 cm on the
+    panels (mothership, Europa, Mars), captures from the riding camera and the side.
+16. **Detail**: the transfer chamber (mid-grey ribs + light channels, 7 service platforms with railings and floor lights, 13 dark
+    transfer machines between floor and wall, conduits, maintenance openings, the partition housings, the carved archive door
+    with memory light round its edges + Ratwing's scorch / claw marks / a torn panel, 14 hanging globes, the city beyond); 57
+    district pieces beside the routes (planters, benches, glyph signs, memory-crystal shrines), the quiet passage's shielding ribs,
+    10 empty memory positions round the octahedron; the chamber's haze thinned on arrival. Before / after captures. (A first
+    version put the archive door's memory-light panel across the doorway - the check run caught her stopping there; moved to
+    the door's edges, the walk-in re-checked.)
+17. See the repeats. 18. **Boss music** starts in `BossFight.Begin` (all four bosses), never at the approach / talk:
+    `BOSS MUSIC (QF24 18) ratwing: 'biaveh_ratwing' starts with the fight; before it: 'biaveh_mothership'`.
+19. **The viewing window**: both barriers have a curved pane with a rim light; 7 and the pane → Ratwing landed and pressed to the
+    glass, close up through it, BIA_09_11a → back to her. 20. See the repeats.
+21. **Boarding music**: the home scenes stopped the music on boarding until the chair talk; `MusicSystem.Board()` starts the
+    saucer theme with a fade, a stale suspension never survives a load, and the manager's guard brings the area's theme back
+    after ~3.5 s of silence with control (deliberate silences declared: the quiet passage). `MUSIC (QF24 21)` per scene: longest
+    silence with control 0.0-0.3 s.
+22. **The talk after the mothership** came from "the Cattalus lead not seen yet" - Dan's save had seen it once, so it fell to the
+    asteroid-detour talk. `WorldFlags.NextTalk` decides from completion (both done = Cattalus). Run with Dan's order: `NEXT TALK
+    (QF24 22): … asteroid done True, mothership done True -> BIA_13B`. Build check over 6 combinations: 0 wrong.
+23. **The star map** pre-selected the Moon / Venus whenever it opened, which flipped the view to our solar system even at Veyra;
+    it now opens on the saucer's own system and keeps the player's selection while open (self-test in every check run).
+24. **The blur**: the lap / objects inserts turn on the close-up depth of field and nothing turned it off when the talk ended;
+    `CloseUpFocus` now forces it off within a frame whenever the player has control (`POST FX (QF24 24)`), build check
+    `POST-PROCESSING (QF24 24)`.
+
+**New / changed lines (voiced with ElevenLabs, in `Docs/CHAPTER_BIAVEH.md` + `Docs/BIAVEH-LINES.md`) - Dan to confirm:**
+- BIA_06_02 (7, re-voiced) "What are you carrying?" · BIA_06_02a (Resident) "Seedlings for the upper gardens. Every district
+  grows a few for the others." · BIA_06_02b (7) "They look ready to plant themselves."
+- BIA_09_11a (Ratwing, through the glass) "Fine. But this whole ship remembers everything. You'll never live this down. And
+  neither will I."
+- BIA_05_N1 (Nela, rewritten for the new relay) "The relay stands at the junction. He jammed its node and cracked it. Lay your
+  hand on its plate and this district will hear us."
+
+**Decisions made (no stop):** the batting place is the navigation desk (the chair is 1.2 m from the display - out of paw reach);
+the egg chair has no adjoining seat, so AST_01's "onto the adjoining seat" puts him on the deck beside it; the relay's district
+channel runs west at the junction / garden / passage; the boss-track rule applies to the Wormmaster with `venus_underground`.
+
+## For Dan to check (QF24)
+1. **Arrival talks in the egg chair** by the window (EUR_01, MAR_01, AST_01, BIA_01): Panther in her lap, the hull dissolving
+   round the egg chair, no "X Sit" prompt. The star-map choices still at the console.
+2. **The records**: all you have collected (your save: six after the mothership) on the little side table's ring beside her.
+3. **BIA_02**: no overlapping voices at the door; the hull back before the door; after the iris only exterior shots inside the
+   ship - the hall, the rippling guide lights, the berth.
+4. **The berth**: the bike leaves the hold with no arm in front of it.
+5. **Blades**: nothing on her when sheathed; drawing = a crackle of light in her hands.
+6. **"What was that?"** over the memory; **"What are you carrying?"** over the tray + the new seedlings lines.
+7. **Panther's cutaways**: no toy; big in the pilot's chair at the display; on the desk batting at the screen, then sitting up.
+8. **Ratwing's close-ups** (BIA_05 / 07 / 09) and **through the window** with his new line.
+9. **The relays**: the new pylons, her palm on the plate, the light running out along the floor.
+10. **The garden** with Venus's plants and moving grass; **the transfer chamber** and the districts - enough detail?
+11. **BIA_08's "How was the silence?" / "Overrated."**: her face and his cutaways.
+12. **The coupling** rising and slotting in.
+13. **Riding** on every world: seated on the saddle, hands on the grips.
+14. **The Ratwing fight**: no general tips, only "Close the partition (X)"; no keyboard keys anywhere; the boss music only when
+    the fight starts.
+15. **The octahedron**: smaller, her hand on it (not through), the vision not covered, the music coming back afterwards, and the
+    saucer theme when you're back aboard.
+16. **After the mothership** (with the asteroid done): the Cattalus talk; the star map opening on Veyra; no blur when you get
+    control back.
 
 ## Quick fix QF23: Dan's mothership (Round 17) review (Dan, 2026-11-21) — done, status below; release 0.17.2 (Dan: "we are getting so close to being done")
 Commit first. All standing rules + the repeat-item rule (why the last fix didn't hold, fix the cause, prove it in normal play

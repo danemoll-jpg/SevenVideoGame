@@ -87,7 +87,7 @@ namespace Seven
             if (cp <= L.CpReceiving) { Bike.gameObject.SetActive(false); Seven.gameObject.SetActive(false); }   // both start in the hold / aboard
             else if (riding) { Seven.gameObject.SetActive(true); Bike.Mount(); }
             else { Seven.gameObject.SetActive(true); Seven.Place(at, Quaternion.Euler(0f, yaw, 0f) * Vector3.forward); }
-            MusicSystem.Play(cp == L.CpFight ? "asteroid_machinist" : cp <= L.CpReceiving ? null : "asteroid_city", 2.5f);
+            MusicSystem.Play(cp <= L.CpReceiving ? null : "asteroid_city", 2.5f);   // QF24 (18): the Machinist's track starts with his fight
             FollowCamera(); Cam.SnapBehind();
             Log($"restore: {AsteroidState.Summary()} -> {(riding ? "riding" : "on foot")} at {at}");
         }
@@ -387,7 +387,8 @@ namespace Seven
             Vector3 b0 = Bird != null ? Bird.transform.position : L.BirdAt;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 0.8f) { var p = Vector3.Lerp(b0, hold, Mathf.SmoothStep(0f, 1f, t)); if (Bird != null) Bird.transform.position = p; tik.RightPos = p + Vector3.right * 0.03f; tik.LeftPos = p - Vector3.right * 0.05f + Vector3.back * 0.02f; tik.LookPos = p; yield return null; }
             Shoot(hold + Seven.transform.forward * 0.8f + Vector3.up * 0.15f + Seven.transform.right * 0.3f, hold, 30f, 0.01f);
-            yield return Say("AST_03", 5, 7);                     // Look at this. Someone kept fixing it. / Does it still work? / Hang on...
+            yield return DialogueFraming.Over("the bird in her hands (QF24 7)", Say("AST_03", 5, 5));   // Look at this. Someone kept fixing it. (over the bird she holds)
+            yield return Say("AST_03", 6, 7);                     // Does it still work? / Hang on...
             if (Bird != null) { Bird.transform.rotation = Quaternion.LookRotation(-Seven.transform.forward); yield return Bird.WindAndChirp(); }    // AST_03_08: one uneven chirp, a wing flap
             yield return Shot("a15_the_bird_chirps_and_flaps");
             yield return Say("AST_03", 9, 13);                    // Ha! There you are. / Hm. Very convincing. / You're doing that voice. / What voice? / The one you do when...

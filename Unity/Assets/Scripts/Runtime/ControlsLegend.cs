@@ -16,6 +16,10 @@ namespace Seven
     {
         public Camera Cam;
         public bool ShowXbox = true;
+        /// <summary>QF24 (17) - Dan: "keyboard keys along with the controller buttons, which I forbade long ago". Prompts and
+        /// hints show controller buttons only, game-wide (the keyboard still works; the Controls page lists it). The legend
+        /// used to switch to keyboard glyphs whenever a key was pressed.</summary>
+        public static bool KeyboardPrompts = false;
         public enum Layout { Fight, SaucerWalk, SaucerSeated, GalleryView, Chapter }
         public Layout Set = Layout.Fight;
         bool _saucer;
@@ -262,7 +266,7 @@ namespace Seven
             if (ms != null && (ms.leftButton.wasPressedThisFrame || ms.rightButton.wasPressedThisFrame || ms.middleButton.wasPressedThisFrame
                                || ms.delta.ReadValue().sqrMagnitude > 9f)) keys = true;
             if (pad && !ShowXbox) SetMode(true);
-            else if (keys && !pad && ShowXbox) SetMode(false);
+            else if (keys && !pad && ShowXbox && KeyboardPrompts) SetMode(false);   // QF24 (17): never - controller buttons only, game-wide
         }
 
         // ------------------------------------------------------------------------------------ Round 9 hints

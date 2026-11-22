@@ -68,6 +68,41 @@ namespace Seven
             }
             return hits;
         }
+        /// <summary>QF24 (5) - the bike's way out and the beam's column stay clear on every world: (a) the HOLD CORRIDOR, a box
+        /// in front of the bike hold (the hatch's width 3.4 m, from the rim at r 5.6 m out to r 12 m where the bike lands, from
+        /// 0.35 m above the ground under the saucer up to the belly + 1 m); (b) the BEAM COLUMN (r 1.6 m round the axis, from
+        /// 0.35 m up to the belly). Ground / walkable surfaces (by name) and the bike / 7 are not obstacles. Returns the hits.</summary>
+        public static List<string> InHoldWay(Transform saucer, IEnumerable<Transform> ignore = null, bool activeOnly = true)
+        {
+            var hits = new List<string>(); if (saucer == null) return hits;
+            float belly = SaucerBeam.ShipBelly;
+            var rot = Quaternion.Euler(0f, SaucerHold.Angle, 0f);        // hold direction (cos a, 0, sin a) -> +x
+            var corr = new Bounds(new Vector3((5.6f + 12f) * 0.5f, (0.35f + belly + 1f) * 0.5f, 0f), new Vector3(12f - 5.6f, belly + 1f - 0.35f, 3.4f));
+            var col = new Bounds(new Vector3(0f, (0.35f + belly) * 0.5f, 0f), new Vector3(3.2f, belly - 0.35f, 3.2f));
+            var ign = new HashSet<Transform>(); if (ignore != null) foreach (var t in ignore) if (t != null) ign.Add(t);
+            var wc = saucer.position; var reach = new Bounds(wc + Vector3.up * belly * 0.5f, new Vector3(26f, belly + 2.5f, 26f));
+            foreach (var mr in Object.FindObjectsByType<MeshRenderer>(activeOnly ? FindObjectsInactive.Exclude : FindObjectsInactive.Include))
+            {
+                if (activeOnly && !mr.enabled) continue;
+                if (mr.transform.IsChildOf(saucer)) continue;
+                bool skip = false; foreach (var t in ign) if (mr.transform.IsChildOf(t)) { skip = true; break; }
+                if (skip || mr.GetComponentInParent<BubbleHelmet>() != null || mr.name.Contains("Helmet") || CameraOccluders.IsWalkableName(mr.name) || mr.name.Contains("Terrain") || mr.name.Contains("Ground") || mr.name.Contains("Grass")) continue;
+                if (!mr.bounds.Intersects(reach)) continue;
+                var mf = mr.GetComponent<MeshFilter>(); if (mf == null || mf.sharedMesh == null) continue;
+                var m = mf.sharedMesh; if (!m.isReadable) { if (mr.bounds.Intersects(reach)) hits.Add(mr.name + " (not readable - bounds overlap)"); continue; }
+                var v = m.vertices; var tri = m.triangles;
+                var l2w = mr.transform.localToWorldMatrix; var w2s = saucer.worldToLocalMatrix;
+                var loc = new Vector3[v.Length]; for (int i = 0; i < v.Length; i++) loc[i] = w2s.MultiplyPoint3x4(l2w.MultiplyPoint3x4(v[i]));
+                for (int i = 0; i + 2 < tri.Length; i += 3)
+                {
+                    Vector3 a = loc[tri[i]], b = loc[tri[i + 1]], c = loc[tri[i + 2]];
+                    if (TriBox(a, b, c, col.center, col.extents)) { hits.Add(Path(mr.transform) + " (in the beam column)"); break; }
+                    if (TriBox(rot * a, rot * b, rot * c, corr.center, corr.extents)) { hits.Add(Path(mr.transform) + " (in front of the bike hold)"); break; }
+                }
+            }
+            return hits;
+        }
+
         static string Path(Transform t) { var p = t.name; for (int k = 0; k < 3 && t.parent != null; k++) { t = t.parent; p = t.name + "/" + p; } return p; }
 
         // the hull's real shape: a disc / dome - per height band, the largest radius of its vertices (saucer space)

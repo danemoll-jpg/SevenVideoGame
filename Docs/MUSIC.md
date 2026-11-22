@@ -65,3 +65,15 @@ script wants the silence (the cavern quiet "for the first time").
 | `biaveh_mothership.mp3` | The mothership: the arrival along the hull, the interior city, the relay districts, the ride back |
 | `biaveh_ratwing.mp3` | Ratwing's appearances (BIA_05 / BIA_07 stingers) and the BIA_09 encounter |
 Quiet moments (the quiet passage BIA_08 — near silence, the octahedron chamber + vision, BIA_12 aboard): music fades out.
+
+# Chapter — Cattalus (Round 18)
+
+Made by Dan in Suno, instrumental. Spec: `Docs/CHAPTER_CATTALUS.md`.
+
+| File | Title | Where it plays | Style prompt |
+| --- | --- | --- | --- |
+| `cattalus_city.mp3` | Patches of Sun | Cattalus: CAT_01's city reveal, the berth, the streets, the Cat-a-tron square, registration, after the race | playful gentle chamber jazz, lazy sunny afternoon, pizzicato strings, soft clarinet melody, light vibraphone, brushed snare, warm upright bass, little mischievous flourishes and pauses, cozy and affectionate, unhurried 90 bpm, seamless loop |
+| `cattalus_race.mp3` | The Grand Circuit | The race only, from the starting lights to the finish (practice lap too) | upbeat retro-futurist racing theme, driving synth bass arpeggio, bright brass stabs, fast brushed drums, playful whistled lead melody, festival crowd energy, cheeky and fun, 140 bpm, seamless loop |
+| `cattalus_meadow.mp3` | The Leaning Tree | CAT_10, the meadow cinematic (about 72 s); kept for the heaven ending | tender cinematic piano and warm strings, soft wordless female hum, gentle acoustic guitar, golden afternoon, joyful lift as they run, then settling into stillness and peace, hopeful not sad, no drums, 70 bpm, about 90 seconds with a soft ending |
+
+The vision (CAT_09) has no music: the city track fades out and comes back after (QF24 item 20).

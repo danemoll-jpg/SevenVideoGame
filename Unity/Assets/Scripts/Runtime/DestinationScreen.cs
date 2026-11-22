@@ -67,7 +67,7 @@ namespace Seven
                 _labels[i] = T(Items[i].label, Vector2.zero, 28, Color.white, bar.transform);
             }
             _note = T("", new Vector2(0, -130), 18, new Color(0.7f, 0.7f, 0.7f));
-            T("stick / d-pad + A    ·    W S / arrows + Enter    ·    B / Esc = stay aboard", new Vector2(0, -300), 16, new Color(0.55f, 0.55f, 0.55f));
+            T("stick / d-pad + A    ·    B = stay aboard", new Vector2(0, -300), 16, new Color(0.55f, 0.55f, 0.55f));
             Refresh();
         }
 

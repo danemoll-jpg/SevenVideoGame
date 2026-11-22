@@ -384,19 +384,29 @@ namespace Seven
         /// itself, small copies of the rest in a row along the arm (old copies cleared first, so nothing doubles).</summary>
         void PlaceRecords(string where)
         {
-            foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None)) if (r != null && r.name.EndsWith("RecordCopy")) Destroy(r.gameObject);
+            foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None)) if (r != null && r.name.EndsWith("RecordCopy") && (_recordDisplay == null || !r.transform.IsChildOf(_recordDisplay.transform))) Destroy(r.gameObject);
             if (_cubeCopy != null) _cubeCopy.gameObject.SetActive(false);
-            var recs = RecordSet.Collected(); int slot = 0;
+            if (_recordDisplay != null) Destroy(_recordDisplay.gameObject);
             Material mat = Shape != null && Shape.GetComponentInChildren<Renderer>() != null ? Shape.GetComponentInChildren<Renderer>().sharedMaterial : null;
-            foreach (var rec in recs)
-            {
-                var at = ArmRest + PilotFwd * (0.21f - slot * 0.105f) + Up * 0.02f; slot++;
-                if (rec.Name == "dodecahedron" && Shape != null) { _carry?.Set(CarriedShape.Where.Away, 0f); PlaceShape(at - Up * 0.02f, MarkingUp()); continue; }
-                var go = new GameObject(char.ToUpper(rec.Name[0]) + rec.Name.Substring(1) + "RecordCopy");
-                go.AddComponent<MeshFilter>().sharedMesh = rec.Mesh(0.05f); var mr = go.AddComponent<MeshRenderer>(); if (mat != null) mr.sharedMaterial = mat;
-                go.transform.SetPositionAndRotation(at, Quaternion.LookRotation(PilotFwd));
-            }
-            if (DemoBoot.CaptureDir != null) Cap?.Log($"RECORDS (QF23 23) on {where}: {recs.Count} - {RecordSet.Names()} (from the saved list; VenusState / EuropaState / MarsState / AsteroidState / BiavehState RecordAwarded)");
+            // QF24 (2): the dodecahedron itself stays in her pocket; every record - the dodecahedron's copy too - rests on the
+            // display ring of a small side table beside the seat she is in (the egg chair has no armrest)
+            if (Shape != null && _carry != null) _carry.Set(CarriedShape.Where.Pocket, 0f);
+            _recordDisplay = RecordDisplay.Build(RecordDisplayFloor(), -PilotFwd, mat);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"RECORDS (QF24 2) beside {(InEggChair ? "7's egg chair" : "the pilot's chair")} ({where}): {_recordDisplay.Audit()} - from the player's own saves (RecordSet)");
+            if (Auto && Cap != null) StartCoroutine(RecordShot());
+        }
+        RecordDisplay _recordDisplay;
+        /// <summary>QF24 (2): the side table stands at her right hand, a little forward, clear of the chair and of Panther.</summary>
+        Vector3 RecordDisplayFloor() => Flat(PilotHips + PilotRight * (InEggChair ? 0.92f : 0.78f) + PilotFwd * 0.18f);
+        Vector3 RecordDisplayTop() => _recordDisplay != null ? _recordDisplay.Top : RecordDisplayFloor() + Up * RecordDisplay.TopY;
+        int _recordShots;
+        IEnumerator RecordShot()
+        {
+            yield return null; yield return null;
+            if (_recordShots++ > 3) yield break;
+            var d = RecordDisplayTop();
+            yield return Cap.ShotFrom($"qf24_02_records_{_recordShots}_{StagedScene ?? "aboard"}", d + PilotRight * 0.55f + PilotFwd * 0.65f + Up * 0.35f, d + Up * 0.05f, 36f);
+            yield return Cap.ShotFrom($"qf24_02_records_{_recordShots}_{StagedScene ?? "aboard"}_with_her", PilotHips + PilotFwd * 1.9f + PilotRight * 1.2f + Up * 0.9f, (PilotHips + d) * 0.5f + Up * 0.15f, 44f);
         }
 
         /// <summary>Mars's record: the small tetrahedron (generated like the others - pale stone).</summary>

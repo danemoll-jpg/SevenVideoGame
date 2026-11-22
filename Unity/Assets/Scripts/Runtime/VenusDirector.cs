@@ -1105,7 +1105,7 @@ namespace Seven
             if (!skipped)
             {
                 yield return Cutscene(true);
-                Seven.Gesture(SlabLookAt);
+                Seven.Gesture(SlabLookAt); TkAudit.Watch(this, "Venus: the slab bridge", SlabLookAt, null);   // QF24 (14)
                 Seven.SetEnergyPoint(1.9f, 0.25f);
                 // the beat from the side: her, the slab and the hole in one frame
                 Shoot(new Vector3(25.2f, 3.4f, 104.2f), new Vector3(31f, 0.6f, 119f), 52f, 0.8f);

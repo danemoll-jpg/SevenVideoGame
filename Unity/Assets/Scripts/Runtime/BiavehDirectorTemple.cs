@@ -33,6 +33,7 @@ namespace Seven
                 yield return Cutscene(true);
                 if (Ratwing != null) { Ratwing.gameObject.SetActive(true); SetRat(new Vector3(L.ArchiveEntrance.x, 0f, L.ArchiveEntrance.z - 3f), 0f, RatwingRig.Mode.Perched, Vector3.forward); }
                 Seven.Place(L.ChamberCover, Vector3.left); Seven.Lock(true);
+                StartCoroutine(FogThin(0.55f, 1.0f));               // QF24 (16): the chamber reads as a place - its detail out of the haze (the fight thins it further)
                 Shoot(L.ChamberCover + new Vector3(2.2f, 1.5f, -2f), L.ArchiveEntrance + Vector3.up * 2f, 46f, 0.01f);
                 yield return Wait(0.6f);
                 if (Ratwing != null) StartCoroutine(TurnRat(P7, 0.8f));
@@ -53,7 +54,7 @@ namespace Seven
                 yield return Cutscene(false);
             }
             // the fight (the Decisions): his passes, the throw that brings him down, her strikes, the partitions
-            MusicSystem.Play("biaveh_ratwing", 1.5f);
+            // QF24 (18): the boss track starts with the fight itself (BossFight.Begin), not here
             StartCoroutine(FogThin(0.8f, 1.5f));                 // the shaft: clear enough to read him in the air
             _fight = Ratwing.GetComponent<RatwingFight>() ?? Ratwing.gameObject.AddComponent<RatwingFight>();
             _fight.HomeOf = Home; _fight.Setup(RRig, ChamberPartitions, StationLamps, DebrisMeshes, DebrisMat);
@@ -61,9 +62,11 @@ namespace Seven
             if (Flat(P7 - L.HerFightStart).magnitude > 2f) Seven.Place(L.HerFightStart, Vector3.forward);
             _fight.UI = UI; _fight.AutoPilot = Auto;
             _fight.Beat = PhaseBeatShot;
-            _fight.PhaseObjective = ph => ph == 0 ? "He swoops and claws - dodge (B), then knock him down with telekinesis (RT) and fight him on the floor (X / Y). Close the first partition (X at its station)"
-                                       : ph == 1 ? "His space is smaller - keep him coming down. The second partition (X at its station)"
-                                       : "Wear him out - dodge, bring him down, fight";
+            // QF24 (17): no general controls - the one button prompt is "Close the partition (X)" at a station in reach;
+            // Nela's lines and the lit station say where to go
+            _fight.PhaseObjective = ph => ph == 0 ? "Close the first partition - the lit station"
+                                       : ph == 1 ? "His space is smaller - the second partition, the lit station"
+                                       : "Wear him out";
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _fight.Begin(BossFight.Load("ratwing"), Seven, Cam);
             if (Auto && Seven.BladesOwned) Seven.DrawBlades(true);
@@ -165,6 +168,26 @@ namespace Seven
             if (Ratwing != null) { yield return FlyRat(L.InnerBarrier + new Vector3(1.2f, 0f, 0f), 1.6f, 0.8f, RatwingRig.Mode.Fly); AudioKit.Play("ratwing_strike", L.InnerBarrier + Vector3.up * 1.6f, 0.8f, 0f, AudioKit.Bus.Sfx, 40f); }
             if (Ratwing != null) { yield return FlyRat(L.CompartmentIn, 0f, 0.9f, RatwingRig.Mode.Perched); }
             yield return Shot("b39_he_tests_both_barriers_both_hold");
+            // QF24 (19): through the viewing window - 7 and the pane, then Ratwing close up behind the glass for his line, then
+            // back to her. He lands and presses up to the glass.
+            {
+                var paneAt = L.OuterBarrier + Vector3.up * 2.6f;
+                if (Ratwing != null) { yield return FlyRat(L.OuterBarrier + new Vector3(-0.8f, 0f, 0f), 0f, 0.7f, RatwingRig.Mode.Perched); if (Ratwing != null) Ratwing.rotation = Quaternion.LookRotation(Vector3.right); if (RRig != null) RRig.Sneer = true; }   // landed, pressed up to the glass, facing her
+                Seven.Place(L.OuterBarrier + new Vector3(2.6f, 0f, 0.4f), Vector3.left); Seven.Lock(true);
+                Shoot(P7 + new Vector3(1.5f, 1.75f, 0.9f), paneAt, 44f, 0.01f);               // 7 and the pane, over her shoulder
+                yield return Wait(1.0f);
+                yield return Shot("qf24_19a_seven_and_the_viewing_window");
+                for (float t = 0f; t < 0.3f; t += Time.deltaTime) yield return null;
+                var rh = RRig != null && RRig.HeadBone != null ? RRig.HeadBone.position : paneAt + Vector3.left * 0.8f;
+                rh.y = Mathf.Clamp(rh.y, 1.5f, 3.6f);                                         // through the window (1.3 - 3.9 m)
+                _ratGlassShot = true;
+                Shoot(L.OuterBarrier + new Vector3(1.3f, 0f, 0.15f) + Vector3.up * (rh.y - 0.25f), rh, 30f, 0.01f);   // close on him THROUGH the glass, a little low
+                RatKey(true, L.OuterBarrier + new Vector3(1.3f, rh.y, 0.2f), rh);
+                yield return DialogueFraming.Over("Ratwing close up through the viewing window (QF24 19)", SayIds("BIA_09_11a"));   // Fine. But this whole ship remembers everything...
+                yield return Shot("qf24_19b_ratwing_through_the_glass");
+                _ratGlassShot = false; RatKey(false); if (RRig != null) RRig.Sneer = false;
+                Log("BIA_09 (QF24 19): the viewing window - 7 and the pane, Ratwing pressed to the glass for BIA_09_11a, back to her");
+            }
             Log($"BIA_09: RATWING CONTAINED alive in the maintenance compartment (outer + inner barrier) - stage three took {SealedAt:0.0} s, mistimed tries {Mistimed} (each reset the chance; the barrier never closed on him)");
             Seven.Release(); Seven.Lock(true);
             TwoShot(P7 + Vector3.left * 2f, Vector3.forward, 3.2f, 1.2f, 1.3f, 44f, 0.4f);
@@ -272,13 +295,13 @@ namespace Seven
             Shoot(L.OctaView + new Vector3(1.6f, 1.6f, -1.2f), L.OctaAt, 38f, 0.01f);
             yield return Wait(0.4f);
             yield return Shot("b45_she_touches_the_octahedron");
-            MusicSystem.Stop(1.5f);
+            // QF24 (20): no MusicSystem.Stop here any more - the shared vision sequence fades the music down and brings it back
             System.Action<float> glow = k => { if (Octa != null) foreach (var rr in Octa.GetComponentsInChildren<Renderer>()) if (rr.name == "Edges") Glow(rr, 1.1f * k); };
-            yield return VisionTouch.Into("biaveh", Seven, Cam, UI, Octa != null ? Octa.position : L.OctaAt, OctaFace, glow);   // QF23 (22): the face distance of the 0.45 m octahedron
+            yield return VisionTouch.Into("biaveh", Seven, Cam, UI, Octa != null ? Octa.position : L.OctaAt, OctaFace, glow, true, p => { if (Octa != null) Octa.position = p; });   // QF24 (20): the hovering octahedron drifts the last centimetres to meet her fingers (it answers her), measured on its mesh   // QF23 (22): the face distance of the 0.45 m octahedron
             yield return Vision6Play();
             yield return VisionTouch.Back("biaveh", Seven, Cam, Octa != null ? Octa.position : L.OctaAt, OctaFace, glow);
             yield return Shot("b46_her_fingers_lift_slowly_from_the_octahedron");
-            Shoot(P7 + new Vector3(-0.5f, 1.65f, 2.2f), HerHead() + Vector3.down * 0.2f, 40f, 0.5f);
+            Shoot(P7 + new Vector3(-1.75f, 1.6f, 1.05f), HerHead() + Vector3.down * 0.18f, 40f, 0.5f);   // QF24 (20): from her left - the octahedron (in front of her, +z) no longer between the camera and her face
             yield return Say("BIA_11", 6, 9);                    // They weren't sure they wanted to leave it. / What did you see? / Someone recording a memory... / I remember waiting with them.
             yield return Wait(1.8f);                             // BIA_11_10: hold on her still posture
             yield return Shot("b47_hold_on_her_still_posture");
@@ -305,7 +328,7 @@ namespace Seven
             Complete("BIA_11");
             yield return Cutscene(false);
         }
-        const float OctaFace = 0.45f / 1.7320508f;   // an octahedron of vertex radius r has its faces at r / sqrt(3)
+        const float OctaFace = RuneSizes.OctaR * 0.7071f;   /* QF24 (20): at her hand height the nearest surface of a vertex-up octahedron is an EDGE at r/sqrt 2 - the QF23 r/sqrt 3 (a face along a diagonal) put her fingertips 1.6 cm inside it */   // QF24 (20): the smaller octahedron (faces at r / sqrt 3); the contact itself is measured on its mesh
         Vector3 HerHead() => Seven.Bone(HumanBodyBones.Head) != null ? Seven.Bone(HumanBodyBones.Head).position : P7 + Vector3.up * 1.6f;
         IEnumerator Ripple()
         {

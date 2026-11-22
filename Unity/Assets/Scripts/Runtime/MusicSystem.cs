@@ -38,6 +38,10 @@ namespace Seven
         {
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += (sc, mode) =>
             {
+                ReportScene();                                             // QF24 (21): the last scene's silence audit
+                _silenceUntil = 0f; _silenceWhy = null; _quietFor = 0f; _longestQuiet = 0f; _guardStarts = 0; _sceneName = sc.name;
+                // QF24 (21): a stale suspension from the last scene (a vision whose resume never came) never carries over
+                if (_suspended != null) { AudioKit.Log?.Invoke($"music (QF24 21): a suspension of '{_suspended}' left from the last scene cleared on loading {sc.name}"); _suspended = null; }
                 if (sc.name == "FightDemo" || sc.name == "FightDemo_Room" || sc.name == "Ratwing") Stop(1.5f);
                 else if (sc.name == "Saucer" && !Chapter1State.Aboard)
                 {
@@ -46,6 +50,54 @@ namespace Seven
                 }
             };
         }
+
+        // ---- QF24 (18 / 20 / 21): music rules owned by the manager, not patched per scene ---------------------------------
+        //  - boarding: <see cref="Board"/> starts the saucer theme with a short fade whatever state the music was in;
+        //  - a vision suspends and then RESUMES (VisionTouch.Into / Back own it), and a stale suspension never survives a load;
+        //  - never silent while the player has control: after a few seconds of silence with control, the area's theme comes
+        //    back (MUSIC GUARD) unless a director declared a deliberate short silence (<see cref="Silence"/>);
+        //  - a boss track starts with the fight (BossFight.Begin -> <see cref="BossTrack"/>), never at the approach or the talk.
+        static float _silenceUntil, _quietFor, _longestQuiet, _guardNext; static string _silenceWhy, _sceneName; static int _guardStarts;
+        public static int GuardStarts => _guardStarts;
+        public static float LongestQuiet => _longestQuiet;
+        /// <summary>A deliberate silence (the quiet passage, a dramatic pause): the guard leaves it alone for up to <paramref name="seconds"/>.</summary>
+        public static void Silence(string why, float seconds) { _silenceUntil = Time.unscaledTime + seconds; _silenceWhy = why; Stop(1.5f); AudioKit.Log?.Invoke($"music (QF24 21): a deliberate silence - {why} (up to {seconds:0} s)"); }
+        public static void EndSilence() { _silenceUntil = 0f; _silenceWhy = null; }
+        /// <summary>On boarding the saucer (the beam / back in the cabin): the saucer theme, a short fade in, every time.</summary>
+        public static void Board(float fade = 2f) { _suspended = null; EndSilence(); Play("aboard_saucer", fade); AudioKit.Log?.Invoke("music (QF24 21): boarding - the saucer theme"); }
+        /// <summary>The area's own theme (what the guard brings back).</summary>
+        public static string Theme(string scene)
+        {
+            switch (scene)
+            {
+                case "Chapter1": return "moon_prison";
+                case "Saucer": return "aboard_saucer";
+                case "Venus": return "venus_gardens";
+                case "Europa": return "europa_underwater";
+                case "Mars": return "mars_kingdoms";
+                case "Asteroid": return "asteroid_city";
+                case "Biaveh": return "biaveh_mothership";
+                case "Menu": return "main_theme";
+                default: return null;
+            }
+        }
+        /// <summary>A boss's own track (started by BossFight.Begin, the fight's first moment).</summary>
+        public static string BossTrack(string boss) => boss == "viper" ? "mars_viper" : boss == "machinist" ? "asteroid_machinist" : boss == "ratwing" ? "biaveh_ratwing" : boss == "wormmaster" ? "venus_underground" : null;
+        /// <summary>Does the player have control right now (a chapter's follow camera, no fade, no hold)?</summary>
+        public static System.Func<bool> HasControl = DefaultControl;
+        static bool DefaultControl()
+        {
+            var cam = Camera.main; if (cam == null) return false;
+            var cc = cam.GetComponent<ChapterCamera>(); if (cc != null) return cc.isActiveAndEnabled && !cc.InShot;
+            var sc = cam.GetComponent<SaucerCamera>(); if (sc != null) return !sc.Hold && (Chapter1Aboard.I == null || !Chapter1Aboard.I.Active || !Chapter1Aboard.I.InGalleyScene);
+            return false;
+        }
+        static void ReportScene()
+        {
+            if (DemoBoot.CaptureDir == null || string.IsNullOrEmpty(_sceneName)) return;
+            ChapterCapture.I?.Log($"MUSIC (QF24 21) {_sceneName}: longest silence while she had control {_longestQuiet:0.0} s (must be under 5 s unless declared), the guard brought the theme back {_guardStarts}x, now '{Current ?? "(none)"}'{(_suspended != null ? $", suspended '{_suspended}'" : "")}");
+        }
+        public static void Report() => ReportScene();
 
         AudioSource Src(string n)
         {
@@ -124,6 +176,19 @@ namespace Seven
         void Update()
         {
             if (_suspended != null && Time.unscaledTime - _suspendTime > 60f) Resume(3f);
+            // QF24 (21): the never-silent guard (while she has control)
+            if (Time.unscaledTime >= _guardNext)
+            {
+                float step = 0.25f; _guardNext = Time.unscaledTime + step;
+                bool control = false; try { control = HasControl != null && HasControl(); } catch { }
+                bool silent = Current == null && _suspended == null && !(Time.unscaledTime < _silenceUntil);
+                if (control && silent && Theme(_sceneName ?? "") != null)
+                {
+                    _quietFor += step; _longestQuiet = Mathf.Max(_longestQuiet, _quietFor);
+                    if (_quietFor >= 3.5f) { var th = Theme(_sceneName); _guardStarts++; AudioKit.Log?.Invoke($"MUSIC GUARD (QF24 21): {_quietFor:0.0} s of silence with control in {_sceneName} - '{th}' fades back in"); Play(th, 2.5f); _quietFor = 0f; }
+                }
+                else _quietFor = 0f;
+            }
             bool duckNow = DialoguePlayer.AnyBusy || Purr.Playing;   // QF23 (11): the music ducks under his purr too
             _duck = Mathf.MoveTowards(_duck, duckNow ? DuckLevel : 1f, Time.unscaledDeltaTime * (duckNow ? 2.5f : 0.8f));
             float g = AudioKit.Gain(AudioKit.Bus.Music) * _duck;

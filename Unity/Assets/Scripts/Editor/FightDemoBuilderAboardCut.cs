@@ -63,11 +63,70 @@ namespace Seven.EditorTools
                 foreach (var smr in cm.GetComponentsInChildren<SkinnedMeshRenderer>()) { smr.updateWhenOffscreen = true; smr.sharedMaterials = smr.sharedMaterials.Select(mm => mm != null && mm.name.Contains("whisker") ? wh : fur).ToArray(); }
                 var toD = Vector3.ProjectOnPlane(disp.position - deskAt, Vector3.up); cr.transform.rotation = Quaternion.LookRotation(toD.sqrMagnitude > 0.01f ? toD : fwd);
                 ac.Cat = cr.transform; ac.CatAnim = can; ac.Pose = cr.AddComponent<Seven.CatPoseOverlay>();
-                // a dangling cable from under the console lip, within paw reach
-                var cable = new GameObject("DanglingCable").transform; cable.SetParent(root.transform, false); cable.position = deskAt + toD.normalized * 0.25f + right * 0.22f + Vector3.up * 0.42f;
-                var cv = new List<Vector3>(); var ct = new List<int>(); Sweep(cv, ct, new[] { Vector3.zero, new Vector3(0.01f, -0.14f, 0f), new Vector3(0f, -0.3f, 0.01f) }, 0.006f, false, 5); Ellipsoid(cv, ct, new Vector3(0f, -0.31f, 0.01f), Vector3.one * 0.014f, 3, 6);
-                var cg = MeshObject("Cable", SaveMesh(SmoothFinish(cv, ct), "QF23_CutCable_" + parent.name), Markers.DarkGloss(), cable, false); cg.transform.localPosition = Vector3.zero;
-                ac.Cable = cable;
+                // QF24 (8a): no dangling cable / toy any more (it never read as a toy and was never on the ship).
+                // QF24 (8b): he was half hanging off the console. Two measured places (temporary colliders on the interior,
+                // raycasts over his footprint - every sample must land on the same flat surface):
+                //  - the PILOT'S CHAIR, in one of his larger forms (he changes size): sitting on the seat cushion facing the
+                //    display, his head at the display's height (the default for watching / composed / talking);
+                //  - fully ON the console top in front of the display (all four paws on it) - for batting at the screen.
+                // straight ray-triangle tests on the interior's own meshes (edit-mode physics on a prefab instance is unreliable)
+                var surf = new List<(Bounds b, Vector3[] v, int[] t)>();
+                foreach (var mf in inst.GetComponentsInChildren<MeshFilter>(true))
+                {
+                    var rr = mf.GetComponent<Renderer>(); if (mf.sharedMesh == null || rr == null || !mf.sharedMesh.isReadable) continue;
+                    var mv = mf.sharedMesh.vertices; var wv = new Vector3[mv.Length]; for (int q = 0; q < mv.Length; q++) wv[q] = mf.transform.TransformPoint(mv[q]);
+                    surf.Add((rr.bounds, wv, mf.sharedMesh.triangles));
+                }
+                bool RayDown(Vector3 o, out float hitY)
+                {
+                    hitY = float.NegativeInfinity; bool any = false;
+                    foreach (var sf in surf)
+                    {
+                        if (o.x < sf.b.min.x || o.x > sf.b.max.x || o.z < sf.b.min.z || o.z > sf.b.max.z || sf.b.min.y > o.y) continue;
+                        for (int q = 0; q + 2 < sf.t.Length; q += 3)
+                        {
+                            Vector3 a0 = sf.v[sf.t[q]], b0 = sf.v[sf.t[q + 1]], c0 = sf.v[sf.t[q + 2]];
+                            var e1 = b0 - a0; var e2 = c0 - a0; var h = Vector3.Cross(Vector3.down, e2); float det = Vector3.Dot(e1, h); if (Mathf.Abs(det) < 1e-9f) continue;
+                            float f = 1f / det; var sv = o - a0; float u = f * Vector3.Dot(sv, h); if (u < 0f || u > 1f) continue;
+                            var qv = Vector3.Cross(sv, e1); float w = f * Vector3.Dot(Vector3.down, qv); if (w < 0f || u + w > 1f) continue;
+                            float d = f * Vector3.Dot(e2, qv); if (d <= 0f || d > 1.2f) continue;
+                            float y = o.y - d; if (y > hitY) { hitY = y; any = true; }
+                        }
+                    }
+                    return any;
+                }
+                var fwdD = toD.normalized; var rightD = Vector3.Cross(Vector3.up, fwdD);
+                // a footprint: half-length along his body, half-width; samples at the corners, the mid-sides and the centre
+                bool Support(Vector3 c, float hl, float hw, float yRef, out float top, out float spread)
+                {
+                    top = -99f; spread = 99f; float lo = 99f, hi = -99f; int n = 0;
+                    foreach (var a in new[] { -1f, 0f, 1f }) foreach (var b in new[] { -1f, 0f, 1f })
+                    {
+                        var o = c + fwdD * hl * a + rightD * hw * b + Vector3.up * 0.6f;
+                        if (!RayDown(o, out float hy)) return false;
+                        lo = Mathf.Min(lo, hy); hi = Mathf.Max(hi, hy); n++;
+                        if (Mathf.Abs(hy - yRef) > 0.25f) return false;
+                    }
+                    top = hi; spread = hi - lo; return n == 9;
+                }
+                // the chair: the seat cushion's top (the cushion ellipsoid: centre 0.445 m, half-height 0.075 m in the chair's
+                // frame; the PilotSeat marker sits at 0.60 m) - a big form sitting on it, facing the display
+                float chairScale = 2.1f;
+                var up2 = seat.up; var chairTop = seat.position - up2 * 0.08f + fwdD * 0.03f;
+                float chairSpread = 0f; bool chairOk = RayDown(chairTop + Vector3.up * 0.5f, out float chY) && Mathf.Abs(chY - chairTop.y) < 0.03f;
+                if (chairOk) { chairSpread = Mathf.Abs(chY - chairTop.y); chairTop.y = chY; }
+                ac.ChairSpot = new GameObject("CutPantherChairSpot").transform; ac.ChairSpot.SetParent(root.transform, false);
+                ac.ChairSpot.position = chairTop; ac.ChairSpot.rotation = Quaternion.LookRotation(fwdD);
+                ac.ChairScale = chairScale; ac.ChairHalf = new Vector2(0.29f, 0.28f);   // the cushion's own half-sizes
+                // the navigation desk in front of the display: its top runs from r 2.01 to 2.34 m (0.77 -> 0.82 m high), the
+                // display stands from r 2.30 - so the spot is 0.15 m in front of the display's foot, on the desk top
+                var best = disp.position - fwdD * 0.15f; best.y = disp.position.y - 0.442f;
+                float deskSpread = 0f; bool deskOk = RayDown(best + Vector3.up * 0.5f, out float dkY) && Mathf.Abs(dkY - best.y) < 0.05f;
+                if (deskOk) { deskSpread = Mathf.Abs(dkY - best.y); best.y = dkY; }
+                ac.DeskSpot = new GameObject("CutPantherDeskSpot").transform; ac.DeskSpot.SetParent(root.transform, false);
+                ac.DeskSpot.position = best; ac.DeskSpot.rotation = Quaternion.LookRotation(fwdD); ac.DeskHalf = new Vector2(0.12f, 0.15f);
+                Log($"PANTHER PLACE (QF24 8): the pilot's chair - cushion top {chairTop.y - root.transform.position.y:0.000} m above the deck ({(chairOk ? $"a ray down confirms it within {chairSpread * 100f:0.0} cm" : "from the cushion's built shape")}), his larger form x{chairScale:0.0}; the navigation desk top {best.y - root.transform.position.y:0.000} m ({(deskOk ? $"ray-confirmed within {deskSpread * 100f:0.0} cm" : "from the desk's built shape")}), {Vector3.Distance(best, disp.position):0.00} m from the display (paw reach) - his paws vs these surfaces are measured in every cut (PANTHER PLACE lines in check runs)");
+                cr.transform.position = ac.ChairSpot.position; cr.transform.rotation = ac.ChairSpot.rotation; cr.transform.localScale = Vector3.one * chairScale;
             }
             else Log("WARNING (QF23 10): no cat model / no console markers for the cutaway set");
             // the display: what the saucer's instruments see - a live top-down map round her, her marker, his
@@ -90,7 +149,7 @@ namespace Seven.EditorTools
             }
             // the ship's own light, so the cut is lit like the ship even far from the level's lights
             PointLight("CutFill", (seat != null ? seat.position : at) + Vector3.up * 2.2f, 7f, 1.6f, root.transform);
-            Log($"QF23 (10): Panther's cutaway set in this scene - the real saucer interior at {at}, Panther on the console desk, the display = a live map round her");
+            Log($"QF23 (10) / QF24 (8): Panther's cutaway set in this scene - the real saucer interior at {at}, Panther in the pilot's chair (larger form) / on the console top to bat at the screen, the display = a live map round her");
             return ac;
         }
         static Mesh Markers_Ring(float r)

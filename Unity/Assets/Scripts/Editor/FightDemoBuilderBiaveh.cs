@@ -209,7 +209,9 @@ namespace Seven.EditorTools
             // and curving in toward its rim (their glowing pads stop 0.6 m short of the hull), the beam's landing pad beneath
             for (int i = 0; i < 4; i++)
             {
-                var (av, at2) = bk.Of(m.pale); float a = (45f + i * 90f) * Mathf.Deg2Rad; var d = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                // QF24 (5): the arm set turned round the saucer so NO arm stands in front of the bike hold (hold at
+                // SaucerHold.Angle 41.25 deg - the old 45 deg arm stood right in its opening): 70 / 140 / 220 / 290 deg from it
+                var (av, at2) = bk.Of(m.pale); float a = (Seven.SaucerHold.Angle + new[] { 70f, 140f, 220f, 290f }[i]) * Mathf.Deg2Rad; var d = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
                 var pts = new List<Vector3> { B.SaucerAt + d * 8.6f, B.SaucerAt + d * 8.9f + Vector3.up * 1.6f, B.SaucerAt + d * 8.2f + Vector3.up * 3.2f, B.SaucerAt + d * 7.0f + Vector3.up * 3.9f };
                 Sweep(av, at2, pts, 0.16f, false, 10);
                 var (gv3, gt3) = bk.Of(m.glowSoft); Ellipsoid(gv3, gt3, B.SaucerAt + d * 6.85f + Vector3.up * 3.9f, new Vector3(0.22f, 0.1f, 0.22f), 4, 8);
@@ -239,11 +241,10 @@ namespace Seven.EditorTools
             for (int i = 0; i < 6; i++) { var (v, t) = jk.Of(m.dark); Sweep(v, t, new[] { new Vector3(132f + i * 3f, B.HighBridgeY - 1.4f, -3.2f), new Vector3(133.5f + i * 3f, B.HighBridgeY - 2.6f, -2f), new Vector3(132f + i * 3f, B.HighBridgeY - 1.4f, -0.8f) }, 0.12f, false, 5); }   // the supports he hides among
             { var (v, t) = jk.Of(m.pale); Append(v, t, Lathe(new[] { new Vector2(0f, -1.2f), new Vector2(5f, -1.2f), new Vector2(5.4f, -0.3f), new Vector2(5f, 0f), new Vector2(0f, 0f) }, 0f, 360f, 20, null, B.RatwingDrop)); }   // the distant platform
             { var (v, t) = jk.Of(m.dark); Append(v, t, Lathe(new[] { new Vector2(14f, -60f), new Vector2(14f, 120f), new Vector2(15f, 120f), new Vector2(15f, -60f) }, 0f, 360f, 24, null, new Vector3(B.ShaftTop.x, 0f, B.ShaftTop.z))); }   // the vertical shaft
-            var lamp1 = Pedestal(jk, m, B.CabinetAt + new Vector3(0f, 0f, 1.2f), 1.9f, "Relay1_Lamp", junc);
-            { var (v, t) = jk.Of(m.pale); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.9f, 0f), new Vector2(0.8f, 1.6f), new Vector2(0.5f, 2.1f), new Vector2(0f, 2.15f) }, 0f, 360f, 16, null, B.CabinetAt)); }
+            var lamp1 = RelayPylon(m, B.CabinetAt, B.CabinetView - B.CabinetAt, Vector3.left, "Relay1_Lamp", junc);   // QF24 (10): the redesigned relay (was a cabinet + a lamp)
+            // QF24 (10): the old cabinet housing is gone - the relay pylon stands here
             jk.Save("Bia_Junction", junc);
-            var cabDoor = new GameObject("Relay1_Door").transform; cabDoor.SetParent(junc, false); cabDoor.position = B.CabinetAt + new Vector3(-0.6f, 0f, -0.75f);
-            { var dk = new AK(); var (v, t) = dk.Of(m.dark); MBox(v, t, new Vector3(0.6f, 1.0f, 0f), new Vector3(1.2f, 1.6f, 0.08f), 0f, 0.03f); var (sv, st) = dk.Of(m.glowSoft); Sweep(sv, st, new[] { new Vector3(0.1f, 0.4f, -0.05f), new Vector3(0.6f, 1.2f, -0.05f), new Vector3(1.1f, 0.7f, -0.05f) }, 0.02f, false, 4); foreach (var g in dk.Save("Relay1_DoorMesh", cabDoor)) g.transform.localPosition = Vector3.zero; }   // the damage: a torn light line
+            Transform cabDoor = null;   // QF24 (10): no cabinet door - the relay is open to her hand (its resonance plate)
 
             // ---------------------------------------------------------------- BIA_06: the suspended bridge (three segments), the echo span, the partition
             var br = new GameObject("SuspendedBridge").transform; br.SetParent(world, false);
@@ -299,15 +300,12 @@ namespace Seven.EditorTools
             // ---------------------------------------------------------------- BIA_07: the garden, the wall with the remembered door, the seam, relay 2, the glass, the opening
             var gar = new GameObject("Garden").transform; gar.SetParent(world, false);
             var gk = new AK();
-            foreach (var p in B.GardenPlanters())
-            {
-                var (v, t) = gk.Of(m.pale); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(1.2f, 0f), new Vector2(1.3f, 0.6f), new Vector2(0f, 0.6f) }, 0f, 360f, 14, null, p));
-                var (lv, lt) = gk.Of(m.leaf); Sweep(lv, lt, new[] { p + Vector3.up * 0.6f, p + Vector3.up * 3.2f }, 0.14f, false, 6); Ellipsoid(lv, lt, p + Vector3.up * 4.2f, new Vector3(1.8f, 1.4f, 1.8f), 5, 9);
-            }
+            // QF24 (12): the planters are Venus-vegetation beds now (BiaGarden, below)
             { var (v, t) = gk.Of(m.paleSoft); MBox(v, t, new Vector3(253f, 5f, 92.6f), new Vector3(34f, 10f, 1.2f), 0f, 0.3f); MBox(v, t, new Vector3(281f, 5f, 92.6f), new Vector3(6f, 10f, 1.2f), 0f, 0.3f); MBox(v, t, new Vector3(275f, 9f, 92.6f), new Vector3(6f, 2f, 1.2f), 0f, 0f); MBox(v, t, new Vector3(235.4f, 5f, 50.5f), new Vector3(0.8f, 10f, 19f), 0f, 0.3f); MBox(v, t, new Vector3(235.4f, 5f, 82f), new Vector3(0.8f, 10f, 20f), 0f, 0.3f); MBox(v, t, new Vector3(284.6f, 5f, 66f), new Vector3(0.8f, 10f, 52f), 0f, 0.3f); }
-            var lamp2 = Pedestal(gk, m, B.Relay2At + new Vector3(0f, 0f, 0.6f), 1.5f, "Relay2_Lamp", gar);
+            var lamp2 = RelayPylon(m, B.Relay2At, B.Relay2View - B.Relay2At, Vector3.left, "Relay2_Lamp", gar);   // QF24 (10)
             var lampOp = Pedestal(gk, m, B.OpeningControl + new Vector3(0f, 0f, 0.4f), 1.2f, "OpeningControl_Lamp", gar);
             gk.Save("Bia_Garden", gar);
+            BiaGarden(gar, m);                                                    // QF24 (12)
             var glassV = new List<Vector3>(); var glassT = new List<int>(); Quad(glassV, glassT, new Vector3(272f, 0f, 92.6f), new Vector3(272f, 8f, 92.6f), new Vector3(278f, 8f, 92.6f), new Vector3(278f, 0f, 92.6f)); Quad(glassV, glassT, new Vector3(278f, 0f, 92.62f), new Vector3(278f, 8f, 92.62f), new Vector3(272f, 8f, 92.62f), new Vector3(272f, 0f, 92.62f));
             MeshObject("GlassPartition", SaveMesh(Finish(glassV, glassT), "Bia_GlassPartition"), m.glass, gar, false);
             var seam = new GameObject("SeamPanel").transform; seam.SetParent(gar, false); seam.position = new Vector3(266.6f, 0f, 92.0f);
@@ -321,7 +319,7 @@ namespace Seven.EditorTools
                 Sweep(v, t, Enumerable.Range(0, 13).Select(i => { float a = i / 12f * Mathf.PI; return d + new Vector3(Mathf.Cos(a) * 1.3f, 2.4f + Mathf.Sin(a) * 0.8f, 0f); }).ToList(), 0.06f, false, 5);
                 Sweep(v, t, new[] { d + new Vector3(-1.3f, 0f, 0f), d + new Vector3(-1.3f, 2.4f, 0f) }, 0.06f, false, 5); Sweep(v, t, new[] { d + new Vector3(1.3f, 0f, 0f), d + new Vector3(1.3f, 2.4f, 0f) }, 0.06f, false, 5);
                 MBox(v, t, d + new Vector3(0f, 1.4f, 0.05f), new Vector3(2.4f, 2.8f, 0.04f), 0f, 0f);
-                for (int i = 0; i < 8; i++) { var p = new Vector3(242f + i * 5f, 0f, 60f + (i % 3) * 9f); Ellipsoid(v, t, p + Vector3.up * 0.5f, new Vector3(1.6f, 0.4f, 1.0f), 4, 8); Sweep(v, t, new[] { p, p + Vector3.up * 2.4f }, 0.08f, false, 4); }
+                BiaEchoPlants(v, t);                                              // QF24 (12): translucent versions of the same plants
             });
 
             // ---------------------------------------------------------------- BIA_08: the quiet passage, the airlock pair, relay 3
@@ -331,9 +329,18 @@ namespace Seven.EditorTools
             { var (v, t) = pk2.Of(m.dark); foreach (var (a, b2) in new[] { (new Vector3(170f, 0f, 57.6f), new Vector3(186f, 0f, 57.6f)), (new Vector3(170f, 0f, 74.4f), new Vector3(186f, 0f, 74.4f)), (new Vector3(169.6f, 0f, 57.6f), new Vector3(169.6f, 0f, 74.4f)) }) { var d = b2 - a; MBox(v, t, (a + b2) * 0.5f + Vector3.up * 3f, new Vector3(Mathf.Abs(d.x) > 0.1f ? d.magnitude : 0.8f, 6f, Mathf.Abs(d.z) > 0.1f ? d.magnitude : 0.8f), 0f, 0.1f); } }
             { var (gv, gt) = pk2.Of(m.glowSoft); foreach (var z in new[] { 63.6f, 68.4f }) Sweep(gv, gt, new[] { new Vector3(186f, 0.3f, z), new Vector3(205f, 0.3f, z) }, 0.03f, false, 4); }
             var lampA = Pedestal(pk2, m, B.LockPanelA, 1.2f, "PanelA_Lamp", pas); var lampB = Pedestal(pk2, m, B.LockPanelB, 1.2f, "PanelB_Lamp", pas);
-            var lamp3 = Pedestal(pk2, m, B.Relay3At + new Vector3(-0.8f, 0f, 0f), 1.6f, "Relay3_Lamp", pas);
-            { var (v, t) = pk2.Of(m.pale); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(1.0f, 0f), new Vector2(0.85f, 2.2f), new Vector2(0f, 2.4f) }, 0f, 360f, 16, null, B.Relay3At + new Vector3(-1.6f, 0f, 0f))); }
-            { var (v, t) = pk2.Of(m.mid); Append(v, t, RotZ(Lathe(new[] { new Vector2(0f, -0.3f), new Vector2(0.12f, -0.3f), new Vector2(0.12f, 0.3f), new Vector2(0f, 0.3f) }, 0f, 360f, 10), B.LockPanelB + new Vector3(-0.6f, 0.12f, -1.6f))); }   // the loose coupling on the lock floor
+            var lamp3 = RelayPylon(m, B.Relay3At, B.Relay3View - B.Relay3At, Vector3.left, "Relay3_Lamp", pas);   // QF24 (10)
+            /* QF24 (10): the old relay-3 housing removed (the pylon stands at Relay3At) */
+            // QF24 (14): the loose coupling is its OWN object (it was baked into the passage's static mesh, so her telekinesis
+            // could never move it): a short ribbed cylinder lying on the lock floor, lifted into the socket by the director
+            var coupling = new GameObject("LockCoupling").transform; coupling.SetParent(pas, false); coupling.position = B.LockPanelB + new Vector3(-0.6f, 0.12f, -1.6f);
+            {
+                var cv = new List<Vector3>(); var ct = new List<int>();
+                Append(cv, ct, RotZ(Lathe(new[] { new Vector2(0f, -0.3f), new Vector2(0.12f, -0.3f), new Vector2(0.12f, -0.22f), new Vector2(0.1f, -0.2f), new Vector2(0.1f, 0.2f), new Vector2(0.12f, 0.22f), new Vector2(0.12f, 0.3f), new Vector2(0f, 0.3f) }, 0f, 360f, 14), Vector3.zero));
+                var cg = MeshObject("LockCoupling_Body", SaveMesh(SmoothFinish(cv, ct), "Bia_LockCoupling"), m.mid, coupling, false); cg.transform.localPosition = Vector3.zero;
+                var gv = new List<Vector3>(); var gt = new List<int>(); Append(gv, gt, RotZ(Lathe(new[] { new Vector2(0.125f, -0.02f), new Vector2(0.13f, 0f), new Vector2(0.125f, 0.02f) }, 0f, 360f, 14), Vector3.zero));
+                var glo = MeshObject("LockCoupling_Glow", SaveMesh(SmoothFinish(gv, gt), "Bia_LockCouplingGlow"), new Material(m.glowSoft) { name = "Bia_coupling_glow" }, coupling, false); glo.transform.localPosition = Vector3.zero;
+            }
             pk2.Save("Bia_Passage", pas);
             Transform Door(string n, Vector3 at)
             {
@@ -361,7 +368,35 @@ namespace Seven.EditorTools
                 foreach (var g in dk.Save(n + "_Mesh", d)) g.transform.localPosition = Vector3.zero; return d;
             }
             var parts = new[] { Shutter("ChamberPartition1", B.Partitions[0], new Vector3(46f, 14f, 0.8f)), Shutter("ChamberPartition2", B.Partitions[1], new Vector3(0.8f, 14f, 44f)) };
-            var outerB = Shutter("OuterBarrier", B.OuterBarrier, new Vector3(0.5f, 6f, 10.4f)); var innerB = Shutter("InnerBarrier", B.InnerBarrier, new Vector3(0.5f, 6f, 10.4f));
+            // QF24 (19): the sealing barrier (and the compartment's other exit) has a clear viewing window - a curved Biavian pane
+            // with a soft rim light - so the camera can hold on Ratwing inside after it closes
+            Transform WindowShutter(string n, Vector3 at, Vector3 size)
+            {
+                var d = new GameObject(n).transform; d.SetParent(ch, false); d.position = at;
+                var dk = new AK(); var (v, t) = dk.Of(m.paleSoft);
+                float w = size.z, h = size.y, th = size.x, ow = 3.6f, oy0 = 1.3f, oy1 = 3.9f;
+                MBox(v, t, new Vector3(0f, oy0 * 0.5f, 0f), new Vector3(th, oy0, w), 0f, 0.1f);                                       // below the window
+                MBox(v, t, new Vector3(0f, (oy1 + h) * 0.5f, 0f), new Vector3(th, h - oy1, w), 0f, 0.1f);                              // above it
+                float sw = (w - ow) * 0.5f;
+                foreach (var sgn in new[] { -1f, 1f }) MBox(v, t, new Vector3(0f, (oy0 + oy1) * 0.5f, sgn * (ow * 0.5f + sw * 0.5f)), new Vector3(th, oy1 - oy0, sw), 0f, 0.1f);   // the sides
+                var (gv, gt) = dk.Of(m.glowSoft);
+                Sweep(gv, gt, new[] { new Vector3(-w * 0.5f, 0.2f, -th * 0.6f), new Vector3(w * 0.5f, 0.2f, -th * 0.6f) }, 0.05f, false, 4);
+                // the rim light: a rounded loop just inside the opening, on both faces
+                foreach (var fx in new[] { -th * 0.55f, th * 0.55f })
+                {
+                    var loop = new List<Vector3>();
+                    for (int i = 0; i <= 40; i++) { float a = i / 40f * Mathf.PI * 2f; float cx = Mathf.Cos(a), cy = Mathf.Sin(a); float sx = Mathf.Sign(cx) * Mathf.Pow(Mathf.Abs(cx), 0.45f), sy = Mathf.Sign(cy) * Mathf.Pow(Mathf.Abs(cy), 0.45f); loop.Add(new Vector3(fx, (oy0 + oy1) * 0.5f + sy * (oy1 - oy0) * 0.47f, sx * ow * 0.47f)); }
+                    Sweep(gv, gt, loop, 0.035f, false, 5);
+                }
+                foreach (var g in dk.Save(n + "_Mesh", d)) g.transform.localPosition = Vector3.zero;
+                // the pane: a faint, slightly curved sheet (additive - it reads as glass, the room behind it stays clear)
+                var pv = new List<Vector3>(); var pt = new List<int>();
+                for (int iy = 0; iy <= 6; iy++) for (int iz = 0; iz <= 10; iz++) { float u = iz / 10f - 0.5f, vv = iy / 6f; pv.Add(new Vector3(-0.06f * Mathf.Cos(u * Mathf.PI), oy0 + vv * (oy1 - oy0), u * ow)); }
+                for (int iy = 0; iy < 6; iy++) for (int iz = 0; iz < 10; iz++) { int a = iy * 11 + iz, b = a + 11; pt.AddRange(new[] { a, b, a + 1, a + 1, b, b + 1, a, a + 1, b, a + 1, b + 1, b }); }
+                var pane = MeshObject(n + "_WindowPane", SaveMesh(Finish(pv, pt), "Bia_" + n + "_Pane"), m.glass, d, false); pane.transform.localPosition = Vector3.zero;
+                return d;
+            }
+            var outerB = WindowShutter("OuterBarrier", B.OuterBarrier, new Vector3(0.5f, 6f, 10.4f)); var innerB = WindowShutter("InnerBarrier", B.InnerBarrier, new Vector3(0.5f, 6f, 10.4f));
             var archDoor = Shutter("ArchiveDoor", B.ArchiveEntrance, new Vector3(8f, 7f, 0.6f));
 
             // ---------------------------------------------------------------- BIA_11: the memory chamber, the suspended structures, the octahedron
@@ -376,7 +411,7 @@ namespace Seven.EditorTools
             PointLight("Temple_Light", new Vector3(175f, 12f, 170f), 34f, 2.4f, tem); PointLight("Octa_Light", B.OctaAt + Vector3.up * 2f, 10f, 2.4f, tem); PointLight("Temple_Fill", new Vector3(175f, 4f, 158f), 18f, 1.4f, tem);
             { var rk = new AK(); var (gv, gt) = rk.Of(m.glowSoft); foreach (var rr in new[] { 4f, 9f, 14f }) Sweep(gv, gt, Enumerable.Range(0, 49).Select(i => new Vector3(175f + Mathf.Cos(i / 48f * Mathf.PI * 2f) * rr, 0.04f, 170f + Mathf.Sin(i / 48f * Mathf.PI * 2f) * rr)).ToList(), 0.05f, true, 4); rk.Save("Bia_TempleRings", tem, false, false); }
             var em = ElarimMaterials(false);
-            var octa = BuildOctahedronShape("MothershipRune", world, 0.45f, em, "Bia_Rune").transform; octa.position = B.OctaAt;
+            var octa = BuildOctahedronShape("MothershipRune", world, Seven.RuneSizes.OctaR, em, "Bia_Rune").transform; octa.position = B.OctaAt;
             var recordOcta = BuildOctahedronShape("MothershipRecordCopy", world, 0.06f, em, "Bia_RecordOcta").transform; recordOcta.gameObject.SetActive(false);
             // district lights (each relay's district: lights return when it reconnects)
             Renderer[] District(string n, Vector3 c, int count) { var l = new List<Renderer>(); for (int i = 0; i < count; i++) { var p = c + Quaternion.Euler(0f, i * 360f / count, 0f) * Vector3.forward * (14f + (i % 3) * 6f) + Vector3.up * (6f + (i % 4) * 3f); var lv = new List<Vector3>(); var lt = new List<int>(); Ellipsoid(lv, lt, p, new Vector3(0.6f, 0.4f, 0.6f), 4, 8); l.Add(MeshObject(n + i, SaveMesh(SmoothFinish(lv, lt), "Bia_" + n + i), new Material(m.glowSoft) { name = "Bia_" + n.ToLower() + i }, world, false).GetComponent<Renderer>()); } return l.ToArray(); }
@@ -476,9 +511,10 @@ namespace Seven.EditorTools
             dir.Atmo = atmo.GetComponent<Seven.Atmosphere>(); dir.GuideLight = guideLight.transform;
             dir.Nela = nela; dir.ResidentA = resA; dir.Crossers = crossers.Where(c => c != null).ToArray(); dir.Seedlings = seedlings; dir.Ratwing = rwRoot.transform; dir.RRig = rrig;
             dir.EchoBerth = echoBerth; dir.RouteDisplay = disp; dir.RouteMarks = marks.ToArray(); dir.RouteLine = routeLine;
+            BiaDetail(world, m);                                                  // QF24 (16): purposeful detail across the mothership
             dir.Relay1Lamp = lamp1; dir.Cabinet1Door = cabDoor; dir.BridgeSegments = segs.ToArray(); dir.SegmentParked = parked.ToArray(); dir.SegmentAligned = aligned.ToArray(); dir.EchoBridge = echoBridge; dir.BridgeLever = lever; dir.PartitionA = partA; dir.DistrictLights1 = d1;
             dir.EchoGarden = echoGarden; dir.SeamPanel = seam; dir.Relay2Lamp = lamp2; dir.UpperShutter = upper; dir.OpeningLamp = lampOp; dir.DistrictLights2 = d2;
-            dir.PassageDoor = passDoor; dir.LockDoorA = lockA; dir.LockDoorB = lockB; dir.PanelALamp = lampA; dir.PanelBLamp = lampB; dir.Relay3Lamp = lamp3; dir.DistrictLights3 = d3;
+            dir.LockCoupling = coupling; dir.PassageDoor = passDoor; dir.LockDoorA = lockA; dir.LockDoorB = lockB; dir.PanelALamp = lampA; dir.PanelBLamp = lampB; dir.Relay3Lamp = lamp3; dir.DistrictLights3 = d3;
             dir.ChamberPartitions = parts; dir.StationLamps = stationLamps.ToArray(); dir.OuterBarrier = outerB; dir.InnerBarrier = innerB; dir.BarrierLamp = barrierLamp;
             dir.ArchiveDoor = archDoor; dir.RoutingLamp = routingLamp; dir.Octa = octa; dir.RecordOcta = recordOcta; dir.CityLights = cityLights.ToArray();
             dir.DebrisMeshes = BiavianDebrisMeshes(); dir.DebrisMat = m.pale;   // QF23 (18): Biavian debris, not the asteroid's gears

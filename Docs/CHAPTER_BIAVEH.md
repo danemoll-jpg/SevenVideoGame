@@ -226,7 +226,7 @@ Ratwing severs a local control connection and launches into the vertical shaft.
 | BIA_05_12 | — | — | Cut to his twitching tail. It stops. |
 | BIA_05_13 | Panther | Repair the relay. | Dignified. |
 | BIA_05_14 | 7 | Thought so. | Quiet laugh; approaches the controls. |
-| BIA_05_N1 | Guide | The relay is in that cabinet at the junction. He tore its coupling loose. Seat it again and this district will hear us. | Calm, precise. *(QF23, new - Dan to review)* |
+| BIA_05_N1 | Guide | The relay stands at the junction. He jammed its node and cracked it. Lay your hand on its plate and this district will hear us. | Calm, precise. *(QF23, new - Dan to review)* *(QF24 10: rewritten for the redesigned relay - was "The relay is in that cabinet...")* |
 
 **Gameplay:** a brief pursuit is optional for a better view of Ratwing’s escape route, but repairing the relay is the required objective.
 
@@ -245,7 +245,9 @@ As the bridge settles, waiting residents cross. One struggles with a container o
 | BIA_06_N1 | Guide | That relay also held our bridge in line. Without it the span drifted apart, and our people are stranded on the far side. | Concerned. *(QF23, new - Dan to review)* |
 | BIA_06_N2 | Guide | The bridge's service controls are at the chasm's edge. Bring the segments back together. | Precise. *(QF23, new - Dan to review)* |
 | BIA_06_01 | Resident | Thank you. We thought we might be here all day. | Adjusts the container. |
-| BIA_06_02 | 7 | Are those all yours? | Looks at the crowded seedlings. |
+| BIA_06_02 | 7 | What are you carrying? | Looks at the overflowing tray (the camera shows the tray). *(QF24 11: replaces "Are those all yours?")* |
+| BIA_06_02a | Resident | Seedlings for the upper gardens. Every district grows a few for the others. | Explains them - the connected people. *(QF24 11, new)* |
+| BIA_06_02b | 7 | They look ready to plant themselves. | A small smile. *(QF24 11, new)* |
 | BIA_06_03 | Resident | They were smaller when I left home. | Weary amusement. |
 | BIA_06_04 | 7 | Heh. Good luck. | Steps aside. |
 
@@ -401,10 +403,14 @@ The barriers must never close on his body or wings. Mistimed attempts reset the 
 | BIA_09_10 | Panther | Wait… | Tail still; eyes fixed. |
 | BIA_09_11 | Panther | Now. | Sharp and precise. |
 
-The compartment seals safely. Ratwing strikes the barrier, then tests the other exit. Both hold.
+The compartment seals safely. Ratwing strikes the barrier, then tests the other exit. Both hold. *(QF24 19)* The sealing
+partition (and the compartment's other exit) has a clear pane - a curved Biavian viewing window with a soft rim light - so the
+camera holds on him inside: he strikes the barrier, tests the other exit, then lands and presses up to the glass. Shot order:
+7 and the pane (her reflection faint on it) → Ratwing close up through the glass for his line → back to 7 for BIA_09_12 onward.
 
 | ID | Speaker | Dialogue | Performance |
 |---|---|---|---|
+| BIA_09_11a | Ratwing | Fine. But this whole ship remembers everything. You'll never live this down. And neither will I. | To the glass - sulky, still smug. *(QF24 19, new - Dan to confirm)* |
 | BIA_09_12 | 7 | Ha! Got him. | Breathless relief; lowers her shoulders. |
 | BIA_09_13 | Panther | Mm. | Deep satisfaction. |
 | BIA_09_14 | 7 | That was a very pleased noise. | Small laugh. |

@@ -213,3 +213,59 @@ left chest, a **wide dark belt with a square buckle** (a circle and four dots); 
 and residents (sizes / tones / medallion glyph vary). Pipeline: Dan generates a full-body A-pose reference (prompt in chat; fitted
 trousers, no robe / cape) → `Art/Reference/biavian_ref_front.png` → Tripo `Art/Source/biavian/biavian_v1.glb` → Code makes
 `..._for_mixamo.fbx` → Mixamo → `Art/Mixamo/biavian/biavian_body_mixamo.fbx` → replaces the Zorp stand-in (Round 17).
+
+## Cattalus — Panther's homeworld (2026-11-21, Round 18)
+Spec: `Docs/CHAPTER_CATTALUS.md`. Built with stand-ins until these are in; each drops in by file name.
+
+**City cats (citizens, Juniper, the Steward, the Announcer):** no new models. Code builds them from Panther's rigged cat
+(`cat_v1`) with new fur textures / markings, size and proportion variations, long-haired fur shells and small accessories,
+reusing his clips.
+
+**1. Duchess, the champion (optional, recommended)** → `Art/Reference/duchess_ref_34.png` → Tripo (rigged, quadruped)
+`Art/Source/duchess/duchess_v1.glb`. Until then: a long-haired white variant of Panther's cat.
+```
+Character model reference, a single large fluffy long-haired white domestic cat, full body from nose to tail tip, centered, nothing cropped. Strictly black-and-white grayscale, no color. Flat even studio lighting, no cast shadows, plain light gray background. Clean painterly concept-art style. Standing on all four legs in a neutral 3/4 front view, legs slightly apart, a big plumed tail raised and curving away from the body, ears up, eyes open. Thick soft white fur with a full ruff round the neck and feathered paws, pale eyes, calm, gracious, slightly sleepy expression, heavy elegant build, a thin smooth metal band round one foreleg.
+```
+Negative: `color, cartoon, chibi, cropped tail, cropped paws, clothing, props, shadows, multiple cats`.
+
+**2. Duchess's hover racer** → `Art/Reference/cat_racer_ref.png` → Tripo `Art/Source/cat_racer/cat_racer_v1.glb` (no rig).
+Until then: procedural.
+```
+3D model reference of a single small hover racing vehicle sized for a large cat rider, 3/4 front view, centered, whole vehicle visible. Strictly black-and-white grayscale, no color. Flat even studio lighting, plain light gray background. A low sleek teardrop hull with no wheels, a padded round saddle well in the middle for a crouching cat, a curved low windscreen fairing at the front, two small round thruster pods at the back, a slim racing-number plate on the side, soft rounded retro-futurist styling, playful and elegant, smooth panels with fine seams.
+```
+Negative: `color, wheels, rider, cat, person, text, logos, shadows, cropped`.
+
+**3. The championship trophy** (the sphere is separate, made in code from Kyle's `kyle_7_sphere.jpg`) →
+`Art/Reference/cat_trophy_ref.png` → Tripo `Art/Source/cat_trophy/cat_trophy_v1.glb`. Until then: procedural.
+```
+3D model reference of a single ornate championship trophy, front 3/4 view, centered, whole object visible. Strictly black-and-white grayscale, no color. Flat even studio lighting, plain light gray background. A tall stepped round pedestal of small carved columns wrapped in rope like miniature scratching posts, two curling side handles shaped like cat tails, small paw-print reliefs round the base, and at the top an open decorative cradle of four slender curved prongs holding nothing, sized to cradle a ball the size of two hands. Polished metal and carved stone.
+```
+Negative: `color, ball, sphere, text, logos, shadows, cropped, people, cats`.
+
+**4. The colour reference: 7 beside giant Panther in the meadow** (Dan approves this before any meadow clip) →
+`Art/Reference/cattalus_meadow_color_ref.png`. Attach `7_ref_regular_front.png` and `cat_ref_34.png` as character references if
+the tool allows. The bracketed colours are proposals; Dan sets 7's colours.
+```
+Cinematic film still in full natural color, warm golden late-afternoon light, soft haze. A wide meadow of tall golden-green grass with drifting seedheads, low rolling hills along the horizon, and a single old tree leaning strongly to one side with one long low branch reaching out almost level with the ground. Beneath the tree a young woman sits leaning against the shoulder of an enormous black cat lying on its belly with its forelegs stretched out in front; the cat is so large that its shoulder would stand above her head. She rests the side of her head against its fur, one hand on its foreleg, knees loosely drawn up, eyes closed, peaceful. The woman: slim and athletic, black hair in two high pigtails tied with small pearl-silver ball ties, a small white dot on her forehead, light freckles; a fitted long-sleeved [deep charcoal] bodysuit with thin [pale silver] seam lines over the shoulders, a segmented [silver] collar at the neck, fitted [charcoal] shorts with small flap pockets, tall armored [sand-gray] boots above the knee with knee plates and straps. The cat: a sleek short-haired black domestic cat at giant scale, glossy fur, [pale gold] eyes, head lowered beside hers, tail curving loosely through the grass near her feet, relaxed and content. Gentle painterly realism, tender and calm, no text.
+```
+Negative: `cartoon, anime, extra limbs, extra fingers, saddle, armor on the cat, collar on the cat, bared teeth, other animals, other people, text, watermark`.
+
+**5. Videos (Dan, your video tool, image-to-video).** All 1920×1044-ready (Code converts), no speech generated, no text.
+
+*Vision 7* → `Art/Video/vision_07_cattalus.mp4`, about 12 s, **grayscale**. Start frame: an image of the empty meadow and leaning
+tree in grayscale, misty.
+```
+Grayscale, painterly, dreamlike memory, soft misty light, slow gentle camera drift. A broad meadow long ago, the same old tree leaning strongly to one side with one long low branch. A hooded traveler whose face stays hidden in shadow and soft blur kneels beside a simple open wooden box in the grass and gently places a smooth pale ball inside it. A short-haired cat walks up through the grass, sniffs the ball, then deliberately rests one paw on the grass beside the box. The traveler sits down beneath the tree and the cat settles against their side. Long, still hold on the quiet companionship. Monochrome, no speech, no text.
+```
+
+*The meadow cinematic* → `Art/Video/color/cattalus_meadow_01.mp4` … `_06.mp4`, **full colour**, about 12 s each. Start each from
+the approved colour reference (`cattalus_meadow_color_ref.png`) or from the last frame of the previous clip, and keep the same
+characters, tree, hill line and light direction. Shared style line, put at the start of each prompt:
+`Cinematic, full natural color, warm golden late-afternoon light, soft haze, gentle painterly realism, the same young woman (black pigtails with pearl ties, charcoal bodysuit, tall armored boots) and the same black cat, the same leaning tree and low hills.`
+1. `Wide unhurried shot. The woman walks into the tall golden grass with a small black cat trotting beside her, trailing her fingers through the seedheads. A seedhead drifts past the cat's nose and his eyes follow it. She glances down at him, smiling, says something softly. He springs after the seedhead and she jogs a few steps alongside, laughing.`
+2. `Wide shot to show scale. The small cat bounds behind a grassy rise and disappears. The woman slows and turns, looking for him. A huge dark silhouette rises above the grass, and an enormous black cat walks out from behind the rise, graceful and relaxed, his shoulder higher than her head. She steps back in surprise, then laughs with delight and walks closer, looking up at him.`
+3. `Medium shot. The enormous black cat lowers his head toward her. She places her palm against his cheek and he leans into it; she rubs his face with both hands, laughing. He steps back and drops into a playful crouch, tail swishing. She laughs, turns and runs; he starts after her.`
+4. `Broad side-on tracking shot. She runs through the tall grass laughing, and the enormous cat bounds beside her, matching her pace. She changes direction and he takes a wide graceful curve around her; she disappears behind his shoulder for a moment, then reappears laughing. Playful, gentle, no teeth, no hunting.`
+5. `They reach the leaning tree. She slows to a walk, catching her breath, smiling. The enormous cat turns and lowers himself onto his belly in the grass, forelegs stretched out in front. She rests a hand on his shoulder and sits down beside him. Their breathing settles.`
+6. `Low intimate three-quarter view, wide enough to show his size. She sits against his shoulder with her knees loosely drawn up and rests the side of her head against his fur, one hand on his foreleg. He lowers his head beside hers; his tail curves loosely through the grass near her feet. Her eyes close. Very still: only breathing, a small ear twitch and the breeze moving the grass.`
+Negative for all: `bared teeth, aggression, hunting, extra limbs, extra fingers, saddle, collar, other people, other animals, text, watermark`.

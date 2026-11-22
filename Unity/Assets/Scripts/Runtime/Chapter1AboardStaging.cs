@@ -16,23 +16,28 @@ namespace Seven
     /// </summary>
     public partial class Chapter1Aboard
     {
-        public enum Stage { Chair, ChairCatConsole, Sofa, FloorSofa, Window, WindowShoulder }
+        /// <summary>QF24 (1): Chair = 7's EGG LOUNGE CHAIR on the tulip pedestal facing the window (the ChairPivot chair the
+        /// vanish-ship reveal was built around) - every ARRIVAL / strategy talk. Pilot = the pilot's chair at the console, Panther
+        /// in her lap (debriefs); ChairCatConsole = the pilot's chair with Panther on the console (the next-destination choices).</summary>
+        public enum Stage { Chair, ChairCatConsole, Sofa, FloorSofa, Window, WindowShoulder, Pilot }
+        static bool Seated(Stage s) => s == Stage.Chair || s == Stage.Pilot || s == Stage.ChairCatConsole;
+        static bool LapChair(Stage s) => s == Stage.Chair || s == Stage.Pilot;
         /// <summary>The staging table (the chat's proposal, QF16 3): scene id → staging.</summary>
         public static readonly Dictionary<string, Stage> Table = new Dictionary<string, Stage>
         {
             { "VEN_C11", Stage.Sofa },             // the debrief after Venus: both lying on the sofa
             { "VEN_C13", Stage.ChairCatConsole },  // choosing the next world: the chair, Panther sitting on the console
-            { "EUR_01", Stage.Chair },             // QF23 (3): every ARRIVAL talk = the pilot's chair at the front window, the hull faded away (HullAway), Panther in her lap
+            { "EUR_01", Stage.Chair },             // QF24 (1): every ARRIVAL talk = 7's EGG chair facing the window (never the console's pilot chair), the hull faded away (HullAway), Panther in her lap
             { "EUR_17", Stage.FloorSofa },         // Europa debrief: on the floor, back against the sofa
             { "MAR_01", Stage.Chair },             // QF23 (3): Mars arrival - the chair, the vanish view over the plain
             { "MAR_12", Stage.Sofa },              // Mars, what she remembers: both lying on the sofa
             { "MAR_13", Stage.ChairCatConsole },   // the route display: the chair, Panther on the console
-            { "AST_01", Stage.Chair },             // the asteroid: at the controls, Panther in her lap (he is lifted onto the adjoining seat)
+            { "AST_01", Stage.Chair },             // QF24 (1): the asteroid arrival - the egg chair at the window, Panther in her lap
             { "BIA_01", Stage.Chair },             // QF23 (3): the mothership arrival (BIA_01 + BIA_02 while aboard) - the chair, the vanish view among Veyra's rings
-            { "AST_10", Stage.Chair },             // after the asteroid: the navigation chair, Panther in her lap
+            { "AST_10", Stage.Pilot },             // after the asteroid (a debrief): the navigation chair, Panther in her lap
         };
-        public static Stage StageOf(string scene) => Table.TryGetValue(scene, out var s) ? s : Stage.Chair;
-        public Stage CurrentStage { get; private set; } = Stage.Chair;
+        public static Stage StageOf(string scene) => Table.TryGetValue(scene, out var s) ? s : Stage.Pilot;
+        public Stage CurrentStage { get; private set; } = Stage.Pilot;
         public string StagedScene { get; private set; }
         bool _staged;
 
@@ -49,12 +54,13 @@ namespace Seven
         {
             var st = StageOf(scene); CurrentStage = st; StagedScene = scene; _staged = true;
             Seven.Frozen = true; Seven.Cutscene = true;
-            if (st == Stage.Chair || st == Stage.ChairCatConsole)
+            if (Seated(st))
             {
+                _eggSeat = st == Stage.Chair ? Seven.SeatPoint : null;      // QF24 (1): every Pilot* accessor follows the seat in use
                 yield return SitInPilotChair();
-                if (st == Stage.Chair)
+                if (LapChair(st))
                 {
-                    Cat.LapFrame = ShipConsole.I.PilotSeat; Cat.enabled = true; yield return null; yield return null;
+                    Cat.LapFrame = SeatT; Cat.enabled = true; yield return null; yield return null;
                     Cat.PlaceOnLap();
                 }
                 else
@@ -176,7 +182,7 @@ namespace Seven
             if (_staged && CurrentStage == Stage.WindowShoulder && !Cat.enabled) PerchCat();
             if (_staged && (CurrentStage == Stage.Window || CurrentStage == Stage.WindowShoulder) && Seven.State != "idle") Seven.PlayClip("idle", 0.2f);   // standing still at the glass
             // the staged Panther stays in his pose (nothing else re-animates him) unless a scripted cat moment is moving him
-            if (_staged && !_catScripted && _stageCatAnim != null && Cat.Anim != null && CurrentStage != Stage.Chair)
+            if (_staged && !_catScripted && _stageCatAnim != null && Cat.Anim != null && !LapChair(CurrentStage))
             {
                 if (Cat.enabled) Cat.enabled = false;
                 if (CurrentStage == Stage.Sofa || CurrentStage == Stage.FloorSofa)
@@ -193,7 +199,7 @@ namespace Seven
         /// staging in use - faces and the cat, never body-emphasis angles.</summary>
         bool CutStage(string kind)
         {
-            if (!_staged || CurrentStage == Stage.Chair || CurrentStage == Stage.ChairCatConsole)
+            if (!_staged || Seated(CurrentStage))
             {
                 if (_staged && CurrentStage == Stage.ChairCatConsole && kind == "lap") { Cut(_stageCat + PilotRight * -0.8f + PilotFwd * -0.4f + Up * 0.3f, (_stageCat + PilotHead) * 0.5f, 38f); return true; }
                 return false;
@@ -250,7 +256,7 @@ namespace Seven
             yield return UI.Fade(1f, 0.5f);
             _stroke = 0f; if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
             if (_ik != null) _ik.ReleaseAll("the staging changes");
-            if (_staged && (CurrentStage == Stage.Chair || CurrentStage == Stage.ChairCatConsole)) { _seated = false; _inPilotChair = false; Seven.SeatHips = null; Cat.LapFrame = null; }
+            if (_staged && Seated(CurrentStage)) { _seated = false; _inPilotChair = false; Seven.SeatHips = null; Cat.LapFrame = null; _eggSeat = null; }
             Seven.OnSofa = false; _staged = false; _shoulder = null; _stageCatAnim = null; Cat.ShowCurled(false); SevenRestPose.On(Seven.gameObject, SevenRestPose.Kind.None);
             if (Cat.Current == CatCompanion.Mode.OnLap) Cat.enabled = false;
             yield return EnterStaging(scene);
@@ -264,10 +270,11 @@ namespace Seven
         {
             _stroke = 0f; if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
             if (_ik != null) _ik.ReleaseAll(why);
+            if (_recordDisplay != null) { Destroy(_recordDisplay.gameObject); _recordDisplay = null; }   // QF24 (2): the side table goes with the scene
             if (!_staged) yield break;
             var st = CurrentStage; _staged = false; _shoulder = null; _stageCatAnim = null; Cat.ShowCurled(false); SevenRestPose.On(Seven.gameObject, SevenRestPose.Kind.None);
             if (Cat.Anim != null) Cat.Anim.speed = 1f; if (_catPose != null) { _catPose.LookAt = null; _catPose.TailToward = null; }   // QF18 (4)
-            if (st == Stage.Chair || st == Stage.ChairCatConsole)
+            if (Seated(st))
             {
                 if (st == Stage.ChairCatConsole) { Cat.transform.localScale = Vector3.one * Cat.RoamScale; Cat.transform.position = Flat(PilotHips + PilotRight * 1.1f); Cat.enabled = true; }
                 yield return StandFromPilotChair();
@@ -286,7 +293,7 @@ namespace Seven
                 yield return UI.Fade(0f, 0.5f);
             }
             if (Auto) Cap?.Log($"staging (QF16 3) '{StagedScene}' ended: {st} - hand IK left {_ik?.LeftW:0.00} right {_ik?.RightW:0.00}, Panther roaming {Cat.enabled}");
-            CurrentStage = Stage.Chair;
+            CurrentStage = Stage.Pilot;
         }
     }
 }

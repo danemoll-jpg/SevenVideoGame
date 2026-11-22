@@ -33,6 +33,8 @@ namespace Seven
         [System.NonSerialized] public float LookUp, Gather;   // 0..1 (BIA_07)
         [System.NonSerialized] public bool Sneer;       // taunts: a sneering tilt while he speaks
         Transform _wrL, _wrR, _wuL, _wuR, _jaw, _hips, _chest, _head, _neck; Transform[] _spL, _spR;
+        /// <summary>QF24 (9): his head / chest bones (close-ups and the speaker check frame his real face, wherever he hangs).</summary>
+        public Transform HeadBone => _head; public Transform ChestBone => _chest;
         float _phase, _flapCd, _talk, _fold, _bank, _seize, _snap, _land, _glide, _cling, _pitchS; readonly float[] _buf = new float[256];
         // the lagged chain angles (overlapping motion): per side, root / upper / spars - value + velocity
         readonly float[] _a = new float[6], _v = new float[6];

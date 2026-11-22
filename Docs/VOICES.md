@@ -172,3 +172,14 @@ Residents (BIA_03, BIA_06): premade voices picked by Code (telepathic treatment)
 ## Mars: the caretaker, the worker, the guard — voice names `Caretaker`, `MarsWorker`, `MarsGuard`
 **Status: created and saved by Dan in ElevenLabs (2026-11-21)** - every caretaker / worker / guard line re-voiced with them
 (`Tools/Voice/generate_mars_voices.py`; replaces the premade Bill / Sarah / Daniel takes). Each line keeps its direction.
+
+## Cattalus (Round 18) — voice names `Juniper`, `Duchess`, `Steward`, `Announcer`
+All Cattalus cats speak telepathically (Panther's treatment, no lip-sync). Code designs these with ElevenLabs Voice Design (or
+picks premade voices) and lists which in the status. Voices match the looks.
+- **Juniper** (the script's "Acquaintance"): Panther's old friend, a silver tabby a little older than him. Warm, teasing,
+  knowing; a mid-range female voice with a smile in it, unhurried.
+- **Duchess** (the script's "Champion"): a large, fluffy white champion. Languid, gracious, a little sleepy and posh; a low,
+  velvety older female voice; gets genuinely delighted about boxes.
+- **Steward**: the race steward, a neat tuxedo cat. Precise, polite, professional, slightly prim; a crisp middle-aged male voice.
+- **Announcer**: the Cat-a-tron's sports announcer. Big, warm, theatrical, enthusiastic; a male sporting-announcer voice with a
+  stadium PA treatment (slight echo).

@@ -91,7 +91,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `BIA_05_11` | 7 | Mm-hmm. Is your tail doing that little twitch? | Suppressed giggle |
 | `BIA_05_13` | Panther | Repair the relay. | Dignified |
 | `BIA_05_14` | 7 | Thought so. | Quiet laugh |
-| `BIA_05_N1` | Nela | The relay is in that cabinet at the junction. He tore its coupling loose. Seat it again and this district will hear us. | Calm, precise |
+| `BIA_05_N1` | Nela | The relay stands at the junction. He jammed its node and cracked it. Lay your hand on its plate and this district will hear us. | Calm, precise |
 
 ## BIA_06 — The interrupted crossing
 
@@ -100,7 +100,9 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `BIA_06_N1` | Nela | That relay also held our bridge in line. Without it the span drifted apart, and our people are stranded on the far side. | Concerned |
 | `BIA_06_N2` | Nela | The bridge's service controls are at the chasm's edge. Bring the segments back together. | Precise |
 | `BIA_06_01` | Resident | Thank you. We thought we might be here all day. |  |
-| `BIA_06_02` | 7 | Are those all yours? |  |
+| `BIA_06_02` | 7 | What are you carrying? |  |
+| `BIA_06_02a` | Resident | Seedlings for the upper gardens. Every district grows a few for the others. |  |
+| `BIA_06_02b` | 7 | They look ready to plant themselves. | A small smile |
 | `BIA_06_03` | Resident | They were smaller when I left home. | Weary amusement |
 | `BIA_06_04` | 7 | Heh. Good luck. |  |
 | `BIA_06_05` | Nela | We have the crossing. Everyone is through. | Relief |
@@ -179,6 +181,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `BIA_09_09` | 7 | I see him. |  |
 | `BIA_09_10` | Panther | Wait… |  |
 | `BIA_09_11` | Panther | Now. | Sharp and precise |
+| `BIA_09_11a` | Ratwing | Fine. But this whole ship remembers everything. You'll never live this down. And neither will I. |  |
 | `BIA_09_12` | 7 | Ha! Got him. | Breathless relief |
 | `BIA_09_13` | Panther | Mm. | Deep satisfaction |
 | `BIA_09_14` | 7 | That was a very pleased noise. | Small laugh |

@@ -33,7 +33,7 @@ namespace Seven
         (string label, string key)[] Items;
         Page _page;
         int _chapter = -1;              // ChapterList.All index of the open chapter page
-        string _confirm;                // the row (key) that is asking "…?  Yes (A / Enter)"
+        string _confirm;                // the row (key) that is asking "…?  Yes (A)"
 
         public static DemoMenu I { get; private set; }
         /// <summary>QF12 (MenuPilot): the rows as the player sees them (a confirm shows its question) and the highlighted row.</summary>
@@ -138,9 +138,9 @@ namespace Seven
             if (DemoBoot.MarsCp >= 0 && DemoBoot.CaptureDir != null) { if (DemoBoot.MarsCp >= MarsLayout.CpHome) { MarsState.ResetForTest(); MarsState.Fake(DemoBoot.MarsCp, true); MarsState.HomeAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else SceneManager.LoadScene("Mars"); return; }
             if (DemoBoot.Mars && DemoBoot.CaptureDir != null && DemoBoot.MenuPick == null) { MarsState.ResetForTest(); MarsState.StartFresh(); return; }
             // Round 17: the Biavian Mothership
-            if (DemoBoot.BiaPlay && DemoBoot.CaptureDir != null && DemoBoot.BiaCp < 0) { WorldFlags.FakeForTest("biaveh"); Chapter1State.StartAt(Chapter1State.CpExplore); SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("asteroid"); return; }   // free aboard in Veyra's system: console -> the mothership
-            if (DemoBoot.BiaCp >= 0 && DemoBoot.CaptureDir != null) { WorldFlags.FakeForTest("biaveh"); BiavehState.ResetForTest(); BiavehState.Fake(DemoBoot.BiaCp, true); if (DemoBoot.BiaCp >= BiavehLayout.CpHome) { BiavehState.HomeAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else if (DemoBoot.BiaCp <= BiavehLayout.CpArrival) { BiavehState.ArrivalAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else SceneManager.LoadScene("Biaveh"); return; }
-            if (DemoBoot.Bia && DemoBoot.CaptureDir != null) { WorldFlags.FakeForTest("biaveh"); BiavehState.ResetForTest(); BiavehState.StartFresh(); return; }
+            if (DemoBoot.BiaPlay && DemoBoot.CaptureDir != null && DemoBoot.BiaCp < 0) { WorldFlags.FakeForTest(DemoBoot.Routes ?? "biaveh"); Chapter1State.StartAt(Chapter1State.CpExplore); SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("asteroid"); return; }   // free aboard in Veyra's system: console -> the mothership
+            if (DemoBoot.BiaCp >= 0 && DemoBoot.CaptureDir != null) { WorldFlags.FakeForTest(DemoBoot.Routes ?? "biaveh"); BiavehState.ResetForTest(); BiavehState.Fake(DemoBoot.BiaCp, true); if (DemoBoot.BiaCp >= BiavehLayout.CpHome) { BiavehState.HomeAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else if (DemoBoot.BiaCp <= BiavehLayout.CpArrival) { BiavehState.ArrivalAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else SceneManager.LoadScene("Biaveh"); return; }
+            if (DemoBoot.Bia && DemoBoot.CaptureDir != null) { WorldFlags.FakeForTest(DemoBoot.Routes ?? "biaveh"); BiavehState.ResetForTest(); BiavehState.StartFresh(); return; }
             // Round 16: the Asteroid
             if (DemoBoot.AstPlay && DemoBoot.CaptureDir != null && DemoBoot.AstCp < 0) { WorldFlags.FakeForTest("trvast"); Chapter1State.StartAt(Chapter1State.CpExplore); return; }   // free aboard: console -> Biaveh -> TRV_AST
             if (DemoBoot.AstCp >= 0 && DemoBoot.CaptureDir != null) { AsteroidState.ResetForTest(); AsteroidState.Fake(DemoBoot.AstCp, true); if (DemoBoot.AstCp >= AsteroidLayout.CpHome) { AsteroidState.HomeAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else if (DemoBoot.AstCp <= AsteroidLayout.CpArrival) { AsteroidState.ArrivalAboard = true; Chapter1State.Aboard = true; SceneManager.LoadScene("Saucer"); } else SceneManager.LoadScene("Asteroid"); return; }
@@ -235,10 +235,10 @@ namespace Seven
             if (_page == Page.Settings) for (int i = 0; i < GameSettings.Count && i < Items.Length; i++) Items[i].label = GameSettings.Label(i);
             var ct = ConfirmText;
             if (_hint != null)
-                _hint.text = ct != null ? ct + "   A / Enter = yes   ·   B / Esc = no"
-                    : _page == Page.Main ? "stick / d-pad + A    ·    W S / arrows + Enter"
-                    : _page == Page.Settings ? "stick / d-pad + A · ← → adjust · B back    ·    W S / arrows, A D, Enter · Esc back"
-                    : "stick / d-pad + A · B back    ·    W S / arrows / mouse wheel + Enter · Esc back";
+                _hint.text = ct != null ? ct + "   A = yes   ·   B = no"
+                    : _page == Page.Main ? "stick / d-pad + A"
+                    : _page == Page.Settings ? "stick / d-pad + A · ← → adjust · B back"
+                    : "stick / d-pad + A · B back";
             bool main = _page == Page.Main;
             float top0 = _page == Page.Controls ? -240f : main ? MainTop : PageTop, pitch = main ? MainPitch : PagePitch;
             int top = _scroll != null ? _scroll.Follow(_sel, Items.Length) : 0;
@@ -251,7 +251,7 @@ namespace Seven
                 ((RectTransform)_marks[i].transform).anchoredPosition = new Vector2(0, top0 - (i - top) * pitch);
                 bool on = i == _sel;
                 var key = Items[i].key;
-                _labels[i].text = _confirm != null && key == _confirm && ct != null ? Question(ct) + "  Yes (A / Enter)" : Items[i].label;
+                _labels[i].text = _confirm != null && key == _confirm && ct != null ? Question(ct) + "  Yes (A)" : Items[i].label;
                 _marks[i].color = on ? new Color(0.92f, 0.92f, 0.92f, 1f) : new Color(1f, 1f, 1f, 0.06f);
                 _labels[i].color = on ? new Color(0.05f, 0.05f, 0.05f) : new Color(0.85f, 0.85f, 0.85f);
             }

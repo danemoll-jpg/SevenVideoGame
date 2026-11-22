@@ -69,7 +69,7 @@ namespace Seven
                 Seven.DrawBlades(false);
                 Log("AST_05: the arc blades are hers (she keeps them: RB / G draws, X cuts while drawn)");
                 yield return Cutscene(false);
-                UI.Hint("RB / G: draw or sheathe the arc blades  ·  X while drawn: cut", 7f);
+                UI.Hint("RB: draw or sheathe the arc blades  ·  X while drawn: cut", 7f);     // QF24 (17): controller buttons only (taught once, where she finds them)
             }
             Complete("AST_05_blades");
             // the three controls in the compact factory area; the security machines are about
@@ -119,7 +119,7 @@ namespace Seven
             // the valve is held by a powered clamp; the new tool cuts power lines
             yield return SayIds("AST_05_P4");
             Objective("Cut the clamp's power line with the arc blades (RB, then X)" + ControlsLine);
-            yield return BladeCut(L.ClampLine, "Cut the power line", "cut the clamp's power line", "Draw the arc blades (RB / G) and cut the glowing line feeding the clamp on the valve (X)", new[] { new Vector3(-365.5f, 0f, 31.2f) }, 3.0f);
+            yield return BladeCut(L.ClampLine, "Cut the power line", "cut the clamp's power line", "Draw the arc blades (RB) and cut the glowing line feeding the clamp on the valve (X)", new[] { new Vector3(-365.5f, 0f, 31.2f) }, 3.0f);
             if (ClampPower != null) ClampPower.All(false);
             if (ClampJaw != null) StartCoroutine(SwingDoor(ClampJaw, 60f, 0.4f));
             AudioKit.Play("ast_power_down", L.ClampLine, 0.8f, 0f, AudioKit.Bus.Sfx, 30f);
@@ -264,7 +264,7 @@ namespace Seven
             // he is at the override; she stands between him and the terminal
             if (Machinist != null) { Machinist.Stop(); Machinist.Place(L.TerminalAt + new Vector3(0f, 0f, 4.4f), Vector3.back); }
             Seven.Place(L.TerminalAt + new Vector3(0f, 0f, 1.6f), Vector3.forward); Seven.Lock(true);
-            MusicSystem.Play("asteroid_machinist", 2f);
+            // QF24 (18): the city's music carries the confrontation talk; the Machinist's track starts with the fight (BossFight.Begin)
             yield return Line("AST_07_01");                       // You are interfering with restoration.
             yield return Line("AST_07_02");                       // I'm saving the archive.
             Gesture("point", 2.6f);                               // QF21 (8): his one restrained gesture - he reaches past her toward the override
@@ -289,9 +289,9 @@ namespace Seven
             if (Flat(P7 - L.HerFightStart).magnitude > 2f) Seven.Place(L.HerFightStart, Vector3.forward);
             _fight.UI = UI; _fight.AutoPilot = Auto;
             _fight.Beat = FightBeat;
-            _fight.PhaseObjective = ph => ph == 0 ? "He wants to restrain you - make him waste an attack, stun him (RT), then the blades (X) on his glowing couplings, kicks (Y)"
-                                       : ph == 1 ? "The other arm - stun him (RT), then cut (X) and kick (Y); jump the lane surges (A)"
-                                       : "The override - read him, dodge, stun him, then cut and kick until he stops";
+            _fight.PhaseObjective = ph => ph == 0 ? "He wants to restrain you - wear him down, the glowing couplings are his weak point"     // QF24 (17): no general controls
+                                       : ph == 1 ? "The other arm's couplings - and watch the lane surges"
+                                       : "The override - wear him down until he stops";
             yield return Cutscene(false);
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _fight.Begin(BossFight.Load("machinist"), Seven, Cam);
@@ -394,7 +394,7 @@ namespace Seven
             Shoot(L.RuneView + new Vector3(0.6f, 1.6f, 2.2f), L.RuneAt, 38f, 0.01f);
             yield return Wait(0.5f);
             yield return Shot("a45_she_touches_the_rune");
-            MusicSystem.Stop(1.5f);
+            // QF24 (20): no Stop before the vision - the shared sequence suspends and resumes the music
             System.Action<float> runeGlow = k => { if (Rune != null) foreach (var rr in Rune.GetComponentsInChildren<Renderer>()) if (rr.name == "Edges") Glow(rr, 1.1f * k); };
             var runeAt = Rune != null ? Rune.position : L.RuneAt;
             yield return VisionTouch.Into("asteroid", Seven, Cam, UI, runeAt, 0.32f, runeGlow);

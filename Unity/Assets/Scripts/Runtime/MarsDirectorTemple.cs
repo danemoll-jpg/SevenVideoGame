@@ -44,7 +44,7 @@ namespace Seven
             // WIDE - TEMPLE APPROACH: Viper moves to seize the restored crossing; he blocks her path
             if (Viper != null) { Viper.gameObject.SetActive(true); Viper.Place(L.ViperBlocks + Vector3.forward * 4f, Vector3.back); Viper.WalkTo(L.ViperBlocks + Vector3.back * 7f, 1.6f); }
             Shoot(L.IslandC + new Vector3(-26f, 9f, -18f), L.ViperBlocks + Vector3.up * 2f, 54f, 0.01f);
-            MusicSystem.Play("mars_viper", 1.5f);
+            // QF24 (18): the kingdoms' music carries the approach and the talk; Viper's track starts with the fight (BossFight.Begin)
             yield return Wait(2.6f);
             yield return Shot("m24_wide_temple_approach_viper_blocks_her");
             // QF17 (6): she walks up to him first (from 19 m apart the two-shot found no clear framing and showed a wall)
@@ -100,8 +100,8 @@ namespace Seven
             _viperFight.UI = UI; _viperFight.AutoPilot = Auto;
             _viperFight.Beat = ViperComesDown;
             _viperFight.PhaseObjective = ph => ph == 0 ? $"Shut down his two pylons (X)\nPylons {_viperFight.PylonsDown} / {ViperFight.Required}"
-                                            : ph == 1 ? "He hunts you - when he wastes an attack, stun him with debris (RT), then close in: punch (X), kick (Y)"
-                                            : "Enraged - dodge, stun him (RT), then punch (X) and kick (Y) until he falls";
+                                            : ph == 1 ? "He hunts you - wear him down"                                       // QF24 (17): no general controls
+                                            : "Enraged - wear him down until he falls";
             yield return Cutscene(false);
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _viperFight.Begin(BossFight.Load("viper"), Seven, Cam);

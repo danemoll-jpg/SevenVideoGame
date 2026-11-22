@@ -17,6 +17,20 @@ namespace Seven
         /// <summary>Optional: a director's own speaker lookup (speaker id -> transform). Falls back to scene objects by name.</summary>
         public static System.Func<string, Transform> Speaker;
         public static int Checked, Visible, Reframed, Blocked;
+        /// <summary>QF24 (4 / 7): a line that plays deliberately OVER a shot of something else (the saucer flying inside the
+        /// mothership, the memory she asks about): the reason, set by the director for that shot; null = the normal rule.</summary>
+        public static string VoiceOver;
+        /// <summary>QF24 (20): props that must never cover a speaker's face (the runes during the post-vision talk) - the
+        /// segment camera -> face may not pass within the radius of any of them.</summary>
+        public static readonly List<(Transform t, float r)> Props = new List<(Transform, float)>();
+        public static int VoiceOvers, Telepathic, TelepathicReframed, PropBlocks;
+        /// <summary>QF24 (7): play a line (or lines) OVER the shot of the thing it refers to ("What was that?", "Look at this",
+        /// "There.") - the shot shows the thing, her voice off-screen; the speaker check does not cut away to her face.</summary>
+        public static System.Collections.IEnumerator Over(string what, System.Collections.IEnumerator say)
+        {
+            var prev = VoiceOver; VoiceOver = what;
+            try { yield return say; } finally { VoiceOver = prev; }
+        }
         public static readonly List<string> Changes = new List<string>();
         static readonly Dictionary<string, Transform> _cache = new Dictionary<string, Transform>();
         static UnityEngine.SceneManagement.Scene _cacheScene;
@@ -41,12 +55,14 @@ namespace Seven
 
         static Vector3 Head(Transform t)
         {
+            var rr = t.GetComponentInChildren<RatwingRig>(); if (rr != null && rr.HeadBone != null) return rr.HeadBone.position;   // QF24 (9)
             var an = t.GetComponentInChildren<Animator>();
             if (an != null && an.isHuman) { var h = an.GetBoneTransform(HumanBodyBones.Head); if (h != null) return h.position + Vector3.up * 0.06f; }
             return t.position + Vector3.up * 1.6f * t.lossyScale.y;
         }
         static Vector3 Chest(Transform t)
         {
+            var rr = t.GetComponentInChildren<RatwingRig>(); if (rr != null && rr.ChestBone != null) return rr.ChestBone.position;   // QF24 (9)
             var an = t.GetComponentInChildren<Animator>();
             if (an != null && an.isHuman) { var c = an.GetBoneTransform(HumanBodyBones.UpperChest) ?? an.GetBoneTransform(HumanBodyBones.Chest); if (c != null) return c.position; }
             return t.position + Vector3.up * 1.2f * t.lossyScale.y;
@@ -103,6 +119,12 @@ namespace Seven
                 float tanV = Mathf.Tan(fov * 0.5f * Mathf.Deg2Rad), tanH = tanV * (cam != null ? cam.aspect : 16f / 9f);
                 if (Mathf.Abs(local.x / local.z) > tanH * 0.92f || Mathf.Abs(local.y / local.z) > tanV * 0.92f) { LastFail = "out of frame"; return false; }
                 if (!ChapterCamera.ClearLine(pos, p)) { LastFail = "a wall / prop: " + ChapterCamera.LastBlocker; return false; }
+                foreach (var pr in Props)
+                {
+                    if (pr.t == null || !pr.t.gameObject.activeInHierarchy) continue;
+                    var seg2 = p - pos; float u2 = Mathf.Clamp01(Vector3.Dot(pr.t.position - pos, seg2) / seg2.sqrMagnitude);
+                    if (u2 > 0.02f && u2 < 0.98f && (pos + seg2 * u2 - pr.t.position).magnitude < pr.r) { PropBlocks++; LastFail = "a prop over the face: " + pr.t.name; return false; }
+                }
                 // another person in the way
                 if (others != null)
                     foreach (var o in others)
@@ -119,11 +141,23 @@ namespace Seven
         /// <summary>Called at the start of every line (DialoguePlayer.PlayOne).</summary>
         public static void Check(VoiceBank.Line line)
         {
-            if (line == null || line.IsCat) return;
+            if (line == null) return;
             var cam = Camera.main; if (cam == null) return;
             var cc = cam.GetComponent<ChapterCamera>();
             if (cc == null || !cc.InShot) return;                          // gameplay lines (follow camera) are not shots
-            var who = Find(line.Speaker, line.Label);
+            if (VoiceOver != null) { VoiceOvers++; Log($"framing (QF24 7): line {line.Id} ({line.Label}) plays over {VoiceOver}"); return; }
+            // QF24 (13): a TELEPATHIC line (Panther; Nela when she is not on screen) is exempt from "the speaker in frame", but
+            // never from "something in frame": 7 must be in the shot - or the cutaway to Panther aboard is showing
+            bool telepathic = line.IsCat || line.Speaker == "nela";
+            var who = telepathic ? null : Find(line.Speaker, line.Label);
+            if (telepathic)
+            {
+                if (line.IsCat && AboardCut.I != null && AboardCut.I.Showing) { Telepathic++; return; }
+                if (line.Speaker == "nela") who = Find(line.Speaker, line.Label);
+                if (who == null) who = Find("seven", "7");
+                if (who == null) return;
+                Telepathic++;
+            }
             if (who == null) return;
             Checked++;
             var people = People();
@@ -151,7 +185,7 @@ namespace Seven
                 if (RideProbe.Overlap(c.p, 0.25f, null, null, false)) continue;
                 if (!Sees(cam, c.p, c.l, c.f, who, people)) continue;
                 cc.Shot(c.p, c.l, 0.01f, true, c.f);
-                Reframed++;
+                Reframed++; if (telepathic) TelepathicReframed++;
                 var msg = $"framing (QF18 7): line {line.Id} ({line.Label}) - the speaker was hidden or out of frame; reframed: {c.what}";
                 Changes.Add(line.Id + ": " + c.what);
                 Log(msg);
@@ -174,6 +208,6 @@ namespace Seven
             return best;
         }
         static void Log(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) ChapterCapture.I?.Log(s); }
-        public static string Summary() => $"DIALOGUE FRAMING (QF18 7): {Checked} lines in cutscene shots checked, speaker visible {Visible}, reframed {Reframed}, still blocked {Blocked} (must be 0); QF21 (7): shots rejected for a big body filling over half the frame {BigBodyRejects}{(Changes.Count > 0 ? "; changed: " + string.Join("; ", Changes) : "")}";
+        public static string Summary() => $"DIALOGUE FRAMING (QF18 7): {Checked} lines in cutscene shots checked, speaker visible {Visible}, reframed {Reframed}, still blocked {Blocked} (must be 0); QF21 (7): shots rejected for a big body filling over half the frame {BigBodyRejects}; QF24 (13): telepathic lines {Telepathic} (7 or Panther's cutaway in frame; reframed to 7 {TelepathicReframed}); QF24 (20): angles rejected for a prop over the face {PropBlocks}; QF24 (4/7): declared voice-overs {VoiceOvers}{(Changes.Count > 0 ? "; changed: " + string.Join("; ", Changes) : "")}";
     }
 }

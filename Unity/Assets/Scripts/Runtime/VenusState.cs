@@ -171,6 +171,8 @@ namespace Seven
         public static bool DisableDevice(string id) { if (D.devicesDisabled.Contains(id)) return false; D.devicesDisabled.Add(id); Save(); return true; }
         public static bool WormmasterContained { get => D.wormmasterContained; set { D.wormmasterContained = value; Save(); } }
         public static bool RecordAwarded => D.recordAwarded;
+        /// <summary>QF24 (2): the record on the PLAYER'S OWN save (what she has really collected - shown in every scene, Scene Select included).</summary>
+        public static bool OwnRecordAwarded => PeekOwn().recordAwarded;
         public static int RecordAwards => D.recordAwards;
         /// <summary>Award Venus's record - exactly once, whatever happens (replays, reloads, revisits).</summary>
         public static bool AwardRecord()

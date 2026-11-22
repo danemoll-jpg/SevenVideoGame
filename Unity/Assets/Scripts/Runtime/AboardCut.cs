@@ -18,6 +18,9 @@ namespace Seven
     {
         public static AboardCut I { get; private set; }
         public Transform Interior, Cat, Display, PilotSeat, Cable;
+        /// <summary>QF24 (8): his two measured places - the pilot's chair (larger form) and the console top (batting the screen).</summary>
+        public Transform ChairSpot, DeskSpot; public float ChairScale = 2.1f; public Vector2 ChairHalf, DeskHalf;
+        int _placeLogs;
         public Animator CatAnim; public CatPoseOverlay Pose;
         public Camera MapCam; public Renderer Screen; public Transform HerMark, RatMark;
         public enum Mood { Calm, Watch, Hunt, Bat, Composed, Twitch, Paws, Purr }
@@ -67,28 +70,61 @@ namespace Seven
         void SetVisible(bool on) { if (Interior != null) Interior.gameObject.SetActive(on); if (Cat != null) Cat.gameObject.SetActive(on); }
 
         /// <summary>The camera's framing for a cut: "screen" = over his shoulder onto the display (his marker view),
-        /// "him" = his face and front paws, past the display edge; "wide" = him at the console, the chair, the window.</summary>
+        /// "him" = his face and front paws, past the display edge; "wide" = him at the console, the chair, the window.
+        /// QF24 (8): scaled with the form he is in (in the pilot's chair he is about twice his size).</summary>
         public (Vector3 pos, Vector3 look) Frame(string kind)
         {
+            PlaceFor(Now);
             var c = Cat != null ? Cat.position : transform.position; var d = Display != null ? Display.position : c + Vector3.forward;
             var toD = d - c; toD.y = 0f; toD.Normalize(); var side = Vector3.Cross(Vector3.up, toD);
+            float k = Cat != null ? Mathf.Max(1f, Cat.localScale.x) : 1f;
             switch (kind)
             {
-                case "screen": return (c - toD * 0.55f + side * 0.35f + Vector3.up * 0.42f, d - Vector3.up * 0.05f);
-                case "him": return (c + toD * 0.65f + side * 0.55f + Vector3.up * 0.2f, c + Vector3.up * 0.18f);
-                default: return (c - toD * 2.3f + side * 1.6f + Vector3.up * 0.9f, (c + d) * 0.5f);
+                case "screen": return k > 1.5f ? (c - toD * 0.12f + side * 0.78f + Vector3.up * 1.0f, d - Vector3.up * 0.05f)   // beside and above the chair (its shell is behind him)
+                                               : (c - toD * 0.55f + side * 0.35f + Vector3.up * 0.42f, d - Vector3.up * 0.05f);
+                case "him": return k > 1.5f ? (c + side * 1.3f + toD * 0.5f + Vector3.up * 1.0f, c + Vector3.up * 0.32f * k)   // in the pilot's chair: from beside it (the console is in front, the shell behind)
+                                            : (c + toD * 0.65f + side * 0.55f + Vector3.up * 0.2f, c + Vector3.up * 0.18f);
+                default: return (c - toD * 2.3f + side * 1.6f + Vector3.up * 0.9f * k, (c + d) * 0.5f);
             }
+        }
+        /// <summary>QF24 (8): where he is for a mood - batting at the screen = fully on the console top in front of the display
+        /// (his normal size); everything else = sitting in the pilot's chair in his larger form, at eye level with the display.</summary>
+        void PlaceFor(Mood m)
+        {
+            if (Cat == null || ChairSpot == null || DeskSpot == null) return;
+            bool desk = m == Mood.Bat || m == Mood.Hunt;
+            var spot = desk ? DeskSpot : ChairSpot;
+            _catHome = spot.position; _catRot = spot.rotation;
+            Cat.SetPositionAndRotation(_catHome, _catRot); Cat.localScale = Vector3.one * (desk ? 1f : m == Mood.Purr ? ChairScale * 0.72f : ChairScale);   // curled asleep he takes the cushion, not more
+        }
+        /// <summary>QF24 (8): his paws vs the surface he is on (inside its footprint, on its top) - logged for each cut.</summary>
+        void LogPlacement()
+        {
+            if (DemoBoot.CaptureDir == null || Pose == null || ChairSpot == null || _placeLogs > 24) return;
+            _placeLogs++;
+            bool desk = Now == Mood.Bat || Now == Mood.Hunt; var spot = desk ? DeskSpot : ChairSpot; var half = desk ? DeskHalf : ChairHalf;
+            float k = Cat.localScale.x;
+            string Paw(Vector3 p)
+            {
+                var l = spot.InverseTransformPoint(p); l.Scale(spot.lossyScale);
+                bool inside = Mathf.Abs(l.z) <= half.x + 0.02f && Mathf.Abs(l.x) <= half.y + 0.02f;
+                return $"{(p.y - 0.032f * k - spot.position.y) * 100f:+0.0;-0.0} cm{(inside ? "" : " OFF THE EDGE")}";   // the paw bone sits ~3.2 cm (x his size) above the sole
+            }
+            var body = Cat.GetComponentInChildren<SkinnedMeshRenderer>(); float under = body != null ? (spot.position.y - body.bounds.min.y) * 100f : 0f;
+            ChapterCapture.I?.Log($"PANTHER PLACE (QF24 8): mood {Now} - {(desk ? "on the console top" : $"in the pilot's chair (larger form x{Cat.localScale.x:0.0})")}; front paw soles vs the surface {Paw(Pose.PawL)} / {Paw(Pose.PawR)}; lowest body point {under:0.0} cm below the top ({(desk ? "the desk is hard: must be ~0" : "the cushion is domed and soft: up to ~3 cm at its rim")}); no toy / cable in the set");
         }
 
         /// <summary>Show the interior (the director then frames with <see cref="Frame"/>).</summary>
         public void Begin(Mood m)
         {
-            SetVisible(true); Showing = true; Cuts++; Now = m; _moodT = 0f;
+            SetVisible(true); Showing = true; Cuts++; Now = m; _moodT = 0f; PlaceFor(m); _logPending = true;
+            if (Cable != null) Cable.gameObject.SetActive(false);                // QF24 (8a): no toy
             _atmo = FindAnyObjectByType<Atmosphere>();
             if (_atmo != null) { _d = _atmo.DistanceDensity; _m = _atmo.MaxFog; _g = _atmo.GroundDensity; _atmo.DistanceDensity = _d * 0.05f; _atmo.MaxFog = _m * 0.2f; _atmo.GroundDensity = 0f; }
             if (DemoBoot.CaptureDir != null) ChapterCapture.I?.Log($"cut aboard (QF23 10): Panther in the REAL saucer interior ({(Interior != null ? Interior.name : "no interior!")}), mood {m}, the display shows {(Follow != null ? "the area round 7 with her marker" : "the route")}{(Rat != null ? " + Ratwing's marker" : "")}");
         }
-        public void SetMood(Mood m) { Now = m; _moodT = 0f; }
+        public void SetMood(Mood m) { Now = m; _moodT = 0f; PlaceFor(m); _logPending = true; }
+        bool _logPending;
         public void End()
         {
             Showing = false; SetVisible(false);
@@ -118,7 +154,7 @@ namespace Seven
             switch (Now)
             {
                 case Mood.Watch:
-                    Pose.Crouch = 0.6f; Pose.LookAt = markOnScreen; Pose.EarToward = scr; Play("sit"); break;
+                    Pose.Crouch = Cat.localScale.x > 1.5f ? 0f : 0.6f; Pose.LookAt = Cat.localScale.x > 1.5f ? new Vector3(markOnScreen.x, Cat.position.y + 0.75f, markOnScreen.z) : markOnScreen; Pose.EarToward = scr; Play("sit"); break;   // QF24 (8): in the chair he watches sitting upright (the crouch lifted his front paws off the cushion)
                 case Mood.Hunt:
                 {
                     Play("sit"); Pose.Crouch = 0.9f; Pose.LookAt = markOnScreen; Pose.EarToward = scr; Pose.TailFlick = 1f;
@@ -133,9 +169,21 @@ namespace Seven
                     break;
                 }
                 case Mood.Bat:
-                    Play("sit"); Pose.LookAt = Cable != null ? Cable.position : scr;
-                    if (Cable != null) { float ph = (_moodT % 1.4f) / 1.4f; Pose.PawTo = Cable.position; Pose.PawW = ph < 0.4f ? Mathf.Sin(ph / 0.4f * Mathf.PI) : 0f; Cable.localRotation = Quaternion.Euler(Mathf.Sin(t * 5f) * 14f * (1f - ph), 0f, Mathf.Cos(t * 4f) * 10f); if (ph < 0.05f && _tapCd <= 0f) { _tapCd = 1.2f; AudioKit.Play("cat_paw_tap", Cable.position, 0.5f, 0.1f, AudioKit.Bus.Sfx, 6f); } }
+                {
+                    // QF24 (8a): he bats at the SCREEN - a quick swipe or two at Ratwing's / her moving marker, tap-tap on the
+                    // glass, then the paw comes back and he sits up very properly, as if nothing happened (no props)
+                    Play("sit"); Pose.LookAt = markOnScreen; Pose.EarToward = scr;
+                    float ph = _moodT % 3.2f;
+                    if (ph < 1.3f)
+                    {
+                        Pose.Crouch = 0.5f; Pose.TailFlick = 0.8f;
+                        float sw = ph < 0.55f ? Mathf.Sin(ph / 0.55f * Mathf.PI) : ph > 0.7f && ph < 1.2f ? Mathf.Sin((ph - 0.7f) / 0.5f * Mathf.PI) : 0f;
+                        Pose.PawTo = markOnScreen + (Display != null ? -Display.forward * 0.01f : Vector3.zero); Pose.PawW = sw;
+                        if (sw > 0.95f && _tapCd <= 0f) { _tapCd = 0.35f; AudioKit.Play("cat_paw_tap", scr, 0.6f, 0.08f, AudioKit.Bus.Sfx, 6f); }
+                    }
+                    else { Pose.Crouch = 0f; Pose.LookAt = scr + Vector3.up * 0.25f; Pose.TailToward = Cat.position + Cat.right * 0.2f; }   // sits up, very proper
                     break;
+                }
                 case Mood.Composed:
                     Play("sit"); Pose.LookAt = scr + Vector3.up * 0.2f; Pose.TailToward = Cat.position + Cat.right * 0.2f; break;      // upright, tail curled neatly
                 case Mood.Twitch:
@@ -153,6 +201,7 @@ namespace Seven
                 default: Play("sit"); Pose.LookAt = scr; break;
             }
             _tapCd -= dt;
+            if (_logPending && _moodT > 0.5f) { _logPending = false; LogPlacement(); }
         }
         string _clip;
         void Play(string s) { if (CatAnim == null || _clip == s) return; if (!CatAnim.HasState(0, Animator.StringToHash(s))) s = "idle"; _clip = s; CatAnim.CrossFadeInFixedTime(s, 0.25f); }

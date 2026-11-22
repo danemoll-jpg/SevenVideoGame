@@ -42,6 +42,7 @@ namespace Seven
             return string.IsNullOrEmpty(j) ? new Data() : JsonUtility.FromJson<Data>(j) ?? new Data();
         }
         public static bool OwnReached => PeekOwn().cp >= 0;
+        public static bool OwnComplete => PeekOwn().cp >= EuropaLayout.CpDone;   // QF24 (2): a completed chapter counts as its record
         public static bool OwnHasProgress { get { var d = PeekOwn(); return d.cp > 0 || (d.done != null && d.done.Count > 0); } }
 
         public static bool Reached => D.cp >= 0;
@@ -53,6 +54,8 @@ namespace Seven
         public static bool SceneDone(string id) => D.done.Contains(id);
         public static bool CompleteScene(string id) { if (D.done.Contains(id)) return false; D.done.Add(id); Save(); return true; }
         public static bool RecordAwarded => D.recordAwarded;
+        /// <summary>QF24 (2): the record on the PLAYER'S OWN save (what she has really collected - shown in every scene, Scene Select included).</summary>
+        public static bool OwnRecordAwarded => PeekOwn().recordAwarded;
         public static int RecordAwards => D.recordAwards;
         public static bool AwardRecord() { if (D.recordAwarded) return false; D.recordAwarded = true; D.recordAwards++; Save(); return true; }
         public static bool RaceEntered => D.raceEntered;

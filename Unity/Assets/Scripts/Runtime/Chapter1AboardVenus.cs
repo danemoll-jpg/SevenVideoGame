@@ -252,22 +252,27 @@ namespace Seven
         // star map brings Mars and Europa close and the player chooses. Mars / Europa chapters do not exist yet: after the
         // journey begins, a "coming soon" card, then free exploration (both stay selectable on the star map).
         bool _inPilotChair;
-        Vector3 PilotHips => ShipConsole.I.PilotSeat.position;
-        Vector3 PilotFwd => Flat(ShipConsole.I.PilotSeat.forward).normalized;
+        /// <summary>QF24 (1): the seat in use - 7's egg chair at the window (arrival talks) or the pilot's chair at the console.
+        /// Every framing, the lap, the stroke, the records display and the vanish centre read it, so one switch moves a scene.</summary>
+        Transform _eggSeat;
+        Transform SeatT => _eggSeat != null ? _eggSeat : ShipConsole.I.PilotSeat;
+        bool InEggChair => _eggSeat != null;
+        Vector3 PilotHips => SeatT.position;
+        Vector3 PilotFwd => Flat(SeatT.forward).normalized;
         Vector3 PilotRight => Vector3.Cross(Vector3.up, PilotFwd);
         Vector3 PilotHead => PilotHips + Up * 0.66f;
         Vector3 ArmRest => PilotHips + PilotRight * 0.42f + Up * 0.12f + PilotFwd * 0.12f;
 
         IEnumerator SitInPilotChair()
         {
-            var seat = ShipConsole.I.PilotSeat;
+            var seat = SeatT;
             Seven.transform.SetPositionAndRotation(Flat(seat.position) + PilotFwd * 0.1f, Quaternion.LookRotation(PilotFwd));
             _seatClip = Seven.HasState("sit_idle") ? "sit_idle" : "sitting_idle";
             Seven.PlayClip(_seatClip, 0.3f);
             Seven.SeatHips = seat.position;
             _seated = true; _inPilotChair = true;
             yield return Wait(0.6f);
-            if (DemoBoot.CaptureDir != null) Cap?.Log($"pilot's chair (0j): seated ({_seatClip}), hips {Vector3.Distance(Seven.Hips.position, seat.position):0.000} m from the seat point");
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"{(InEggChair ? "EGG CHAIR (QF24 1): 7's egg lounge chair facing the window" : "pilot's chair (0j)")}: seated ({_seatClip}), hips {Vector3.Distance(Seven.Hips.position, seat.position):0.000} m from the seat point");
         }
 
         IEnumerator StandFromPilotChair()
@@ -279,8 +284,9 @@ namespace Seven
             Cat.LapFrame = null;
             _seated = false; _inPilotChair = false;
             Seven.SeatHips = null;
-            Seven.transform.SetPositionAndRotation(Flat(PilotHips - PilotFwd * 0.75f), Quaternion.LookRotation(-PilotFwd));
+            Seven.transform.SetPositionAndRotation(Flat(PilotHips - PilotFwd * (InEggChair ? 0.95f : 0.75f)), Quaternion.LookRotation(-PilotFwd));
             Seven.PlayClip("idle", 0.2f);
+            _eggSeat = null;
             Seven.Cutscene = false; Seven.Frozen = false;
             yield return null;
         }
@@ -326,7 +332,7 @@ namespace Seven
                 _ik.LeftPos = back + n * (0.022f + lift) - fingers * 0.05f;   // the wrist: behind the palm, a hand's thickness up
                 _ik.LeftPalmN = n; _ik.LeftFingerDir = fingers; _ik.LeftPalmW = 1f;
                 _ik.LeftHint = PilotHips - PilotRight * 0.30f + Up * 0.16f - PilotFwd * 0.06f; _ik.LeftHintW = 1f;
-                bool onLap = !_staged || CurrentStage == Stage.Chair || CurrentStage == Stage.ChairCatConsole;
+                bool onLap = !_staged || Seated(CurrentStage);
                 _ik.LeftW = Mathf.MoveTowards(_ik.LeftW, onLap ? _stroke : 0f, Time.deltaTime * 2f);   // QF16: the rest poses keep her hand on him
                 // the other hand: lightly on his side by his hip, on top of her thigh (NavHand takes it for the console)
                 if (!_navHand)
@@ -379,11 +385,12 @@ namespace Seven
             var g = new System.Collections.Generic.List<float>(_lapGap); g.Sort(); float med = g.Count > 0 ? g[g.Count / 2] : -1f;
             Cap?.Log($"LAP ARMS (QF23 5): {_lapFrames} frames with Panther in her lap - a hand / forearm inside her legs {_lapInLegs}, inside her body {_lapInBody}, sunk inside him {_lapInHim} (all must be 0); palm vs his back while stroking: median {med * 100f:0.0} cm (must be ~1 cm); stroke along his length (neck -> rump), the other hand on his side, elbow hints both");
         }
-        void NavHand(bool on) { if (_staged && CurrentStage != Stage.Chair && CurrentStage != Stage.ChairCatConsole) on = false; _navHand = on; if (on && ShipConsole.I != null && ShipConsole.I.Display != null) { _ik.RightPos = PilotHips + PilotFwd * 0.55f + PilotRight * 0.28f + Up * 0.28f; _ik.RightW = 0.9f; _ik.RightPalmW = 0f; _ik.RightHint = PilotHips + PilotRight * 0.34f + Up * 0.12f; _ik.RightHintW = 0.8f; } else _ik.RightW = 0f; }
+        void NavHand(bool on) { if ((_staged && !Seated(CurrentStage)) || InEggChair) on = false; _navHand = on; if (on && ShipConsole.I != null && ShipConsole.I.Display != null) { _ik.RightPos = PilotHips + PilotFwd * 0.55f + PilotRight * 0.28f + Up * 0.28f; _ik.RightW = 0.9f; _ik.RightPalmW = 0f; _ik.RightHint = PilotHips + PilotRight * 0.34f + Up * 0.12f; _ik.RightHintW = 0.8f; } else _ik.RightW = 0f; }
 
         void CutPilot(string kind)
         {
             if (CutStage(kind)) return;                                            // QF16 (3): the staging's own framings
+            if (InEggChair) { CutEgg(kind); return; }                              // QF24 (1): the egg chair at the window
             var disp = ShipConsole.I.Display != null ? ShipConsole.I.Display.position : PilotHead + PilotFwd * 2f;
             switch (kind)
             {
@@ -391,8 +398,24 @@ namespace Seven
                 case "side": Cut(PilotHips - PilotFwd * 1.0f + PilotRight * 1.8f + Up * 0.75f, PilotHips + Up * 0.35f + PilotFwd * 0.2f, 46f); break;   // from the deck side (the desk pods block the front)
                 case "two": Cut(PilotHips + PilotFwd * 0.8f + PilotRight * 1.5f + Up * 1.45f, PilotHips + Up * 0.3f, 48f); break;   // high, over the desk
                 case "lap": { var lap = Seven.LapPoint(0.1f); Cut(lap + PilotRight * 0.55f + PilotFwd * 0.45f + Up * 0.25f, lap, 34f, null, 0.6f, 50f, 3f); break; }
-                case "objects": Cut(ArmRest + PilotRight * 0.35f + PilotFwd * 0.35f + Up * 0.3f, ArmRest, 32f, null, 0.5f, 50f, 3f); break;
+                case "objects": { var d = _recordDisplay != null ? RecordDisplayTop() : ArmRest; Cut(d + PilotRight * 0.45f + PilotFwd * 0.5f + Up * 0.3f, d + Up * 0.05f, 32f, null, 0.5f, 50f, 3f); break; }   // QF24 (2): the records on their display
                 case "wide": Cut(PilotHips - PilotFwd * 3.2f + Up * 1.3f + PilotRight * 0.3f, disp, 50f); break;
+            }
+        }
+
+        /// <summary>QF24 (1): framings round 7's egg chair facing the window - from the window side (her face and Panther),
+        /// over the shell's rim at the world outside, wide from behind and above (the two of them before the world).</summary>
+        void CutEgg(string kind)
+        {
+            var h = PilotHips; var f = PilotFwd; var r = PilotRight;
+            switch (kind)
+            {
+                case "ots": Cut(PilotHead - f * 0.62f + r * 0.34f + Up * 0.32f, PilotHead + f * 24f - Up * 4f, 48f); break;
+                case "side": Cut(h + r * 1.45f + f * 0.75f + Up * 0.62f, h + Up * 0.35f, 44f); break;
+                case "lap": { var lap = Seven.LapPoint(0.1f); Cut(lap + f * 0.62f + r * 0.38f + Up * 0.32f, lap, 34f, null, 0.6f, 50f, 3f); break; }
+                case "objects": { var d = RecordDisplayTop(); Cut(d + r * 0.5f + f * 0.6f + Up * 0.32f, d + Up * 0.06f, 34f, null, 0.5f, 50f, 3f); break; }
+                case "wide": Cut(h - f * 2.7f + r * 0.9f + Up * 1.55f, h + f * 6f, 52f); break;
+                default: Cut(h + f * 1.7f + r * 0.95f + Up * 0.95f, h + Up * 0.32f, 46f); break;
             }
         }
 
@@ -419,7 +442,7 @@ namespace Seven
             yield return Wait(0.8f);
             yield return ShotV("c11_02b_pilot_chair_panther_in_her_lap");
             // the dodecahedron and the small cube, set on the chair's arm
-            if (CurrentStage == Stage.Chair) yield return SetBothOnArm();
+            if (LapChair(CurrentStage)) yield return SetBothOnArm();
             CutPilot("objects");
             yield return Wait(1.0f);
             yield return ShotV("c11_03_insert_both_objects");
@@ -428,7 +451,7 @@ namespace Seven
             yield return ShotV("c11_04_side_two_shot");
             yield return SayV("VEN_C11", 6, 7);                                  // What did you see? / Someone giving me a seed.
             // open-hand insert: her right hand open, palm up on the chair's arm (in the chair staging; on the sofa: her face)
-            if (CurrentStage == Stage.Chair)
+            if (LapChair(CurrentStage))
             {
                 _ik.RightPos = ArmRest - PilotRight * 0.08f + PilotFwd * 0.1f; _ik.RightW = 1f; _ik.LookPos = _ik.RightPos; _ik.LookW = 0.7f;
                 yield return Wait(0.7f);

@@ -34,7 +34,7 @@ namespace Seven
         static int _busyCount;
         /// <summary>Any dialogue playing anywhere (music ducks under it).</summary>
         public static bool AnyBusy => _busyCount > 0;
-        void OnDestroy() { if (_busy) _busyCount--; _busy = false; _all.Remove(this); }
+        void OnDestroy() { if (_busy) _busyCount--; _busy = false; _all.Remove(this); if (DemoBoot.CaptureDir != null && LinesTimed > 0) ReportOverlaps(gameObject.scene.name); }
         public VoiceBank.Line Current { get; private set; }
         public readonly List<string> Played = new List<string>();
         /// <summary>Check runs: skip lines automatically (seconds of each line actually waited).</summary>
@@ -119,8 +119,40 @@ namespace Seven
             Busy = false;
         }
 
+        // ---- QF24 (3): ONE dialogue line at a time, game-wide. Every line waits for the line before it (any player) and its
+        // reaction to finish - lines fired by events / timers / a second coroutine queue instead of starting over another.
+        // A line whose coroutine was stopped mid-way can never block the queue: it counts as speaking only until its own
+        // length has passed. Check runs log VOICE QUEUE (a line that had to wait) and VOICE OVERLAP (must be 0).
+        float _speakUntil;
+        public static int Queued, Overlaps, LinesTimed;
+        static readonly List<string> _overlapAt = new List<string>();
+        static string SpeakingOrReacting()
+        {
+            foreach (var d in _all)
+            {
+                if (d == null) continue;
+                if (d.Current != null && Time.time < d._speakUntil) return d.Current.Id;
+                if (d._reacting) return "a reaction (" + (d._rxName ?? "due") + ")";
+            }
+            return null;
+        }
+        /// <summary>QF24 (3): the summary line for the check run (scene end).</summary>
+        public static void ReportOverlaps(string where)
+        {
+            LogCapture($"VOICE OVERLAP (QF24 3) {where}: lines {LinesTimed}, queued behind another {Queued}, overlapping {Overlaps} (must be 0){(_overlapAt.Count > 0 ? " - " + string.Join("; ", _overlapAt) : "")}");
+        }
+
         public IEnumerator PlayOne(VoiceBank.Line line, bool far)
         {
+            {
+                string waited = null; float q0 = Time.time;
+                for (string w = SpeakingOrReacting(); w != null; w = SpeakingOrReacting()) { waited = waited ?? w; yield return null; }
+                if (waited != null) { Queued++; LogCapture($"VOICE QUEUE (QF24 3): {line.Id} waited {Time.time - q0:0.00} s for {waited} to finish"); }
+                foreach (var d in _all)
+                    if (d != null && d.Current != null && d != this && Time.time < d._speakUntil - 0.02f)
+                    { Overlaps++; if (_overlapAt.Count < 12) _overlapAt.Add($"{line.Id} over {d.Current.Id} in {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}"); }
+            }
+            LinesTimed++;
             LastReactionSeconds = 0f;
             StopReactionsUnder(line);
             Current = line;
@@ -134,12 +166,13 @@ namespace Seven
             if (line.Clip != null) { src.clip = line.Clip; src.Play(); }
             _skip = false;
             float wait = AutoSkipAfter >= 0f ? Mathf.Min(len, AutoSkipAfter) : len;
+            _speakUntil = Time.time + wait + 0.25f;
             for (float t = 0f; t < wait && !_skip; t += Time.deltaTime) yield return null;
             bool skipped = _skip || wait < len - 0.01f;   // skipped by the player or cut short by a check run's auto-skip
-            if (_skip) src.Stop();
+            if (_skip || skipped) src.Stop();             // QF24 (3): a skipped line's audio stops (check runs' auto-skip too)
             _skip = false;
             UI?.HideSubtitle();
-            Current = null;
+            Current = null; _speakUntil = 0f;
             // Round 13: the listener's reaction in the gap after the line (none if the line was skipped)
             var rx = Reactions.After(line.Id);
             if (rx != null)

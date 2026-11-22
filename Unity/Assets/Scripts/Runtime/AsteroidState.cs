@@ -58,6 +58,8 @@ namespace Seven
         public static void DoStep(string id) { if (D.steps.Contains(id)) return; D.steps.Add(id); Save(); }
         public static int StepsDone(string prefix) { int n = 0; foreach (var s in D.steps) if (s.StartsWith(prefix)) n++; return n; }
         public static bool RecordAwarded => D.recordAwarded;
+        /// <summary>QF24 (2): the record on the PLAYER'S OWN save (what she has really collected - shown in every scene, Scene Select included).</summary>
+        public static bool OwnRecordAwarded => PeekOwn().recordAwarded;
         public static int RecordAwards => D.recordAwards;
         public static bool AwardRecord() { if (D.recordAwarded) return false; D.recordAwarded = true; D.recordAwards++; Save(); return true; }
 

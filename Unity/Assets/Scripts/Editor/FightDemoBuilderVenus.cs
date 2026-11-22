@@ -215,7 +215,11 @@ namespace Seven.EditorTools
         /// bodies came out of Mixamo in the Tripo A-pose; Unity took that rest pose as the T-pose reference, so every clip
         /// retargeted onto them raised the arms by the A / T difference (the "arms held out stiffly" look). Enforced on the
         /// body and on every clip source used for it, so all references agree.</summary>
-        static void ApplyMixamoHumanMap(ModelImporter imp, string path, bool tpose)
+        static void ApplyMixamoHumanMap(ModelImporter imp, string path, bool tpose) => ApplyMixamoHumanMap(imp, path, tpose, true);
+        /// <summary>QF24 (15): squareLegs = the QF23 (8) leg / foot / spine squaring - ONLY for Mixamo downloads (their rest pose
+        /// is the clip's first frame). 7's Blender-made riding pose (7_ride.fbx) has a real rest pose; squaring its reference
+        /// legs + spine shifted the whole ride pose (hips up, slumped into the fairing, a leg off the side) - the 0.17.2 regression.</summary>
+        static void ApplyMixamoHumanMap(ModelImporter imp, string path, bool tpose, bool squareLegs)
         {
             var model = AssetDatabase.LoadAssetAtPath<GameObject>(path);
             GameObject tmp = null;
@@ -246,6 +250,7 @@ namespace Seven.EditorTools
                 var up = Vector3.up;
                 float KneeDeg(string side) { var a = Bn(side + "UpLeg"); var b = Bn(side + "Leg"); var c = Bn(side + "Foot"); return a != null && b != null && c != null ? Vector3.Angle(b.position - a.position, c.position - b.position) : -1f; }
                 float kl0 = KneeDeg("Left"), kr0 = KneeDeg("Right");
+                if (squareLegs) {
                 foreach (var (b, c) in new[] { ("Spine", "Spine1"), ("Spine1", "Spine2"), ("Spine2", "Neck"), ("Neck", "Head") })
                 { var bt = Bn(b); var ct = Bn(c); if (bt == null || ct == null) continue; var cur = (ct.position - bt.position).normalized; bt.rotation = Quaternion.FromToRotation(cur, up) * bt.rotation; }
                 foreach (var side in new[] { "Left", "Right" })
@@ -258,6 +263,7 @@ namespace Seven.EditorTools
                         var cur = (tt2.position - ft.position).normalized; var flat = Vector3.ProjectOnPlane(cur, up);
                         if (flat.sqrMagnitude > 1e-4f) ft.rotation = Quaternion.FromToRotation(cur, (flat.normalized * 0.85f - up * 0.5f).normalized) * ft.rotation;
                     }
+                }
                 }
                 Log($"{path}: T-pose reference enforced (arms were up to {fixedDeg:0} deg off horizontal); KNEES in the reference (QF23 8): left {kl0:0} -> {KneeDeg("Left"):0} deg, right {kr0:0} -> {KneeDeg("Right"):0} deg");
                 model = tmp;
@@ -813,7 +819,7 @@ namespace Seven.EditorTools
             var ci = (ModelImporter)AssetImporter.GetAtPath(dst);
             ci.animationType = ModelImporterAnimationType.Human; ci.avatarSetup = ModelImporterAvatarSetup.CreateFromThisModel;
             ci.materialImportMode = ModelImporterMaterialImportMode.None; ci.importAnimation = true; ci.SaveAndReimport();
-            ApplyMixamoHumanMap(ci, dst);
+            ApplyMixamoHumanMap(ci, dst, true, false);   // QF24 (15): arms only - never the QF23 leg / spine squaring on her own riding pose
             var cl = ci.defaultClipAnimations;
             foreach (var c in cl) { c.name = "ride"; c.loopTime = true; c.lockRootRotation = true; c.lockRootHeightY = true; c.lockRootPositionXZ = true; c.keepOriginalOrientation = true; c.keepOriginalPositionY = true; c.keepOriginalPositionXZ = true; }
             ci.clipAnimations = cl; ci.SaveAndReimport();

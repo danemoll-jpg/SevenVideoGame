@@ -228,7 +228,7 @@ namespace Seven
                 if (!Auto)
                 {
                     if (!hinted && hint != null && Time.time - since > HintAfter) { hinted = true; Hints++; UI.Hint(hint, 8f); Log($"HINT: '{what}' -> \"{hint}\""); if (at.HasValue) ShowGuide(at.Value); }
-                    if (!SkipOffered && skip != null && Time.time - since > SkipAfter) { SkipOffered = true; UI.Hint("Y / Enter: skip this step", 6f); Log($"SKIP OFFERED: '{what}'"); }
+                    if (!SkipOffered && skip != null && Time.time - since > SkipAfter) { SkipOffered = true; UI.Hint("Y: skip this step", 6f); Log($"SKIP OFFERED: '{what}'"); }
                     if (SkipOffered && SkipButton())
                     {
                         Skips++; Log($"SKIP taken: '{what}'");
@@ -394,6 +394,7 @@ namespace Seven
             if (Auto) { if (Riding && onFoot) yield return GetOff(); if (autoPath != null) StartCoroutine(WalkPath(autoPath, 40f)); }
             yield return Until(() => hit, what, 60f, hint, target, () => { if (Riding && onFoot) Bike.Dismount(true); hit = true; });
             hit = true; if (Auto) StopWalks();
+            TkAudit.Watch(this, what, track != null ? track.position : target, track);   // QF24 (14): did the visible object move?
             if (track != null) target = track.position;
             HideGuide();
             Seven.Gesture(target); Seven.SetEnergyPoint(1.9f, 0.25f);

@@ -309,8 +309,8 @@ namespace Seven
             _wmFight.Beat = WormmasterComesDown;
             _wmFight.UI = UI; _wmFight.AutoPilot = Auto;
             _wmFight.PhaseObjective = ph => ph == 0 ? "He fights from his dais - shut the north device (X) and the ledge device (RT from below) down under attack"
-                                         : ph == 1 ? "He comes down - make him waste an attack, throw root debris at him (RT), then punch (X) and kick (Y); pull the signal crystal (RT)"
-                                         : "His signal fails - read him, dodge, stun him (RT), then punch (X) and kick (Y)";
+                                         : ph == 1 ? "He comes down - wear him down and pull the signal crystal (RT)"     // QF24 (17): only the place's own actions
+                                         : "His signal fails - wear him down";
             _encounterOn = true;
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _wmFight.Begin(BossFight.Load("wormmaster"), Seven, Cam);
@@ -629,7 +629,7 @@ namespace Seven
         }
         IEnumerator StunWorm(WormCreature w)
         {
-            Seven.Gesture(w.transform.position + Vector3.up * 0.6f);
+            Seven.Gesture(w.transform.position + Vector3.up * 0.6f); TkAudit.Watch(this, "Venus: a creature stunned", w.transform.position, w.transform);   // QF24 (14)
             Seven.SetEnergyPoint(1.6f, 0.2f);
             for (float t = 0f; t < 1.2f && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
             AudioKit.Play("tk_push", w.transform.position, 0.9f);
@@ -668,7 +668,7 @@ namespace Seven
         }
         IEnumerator StunTunnelWorm()
         {
-            Seven.Gesture(_tunnelWorm.transform.position + Vector3.up * 0.5f);
+            Seven.Gesture(_tunnelWorm.transform.position + Vector3.up * 0.5f); TkAudit.Watch(this, "Venus: the tunnel creature", _tunnelWorm.transform.position, _tunnelWorm.transform);   // QF24 (14)
             for (float t = 0f; t < 1.2f && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
             AudioKit.Play("tk_push", _tunnelWorm.transform.position, 0.9f);
             _tunnelWorm.Stun(6f, _tunnelWorm.transform.position - P7);
@@ -695,7 +695,7 @@ namespace Seven
         IEnumerator PullCrystal()
         {
             if (Crystal == null) { DisableDevice(2); yield break; }
-            Seven.Gesture(Crystal.position);
+            Seven.Gesture(Crystal.position); TkAudit.Watch(this, "Venus: the signal crystal", Crystal.position, Crystal);   // QF24 (14)
             Seven.SetEnergyPoint(1.8f, 0.25f);
             for (float t = 0f; t < 2.5f && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
             AudioKit.Play("tk_push", Crystal.position, 0.8f);

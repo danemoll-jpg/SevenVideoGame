@@ -73,7 +73,7 @@ namespace Seven
                 var layout = Gallery != null && Gallery.InView ? ControlsLegend.Layout.GalleryView
                     : m == SaucerSeven.Mode.Seated ? ControlsLegend.Layout.SaucerSeated : ControlsLegend.Layout.SaucerWalk;
                 if (Legend.Set != layout) Legend.SetLayout(layout);
-                string prompt = ChapterMode && PromptOverride != null ? PromptOverride : ExtraPrompt != null ? ExtraPrompt : Seven.NearChair ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
+                string prompt = ChapterMode && PromptOverride != null ? PromptOverride : ExtraPrompt != null ? ExtraPrompt : Seven.NearChair && !Seven.Frozen && !Seven.Cutscene ? "Sit" : Gallery != null && Gallery.NearTV ? "View art" : null;
                 // Round 9: in Chapter 1 there is no permanent legend; "X Sit" is taught once, then a quiet context prompt.
                 Legend.HidePanels = Chapter1State.Aboard;
                 if (Chapter1State.Aboard)

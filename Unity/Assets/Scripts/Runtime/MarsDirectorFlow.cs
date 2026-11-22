@@ -76,7 +76,7 @@ namespace Seven
             if (cp == L.CpArrival || cp == L.CpCrossing && !DemoBoot.RampCheck) { Bike.gameObject.SetActive(false); Seven.gameObject.SetActive(false); }   // QF17 (5): both start in the hold / aboard
             else if (riding) { Seven.gameObject.SetActive(true); Bike.Mount(); }
             else { Seven.gameObject.SetActive(true); Seven.Place(at + (cp == L.CpSharedDoor ? new Vector3(1.5f, 0f, 1.5f) : Vector3.zero), Quaternion.Euler(0f, yaw, 0f) * Vector3.forward); if (cp == L.CpSharedDoor) Bike.Place(L.EastStop + new Vector3(-2f, 0f, -1f), 0f); }
-            MusicSystem.Play(cp == L.CpViper ? "mars_viper" : "mars_kingdoms", 2.5f);
+            MusicSystem.Play("mars_kingdoms", 2.5f);                                // QF24 (18): Viper's track starts with his fight
             FollowCamera(); Cam.SnapBehind();
             Log($"restore: {MarsState.Summary()} -> {(riding ? "riding" : "on foot")} at {at}");
         }

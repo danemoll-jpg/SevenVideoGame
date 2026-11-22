@@ -9,8 +9,9 @@ namespace Seven
     /// Machinists' repair tools for cutting and re-joining energy lines: against machines they sever power and short out
     /// systems; against living beings they only STUN (7 never kills). Found in AST_05's maintenance locker; she keeps them
     /// for later chapters (<see cref="AsteroidState.BladesOwned"/>).
-    ///  - RB / G draws or sheathes them (the controls page + the first-use prompt say so). Sheathed: two dark crescent hilts
-    ///    crossed on her back. Drawn: the light ribbons grow out of the hilts in her hands (0.25 s), hum, flicker.
+    ///  - RB draws or sheathes them (the Controls page lists it). QF24 (6): sheathed = INVISIBLE (nothing on her); drawn = they
+    ///    ignite in her hands out of thin air (a crackle of white light forming the crescents, 0.25 s, the hum rising), and
+    ///    collapse into a brief flicker when sheathed.
     ///  - On foot (drawn): X near a target = a swing (<see cref="BladeSwing"/>; the director decides what it cuts).
     ///  - In a boss fight (drawn): X = the blade chain (slash in -> slash out -> the combo, round again; Y still kicks) - the
     ///    damage that matters on a machine's power couplings (BossDef.bladeDamage).
@@ -67,24 +68,11 @@ namespace Seven
             _bladeR = MakeBlade(HumanBodyBones.RightHand, HumanBodyBones.RightThumbDistal, HumanBodyBones.RightMiddleProximal, false, lights);
             _bladeL = MakeBlade(HumanBodyBones.LeftHand, HumanBodyBones.LeftThumbDistal, HumanBodyBones.LeftMiddleProximal, true, lights);
             _bladeLight = lights.ToArray();
-            // sheathed: two dark crescent hilts crossed on her back. QF23 (7): the old pair ran BOTH from her spine to her right
-            // side, curving forward into her flank, posed once before the animator ran (from behind: two thin dark lines from
-            // her back down past her right arm). Now an X across her shoulder blades, wider and shorter (they read as hilts),
-            // re-posed every frame from her chest (PoseHilts), bowing away from her back, no shadows, unscaled by the bone.
-            var chest = Bone(HumanBodyBones.UpperChest) ?? Bone(HumanBodyBones.Chest);
-            if (chest != null)
-            {
-                _hiltBack = new GameObject("ArcBlades_Back").transform; _hiltBack.SetParent(chest, false);
-                _hilts.Clear();
-                foreach (var s in new[] { 1f, -1f })
-                {
-                    var h = new GameObject("Hilt").AddComponent<MeshFilter>(); h.transform.SetParent(_hiltBack, false);
-                    h.sharedMesh = Crescent(HiltLen, 0.05f, 0.036f, 28f);
-                    var mr = h.gameObject.AddComponent<MeshRenderer>(); mr.sharedMaterial = _hiltMat; mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-                    _hilts.Add((h.transform, s));
-                }
-                PoseHilts();
-            }
+            // QF24 (6) - Dan: "leave them invisible until she unsheathes them". No back / hip mount any more (the QF23 7 X of
+            // hilts on her back is gone - and with it the hanging-strands / dark-shape problem for good): sheathed, nothing
+            // shows on her. Drawing = the blades IGNITE out of thin air in her hands (a crackle of white light forming the
+            // crescents, the hum rising); sheathing = they collapse into a brief flicker and vanish (ApplyBladeVisual).
+            _hiltBack = null;
             ApplyBladeVisual(0f);
         }
 
@@ -180,8 +168,13 @@ namespace Seven
                     r.enabled = show;
                     float flick = 0.88f + 0.12f * Mathf.PerlinNoise(Time.time * 23f, bi * 3.7f);
                     float sk = ShrinkOf(r.transform.parent); if (sk < 0.99f) BladePullIns++;
-                    r.transform.localScale = new Vector3(1f, 1f + 0.06f * (flick - 0.9f), Mathf.Max(0.001f, grow) * flick * sk);
+                    // QF24 (6): igniting / collapsing = a crackle - hard flicker and a jagged width while the light forms or dies
+                    float crackle = grow > 0.01f && grow < 0.99f ? (0.55f + 0.9f * Mathf.PerlinNoise(Time.time * 71f, bi * 5.3f)) : 1f;
+                    r.transform.localScale = new Vector3(1f, (1f + 0.06f * (flick - 0.9f)) * crackle, Mathf.Max(0.001f, grow) * flick * sk);
+                    var guard = r.transform.parent != null ? r.transform.parent.Find("Guard") : null;
+                    if (guard != null) guard.localScale = Vector3.one * Mathf.Clamp01(grow * 1.4f);   // the grip forms with the light
                 }
+            if (_bladeHum != null) _bladeHum.pitch = Mathf.Lerp(0.55f, 1f, grow);                  // the hum rises as they ignite
         }
 
         /// <summary>Per frame (LateUpdate of 7): the blades grow / shrink, flicker, hum.</summary>

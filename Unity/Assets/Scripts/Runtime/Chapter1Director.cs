@@ -921,7 +921,7 @@ namespace Seven
                 if (_promptHit && !_stoneDown && !_resetting)
                 {
                     ClearPrompt();
-                    Seven.Gesture(MoonLayout.StoneRest);
+                    Seven.Gesture(MoonLayout.StoneRest); TkAudit.Watch(this, "the Moon: the stone", MoonLayout.StoneRest, null);   // QF24 (14)
                     Seven.SetEnergyPoint(1.9f, 0.25f);         // Round 9: brightens while she uses it
                     while (Seven.Current == ChapterSeven.Mode.Gesture && !Seven.GesturePeak) yield return null;
                     if (Seven.GesturePeak)
@@ -1555,7 +1555,7 @@ namespace Seven
             yield return WaitPrompt("clear the collapse from the lock (telekinesis)");
             pulsing = false;
             yield return Cutscene(true);
-            Seven.Gesture(RubbleCentre);
+            Seven.Gesture(RubbleCentre); TkAudit.Watch(this, "the Moon: uncover the lock", RubbleCentre, null);   // QF24 (14)
             Seven.SetEnergyPoint(1.9f, 0.25f);
             for (float t = 0f; t < 2f && Seven.Current == ChapterSeven.Mode.Gesture && !Seven.GesturePeak; t += Time.deltaTime) yield return null;
             TkStream(RubbleCentre);
@@ -2206,7 +2206,7 @@ namespace Seven
                 if (!w) Cam.Follow();
             }
             yield return WaitPrompt("pull the release lever");
-            Seven.Gesture(MoonLayout.Lever + Vector3.up * 1f);
+            Seven.Gesture(MoonLayout.Lever + Vector3.up * 1f); TkAudit.Watch(this, "the Moon: the lever", MoonLayout.Lever + Vector3.up * 1f, null);   // QF24 (14)
             while (!Seven.GesturePeak) yield return null;
             TkStream(MoonLayout.Lever + Vector3.up * 1.1f);
             Seven.Lock(true);
@@ -3130,7 +3130,7 @@ namespace Seven
             if (Auto) { yield return Until(() => PromptNear, "slab in telekinesis range", 20f); yield return AwaitTeach("tk"); yield return Shot("tr_slab_highlighted"); }
             yield return WaitPrompt("lift the fallen slab");
             pulsing = false;
-            Seven.Gesture(MoonTraversal.SlabRest);
+            Seven.Gesture(MoonTraversal.SlabRest); TkAudit.Watch(this, "the Moon: the fallen slab", MoonTraversal.SlabRest, null);   // QF24 (14)
             Seven.SetEnergyPoint(1.9f, 0.25f);                  // the energy point brightens while she uses it
             while (Seven.Current == ChapterSeven.Mode.Gesture && !Seven.GesturePeak) yield return null;
             TkStream(MoonTraversal.SlabRest);

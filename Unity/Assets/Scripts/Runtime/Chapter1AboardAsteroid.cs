@@ -98,7 +98,7 @@ namespace Seven
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
             // EXTERIOR WIDE through the window: the asteroid, its silver structures, the turning rings, the white route lights
             var wf = Flat(Polar(9f, WindowA, 0f)).normalized;
-            Cut(new Vector3(0f, 1.7f, 0f) + wf * 4.5f, new Vector3(0f, -6f, 0f) + wf * 120f, 52f);
+            Cut(new Vector3(0f, 1.7f, 0f) + wf * 5.9f, new Vector3(0f, -6f, 0f) + wf * 120f, 52f);   // QF24 (1): ahead of the egg chair (it stands at r 4.4)
             yield return UI.Fade(0f, 1.4f);
             yield return Wait(1.0f);
             yield return ShotV("aa01_the_asteroid_through_the_window");
@@ -143,16 +143,20 @@ namespace Seven
             if (rev == null) { if (DemoBoot.CaptureDir != null) Cap?.Log($"{tag} (QF21 1 / QF23 3): no ShipReveal in the scene - the hull stays"); yield break; }
             if (away)
             {
-                rev.CenterOverride = ShipConsole.I != null && ShipConsole.I.PilotSeat != null ? ShipConsole.I.PilotSeat : null;
+                // QF24 (1): the vanish centres on the seat she is in - 7's egg chair at the window for every arrival talk (no tilt:
+                // CenterOverride set), the pilot's chair only where a scene still seats her there
+                rev.CenterOverride = SeatT;
                 var keep = new System.Collections.Generic.List<Renderer>();
-                if (ShipConsole.I != null && ShipConsole.I.PilotChair != null) keep.AddRange(ShipConsole.I.PilotChair.GetComponentsInChildren<Renderer>(true));
+                if (!InEggChair && ShipConsole.I != null && ShipConsole.I.PilotChair != null) keep.AddRange(ShipConsole.I.PilotChair.GetComponentsInChildren<Renderer>(true));
+                if (InEggChair) { var ped = GameObject.Find("ChairPedestal"); if (ped != null) keep.AddRange(ped.GetComponentsInChildren<Renderer>(true)); }
+                if (_recordDisplay != null) keep.AddRange(_recordDisplay.GetComponentsInChildren<Renderer>(true));
                 var catSeat = PilotHips + PilotFwd * 0.62f - PilotRight * 0.42f;
                 var ship = GameObject.Find("Ship");
                 if (ship != null)
                     foreach (var r in ship.GetComponentsInChildren<Renderer>(true))
                     {
                         var b = r.bounds; if (b.size.magnitude > 2.6f) continue;               // never the floor, walls or the hull
-                        if ((b.ClosestPoint(catSeat) - catSeat).magnitude < 0.55f || (b.ClosestPoint(ArmRest) - ArmRest).magnitude < 0.3f) keep.Add(r);
+                        if (!InEggChair && ((b.ClosestPoint(catSeat) - catSeat).magnitude < 0.55f || (b.ClosestPoint(ArmRest) - ArmRest).magnitude < 0.3f)) keep.Add(r);
                     }
                 foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None)) if (r.name.StartsWith("AsteroidRecordCopy") || r.name.EndsWith("RecordCopy")) keep.Add(r);
                 rev.KeepSolid(keep);
@@ -179,7 +183,7 @@ namespace Seven
         {
             // beside and a little ahead of the chair, looking back past her profile toward the asteroid (never the chair's back)
             var wf = Flat(Polar(9f, WindowA, 0f)).normalized; var side = Vector3.Cross(Up, wf);
-            Cut(PilotHead + side * 2.6f + wf * 1.2f + Up * 0.15f, PilotHead + wf * 7f - side * 1.2f - Up * 0.9f, 60f);
+            Cut(PilotHead + side * 2.6f + wf * 1.2f + Up * 0.15f, InEggChair ? PilotHead + wf * 3.2f - side * 0.5f - Up * 0.45f : PilotHead + wf * 7f - side * 1.2f - Up * 0.9f, 60f);   // QF24 (1): from the egg chair her profile stays in frame against the world
         }
         /// <summary>AST_01_07: she gently lifts him off her lap onto the adjoining seat (the co-pilot pod beside the chair).</summary>
         IEnumerator LiftCatToSeat()
@@ -187,6 +191,7 @@ namespace Seven
             var from = Cat.transform.position;
             var disp = ShipConsole.I != null && ShipConsole.I.Display != null ? ShipConsole.I.Display.position : PilotHips + PilotFwd * 1.1f + Up * 0.5f;
             var seat = PilotHips + PilotFwd * 0.62f - PilotRight * 0.42f; seat.y = disp.y - 0.34f;      // the console desk beside the chair (where he sits in the route scenes)
+            if (InEggChair) seat = Flat(PilotHips - PilotRight * 0.82f + PilotFwd * 0.2f);              // QF24 (1): the egg chair has no adjoining seat - the deck beside it, looking up at her
             Cat.enabled = false; _handsBusy = true;
             _ik.LeftW = 1f; _ik.RightW = 1f; _ik.LeftPalmW = _ik.RightPalmW = 0f; _ik.LeftHintW = _ik.RightHintW = 0f;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.3f)
@@ -210,7 +215,7 @@ namespace Seven
             Seven.Frozen = true; Seven.Cutscene = true; Director.Cam.Hold = true;
             Cat.ForceTarget = null; Cat.enabled = false;
             SaucerLocation.Set("asteroid");
-            MusicSystem.Stop(0.2f);
+            MusicSystem.Board();                                              // QF24 (21): back aboard = the saucer theme, every time
             if (!AsteroidState.SceneDone("AST_10_reunion"))
             {
                 // straight from the beam-up: she is already kneeling at the boarding area; he walks directly into her hands
@@ -276,7 +281,9 @@ namespace Seven
         IEnumerator NextDestination(string where)
         {
             var con = ShipConsole.I;
-            if (WorldFlags.CattalusDue)
+            var talk = where.StartsWith("the console") ? "AST_11B" : WorldFlags.NextTalk("asteroid");     // QF24 (22): from the save's completion flags
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"NEXT TALK (QF24 22): the asteroid finished, asteroid done {WorldFlags.AsteroidDone}, mothership done {WorldFlags.BiavehDone} -> {talk}");
+            if (talk == "AST_11B")
             {
                 if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_11B (the Cattalus lead) plays at {where}: {WorldFlags.Summary()}");
                 NavHand(true); CutPilot("ots");

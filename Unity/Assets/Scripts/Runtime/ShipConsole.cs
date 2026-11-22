@@ -215,6 +215,7 @@ namespace Seven
             var pg = new GameObject("Page", typeof(RectTransform)); pg.transform.SetParent(_menuRoot, false);
             _pageRoot = (RectTransform)pg.transform; _pageRoot.sizeDelta = _menuRoot.sizeDelta;
             _map = new StarMap(_mapRoot, _font, _mapRoot.sizeDelta);
+            if (DemoBoot.CaptureDir != null) StarMapSelfTest();
         }
 
         GameObject MakeCanvas(string name, Transform at, Vector2 sizeM, out RectTransform root, out CanvasGroup group)
@@ -261,11 +262,29 @@ namespace Seven
             Img(_pageRoot, StarMap.SoftSprite, new Vector2(0f, 40f), new Vector2(360f, 360f), new Color(1f, 1f, 1f, 0.16f));
             Txt(_pageRoot, "7", new Vector2(0f, 46f), 190, new Color(0.82f, 0.82f, 0.82f), TextAnchor.MiddleCenter, new Vector2(400f, 240f));
             Txt(_pageRoot, "SHIP'S CONSOLE", new Vector2(0f, -110f), 26, new Color(0.6f, 0.6f, 0.6f), TextAnchor.MiddleCenter, new Vector2(W, 36f));
-            Txt(_pageRoot, "X / E   Use console", new Vector2(0f, -H * 0.5f + 40f), 20, new Color(0.45f, 0.45f, 0.45f), TextAnchor.MiddleCenter, new Vector2(W, 30f));
+            Txt(_pageRoot, "X   Use console", new Vector2(0f, -H * 0.5f + 40f), 20, new Color(0.45f, 0.45f, 0.45f), TextAnchor.MiddleCenter, new Vector2(W, 30f));
             if (_menuGroup != null) _menuGroup.alpha = 0.8f;
             ConfigureMap(null, null, null);
             if (_mapGroup != null) _mapGroup.alpha = 0.6f;
             _map?.HidePointer();
+        }
+
+        /// <summary>QF24 (23) check runs: the map opened at every place the saucer can be must show THAT system first; and a
+        /// selection made while it is open must survive a re-configure (the player switched systems).</summary>
+        void StarMapSelfTest()
+        {
+            var all = new List<string> { "venus", "moon", "mars", "europa", "biaveh", "asteroid" };
+            int bad = 0; var rows = new List<string>();
+            foreach (var here in new[] { "moon", "venus", "mars", "europa", "asteroid", "biaveh", "biaveh_space" })
+            {
+                _map.Configure(all, all, null, here, null);
+                string want = StarMap.SystemOf(here); bool ok = _map.View == want; if (!ok) bad++;
+                rows.Add($"{here} -> {(_map.View == StarMap.Sol ? "our solar system" : "the Veyra system")}{(ok ? "" : " (WRONG)")}");
+            }
+            _map.Configure(all, all, null, "moon", null); _map.Select("asteroid"); var kept = _map.Selected;
+            _map.Configure(all, all, null, "moon", kept); bool keepOk = _map.View == StarMap.Bia; if (!keepOk) bad++;
+            CapLog($"STAR MAP (QF24 23) self-test: {string.Join(", ", rows)}; the player's Veyra selection kept while open: {(keepOk ? "yes" : "NO")} - wrong {bad} (must be 0)");
+            _map.Configure(all, all, null, Here(), null);
         }
 
         void ConfigureMap(ICollection<string> selectable, IDictionary<string, string> extraNotes, string select)
@@ -493,7 +512,12 @@ namespace Seven
             if (p == Page.Guide) _guide = GuideEntries();
             if (p == Page.Map)
             {
-                ConfigureMap(Reachable(), null, Here() == "moon" ? "venus" : "moon");
+                // QF24 (23): the map opens on the system the SAUCER is in (null = Configure picks the first world there) and
+                // keeps whatever the player last selected while it stays open. Before, it always pre-selected the Moon / Venus,
+                // which switched the view to our solar system even at Veyra.
+                var keep = !mapChange && _map != null ? _map.Selected : null;
+                ConfigureMap(Reachable(), null, keep);
+                if (_map != null) CapLog($"STAR MAP (QF24 23): opens on {(_map.View == StarMap.Sol ? "our solar system" : "the Veyra system")} - the saucer is at {Here()} ({SaucerLocation.System}){(keep != null ? ", kept the player's selection " + keep : "")}");
                 if (_mapGroup != null) _mapGroup.alpha = 1f;
                 CapLog(LastStarMapLog);
             }

@@ -134,6 +134,7 @@ namespace Seven
             else if (reach < 0.005f) _reachLean = Mathf.Max(0f, _reachLean - 4f * Time.deltaTime);
             RideGaps = new Vector4(G(HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal, b.GripL), G(HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal, b.GripR),
                                    F(HumanBodyBones.LeftFoot, b.FootL), F(HumanBodyBones.RightFoot, b.FootR));
+            RidePose.Sample(this, b);                                                  // QF24 (15): the regression check, every check run that rides
         }
     }
 }

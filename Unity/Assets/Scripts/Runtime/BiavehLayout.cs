@@ -86,7 +86,7 @@ namespace Seven
         public static readonly Vector3 RoutingView = new Vector3(178.5f, 0f, 145f);
         // BIA_11: the memory chamber, the octahedron
         public static readonly Vector3 TempleDoor = new Vector3(175f, 0f, 151f);
-        public static readonly Vector3 OctaAt = new Vector3(175f, 1.35f, 172f);
+        public static readonly Vector3 OctaAt = new Vector3(175f, 1.14f, 172f);      // QF24 (20): the smaller octahedron (0.44 m across) hovers just over its plinth
         public static readonly Vector3 OctaView = new Vector3(175f, 0f, 170.6f);
         public static readonly Vector3 SaucerHome = new Vector3(0f, 0f, 0f);
 

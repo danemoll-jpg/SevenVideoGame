@@ -101,7 +101,7 @@ namespace Seven
             }
             yield return Wait(1.0f);
             yield return ShotV("ea03_insert_navigation_display");
-            yield return SayE("EUR_01", 5, 5);                   // There. A way down.
+            yield return DialogueFraming.Over("the passage through the ice on the display (QF24 7)", SayE("EUR_01", 5, 5));   // There. A way down.
             Cat.LapNudge(-14f);                                  // Panther looks up at her
             CutPilot("lap");
             yield return SayE("EUR_01", 6, 7);                   // You said that rather enthusiastically. / Mm-hmm.

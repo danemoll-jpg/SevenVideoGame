@@ -34,6 +34,8 @@ namespace Seven
         [Header("People")]
         public MarsFolk Nela; public MarsFolk ResidentA; public MarsFolk[] Crossers; public Transform Seedlings;
         public Transform Ratwing; public RatwingRig RRig;
+        /// <summary>QF24 (14): the airlock's loose coupling (its own object - her telekinesis lifts it into the socket).</summary>
+        public Transform LockCoupling;
         [Header("BIA_03 / 04")]
         public MemoryEcho EchoBerth; public Transform RouteDisplay; public Renderer[] RouteMarks; public Renderer RouteLine;
         [Header("BIA_05 / 06")]
@@ -129,11 +131,17 @@ namespace Seven
         {
             while (Seven == null || !Seven.gameObject.activeInHierarchy || _cut || Riding || !Seven.BladesOwned) { if (Time.time > 900f) yield break; yield return null; }
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) yield return null;
-            Log("BLADES SHEATHED (QF23 7): " + Seven.HiltReport());
+            Log("BLADES SHEATHED (QF24 6): " + Seven.HiltReport() + " - invisible until drawn (no back / hip mount)");
             var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f); var h = P7 + Vector3.up * 1.3f;
+            // off-camera captures (a second angle of the same frame): the gameplay camera is never moved for the proof
             foreach (var (n, o) in new[] { ("back", -f * 2.2f), ("left", -r * 2.2f - f * 0.6f), ("right", r * 2.2f - f * 0.6f) })
-            { Cam.Shot(h + o + Vector3.up * 0.2f, h, 0.01f, true, 40f); for (float t = 0f; t < 0.15f; t += Time.deltaTime) yield return null; yield return Shot("b03z_qf23_hilts_from_" + n); }
-            if (!_cut) FollowCamera();
+                if (Cap != null) yield return Cap.ShotFrom("qf24_06_sheathed_nothing_on_her_from_" + n, h + o + Vector3.up * 0.2f, h, 40f);
+            // the draw: the blades ignite in her hands (captured the first time she draws them)
+            while (!Seven.BladesDrawn) { if (Time.time > 1500f) yield break; yield return null; }
+            for (float t = 0f; t < 0.08f; t += Time.deltaTime) yield return null;
+            if (Cap != null) { var hh = P7 + Vector3.up * 1.1f; var ff = Flat(Seven.transform.forward).normalized; yield return Cap.ShotFrom("qf24_06_drawn_the_blades_ignite", hh + ff * 2.0f + Vector3.Cross(Vector3.up, ff) * 0.8f + Vector3.up * 0.2f, hh, 42f); }
+            for (float t = 0f; t < 0.4f; t += Time.deltaTime) yield return null;
+            if (Cap != null) { var hh = P7 + Vector3.up * 1.1f; var ff = Flat(Seven.transform.forward).normalized; yield return Cap.ShotFrom("qf24_06_drawn_the_blades_lit", hh + ff * 2.0f + Vector3.Cross(Vector3.up, ff) * 0.8f + Vector3.up * 0.2f, hh, 42f); }
         }
         string RideAreaName(Vector3 p) { var z = L.ZoneAt(p); return z.StartsWith("Road") ? "the city roads" : z; }
 
@@ -146,7 +154,108 @@ namespace Seven
             if (Crossers != null) foreach (var c in Crossers) if (c != null) c.Voice = null;
             if (l.Speaker == "nela" && Nela != null && Flat(Nela.transform.position - P7).magnitude < 25f) { var tg = GameObject.Find("Voice_Cat_Telepathy"); Nela.Voice = tg != null ? tg.GetComponent<AudioSource>() : VoiceSource(); }   // her lines play on the telepathy source
             if (l.Speaker == "ratwing" && RRig != null) RRig.Voice = VoiceSource();
+            RatwingLineShot(l);
             if (l.Speaker == "resident1" && Crossers != null && Crossers.Length > 0 && Crossers[0] != null) Crossers[0].Voice = VoiceSource();
+        }
+
+        // ---- QF24 (9): Ratwing's close-ups when he talks (BIA_05 / 07 / 09, like Viper's QF18 8) -----------------------------
+        float _ratSpokeAt = -99f; Light _ratKey; public int RatCloseUps, RatReplies; protected bool _ratGlassShot;
+        /// <summary>Every Ratwing line in a cutscene shot: a close-up / medium close-up of HIM - his face, eyes and teeth, the
+        /// head tilt / sneer with his voice, wings framing him; low angle when he is above her; a soft white key light on his
+        /// face so it reads against the white fog. 7's replies right after: over her shoulder, looking up at him.</summary>
+        void RatwingLineShot(VoiceBank.Line l)
+        {
+            if (_ratGlassShot) return;                                                    // QF24 (19): the through-the-glass shot is set by hand
+            if (Cam == null || !Cam.InShot || RRig == null || RRig.HeadBone == null || Ratwing == null || !Ratwing.gameObject.activeInHierarchy) { RatKey(false); return; }
+            var h = RRig.HeadBone.position;
+            if (Vector3.Distance(h, P7) > 45f) { RatKey(false); return; }
+            var cam = Cam.GetComponent<Camera>();
+            bool above = h.y > HerHeadB().y + 1.0f;
+            if (l.Speaker == "ratwing")
+            {
+                _ratSpokeAt = Time.time;
+                var toHer = Flat(P7 - h).normalized; if (toHer.sqrMagnitude < 0.01f) toHer = Flat(-RRig.HeadBone.up);
+                bool medium = (RatCloseUps % 3) == 2;                                   // mostly close-ups, every third a medium (the wings)
+                foreach (var a in new[] { 0f, 25f, -25f, 45f, -45f, 70f, -70f })
+                {
+                    var d = Quaternion.Euler(0f, a, 0f) * toHer;
+                    var pos = h + d * (medium ? 3.6f : 2.2f) + Vector3.down * (above ? (medium ? 1.6f : 1.0f) : (medium ? 0.5f : 0.25f));
+                    var look = h + Vector3.down * (medium ? 0.45f : 0.08f);
+                    float fov = medium ? 40f : 30f;
+                    if (RideProbe.Overlap(pos, 0.25f, null, null, false)) continue;
+                    if (!DialogueFraming.Sees(cam, pos, look, fov, Ratwing, new[] { Seven.transform, Nela != null ? Nela.transform : null })) continue;
+                    Cam.Subjects.Clear(); Cam.Shot(pos, look, 0.01f, true, fov); RatCloseUps++;
+                    RatKey(true, pos, h);
+                    Log($"RATWING CLOSE-UP (QF24 9): {l.Id} - {(medium ? "medium close-up" : "close-up")} of his face{(above ? ", low angle (he is above her)" : "")}, {Vector3.Distance(pos, h):0.0} m, key light on his face");
+                    if (DemoBoot.CaptureDir != null && RatCloseUps <= 6) StartCoroutine(Shot($"qf24_09_ratwing_closeup_{l.Id}"));
+                    return;
+                }
+                Log($"RATWING CLOSE-UP (QF24 9): {l.Id} - no clear angle on his face (the shot kept; the speaker check decides)");
+            }
+            else if (l.Speaker == "seven" && Time.time - _ratSpokeAt < 12f)
+            {
+                // her reply: over her shoulder, looking up at him
+                var hh = HerHeadB(); var d = Flat(h - hh).normalized; var side = Vector3.Cross(Vector3.up, d);
+                foreach (var s in new[] { 1f, -1f })
+                {
+                    var pos = hh - d * 1.1f + side * 0.55f * s + Vector3.up * (above ? -0.1f : 0.15f);
+                    var look = Vector3.Lerp(hh, h, 0.55f);
+                    if (RideProbe.Overlap(pos, 0.2f, null, null, false)) continue;
+                    if (!DialogueFraming.Sees(cam, pos, look, 44f, Seven.transform, new[] { Ratwing })) continue;
+                    Cam.Subjects.Clear(); Cam.Shot(pos, look, 0.01f, true, 44f); RatReplies++;
+                    Log($"RATWING CLOSE-UP (QF24 9): {l.Id} (7's reply) - over her shoulder, looking {(above ? "up " : "")}at him");
+                    return;
+                }
+            }
+            else RatKey(false);
+        }
+        // ---- QF24 (10): the relays - her palm on the resonance plate (a natural hand pose, IK onto the plate), then the payoff
+        RelayDevice Dev(Renderer lamp) => lamp != null ? lamp.GetComponentInParent<RelayDevice>() : null;
+        public int RelayTouches; public float RelayWorstGap;
+        IEnumerator RelayTouch(Renderer lamp, string tag, bool restore = true, float hold = 0.6f)
+        {
+            var dev = Dev(lamp);
+            if (dev == null || dev.Plate == null) { if (lamp != null) Seven.Touch(lamp.transform.position); if (restore) Glow(lamp, 1.8f); yield break; }
+            var n = dev.PlateNormal; var nf = Flat(n).normalized; var plateC = dev.Plate.position; var fingers = dev.PlateUp;
+            var stand = Flat(plateC) + nf * 0.40f;                                  // QF24 (10): close enough for her palm (at 0.52 m the IK net let relay 1 / 3 go - 27 / 36 cm short)
+            Seven.Place(stand, -nf); Seven.Lock(true);
+            var side = Vector3.Cross(Vector3.up, -nf);
+            var tik = Seven.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
+            tik.enabled = true; tik.Ease = 2.4f;
+            tik.RightPos = plateC + n * 0.028f - fingers * 0.07f; tik.RightW = 1f;
+            tik.RightPalmN = n; tik.RightFingerDir = fingers; tik.RightPalmW = 1f;
+            tik.RightHint = Seven.transform.position + Vector3.up * 1.0f + side * 0.38f + nf * 0.1f; tik.RightHintW = 0.8f;
+            tik.LookPos = dev.Node != null ? dev.Node.transform.position : plateC; tik.LookW = 0.8f;
+            Shoot(plateC + side * 0.95f + n * 0.55f + Vector3.up * 0.25f, plateC + Vector3.up * 0.12f, 38f, 0.01f);
+            for (float t = 0f; t < 1.0f; t += Time.deltaTime) yield return null;
+            // the palm on the plate: measured and corrected (the palm centre to the plate's face)
+            Vector3 Palm() { var h = Seven.Bone(HumanBodyBones.RightHand); var mid = Seven.Bone(HumanBodyBones.RightMiddleProximal); return h == null ? plateC : mid == null ? h.position : Vector3.Lerp(h.position, mid.position, 0.55f); }
+            float Gap() => Vector3.Dot(Palm() - plateC, n) - 0.015f;                   // 0 = resting on the plate's face (1.5 cm thick)
+            float g0 = Gap(), g = g0;
+            for (int k = 0; k < 3 && Mathf.Abs(g) > 0.008f; k++) { tik.RightPos -= n * Mathf.Clamp(g, -0.08f, 0.08f); for (float t = 0f; t < 0.3f; t += Time.deltaTime) yield return null; g = Gap(); }
+            RelayTouches++; RelayWorstGap = Mathf.Max(RelayWorstGap, Mathf.Abs(g));
+            Log($"RELAY (QF24 10) {tag}: her palm on the resonance plate - gap {g * 100f:+0.0;-0.0} cm (before the correction {g0 * 100f:+0.0;-0.0} cm), palm {Vector3.Distance(Palm(), plateC) * 100f:0} cm from the plate's centre, elbow hinted down by her side");
+            yield return Shot($"qf24_10_{tag.Replace(' ', '_')}_her_palm_on_the_resonance_plate");
+            Shoot(Seven.transform.position + side * 2.4f + nf * -0.4f + Vector3.up * 1.4f, plateC + Vector3.up * 0.1f, 46f, 0.01f);   // the gameplay-height view of her and the device
+            yield return Shot($"qf24_10_{tag.Replace(' ', '_')}_her_and_the_relay_from_the_side");
+            if (restore)
+            {
+                AudioKit.Play("bia_relay_on", plateC, 1f, 0f, AudioKit.Bus.Sfx, 60f);
+                Shoot(dev.transform.position + side * 2.8f - nf * -2.2f + Vector3.up * 1.6f, dev.transform.position + Vector3.up * 0.8f, 50f, 0.01f);
+                yield return dev.Restore();
+                yield return Shot($"qf24_10_{tag.Replace(' ', '_')}_restored_the_light_runs_out");
+            }
+            for (float t = 0f; t < hold; t += Time.deltaTime) yield return null;
+            tik.ReleaseAll("the relay touch ends");
+        }
+
+        Vector3 HerHeadB() => Seven.Bone(HumanBodyBones.Head) != null ? Seven.Bone(HumanBodyBones.Head).position : P7 + Vector3.up * 1.6f;
+        void RatKey(bool on, Vector3 cam = default, Vector3 face = default)
+        {
+            if (!on) { if (_ratKey != null) _ratKey.enabled = false; return; }
+            if (_ratKey == null) { var go = new GameObject("RatwingKeyLight"); _ratKey = go.AddComponent<Light>(); _ratKey.type = LightType.Spot; _ratKey.color = Color.white; _ratKey.range = 8f; _ratKey.spotAngle = 40f; _ratKey.intensity = 6f; _ratKey.shadows = LightShadows.None; }
+            _ratKey.enabled = true; var from = Vector3.Lerp(cam, face, 0.35f) + Vector3.up * 0.4f;
+            _ratKey.transform.SetPositionAndRotation(from, Quaternion.LookRotation(face - from));
         }
 
         void LateUpdate()
@@ -172,7 +281,7 @@ namespace Seven
         static readonly System.Collections.Generic.List<Vector3> _planters = L.GardenPlanters();
         static readonly (Vector3 c, float r)[] PropCircles =
         {
-            (L.DisplayAt, 0.8f), (L.PillarAt, 1.1f), (L.CabinetAt, 0.7f), (L.BridgeControl, 0.5f), (L.Relay3At, 0.8f), (L.BarrierControl, 0.5f),
+            (L.DisplayAt, 0.8f), (L.PillarAt, 1.1f), (L.CabinetAt, 0.3f), (L.BridgeControl, 0.5f), (L.Relay3At, 0.3f), (L.BarrierControl, 0.5f),
             (L.PartitionStations[0], 0.5f), (L.PartitionStations[1], 0.5f), (L.RoutingControl, 0.6f), (L.OctaAt, 0.45f), (L.BenchAt, 0.7f),
         };
 
@@ -266,7 +375,7 @@ namespace Seven
                 if (!Auto)
                 {
                     if (!hinted && hint != null && Time.time - since > HintAfter) { hinted = true; Hints++; UI.Hint(hint, 8f); Log($"HINT: '{what}' -> \"{hint}\""); if (at.HasValue) ShowGuide(at.Value); }
-                    if (!SkipOffered && skip != null && Time.time - since > SkipAfter) { SkipOffered = true; UI.Hint("Y / Enter: skip this step", 6f); Log($"SKIP OFFERED: '{what}'"); }
+                    if (!SkipOffered && skip != null && Time.time - since > SkipAfter) { SkipOffered = true; UI.Hint("Y: skip this step", 6f); Log($"SKIP OFFERED: '{what}'"); }
                     if (SkipOffered && SkipButton())
                     {
                         Skips++; Log($"SKIP taken: '{what}'");
@@ -473,6 +582,7 @@ namespace Seven
             if (Auto) { if (Riding && onFoot) yield return GetOff(); if (autoPath != null) StartCoroutine(WalkPath(autoPath, 40f)); }
             yield return Until(() => hit, what, 60f, hint, target, () => { if (Riding && onFoot) Bike.Dismount(true); hit = true; });
             hit = true; if (Auto) StopWalks();
+            TkAudit.Watch(this, what, track != null ? track.position : target, track);   // QF24 (14): did the visible object move?
             if (track != null) target = track.position;
             HideGuide();
             Seven.Gesture(target); Seven.SetEnergyPoint(1.9f, 0.25f);

@@ -25,6 +25,7 @@ namespace Seven.EditorTools
         {
             KneeCheck(scene);
             SaucerClearanceCheck(scene);
+            RidePoseCheck(scene);          // QF24 (15)
         }
 
         static float KneeAngle(Animator a, bool left)
@@ -103,7 +104,7 @@ namespace Seven.EditorTools
 
         static void SaucerClearanceCheck(string scene)
         {
-            var sb = new StringBuilder(); int total = 0;
+            var sb = new StringBuilder(); int total = 0; var holdSb = new StringBuilder(); int holdTotal = 0;
             foreach (var beam in Object.FindObjectsByType<Seven.SaucerBeam>(FindObjectsInactive.Exclude))
             {
                 var ignore = new List<Transform>();
@@ -115,7 +116,18 @@ namespace Seven.EditorTools
                 var hits = Seven.SaucerClearance.Intersecting(beam.transform, ignore);
                 total += hits.Count;
                 sb.AppendLine($"saucer at {beam.transform.position}: {hits.Count} {(hits.Count > 0 ? "- " + string.Join(", ", hits) : "")}");
+                // QF24 (5): the bike's way out of the hold and the beam's column
+                if (imp == null)
+                {
+                    var way = Seven.SaucerClearance.InHoldWay(beam.transform, ignore);
+                    holdTotal += way.Count;
+                    holdSb.AppendLine($"saucer at {beam.transform.position}: hold corridor + beam column: {way.Count} {(way.Count > 0 ? "- " + string.Join(", ", way) : "")}");
+                }
             }
+            var holdHead = $"HOLD CORRIDOR (QF24 5) {scene}: {holdTotal} meshes stand in front of the bike hold (out to where the bike lands) or in the beam column (must be 0)";
+            File.WriteAllText(Path.Combine(QF24Dir, $"hold_corridor_{scene}.txt"), holdHead + "\n" + holdSb);
+            Log(holdHead);
+            if (holdTotal > 0) BuildFailures.Add(holdHead);
             var head = $"SAUCER CLEARANCE (QF23 6) {scene}: {total} meshes intersect the saucer's hull where it is placed (must be 0)";
             File.WriteAllText(Path.Combine(QF23Dir, $"saucer_{scene}.txt"), head + "\n" + sb);
             Log(head);

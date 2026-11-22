@@ -35,6 +35,7 @@ namespace Seven
             SetZone("Bridge", bridge); PlaceSegments(bridge ? 1f : 0f);
             if (EchoBridge != null) EchoBridge.SetNow(false); if (EchoBerth != null) EchoBerth.SetNow(false); if (EchoGarden != null) EchoGarden.SetNow(false);
             Glow(Relay1Lamp, r1 ? 1.8f : 0.15f); Glow(Relay2Lamp, r2 ? 1.8f : 0.15f); Glow(Relay3Lamp, r3 ? 1.8f : 0.15f);
+            Dev(Relay1Lamp)?.Set(r1); Dev(Relay2Lamp)?.Set(r2); Dev(Relay3Lamp)?.Set(r3);   // QF24 (10): the devices' broken / restored look
             Lights(DistrictLights1, r1); Lights(DistrictLights2, r2); Lights(DistrictLights3, r3);
             Off(PartitionA, r1 ? Vector3.zero : new Vector3(0f, 26f, 0f));
             Off(SeamPanel, r2 || BiavehState.StepDone("seam") ? new Vector3(1.9f, 0f, 0f) : Vector3.zero);
@@ -81,7 +82,7 @@ namespace Seven
             if (cp <= L.CpBerth) { Bike.gameObject.SetActive(false); Seven.gameObject.SetActive(false); }
             else if (riding) { Seven.gameObject.SetActive(true); Bike.Mount(); }
             else { Seven.gameObject.SetActive(true); Seven.Place(at, Quaternion.Euler(0f, yaw, 0f) * Vector3.forward); }
-            MusicSystem.Play(cp == L.CpFight ? "biaveh_ratwing" : cp <= L.CpBerth ? null : "biaveh_mothership", 2.5f);
+            MusicSystem.Play(cp <= L.CpBerth ? null : "biaveh_mothership", 2.5f);   // QF24 (18): even from the fight's checkpoint the boss track waits for the fight
             FollowCamera(); Cam.SnapBehind();
             Log($"restore: {BiavehState.Summary()} -> {(riding ? "riding" : "on foot")} at {at}");
         }
@@ -131,6 +132,20 @@ namespace Seven
             RRig.Height = toH; RRig.Now = end;
         }
 
+        /// <summary>QF24 (13): a warm close-up of 7's face (three-quarter front, eye level; a touch closer for the smile).</summary>
+        void HerFaceCloseUp(bool closer = false)
+        {
+            var h = Seven.Bone(HumanBodyBones.Head) != null ? Seven.Bone(HumanBodyBones.Head).position : P7 + Vector3.up * 1.6f;
+            var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f);
+            foreach (var a in new[] { 30f, -30f, 50f, -50f, 10f })
+            {
+                var d = Quaternion.Euler(0f, a, 0f) * f; var pos = h + d * (closer ? 1.05f : 1.4f) + Vector3.up * 0.02f;
+                if (RideProbe.Overlap(pos, 0.2f, null, null, false) || !ChapterCamera.ClearLine(pos, h)) continue;
+                Shoot(pos, h - Vector3.up * 0.04f, closer ? 30f : 34f, 0.01f); return;
+            }
+            Shoot(h + f * 1.4f + r * 0.4f, h, 34f, 0.01f);
+        }
+
         // ------------------------------------------------------------------------------------------ BIA_03: a world inside
         IEnumerator Berth()
         {
@@ -169,12 +184,17 @@ namespace Seven
             TwoShot((P7 + L.NelaAt) * 0.5f, Vector3.Cross(Vector3.up, Flat(L.NelaAt - P7).normalized), 3.0f, 1.3f, 1.3f, 44f, 0.5f);
             yield return Say("BIA_03", 4, 5);                    // Remember where we parked. / Little saucer. Enormous wall. Got it.
             // the memory echo across the passage: seated figures in a room that no longer exists; a resident stops, disoriented
-            Shoot(P7 + new Vector3(-1f, 1.7f, -1.5f), L.EchoAt + Vector3.up * 1.2f, 46f, 0.6f);
+            // QF24 (7) - Dan: she asked "What was that?" while the shot showed her looking away from it. Now she turns to the
+            // echo, and the line plays OVER a shot of the memory itself (the fading seated figures, the disoriented resident)
+            Seven.transform.rotation = Quaternion.LookRotation(Flat(L.EchoAt - P7));
             if (EchoBerth != null) EchoBerth.Set(true);
             if (ResidentA != null) { ResidentA.Face(L.EchoAt); ResidentA.Play(ResidentA.HasState("kneel") ? "kneel" : "idle", 0.5f); }
+            var toHer = Flat(P7 - L.EchoAt).normalized; var echoSide = Vector3.Cross(Vector3.up, toHer);
+            Shoot(L.EchoAt + toHer * 3.4f + echoSide * 1.3f + Vector3.up * 1.5f, (L.EchoAt + (ResidentA != null ? ResidentA.transform.position : L.EchoAt)) * 0.5f + Vector3.up * 0.9f, 46f, 0.6f);
             yield return Wait(1.6f);
             yield return Shot("b05_the_memory_echo_a_resident_stops");
-            yield return Say("BIA_03", 6, 6);                    // What was that?
+            yield return DialogueFraming.Over("the memory echo she asks about (QF24 7)", Say("BIA_03", 6, 6));   // What was that? (her voice over the memory)
+            yield return Shot("qf24_07_what_was_that_over_the_memory");
             // QF23 (9): never hold 7 still while someone walks - a cut: Nela is already beside the resident
             if (Nela != null) { Nela.Stop(); var nAt = L.ResidentAAt + new Vector3(-0.9f, 0f, 0.6f); Nela.Place(nAt, L.ResidentAAt - nAt); Nela.Play(Nela.HasState("kneel") ? "kneel" : "idle", 0.2f); Log("WALK CUT (QF23 9): BIA_03 - Nela is already beside the resident (no walk on screen)"); }
             Seven.Release(); Seven.Lock(true);
@@ -301,14 +321,11 @@ namespace Seven
             }
             if (!BiavehState.StepDone("relay1"))
             {
-                Objective("Repair the relay - the damaged cabinet at the junction (X)" + RelayLine);
-                yield return Interact(L.CabinetView, "Repair the relay", "repair relay 1", "The damaged control cabinet at the junction, east side", new[] { L.CabinetView });
+                Objective("Repair the relay - the damaged one at the junction (X)" + RelayLine);
+                yield return Interact(L.CabinetView, "Repair the relay", "repair relay 1", "The damaged relay at the junction, east side", new[] { L.CabinetView });
                 yield return Cutscene(true);
                 Shoot(L.CabinetAt + new Vector3(-2.2f, 1.8f, -2.4f), L.CabinetAt + Vector3.up * 1.2f, 40f, 0.01f);
-                Seven.Touch(L.CabinetAt + Vector3.up * 1.2f);
-                if (Cabinet1Door != null) StartCoroutine(Swing(Cabinet1Door, -95f, 0.8f));
-                yield return Wait(0.8f);
-                AudioKit.Play("bia_relay_on", L.CabinetAt, 1f, 0f, AudioKit.Bus.Sfx, 60f);
+                yield return RelayTouch(Relay1Lamp, "relay 1");                   // QF24 (10): her palm on the plate, the node lights, the petals open, the light runs out
                 Glow(Relay1Lamp, 1.8f); Beacon(0, false);
                 yield return Wait(0.6f);
                 yield return Shot("b14_relay_one_repaired_its_light_returns");
@@ -354,7 +371,15 @@ namespace Seven
                 yield return Shot("b17b_she_carries_the_tray_legs_stepping");
                 if (r1 != null) { r1.Face(P7); Seven.transform.rotation = Quaternion.LookRotation(Flat(r1.transform.position - P7)); TwoShot((P7 + r1.transform.position) * 0.5f, Vector3.Cross(Vector3.up, Flat(r1.transform.position - P7).normalized), 3.0f, 1.2f, 1.2f, 42f, 0.4f); }
                 yield return Shot("b18_the_seedlings_resident");
-                yield return Say("BIA_06", 1, 4);                // Thank you... / Are those all yours? / They were smaller when I left home. / Heh. Good luck.
+                yield return Say("BIA_06", 1, 1);                // Thank you. We thought we might be here all day.
+                // QF24 (11): "What are you carrying?" - the shot SHOWS the overflowing tray (over her shoulder onto it), then the
+                // resident explains (seedlings for the upper gardens: every district grows a few for the others)
+                var tray = Seedlings != null ? Seedlings.position : (r1 != null ? r1.transform.position + Vector3.up * 1.1f : P7);
+                { var d = Flat(tray - P7).normalized; var sd = Vector3.Cross(Vector3.up, d); Shoot(P7 + Vector3.up * 1.55f - d * 0.55f + sd * 0.45f, tray, 34f, 0.01f); }
+                yield return DialogueFraming.Over("the overflowing tray of seedlings (QF24 11)", Say("BIA_06", 2, 2));   // What are you carrying?
+                yield return Shot("qf24_11_what_are_you_carrying_the_tray");
+                if (r1 != null) TwoShot((P7 + r1.transform.position) * 0.5f, Vector3.Cross(Vector3.up, Flat(r1.transform.position - P7).normalized), 3.0f, 1.2f, 1.2f, 42f, 0.4f);
+                yield return SayIds("BIA_06_02a", "BIA_06_02b"); yield return Say("BIA_06", 3, 4);   // (02a) Seedlings for the upper gardens... / (02b) They look ready to plant themselves. / They were smaller when I left home. / Heh. Good luck.
                 if (r1 != null) r1.WalkTo(new Vector3(60f, 0f, 3.6f), 1.2f);   // she carries on, the tray in her arms
                 // the first district reconnects: distant lights return; a security partition closes across one of his routes
                 BiavehState.DoStep("relay1");
@@ -422,7 +447,7 @@ namespace Seven
             Objective("Reconnect the second relay (X)" + RelayLine);
             yield return Interact(L.Relay2View, "Reconnect the relay", "reconnect relay 2", "Behind the panel that slid back, right of the seam", new[] { L.Relay2View });
             yield return Cutscene(true);
-            Seven.Place(L.Relay2View, Vector3.forward); Seven.Touch(L.Relay2At + Vector3.up * 1.2f);
+            yield return RelayTouch(Relay2Lamp, "relay 2", false, 0.2f);       // QF24 (10): her palm on its plate - then Ratwing interrupts
             // Ratwing returns: he lands beyond the glass partition and tries to reach its external controls
             if (Ratwing != null) { Ratwing.gameObject.SetActive(true); SetRat(L.RatwingGarden + new Vector3(10f, 0f, 14f), 9f, RatwingRig.Mode.Fly, Vector3.back); }
             StartCoroutine(FlyRat(new Vector3(L.RatwingGarden.x, 0f, L.RatwingGarden.z), 0f, 1.8f));
@@ -466,7 +491,7 @@ namespace Seven
             TwoShot(P7 + Vector3.forward * 2f, Vector3.right, 3.2f, 1.2f, 1.3f, 44f, 0.5f);
             yield return Say("BIA_07", 9, 12);                   // How did you know? / He looked at the gap... / You really have been watching. / Mm-hmm.
             // the second district reconnects, the garden echo fades
-            BiavehState.DoStep("relay2"); Glow(Relay2Lamp, 1.8f); Lights(DistrictLights2, true); Beacon(1, false);
+            BiavehState.DoStep("relay2"); if (Dev(Relay2Lamp) != null) StartCoroutine(Dev(Relay2Lamp).Restore()); else Glow(Relay2Lamp, 1.8f); Lights(DistrictLights2, true); Beacon(1, false);
             if (EchoGarden != null) EchoGarden.Set(false);
             AudioKit.Play("bia_relay_on", L.Relay2At, 1f, 0f, AudioKit.Bus.Sfx, 60f);
             Shoot(new Vector3(252f, 8f, 70f), new Vector3(262f, 2f, 90f), 54f, 0.01f);
@@ -506,7 +531,7 @@ namespace Seven
             yield return Interact(L.PassageDoor + new Vector3(1.4f, 0f, 0f), "Open the door", "open the shielded door", "The door at the end of the road, west", new[] { L.PassageDoor + new Vector3(1.4f, 0f, 0f) });
             yield return DoorMove(PassageDoor, true);
             ShieldThreshold(L.PassageDoor);                      // QF23 (16a): the shielding shows - a shimmering threshold, the link drops
-            QuietInside = true; MusicSystem.Stop(2f);
+            QuietInside = true; MusicSystem.Silence("the shielded quiet passage (the link and the music drop inside)", 180f);   // QF24 (21): a declared silence
             Log("BIA_08: inside the shielded passage - no Panther (no telepathy lines play in here), music down");
             // the short solo spatial puzzle: an airlock pair. Panel A opens door A; inside the lock panel B is dead - its
             // conduit coupling lies on the floor; telekinesis seats it; then panel B closes A behind her and opens B
@@ -521,6 +546,27 @@ namespace Seven
             var socket = L.LockPanelB + new Vector3(-1.2f, 0.9f, -0.2f);
             yield return SayIds("BIA_08_N3");                    // QF23 (12): No power. Its coupling's on the floor.
             yield return Telekinesis(socket, 7f, "seat the coupling (telekinesis)", "The panel inside the lock is dark: its coupling lies on the floor - lift it into the socket with telekinesis (RT)", PanelBLamp, null, true, null);
+            // QF24 (14): the coupling VISIBLY moves - it rises off the floor in her telekinetic glow, turns upright as it floats
+            // to the socket, and slots in with a clunk and a pulse of light; then panel B lights (the effect)
+            if (LockCoupling != null)
+            {
+                var c0 = LockCoupling.position; var r0 = LockCoupling.rotation; var rIn = Quaternion.LookRotation(Vector3.right, Vector3.up) * Quaternion.Euler(0f, 0f, 90f);
+                var glowR = LockCoupling.Find("LockCoupling_Glow") != null ? LockCoupling.Find("LockCoupling_Glow").GetComponent<Renderer>() : null;
+                Shoot(Vector3.Lerp(c0, socket, 0.5f) + new Vector3(1.6f, 0.7f, -1.4f), Vector3.Lerp(c0, socket, 0.5f), 44f, 0.01f);
+                AudioKit.Play("tk_gather", c0, 0.8f, 0.05f, AudioKit.Bus.Sfx, 15f);
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.6f) { LockCoupling.position = c0 + Vector3.up * 0.45f * Mathf.SmoothStep(0f, 1f, t); if (glowR != null) Glow(glowR, 1.6f * t); yield return null; }
+                yield return Shot("qf24_14_the_coupling_rises_in_her_telekinesis");
+                var c1 = LockCoupling.position;
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 1.1f) { float u = Mathf.SmoothStep(0f, 1f, t); LockCoupling.position = Vector3.Lerp(c1, socket - Vector3.right * 0.25f, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 0.12f; LockCoupling.rotation = Quaternion.Slerp(r0, rIn, u); yield return null; }
+                var c2 = LockCoupling.position;
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.25f) { LockCoupling.position = Vector3.Lerp(c2, socket, t * t); yield return null; }
+                LockCoupling.position = socket; LockCoupling.rotation = rIn;
+                AudioKit.Play("land_hard", socket, 0.5f, 0.05f, AudioKit.Bus.Sfx, 15f); CameraShake.Quake(0.06f, 0.1f);
+                if (glowR != null) Glow(glowR, 3f);
+                yield return Shot("qf24_14_the_coupling_slots_into_the_socket");
+                for (float t = 0f; t < 0.5f; t += Time.deltaTime) { if (glowR != null) Glow(glowR, Mathf.Lerp(3f, 1.2f, t / 0.5f)); yield return null; }
+                Log($"BIA_08 (QF24 14): the coupling moved {Vector3.Distance(c0, socket):0.00} m from the lock floor into the socket");
+            }
             Glow(PanelBLamp, 1.4f); AudioKit.Play("bia_seam", socket, 0.8f, 0f, AudioKit.Bus.Sfx, 20f);
             Log("BIA_08 puzzle: the coupling seated by telekinesis - panel B has power");
             yield return Shot("b30_the_coupling_seated_panel_b_lights");
@@ -532,7 +578,7 @@ namespace Seven
             Objective("Restore the third relay (X)" + RelayLine);
             yield return Interact(L.Relay3View, "Restore the relay", "restore relay 3", "At the end of the passage", new[] { L.Relay3View });
             yield return Cutscene(true);
-            Seven.Place(L.Relay3View, Vector3.left); Seven.Touch(L.Relay3At + Vector3.up * 1.2f);
+            yield return RelayTouch(Relay3Lamp, "relay 3");                       // QF24 (10)
             AudioKit.Play("bia_relay_on", L.Relay3At, 1f, 0f, AudioKit.Bus.Sfx, 60f);
             BiavehState.DoStep("relay3"); Glow(Relay3Lamp, 1.8f); Lights(DistrictLights3, true); Beacon(2, false);
             Shoot(L.Relay3At + new Vector3(3f, 1.7f, 2.4f), L.Relay3At + Vector3.up * 1.2f, 42f, 0.01f);
@@ -542,15 +588,27 @@ namespace Seven
             StartCoroutine(DoorMove(LockDoorA, true)); SetZone("LockDoorA", true);
             QuietInside = false;
             Seven.Release(); Seven.Lock(true);
+            // QF24 (13) - Dan: "a long shot of just a wall". A telepathic exchange used to sit on whatever the camera faced (the
+            // speaker check exempted Panther's lines). Now: a warm close-up of HER face as she steps out (the relief, the small
+            // smile on "Overrated."), and for his lines the cutaway to him aboard, in the pilot's chair
+            HerFaceCloseUp();
             yield return Say("BIA_08", 9, 9);                    // Panther?
-            yield return Say("BIA_08", 10, 13);                  // Here. / Good. / How was the silence? / Overrated.
+            yield return Cutaway("qf24_13a_aboard_here", AboardCut.Mood.Composed, "him", 0.3f, "BIA_08_10");   // Here.
+            HerFaceCloseUp();
+            yield return Say("BIA_08", 11, 11);                  // Good.
+            yield return Cutaway("qf24_13b_aboard_how_was_the_silence", AboardCut.Mood.Watch, "him", 0.3f, "BIA_08_12");   // How was the silence?
+            HerFaceCloseUp(true);
+            yield return Say("BIA_08", 13, 13);                  // Overrated. (the small smile)
+            yield return Shot("qf24_13c_overrated_her_face");
             yield return Wait(1.2f);                             // a pause before Nela interrupts
             yield return Say("BIA_08", 14, 14);                  // All three districts are connected. Ratwing is moving toward the archive.
             yield return Cutaway("b33_aboard_he_turns_to_the_moving_marker", AboardCut.Mood.Watch, "screen", 0.5f, "BIA_08_15");   // I have him.
             yield return Say("BIA_08", 16, 16);                  // Let's keep it that way.
             Complete("BIA_08");
             Log($"relay 3 restored in the quiet passage - Relays {RelaysDone} / 3");
-            MusicSystem.Play("biaveh_ratwing", 2f);
+            // QF24 (18) - Dan: "the mothership music should continue until we actually start the Ratwing fight". Before, the boss
+            // track started HERE (after the third relay, long before the archive). The mothership's theme comes back instead.
+            MusicSystem.EndSilence(); MusicSystem.Play("biaveh_mothership", 2.5f);
             yield return Cutscene(false);
             Objective("Back to the bike - Ratwing is moving toward the archive");
             FreeBike = true;

@@ -181,7 +181,9 @@ namespace Seven
         /// <summary>Things on the ground a player steps round (a surfaced creature).</summary>
         public virtual IEnumerable<Vector3> Hazards() { yield break; }
         /// <summary>The context prompt a player sees now (objective / throw / takedown).</summary>
-        public virtual string PromptLabel => Paused ? null : ObjectiveUseLabel() ?? (ObjectiveTk().HasValue ? "Telekinesis" : Open && DebrisNear ? "Telekinesis: throw" : State == St.Dazed ? "Takedown" : null);
+        /// <summary>QF24 (17): only the place's own actions (a station, a device, a pylon, an objective's telekinesis) - never
+        /// the moves she already knows (throw, takedown).</summary>
+        public virtual string PromptLabel => Paused ? null : ObjectiveUseLabel() ?? (ObjectiveTk().HasValue ? "Telekinesis" : null);
         public bool PromptIsTk => PromptLabel != null && PromptLabel.StartsWith("Telekinesis");
         /// <summary>The phase was skipped (fairness): complete its objectives.</summary>
         protected virtual void SkipObjectives() { }
@@ -212,8 +214,10 @@ namespace Seven
         public Vector3? NearestDebrisAt { get { var d = NearestDebris(60f); return d != null ? d.T.position : (Vector3?)null; } }
 
         // ---------------------------------------------------------------- start / stop
+        string _musicBefore;
         public void Begin(BossDef def, ChapterSeven seven, ChapterCamera cam)
         {
+            _musicBefore = MusicSystem.Current;
             Def = def; Seven = seven; Cam = cam; Active = this;
             Phase = 0; _phaseStaggers = 0; Over = false; Paused = false; Energy = 1f; _phaseStartEnergy = 1f; _endPending = false; DamageByStrikes = DamageByThrows = 0f; StunStrikes = OpenStrikes = 0;
             DamageByPunches = DamageByKicks = DamageByBlades = 0f; KicksLanded = PunchesLanded = BladeHits = 0; RetryEnergy.Clear();
@@ -223,6 +227,10 @@ namespace Seven
             ArmSeven();
             Markers.Init();
             Log($"BOSS {Def.id}: the fight begins - {Def.phases.Length} phases, she can take {Def.sevenHits} hits, table Resources/Bosses/boss_tuning.json");
+            // QF24 (18): the boss track starts HERE - the fight's first moment (control back, his bar on screen) - with a short
+            // cross-fade; the approach, the reveal and the pre-fight talk keep the area's music
+            var bt = MusicSystem.BossTrack(Def.id);
+            if (bt != null) { MusicSystem.EndSilence(); MusicSystem.Play(bt, 1.2f); Log($"BOSS MUSIC (QF24 18) {Def.id}: '{bt}' starts with the fight (1.2 s cross-fade); before it: '{_musicBefore ?? "(none)"}'"); }
             PhaseLog.Add($"phase 1 '{P.name}' from 0:00");
         }
         void ArmSeven()
@@ -382,7 +390,9 @@ namespace Seven
             Aimed(a);
             SetState(St.Telegraph, a.telegraph / Tempo);
             AudioKit.Play(a.windSound, Centre, 1f, 0.04f, AudioKit.Bus.Sfx, 70f);
-            if (a.dodgeable && !a.jumpable) Tip("dodge", "Dodge  (B / Ctrl)"); else if (a.jumpable) Tip("jump", "Jump  (A / Space)"); else if (a.blockable) Tip("block", "Block  (LT / Q)");
+            // QF24 (17) - the repeat (QF23 17): QF23 swapped the controls box for first-use tips - but they were still the GENERAL
+            // controls (dodge / jump / block / punch / kick / takedown / blades), and with a keyboard key beside each. Dan: only
+            // the context keys this place needs. No general-control tips in any boss fight; the Controls page lists them.
             if (DemoBoot.CaptureDir != null) Log($"boss {Def.id}: attack {Attacks} '{a.id}' ({a.kind}) - telegraph {a.telegraph / Tempo:0.00} s, she is {Flat(Her - transform.position).magnitude:0.0} m away (answer: {a.answer})");
             Burst("telegraph");
         }
@@ -675,7 +685,7 @@ namespace Seven
             CameraKick.Nudge(Flat(Centre - Her).normalized * 0.05f);
             AudioKit.Play("scree_grunt", Centre, 1f, 0.05f, AudioKit.Bus.Sfx, 40f); AudioKit.Play("signal_pulse", Centre, 0.7f, 0.05f, AudioKit.Bus.Sfx, 40f);
             UI?.BossStunned();
-            Tip("strike", Seven != null && Seven.BladesOwned && Seven.BladesDrawn ? "Close in:  Strike (X) · Kick (Y)" : "Close in:  Punch (X) · Kick (Y)", 3);
+
             Raise("stagger");
             Log($"boss {Def.id}: STAGGERED by {how} ({_phaseStaggers}/{P.staggers} in phase {Phase + 1})");
             Burst("stagger");
@@ -765,12 +775,12 @@ namespace Seven
         public IEnumerator Run(System.Action<string> objective)
         {
             int shown = -1; bool dazedShown = false, offered = false; int phaseOfDowns = 0;
-            if (Seven != null && Seven.BladesOwned && !Seven.BladesDrawn) Tip("blades", "Arc blades  (RB / G)", 1, 3.5f);   // QF23 (21): once, small
+
             while (!Over)
             {
                 if (AutoPilot && !Paused) { var it = BossPilot.Think(this, Seven); BossPilot.ApplyAuto(it, Seven); AutoSkip = it.Skip; }
                 if (Phase != shown && !Paused) { shown = Phase; objective?.Invoke(PhaseObjective?.Invoke(Phase)); }
-                if (State == St.Dazed && !dazedShown) { dazedShown = true; objective?.Invoke("He is dazed - take him down (Y / E)"); Tip("takedown", "Takedown  (Y / E)", 1, 4f); Raise("dazed"); }
+                if (State == St.Dazed && !dazedShown) { dazedShown = true; objective?.Invoke("He is dazed - take him down"); Raise("dazed"); }   // QF24 (17): no general-control tip
                 // QF23 (19): the bar never stalls silently - the mark it is waiting at pulses and the director is told
                 bool waiting = WaitingOnObjective && !Paused;
                 if (UI != null) UI.PulseMark = waiting ? Phase : -1;
@@ -800,7 +810,7 @@ namespace Seven
                 }
                 if (DownsThisPhase >= 3 && !offered && !Paused && State != St.Dazed)
                 {
-                    offered = true; UI?.Hint("View / Enter: skip this part of the fight", 8f);   // QF20: Y is the kick now
+                    offered = true; UI?.Hint("View: skip this part of the fight", 8f);   // QF20: Y is the kick now; QF24 (17): controller buttons only
                     Log($"boss {Def.id}: SKIP OFFERED after 3 knockdowns in phase {Phase + 1} (fairness)");
                 }
                 if (offered && !Paused && State != St.Dazed && (SkipPressed() || AutoSkip)) { SkipTaken = true; offered = false; Log($"boss {Def.id}: phase {Phase + 1} skipped"); SkipObjectives(); StartCoroutine(NextPhase()); }

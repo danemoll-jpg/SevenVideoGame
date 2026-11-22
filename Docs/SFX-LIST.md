@@ -176,3 +176,17 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `ast_coolant` | Coolant rushing through big pipes, a deep liquid flow, valves opening, steam dying down. | 4 |  | Asteroid: the cooling control (AST_05) |
 | `ast_bird_chirp` | A small clockwork toy bird: a tiny wind-up ratchet, one uneven mechanical chirp, and a little tin wing flap. | 2.5 |  | Asteroid: the mechanical bird (AST_03_08; the vision) |
 | `ast_vault_open` | A heavy protected storage vault unlocking: bolts withdrawing one after another, a big door swinging open with a deep groan. | 4 |  | Asteroid: protected storage opens (AST_09) |
+
+## Cattalus (Round 18)
+| Name | Prompt | Seconds | | Where |
+|---|---|---|---|---|
+| `cat_crowd_cheer` | A large outdoor crowd of cats cheering at a race: excited chirps, trills and happy meows over a festive crowd roar. | 5 |  | CAT_07 finish, CAT_08 |
+| `cat_crowd_ambience` | A busy, relaxed outdoor plaza of cats: soft chirps, distant meows, padding feet, a gentle breeze, far-off chimes. | 10 |  | Cattalus streets (loop) |
+| `cardboard_rustle` | A cat climbing into a cardboard box: cardboard creaking and flexing, soft thumps, paws shuffling. | 2.5 |  | the boxes, the Deluxe Retreat |
+| `paper_crinkle` | Packing paper being pawed and arranged: crisp crinkling and rustling. | 2.5 |  | CAT_08 |
+| `race_start_lights` | Race starting lights: three short low beeps and one long high beep. | 4 |  | CAT_07_01 |
+| `cat_racer_hover` | A small hover racing vehicle passing: a smooth rising and falling electric whine with a soft air rush. | 3 |  | Duchess's racer |
+| `sphere_lines` | A smooth stone sphere awakening: a soft rising glassy shimmer with faint ringing harmonics. | 2.5 |  | CAT_09 touch |
+| `cradle_release` | A small ornate metal cradle opening: a soft precise click and a gentle metallic sigh. | 1.5 |  | CAT_09 |
+| `giant_purr` | An enormous cat purring deeply and contentedly: a low, warm, rumbling purr. | 6 |  | CAT_10 |
+| `grass_run` | Running through tall dry grass: swishing stalks and light footfalls with heavier soft thuds alongside. | 6 |  | CAT_10 segment 4 |
