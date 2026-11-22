@@ -1,5 +1,30 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF26: Cattalus is unplayable, a white-out (Dan, 2026-11-22) — to do, URGENT
+Dan: "What is this overpowering glow? You literally can't see anything. I played this through the opening cut scene but had to
+bail since it stayed like this even after you got control. This is unplayable." Screenshot: `Docs/Previews/qf26/dan_cattalus_whiteout.png`
+(a huge white glow covering most of the screen; the city reduced to scattered black specks inside it; the meadow tree tiny at the
+left; hills and ground flat gray).
+
+1. **Find and fix the white-out at the root.** Something blows the frame out to white: a bloom / emissive source (the sunlit
+   patches? the "shimmering edge" dissolve of the hull-away / CAT_01 reveal? a glow sprite or volume left on near the camera?), an
+   exposure / tonemapping setting in `Atmosphere_Cattalus`, or fog so dense the city dissolves. Say what it was. It also **stayed on
+   after control returned**: that is QF24 item 24's rule (every cutscene restores the gameplay camera's post-processing), so say why
+   that check didn't catch it and fix the check.
+2. **Your own captures show the problem and still passed.** `Docs/Previews/r18/06_ca04_the_city_reveal_the_hull_gone.png` is fog with
+   a giant blank slab and a few tiny props; `10_c01_the_public_berth.png` is washed-out with almost nothing in it. Add an
+   **image-quality gate** that runs on every capture in every chapter and fails the build: too much of the frame near-white or
+   near-flat (luminance histogram), too little local contrast, or no subject in frame (the expected character / object not visible
+   at a readable size). And **look at your captures** before calling anything done: describe in the status what each key shot
+   actually shows.
+3. **Make Cattalus look like the spec.** It's a sunny, warm, lived-in cat city (patches of sunlight), not a fog bank: brighter
+   than the other chapters but with real contrast: clear sunlight and soft shadows, haze only in the far distance (Kyle's monochrome
+   look, detail silhouetted against light haze). The city must read as dense and full at the scale of the shots: the cardboard
+   quarter, cat-tree towers, scratching-post columns, terraces, the transit tower, the square and Cat-a-tron, cats everywhere. No
+   giant blank surfaces; no buildings reduced to specks in the reveal. The meadow and the leaning tree match vision 7.
+4. **Re-prove the whole chapter** (both race outcomes) with before / after captures of every scene from the player's camera, all
+   passing the new gate.
+
 ## Quick fix QF25: Dan's 0.17.3 review (Dan, 2026-11-22) — done, status below; release 0.17.4
 
 1. **Veyra is far too small next to the mothership, and the shots favour the planet.** Dan: "The mothership is way large in
