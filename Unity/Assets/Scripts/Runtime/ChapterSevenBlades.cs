@@ -67,19 +67,23 @@ namespace Seven
             _bladeR = MakeBlade(HumanBodyBones.RightHand, HumanBodyBones.RightThumbDistal, HumanBodyBones.RightMiddleProximal, false, lights);
             _bladeL = MakeBlade(HumanBodyBones.LeftHand, HumanBodyBones.LeftThumbDistal, HumanBodyBones.LeftMiddleProximal, true, lights);
             _bladeLight = lights.ToArray();
-            // sheathed: two dark crescent hilts crossed on her back
+            // sheathed: two dark crescent hilts crossed on her back. QF23 (7): the old pair ran BOTH from her spine to her right
+            // side, curving forward into her flank, posed once before the animator ran (from behind: two thin dark lines from
+            // her back down past her right arm). Now an X across her shoulder blades, wider and shorter (they read as hilts),
+            // re-posed every frame from her chest (PoseHilts), bowing away from her back, no shadows, unscaled by the bone.
             var chest = Bone(HumanBodyBones.UpperChest) ?? Bone(HumanBodyBones.Chest);
             if (chest != null)
             {
                 _hiltBack = new GameObject("ArcBlades_Back").transform; _hiltBack.SetParent(chest, false);
-                _hiltBack.position = chest.position - transform.forward * 0.17f; _hiltBack.rotation = transform.rotation;
+                _hilts.Clear();
                 foreach (var s in new[] { 1f, -1f })
                 {
                     var h = new GameObject("Hilt").AddComponent<MeshFilter>(); h.transform.SetParent(_hiltBack, false);
-                    h.sharedMesh = Crescent(0.34f, 0.022f, 0.016f, 70f);
-                    h.gameObject.AddComponent<MeshRenderer>().sharedMaterial = _hiltMat;
-                    h.transform.localRotation = Quaternion.Euler(0f, 90f, 35f * s) * Quaternion.Euler(0f, 0f, -90f);
+                    h.sharedMesh = Crescent(HiltLen, 0.05f, 0.036f, 28f);
+                    var mr = h.gameObject.AddComponent<MeshRenderer>(); mr.sharedMaterial = _hiltMat; mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    _hilts.Add((h.transform, s));
                 }
+                PoseHilts();
             }
             ApplyBladeVisual(0f);
         }
@@ -104,6 +108,44 @@ namespace Seven
             gd.sharedMesh = Crescent(0.14f, 0.03f, 0.02f, 40f); gd.gameObject.AddComponent<MeshRenderer>().sharedMaterial = _hiltMat;
             gd.transform.localRotation = Quaternion.Euler(0f, 0f, 180f);
             return root;
+        }
+
+        const float HiltLen = 0.30f;
+        readonly List<(Transform t, float side)> _hilts = new List<(Transform, float)>();
+        /// <summary>QF23 (7): the sheathed hilts, an X close on her back (between the shoulder blades), posed after the
+        /// animator every frame: each runs diagonally (one up-left to down-right, the other mirrored), centred on her spine,
+        /// 0.13 m behind the chest bone, its curve bowing AWAY from her back. Never parented-and-forgotten.</summary>
+        void PoseHilts()
+        {
+            if (_hiltBack == null || !_hiltBack.gameObject.activeInHierarchy) return;
+            var chest = _hiltBack.parent; if (chest == null) return;
+            var hips = Bone(HumanBodyBones.Hips);
+            var up = hips != null ? (chest.position - hips.position).normalized : transform.up;
+            if (up.sqrMagnitude < 0.01f) up = transform.up;
+            var right = Vector3.ProjectOnPlane(transform.right, up).normalized;
+            var fwd = Vector3.Cross(right, up).normalized;
+            var ls = chest.lossyScale; _hiltBack.localScale = new Vector3(1f / Mathf.Max(1e-4f, ls.x), 1f / Mathf.Max(1e-4f, ls.y), 1f / Mathf.Max(1e-4f, ls.z));
+            _hiltBack.SetPositionAndRotation(chest.position - fwd * 0.13f, Quaternion.LookRotation(fwd, up));
+            foreach (var (h, s) in _hilts)
+            {
+                if (h == null) continue;
+                var dir = (up * 0.82f + right * 0.57f * s).normalized;                 // the X: 35 deg either side of her spine
+                var centre = _hiltBack.position;
+                h.rotation = Quaternion.LookRotation(dir, fwd);                       // ribbon bows toward -y = away from her back
+                h.position = centre - dir * HiltLen * 0.5f - fwd * 0.01f * (s > 0 ? 0f : 1f);
+            }
+        }
+        /// <summary>QF23 (7) proof: the hilts' farthest point from her spine line and lowest point vs her chest (check runs).</summary>
+        public string HiltReport()
+        {
+            if (_hiltBack == null || !_hiltBack.gameObject.activeInHierarchy) return "hilts hidden";
+            var chest = _hiltBack.parent; float far = 0f, low = 0f;
+            foreach (var (h, s) in _hilts)
+            {
+                if (h == null) continue; var mf = h.GetComponent<MeshFilter>(); if (mf == null || mf.sharedMesh == null) continue;
+                foreach (var v in mf.sharedMesh.vertices) { var w = h.TransformPoint(v); far = Mathf.Max(far, Vector3.Distance(w, chest.position)); low = Mathf.Min(low, w.y - chest.position.y); }
+            }
+            return $"hilts on her back: farthest point {far:0.00} m from the chest bone (must be < 0.35), lowest {low:+0.00;-0.00} m vs the chest (must be > -0.25)";
         }
 
         /// <summary>A crescent ribbon: from the root along +z, bowing toward -y; width tapers from w0 to w1.</summary>
@@ -151,6 +193,7 @@ namespace Seven
             _bladeGrow = Mathf.MoveTowards(_bladeGrow, BladesDrawn ? 1f : 0f, Time.deltaTime / 0.25f);
             BladesHoldOut(Time.deltaTime);
             ApplyBladeVisual(_bladeGrow);
+            PoseHilts();
             BladeBodyCheck();
             if (BladesDrawn && _bladeHum == null) _bladeHum = AudioKit.Loop("laser_hum", transform, null, 0.12f, AudioKit.Bus.Sfx, 2f, 12f);
             if (!BladesDrawn && _bladeHum != null) { StartCoroutine(AudioKit.Fade(_bladeHum, 0f, 0.3f, true)); _bladeHum = null; }

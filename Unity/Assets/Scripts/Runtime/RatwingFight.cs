@@ -41,6 +41,7 @@ namespace Seven
             }
             for (int i = 0; i < 2; i++) Glowing.Set(lamps != null && i < lamps.Length ? lamps[i] : null, 0.5f);
         }
+        public System.Func<Transform, Vector3> HomeOf;
         public void PlaceStart() { transform.position = new Vector3(L.RatwingStart.x, 0f, L.RatwingStart.z); transform.rotation = Quaternion.LookRotation(Vector3.back); _h = L.RatwingStart.y; }
 
         // ---------------------------------------------------------------- the arena (shrinks with each partition)
@@ -65,11 +66,12 @@ namespace Seven
         IEnumerator Shut(int i)
         {
             AudioKit.Play("bia_partition", L.Partitions[i] + Vector3.up * 6f, 1f, 0f, AudioKit.Bus.Sfx, 80f);
+            StationBeam(false);
             if (StationLamps != null && i < StationLamps.Length) Glowing.Set(StationLamps[i], 1.8f);
             NudgeCamera(L.Partitions[i] + Vector3.up * 4f);
             var d = PartitionDoors != null && i < PartitionDoors.Length ? PartitionDoors[i] : null;
             if (d == null) yield break;
-            var a = d.localPosition; var b = new Vector3(a.x, 0f, a.z);
+            var a = d.localPosition; var b = HomeOf != null ? HomeOf(d) : new Vector3(a.x, 0f, a.z);   // QF23 (6): shut = its built home
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.2f) { d.localPosition = Vector3.Lerp(a, b, t * t); yield return null; }
             d.localPosition = b; CameraShake.Quake(0.3f, 0.25f);
             // he is pushed back inside what is left of the shaft
@@ -78,7 +80,7 @@ namespace Seven
         protected override void SkipObjectives() { for (int i = 0; i < 2; i++) if (!Closed[i]) { Closed[i] = true; StartCoroutine(Shut(i)); } }
         public override (Vector3 at, string how)? PilotObjective() => Phase < 2 && !Closed[Phase] ? (Station, "use") : ((Vector3, string)?)null;
         public override string PromptLabel => Paused ? null : ObjectiveUseLabel() ?? (Open && DebrisNear && !Reachable ? "Telekinesis: knock him down" : Open && DebrisNear ? "Telekinesis: throw" : null);
-        public void ForceClosed(int i) { if (i >= 0 && i < 2 && !Closed[i]) { Closed[i] = true; if (PartitionDoors != null && i < PartitionDoors.Length && PartitionDoors[i] != null) { var p = PartitionDoors[i].localPosition; PartitionDoors[i].localPosition = new Vector3(p.x, 0f, p.z); } } }
+        public void ForceClosed(int i) { if (i >= 0 && i < 2 && !Closed[i]) { Closed[i] = true; if (PartitionDoors != null && i < PartitionDoors.Length && PartitionDoors[i] != null) { var p = PartitionDoors[i].localPosition; PartitionDoors[i].localPosition = HomeOf != null ? HomeOf(PartitionDoors[i]) : new Vector3(p.x, 0f, p.z); } } }
 
         protected override IEnumerator PhaseBeat(int ended)
         {
@@ -125,7 +127,80 @@ namespace Seven
             _h = Mathf.MoveTowards(_h, want, rate * Time.deltaTime);
             Rig.Height = _h; Rig.Now = mode; Rig.Pitch = pitch;
         }
-        protected override void AttackStarted(AttackDef a) { AudioKit.Play("ratwing_flap", Centre, 0.9f, 0.05f, AudioKit.Bus.Sfx, 60f); }
+        protected override void AttackStarted(AttackDef a) { AudioKit.Play("ratwing_flap", Centre, 0.9f, 0.05f, AudioKit.Bus.Sfx, 60f); if (Rig != null && a != null && a.kind == "lunge") Rig.SnapOpen(); }
         public float HeightNow => _h;
+
+        // ---------------------------------------------------------------- QF23 (21): the arc blades SHOCK him (stun-only)
+        public int BladeShocks { get; private set; }
+        public int SwoopCounters { get; private set; }
+        /// <summary>Every arc-blade hit crackles: white arcs across his body and wings, a sharp zap, he seizes for a moment
+        /// (living things are shocked and stunned, never cut). Combo hits add a little more shock time.</summary>
+        protected override void StrikeLanded(string blow, bool counted)
+        {
+            if (!ChapterSeven.IsBlade(blow)) return;
+            BladeShocks++;
+            bool combo = blow != null && (blow.Contains("2") || blow.Contains("3"));
+            AudioKit.Play("blade_zap", Centre, 1f, 0.08f, AudioKit.Bus.Sfx, 40f);
+            Arcs(0.6f + (combo ? 0.25f : 0f));
+            if (Rig != null) Rig.Seize(0.35f + (combo ? 0.2f : 0f));
+            Raise("blade_shock");
+            if (DemoBoot.CaptureDir != null) Log($"boss {Def.id}: ARC BLADE SHOCK (QF23 21) #{BladeShocks} ({blow}) - white arcs over his body and wings, a zap; he seizes");
+        }
+        /// <summary>The counter: a well-timed blade slash as he dives past (close, during the swoop) shocks him out of the air -
+        /// he tumbles down, stunned (an alternative to the telekinetic knock-down).</summary>
+        protected override void LateUpdate()
+        {
+            base.LateUpdate();
+            if (Def == null || Over || Paused || Seven == null || !Seven.BladesOwned || !Seven.BladesDrawn) return;
+            if (State == St.Active && Cur != null && Cur.kind == "lunge" && Seven.Current == ChapterSeven.Mode.Fight && ChapterSeven.IsBlade(Seven.LastBlow)
+                && Seven.Act != ChapterSeven.FightAct.Idle && Seven.Act != ChapterSeven.FightAct.Block
+                && Flat(Centre - Her).magnitude < 2.8f && _h < 3.2f && Time.time - _lastCounter > 2f)
+            {
+                _lastCounter = Time.time; SwoopCounters++;
+                AudioKit.Play("blade_zap", Centre, 1f, 0f, AudioKit.Bus.Sfx, 40f); Arcs(1.1f);
+                Stun("an arc-blade slash as he dived past - SHOCKED out of the air (QF23 21)");
+                Raise("blade_shock");
+            }
+        }
+        float _lastCounter = -9f;
+        void Arcs(float secs) { StartCoroutine(ArcsRun(secs)); }
+        IEnumerator ArcsRun(float secs)
+        {
+            var go = new GameObject("BladeShockArcs"); var lr = go.AddComponent<LineRenderer>(); lr.positionCount = 9; lr.widthMultiplier = 0.035f; lr.sharedMaterial = Markers.Additive(2.2f); lr.useWorldSpace = true;
+            var lr2 = new GameObject("BladeShockArcs2").AddComponent<LineRenderer>(); lr2.transform.SetParent(go.transform); lr2.positionCount = 7; lr2.widthMultiplier = 0.025f; lr2.sharedMaterial = lr.sharedMaterial; lr2.useWorldSpace = true;
+            var l = new GameObject("ShockLight").AddComponent<Light>(); l.transform.SetParent(go.transform); l.type = LightType.Point; l.color = Color.white; l.range = 5f; l.shadows = LightShadows.None;
+            for (float t = 0f; t < secs; t += Time.deltaTime)
+            {
+                var c = Centre; var span = transform.right * 1.6f;          // across his body and out along the wings
+                for (int i = 0; i < lr.positionCount; i++) lr.SetPosition(i, c - span + span * 2f * i / (lr.positionCount - 1) + Random.insideUnitSphere * 0.28f);
+                for (int i = 0; i < lr2.positionCount; i++) lr2.SetPosition(i, c + Vector3.up * (0.6f - 1.2f * i / (lr2.positionCount - 1)) + Random.insideUnitSphere * 0.22f);
+                l.transform.position = c; l.intensity = Random.Range(2f, 6f) * (1f - t / secs);
+                lr.enabled = lr2.enabled = Random.value > 0.2f;
+                yield return null;
+            }
+            Destroy(go);
+        }
+
+        // ---------------------------------------------------------------- QF23 (19): the station to use, lit from above
+        GameObject _beam; Renderer _edge;
+        /// <summary>While the fight waits on a partition: a bright beam of light down onto its station and the partition's edge
+        /// glowing (the director plays Panther's call). Off once it is closed.</summary>
+        public void StationBeam(bool on)
+        {
+            int i = Mathf.Clamp(Phase, 0, 1);
+            if (on && _beam == null)
+            {
+                _beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder); Destroy(_beam.GetComponent<Collider>()); _beam.name = "StationBeam";
+                _beam.transform.position = L.PartitionStations[i] + Vector3.up * 12f; _beam.transform.localScale = new Vector3(1.4f, 12f, 1.4f);
+                var r = _beam.GetComponent<Renderer>(); r.sharedMaterial = Markers.Additive(0.55f); r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                var pl = new GameObject("StationBeamLight").AddComponent<Light>(); pl.transform.SetParent(_beam.transform, false); pl.transform.position = L.PartitionStations[i] + Vector3.up * 2.5f; pl.type = LightType.Point; pl.range = 8f; pl.intensity = 6f; pl.color = Color.white; pl.shadows = LightShadows.None;
+                var d = PartitionDoors != null && i < PartitionDoors.Length ? PartitionDoors[i] : null;
+                if (d != null) foreach (var rr in d.GetComponentsInChildren<Renderer>()) if (rr.sharedMaterial != null && rr.sharedMaterial.name.Contains("glow")) { _edge = rr; break; }
+                Log($"boss {Def.id}: STATION BEAM (QF23 19) - a beam of light down onto partition station {i + 1}, the edge of the partition it closes glows");
+            }
+            if (!on && _beam != null) { Destroy(_beam); _beam = null; if (_edge != null) Glowing.Set(_edge, 0f); _edge = null; }
+            if (on && _edge != null) Glowing.Set(_edge, 1.2f + 0.8f * Mathf.Sin(Time.time * 6f));
+            if (on && StationLamps != null && i < StationLamps.Length) Glowing.Set(StationLamps[i], 1.4f + 0.8f * Mathf.Sin(Time.time * 6f));
+        }
     }
 }

@@ -73,23 +73,23 @@ namespace Seven
             MusicSystem.Play("mars_kingdoms", 3f);
             yield return UI.Title("MARS  —  THE DIVIDED KINGDOMS", 1.0f, 2.4f, 1.0f);
             if (DemoBoot.CaptureDir != null) Cap?.Log("title card: 'MARS — THE DIVIDED KINGDOMS' over black");
-            yield return EnterStaging("MAR_01");                                // QF16 (3): at the window, Panther on her shoulder
-            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0f;
+            yield return EnterStaging("MAR_01");                                // QF23 (3): the pilot's chair at the front window, Panther in her lap
+            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
             PlaceRecordsOnArmMars();
             // the navigation display: the plain, the two fortress cities, the ravine, the temple on its island
             NavHand(true);
             // QF18 (2): the display SHOWS it - a glowing hologram of the actual Mars level (the plain, the ravine, both fortress
             // cities, the temple island, the bridges), the temple highlighted - projected in front of her at the window
-            var holo = HoloDisplay.Get(Seven.transform.position + Seven.transform.forward * 1.25f + Vector3.up * 1.12f, -Seven.transform.forward);
+            var holo = HoloDisplay.Get();                                        // QF23 (3): over the console in front of the chair
             holo?.Show("mars", 1.0f, 1150f, new Vector3(-40f, 0f, 60f));
             holo?.Mark(new Vector3(0f, 0f, 178f), 28f, "the temple");
-            if (holo != null) Cut(holo.transform.position - Seven.transform.forward * 1.9f + Seven.transform.right * 0.55f + Up * 0.45f, holo.transform.position + Up * 0.05f, 44f);
+            if (holo != null) Cut(holo.transform.position - PilotFwd * 1.9f + PilotRight * 0.55f + Up * 0.45f, holo.transform.position + Up * 0.05f, 44f);
             yield return UI.Fade(0f, 1.4f);
             yield return Wait(0.8f);
             yield return ShotV("ma01_navigation_display_the_temple");
             yield return SayM("MAR_01", 1, 1);                                   // There's the temple.
+            StartCoroutine(HullAway(true, "MAR_01", "ma01h"));                   // QF23 (3): the vanish view - the plain all round them
             CutPilot("lap");
-            StartCoroutine(CatMomentTailFlick());                                // QF16 (4): his tail flicks across her face
             yield return SayM("MAR_01", 2, 2);                                   // And several people determined to make reaching it inconvenient.
             yield return ShotV("ma02_panther_in_her_lap");
             // she studies the bridges - QF18 (2): the display zooms to the two bridges, the barricades marked
@@ -99,7 +99,7 @@ namespace Seven
                 holo.Bar(new Vector3(51f, 0f, -6f), new Vector3(51f, 0f, 6f), 4f, "the east checkpoint barrier");
                 holo.Bar(new Vector3(-34f, 0f, 143f), new Vector3(-34f, 0f, 157f), 4f, "the west span, out of line");
                 holo.Bar(new Vector3(34f, 0f, 143f), new Vector3(34f, 0f, 157f), 4f, "the east span, out of line");
-                Cut(holo.transform.position + Seven.transform.forward * -0.8f + Seven.transform.right * 0.25f + Up * 0.42f, holo.transform.position, 36f);
+                Cut(holo.transform.position - PilotFwd * 0.8f + PilotRight * 0.25f + Up * 0.42f, holo.transform.position, 36f);
                 yield return holo.Focus(new Vector3(0f, 0f, 75f), 2.4f, 1.8f);
                 yield return ShotV("ma02b_hologram_the_barricaded_bridges");
             }
@@ -109,6 +109,7 @@ namespace Seven
             yield return ShotV("ma03_two_shot_in_the_chair");
             NavHand(false);
             holo?.Hide();
+            yield return HullAway(false, "MAR_01");                              // the hull back as the talk ends
             _stroke = 0f;
             yield return Wait(0.8f);
             if (_strokeRoutine != null) StopCoroutine(_strokeRoutine);
@@ -320,6 +321,17 @@ namespace Seven
         IEnumerator TravelAsteroid()
         {
             var con = ShipConsole.I;
+            // QF23 (24): TRV_AST is the FIRST journey's discovery - never again once the asteroid is found and either chapter has
+            // been played (an old save that replays MAR_13C would otherwise replay the find and reopen a finished chapter)
+            if (WorldFlags.AsteroidFound && (AsteroidState.OwnComplete || AsteroidState.HasProgress || BiavehState.OwnComplete || BiavehState.HasProgress))
+            {
+                if (DemoBoot.CaptureDir != null) Cap?.Log("TRV_AST (QF23 24): skipped - the asteroid was found long ago; no replay");
+                EndChairMoment("the departure routing ends (no TRV_AST replay)");
+                yield return ExitStaging("the Mars departure routing ends");
+                ShipConsole.StoryLock = false;
+                yield return ExploreVenus(false);
+                yield break;
+            }
             AudioKit.Play("console_select", null, 0.6f);                        // the navigation chime
             if (con != null) con.ShowMap("asteroid", "An asteroid  ·  artificial structures");
             WorldFlags.MarkAsteroid();
@@ -347,6 +359,7 @@ namespace Seven
                 // Round 16: "Investigate the asteroid" - the chapter begins (AST_01 in the pilot's chair)
                 yield return UI.Fade(1f, 1.0f);
                 ShipConsole.StoryLock = false;
+                if (AsteroidState.OwnComplete) { yield return RevisitWorld("asteroid", "The asteroid — visited (its record is aboard)"); yield break; }   // QF23 (24)
                 if (AsteroidState.HasProgress) AsteroidState.ContinueOwn(); else AsteroidState.StartFresh();
                 yield break;
             }
@@ -355,6 +368,7 @@ namespace Seven
                 // Round 17: "Continue to the Biavian mothership" - the chapter begins (BIA_01 in the pilot's chair)
                 yield return UI.Fade(1f, 1.0f);
                 ShipConsole.StoryLock = false;
+                if (BiavehState.OwnComplete) { yield return RevisitWorld("biaveh", "The Biavian Mothership — visited (its record is aboard)"); yield break; }   // QF23 (24)
                 if (BiavehState.HasProgress) BiavehState.ContinueOwn(); else BiavehState.StartFresh();
                 yield break;
             }
@@ -365,12 +379,24 @@ namespace Seven
         }
         /// <summary>The records together on the chair arm: the dodecahedron, the cube, Europa's icosahedron (once it was
         /// awarded) and Mars's small tetrahedron (once it was awarded).</summary>
-        void PlaceRecordsOnArmMars()
+        void PlaceRecordsOnArmMars() => PlaceRecords("the chair arm");
+        /// <summary>QF23 (23): EVERY collected record on the chair arm, from the one saved list (RecordSet) - the dodecahedron
+        /// itself, small copies of the rest in a row along the arm (old copies cleared first, so nothing doubles).</summary>
+        void PlaceRecords(string where)
         {
-            if (Shape != null) { _carry?.Set(CarriedShape.Where.Away, 0f); PlaceShape(ArmRest, MarkingUp()); }
-            if (_cubeCopy != null) { _cubeCopy.gameObject.SetActive(true); _cubeCopy.SetPositionAndRotation(ArmRest + PilotFwd * 0.14f, Quaternion.LookRotation(PilotFwd)); }
-            if (EuropaState.RecordAwarded) { var ico = MakeIcosahedronCopy(); ico.SetPositionAndRotation(ArmRest - PilotFwd * 0.14f, Quaternion.LookRotation(PilotFwd)); }
-            if (MarsState.RecordAwarded) { var tet = MakeTetrahedronCopy(); tet.SetPositionAndRotation(ArmRest - PilotFwd * 0.27f + Up * 0.02f, Quaternion.LookRotation(PilotFwd)); }
+            foreach (var r in FindObjectsByType<Renderer>(FindObjectsSortMode.None)) if (r != null && r.name.EndsWith("RecordCopy")) Destroy(r.gameObject);
+            if (_cubeCopy != null) _cubeCopy.gameObject.SetActive(false);
+            var recs = RecordSet.Collected(); int slot = 0;
+            Material mat = Shape != null && Shape.GetComponentInChildren<Renderer>() != null ? Shape.GetComponentInChildren<Renderer>().sharedMaterial : null;
+            foreach (var rec in recs)
+            {
+                var at = ArmRest + PilotFwd * (0.21f - slot * 0.105f) + Up * 0.02f; slot++;
+                if (rec.Name == "dodecahedron" && Shape != null) { _carry?.Set(CarriedShape.Where.Away, 0f); PlaceShape(at - Up * 0.02f, MarkingUp()); continue; }
+                var go = new GameObject(char.ToUpper(rec.Name[0]) + rec.Name.Substring(1) + "RecordCopy");
+                go.AddComponent<MeshFilter>().sharedMesh = rec.Mesh(0.05f); var mr = go.AddComponent<MeshRenderer>(); if (mat != null) mr.sharedMaterial = mat;
+                go.transform.SetPositionAndRotation(at, Quaternion.LookRotation(PilotFwd));
+            }
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"RECORDS (QF23 23) on {where}: {recs.Count} - {RecordSet.Names()} (from the saved list; VenusState / EuropaState / MarsState / AsteroidState / BiavehState RecordAwarded)");
         }
 
         /// <summary>Mars's record: the small tetrahedron (generated like the others - pale stone).</summary>

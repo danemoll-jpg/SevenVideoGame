@@ -122,7 +122,10 @@ namespace Seven
         [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen, mothershipKnown; }
         static string Key => DemoBoot.CaptureDir != null ? "seven_test_routes" : "seven_routes";
         static R Get() { var j = PlayerPrefs.GetString(Key, ""); return string.IsNullOrEmpty(j) ? new R() : JsonUtility.FromJson<R>(j) ?? new R(); }
-        static void Put(R r) { PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
+        /// <summary>QF23 (24): a Scene Select session never writes the player's real route flags (it could unlock or consume
+        /// real story beats - e.g. mark Cattalus seen from a replayed BIA_13).</summary>
+        static bool SelectRun => VenusState.SceneSelectRun || EuropaState.SceneSelectRun || MarsState.SceneSelectRun || AsteroidState.SceneSelectRun || BiavehState.SceneSelectRun;
+        static void Put(R r) { if (SelectRun && DemoBoot.CaptureDir == null) { Debug.Log("[Seven] world flags: not written during a Scene Select session (QF23 24)"); return; } PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
         public static void Clear() { PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); }
         /// <summary>Check runs (-routes): "europa" = Europa already complete (the Mars debrief plays MAR_13C);
         /// "mars" = Mars already complete (the end of Europa plays it); "none" = neither; always on the test keys.</summary>
@@ -159,6 +162,9 @@ namespace Seven
                 Put(new R { combined = true, combinedSeen = true, asteroidFound = true });
                 SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("asteroid");   // as a real save after TRV_AST: in Veyra's system
             }
+            // QF23 (24): an old save - every chapter finished in builds before the newer flags existed (combinedSeen, asteroidDone,
+            // biavehDone, cattalusSeen all unset)
+            if (what == "oldsave") Put(new R { combined = true, asteroidFound = true });
             Debug.Log("[Seven] -routes " + what + ": " + Summary());
         }
         public static bool VenusDone => VenusState.SceneDone("VEN_C12");

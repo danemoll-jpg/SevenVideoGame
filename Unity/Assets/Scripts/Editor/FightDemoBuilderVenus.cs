@@ -209,7 +209,8 @@ namespace Seven.EditorTools
             ("LeftUpLeg", "LeftUpperLeg"), ("LeftLeg", "LeftLowerLeg"), ("LeftFoot", "LeftFoot"), ("LeftToeBase", "LeftToes"),
             ("RightUpLeg", "RightUpperLeg"), ("RightLeg", "RightLowerLeg"), ("RightFoot", "RightFoot"), ("RightToeBase", "RightToes"),
         };
-        static void ApplyMixamoHumanMap(ModelImporter imp, string path) => ApplyMixamoHumanMap(imp, path, false);
+        // QF23 (8): every body and clip source gets the same canonical T-pose reference (the left-knee fix needs it everywhere)
+        static void ApplyMixamoHumanMap(ModelImporter imp, string path) => ApplyMixamoHumanMap(imp, path, true);
         /// <summary>tpose (QF18 6): the avatar's reference pose = a true T-pose (arms horizontal). Dan's Reptilian / Viper
         /// bodies came out of Mixamo in the Tripo A-pose; Unity took that rest pose as the T-pose reference, so every clip
         /// retargeted onto them raised the arms by the A / T difference (the "arms held out stiffly" look). Enforced on the
@@ -234,7 +235,31 @@ namespace Seven.EditorTools
                         fixedDeg = Mathf.Max(fixedDeg, Vector3.Angle(cur, want));
                         bt.rotation = Quaternion.FromToRotation(cur, want) * bt.rotation;
                     }
-                Log($"{path}: T-pose reference enforced (arms were up to {fixedDeg:0} deg off horizontal)");
+                // QF23 (8) - THE LEFT KNEE. A Mixamo animation download has no bind pose: its rest pose is the clip's FIRST
+                // FRAME. Every NPC walk was imported with CreateFromThisModel, so its avatar's reference ("zero muscle") pose
+                // was frame 0 of the walk - left knee bent ~60 deg, right ~20 deg (measured in the .meta skeletons). Unity
+                // reads every knee bend relative to that reference, so on the T-posed NPC bodies the left knee lost ~60 deg of
+                // its bend all game long (the right only ~20). 7 was never affected: her clips copy her own T-pose avatar.
+                // Fix (once, for every humanoid body + clip source): the reference legs, feet and spine are squared to the
+                // same canonical T-pose as the arms - thigh and shin straight down, the foot forward and a little down, the
+                // spine chain upright - so the body and all its clips agree.
+                var up = Vector3.up;
+                float KneeDeg(string side) { var a = Bn(side + "UpLeg"); var b = Bn(side + "Leg"); var c = Bn(side + "Foot"); return a != null && b != null && c != null ? Vector3.Angle(b.position - a.position, c.position - b.position) : -1f; }
+                float kl0 = KneeDeg("Left"), kr0 = KneeDeg("Right");
+                foreach (var (b, c) in new[] { ("Spine", "Spine1"), ("Spine1", "Spine2"), ("Spine2", "Neck"), ("Neck", "Head") })
+                { var bt = Bn(b); var ct = Bn(c); if (bt == null || ct == null) continue; var cur = (ct.position - bt.position).normalized; bt.rotation = Quaternion.FromToRotation(cur, up) * bt.rotation; }
+                foreach (var side in new[] { "Left", "Right" })
+                {
+                    foreach (var (b, c) in new[] { (side + "UpLeg", side + "Leg"), (side + "Leg", side + "Foot") })
+                    { var bt = Bn(b); var ct = Bn(c); if (bt == null || ct == null) continue; var cur = (ct.position - bt.position).normalized; bt.rotation = Quaternion.FromToRotation(cur, -up) * bt.rotation; }
+                    var ft = Bn(side + "Foot"); var tt2 = Bn(side + "ToeBase");
+                    if (ft != null && tt2 != null)
+                    {
+                        var cur = (tt2.position - ft.position).normalized; var flat = Vector3.ProjectOnPlane(cur, up);
+                        if (flat.sqrMagnitude > 1e-4f) ft.rotation = Quaternion.FromToRotation(cur, (flat.normalized * 0.85f - up * 0.5f).normalized) * ft.rotation;
+                    }
+                }
+                Log($"{path}: T-pose reference enforced (arms were up to {fixedDeg:0} deg off horizontal); KNEES in the reference (QF23 8): left {kl0:0} -> {KneeDeg("Left"):0} deg, right {kr0:0} -> {KneeDeg("Right"):0} deg");
                 model = tmp;
             }
             var all = model.GetComponentsInChildren<Transform>(true);

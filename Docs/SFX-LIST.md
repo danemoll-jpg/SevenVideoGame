@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-158 sounds.
+166 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -87,6 +87,14 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `stone_rain` | Dust, grit and small stones raining down from a stone ceiling onto a hard floor during a quake. | 3.5 |  | C04 tremor: stones from the ceiling (0k) |
 | `water_slosh` | Water sloshing heavily out of a stone channel and splashing onto paving. | 2 |  | B03 tremor: water slops from the channel (0k) |
 | `cat_purr` | A house cat purring contentedly on someone's lap, close, soft and steady, gentle rumble. | 6 | yes | VEN_C13: Panther purrs in her lap (close insert) |
+| `cat_purr_a` | A real domestic cat purring loudly and deeply, close-miked right next to the cat, rich rumbling low-frequency purr, steady rhythm of in and out breaths, warm and intimate, no other sounds. | 8 | yes | QF23 (11): Panther's loud purr, variation A (lap scenes, reunions) |
+| `cat_purr_b` | A big contented house cat purring very loudly, close microphone, deep chesty rumble with a slight rattle on the in-breath, slow relaxed rhythm, no background. | 8 | yes | QF23 (11): Panther's loud purr, variation B |
+| `cat_purr_c` | A cat purring hard while being stroked, close-up recording, a deep motorboat rumble rising and falling with each breath, rich and loud, no background noise. | 8 | yes | QF23 (11): Panther's loud purr, variation C (swells while she strokes him) |
+| `cat_chatter` | A house cat chattering and chittering excitedly at a bird through a window: rapid soft clicking jaw chatter and tiny squeaky trills, close. | 2.5 |  | QF23 (10): Panther chatters at Ratwing on the display |
+| `cat_paw_tap` | Small soft taps of a cat's paw batting at a glass display screen and a dangling cable, light quick thumps. | 1.2 |  | QF23 (10): Panther paws at Ratwing's marker / bats a cable |
+| `bia_iris_snap_open` | A huge mechanical camera-shutter iris snapping open very fast: a sharp rising whirr and a crisp metallic click as overlapping blades retract, under one second. | 1 |  | QF23 (4): the mothership's iris snaps open just for a moment |
+| `bia_iris_snap_shut` | A giant mechanical aperture spiralling shut very quickly: a fast whirr ending in one solid heavy metallic clack. | 1 |  | QF23 (4): the iris spirals shut behind the saucer |
+| `blade_zap` | A sharp crackling electric zap, bright arcing static discharge with a short sizzle, punchy, no explosion. | 0.8 |  | QF23 (21): an arc-blade hit shocks Ratwing |
 | `console_open` | A retro-futuristic chrome control console powering up: soft rising electronic chime, gentle glassy hum, warm. | 1.5 |  | the ship's console opens (item 2) |
 | `console_move` | A soft short electronic tick of a retro chrome console menu, glassy and quiet. | 0.5 |  | console: cursor moves |
 | `console_select` | A soft confirming electronic blip of a retro chrome console, two gentle rising tones. | 0.5 |  | console: select |

@@ -285,27 +285,101 @@ namespace Seven
             yield return null;
         }
 
-        /// <summary>Her left hand on his back, stroking slowly (IK); 0 = hand off.</summary>
-        float _stroke; Coroutine _strokeRoutine; int _strokeLogN;
+        /// <summary>Her hands with Panther in her lap (IK); _stroke 0 = hands off him.
+        /// QF23 (5) - the repeat (QF12 10 / QF13 15): those fixes moved the palm onto the TOP of his back and made the hands let
+        /// go, but the stroke slid along her FORWARD axis while he lies ACROSS her lap (head to her left) - so it rubbed across
+        /// him, not along him; the wrist kept the clip's angle, the elbow went wherever the solver put it, and the other arm
+        /// had no target at all (sit_idle dropped it into her thighs, under him). Now:
+        ///  - the LEFT hand strokes along his length, neck -> rump, palm flat (SevenTableIK palm-down), fingers a little apart
+        ///    pointing along the stroke, elbow bent and resting near her side (IK hint); slow, a lift and return, small pauses,
+        ///    and every few strokes a scratch behind his ear;
+        ///  - the RIGHT hand rests lightly on his side by his hip, on top of her thigh, elbow by her side (or on the console
+        ///    when NavHand needs it);
+        ///  - check runs measure every frame: hands / forearms vs her legs and body, palm vs his back (LAP ARMS (QF23 5)).</summary>
+        float _stroke; Coroutine _strokeRoutine; int _strokeLogN; bool _navHand, _handsBusy, _sceneHasPurr; AudioSource _lapPurr; float _settledFor;
+        int _lapFrames, _lapInLegs, _lapInBody, _lapInHim; readonly System.Collections.Generic.List<float> _lapGap = new System.Collections.Generic.List<float>();
+        /// <summary>QF23 (11): the stroke's strength right now (0..1) - the purr swells with it.</summary>
+        public float StrokeNow => _ik != null ? _ik.LeftW * _stroke : 0f;
         IEnumerator Stroke()
         {
+            float phaseT = 0f; int phase = 0, strokes = 0; float pause = 1f;     // 0 stroke, 1 lift + return, 2 rest, 3 ear scratch
+            const float Neck = 0.48f, Rump = -0.32f;
+            _lapFrames = _lapInLegs = _lapInBody = _lapInHim = 0; _lapGap.Clear(); _settledFor = 0f;
             for (float t = 0f; ; t += Time.deltaTime)
             {
-                // QF12 (10): her palm on the TOP of his back (measured from his drawn body), stroking along it - not her knee
-                float along = Mathf.Sin(t * 1.6f) * 0.45f;
-                var back = Cat != null ? Cat.BackTop(along, PilotFwd) : Seven.LapPoint(0.13f);
-                _ik.LeftPos = back - Up * 0.025f;          // the wrist a little below the top: the palm (measured ~4.5 cm above the wrist here) lies on his fur
-                if (DemoBoot.CaptureDir != null && _ik.LeftW > 0.95f && (_strokeLogN++ % 90) == 0)
+                if (_handsBusy) { yield return null; continue; }           // a scripted hand moment (lifting him) owns the hands
+                phaseT += Time.deltaTime;
+                var len = -PilotRight;                                        // his length: head toward her left
+                float along = Neck, lift = 0f; bool ear = false;
+                switch (phase)
                 {
-                    var palm = Palm(false);
-                    var top = Cat != null ? Cat.BackTop(0f, PilotFwd) : back;
-                    Cap?.Log($"petting (QF12 10): her left palm {palm.y - top.y:+0.00;-0.00} m vs the top of his back, {Flat(palm - top).magnitude:0.00} m from its middle; her lap {Seven.LapPoint(0f).y - top.y:+0.00;-0.00} m (palm {(Mathf.Abs(palm.y - top.y) < 0.07f && Flat(palm - top).magnitude < 0.2f ? "on his back" : "OFF his back")})");
+                    case 0: { float u = Mathf.Clamp01(phaseT / 2.6f); along = Mathf.Lerp(Neck, Rump, Mathf.SmoothStep(0f, 1f, u)); if (u >= 1f) { phase = 1; phaseT = 0f; strokes++; } break; }
+                    case 1: { float u = Mathf.Clamp01(phaseT / 1.1f); along = Mathf.Lerp(Rump, Neck, Mathf.SmoothStep(0f, 1f, u)); lift = Mathf.Sin(u * Mathf.PI) * 0.045f; if (u >= 1f) { phase = strokes % 4 == 3 ? 3 : 2; phaseT = 0f; pause = Random.Range(0.5f, 1.6f); } break; }
+                    case 2: along = Neck; if (phaseT > pause) { phase = 0; phaseT = 0f; } break;
+                    case 3: { ear = true; along = 0.62f; if (phaseT > 1.6f) { phase = 0; phaseT = 0f; } break; }
                 }
-                _ik.LeftW = Mathf.MoveTowards(_ik.LeftW, _staged && CurrentStage != Stage.Chair && CurrentStage != Stage.ChairCatConsole ? 0f : _stroke, Time.deltaTime * 2f);   // QF16: the rest poses keep her hand on him
+                var back = Cat != null ? Cat.BackTop(along, len) : Seven.LapPoint(0.13f);
+                var fingers = ear ? len : -len;                               // along the stroke (toward his tail); at the ear toward his head
+                if (ear) back += Up * 0.02f + (PilotFwd * Mathf.Cos(t * 18f) + len * Mathf.Sin(t * 18f)) * 0.012f;   // a small scratching circle
+                var n = Up;
+                if (Cat != null) { var a2 = Cat.BackTop(along + 0.08f, len); var b2 = Cat.BackTop(along - 0.08f, len); var slope = a2 - b2; var nn = Vector3.Cross(Vector3.Cross(slope, Up), slope).normalized; if (Vector3.Dot(nn, Up) < 0f) nn = -nn; if (nn.sqrMagnitude > 0.01f) n = nn; }
+                _ik.LeftPos = back + n * (0.022f + lift) - fingers * 0.05f;   // the wrist: behind the palm, a hand's thickness up
+                _ik.LeftPalmN = n; _ik.LeftFingerDir = fingers; _ik.LeftPalmW = 1f;
+                _ik.LeftHint = PilotHips - PilotRight * 0.30f + Up * 0.16f - PilotFwd * 0.06f; _ik.LeftHintW = 1f;
+                bool onLap = !_staged || CurrentStage == Stage.Chair || CurrentStage == Stage.ChairCatConsole;
+                _ik.LeftW = Mathf.MoveTowards(_ik.LeftW, onLap ? _stroke : 0f, Time.deltaTime * 2f);   // QF16: the rest poses keep her hand on him
+                // the other hand: lightly on his side by his hip, on top of her thigh (NavHand takes it for the console)
+                if (!_navHand)
+                {
+                    var hip = Cat != null ? Cat.BackTop(-0.5f, len) : Seven.LapPoint(0.1f);
+                    var sn = (Up * 0.8f - PilotFwd * 0.6f).normalized; var side = hip - PilotFwd * 0.05f - Up * 0.02f;
+                    _ik.RightPos = side + sn * 0.022f - PilotFwd * 0.04f; _ik.RightPalmN = sn; _ik.RightFingerDir = PilotFwd; _ik.RightPalmW = 1f;
+                    _ik.RightHint = PilotHips + PilotRight * 0.30f + Up * 0.16f - PilotFwd * 0.06f; _ik.RightHintW = 1f;
+                    _ik.RightW = Mathf.MoveTowards(_ik.RightW, onLap ? _stroke * 0.95f : 0f, Time.deltaTime * 2f);
+                }
+                // QF23 (11): purring whenever he is in her lap and she strokes him - swells with the stroke, fades when she stops
+                if (onLap && _stroke > 0.05f && _lapPurr == null && !_sceneHasPurr) { _lapPurr = Purr.Loop(Cat.transform, 0.85f); if (DemoBoot.CaptureDir != null) Cap?.Log("PURR (QF23 11): lap purr starts as she strokes him - " + Purr.Level()); }
+                if (_lapPurr != null) { if (!onLap || _stroke <= 0.05f) { StartCoroutine(AudioKit.Fade(_lapPurr, 0f, 1.2f, true)); _lapPurr = null; } else Purr.Swell(_lapPurr, phase == 0 ? 1f : 0.3f); }
+                bool settled = _ik.LeftW > 0.95f && (_navHand || _ik.RightW > 0.9f);
+                _settledFor = settled ? _settledFor + Time.deltaTime : 0f;
+                if (DemoBoot.CaptureDir != null && _settledFor > 0.5f && t > 1.2f) LapMeasure(back, n, phase == 0);   // from a moment into the stroke (the first frame still has the clip's arms)
+                if (DemoBoot.CaptureDir != null && _ik.LeftW > 0.95f && (_strokeLogN++ % 240) == 0) LapReport();
                 yield return null;
             }
         }
-        void NavHand(bool on) { if (_staged && CurrentStage != Stage.Chair && CurrentStage != Stage.ChairCatConsole) on = false; if (on && ShipConsole.I != null && ShipConsole.I.Display != null) { _ik.RightPos = PilotHips + PilotFwd * 0.55f + PilotRight * 0.28f + Up * 0.28f; _ik.RightW = 0.9f; } else _ik.RightW = 0f; }
+        /// <summary>QF23 (5) proof, per frame: points along both forearms and hands vs her thighs (capsules) and torso, the
+        /// palm vs his back (within ~1 cm while stroking), and nothing sunk inside him.</summary>
+        void LapMeasure(Vector3 back, Vector3 n, bool stroking)
+        {
+            _lapFrames++;
+            Vector3 B(HumanBodyBones b) { var t = Seven.Bone(b); return t != null ? t.position : Vector3.zero; }
+            float Seg(Vector3 p, Vector3 a, Vector3 b) { var ab = b - a; float k = Mathf.Clamp01(Vector3.Dot(p - a, ab) / Mathf.Max(1e-6f, ab.sqrMagnitude)); return (p - (a + ab * k)).magnitude; }
+            bool legs = false, body = false, him = false;
+            foreach (var right in new[] { false, true })
+            {
+                var lo = B(right ? HumanBodyBones.RightLowerArm : HumanBodyBones.LeftLowerArm); var h = B(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
+                var mid = B(right ? HumanBodyBones.RightMiddleProximal : HumanBodyBones.LeftMiddleProximal);
+                for (int i = 2; i <= 8; i++)
+                {
+                    var p = i <= 6 ? Vector3.Lerp(lo, h, i / 6f) : Vector3.Lerp(h, mid, (i - 6) / 2f);
+                    foreach (var (u, l) in new[] { (HumanBodyBones.LeftUpperLeg, HumanBodyBones.LeftLowerLeg), (HumanBodyBones.RightUpperLeg, HumanBodyBones.RightLowerLeg) })
+                        if (Seg(p, B(u), B(l)) < 0.065f) legs = true;
+                    if (Seg(p, B(HumanBodyBones.Hips), B(HumanBodyBones.Neck)) < 0.085f) body = true;
+                }
+            }
+            var palm = Palm(false);
+            float gap = Vector3.Dot(palm - back, n) - 0.015f;                  // the bone line sits ~1.5 cm inside the palm skin
+            if (gap < -0.03f && Flat(palm - back).magnitude < 0.12f) him = true;
+            if (stroking) _lapGap.Add(Mathf.Abs(gap));
+            if (legs) _lapInLegs++; if (body) _lapInBody++; if (him) _lapInHim++;
+        }
+        void LapReport()
+        {
+            if (_lapFrames == 0) return;
+            var g = new System.Collections.Generic.List<float>(_lapGap); g.Sort(); float med = g.Count > 0 ? g[g.Count / 2] : -1f;
+            Cap?.Log($"LAP ARMS (QF23 5): {_lapFrames} frames with Panther in her lap - a hand / forearm inside her legs {_lapInLegs}, inside her body {_lapInBody}, sunk inside him {_lapInHim} (all must be 0); palm vs his back while stroking: median {med * 100f:0.0} cm (must be ~1 cm); stroke along his length (neck -> rump), the other hand on his side, elbow hints both");
+        }
+        void NavHand(bool on) { if (_staged && CurrentStage != Stage.Chair && CurrentStage != Stage.ChairCatConsole) on = false; _navHand = on; if (on && ShipConsole.I != null && ShipConsole.I.Display != null) { _ik.RightPos = PilotHips + PilotFwd * 0.55f + PilotRight * 0.28f + Up * 0.28f; _ik.RightW = 0.9f; _ik.RightPalmW = 0f; _ik.RightHint = PilotHips + PilotRight * 0.34f + Up * 0.12f; _ik.RightHintW = 0.8f; } else _ik.RightW = 0f; }
 
         void CutPilot(string kind)
         {
@@ -479,7 +553,7 @@ namespace Seven
             // she sets the course; close insert - Panther in her lap, a quiet purr joins the ship's hum
             NavHand(true);
             AudioKit.Play("course_set", null, 0.7f);
-            var purr = AudioKit.Loop("cat_purr", null, null, 0.5f, AudioKit.Bus.Sfx);
+            var purr = Purr.Loop(Cat.transform, 1f)   /* QF23 (11): loud, on the voice bus */;
             CutPilot("lap");
             yield return Wait(1.6f);
             yield return ShotV("c13_05_insert_panther_purring");

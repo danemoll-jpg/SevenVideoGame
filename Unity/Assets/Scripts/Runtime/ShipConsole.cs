@@ -734,6 +734,8 @@ namespace Seven
         // ================================================================================== travel
         /// <summary>"Set course" on the star map: the Moon / Venus = the existing travel (Chapter1Aboard.TravelFromConsole);
         /// Mars / Europa = the "Chapter 3 — … (coming soon)" card, then back to the map.</summary>
+        /// <summary>QF23 (24) check run: the star map's own travel path for a world (as A on it).</summary>
+        public IEnumerator TravelForCheck(string id) { yield return SetCourseTo(id); }
         IEnumerator SetCourseTo(string id)
         {
             _busy++;
@@ -742,7 +744,7 @@ namespace Seven
             {
                 // Round 14: Europa is playable. Not started / in progress = the chapter (Continue where it left off);
                 // done = a short card (the record is aboard) and back to the map
-                if (EuropaState.Complete) { yield return ComingSoonCard("Europa — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                if (EuropaState.Complete) { yield return Revisit("europa", "Europa"); _busy--; yield break; }
                 ReleaseForTravel();
                 yield return TravelPassage.Run("europa");                    // QF16 (2): the sacred-geometry passage
                 if (UI != null) yield return UI.Fade(1f, 0.8f);
@@ -753,7 +755,7 @@ namespace Seven
             if (id == "mars")
             {
                 // Round 15: Mars is playable (as Europa: done = a short card, else the chapter where it left off)
-                if (MarsState.OwnComplete) { yield return ComingSoonCard("Mars — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                if (MarsState.OwnComplete) { yield return Revisit("mars", "Mars"); _busy--; yield break; }
                 ReleaseForTravel();
                 yield return TravelPassage.Run("mars");                      // QF16 (2): the sacred-geometry passage
                 if (UI != null) yield return UI.Fade(1f, 0.8f);
@@ -764,7 +766,7 @@ namespace Seven
             if (id == "asteroid" && WorldFlags.AsteroidFound)
             {
                 // Round 16: the asteroid is playable (as Mars: done = a short card, else the chapter where it left off)
-                if (AsteroidState.OwnComplete) { yield return ComingSoonCard("The asteroid — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                if (AsteroidState.OwnComplete) { yield return Revisit("asteroid", "The asteroid"); _busy--; yield break; }
                 ReleaseForTravel();
                 yield return TravelPassage.Run("asteroid");
                 if (UI != null) yield return UI.Fade(1f, 0.8f);
@@ -776,11 +778,12 @@ namespace Seven
             {
                 // the asteroid is found on the first journey toward Biaveh (TRV_AST); Biaveh's chapter does not exist yet
                 var ab0 = Chapter1Aboard.I;
-                if (id == "biaveh" && !WorldFlags.AsteroidFound && ab0 != null && ab0.Active) { ReleaseForTravel(); yield return ab0.TravelToBiaveh(); _busy--; yield break; }
+                // QF23 (24): the first journey toward the mothership (TRV_AST) only while it is still ahead - never for a finished mothership
+                if (id == "biaveh" && !WorldFlags.AsteroidFound && !BiavehState.OwnComplete && ab0 != null && ab0.Active) { ReleaseForTravel(); yield return ab0.TravelToBiaveh(); _busy--; yield break; }
                 if (id == "biaveh")
                 {
                     // Round 17: the Biavian mothership at Veyra is playable (done = a short card, else the chapter where it left off)
-                    if (BiavehState.OwnComplete) { yield return ComingSoonCard("The Biavian Mothership — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                    if (BiavehState.OwnComplete) { yield return Revisit("biaveh", "The Biavian Mothership"); _busy--; yield break; }
                     ReleaseForTravel();
                     yield return TravelPassage.Run("biaveh");
                     if (UI != null) yield return UI.Fade(1f, 0.8f);
@@ -805,6 +808,19 @@ namespace Seven
             yield return ab.TravelFromConsole(id);
             var cam = Cam; if (cam != null && this != null) cam.fieldOfView = _fov0;
             _busy--;
+        }
+
+        /// <summary>QF23 (24): a FINISHED world revisited - the short arrival only: the sacred-geometry passage, the world in the
+        /// window, a "visited" card, then free exploration aboard. Never its story (no arrival talk, no first-visit or
+        /// mid-chapter scenes); replaying a chapter is only through the main menu's chapter list / Scene Select.</summary>
+        public IEnumerator Revisit(string id, string name)
+        {
+            var ab = Chapter1Aboard.I;
+            CapLog($"REVISIT (QF23 24): {name} is finished - the passage, the world in the window, a visited card, free exploration (no story scenes)");
+            if (ab == null || !ab.Active) { yield return ComingSoonCard($"{name} — visited (its record is aboard)"); _map.SetConfirm(false); Redraw(); yield break; }
+            ReleaseForTravel();
+            yield return ab.RevisitWorld(id, $"{name} — visited (its record is aboard)");
+            var cam = Cam; if (cam != null && this != null) cam.fieldOfView = _fov0;
         }
 
         /// <summary>The "Chapter 3 — &lt;world&gt; (coming soon)" card (fade out, the card, fade back in).</summary>

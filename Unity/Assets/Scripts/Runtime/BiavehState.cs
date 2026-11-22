@@ -41,7 +41,7 @@ namespace Seven
         public static bool OwnHasProgress { get { var d = PeekOwn(); return d.cp > 0 || (d.done != null && d.done.Count > 0); } }
         public static bool OwnComplete => PeekOwn().cp >= BiavehLayout.CpDone;
         /// <summary>The arc blades: hers if she found them on the asteroid (either order - without them the fight is fists only).</summary>
-        public static bool BladesOwned => AsteroidState.BladesOwned || D.blades;
+        public static bool BladesOwned => AsteroidState.BladesOwned || D.blades || (DemoBoot.CaptureDir != null && DemoBoot.BiaBlades);
         public static bool PursuitSeen => D.birdSeen;
         public static void SeePursuit() { if (D.birdSeen) return; D.birdSeen = true; Save(); }
 
@@ -135,7 +135,9 @@ namespace Seven
             {
                 if (x.scene != scene) continue;
                 var tail = x.id.Substring(x.id.LastIndexOf('_') + 1);
-                if (!int.TryParse(tail, out int n)) continue;
+                // QF23: inserted lines (BIA_01_06a-d, BIA_08_06a/b) play in order after their number - the leading digits count
+                int dl = 0; while (dl < tail.Length && char.IsDigit(tail[dl])) dl++;
+                if (dl == 0 || !int.TryParse(tail.Substring(0, dl), out int n)) continue;
                 if (n < from || n > to) continue;
                 l.Add(Make(x));
             }

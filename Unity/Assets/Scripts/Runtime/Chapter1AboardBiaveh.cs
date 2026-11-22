@@ -53,82 +53,44 @@ namespace Seven
         IEnumerator SayB(string scene, int from, int to = -1) { yield return SayLines(BiavehDialogue.Scene(scene, from, to < 0 ? from : to), true); }
 
         // ------------------------------------------------------------------------------------------ the exterior (runtime)
-        Transform _ext, _iris, _egg; Transform[] _orbs, _blades; Vector3 _irisAt, _irisN;
-        /// <summary>Veyra (a ringed planet, a pale debris band), the egg-shaped mothership (hull lights, traffic, recessed
-        /// entrances), the three guardian orbs, the iris - round the exterior saucer of the passage stage (far above the deck).</summary>
+        Transform _ext, _iris; Vector3 _irisAt, _irisN; VeyraScene _veyra; IrisAperture _ap;
+        Transform _egg => _veyra != null ? _veyra.Egg : null;
+        Transform[] _orbs => _veyra != null ? _veyra.Orbs : null;
+        /// <summary>QF23 (1): Veyra, its rings and the WHITE mothership stationed among them (the shared VeyraScene - the same
+        /// composition as the window view), round the exterior saucer of the passage stage (far above the deck); plus, for the
+        /// approach, an unbroken stretch of the white hull with the iris (QF23 4: a real aperture of overlapping leaves).</summary>
         void BuildExterior(Vector3 p0)
         {
             _ext = new GameObject("MothershipExterior").transform;
-            var dark = Markers.DarkGloss(); var glow = Markers.Additive(1.4f); var soft = Markers.Additive(0.35f);
-            var hull = TravelStage.I != null && TravelStage.I.Saucer != null && TravelStage.I.Saucer.GetComponentInChildren<Renderer>() != null ? TravelStage.I.Saucer.GetComponentInChildren<Renderer>().sharedMaterial : dark;
-            GameObject Prim(PrimitiveType t, string n, Vector3 at, Vector3 scale, Material m, Transform parent = null) { var g = GameObject.CreatePrimitive(t); g.name = n; Destroy(g.GetComponent<Collider>()); g.transform.SetParent(parent != null ? parent : _ext, false); g.transform.position = at; g.transform.localScale = scale; g.GetComponent<Renderer>().sharedMaterial = m; return g; }
+            _veyra = VeyraScene.Build(_ext, p0, 1f);
             var fwd = Vector3.forward;
-            // Veyra far beyond, its rings diagonal across the frame
-            var veyra = Prim(PrimitiveType.Sphere, "Veyra", p0 + new Vector3(-900f, -260f, 3400f), Vector3.one * 1700f, dark);
-            foreach (var (r0, r1, k) in new[] { (1050f, 1550f, 0.5f), (1600f, 1800f, 0.22f) })
-            {
-                var ring = new GameObject("VeyraRing"); ring.transform.SetParent(_ext, false); ring.transform.position = veyra.transform.position; ring.transform.rotation = Quaternion.Euler(12f, 0f, -24f);
-                ring.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(r0, r1, 0f); ring.AddComponent<MeshRenderer>().sharedMaterial = Markers.Additive(k);
-            }
-            // the broad band of pale debris under the saucer
-            var rnd = new System.Random(17);
-            for (int i = 0; i < 260; i++)
-            {
-                float x = (float)rnd.NextDouble() * 900f - 450f, z = (float)rnd.NextDouble() * 1400f - 200f, s = 1.5f + (float)rnd.NextDouble() * 9f;
-                var g = Prim(PrimitiveType.Sphere, "Debris", p0 + new Vector3(x, -60f - (float)rnd.NextDouble() * 30f, z), new Vector3(s, s * 0.5f, s * 0.8f), i % 3 == 0 ? Markers.Additive(0.25f) : dark);
-                g.transform.rotation = Quaternion.Euler((float)rnd.NextDouble() * 360f, (float)rnd.NextDouble() * 360f, 0f);
-            }
-            // the mothership: an immense egg (26 miles - shown at a distance that reads; hull lights, traffic, recessed entrances)
-            _egg = Prim(PrimitiveType.Sphere, "Mothership", p0 + new Vector3(260f, 40f, 1500f), new Vector3(900f, 1200f, 900f), hull).transform;
-            _egg.rotation = Quaternion.Euler(0f, 0f, -12f);
-            for (int i = 0; i < 420; i++)
-            {
-                var d = Random.onUnitSphere; if (d.z > 0.35f) continue;                 // the near side
-                var p = _egg.position + Vector3.Scale(d, new Vector3(450f, 600f, 450f)) * 1.002f;
-                Prim(PrimitiveType.Sphere, "HullLight", p, Vector3.one * (i % 9 == 0 ? 9f : 3.5f), i % 9 == 0 ? glow : soft);
-            }
-            for (int i = 0; i < 6; i++) { var d = Quaternion.Euler(Random.Range(-40f, 40f), Random.Range(140f, 220f), 0f) * Vector3.forward; Prim(PrimitiveType.Sphere, "RecessedEntrance", _egg.position + Vector3.Scale(d, new Vector3(452f, 602f, 452f)), new Vector3(60f, 26f, 8f), Markers.DarkGloss()).transform.rotation = Quaternion.LookRotation(d); }
-            for (int i = 0; i < 14; i++) { var t = Prim(PrimitiveType.Sphere, "Traffic", _egg.position, Vector3.one * 4f, glow).transform; _traffic.Add((t, Random.Range(0f, 6.28f), Random.Range(520f, 760f), Random.Range(-0.4f, 0.4f))); }
-            // the three guardian orbs on separate orbital paths
-            _orbs = new Transform[3];
-            for (int i = 0; i < 3; i++) { _orbs[i] = Prim(PrimitiveType.Sphere, "GuardianOrb" + i, _egg.position, Vector3.one * (60f - i * 8f), dark).transform; Prim(PrimitiveType.Sphere, "OrbGlow", _orbs[i].position, Vector3.one * 0.35f, glow, _orbs[i]).transform.localPosition = new Vector3(0f, 0f, -0.48f); }
-            // the iris: on the hull, facing the saucer's approach; 12 overlapping segments
+            // the door: an unbroken stretch of white hull (a gently curved wall seen up close), a fine spiral seam, the aperture
             _irisN = -fwd; _irisAt = p0 + fwd * 160f;
             _iris = new GameObject("Iris").transform; _iris.SetParent(_ext, false); _iris.position = _irisAt; _iris.rotation = Quaternion.LookRotation(_irisN);
-            Prim(PrimitiveType.Cylinder, "IrisWall", _irisAt + fwd * 2f, Vector3.zero, dark).transform.localScale = Vector3.zero;
-            var wall = new GameObject("HullSection"); wall.transform.SetParent(_ext, false); wall.transform.position = _irisAt + fwd * 0.6f; wall.transform.rotation = Quaternion.LookRotation(Vector3.up, -fwd); wall.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(15.5f, 700f, 0f); wall.AddComponent<MeshRenderer>().sharedMaterial = hull; _hullSection = wall;
-            _blades = new Transform[12];
-            for (int i = 0; i < 12; i++)
-            {
-                var b = new GameObject("IrisBlade" + i).transform; b.SetParent(_iris, false); b.localRotation = Quaternion.Euler(0f, 0f, i * 30f);
-                var q = Prim(PrimitiveType.Cube, "Segment", Vector3.zero, new Vector3(9f, 18f, 0.6f), i % 2 == 0 ? hull : dark, b);
-                q.transform.localPosition = new Vector3(5f, 7f, -0.4f - (i % 2) * 0.3f); q.transform.localRotation = Quaternion.Euler(0f, 0f, 24f);
-                _blades[i] = b;
-            }
-            var seam = new GameObject("IrisSeam"); seam.transform.SetParent(_iris, false); seam.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(15.5f, 16.2f, 0f); _seamR = seam.AddComponent<MeshRenderer>(); _seamR.sharedMaterial = Markers.Additive(0f);
-            seam.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            var wall = new GameObject("HullSection"); wall.transform.SetParent(_iris, false); wall.transform.localPosition = Vector3.zero; wall.transform.localRotation = Quaternion.identity;
+            wall.AddComponent<MeshFilter>().sharedMesh = IrisAperture.Annulus(HoleR, 700f, 128);
+            var wr = wall.AddComponent<MeshRenderer>(); wr.sharedMaterial = VeyraScene.Pearl(); _hullSection = wall;
+            // the seam round the door: a hairline, and the spiral of the leaves' edges reads through it as it opens
+            var seam = new GameObject("IrisSeam"); seam.transform.SetParent(_iris, false); seam.transform.localPosition = new Vector3(0f, 0f, 0.03f); seam.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            seam.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(HoleR - 0.05f, HoleR + 0.12f, 0f); _seamR = seam.AddComponent<MeshRenderer>(); _seamR.sharedMaterial = Markers.Additive(0f);
+            // the leaves: two soft metal greys, darker than the white hull (in the hull's own pearl, half of them vanished against it)
+            Material Leaf(string n2, float g, float e) { var m = new Material(VeyraScene.Pearl()) { name = n2 }; if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", new Color(g, g, g)); if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", new Color(e, e, e)); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.85f); return m; }
+            var leafA = Leaf("Veyra_iris_leaf_a", 0.62f, 0.10f); var leafB = Leaf("Veyra_iris_leaf_b", 0.50f, 0.07f);
+            _ap = IrisAperture.Build(_iris, HoleR, 7.6f, 10, leafA, leafB, Markers.DarkGloss());
             // inside: the guide lights toward the receiving berth
-            for (int i = 0; i < 16; i++) Prim(PrimitiveType.Sphere, "GuideLights", _irisAt + fwd * (12f + i * 8f) + Vector3.down * 10f, Vector3.one * 1.2f, glow);
-            Irise(0f);
+            for (int i = 0; i < 16; i++) { var g = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(g.GetComponent<Collider>()); g.name = "GuideLights"; g.transform.SetParent(_ext, false); g.transform.position = _irisAt + fwd * (12f + i * 8f) + Vector3.down * 10f; g.transform.localScale = Vector3.one * 1.2f; g.GetComponent<Renderer>().sharedMaterial = Markers.Additive(1.4f); }
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_01 exterior (QF23 1): the mothership WHITE (pearl hull, emission) in Veyra's ring plane; iris (QF23 4): {IrisInfo()}");
         }
+        const float HoleR = 8.2f;
+        string IrisInfo() => _ap != null ? $"10 leaves, open swing {_ap.OpenDeg:0} deg, clear radius {_ap.ClearRadius:0.00} m vs the saucer's 6 m, shut coverage {_ap.Coverage * 100f:0.0}%" : "none";
         Renderer _seamR; GameObject _hullSection; float _far0 = -1f;
-        void Approach(bool on) { if (_hullSection != null) _hullSection.SetActive(on); if (_iris != null) _iris.gameObject.SetActive(on); }
-        readonly List<(Transform t, float a, float r, float y)> _traffic = new List<(Transform, float, float, float)>();
-        /// <summary>0 = shut (the segments meet at the centre), 1 = open just wider than the saucer (~14 m).</summary>
-        void Irise(float k)
-        {
-            if (_blades == null) return;
-            for (int i = 0; i < _blades.Length; i++) { var b = _blades[i]; if (b == null) continue; b.localRotation = Quaternion.Euler(0f, 0f, i * 30f + k * 38f); b.localScale = Vector3.one; b.GetChild(0).localPosition = new Vector3(5f + k * 9.5f, 7f + k * 2f, b.GetChild(0).localPosition.z); }
-        }
-        void ExteriorTick()
-        {
-            if (_egg == null) return;
-            float t = Time.time;
-            if (_orbs != null) for (int i = 0; i < _orbs.Length; i++) if (_orbs[i] != null && !(_orbHold && i == 0))
-                    _orbs[i].position = _egg.position + Quaternion.Euler(20f * i - 15f, t * (6f + i * 3f) + i * 120f, 0f) * new Vector3(0f, 0f, 820f + i * 160f);
-            foreach (var (tr, a, r, y) in _traffic) if (tr != null) tr.position = _egg.position + Quaternion.Euler(y * 40f, a * 57.3f + t * 4f, 0f) * new Vector3(0f, 0f, r);
-        }
+        void Approach(bool on) { if (_iris != null) _iris.gameObject.SetActive(on); }
+        void ExteriorTick() { if (_veyra != null) _veyra.Tick(_orbHold ? 0 : -1); }
         bool _orbHold;
+        /// <summary>QF23 (1): the ship's own window view (a small Veyra round the deck) is hidden while the camera is out at the
+        /// exterior stage (from up there it showed as a second, small Veyra far below).</summary>
+        void Win(bool on) { if (_win == null) _win = GameObject.Find("Outside_SpaceBiaveh"); if (_win != null) _win.SetActive(on); }
+        GameObject _win;
 
         // ------------------------------------------------------------------------------------------ BIA_01 + BIA_02
         IEnumerator BiavehArrival()
@@ -141,80 +103,111 @@ namespace Seven
             if (DemoBoot.CaptureDir != null) Cap?.Log("title card: 'THE BIAVIAN MOTHERSHIP — THE CONNECTED MIND AGE' over black");
             var stage = TravelStage.I; Transform saucer = null; Vector3 p0 = new Vector3(0f, 400f, 0f);
             if (stage != null && stage.Saucer != null) { saucer = stage.Saucer; var holder = saucer.parent != null ? saucer.parent.gameObject : saucer.gameObject; holder.SetActive(true); p0 = saucer.position; }
-            BuildExterior(p0); Approach(false);
-            var mainCam = Director.Cam != null ? Director.Cam.GetComponent<Camera>() : Camera.main; if (mainCam != null) { _far0 = mainCam.farClipPlane; mainCam.farClipPlane = 9000f; }
+            BuildExterior(p0); Approach(false); Win(false);
+            var mainCam = Director.Cam != null ? Director.Cam.GetComponent<Camera>() : Camera.main; if (mainCam != null) { _far0 = mainCam.farClipPlane; mainCam.farClipPlane = 12000f; }
             MusicSystem.Play("biaveh_mothership", 3f);
-            // EXTREME WIDE: Veyra fills the distance, its rings diagonal; the saucer above the pale debris band; the egg beyond
-            var camA = p0 + new Vector3(-120f, 30f, -260f);
-            for (float t = 0f; t < 0.2f; t += Time.deltaTime) { ExteriorTick(); Cut(camA, p0 + new Vector3(60f, -20f, 900f), 50f); yield return null; }
+            // EXTREME WIDE: Veyra huge beyond, its rings crossing the frame; the saucer above the band of ice; the white egg
+            // rising out of the ring plane among the drifting ice
+            var n = _veyra.RingNormal; var toEgg = (_veyra.EggPos - p0).normalized; var side = Vector3.Cross(n, toEgg).normalized;
+            var camA = p0 - toEgg * 70f + side * 26f + n * 34f;
+            var lookA = Vector3.Lerp(_veyra.EggPos, _veyra.Planet.position, 0.3f);
+            for (float t = 0f; t < 0.2f; t += Time.deltaTime) { ExteriorTick(); Cut(camA, lookA, 58f); yield return null; }
             yield return UI.Fade(0f, 1.4f);
-            for (float t = 0f; t < 3.2f; t += Time.deltaTime) { ExteriorTick(); if (saucer != null) saucer.position = p0 + Vector3.forward * t * 6f; Cut(camA + Vector3.forward * t * 5f, p0 + new Vector3(60f, -20f, 900f), 50f); yield return null; }
-            yield return ShotV("ba01_extreme_wide_veyra_its_rings_the_debris_band");
+            for (float t = 0f; t < 3.2f; t += Time.deltaTime) { ExteriorTick(); if (saucer != null) saucer.position = p0 + toEgg * t * 6f; Cut(camA + toEgg * t * 5f, lookA, 58f); yield return null; }
+            yield return ShotV("ba01_extreme_wide_the_white_mothership_in_veyras_rings");
             // one orb crosses the foreground: the mothership is still far away
-            if (_orbs != null && _orbs[1] != null) { var o = _orbs[1]; for (float t = 0f; t < 2.4f; t += Time.deltaTime) { ExteriorTick(); o.position = camA + Vector3.forward * 220f + Vector3.right * Mathf.Lerp(-160f, 160f, t / 2.4f) + Vector3.up * 10f; yield return null; } }
+            if (_orbs != null && _orbs[1] != null) { var o = _orbs[1]; for (float t = 0f; t < 2.4f; t += Time.deltaTime) { ExteriorTick(); o.position = camA + toEgg * 220f + side * Mathf.Lerp(-160f, 160f, t / 2.4f) + n * 10f; Cut(camA + toEgg * 16f, _veyra.EggPos - n * 120f, 50f); yield return null; } }
             yield return ShotV("ba02_an_orb_crosses_the_foreground");
             if (saucer != null) saucer.position = p0;
-            // INTERIOR: 7 at the controls with Panther in her lap (the window shows Veyra and the mothership)
-            yield return EnterStaging("AST_01");
+            // INTERIOR (QF23 3): the pilot's chair at the front window, Panther in her lap; as they talk the hull fades away
+            Win(true);
+            yield return EnterStaging("BIA_01");
             PlaceRecordsOnArmAsteroid();
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
             CutPilot("two");
             yield return SayB("BIA_01", 1, 2);                   // Is that Biaveh? / Veyra. The route leads to a Biavian station here.
+            StartCoroutine(HullAway(true, "BIA_01", "ba02h"));
             WindowOnTheAsteroid();
-            yield return ShotV("ba03_the_window_veyra_the_mothership");
+            yield return ShotV("ba03_the_window_veyra_the_white_mothership");
             yield return SayB("BIA_01", 3, 4);                   // That's the station? / Their mothership. Twenty-six miles across.
+            OpenSpaceShot();
+            for (float t = 0f; t < 8f && Director.Reveal != null && Director.Reveal.Progress < 0.99f; t += Time.deltaTime) yield return null;   // the dissolve has finished
+            yield return ShotV("ba03b_open_space_round_the_chair_veyras_rings");
             CutPilot("lap");
-            yield return SayB("BIA_01", 5, 6);                   // Across? / Mm-hmm.
+            yield return SayB("BIA_01", 5, 6);                   // Across? / Mm-hmm. / (QF23 2) I thought their mothership was in the rings of Saturn. / That one is. This is a sister ship. / A sister ship. So… the aunt ship? / That was a terrible joke.
             // the three things moving round it
-            for (float t = 0f; t < 2.6f; t += Time.deltaTime) { ExteriorTick(); Cut(_egg.position + new Vector3(-700f, 200f, -1600f), _egg.position, 40f); yield return null; }
-            yield return ShotV("ba04_three_orbs_round_the_mothership");
-            CutPilot("two");
+            Win(false);
+            for (float t = 0f; t < 2.6f; t += Time.deltaTime) { ExteriorTick(); Cut(_veyra.EggPos - toEgg * 1900f + side * 500f + n * 160f, _veyra.EggPos, 40f); yield return null; }
+            yield return ShotV("ba04_three_orbs_round_the_white_mothership");
+            Win(true); CutPilot("two");
             yield return SayB("BIA_01", 7, 8);                   // And those three things moving around it? / Let's wait to be invited...
             // BIA_02: one orb adjusts its course and holds near their approach; Nela's voice
-            _orbHold = true;
-            if (_orbs != null && _orbs[0] != null) for (float t = 0f; t < 2f; t += Time.deltaTime) { ExteriorTick(); _orbs[0].position = Vector3.Lerp(_orbs[0].position, p0 + new Vector3(70f, 10f, 120f), Time.deltaTime * 2f); Cut(p0 + new Vector3(-30f, 14f, -40f), p0 + new Vector3(60f, 10f, 110f), 46f); yield return null; }
+            _orbHold = true; Win(false);
+            if (_orbs != null && _orbs[0] != null) for (float t = 0f; t < 2f; t += Time.deltaTime) { ExteriorTick(); _orbs[0].position = Vector3.Lerp(_orbs[0].position, p0 + toEgg * 120f + side * 70f + n * 10f, Time.deltaTime * 2f); Cut(p0 - toEgg * 40f - side * 30f + n * 14f, p0 + toEgg * 110f + side * 60f, 46f); yield return null; }
             yield return ShotV("ba05_an_orb_holds_position_near_their_approach");
-            CutPilot("two");
+            Win(true); CutPilot("two");
             yield return SayB("BIA_02", 1, 5);                   // Welcome to Veyra. I am Nela... / Oh-hello. / Forgive me... / A little... / A considerable improvement...
-            // EXTERIOR TRACKING: the orb moves aside; an unbroken stretch of hull; a circular seam; the iris opens
-            Approach(true);
-            var cTrack = new Vector3(-26f, 9f, -30f);
-            float k0 = 0f;
-            bool spoken = false; Coroutine say = null;
-            AudioKit.Play("bia_iris_open", null, 0.8f);
-            for (float t = 0f; t < 6.5f; t += Time.deltaTime)
+            // QF23 (4): EXTERIOR - the orb moves aside; the saucer flies right up to the door (a closed, seamless circle of white
+            // hull, the fine spiral seam) and HOVERS in front of it while they talk about it
+            Approach(true); _ap.Set(0f); Win(false);
+            var hover = _irisAt - Vector3.forward * 30f;
+            float s0 = 0f;
+            for (float t = 0f; t < 4.2f; t += Time.deltaTime)
             {
                 ExteriorTick();
-                if (_orbs != null && _orbs[0] != null) _orbs[0].position += Vector3.right * 30f * Time.deltaTime;
-                if (saucer != null) saucer.position = p0 + Vector3.forward * Mathf.Lerp(0f, 110f, Mathf.SmoothStep(0f, 1f, t / 6.5f));
+                if (_orbs != null && _orbs[0] != null) _orbs[0].position += side * 30f * Time.deltaTime;
+                s0 = Mathf.SmoothStep(0f, 1f, t / 4.2f);
+                if (saucer != null) saucer.position = Vector3.Lerp(p0, hover, s0);
                 var sp = saucer != null ? saucer.position : p0;
-                Cut(sp + cTrack, sp + Vector3.forward * 40f, 48f);
-                if (_seamR != null) Glowing.Set(_seamR, Mathf.Clamp01(t - 1f) * 1.4f);
-                if (t > 2f) { k0 = Mathf.SmoothStep(0f, 1f, (t - 2f) / 3.5f); Irise(k0); }
-                if (!spoken && t > 1.2f) { spoken = true; say = StartCoroutine(SayB("BIA_02", 6, 10)); }   // That's the door? / Apparently. / All that ship... / You have sufficient clearance... / Slowly sounds excellent.
-                if (t > 3.6f && t < 3.7f) yield return ShotV("ba06_the_seam_the_iris_opens");
+                Cut(sp + new Vector3(-24f, 7f, -26f), sp + Vector3.forward * 40f, 46f);
+                if (_seamR != null) Glowing.Set(_seamR, Mathf.Clamp01(t - 1.5f) * 0.9f);
                 yield return null;
             }
-            while (say != null && Dlg.Busy) { ExteriorTick(); yield return null; }
-            // FRONT-FACING: the saucer slips through, its edges close to the aperture without touching
-            for (float t = 0f; t < 3.2f; t += Time.deltaTime)
+            yield return ShotV("ba06_the_saucer_hovers_at_the_closed_door");
+            // the conversation about the door, hovering in front of it (a slow drift round the saucer, the door behind it)
+            var talk = StartCoroutine(SayB("BIA_02", 6, 10));    // That's the door? / Apparently. / All that ship... / You have sufficient clearance... / Slowly sounds excellent.
+            for (float t = 0f; Dlg.Busy || t < 0.5f; t += Time.deltaTime)
             {
                 ExteriorTick();
-                if (saucer != null) saucer.position = p0 + Vector3.forward * Mathf.Lerp(110f, 190f, t / 3.2f);
-                Cut(_irisAt + Vector3.forward * 40f + Vector3.up * 6f, saucer != null ? saucer.position : _irisAt, 44f);
-                if (t > 1.4f && t < 1.5f) yield return ShotV("ba07_front_the_saucer_slips_through_the_iris");
+                if (saucer != null) saucer.position = hover + Vector3.up * Mathf.Sin(t * 1.3f) * 0.25f;
+                float a = Mathf.Lerp(-0.5f, 0.5f, Mathf.Clamp01(t / 14f));
+                var cp = hover + Quaternion.Euler(0f, a * 40f, 0f) * new Vector3(-18f, 5f, -16f);
+                Cut(cp, hover + Vector3.forward * 22f, 44f);
+                if (t > 2f && t < 2.1f) yield return ShotV("ba06b_hovering_the_door_behind_the_saucer");
                 yield return null;
             }
-            // REVERSE from inside: the iris spirals shut behind them; the ringed planet disappears; the guide lights
-            AudioKit.Play("bia_iris_close", null, 0.8f);
-            for (float t = 0f; t < 3f; t += Time.deltaTime) { ExteriorTick(); Irise(1f - Mathf.SmoothStep(0f, 1f, t / 3f)); Cut(_irisAt + Vector3.forward * 60f + Vector3.up * -4f, _irisAt, 46f); if (t > 2.2f && t < 2.3f) yield return ShotV("ba08_reverse_the_iris_closes_the_planet_disappears"); yield return null; }
+            // FRONT, then the snap: the leaves swing and spiral back just wider than the saucer, a sharp whirr-click
+            var front = _irisAt - Vector3.forward * 58f + Vector3.up * 3f + Vector3.right * 9f;
+            Cut(front, _irisAt, 40f);
+            yield return Wait(0.35f);
+            AudioKit.Play("bia_iris_snap_open", null, 1f);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_02 (QF23 4): the iris snaps open - {IrisInfo()}");
+            for (float t = 0f; t < 0.45f; t += Time.deltaTime) { ExteriorTick(); _ap.Set(Mathf.SmoothStep(0f, 1f, t / 0.45f)); Cut(front, _irisAt, 40f); if (t > 0.2f && t < 0.24f) yield return ShotV("ba07_front_the_leaves_spiral_open"); yield return null; }
+            _ap.Set(1f);
+            // the saucer slips through in that instant
+            for (float t = 0f; t < 0.9f; t += Time.deltaTime)
+            {
+                ExteriorTick();
+                if (saucer != null) saucer.position = Vector3.Lerp(hover, _irisAt + Vector3.forward * 24f, Mathf.SmoothStep(0f, 1f, t / 0.9f));
+                Cut(front + Vector3.forward * 6f, saucer != null ? saucer.position : _irisAt, 42f);
+                if (t > 0.42f && t < 0.46f) yield return ShotV("ba07b_the_saucer_slips_through");
+                yield return null;
+            }
+            // REVERSE from inside: the leaves spiral shut very quickly behind them - a solid clack; the ringed planet disappears
+            var inside = _irisAt + Vector3.forward * 46f + Vector3.up * -3f + Vector3.right * 4f;
+            AudioKit.Play("bia_iris_snap_shut", null, 1f);
+            for (float t = 0f; t < 0.35f; t += Time.deltaTime) { ExteriorTick(); _ap.Set(1f - Mathf.SmoothStep(0f, 1f, t / 0.35f)); Cut(inside, _irisAt, 44f); if (t > 0.15f && t < 0.19f) yield return ShotV("ba08_reverse_the_leaves_spiral_shut"); yield return null; }
+            _ap.Set(0f); CameraShake.Quake(0.12f, 0.15f);
+            yield return Wait(0.5f);
+            yield return ShotV("ba08b_shut_the_planet_gone");
             if (_seamR != null) Glowing.Set(_seamR, 0f);
             if (mainCam != null && _far0 > 0f) mainCam.farClipPlane = _far0;
-            CutPilot("lap");
+            Win(true); CutPilot("lap");
             yield return SayB("BIA_02", 11, 13);                 // There. Plenty of room. / Then you can stop holding yours. / Heh. You noticed.
             CutPilot("two");
             yield return SayB("BIA_02", 14, 14);                 // Follow the lights to the receiving berth... We have an intruder in the inner districts.
             yield return ShotV("ba09_follow_the_lights");
+            yield return HullAway(false, "BIA_01");              // QF23 (3): the hull back as the talk ends
             BiavehState.CompleteScene("BIA_01"); BiavehState.CompleteScene("BIA_02");
             BiavehState.Reach(BiavehLayout.CpBerth);
             _ik.ReleaseAll("BIA_02 ends");
@@ -253,7 +246,7 @@ namespace Seven
                 CamTo(head + fwd * 1.6f + side * 0.7f + Up * 0.1f, (head + lap) * 0.5f, 0.4f, 38f);
                 if (_catPose != null) _catPose.LookAt = head;
                 yield return SayB("BIA_12", 1, 3);               // There are chairs. / Mm. This was closer. / Fair enough.
-                var purr = AudioKit.Loop("cat_purr", Cat.transform, null, 0.5f, AudioKit.Bus.Sfx, 1f, 8f);
+                var purr = Purr.Loop(Cat.transform, 1f)   /* QF23 (11): loud, on the voice bus */;
                 CatState("sleep");
                 yield return Wait(2.4f);                         // BIA_12_04: a quiet pause, audible purring
                 yield return ShotV("ba11_the_purr_carries_the_pause");
@@ -320,6 +313,6 @@ namespace Seven
             yield return ExploreVenus(false);
         }
         static Vector3 Down() => Vector3.down;
-        void LateUpdateBiaveh() { if (BiavehMode && _egg != null) ExteriorTick(); }
+        void LateUpdateBiaveh() { if (BiavehMode && _veyra != null) ExteriorTick(); }
     }
 }

@@ -23,21 +23,74 @@ namespace Seven
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
 
         /// <summary>Up to the white. reach = her hand goes onto the shape (false while she rides: a reaching gesture).</summary>
-        public static IEnumerator Into(string tag, ChapterSeven s, ChapterCamera cam, ChapterUI ui, Vector3 shape, float radius, System.Action<float> glow, bool reach = true)
+        public static IEnumerator Into(string tag, ChapterSeven s, ChapterCamera cam, ChapterUI ui, Vector3 shape, float radius, System.Action<float> glow, bool reach = true, System.Action<Vector3> floatTo = null)
         {
             var fwd = Flat(shape - s.transform.position).normalized; if (fwd.sqrMagnitude < 0.01f) fwd = s.transform.forward;
             var side = Vector3.Cross(Vector3.up, fwd);
             var tik = reach ? (s.GetComponent<SevenTableIK>() ?? s.gameObject.AddComponent<SevenTableIK>()) : null;
             var touch = shape - fwd * (radius + 0.07f) + Vector3.up * 0.01f;            // the wrist placed so the palm / fingers meet the near face
             // the reach - a close insert on her hand and the shape
+            // QF23 (22) - the repeat (QF18 20): the sequence was shared, but nothing made sure the hand could ARRIVE: on the
+            // mothership she was placed 1.4 m from the octahedron, the target was ~1 m from her shoulder, and the QF13 safety net
+            // let the hand go (out of reach) - no contact. Now she steps into reach first, the palm faces the shape (fingers up),
+            // and the fingertip gap is measured and corrected onto the surface (logged before / after: must end ~0).
+            var tip = s.Bone(HumanBodyBones.RightMiddleDistal) ?? s.Bone(HumanBodyBones.RightMiddleIntermediate) ?? s.Bone(HumanBodyBones.RightHand);
+            var hand = s.Bone(HumanBodyBones.RightHand); var shBone = s.Bone(HumanBodyBones.RightUpperArm); var lo = s.Bone(HumanBodyBones.RightLowerArm);
+            float handLen = hand != null && tip != null ? Vector3.Distance(hand.position, tip.position) + 0.015f : 0.12f;
+            touch = shape - fwd * (radius + handLen * 0.8f) + Vector3.up * 0.02f;
+            if (tik != null && shBone != null && lo != null && hand != null)
+            {
+                float arm = Vector3.Distance(shBone.position, lo.position) + Vector3.Distance(lo.position, hand.position);
+                float d = Flat(touch - shBone.position).magnitude, want = arm * 0.72f;
+                if (d > want)
+                {
+                    var a0 = s.transform.position; var a1 = a0 + fwd * (d - want);
+                    Log($"vision touch (QF23 22) {tag}: she steps {d - want:0.00} m closer - the shape was {d:0.00} m from her shoulder (reach {arm:0.00} m)");
+                    for (float t = 0f; t < 1f; t += Time.deltaTime / 0.55f) { s.Place(Vector3.Lerp(a0, a1, Mathf.SmoothStep(0f, 1f, t)), fwd); s.Lock(true); yield return null; }
+                    s.Place(a1, fwd); s.Lock(true);
+                    for (float t = 0f; t < 0.1f; t += Time.deltaTime) yield return null;
+                    Log($"vision touch (QF23 22) {tag}: after the step the shape is {Flat(touch - shBone.position).magnitude:0.00} m from her shoulder");
+                }
+                // still out of reach (the set keeps her back - a plinth, an altar): she leans in from the waist
+                float short2 = Flat(touch - shBone.position).magnitude - arm * 0.8f;
+                if (short2 > 0.01f)
+                {
+                    tik.Lean = Mathf.Clamp(Mathf.Asin(Mathf.Clamp01(short2 / 0.5f)) * Mathf.Rad2Deg * 1.15f, 0f, 38f); tik.LeanDir = fwd;
+                    Log($"vision touch (QF23 22) {tag}: she leans in {tik.Lean:0} deg to reach it ({short2:0.00} m short at her shoulder)");
+                }
+            }
             cam.Shot(touch + side * 0.75f - fwd * 0.25f + Vector3.up * 0.18f, Vector3.Lerp(touch, shape, 0.5f), 0.01f, true, 32f);
-            if (tik != null) { tik.enabled = true; tik.Ease = 2.4f; tik.RightPos = touch; tik.RightW = 1f; tik.LookPos = shape; tik.LookW = 0.85f; }
+            if (tik != null)
+            {
+                tik.enabled = true; tik.Ease = 2.4f; tik.RightPos = touch; tik.RightW = 1f; tik.LookPos = shape; tik.LookW = 0.85f;
+                tik.RightPalmN = -fwd; tik.RightFingerDir = (Vector3.up * 0.85f + fwd * 0.5f).normalized; tik.RightPalmW = 1f;
+                tik.RightHint = s.transform.position + Vector3.up * 1.0f + side * 0.35f - fwd * 0.1f; tik.RightHintW = 0.8f;
+            }
             else s.Gesture(shape);
             for (float t = 0f; t < 1.0f; t += Time.deltaTime) yield return null;
-            float gap = -1f;
-            var tip = s.Bone(HumanBodyBones.RightMiddleDistal) ?? s.Bone(HumanBodyBones.RightMiddleIntermediate) ?? s.Bone(HumanBodyBones.RightHand);
-            if (tip != null) gap = Vector3.Distance(tip.position, shape) - radius;
-            Log($"vision touch (QF18 20) {tag}: her fingertips {(gap >= 0f ? gap * 100f : 0f):0.0} cm from the shape's surface{(gap < 0f ? " (inside by " + (-gap * 100f).ToString("0.0") + " cm)" : "")}{(reach ? "" : " - a reach from the bike")}");
+            float Gap() => tip != null ? Vector3.Dot(shape - tip.position, fwd) - radius : -1f;     // + = short of the face, - = inside it
+            float gap0 = Gap(), gap = gap0;
+            if (tik != null && tip != null)
+                for (int k = 0; k < 3 && Mathf.Abs(gap) > 0.006f; k++)
+                {
+                    tik.RightPos += fwd * Mathf.Clamp(gap, -0.1f, 0.1f);
+                    for (float t = 0f; t < 0.3f; t += Time.deltaTime) yield return null;
+                    gap = Gap();
+                }
+            // a FLOATING shape the set keeps beyond her full reach (the Moon's over its altar) drifts the last centimetres to
+            // meet her fingertips - it answers her
+            if (floatTo != null && gap > 0.01f && tip != null)
+            {
+                var from = shape; var to = from - fwd * gap;
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.6f) { shape = Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, t)); floatTo(shape); yield return null; }
+                shape = to; floatTo(shape); float g2 = Gap();
+                // the insert again, on the hand and the shape where they meet now
+                var meet = tip.position;
+                cam.Shot(meet + side * 0.75f - fwd * 0.25f + Vector3.up * 0.18f, Vector3.Lerp(meet, shape, 0.5f), 0.01f, true, 32f);
+                Log($"vision touch (QF23 22) {tag}: the floating shape drifts {gap * 100f:0.0} cm to meet her fingers (it answers her reach) - fingertips now {g2 * 100f:+0.0;-0.0} cm from its face");
+                gap = g2;
+            }
+            Log($"vision touch (QF18 20 / QF23 22) {tag}: her fingertips {gap * 100f:+0.0;-0.0} cm from the shape's face (before the correction {gap0 * 100f:+0.0;-0.0} cm; must end within 1 cm){(reach ? "" : " - a reach from the bike")}; hand IK weight held (the net did not let go: {(SevenTableIK.LastNet ?? "none")})");
             yield return Shot($"vision_{tag}_1_the_reach");
             for (float t = 0f; t < 0.5f; t += Time.deltaTime) yield return null;     // a breath
             // the shape answers: glow surges, light runs up her arm, her forehead point lights, a rising tone

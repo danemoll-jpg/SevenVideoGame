@@ -41,6 +41,8 @@ namespace Seven
         [System.NonSerialized] public float AutoSkipAfter = -1f;
         bool _skip;
         public event System.Action<VoiceBank.Line> LineStarted;
+        /// <summary>QF23 check runs: every line started in this session (any player).</summary>
+        public static int LinesStarted;
 
         void Awake()
         {
@@ -125,6 +127,7 @@ namespace Seven
             Played.Add(line.Id);
             var src = line.IsCat ? (far ? _catFar : _cat) : line.Speaker == "nela" ? _cat : _seven;   // Nela (the mothership) speaks telepathically too: Panther's treatment
             UI?.ShowSubtitle(line.Label ?? (line.IsCat ? "Cat" : "7"), line.Text, line.IsCat, far);
+            LinesStarted++;
             LineStarted?.Invoke(line);
             DialogueFraming.Check(line);          // QF18 (7): the speaker must be visible in a dialogue shot
             float len = line.Clip != null ? line.Clip.length : 1.2f + line.Text.Length * 0.06f;

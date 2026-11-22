@@ -36,6 +36,9 @@ namespace Seven
         IEnumerator TrackWalk(MarsFolk m, Vector3 to, float speed, string shot, Vector3? keep = null, float ahead = 6.5f, float sideDist = 5f)
         {
             if (m == null) yield break;
+            // QF23 (9): never more than ~2 s of someone walking while 7 waits - a longer walk starts with a cut (he is already
+            // most of the way there), the tracking shot covers the last stretch
+            { var d0 = Flat(to - m.transform.position); float keepLen = speed * 2.0f; if (d0.magnitude > keepLen + 0.5f) { m.Place(to - d0.normalized * keepLen, d0); Log($"WALK CUT (QF23 9): '{shot}' - {d0.magnitude:0.0} m walk cut to the last {keepLen:0.0} m"); } }
             var start = m.transform.position; var dir = Flat(to - start); if (dir.sqrMagnitude < 0.01f) dir = m.transform.forward; dir.Normalize();
             var side = Vector3.Cross(Vector3.up, dir);
             float pref = keep.HasValue ? Mathf.Sign(Vector3.Dot(side, keep.Value - start) + 0.001f) : 1f;

@@ -312,7 +312,7 @@ namespace Seven
                                          : ph == 1 ? "He comes down - make him waste an attack, throw root debris at him (RT), then punch (X) and kick (Y); pull the signal crystal (RT)"
                                          : "His signal fails - read him, dodge, stun him (RT), then punch (X) and kick (Y)";
             _encounterOn = true;
-            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Punch X  ·  Kick Y (mix them)  ·  Telekinesis RT: throw debris when he is open  ·  R3 / Tab: lock on", 9f);
+            // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _wmFight.Begin(BossFight.Load("wormmaster"), Seven, Cam);
             StartCoroutine(FightPrompts());
             yield return _wmFight.Run(Objective);
@@ -878,7 +878,10 @@ namespace Seven
             yield return Shot("c09_02_hand_touches");
             // QF18 (20): the shared touch -> vision lead-in (the cube answers, light up her arm, the forehead point, the push-in
             // to her eyes, the bloom to white); the return is Dan's match cut to her open palm below
-            yield return VisionTouch.Into("venus", Seven, Cam, UI, VenusLayout.CubeAt, Flat(VenusLayout.CubeAt - touch).magnitude - 0.07f, null);
+            // QF23 (22): the cube's real face (0.21 m - QF18 passed a "radius" 1.2 m out, so her fingers never met it); she stands
+            // outside its cage, so the cube drifts out between the stems to meet her fingertips, and goes back under the white
+            yield return VisionTouch.Into("venus", Seven, Cam, UI, Cube != null ? Cube.position : VenusLayout.CubeAt, 0.21f, null, true, p => { if (Cube != null) Cube.position = p; });
+            if (Cube != null) Cube.position = VenusLayout.CubeAt;
             // the vision: full screen (skippable; a still if the video can't play). Under it her hand comes back and opens,
             // palm up in front of her at chest height (ready for the match cut)
             var fw = Flat(Seven.transform.forward).normalized;
@@ -970,7 +973,7 @@ namespace Seven
             yield return Say("VEN_C12", 1, 3);
             // the guardian approaches the ancient display; two locations appear
             var dispAt = LocationsDisplay != null ? LocationsDisplay.position : VenusLayout.CubeAt + new Vector3(4.3f, 0f, -2.5f);
-            if (Guardian != null) { Guardian.WalkTo(dispAt + new Vector3(-1.1f, 0f, 2.0f)); /* beside the display, never between it and her */ for (float t = 0f; t < 6f && Guardian.Walking; t += Time.deltaTime) yield return null; Guardian.Face(dispAt + Vector3.up * 1.8f); }
+            if (Guardian != null) { var gTo = dispAt + new Vector3(-1.1f, 0f, 2.0f); var gd = Flat(gTo - Guardian.transform.position); if (gd.magnitude > 2.6f) { Guardian.transform.position = gTo - gd.normalized * 2.4f; Log("WALK CUT (QF23 9): VEN_C12 - the guardian is already near the display"); } Guardian.WalkTo(gTo); /* beside the display, never between it and her */ for (float t = 0f; t < 2.2f && Guardian.Walking; t += Time.deltaTime) yield return null; Guardian.Face(dispAt + Vector3.up * 1.8f); }
             for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(dispAt - P7)), 300f * Time.deltaTime); yield return null; }
             AudioKit.Play("energy_point", dispAt + Vector3.up * 1.8f, 0.8f);
             Renderer mars = null, europa = null;

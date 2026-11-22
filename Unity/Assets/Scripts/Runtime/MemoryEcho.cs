@@ -15,13 +15,13 @@ namespace Seven
         public Renderer[] Parts;
         public float Strength = 0.55f;
         public float Shown { get; private set; }
-        float _target; MaterialPropertyBlock _mpb; static readonly int IntensityId = Shader.PropertyToID("_Intensity");
+        float _target, _phase; MaterialPropertyBlock _mpb; static readonly int IntensityId = Shader.PropertyToID("_Intensity");
         public bool Visible => Shown > 0.05f;
 
         void Awake()
         {
             if (Parts == null || Parts.Length == 0) Parts = GetComponentsInChildren<Renderer>(true);
-            _mpb = new MaterialPropertyBlock();
+            _mpb = new MaterialPropertyBlock(); _phase = Random.value * 6.28f; transform.localScale = Vector3.one;
             foreach (var r in Parts) if (r != null) { r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; r.receiveShadows = false; }
             Apply(0f);
         }
@@ -38,7 +38,7 @@ namespace Seven
         }
         void Update()
         {
-            Shown = Mathf.MoveTowards(Shown, _target, Time.deltaTime / 1.2f);
+            Shown = Mathf.MoveTowards(Shown, _target, Time.deltaTime / 2.2f);   // QF23 (14): fades slowly in and out
             Apply(Shown);
         }
         void Apply(float k)
@@ -48,15 +48,19 @@ namespace Seven
             {
                 var r = Parts[i]; if (r == null) continue;
                 bool on = k > 0.01f; if (r.enabled != on) r.enabled = on; if (!on) continue;
-                // the shimmer: a fine flicker per part + a slow band of brightness rising through the echo
-                float band = 0.5f + 0.5f * Mathf.Sin(Time.time * 1.7f - r.bounds.center.y * 1.3f + i);
-                float flick = 0.85f + 0.15f * Mathf.PerlinNoise(Time.time * 9f, i * 1.37f);
-                float a = Strength * k * flick * Mathf.Lerp(0.6f, 1f, band);
+                // QF23 (14): a memory, not a glitch - the echo BREATHES in and out on a calm rhythm (~10 s), a gentle shimmer
+                // band rises slowly through it; no fast flicker
+                float breathe = 0.55f + 0.45f * Mathf.Sin(Time.time * 0.6f + _phase);
+                float band = 0.5f + 0.5f * Mathf.Sin(Time.time * 0.9f - r.bounds.center.y * 0.8f + i * 0.3f);
+                float flick = 0.96f + 0.04f * Mathf.PerlinNoise(Time.time * 1.5f, i * 1.37f);
+                float a = Strength * k * flick * breathe * Mathf.Lerp(0.75f, 1f, band);
                 r.GetPropertyBlock(_mpb);
                 _mpb.SetFloat(IntensityId, a * 1.6f);
                 r.SetPropertyBlock(_mpb);
             }
-            transform.localScale = Vector3.one * (1f + 0.004f * Mathf.Sin(Time.time * 2.2f));
+            // QF23 (14) - THE SHIFTING: this used to pulse the echo's scale by 0.4 %; the echo roots sit at the world origin while
+            // their parts stand ~270 m away (the garden), so the "tiny" pulse slid the whole remembered garden back and forth by
+            // about a metre. No transform motion at all now.
         }
     }
 }

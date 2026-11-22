@@ -71,9 +71,12 @@ namespace Seven
             _objGroup.alpha = 0f;
 
             // Small hint line under the objective (e.g. "Spotted - back to the entrance").
+            // QF23 (17): hints are small and OUT of the centre - bottom of the screen, above the subtitles (never a help box
+            // over the middle of the view)
             _hintPanel = Panel(root, new Vector2(0.5f, 0.5f), new Vector2(0f, 120f), new Vector2(400f, 40f), 0.5f, true);
-            _hint = MakeText(root, "", 18, TextAnchor.MiddleCenter, new Vector2(0f, 120f), new Vector2(900f, 30f));
-            var hrt = (RectTransform)_hint.transform; hrt.anchorMin = hrt.anchorMax = hrt.pivot = new Vector2(0.5f, 0.5f);
+            { var prt = (RectTransform)_hintPanel.transform; prt.anchorMin = prt.anchorMax = new Vector2(0.5f, 0f); prt.pivot = new Vector2(0.5f, 0.5f); prt.anchoredPosition = new Vector2(0f, 232f); }
+            _hint = MakeText(root, "", 18, TextAnchor.MiddleCenter, new Vector2(0f, 232f), new Vector2(900f, 30f));
+            var hrt = (RectTransform)_hint.transform; hrt.anchorMin = hrt.anchorMax = new Vector2(0.5f, 0f); hrt.pivot = new Vector2(0.5f, 0.5f); hrt.anchoredPosition = new Vector2(0f, 232f);
             _hintPanel.gameObject.SetActive(false);
 
             // Title card + fade.
@@ -322,6 +325,8 @@ namespace Seven
             _flash = fl.AddComponent<Image>(); _flash.color = new Color(1f, 1f, 1f, 0f); _flash.raycastTarget = false;
         }
         /// <summary>Show / update the boss bar: energy 0..1, the phase marks (energies where a phase ends).</summary>
+        /// <summary>QF23 (19): the phase mark the fight is waiting at (an objective to do) - it pulses; -1 = none.</summary>
+        [System.NonSerialized] public int PulseMark = -1;
         public void BossBar(string name, float energy, float[] marks, bool stunned)
         {
             BuildBars();
@@ -343,6 +348,10 @@ namespace Seven
                 {
                     bool on = i < marks.Length && marks[i] > 0.001f && marks[i] < 0.999f; _marks[i].gameObject.SetActive(on);
                     if (on) { _marks[i].anchorMin = _marks[i].anchorMax = new Vector2(marks[i], 0.5f); _marks[i].anchoredPosition = Vector2.zero; }
+                    // QF23 (19): the mark the fight is waiting at PULSES (white, wider) - never a silent stall
+                    bool pulse = on && i == PulseMark; float k = 0.5f + 0.5f * Mathf.Sin(Time.time * 8f);
+                    _marks[i].sizeDelta = pulse ? new Vector2(5f + 3f * k, 24f + 8f * k) : new Vector2(2f, 18f);
+                    _marks[i].GetComponent<Image>().color = pulse ? new Color(1f, 1f, 1f, 0.6f + 0.4f * k) : new Color(0.05f, 0.05f, 0.05f, 0.95f);
                 }
             }
             float shake = Time.time < _shakeUntil ? 4f : 0f;

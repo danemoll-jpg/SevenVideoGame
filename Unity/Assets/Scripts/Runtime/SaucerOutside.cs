@@ -150,7 +150,8 @@ namespace Seven
                 }
         }
         // ---- QF18 (22): open space in Biaveh's system - its star large and bright, Biaveh itself a dark disc
-        GameObject _bia;
+        GameObject _bia; VeyraScene _veyraView;
+        void LateUpdate() { if (_bia != null && _bia.activeSelf && _veyraView != null) _veyraView.Tick(); }
         void ShowBiavehSpace(bool on)
         {
             if (on && _bia == null)
@@ -158,23 +159,10 @@ namespace Seven
                 _bia = new GameObject("Outside_SpaceBiaveh");
                 var star = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(star.GetComponent<Collider>()); star.transform.SetParent(_bia.transform, false);
                 star.transform.position = new Vector3(700f, 260f, 2300f); star.transform.localScale = Vector3.one * 140f; star.GetComponent<Renderer>().sharedMaterial = Markers.Additive(3f);
-                var halo = GameObject.CreatePrimitive(PrimitiveType.Quad); Destroy(halo.GetComponent<Collider>()); halo.transform.SetParent(_bia.transform, false);
-                halo.transform.position = star.transform.position; halo.transform.localScale = Vector3.one * 1300f; halo.GetComponent<Renderer>().sharedMaterial = Markers.Additive(0.35f); halo.AddComponent<FaceCamera>();
-                var planet = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(planet.GetComponent<Collider>()); planet.transform.SetParent(_bia.transform, false);
-                planet.transform.position = new Vector3(-420f, -60f, 1500f); planet.transform.localScale = Vector3.one * 260f; planet.GetComponent<Renderer>().sharedMaterial = Markers.DarkGloss();
-                // QF22: Veyra and its rings - a wide pale debris band round the planet (tilted), a fainter outer ring
-                foreach (var (r0, r1, glow) in new[] { (175f, 265f, 0.55f), (285f, 330f, 0.25f) })
-                {
-                    var ring = new GameObject("VeyraRing"); ring.transform.SetParent(_bia.transform, false);
-                    ring.transform.position = planet.transform.position; ring.transform.rotation = Quaternion.Euler(14f, 0f, -18f);
-                    ring.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(r0, r1, 0f); ring.AddComponent<MeshRenderer>().sharedMaterial = Markers.Additive(glow);
-                }
-                planet.name = "Veyra";
-                // Round 17: the mothership beyond the ring plane (a dark egg with hull lights) and its three guardian orbs
-                var egg = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(egg.GetComponent<Collider>()); egg.name = "Mothership"; egg.transform.SetParent(_bia.transform, false);
-                egg.transform.position = new Vector3(260f, 40f, 1250f); egg.transform.localScale = new Vector3(240f, 320f, 240f); egg.GetComponent<Renderer>().sharedMaterial = Markers.DarkGloss();
-                for (int i = 0; i < 90; i++) { var d = Random.onUnitSphere; if (d.z > 0.3f) continue; var hl = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(hl.GetComponent<Collider>()); hl.transform.SetParent(_bia.transform, false); hl.transform.position = egg.transform.position + Vector3.Scale(d, new Vector3(120f, 160f, 120f)); hl.transform.localScale = Vector3.one * 2.5f; hl.GetComponent<Renderer>().sharedMaterial = Markers.Additive(i % 7 == 0 ? 1.4f : 0.4f); }
-                for (int i = 0; i < 3; i++) { var o = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(o.GetComponent<Collider>()); o.name = "GuardianOrb"; o.transform.SetParent(_bia.transform, false); o.transform.position = egg.transform.position + Quaternion.Euler(10f * i, 110f * i + 40f, 0f) * new Vector3(0f, 0f, 300f + 40f * i); o.transform.localScale = Vector3.one * 18f; o.GetComponent<Renderer>().sharedMaterial = Markers.DarkGloss(); }
+                // QF23 (1): no halo quad (an untextured additive quad drew as a square)
+                // QF23 (1): the SAME composition as BIA_01 (VeyraScene, scaled to the Saucer scene's 2.5 km camera): the saucer
+                // among Veyra's rings, the white mothership in the ring plane, ice drifting in front of it and behind it
+                _veyraView = VeyraScene.Build(_bia.transform, new Vector3(0f, 1.5f, 0f), 0.24f, 23);
                 Debug.Log("[Seven] window view (QF22): open space at Veyra - its star, Veyra and its rings");
             }
             if (_bia != null) _bia.SetActive(on);

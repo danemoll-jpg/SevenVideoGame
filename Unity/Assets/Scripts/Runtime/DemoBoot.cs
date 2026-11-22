@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || AstPlay || BiaPlay;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || QF23Revisit || AstPlay || BiaPlay;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -140,11 +140,13 @@ namespace Seven
         public static bool BiaPlay { get; private set; }
         public static bool Asteroid { get; private set; }
         public static bool AstPlay { get; private set; }
-        public static bool AstBird { get; private set; }      // -astbird: the check run takes the optional bird scene
+        public static bool AstBird { get; private set; }
+        public static bool BiaBlades { get; private set; }   // QF23 (21): -biablades - the mothership with the arc blades owned      // -astbird: the check run takes the optional bird scene
         /// <summary>QF16: -qf16check = aboard free exploration: every ambient cat moment, then the passage to each world + window views.</summary>
         public static bool QF16Check { get; private set; }
         /// <summary>QF20 (1): Dan's save rebuilt on the test keys, free exploration aboard, one real X press at the console.</summary>
         public static bool QF20Check { get; private set; }
+        public static bool QF23Revisit { get; private set; }
         public static string MarsPick { get; private set; }
         public static string Routes { get; private set; }
         /// <summary>QF15 (2): -europawalltest = the automated wall test (EuropaWallTest; starts at checkpoint 2 unless -europacp is given).</summary>
@@ -228,9 +230,11 @@ namespace Seven
                 if (args[i] == "-biaplay") BiaPlay = true;
                 if (args[i] == "-asteroid") Asteroid = true;
                 if (args[i] == "-astbird") AstBird = true;
+                if (args[i] == "-biablades") BiaBlades = true;
                 if (args[i] == "-astplay") { AstPlay = true; Asteroid = true; }
                 if (args[i] == "-qf16check") { QF16Check = true; Chapter1 = true; }
                 if (args[i] == "-qf20check") { QF20Check = true; Chapter1 = true; }
+                if (args[i] == "-qf23revisit") { QF23Revisit = true; Chapter1 = true; }
                 if (args[i] == "-marspick" && i + 1 < args.Length) MarsPick = args[i + 1];
                 if (args[i] == "-routes" && i + 1 < args.Length) Routes = args[i + 1];
                 if (args[i] == "-europawalltest") EuropaWallTest = true;

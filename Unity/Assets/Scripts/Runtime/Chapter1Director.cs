@@ -57,6 +57,7 @@ namespace Seven
         public Transform Slab;
         [Tooltip("Kyle's floating shape in the vision alcove (InscriptionGlow = its edges) and its light; its outline on the sealed door.")]
         public Transform Shape;
+        Vector3 _shapeDrift;   // QF23 (22): the shape drifted toward her fingers during the touch
         public Light ShapeLight;
         [Tooltip("QF7: the collapse that buries the lock in the present (cleared by telekinesis after the vision).")]
         public Transform LockRubble;
@@ -1049,7 +1050,7 @@ namespace Seven
             yield return Shot("qf7_01_reaches_for_the_shape");
             // her fingers on it: QF18 (20) the shared touch -> vision lead-in - the edges flare, light runs up her arm, her
             // forehead point lights, the push-in to her eyes, the bloom to white (she keeps the shape after the vision)
-            yield return VisionTouch.Into("moon", Seven, Cam, UI, MoonLayout.ShapeAt, MoonLayout.ShapeRadius, k => _shapeGlow = Mathf.Max(ShapeGlowIdle, k));
+            yield return VisionTouch.Into("moon", Seven, Cam, UI, MoonLayout.ShapeAt + _shapeDrift, MoonLayout.ShapeRadius, k => _shapeGlow = Mathf.Max(ShapeGlowIdle, k), true, p => _shapeDrift = p - MoonLayout.ShapeAt);   // QF23 (22): it floats to meet her fingers
             yield return Shot("s06_shape_touch_flare");
             // Wash to white; the vision (Dan, 2026-11-17): the video of this doorway long ago - the lock beside it intact,
             // being used - full-screen; the cat is heard faintly, far away. The music fades out (Round 13 0g: suspended, it
@@ -3167,7 +3168,7 @@ namespace Seven
                 t += Time.deltaTime;
                 if (_shapeTaken) { yield return null; continue; }
                 Shape.rotation = Quaternion.Euler(12f * Mathf.Sin(t * 0.21f), t * 9f, 8f * Mathf.Sin(t * 0.17f + 1f));
-                Shape.position = MoonLayout.ShapeAt + Vector3.up * Mathf.Sin(t * 0.8f) * 0.012f;
+                Shape.position = MoonLayout.ShapeAt + _shapeDrift + Vector3.up * Mathf.Sin(t * 0.8f) * 0.012f;
                 Glow(InscriptionGlow, _shapeGlow * (1f + 0.14f * Mathf.Sin(t * 1.6f)));
                 if (ShapeLight != null) ShapeLight.intensity = 0.5f * _shapeGlow * (1f + 0.1f * Mathf.Sin(t * 1.6f));
                 yield return null;

@@ -23,11 +23,8 @@ namespace Seven
         public static List<Mesh> Collected(out string names)
         {
             var l = new List<Mesh>(); var n = new List<string>();
-            // the dodecahedron: she has had it since the Moon (every journey happens after Chapter 1's vision)
-            l.Add(ElarimShape.BodyMesh(1f)); n.Add("dodecahedron");
-            if (VenusState.RecordAwarded) { l.Add(CubeMesh()); n.Add("cube"); }
-            if (EuropaState.RecordAwarded) { l.Add(Icosahedron.Mesh(1f)); n.Add("icosahedron"); }
-            if (MarsState.RecordAwarded) { l.Add(Tetrahedron.Mesh(1f)); n.Add("tetrahedron"); }
+            // QF23 (23): the one saved list of collected records (the dodecahedron always; the cuboctahedron and octahedron too)
+            foreach (var r in RecordSet.Collected()) { l.Add(r.Name == "cube" ? CubeMesh() : r.Mesh(1f)); n.Add(r.Name); }
             l.RemoveAll(m => m == null);
             if (l.Count == 0) { l.Add(Icosahedron.Mesh(1f)); n.Add("(none yet: icosahedron stand-in)"); }
             names = string.Join(", ", n);

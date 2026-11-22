@@ -31,6 +31,7 @@ namespace Seven
         public float HopTime = 0.75f, HopHeight = 0.35f;
 
         public enum Mode { Roam, ToChair, Waiting, HopUp, OnLap, HopDown }
+        AudioSource _freePurr;
         public Mode Current { get; private set; } = Mode.Roam;
         public string Action { get; private set; } = "idle";   // current roam behaviour / clip
         public float Scale => transform.localScale.x;
@@ -412,6 +413,10 @@ namespace Seven
                     _lapMesh.localScale = new Vector3(1f + 0.012f * b, 1f + 0.022f * b, 1f + 0.012f * b);
                 }
             }
+            // QF23 (11): free roam aboard - when he settles in her lap (and nothing scripted owns the moment) a gentle purr
+            bool freeLap = Current == Mode.OnLap && enabled && Time.time - _lapSince > 1.5f && !(Chapter1Aboard.I != null && Chapter1Aboard.I.InGalleyScene);
+            if (freeLap && _freePurr == null) _freePurr = Purr.Loop(transform, 0.55f);
+            if (!freeLap && _freePurr != null) { StartCoroutine(AudioKit.Fade(_freePurr, 0f, 1f, true)); _freePurr = null; }
             var sh = _motes.shape;
             sh.radius = 0.22f * Scale;
             _motes.transform.position = transform.position + Vector3.up * 0.15f * Scale;

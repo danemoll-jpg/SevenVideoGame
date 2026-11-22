@@ -32,7 +32,8 @@ WANT = {
     "nela": (["biavianguide", "nela"], ["bella", "matilda", "alice"], "female",
              ["calm", "gentle", "warm", "soft", "soothing", "reassur", "professional"], ["child", "raspy", "seductive", "sassy", "quirky", "hyped"]),
     "ratwing": (["ratwing"], ["callum"], "male", ["trickster", "sly", "raspy", "gravel", "unsettling", "husky"], ["warm", "comforting", "calm"]),
-    "resident": ([], ["chris", "matilda", "will", "eric", "roger", "jessica", "alice"], None,
+    # QF23 (13e): a voice matches the look - the seedlings resident (resident1) uses the female Biavian look, so a female voice
+    "resident": ([], ["matilda", "alice", "jessica"], "female",
                  ["casual", "conversational", "warm", "natural", "down-to-earth"], ["hyped", "fierce", "dominant"]),
 }
 

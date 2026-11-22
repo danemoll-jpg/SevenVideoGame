@@ -564,6 +564,7 @@ namespace Seven.EditorTools
             d.Vision3 = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_03_europa.mp4");
             AddProbe(new Vector3(0f, -60f, 220f), new Vector3(300f, 100f, 240f), Vector3.zero);
             AddProbe(new Vector3(-186f, E.BaseY + 1.8f, 476f), new Vector3(80f, 6f, 64f), Vector3.zero);
+            PlaceAboardCut(new GameObject("Europa").transform, new Vector3(0f, -1500f, 0f));   // QF23 (10, 15a): Panther's cutaways = the real saucer interior
             QF18SceneChecks("Europa", false);   // QF18 (11, 13): report
             EditorSceneManager.SaveScene(scene, EuropaScenePath);
             Log("scene saved " + EuropaScenePath);

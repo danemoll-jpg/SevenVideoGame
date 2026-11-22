@@ -42,6 +42,53 @@ namespace Seven
             _eyeL.transform.position = c - r2 * 0.038f * s; _eyeR.transform.position = c + r2 * 0.038f * s; _eyeLight.transform.position = c + f * 0.05f * s;
         }
         public bool Busy => _co != null;
+        // ---- QF23 (13d): a CARRYING walk - the walk clip keeps stepping (legs), both arms hold the item in front (two-bone IK
+        // after the animator), the item rides between her hands. Never a glide in a static hold pose.
+        [System.NonSerialized] public bool Carry; [System.NonSerialized] public Transform CarryItem;
+        void CarryArms()
+        {
+            if (!Carry || Anim == null || !Anim.isHuman) return;
+            var chest = _chest != null ? _chest : _hips; if (chest == null) return;
+            float sc = transform.lossyScale.y;
+            var f = transform.forward; var r = transform.right; var up = Vector3.up;
+            var centre = chest.position + f * 0.36f * sc - up * 0.12f * sc;
+            if (CarryItem != null) { CarryItem.position = centre - up * 0.05f * sc; CarryItem.rotation = Quaternion.LookRotation(f); }
+            foreach (var right in new[] { false, true })
+            {
+                var u = Anim.GetBoneTransform(right ? HumanBodyBones.RightUpperArm : HumanBodyBones.LeftUpperArm);
+                var l = Anim.GetBoneTransform(right ? HumanBodyBones.RightLowerArm : HumanBodyBones.LeftLowerArm);
+                var h = Anim.GetBoneTransform(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
+                if (u == null || l == null || h == null) continue;
+                var target = centre + r * (right ? 0.2f : -0.2f) * sc;                      // the tray's sides
+                var pole = u.position - up * 0.4f * sc + r * (right ? 0.3f : -0.3f) * sc - f * 0.1f * sc;   // elbows down and out
+                TwoBone(u, l, h, target, pole);
+            }
+        }
+        static void TwoBone(Transform a, Transform b, Transform c, Vector3 target, Vector3 pole)
+        {
+            float la = Vector3.Distance(a.position, b.position), lb = Vector3.Distance(b.position, c.position);
+            var toT = target - a.position; float d = Mathf.Clamp(toT.magnitude, 0.01f, (la + lb) * 0.999f);
+            var dir = toT.normalized;
+            var pn = Vector3.ProjectOnPlane(pole - a.position, dir).normalized; if (pn.sqrMagnitude < 1e-4f) pn = Vector3.down;
+            float cosA = Mathf.Clamp((la * la + d * d - lb * lb) / (2f * la * d), -1f, 1f);
+            var elbow = a.position + dir * (Mathf.Cos(Mathf.Acos(cosA)) * la) + pn * (Mathf.Sin(Mathf.Acos(cosA)) * la);
+            a.rotation = Quaternion.FromToRotation(b.position - a.position, elbow - a.position) * a.rotation;
+            b.rotation = Quaternion.FromToRotation(c.position - b.position, a.position + dir * d - b.position) * b.rotation;
+        }
+        /// <summary>QF23 (13e): the masculine Biavian variant from the same model - broader shoulders, a squarer head, taller,
+        /// a darker suit tone - so the residents have some variety and each voice can match its look.</summary>
+        public void MakeMasculine()
+        {
+            if (_masc || Anim == null || !Anim.isHuman) return; _masc = true;
+            foreach (var b in new[] { HumanBodyBones.LeftShoulder, HumanBodyBones.RightShoulder }) { var t = Anim.GetBoneTransform(b); if (t != null) t.localPosition *= 1.18f; }
+            var hd = Anim.GetBoneTransform(HumanBodyBones.Head); if (hd != null) hd.localScale = new Vector3(1.1f, 0.97f, 1.06f);
+            var ch = Anim.GetBoneTransform(HumanBodyBones.UpperChest) ?? Anim.GetBoneTransform(HumanBodyBones.Chest); if (ch != null) ch.localScale = new Vector3(1.12f, 1f, 1.05f);
+            foreach (var c in new[] { HumanBodyBones.LeftUpperArm, HumanBodyBones.RightUpperArm, HumanBodyBones.Neck }) { var t = Anim.GetBoneTransform(c); if (t != null) t.localScale = new Vector3(1f / 1.12f, 1f, 1f / 1.05f); }
+            transform.localScale *= 1.07f;
+            foreach (var mr in GetComponentsInChildren<Renderer>()) { var mpb = new MaterialPropertyBlock(); mr.GetPropertyBlock(mpb); mpb.SetColor("_BaseColor", new Color(0.62f, 0.62f, 0.62f)); mr.SetPropertyBlock(mpb); }
+            Debug.Log($"[Seven] resident '{name}': the masculine Biavian variant (QF23 13e)");
+        }
+        bool _masc;
         public float Distance { get; private set; }
         string _state; Coroutine _co; Transform _head, _neck, _chest, _hips; float _talk, _nod; readonly float[] _buf = new float[256];
         Vector3 _hipsRest; bool _hipsSet;
@@ -144,6 +191,7 @@ namespace Seven
                 if (_neck != null) _neck.localScale = new Vector3(1f + 0.08f * Mathf.Clamp01(Flare), 1f, 1f);
             }
             UpdateEyes();
+            CarryArms();
             // the Orc Walk is broad in the hips: damp its side sway by a third while walking
             if (CalmSway && _hips != null && _state == "walk")
             {

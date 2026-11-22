@@ -73,12 +73,13 @@ namespace Seven
             yield return UI.Title("EUROPA  —  BENEATH THE ICE", 1.0f, 2.4f, 1.0f);
             if (DemoBoot.CaptureDir != null) Cap?.Log("title card: 'EUROPA — BENEATH THE ICE' over black");
             // 7 sits with Panther in her lap (already settled - no hop); ahead, the Elarim's coordinates beneath the surface
-            yield return EnterStaging("EUR_01");                                // QF16 (3): standing at the window over the ice field
-            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0f;
+            yield return EnterStaging("EUR_01");                                // QF23 (3): the pilot's chair at the front window, Panther in her lap
+            _strokeRoutine = StartCoroutine(Stroke()); _stroke = 0.6f;
             CutPilot("two");
             yield return UI.Fade(0f, 1.4f);
             yield return ShotV("ea01_pilot_chair_panther_in_her_lap");
-            StartCoroutine(CatMomentGlass());                                    // QF16 (4): he paws at the glass, tail twitching
+            // QF23 (3): as they talk about the world below, the hull fades away round them (the vanish-ship effect)
+            StartCoroutine(HullAway(true, "EUR_01", "ea01h"));
             yield return SayE("EUR_01", 1, 4);                   // There's an ocean under all of this. / Apparently. / ... / I'm curious from here.
             // she laughs softly and strokes his back
             _stroke = 1f;
@@ -107,9 +108,9 @@ namespace Seven
             NavHand(false);
             holo?.Hide();
             CutPilot("wide");
-            yield return Wait(1.6f);
+            yield return HullAway(false, "EUR_01");                             // the hull comes back as the talk ends
             if (_strokeRoutine != null) StopCoroutine(_strokeRoutine);
-            _ik.LeftW = 0f;
+            _ik.ReleaseAll("EUR_01 ends");
             EuropaState.CompleteScene("EUR_01");
             yield return UI.Fade(1f, 1.2f);
             if (DemoBoot.CaptureDir != null) Cap?.Log("Europa arrival aboard done -> the Europa scene (the saucer over the ice field, the beam, the dive)");
@@ -147,7 +148,7 @@ namespace Seven
             _stroke = 0.4f;                                       // her hand slows against his fur
             yield return SayE("EUR_17", 4, 5);                   // How could I know that? / I don't know.
             // he begins to purr; she looks down at him, listening
-            var purr = AudioKit.Loop("cat_purr", null, null, 0.55f, AudioKit.Bus.Sfx);
+            var purr = Purr.Loop(Cat.transform, 1f)   /* QF23 (11): loud, on the voice bus */;
             CutPilot("lap");
             _ik.LookPos = Seven.LapPoint(0.1f); _ik.LookW = 0.8f;
             yield return Wait(2.0f);
@@ -189,11 +190,8 @@ namespace Seven
 
         IEnumerator PlaceRecordsOnArm()
         {
-            // the dodecahedron, the small cube and now the small icosahedron rest together on the chair's arm
-            if (Shape != null) { _carry?.Set(CarriedShape.Where.Away, 0f); PlaceShape(ArmRest, MarkingUp()); }
-            if (_cubeCopy != null) { _cubeCopy.gameObject.SetActive(true); _cubeCopy.SetPositionAndRotation(ArmRest + PilotFwd * 0.14f, Quaternion.LookRotation(PilotFwd)); }
-            var ico = MakeIcosahedronCopy();
-            ico.SetPositionAndRotation(ArmRest - PilotFwd * 0.14f, Quaternion.LookRotation(PilotFwd));
+            // QF23 (23): every collected record rests together on the chair's arm (the one saved list - Mars's too if it is done)
+            PlaceRecords("the chair arm");
             yield return null;
         }
 

@@ -22,12 +22,13 @@ namespace Seven
         {
             { "VEN_C11", Stage.Sofa },             // the debrief after Venus: both lying on the sofa
             { "VEN_C13", Stage.ChairCatConsole },  // choosing the next world: the chair, Panther sitting on the console
-            { "EUR_01", Stage.Window },            // Europa arrival: standing at the window over the ice field
+            { "EUR_01", Stage.Chair },             // QF23 (3): every ARRIVAL talk = the pilot's chair at the front window, the hull faded away (HullAway), Panther in her lap
             { "EUR_17", Stage.FloorSofa },         // Europa debrief: on the floor, back against the sofa
-            { "MAR_01", Stage.WindowShoulder },    // Mars arrival: at the window, Panther on her shoulder
+            { "MAR_01", Stage.Chair },             // QF23 (3): Mars arrival - the chair, the vanish view over the plain
             { "MAR_12", Stage.Sofa },              // Mars, what she remembers: both lying on the sofa
             { "MAR_13", Stage.ChairCatConsole },   // the route display: the chair, Panther on the console
             { "AST_01", Stage.Chair },             // the asteroid: at the controls, Panther in her lap (he is lifted onto the adjoining seat)
+            { "BIA_01", Stage.Chair },             // QF23 (3): the mothership arrival (BIA_01 + BIA_02 while aboard) - the chair, the vanish view among Veyra's rings
             { "AST_10", Stage.Chair },             // after the asteroid: the navigation chair, Panther in her lap
         };
         public static Stage StageOf(string scene) => Table.TryGetValue(scene, out var s) ? s : Stage.Chair;

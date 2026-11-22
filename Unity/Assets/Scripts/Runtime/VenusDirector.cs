@@ -1014,10 +1014,12 @@ namespace Seven
             Seven.Lock(true);
             VenusState.SaveBike(Bike.transform.position, Bike.transform.eulerAngles.y, false);
             Shoot(VenusLayout.ParkSpot + new Vector3(10f, 4f, -9f), VenusLayout.MeetSpot + Vector3.up * 2f, 55f);
-            if (Guardian != null) Guardian.WalkTo(VenusLayout.MeetSpot + Vector3.forward * 1.6f);
-            yield return Wait(1.5f);
+            // QF23 (9): they walk TOGETHER and briefly - both start a couple of metres from the meeting spot (a cut)
+            if (Guardian != null) { var gm = VenusLayout.MeetSpot + Vector3.forward * 1.6f; var gd = Flat(gm - Guardian.transform.position); if (gd.magnitude > 3f) Guardian.transform.position = gm - gd.normalized * 2.6f; Guardian.WalkTo(gm); }
+            { var sm = VenusLayout.MeetSpot - Vector3.forward * 1.4f; var sd = Flat(sm - P7); if (sd.magnitude > 3f) Seven.Place(sm - sd.normalized * 2.6f, sd); }
+            yield return Wait(1.2f);
             yield return Shot("v14a_b04_guardian_walking_cape");
-            yield return WalkSeven(VenusLayout.MeetSpot - Vector3.forward * 1.4f, 10f);
+            yield return WalkSeven(VenusLayout.MeetSpot - Vector3.forward * 1.4f, 4f);
             Seven.Lock(true);
             yield return Shot("v14_b04_temple_arrival_wide");
             Complete("VEN_B04");
@@ -1570,14 +1572,14 @@ namespace Seven
             yield return Shot("v20_c04_falling_dust");
             if (Auto && DemoBoot.R13 == "tremor") { yield return Wait(2.5f); yield return Shot("v20c_c04_after_the_tremor"); Cap.Finish($"TREMOR CHECK (Round 13): B03 walkway collapse + bridge + temple + C04 tremor done; knockdowns 0"); yield break; }
             // they both turn to the doorway; over 7's shoulder as the attendant comes in
-            if (Attendant != null) { Attendant.gameObject.SetActive(true); Attendant.transform.position = new Vector3(30f, 0f, 252f); Attendant.WalkTo(VenusLayout.CubeView + new Vector3(-2f, 0f, -1.5f)); }
+            if (Attendant != null) { Attendant.gameObject.SetActive(true); var aTo = VenusLayout.CubeView + new Vector3(-2f, 0f, -1.5f); var aFrom = new Vector3(30f, 0f, 252f); var ad = Flat(aTo - aFrom); Attendant.transform.position = ad.magnitude > 2.8f ? aTo - ad.normalized * 2.6f : aFrom; Attendant.WalkTo(aTo); Log("WALK CUT (QF23 9): C04 - the attendant comes in already near (no long walk while 7 waits)"); }
             if (Guardian != null) Guardian.Face(new Vector3(30f, 0f, 255f));
             {
                 var door = new Vector3(30f, 2.4f, 258f); var d = Flat(door - P7).normalized; var r = Vector3.Cross(Vector3.up, d);
                 for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(d), 400f * Time.deltaTime); yield return null; }
                 Shoot(Head7 - d * 1.3f + r * 0.6f - Vector3.up * 0.2f, door, 48f, 0.01f);
             }
-            for (float t = 0f; t < 5f && Attendant != null && Attendant.Walking; t += Time.deltaTime)
+            for (float t = 0f; t < 2.2f && Attendant != null && Attendant.Walking; t += Time.deltaTime)
             {
                 if (t > 1.2f && t - Time.deltaTime <= 1.2f) StartCoroutine(Shot("v20b_c04_the_attendant_arrives"));
                 Cam.Shot(Cam.ShotPos, HeadOf(Attendant) - Vector3.up * 0.4f, 0.5f, false, 48f);

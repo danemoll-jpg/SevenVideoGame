@@ -12,6 +12,10 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `BIA_01_04` | Panther | Their mothership. Twenty-six miles across. |  |
 | `BIA_01_05` | 7 | Across? | Quiet, astonished laugh |
 | `BIA_01_06` | Panther | Mm-hmm. |  |
+| `BIA_01_06a` | 7 | I thought their mothership was in the rings of Saturn. |  |
+| `BIA_01_06b` | Panther | That one is. This is a sister ship. | Matter-of-fact |
+| `BIA_01_06c` | 7 | A sister ship. So… the aunt ship? |  |
+| `BIA_01_06d` | Panther | That was a terrible joke. | A reluctant chuckle first |
 | `BIA_01_07` | 7 | And those three things moving around it? |  |
 | `BIA_01_08` | Panther | Let’s wait to be invited before we find out. |  |
 
@@ -67,6 +71,8 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `BIA_04_10` | 7 | Would you see my thoughts? | Slight hesitation |
 | `BIA_04_11` | Nela | Only what you choose to share. This can go one way. | Patient reassurance |
 | `BIA_04_12` | 7 | All right. Just the route. |  |
+| `BIA_04_N1` | Nela | I've linked your ship to our inner sensors. Your companion will be able to follow him. | Calm |
+| `BIA_04_N2` | Panther | Delighted. | Far too pleased |
 
 ## BIA_05 — First sight of Ratwing
 
@@ -85,11 +91,14 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `BIA_05_11` | 7 | Mm-hmm. Is your tail doing that little twitch? | Suppressed giggle |
 | `BIA_05_13` | Panther | Repair the relay. | Dignified |
 | `BIA_05_14` | 7 | Thought so. | Quiet laugh |
+| `BIA_05_N1` | Nela | The relay is in that cabinet at the junction. He tore its coupling loose. Seat it again and this district will hear us. | Calm, precise |
 
 ## BIA_06 — The interrupted crossing
 
 | id | speaker | line | direction |
 |---|---|---|---|
+| `BIA_06_N1` | Nela | That relay also held our bridge in line. Without it the span drifted apart, and our people are stranded on the far side. | Concerned |
+| `BIA_06_N2` | Nela | The bridge's service controls are at the chasm's edge. Bring the segments back together. | Precise |
 | `BIA_06_01` | Resident | Thank you. We thought we might be here all day. |  |
 | `BIA_06_02` | 7 | Are those all yours? |  |
 | `BIA_06_03` | Resident | They were smaller when I left home. | Weary amusement |
@@ -103,11 +112,15 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 
 | id | speaker | line | direction |
 |---|---|---|---|
+| `BIA_07_N1` | Nela | Careful. This garden is remembering itself. The damaged relay is leaking an old memory of it into the present. Some of what you see isn't really there. | Calm warning |
+| `BIA_07_N2` | Panther | The old layout and the new one don't agree. Look for what's real. | Dry |
+| `BIA_07_N3` | Nela | The second relay is behind the garden wall. Its old door was sealed when the garden was rebuilt. | Precise |
 | `BIA_07_01` | 7 | There used to be a door here. |  |
 | `BIA_07_02` | Panther | There’s a seam. Lower down. | Focused |
 | `BIA_07_03` | 7 | Mm. Found it. |  |
 | `BIA_07_04` | Ratwing | Leave it alone. |  |
 | `BIA_07_05` | 7 | You first. |  |
+| `BIA_07_N4` | Panther | There's a service opening above the glass. He can get round through it. The control's beside you. | Quick, low |
 | `BIA_07_06` | Panther | He’s looking at the upper opening. | Quiet observation |
 | `BIA_07_07` | 7 | Can he get through? |  |
 | `BIA_07_08` | Panther | Yes. Close it now. | Precise |
@@ -120,14 +133,19 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 
 | id | speaker | line | direction |
 |---|---|---|---|
+| `BIA_08_N1` | Nela | The relay beyond this door sits inside the archive's shielding. Nothing reaches through it. Not our sensors, not our thoughts. Not even yours. | Calm |
 | `BIA_08_01` | Panther | I’ll lose you beyond that door. |  |
 | `BIA_08_02` | 7 | Only until I reach the other side. |  |
 | `BIA_08_03` | Panther | Mm-hmm. |  |
 | `BIA_08_04` | 7 | I know. I’ll be careful. | Softens |
 | `BIA_08_05` | Panther | I hadn’t said anything. | Gentle protest |
 | `BIA_08_06` | 7 | You did the pause. | Small laugh |
-| `BIA_08_07` | Panther | An expressive pause. |  |
+| `BIA_08_06a` | Panther | My… paws? |  |
+| `BIA_08_06b` | 7 | Pause. The silence. | A laugh she can't hold in |
+| `BIA_08_07` | Panther | Ah. An expressive pause. | Composure returning, sets the paw down very neatly |
 | `BIA_08_08` | 7 | See you on the other side. |  |
+| `BIA_08_N2` | 7 | An airlock. One door at a time. | Quietly, to herself |
+| `BIA_08_N3` | 7 | No power. Its coupling's on the floor. |  |
 | `BIA_08_09` | 7 | Panther? |  |
 | `BIA_08_10` | Panther | Here. | Immediate |
 | `BIA_08_11` | 7 | Good. | Releases a breath |
@@ -145,6 +163,15 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `BIA_09_02` | 7 | Enough to know it isn’t yours. |  |
 | `BIA_09_03` | Ratwing | They leave it sitting here. I could make it worth something. |  |
 | `BIA_09_04` | 7 | It already is. | Quiet and firm |
+| `BIA_09_N1` | Nela | Our partitions can wall off sections of this shaft. Close them and he'll have less and less room to fly, and nowhere left to run. | Calm, firm |
+| `BIA_09_N2` | Panther | A smaller room. My favourite kind of hunt. | Dry |
+| `BIA_09_S1` | Panther | He's stunned. Hit him now! | Urgent |
+| `BIA_09_S2` | Panther | He's down. Now! | Urgent |
+| `BIA_09_S3` | Panther | Go, while he's dazed. |  |
+| `BIA_09_C1` | Panther | Close the partition! | Sharp |
+| `BIA_09_C2` | Panther | Now the partition. The station's lit! | Sharp |
+| `BIA_09_B1` | Panther | He doesn't like those. | Dry, pleased |
+| `BIA_09_B2` | 7 | Good. | Breathless |
 | `BIA_09_05` | Panther | Don’t follow him. Watch the opening on your right. | Low, intent |
 | `BIA_09_06` | 7 | I thought following him was the plan. |  |
 | `BIA_09_07` | Panther | It was an early draft. | Dry |
@@ -163,6 +190,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 
 | id | speaker | line | direction |
 |---|---|---|---|
+| `BIA_10_N1` | Nela | The archive opens only to all three districts together. The control at its entrance takes each relay's mark, in the order you restored them. | Calm |
 | `BIA_10_01` | Nela | We can hear one another clearly again. | A relieved breath |
 | `BIA_10_02` | 7 | Everyone in the closed districts? |  |
 | `BIA_10_03` | Nela | Yes. Thank you. Both of you. |  |

@@ -293,7 +293,7 @@ namespace Seven
                                        : ph == 1 ? "The other arm - stun him (RT), then cut (X) and kick (Y); jump the lane surges (A)"
                                        : "The override - read him, dodge, stun him, then cut and kick until he stops";
             yield return Cutscene(false);
-            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Arc blades RB, then X: cut  ·  Kick Y  ·  Telekinesis RT: stun him when he is open  ·  R3 / Tab: lock on", 10f);
+            // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _fight.Begin(BossFight.Load("machinist"), Seven, Cam);
             if (Auto) Seven.DrawBlades(true);
             StartCoroutine(FightPrompts(_fight));

@@ -915,6 +915,7 @@ namespace Seven.EditorTools
             WireShipConsole(consoleRefs, dir, chUi);
             BuildOutside(atmo, ch);                                                 // QF16 (1 + 2): the view outside + the passage stage                                // Round 13: Seven.ShipConsole
 
+            SaveInteriorPrefab();               // QF23 (10): the real interior for Panther's cutaways in the chapter scenes
             QF18SceneChecks("Saucer", false);   // QF18 (11, 13): report
             EditorSceneManager.SaveScene(scene, SaucerScenePath);
             Log("scene saved " + SaucerScenePath);

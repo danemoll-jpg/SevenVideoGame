@@ -287,6 +287,7 @@ namespace Seven.EditorTools
             AddProbe(new Vector3(-180f, 0f, 40f), new Vector3(320f, 80f, 300f), Vector3.zero);
             AddProbe(new Vector3(-360f, 10f, 105f), new Vector3(84f, 28f, 74f), Vector3.zero);
             AddProbe(new Vector3(-366f, 4f, 30f), new Vector3(100f, 16f, 70f), Vector3.zero);
+            PlaceAboardCut(new GameObject("Asteroid").transform, new Vector3(0f, -1500f, 0f));   // QF23 (10, 15a): Panther's cutaways = the real saucer interior
             QF18SceneChecks("Asteroid", true, () => { for (int i = 0; i < hall.platforms.Length; i++) hall.platforms[i].position = hall.aligned[i]; }, () => { for (int i = 0; i < hall.platforms.Length; i++) hall.platforms[i].position = hall.parked[i]; });
             EditorSceneManager.SaveScene(scene, AsteroidScenePath);
             Log("scene saved " + AsteroidScenePath + $" (Machinist {(machF != null ? "rigged, plate hinge " + (bits != null ? bits.plateVerts + " vertices" : "-") : "missing")})");

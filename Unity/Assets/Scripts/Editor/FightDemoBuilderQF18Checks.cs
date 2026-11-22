@@ -28,6 +28,8 @@ namespace Seven.EditorTools
             foreach (var go in UnityEngine.SceneManagement.SceneManager.GetActiveScene().GetRootGameObjects()) l.AddRange(go.GetComponentsInChildren<MeshRenderer>(false));
             // the one saucer prefab is checked as a prefab (CheckSaucer: every scene's instance must stay unchanged) - never nudged here
             l.RemoveAll(r => r.GetComponentInParent<Seven.SaucerHold>() != null || r.GetComponentInParent<Seven.SaucerBeam>() != null);
+            // QF23 (10): the cutaway set is the Saucer scene's interior (checked there) - not part of this level
+            l.RemoveAll(r => r.GetComponentInParent<Seven.AboardCut>(true) != null);
             return l;
         }
 
@@ -143,6 +145,7 @@ namespace Seven.EditorTools
             if (wg != null && wg.Shape == Seven.Ground.Shape.Zones) HolesCheck(scene, wg, z => z.Name != "Valley", prepare, restore, failHoles, 1f, people);
             else Log($"HOLES CHECK (QF18 13) {scene}: not a zone level - skipped");
             KickStatesCheck(scene);
+            QF23SceneChecks(scene);
         }
 
         /// <summary>QF20 (2): 7's animator in every chapter scene carries the kick states (Y = kick in boss fights).</summary>

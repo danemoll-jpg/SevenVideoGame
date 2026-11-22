@@ -124,7 +124,9 @@ namespace Seven
                     // QF22: Veyra with its rings (a wide tilted ellipse round the planet), the mothership a small bright mark beside it
                     Img(rt, OrbitSprite(d.size * 1.6f, d.size * 0.45f), b.Pos, new Vector2(d.size * 3.4f, d.size * 1.1f), new Color(1f, 1f, 1f, 0.75f));
                     Img(rt, OrbitSprite(d.size * 1.25f, d.size * 0.34f), b.Pos, new Vector2(d.size * 2.7f, d.size * 0.85f), new Color(1f, 1f, 1f, 0.4f));
-                    Img(rt, _disc, b.Pos + new Vector2(d.size * 1.45f, d.size * 0.55f), new Vector2(5f, 7f), Color.white);
+                    // QF23 (1): the mothership is stationed IN the rings - its mark sits on the ring band (front arc), white, haloed
+                    Img(rt, _soft, b.Pos + new Vector2(d.size * 1.2f, -d.size * 0.39f), new Vector2(26f, 26f), new Color(1f, 1f, 1f, 0.55f));
+                    Img(rt, _disc, b.Pos + new Vector2(d.size * 1.2f, -d.size * 0.39f), new Vector2(7f, 9f), Color.white);
                     Txt(rt, "VEYRA", b.Pos + new Vector2(d.size * 2.2f, -d.size * 0.2f), 15, new Color(0.6f, 0.6f, 0.6f), TextAnchor.MiddleCenter, new Vector2(160f, 20f));
                 }
                 b.Label = Txt(rt, d.name, b.Pos + new Vector2(0f, d.size * 0.5f + 18f), 24, new Color(0.88f, 0.88f, 0.88f), TextAnchor.MiddleCenter, new Vector2(d.id == "biaveh" ? 360f : 220f, 26f));   // QF22: the contact's name on one line

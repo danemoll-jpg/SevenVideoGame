@@ -115,6 +115,25 @@ namespace Seven
         /// <summary>QF20 (3): his energy just before she went down and just after the retry (must be identical).</summary>
         public readonly List<string> RetryEnergy = new List<string>();
         public bool Stunned => State == St.Staggered;
+        /// <summary>QF23 (19, 21): fight moments the director answers with lines / light ("stagger", "waiting" = his energy is at a
+        /// phase mark but the phase's objective is not done, "blade_shock", "dazed").</summary>
+        public event System.Action<string> Moment;
+        protected void Raise(string m) { try { Moment?.Invoke(m); } catch (System.Exception e) { Debug.LogWarning("[Seven] boss moment handler: " + e.Message); } }
+        /// <summary>QF23 (19): his energy has reached this phase's mark but its objective is not done yet - the fight waits on it.</summary>
+        public bool WaitingOnObjective => Def != null && !Over && Phase < Def.phases.Length - 1 && P.endAt >= 0f && Energy <= P.endAt + 1e-4f && !ObjectiveDone;
+        /// <summary>QF23 (21): a subclass stuns him (e.g. an arc-blade counter that shocks him out of a dive).</summary>
+        protected void Stun(string how) { if (!Over && State != St.Dazed && State != St.Pinned) StaggerHim(how); }
+        // QF23 (17): no controls box at the start - each fight-specific action gets a small prompt at the moment it matters
+        // (bottom of the screen), the first few times only; the full list stays on the Controls page
+        readonly Dictionary<string, int> _tips = new Dictionary<string, int>();
+        public int TipsShown { get; private set; }
+        protected void Tip(string key, string text, int times = 2, float secs = 2.6f)
+        {
+            if (AutoPilot && DemoBoot.CaptureDir == null) return;
+            _tips.TryGetValue(key, out int n); if (n >= times) return;
+            _tips[key] = n + 1; TipsShown++; UI?.Hint(text, secs);
+            if (DemoBoot.CaptureDir != null) Log($"FIGHT TIP (QF23 17) '{text}' ({n + 1}/{times}) - small, bottom of the screen");
+        }
         public float[] PhaseMarks { get { var m = new float[Def.phases.Length]; for (int i = 0; i < m.Length; i++) m[i] = Def.phases[i].endAt; return m; } }
         float _phaseFloor => P.endAt >= 0f ? P.endAt : Energy;
         public readonly List<string> PhaseLog = new List<string>();
@@ -217,8 +236,10 @@ namespace Seven
         int _herDodges, _herHops, _herBlocks, _herTk;
         public int LockToggles;
         void OnSeven(string e) { if (e == "lock_on" || e == "lock_off") { LockToggles++; Log($"boss {Def.id}: LOCK-ON (QF20) toggled {(e == "lock_on" ? "ON" : "OFF")} by a real R3 / Tab press"); } if (e == "dodge") _herDodgeAt = Time.time; if (e == "hop") _herHopAt = Time.time; if (e == "dodge") _herDodges++; else if (e == "hop") _herHops++; else if (e == "block") _herBlocks++; else if (e == "tk") _herTk++; }
+        bool _waitRaised;
         public void End()
         {
+            if (UI != null) UI.PulseMark = -1;
             UI?.HideBossBar();
             Seven.FightEvent -= OnSeven;
             Markers.Clear();
@@ -361,6 +382,7 @@ namespace Seven
             Aimed(a);
             SetState(St.Telegraph, a.telegraph / Tempo);
             AudioKit.Play(a.windSound, Centre, 1f, 0.04f, AudioKit.Bus.Sfx, 70f);
+            if (a.dodgeable && !a.jumpable) Tip("dodge", "Dodge  (B / Ctrl)"); else if (a.jumpable) Tip("jump", "Jump  (A / Space)"); else if (a.blockable) Tip("block", "Block  (LT / Q)");
             if (DemoBoot.CaptureDir != null) Log($"boss {Def.id}: attack {Attacks} '{a.id}' ({a.kind}) - telegraph {a.telegraph / Tempo:0.00} s, she is {Flat(Her - transform.position).magnitude:0.0} m away (answer: {a.answer})");
             Burst("telegraph");
         }
@@ -653,6 +675,8 @@ namespace Seven
             CameraKick.Nudge(Flat(Centre - Her).normalized * 0.05f);
             AudioKit.Play("scree_grunt", Centre, 1f, 0.05f, AudioKit.Bus.Sfx, 40f); AudioKit.Play("signal_pulse", Centre, 0.7f, 0.05f, AudioKit.Bus.Sfx, 40f);
             UI?.BossStunned();
+            Tip("strike", Seven != null && Seven.BladesOwned && Seven.BladesDrawn ? "Close in:  Strike (X) · Kick (Y)" : "Close in:  Punch (X) · Kick (Y)", 3);
+            Raise("stagger");
             Log($"boss {Def.id}: STAGGERED by {how} ({_phaseStaggers}/{P.staggers} in phase {Phase + 1})");
             Burst("stagger");
         }
@@ -741,11 +765,17 @@ namespace Seven
         public IEnumerator Run(System.Action<string> objective)
         {
             int shown = -1; bool dazedShown = false, offered = false; int phaseOfDowns = 0;
+            if (Seven != null && Seven.BladesOwned && !Seven.BladesDrawn) Tip("blades", "Arc blades  (RB / G)", 1, 3.5f);   // QF23 (21): once, small
             while (!Over)
             {
                 if (AutoPilot && !Paused) { var it = BossPilot.Think(this, Seven); BossPilot.ApplyAuto(it, Seven); AutoSkip = it.Skip; }
                 if (Phase != shown && !Paused) { shown = Phase; objective?.Invoke(PhaseObjective?.Invoke(Phase)); }
-                if (State == St.Dazed && !dazedShown) { dazedShown = true; objective?.Invoke("He is dazed - take him down (Y / E)"); }
+                if (State == St.Dazed && !dazedShown) { dazedShown = true; objective?.Invoke("He is dazed - take him down (Y / E)"); Tip("takedown", "Takedown  (Y / E)", 1, 4f); Raise("dazed"); }
+                // QF23 (19): the bar never stalls silently - the mark it is waiting at pulses and the director is told
+                bool waiting = WaitingOnObjective && !Paused;
+                if (UI != null) UI.PulseMark = waiting ? Phase : -1;
+                if (waiting && !_waitRaised) { _waitRaised = true; Raise("waiting"); Log($"boss {Def.id}: his energy is at phase {Phase + 1}'s mark - the fight waits on the objective (the mark pulses)"); }
+                if (!waiting) _waitRaised = false;
                 if (Phase != phaseOfDowns) { phaseOfDowns = Phase; DownsThisPhase = 0; offered = false; }
                 if (Seven.FightDown && !Paused)
                 {

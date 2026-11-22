@@ -124,7 +124,8 @@ namespace Seven
         void Update()
         {
             if (_suspended != null && Time.unscaledTime - _suspendTime > 60f) Resume(3f);
-            _duck = Mathf.MoveTowards(_duck, DialoguePlayer.AnyBusy ? DuckLevel : 1f, Time.unscaledDeltaTime * (DialoguePlayer.AnyBusy ? 2.5f : 0.8f));
+            bool duckNow = DialoguePlayer.AnyBusy || Purr.Playing;   // QF23 (11): the music ducks under his purr too
+            _duck = Mathf.MoveTowards(_duck, duckNow ? DuckLevel : 1f, Time.unscaledDeltaTime * (duckNow ? 2.5f : 0.8f));
             float g = AudioKit.Gain(AudioKit.Bus.Music) * _duck;
             _a.volume = _aW * g; _b.volume = _bW * g;
         }

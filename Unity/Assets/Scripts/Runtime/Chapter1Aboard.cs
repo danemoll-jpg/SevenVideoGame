@@ -1094,6 +1094,8 @@ namespace Seven
             if (!VenusMode) VenusState.UseOwnSave();
             if (Auto) Cap.Log($"set course from the console's star map: {id} ({VenusState.CurrentId})");
             bool stayForCheck = Auto && !DemoBoot.VenusChain;
+            // QF23 (24): the Moon is always finished by the time she can set course - a revisit, never Chapter 1 from its start
+            if (id == "moon") { yield return RevisitWorld("moon", "The Moon — visited"); yield break; }
             if (id == "moon" || (id == "venus" && (VenusMode || VenusState.AtLeast(VenusState.Stage.Complete))))
             {
                 _settingCourse = true; Director.ExtraPrompt = null; Seven.Frozen = true;
@@ -1113,6 +1115,21 @@ namespace Seven
                 yield break;
             }
             if (id == "venus") yield return MoonFallsAwayToVenus(true);
+        }
+
+        /// <summary>QF23 (24): a finished world revisited from the star map: the passage (the world in the window), a card, and
+        /// back to free exploration aboard - no story scenes.</summary>
+        public IEnumerator RevisitWorld(string id, string card)
+        {
+            _settingCourse = true; Director.ExtraPrompt = null; Seven.Frozen = true;
+            yield return TravelPassage.Run(id);
+            SaucerLocation.System = StarMap.SystemOf(id); SaucerLocation.Set(id);   // the windows show where she is now
+            yield return UI.Fade(1f, 0.8f);
+            yield return UI.Title(card, 0.5f, 1.6f, 0.5f);
+            Director.Cam.Hold = false;
+            yield return UI.Fade(0f, 1.0f);
+            Seven.Frozen = false; _settingCourse = false; CourseSetCount++;
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"REVISIT (QF23 24): {id} - passage + '{card}', back to exploring; story scenes played: none; SaucerLocation {SaucerLocation.Current}");
         }
 
         /// <summary>Round 11's travel to Venus from Chapter 1: the Moon falls away behind the porthole, a short transit, then

@@ -103,7 +103,7 @@ namespace Seven
                                             : ph == 1 ? "He hunts you - when he wastes an attack, stun him with debris (RT), then close in: punch (X), kick (Y)"
                                             : "Enraged - dodge, stun him (RT), then punch (X) and kick (Y) until he falls";
             yield return Cutscene(false);
-            UI.Hint("Dodge B  ·  Jump A  ·  Block LT  ·  Punch X  ·  Kick Y (mix them: a combo)  ·  Telekinesis RT: stun him when he is open  ·  R3 / Tab: lock on", 10f);
+            // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _viperFight.Begin(BossFight.Load("viper"), Seven, Cam);
             StartCoroutine(FightPrompts(_viperFight));
             yield return _viperFight.Run(Objective);
@@ -180,9 +180,11 @@ namespace Seven
             if (Caretaker != null) Caretaker.Place(L.TempleDoor + new Vector3(2.2f, 0f, 1.4f), Vector3.forward);
             Shoot(L.TempleDoor + new Vector3(0f, 2.2f, -3f), L.SymbolWall, 52f, 0.01f);
             yield return UI.Fade(0f, 0.8f);
-            if (Worker != null) Worker.WalkTo(L.RuneView + new Vector3(-2.4f, 0f, 1.5f), 1.1f);
-            if (Caretaker != null) Caretaker.WalkTo(L.RuneView + new Vector3(2.4f, 0f, 1.5f), 1.1f);
-            yield return WalkSeven(L.RuneView + new Vector3(0f, 0f, -1.4f), 12f);
+            // QF23 (9): a cut, not a long walk in - they are already inside, by the markings
+            if (Worker != null) { Worker.Stop(); Worker.Place(L.RuneView + new Vector3(-2.4f, 0f, 1.5f), Vector3.forward); }
+            if (Caretaker != null) { Caretaker.Stop(); Caretaker.Place(L.RuneView + new Vector3(2.4f, 0f, 1.5f), Vector3.forward); }
+            Seven.Place(L.RuneView + new Vector3(0f, 0f, -1.4f), Vector3.forward);
+            Log("WALK CUT (QF23 9): MAR_08 - the walk into the temple is a cut");
             Seven.Lock(true);
             yield return Shot("m31_inside_the_temple_markings_of_both_kingdoms");
             // INSERT - the symbols together

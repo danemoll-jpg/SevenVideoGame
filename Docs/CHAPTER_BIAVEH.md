@@ -186,6 +186,8 @@ The guide offers to share an impression of the route.
 | BIA_04_10 | 7 | Would you see my thoughts? | Slight hesitation. |
 | BIA_04_11 | Guide | Only what you choose to share. This can go one way. | Patient reassurance. |
 | BIA_04_12 | 7 | All right. Just the route. | Her shoulders relax. |
+| BIA_04_N1 | Guide | I've linked your ship to our inner sensors. Your companion will be able to follow him. | Calm; after the route lights up. *(QF23, Dan's proposed line)* |
+| BIA_04_N2 | Panther | Delighted. | Far too pleased. *(QF23, Dan's proposed line)* |
 
 A brief navigation impression identifies the relay stations. It is visually distinct from her historical visions.
 
@@ -224,6 +226,7 @@ Ratwing severs a local control connection and launches into the vertical shaft.
 | BIA_05_12 | — | — | Cut to his twitching tail. It stops. |
 | BIA_05_13 | Panther | Repair the relay. | Dignified. |
 | BIA_05_14 | 7 | Thought so. | Quiet laugh; approaches the controls. |
+| BIA_05_N1 | Guide | The relay is in that cabinet at the junction. He tore its coupling loose. Seat it again and this district will hear us. | Calm, precise. *(QF23, new - Dan to review)* |
 
 **Gameplay:** a brief pursuit is optional for a better view of Ratwing’s escape route, but repairing the relay is the required objective.
 
@@ -239,6 +242,8 @@ As the bridge settles, waiting residents cross. One struggles with a container o
 
 | ID | Speaker | Dialogue | Performance / camera |
 |---|---|---|---|
+| BIA_06_N1 | Guide | That relay also held our bridge in line. Without it the span drifted apart, and our people are stranded on the far side. | Concerned. *(QF23, new - Dan to review)* |
+| BIA_06_N2 | Guide | The bridge's service controls are at the chasm's edge. Bring the segments back together. | Precise. *(QF23, new - Dan to review)* |
 | BIA_06_01 | Resident | Thank you. We thought we might be here all day. | Adjusts the container. |
 | BIA_06_02 | 7 | Are those all yours? | Looks at the crowded seedlings. |
 | BIA_06_03 | Resident | They were smaller when I left home. | Weary amusement. |
@@ -263,6 +268,9 @@ At the second relay, an old garden overlays the current one. A remembered doorwa
 
 | ID | Speaker | Dialogue | Performance / camera |
 |---|---|---|---|
+| BIA_07_N1 | Guide | Careful. This garden is remembering itself. The damaged relay is leaking an old memory of it into the present. Some of what you see isn't really there. | Calm warning. *(QF23, Dan's proposed line)* |
+| BIA_07_N2 | Panther | The old layout and the new one don't agree. Look for what's real. | Dry. *(QF23, Dan's proposed line)* |
+| BIA_07_N3 | Guide | The second relay is behind the garden wall. Its old door was sealed when the garden was rebuilt. | Precise. *(QF23, new - Dan to review)* |
 | BIA_07_01 | 7 | There used to be a door here. | Studies the wall. |
 | BIA_07_02 | Panther | There’s a seam. Lower down. | Focused. |
 | BIA_07_03 | 7 | Mm. Found it. | Kneels beside the release. |
@@ -273,6 +281,7 @@ As she reconnects the relay, Ratwing returns. He lands beyond a glass partition 
 |---|---|---|---|
 | BIA_07_04 | Ratwing | Leave it alone. | A sharp strike against the partition. |
 | BIA_07_05 | 7 | You first. | Keeps working; glances toward him. |
+| BIA_07_N4 | Panther | There's a service opening above the glass. He can get round through it. The control's beside you. | Quick, low. *(QF23, Dan's proposed line)* |
 | BIA_07_06 | Panther | He’s looking at the upper opening. | Quiet observation. |
 | BIA_07_07 | 7 | Can he get through? | Hand poised over the controls. |
 | BIA_07_08 | Panther | Yes. Close it now. | Precise. |
@@ -298,6 +307,7 @@ The third relay lies beyond a shielded passage that blocks external communicatio
 
 | ID | Speaker | Dialogue | Performance / camera |
 |---|---|---|---|
+| BIA_08_N1 | Guide | The relay beyond this door sits inside the archive's shielding. Nothing reaches through it. Not our sensors, not our thoughts. Not even yours. | Calm. *(QF23, Dan's proposed line)* |
 | BIA_08_01 | Panther | I’ll lose you beyond that door. | His attention shifts from Ratwing’s marker to hers. |
 | BIA_08_02 | 7 | Only until I reach the other side. | Checks the route. |
 | BIA_08_03 | Panther | Mm-hmm. | A pause. |
@@ -308,6 +318,8 @@ The third relay lies beyond a shielded passage that blocks external communicatio
 | BIA_08_06b | 7 | Pause. The silence. | A laugh she can't hold in. |
 | BIA_08_07 | Panther | Ah. An expressive pause. | Composure returning; sets the paw down very neatly; sits beside the console. |
 | BIA_08_08 | 7 | See you on the other side. | Opens the door. |
+| BIA_08_N2 | 7 | An airlock. One door at a time. | Quietly, to herself. *(QF23, new - Dan to review)* |
+| BIA_08_N3 | 7 | No power. Its coupling's on the floor. | To herself; crouches. *(QF23, new - Dan to review)* |
 
 **Gameplay:** a short solo spatial puzzle. The absence of Panther’s voice is noticeable, but this is not a horror sequence.
 
@@ -345,6 +357,15 @@ Ratwing has begun forcing the archive entrance. He cannot remove its records or 
 | BIA_09_02 | 7 | Enough to know it isn’t yours. | Steps into view. |
 | BIA_09_03 | Ratwing | They leave it sitting here. I could make it worth something. | Spreads his wings. |
 | BIA_09_04 | 7 | It already is. | Quiet and firm. |
+| BIA_09_N1 | Guide | Our partitions can wall off sections of this shaft. Close them and he'll have less and less room to fly, and nowhere left to run. | Calm, firm. *(QF23, Dan's proposed line)* |
+| BIA_09_N2 | Panther | A smaller room. My favourite kind of hunt. | Dry. *(QF23, Dan's proposed line)* |
+| BIA_09_S1 | Panther | He's stunned. Hit him now! | Urgent. *(QF23, Dan's proposed line)* |
+| BIA_09_S2 | Panther | He's down. Now! | Urgent. *(QF23, new - Dan to review)* |
+| BIA_09_S3 | Panther | Go, while he's dazed. | Quick. *(QF23, new - Dan to review)* |
+| BIA_09_C1 | Panther | Close the partition! | Sharp. *(QF23, Dan's proposed line)* |
+| BIA_09_C2 | Panther | Now the partition. The station's lit! | Sharp. *(QF23, Dan's proposed line)* |
+| BIA_09_B1 | Panther | He doesn't like those. | Dry, pleased. *(QF23, Dan's proposed line)* |
+| BIA_09_B2 | 7 | Good. | Breathless. *(QF23, Dan's proposed line)* |
 
 ### Nonlethal encounter
 
@@ -405,6 +426,7 @@ Historical memories return to the archive. The living network clears.
 
 | ID | Speaker | Dialogue | Performance / camera |
 |---|---|---|---|
+| BIA_10_N1 | Guide | The archive opens only to all three districts together. The control at its entrance takes each relay's mark, in the order you restored them. | Calm. *(QF23, new - Dan to review)* |
 | BIA_10_01 | Guide | We can hear one another clearly again. | A relieved breath. |
 | BIA_10_02 | 7 | Everyone in the closed districts? | Still holding the control. |
 | BIA_10_03 | Guide | Yes. Thank you. Both of you. | Looks toward her communicator. |

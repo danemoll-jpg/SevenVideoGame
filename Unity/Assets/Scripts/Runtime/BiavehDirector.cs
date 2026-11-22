@@ -103,11 +103,38 @@ namespace Seven
             _amb = AudioKit.Loop("amb_saucer", null, null, 0.25f, AudioKit.Bus.Ambience);
             if (Nela != null) { Nela.Role = "nela"; Nela.CalmSway = true; }
             Seven.SetBladesOwned(BiavehState.BladesOwned);
+            RecordHomes();
+            if (AboardCut.I != null) AboardCut.I.AutoFirstLook = false;   // QF23: the mothership cuts to Panther at its own beats
             StartCoroutine(Flow(startCp));
         }
+        // QF23 (6) - the walls through the parked saucer: every door / partition / barrier pivot is built AT its place (its
+        // localPosition = where it stands), but Restore / Door / DoorMove set absolute localPositions ((0, 14, 0) = "raised",
+        // zero = "shut"), which put the two chamber partitions, both barriers, the archive door, partition A and the passage
+        // doors at the world origin = the receiving berth, through the saucer. Every move is now an offset from its home.
+        readonly Dictionary<Transform, Vector3> _home = new Dictionary<Transform, Vector3>();
+        void RecordHomes()
+        {
+            var all = new List<Transform> { PassageDoor, LockDoorA, LockDoorB, OuterBarrier, InnerBarrier, ArchiveDoor, SeamPanel, UpperShutter, PartitionA };
+            if (ChamberPartitions != null) all.AddRange(ChamberPartitions);
+            foreach (var t in all) if (t != null && !_home.ContainsKey(t)) _home[t] = t.localPosition;
+        }
+        Vector3 Home(Transform t) { if (t == null) return Vector3.zero; if (!_home.TryGetValue(t, out var h)) { h = t.localPosition; _home[t] = h; } return h; }
+        void Off(Transform t, Vector3 offset) { if (t != null) t.localPosition = Home(t) + offset; }
         AudioSource _amb;
         void OnDestroy() { if (Dlg != null) Dlg.LineStarted -= OnLine; if (I == this) I = null; HoverBike.ZoneTest = VenusLayout.BikeZone; DialogueFraming.Speaker = null; MoonTraversal.UseMoon(); }
-        IEnumerator FirstFrame() { Cap.Log($"first frame (the Mothership): fade {UI.FadeAlpha:0.00} (1 = black)"); yield return Cap.Shot("b00_first_frame"); }
+        IEnumerator FirstFrame() { Cap.Log($"first frame (the Mothership): fade {UI.FadeAlpha:0.00} (1 = black)"); yield return Cap.Shot("b00_first_frame"); StartCoroutine(HiltProof()); }
+        /// <summary>QF23 (7) proof: the first time she is free on foot with the blades owned - her back from behind and both
+        /// sides (the sheathed hilts: a neat X on her back, nothing trailing), the measured hilt extent.</summary>
+        IEnumerator HiltProof()
+        {
+            while (Seven == null || !Seven.gameObject.activeInHierarchy || _cut || Riding || !Seven.BladesOwned) { if (Time.time > 900f) yield break; yield return null; }
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) yield return null;
+            Log("BLADES SHEATHED (QF23 7): " + Seven.HiltReport());
+            var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f); var h = P7 + Vector3.up * 1.3f;
+            foreach (var (n, o) in new[] { ("back", -f * 2.2f), ("left", -r * 2.2f - f * 0.6f), ("right", r * 2.2f - f * 0.6f) })
+            { Cam.Shot(h + o + Vector3.up * 0.2f, h, 0.01f, true, 40f); for (float t = 0f; t < 0.15f; t += Time.deltaTime) yield return null; yield return Shot("b03z_qf23_hilts_from_" + n); }
+            if (!_cut) FollowCamera();
+        }
         string RideAreaName(Vector3 p) { var z = L.ZoneAt(p); return z.StartsWith("Road") ? "the city roads" : z; }
 
         // the speaker's own body moves with the voice (Nela, the resident: head; Ratwing: the jaw)
@@ -146,7 +173,7 @@ namespace Seven
         static readonly (Vector3 c, float r)[] PropCircles =
         {
             (L.DisplayAt, 0.8f), (L.PillarAt, 1.1f), (L.CabinetAt, 0.7f), (L.BridgeControl, 0.5f), (L.Relay3At, 0.8f), (L.BarrierControl, 0.5f),
-            (L.PartitionStations[0], 0.5f), (L.PartitionStations[1], 0.5f), (L.RoutingControl, 0.6f), (L.OctaAt, 1.3f), (L.BenchAt, 0.7f),
+            (L.PartitionStations[0], 0.5f), (L.PartitionStations[1], 0.5f), (L.RoutingControl, 0.6f), (L.OctaAt, 0.45f), (L.BenchAt, 0.7f),
         };
 
         // ------------------------------------------------------------------------------------------ helpers (as Mars)
@@ -154,7 +181,27 @@ namespace Seven
         void Objective(string s) { _objective = s; UI.SetObjective(s); Log("objective: " + s); }
         void Log(string s) { Debug.Log("[Seven] " + s); if (DemoBoot.CaptureDir != null) Cap?.Log(s); }
         IEnumerator Shot(string name) { if (!Shots) yield break; yield return Cap.Shot(name); }
-        void Shoot(Vector3 pos, Vector3 look, float fov = 50f, float ease = 1f) { Cam.Subjects.Clear(); Cam.Shot(pos, look, ease, ease <= 0.05f, fov); }
+        (Vector3 p, Vector3 l, float f) _lastShot;
+        void Shoot(Vector3 pos, Vector3 look, float fov = 50f, float ease = 1f) { Cam.Subjects.Clear(); Cam.Shot(pos, look, ease, ease <= 0.05f, fov); _lastShot = (pos, look, fov); }
+        /// <summary>QF23 (10, 15): a cut to Panther aboard - the REAL saucer interior (AboardCut), his mood for the beat, his lines
+        /// played while we see him; then back to the shot we came from. Falls back to the old inset if a scene has no AboardCut.</summary>
+        IEnumerator Cutaway(string shot, AboardCut.Mood mood, string frame = "him", float hold = 1.2f, params string[] lines)
+        {
+            var ac = AboardCut.I;
+            if (ac == null) { yield return AboardInset(shot, mood == AboardCut.Mood.Twitch); if (lines.Length > 0) yield return SayIds(lines); yield break; }
+            var back = _lastShot;
+            ac.Follow = Seven.transform; ac.Rat = _ratLinked && Ratwing != null ? Ratwing : null;
+            ac.Begin(mood);
+            var (p, l) = ac.Frame(frame); Cam.Subjects.Clear(); Cam.Shot(p, l, 0.01f, true, 40f);
+            for (float t = 0f; t < 0.35f; t += Time.deltaTime) yield return null;
+            yield return Shot(shot);
+            if (lines.Length > 0) yield return SayIds(lines);
+            for (float t = 0.35f; t < hold; t += Time.deltaTime) yield return null;
+            ac.End();
+            if (back.f > 0f) Shoot(back.p, back.l, back.f, 0.01f);
+            Log($"cut aboard (QF23 10): Panther in the saucer interior - {mood}{(lines.Length > 0 ? ", lines " + string.Join(" ", lines) : "")}");
+        }
+        bool _ratLinked;
         IEnumerator Cutscene(bool on)
         {
             _cut = on;

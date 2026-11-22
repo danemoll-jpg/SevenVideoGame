@@ -69,8 +69,7 @@ namespace Seven
         /// <summary>The records on the chair arm, the asteroid's small cuboctahedron among them once awarded.</summary>
         void PlaceRecordsOnArmAsteroid()
         {
-            PlaceRecordsOnArmMars();
-            if (AsteroidState.RecordAwarded) { var c = MakeCuboctahedronCopy(); c.SetPositionAndRotation(ArmRest - PilotFwd * 0.40f + Up * 0.02f, Quaternion.LookRotation(PilotFwd)); }
+            PlaceRecords("the chair arm");   // QF23 (23): every collected record, the octahedron too
         }
         Transform MakeCuboctahedronCopy()
         {
@@ -138,10 +137,10 @@ namespace Seven
         /// <summary>QF21 (1): the ship "invisible" while they talk - the existing reveal (ShipReveal, the pilot's-chair button)
         /// run from her seat at the front window; her chair, the seat beside it (his) and the records on the arm stay solid;
         /// slow, with the shimmer at the dissolving edge. away = false: the hull comes back (from the outside in).</summary>
-        IEnumerator HullAway(bool away)
+        IEnumerator HullAway(bool away, string tag = "AST_01", string shot = "aa01a")
         {
             var rev = Director != null ? Director.Reveal : null;
-            if (rev == null) { if (DemoBoot.CaptureDir != null) Cap?.Log("AST_01 (QF21 1): no ShipReveal in the scene - the hull stays"); yield break; }
+            if (rev == null) { if (DemoBoot.CaptureDir != null) Cap?.Log($"{tag} (QF21 1 / QF23 3): no ShipReveal in the scene - the hull stays"); yield break; }
             if (away)
             {
                 rev.CenterOverride = ShipConsole.I != null && ShipConsole.I.PilotSeat != null ? ShipConsole.I.PilotSeat : null;
@@ -159,12 +158,12 @@ namespace Seven
                 rev.KeepSolid(keep);
                 float d0 = rev.Duration; rev.Duration = 6.5f;                                  // slow and elegant
                 rev.Set(true);
-                if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_01 (QF21 1): the hull dissolves round them - the ship-reveal effect from the pilot's seat, {rev.KeptCount} renderers kept solid (her chair, his seat, the records)");
+                if (DemoBoot.CaptureDir != null) Cap?.Log($"{tag} (QF21 1 / QF23 3): the hull dissolves round them - the ship-reveal effect from the pilot's seat, {rev.KeptCount} renderers kept solid (her chair, his seat, the records)");
                 for (float t = 0f; t < 10f && rev.Progress < 0.22f; t += Time.deltaTime) yield return null;
-                yield return ShotV("aa01a_mid_dissolve_the_shimmering_edge");
+                yield return ShotV(shot + "_mid_dissolve_the_shimmering_edge");
                 for (float t = 0f; t < 10f && rev.Progress < 0.999f; t += Time.deltaTime) yield return null;
                 rev.Duration = d0;
-                if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_01 (QF21 1): open space round them (reveal {rev.Progress:0.00})");
+                if (DemoBoot.CaptureDir != null) Cap?.Log($"{tag} (QF21 1 / QF23 3): open space round them (reveal {rev.Progress:0.00})");
             }
             else
             {
@@ -172,7 +171,7 @@ namespace Seven
                 rev.Set(false);
                 for (float t = 0f; t < 10f && rev.Progress > 0.001f; t += Time.deltaTime) yield return null;
                 rev.Duration = d0; rev.ClearKeep();
-                if (DemoBoot.CaptureDir != null) Cap?.Log($"AST_01 (QF21 1): the hull is back (reveal {rev.Progress:0.00}) before she goes to disembark");
+                if (DemoBoot.CaptureDir != null) Cap?.Log($"{tag} (QF21 1 / QF23 3): the hull is back (reveal {rev.Progress:0.00}) before she goes to disembark");
             }
         }
         /// <summary>The two of them in open space with the asteroid filling the view (wide, from behind and beside the chair).</summary>
@@ -188,8 +187,8 @@ namespace Seven
             var from = Cat.transform.position;
             var disp = ShipConsole.I != null && ShipConsole.I.Display != null ? ShipConsole.I.Display.position : PilotHips + PilotFwd * 1.1f + Up * 0.5f;
             var seat = PilotHips + PilotFwd * 0.62f - PilotRight * 0.42f; seat.y = disp.y - 0.34f;      // the console desk beside the chair (where he sits in the route scenes)
-            Cat.enabled = false;
-            _ik.LeftW = 1f; _ik.RightW = 1f;
+            Cat.enabled = false; _handsBusy = true;
+            _ik.LeftW = 1f; _ik.RightW = 1f; _ik.LeftPalmW = _ik.RightPalmW = 0f; _ik.LeftHintW = _ik.RightHintW = 0f;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.3f)
             {
                 float u = Mathf.SmoothStep(0f, 1f, t);
@@ -200,7 +199,7 @@ namespace Seven
             }
             Cat.transform.SetPositionAndRotation(seat, Quaternion.LookRotation(Flat(PilotHips - seat)));
             CatState("sit");
-            _ik.LeftW = 0f; _ik.RightW = 0f;
+            _ik.LeftW = 0f; _ik.RightW = 0f; _handsBusy = false;
             if (_catPose != null) _catPose.LookAt = SevenEyes;                // he glances at her now-empty lap
         }
 
@@ -244,7 +243,7 @@ namespace Seven
                 yield return SayA("AST_10", 1, 4);                            // Hello, you. / You're late. / We didn't agree on a time. / I decided on one...
                 if (_catPose != null) _catPose.TailToward = SevenHead - Up * 0.5f;   // his tail curls round her wrist
                 yield return SayA("AST_10", 5, 5);                            // Mm. Sorry. (she rubs behind his ear)
-                var purr = AudioKit.Loop("cat_purr", Cat.transform, null, 0.5f, AudioKit.Bus.Sfx, 1f, 8f);
+                var purr = Purr.Loop(Cat.transform, 1f)   /* QF23 (11): loud, on the voice bus */;
                 yield return Wait(2.6f);                                      // AST_10_06: he purrs; let it carry the pause
                 yield return ShotV("aa12_the_purr_carries_the_pause");
                 if (purr != null) StartCoroutine(AudioKit.Fade(purr, 0f, 1.5f, true));

@@ -911,6 +911,7 @@ namespace Seven.EditorTools
             AddProbe(new Vector3(-110f, 6f, 0f), new Vector3(240f, 30f, 120f), Vector3.zero);
             AddProbe(new Vector3(0f, -8f, 80f), new Vector3(140f, 40f, 300f), Vector3.zero);
             AddProbe(new Vector3(0f, 6f, 180f), new Vector3(24f, 14f, 26f), Vector3.zero);
+            PlaceAboardCut(new GameObject("Mars").transform, new Vector3(0f, -1500f, 0f));   // QF23 (10, 15a): Panther's cutaways = the real saucer interior
             QF18SceneChecks("Mars", true, () => slab.GetComponent<Seven.MarsDrawbridge>().Set(1f), () => slab.GetComponent<Seven.MarsDrawbridge>().Set(0f));   // QF18 (6, 11, 13)
             EditorSceneManager.SaveScene(scene, MarsScenePath);
             Log("scene saved " + MarsScenePath + $" ({folk.Count} townsfolk, Viper {(viperF != null ? "rigged" : "missing")}, Reptilians {(rept != null ? "rigged" : "placeholder")})");

@@ -12,6 +12,15 @@ namespace Seven
     {
         public Vector3 RightPos, LeftPos, LookPos;
         public Quaternion RightRot = Quaternion.identity, LeftRot = Quaternion.identity;
+        // QF23 (5): the seated lap arms. Elbow hints (a comfortable bend resting near her side) and, after the IK pass, the
+        // palm laid flat on what it touches (PalmDown = the surface normal it rests on, FingerDir = where the fingers point,
+        // Spread = fingers a little apart) - before QF23 only the wrist POSITION was set: the clip's wrist angle stayed and the
+        // elbow went wherever the solver put it.
+        public Vector3 LeftHint, RightHint; public float LeftHintW, RightHintW;
+        public Vector3 LeftPalmN, RightPalmN, LeftFingerDir, RightFingerDir; public float LeftPalmW, RightPalmW, Spread = 1f;
+        /// <summary>QF23 (22): lean in from the waist (degrees) toward LeanDir - applied in the IK pass before the hands are
+        /// solved, so a hand on a target stays on it (a reach across a plinth).</summary>
+        public float Lean; public Vector3 LeanDir; float _lean;
         // QF13 (15): every hand moment (bike grip in B01, petting, holding a shape, the table, the console) sets these
         // weights; a moment that ended without setting them back (a skipped line, a stopped coroutine, a never-ending stroke
         // loop) left her arm reaching for an old target. Each weight now remembers when it was last set, and a safety net
@@ -26,7 +35,7 @@ namespace Seven
         public void ReleaseAll(string why)
         {
             bool any = _rightW > 0.01f || _leftW > 0.01f || _lookW > 0.01f || _r > 0.01f || _l > 0.01f;
-            _rightW = _leftW = _lookW = 0f;
+            _rightW = _leftW = _lookW = 0f; LeftHintW = RightHintW = LeftPalmW = RightPalmW = 0f; Lean = 0f;
             if (any) Debug.Log($"[Seven] hand IK released ({why})");
         }
         [Tooltip("How fast the weights ease (per second).")]
@@ -53,7 +62,7 @@ namespace Seven
             if (want > 0.01f)
             {
                 var sh = _anim.GetBoneTransform(upper);
-                if (sh != null && _armLen > 0f && (target - sh.position).magnitude > _armLen * 1.15f) { ok = false; why = $"target {(target - sh.position).magnitude:0.00} m from the shoulder (reach {_armLen:0.00})"; }
+                if (sh != null && _armLen > 0f && (target - sh.position).magnitude > _armLen * (Lean > 0.1f ? 1.5f : 1.15f))   // QF23 (22): leaning in brings the shoulder closer { ok = false; why = $"target {(target - sh.position).magnitude:0.00} m from the shoulder (reach {_armLen:0.00})"; }
                 if (ok && _walkT > 0.3f)
                 {
                     float dt = Mathf.Max(1e-4f, Time.deltaTime);
@@ -83,6 +92,7 @@ namespace Seven
             _r = Mathf.MoveTowards(_r, RightW * nr, dt * Mathf.Max(Ease, nr < 1f ? 4f : 0f));
             _l = Mathf.MoveTowards(_l, LeftW * nl, dt * Mathf.Max(Ease, nl < 1f ? 4f : 0f));
             _look = Mathf.MoveTowards(_look, LookW, dt * Ease);
+            _lean = Mathf.MoveTowards(_lean, Lean, dt * 40f);
             _anim.SetIKPositionWeight(AvatarIKGoal.RightHand, _r);
             _anim.SetIKRotationWeight(AvatarIKGoal.RightHand, 0f);
             _anim.SetIKPosition(AvatarIKGoal.RightHand, RightPos);
@@ -91,12 +101,66 @@ namespace Seven
             _anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0f);
             _anim.SetIKPosition(AvatarIKGoal.LeftHand, LeftPos);
             _anim.SetIKRotation(AvatarIKGoal.LeftHand, LeftRot);
+            _anim.SetIKHintPositionWeight(AvatarIKHint.LeftElbow, LeftHintW * _l); _anim.SetIKHintPosition(AvatarIKHint.LeftElbow, LeftHint);
+            _anim.SetIKHintPositionWeight(AvatarIKHint.RightElbow, RightHintW * _r); _anim.SetIKHintPosition(AvatarIKHint.RightElbow, RightHint);
             _anim.SetLookAtWeight(_look, 0.15f, 0.7f, 1f, 0.6f);
             _anim.SetLookAtPosition(LookPos + (Alive ? _gaze : Vector3.zero));
         }
 
+        float _pl, _pr;
+        /// <summary>The last palm-side direction measured (the proof: palm vs the surface it lies on).</summary>
+        public Vector3 PalmSide { get; private set; }
+        /// <summary>QF23 (5): after the animator (IK applied): lay the palm on the surface - the hand turns so its palm faces
+        /// along -n (onto the surface) and the fingers point along fingerDir; the fingers spread a little.</summary>
+        void PalmTo(bool right, float w, Vector3 n, Vector3 fingerDir)
+        {
+            if (w <= 0.001f || n.sqrMagnitude < 0.01f) return;
+            var hand = _anim.GetBoneTransform(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
+            var mid = _anim.GetBoneTransform(right ? HumanBodyBones.RightMiddleProximal : HumanBodyBones.LeftMiddleProximal);
+            var idx = _anim.GetBoneTransform(right ? HumanBodyBones.RightIndexProximal : HumanBodyBones.LeftIndexProximal);
+            var lit = _anim.GetBoneTransform(right ? HumanBodyBones.RightLittleProximal : HumanBodyBones.LeftLittleProximal);
+            if (hand == null || mid == null || idx == null || lit == null) return;
+            var f = (mid.position - hand.position).normalized; var across = (idx.position - lit.position).normalized;
+            var palm = Vector3.Cross(f, across).normalized * (right ? -1f : 1f);      // the palm side (toward what it holds)
+            // self-calibrating: a relaxed hand's fingers curl toward the palm - use the middle finger's curl when it is clear
+            var midI = _anim.GetBoneTransform(right ? HumanBodyBones.RightMiddleIntermediate : HumanBodyBones.LeftMiddleIntermediate);
+            if (midI != null) { var curl = Vector3.ProjectOnPlane(midI.position - mid.position, f); if (curl.magnitude > 0.004f && Vector3.Dot(curl, palm) < 0f) palm = -palm; }
+            PalmSide = palm;
+            var wantF = Vector3.ProjectOnPlane(fingerDir.sqrMagnitude > 0.01f ? fingerDir : f, n).normalized;
+            if (wantF.sqrMagnitude < 0.01f) return;
+            var from = Quaternion.LookRotation(f, -palm); var to = Quaternion.LookRotation(wantF, n);
+            hand.rotation = Quaternion.Slerp(Quaternion.identity, to * Quaternion.Inverse(from), w) * hand.rotation;
+            // the fingers a little apart (relaxed, not a paddle)
+            var spread = new (HumanBodyBones b, float deg)[] { (right ? HumanBodyBones.RightIndexProximal : HumanBodyBones.LeftIndexProximal, -7f), (right ? HumanBodyBones.RightRingProximal : HumanBodyBones.LeftRingProximal, 5f), (right ? HumanBodyBones.RightLittleProximal : HumanBodyBones.LeftLittleProximal, 10f) };
+            foreach (var (b, deg) in spread) { var t = _anim.GetBoneTransform(b); if (t != null) t.rotation = Quaternion.AngleAxis(deg * Spread * w * (right ? -1f : 1f), n) * t.rotation; }
+        }
         void LateUpdate()
         {
+            if (_anim != null && _lean > 0.1f && LeanDir.sqrMagnitude > 0.01f)
+            {
+                // QF23 (22): the lean, after the animator - the spine and chest bend toward the shape, then the right arm is
+                // re-solved onto its target (two-bone) so the hand still lands where it was aimed
+                var axis = Vector3.Cross(Vector3.up, new Vector3(LeanDir.x, 0f, LeanDir.z).normalized);
+                foreach (var (b, k) in new[] { (HumanBodyBones.Spine, 0.55f), (HumanBodyBones.Chest, 0.45f) })
+                { var t = _anim.GetBoneTransform(b); if (t != null) t.rotation = Quaternion.AngleAxis(_lean * k, axis) * t.rotation; }
+                var u = _anim.GetBoneTransform(HumanBodyBones.RightUpperArm); var lo = _anim.GetBoneTransform(HumanBodyBones.RightLowerArm); var h = _anim.GetBoneTransform(HumanBodyBones.RightHand);
+                if (u != null && lo != null && h != null && _r > 0.01f)
+                {
+                    float la = Vector3.Distance(u.position, lo.position), lb = Vector3.Distance(lo.position, h.position);
+                    var toT = RightPos - u.position; float d = Mathf.Clamp(toT.magnitude, 0.01f, (la + lb) * 0.999f); var dir = toT.normalized;
+                    var pole = RightHintW > 0.01f ? RightHint : u.position - Vector3.up * 0.3f;
+                    var pn = Vector3.ProjectOnPlane(pole - u.position, dir).normalized; if (pn.sqrMagnitude < 1e-4f) pn = Vector3.down;
+                    float cosA = Mathf.Clamp((la * la + d * d - lb * lb) / (2f * la * d), -1f, 1f), A = Mathf.Acos(cosA);
+                    var elbow = u.position + dir * Mathf.Cos(A) * la + pn * Mathf.Sin(A) * la;
+                    var r1 = Quaternion.FromToRotation(lo.position - u.position, elbow - u.position) * u.rotation; u.rotation = Quaternion.Slerp(u.rotation, r1, _r);
+                    var r2 = Quaternion.FromToRotation(h.position - lo.position, u.position + dir * d - lo.position) * lo.rotation; lo.rotation = Quaternion.Slerp(lo.rotation, r2, _r);
+                }
+            }
+            if (_anim != null)
+            {
+                _pl = Mathf.MoveTowards(_pl, LeftPalmW * _l, Time.deltaTime * 3f); _pr = Mathf.MoveTowards(_pr, RightPalmW * _r, Time.deltaTime * 3f);
+                PalmTo(false, _pl, LeftPalmN, LeftFingerDir); PalmTo(true, _pr, RightPalmN, RightFingerDir);
+            }
             if (!Alive || _anim == null) return;
             float dt = Time.deltaTime; _t += dt;
             if (_headB == null) { _headB = _anim.GetBoneTransform(HumanBodyBones.Head); _neckB = _anim.GetBoneTransform(HumanBodyBones.Neck); }

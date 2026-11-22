@@ -205,6 +205,17 @@ namespace Seven.EditorTools
             // the bench by the passage; the sealed gate (a smooth arch with a dark, closed leaf)
             { var (v, t) = bk.Of(m.pale); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.9f, 0f), new Vector2(0.95f, 0.42f), new Vector2(0f, 0.46f) }, 0f, 360f, 16, null, B.BenchAt)); }
             { var (v, t) = bk.Of(m.pale); Sweep(v, t, Enumerable.Range(0, 13).Select(i => { float a = i / 12f * Mathf.PI; return B.SealedGate + new Vector3(Mathf.Cos(a) * 2.4f, Mathf.Sin(a) * 2.4f - 3f, 0f); }).ToList(), 0.25f, false, 8); var (dv, dt) = bk.Of(m.dark); MBox(dv, dt, B.SealedGate + new Vector3(0f, -1.8f, 0.2f), new Vector3(4.2f, 2.4f, 0.3f), 0f, 0.15f); }
+            // QF23 (6): the berth HOLDS the saucer without touching it - four slim, smooth white arms rising from the landing ring
+            // and curving in toward its rim (their glowing pads stop 0.6 m short of the hull), the beam's landing pad beneath
+            for (int i = 0; i < 4; i++)
+            {
+                var (av, at2) = bk.Of(m.pale); float a = (45f + i * 90f) * Mathf.Deg2Rad; var d = new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a));
+                var pts = new List<Vector3> { B.SaucerAt + d * 8.6f, B.SaucerAt + d * 8.9f + Vector3.up * 1.6f, B.SaucerAt + d * 8.2f + Vector3.up * 3.2f, B.SaucerAt + d * 7.0f + Vector3.up * 3.9f };
+                Sweep(av, at2, pts, 0.16f, false, 10);
+                var (gv3, gt3) = bk.Of(m.glowSoft); Ellipsoid(gv3, gt3, B.SaucerAt + d * 6.85f + Vector3.up * 3.9f, new Vector3(0.22f, 0.1f, 0.22f), 4, 8);
+                Append(av, at2, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.7f, 0f), new Vector2(0.45f, 0.3f), new Vector2(0f, 0.32f) }, 0f, 360f, 14, null, B.SaucerAt + d * 8.6f));
+            }
+            { var (gv4, gt4) = bk.Of(m.glowSoft); Append(gv4, gt4, Lathe(new[] { new Vector2(2.2f, 0.09f), new Vector2(2.6f, 0.09f) }, 0f, 360f, 32, null, B.SaucerAt)); }   // the beam's landing pad
             bk.Save("Bia_Berth", berth);
             // the temple-route display: a holo table, the temple at its centre, the three relays round it (they light in BIA_04)
             var disp = new GameObject("RouteDisplay").transform; disp.SetParent(berth, false); disp.position = B.DisplayAt;
@@ -252,7 +263,38 @@ namespace Seven.EditorTools
             var partA = new GameObject("PartitionA").transform; partA.SetParent(world, false); partA.position = B.PartitionA;
             { var pk = new AK(); var (v, t) = pk.Of(m.paleSoft); MBox(v, t, Vector3.zero, new Vector3(30f, 24f, 1.2f), 0f, 0.5f); var (gv, gt) = pk.Of(m.glowSoft); Sweep(gv, gt, new[] { new Vector3(-15f, -11.6f, -0.7f), new Vector3(15f, -11.6f, -0.7f) }, 0.12f, false, 4); foreach (var g in pk.Save("PartitionA_Mesh", partA)) g.transform.localPosition = Vector3.zero; }
             var seedlings = new GameObject("Seedlings").transform; seedlings.SetParent(world, false);
-            { var sk = new AK(); var (v, t) = sk.Of(m.pale); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.32f, 0f), new Vector2(0.36f, 0.28f), new Vector2(0f, 0.28f) }, 0f, 360f, 12)); var (lv2, lt2) = sk.Of(m.leaf); for (int i = 0; i < 9; i++) Ellipsoid(lv2, lt2, new Vector3((i % 3 - 1) * 0.18f, 0.36f + (i % 2) * 0.05f, (i / 3 - 1) * 0.18f), new Vector3(0.06f, 0.1f, 0.06f), 3, 6); foreach (var g in sk.Save("Seedlings_Mesh", seedlings)) g.transform.localPosition = Vector3.zero; }
+            // QF23 (13b): an open tray of young Biavian seedlings - soft leaves with gently glowing tips, a few unfurling fronds -
+            // visibly OVERGROWN, spilling over the sides (they grew while she waited); carried in both arms in front of her
+            {
+                var sk = new AK(); var (v, t) = sk.Of(m.pale);
+                MBox(v, t, new Vector3(0f, 0.02f, 0f), new Vector3(0.62f, 0.04f, 0.42f), 0f, 0.01f);
+                foreach (var zz in new[] { -0.2f, 0.2f }) MBox(v, t, new Vector3(0f, 0.08f, zz), new Vector3(0.62f, 0.12f, 0.022f), 0f, 0.005f);
+                foreach (var xx in new[] { -0.3f, 0.3f }) MBox(v, t, new Vector3(xx, 0.08f, 0f), new Vector3(0.022f, 0.12f, 0.42f), 0f, 0.005f);
+                var (dv, dt2) = sk.Of(m.dark); MBox(dv, dt2, new Vector3(0f, 0.11f, 0f), new Vector3(0.58f, 0.02f, 0.38f), 0f, 0f);    // the soil
+                var (lv2, lt2) = sk.Of(m.leaf); var (gv2, gt2) = sk.Of(m.glow);
+                var srnd = new System.Random(6);
+                float Rn() => (float)srnd.NextDouble();
+                for (int i = 0; i < 24; i++)
+                {
+                    float x = -0.25f + (i % 6) * 0.1f, z = -0.15f + (i / 6) * 0.1f; var b0 = new Vector3(x, 0.12f, z);
+                    bool edge = Mathf.Abs(x) > 0.2f || Mathf.Abs(z) > 0.12f;
+                    var outward = new Vector3(x, 0f, z).normalized;
+                    float h = 0.14f + Rn() * 0.16f;
+                    // the stem: up, then (at the edges) out and over the side, drooping
+                    var tip = edge ? b0 + Vector3.up * h * 0.7f + outward * (0.16f + Rn() * 0.1f) + Vector3.down * 0.05f : b0 + Vector3.up * h + new Vector3(Rn() - 0.5f, 0f, Rn() - 0.5f) * 0.06f;
+                    Sweep(lv2, lt2, new[] { b0, Vector3.Lerp(b0, tip, 0.5f) + Vector3.up * 0.05f, tip }, 0.006f, false, 4);
+                    // the leaves: two to four soft blades round the tip
+                    int nl = 2 + (i % 3);
+                    for (int kk = 0; kk < nl; kk++)
+                    {
+                        float a = kk * 360f / nl + i * 37f; var d = Quaternion.Euler(0f, a, 0f) * Vector3.forward;
+                        Ellipsoid(lv2, lt2, tip + d * 0.035f + Vector3.down * 0.01f * kk, new Vector3(0.022f + Mathf.Abs(d.x) * 0.02f, 0.006f, 0.022f + Mathf.Abs(d.z) * 0.02f), 3, 6);
+                        Ellipsoid(gv2, gt2, tip + d * 0.065f, Vector3.one * 0.006f, 2, 4);              // the glowing leaf tip
+                    }
+                    if (i % 5 == 2) { var c0 = tip + Vector3.up * 0.01f; var pts = new List<Vector3>(); for (int kk = 0; kk <= 8; kk++) { float a = kk * 0.7f; float r = 0.035f * (1f - kk / 10f); pts.Add(c0 + new Vector3(Mathf.Cos(a) * r, 0.02f + kk * 0.006f, Mathf.Sin(a) * r)); } Sweep(lv2, lt2, pts, 0.004f, false, 4); }   // an unfurling frond
+                }
+                foreach (var g in sk.Save("Seedlings_Mesh", seedlings)) g.transform.localPosition = Vector3.zero;
+            }
 
             // ---------------------------------------------------------------- BIA_07: the garden, the wall with the remembered door, the seam, relay 2, the glass, the opening
             var gar = new GameObject("Garden").transform; gar.SetParent(world, false);
@@ -326,7 +368,7 @@ namespace Seven.EditorTools
             var tem = new GameObject("MemoryChamber").transform; tem.SetParent(world, false);
             var tmk = new AK();
             { var (v, t) = tmk.Of(m.paleSoft); Append(v, t, Lathe(new[] { new Vector2(16f, 0f), new Vector2(16f, 16f), new Vector2(10f, 22f), new Vector2(0f, 23f) }, 0f, 360f, 36, (a, y) => a > 255f && a < 285f && y < 9f, new Vector3(175f, 0f, 170f))); }   // the dome (the doorway south)
-            { var (v, t) = tmk.Of(m.stone); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(1.4f, 0f), new Vector2(0.7f, 0.6f), new Vector2(0.9f, 0.75f), new Vector2(0f, 0.75f) }, 0f, 360f, 20, null, new Vector3(B.OctaAt.x, 0f, B.OctaAt.z))); }
+            { var (v, t) = tmk.Of(m.stone); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.42f, 0f), new Vector2(0.24f, 0.55f), new Vector2(0.3f, 0.86f), new Vector2(0f, 0.88f) }, 0f, 360f, 20, null, new Vector3(B.OctaAt.x, 0f, B.OctaAt.z))); /* QF23 (22): a slender plinth - the old 1.4 m-wide base kept her out of arm's reach */ }
             var shards = new List<Vector3>(); var shardT = new List<int>();
             for (int i = 0; i < 46; i++) { var a = i * 137.5f; float r = 3.5f + (i % 7) * 1.4f; var p = new Vector3(B.OctaAt.x, 0f, B.OctaAt.z) + Quaternion.Euler(0f, a, 0f) * Vector3.forward * r + Vector3.up * (3f + (i % 5) * 1.8f); if (i % 11 == 4) continue; Ellipsoid(shards, shardT, p, new Vector3(0.18f, 0.9f + (i % 3) * 0.4f, 0.18f), 3, 6); var (cv, ct) = tmk.Of(m.dark); Sweep(cv, ct, new[] { p + Vector3.up * 1f, p + Vector3.up * 14f }, 0.015f, false, 3); }
             tmk.Save("Bia_Temple", tem);
@@ -416,27 +458,10 @@ namespace Seven.EditorTools
             else Log("WARNING: Ratwing's model is missing - " + RatwingFbx);
             rwRoot.transform.position = new Vector3(B.RatwingPerch.x, 0f, B.RatwingPerch.z);
 
-            // ---------------------------------------------------------------- the aboard set for Panther's cuts (far below the city)
-            var inset = new GameObject("AboardInset").transform; inset.position = new Vector3(0f, -300f, 0f);
-            var ik = new AK();
-            { var (v, t) = ik.Of(m.pale); Append(v, t, Lathe(new[] { new Vector2(0f, 0f), new Vector2(3f, 0f), new Vector2(3f, 0.05f), new Vector2(0f, 0.05f) }, 0f, 360f, 24, null, inset.position)); Append(v, t, Lathe(new[] { new Vector2(1.6f, 0f), new Vector2(1.8f, 0f), new Vector2(1.7f, 0.9f), new Vector2(1.4f, 1.0f), new Vector2(1.3f, 0.9f) }, 120f, 240f, 16, null, inset.position)); }
-            { var (gv, gt) = ik.Of(m.glowSoft); for (int i = 0; i < 5; i++) Ellipsoid(gv, gt, inset.position + Quaternion.Euler(0f, 150f + i * 15f, 0f) * Vector3.forward * 1.55f + Vector3.up * 0.98f, new Vector3(0.06f, 0.02f, 0.06f), 3, 6); }
-            { var (wv, wt) = ik.Of(m.glow); Quad(wv, wt, inset.position + new Vector3(-3f, 0.8f, 3.2f), inset.position + new Vector3(-3f, 3f, 3.2f), inset.position + new Vector3(3f, 3f, 3.2f), inset.position + new Vector3(3f, 0.8f, 3.2f)); }
-            ik.Save("Bia_AboardInset", inset);
-            PointLight("Inset_Light", inset.position + new Vector3(0f, 2.5f, -1f), 8f, 1.4f, inset);
-            Transform insetCat = null; Seven.CatPoseOverlay insetPose = null;
-            var catFbx = AssetDatabase.LoadAssetAtPath<GameObject>(CatFbx); var catCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/Cat.controller");
-            if (catFbx != null)
-            {
-                var cr = new GameObject("InsetPanther"); cr.transform.SetParent(inset, false); cr.transform.position = inset.position + Quaternion.Euler(0f, 180f, 0f) * Vector3.forward * 1.5f + Vector3.up * 1.0f;
-                var cm = (GameObject)PrefabUtility.InstantiatePrefab(catFbx); cm.transform.SetParent(cr.transform, false);
-                var can = cm.GetComponent<Animator>() ?? cm.AddComponent<Animator>(); can.runtimeAnimatorController = catCtl; can.applyRootMotion = false; can.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-                var fur = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_fur.mat"); var wh = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_whisker.mat");
-                foreach (var smr in cm.GetComponentsInChildren<SkinnedMeshRenderer>()) { smr.updateWhenOffscreen = true; smr.sharedMaterials = smr.sharedMaterials.Select(mm => mm != null && mm.name.Contains("whisker") ? wh : fur).ToArray(); }
-                cr.transform.rotation = Quaternion.LookRotation(Vector3.forward);
-                insetPose = cr.AddComponent<Seven.CatPoseOverlay>(); insetCat = cr.transform;
-            }
-            var insetCam = new GameObject("InsetCamPoint").transform; insetCam.SetParent(inset, false); insetCam.position = inset.position + new Vector3(1.1f, 1.3f, -2.2f);
+            // ---------------------------------------------------------------- QF23 (10): Panther's cuts = the REAL saucer interior
+            // (the old inset was a 3 m disc in the level's fog: an all-white void)
+            var cut = PlaceAboardCut(world, new Vector3(0f, -300f, 0f));
+            Transform insetCam = null, insetCat = null; Seven.CatPoseOverlay insetPose = null;
 
             // ---------------------------------------------------------------- the guide light, UI, dialogue, the director
             var gl0 = new List<Vector3>(); var glt = new List<int>(); Ellipsoid(gl0, glt, Vector3.zero, Vector3.one * 0.5f, 10, 14);
@@ -456,7 +481,7 @@ namespace Seven.EditorTools
             dir.PassageDoor = passDoor; dir.LockDoorA = lockA; dir.LockDoorB = lockB; dir.PanelALamp = lampA; dir.PanelBLamp = lampB; dir.Relay3Lamp = lamp3; dir.DistrictLights3 = d3;
             dir.ChamberPartitions = parts; dir.StationLamps = stationLamps.ToArray(); dir.OuterBarrier = outerB; dir.InnerBarrier = innerB; dir.BarrierLamp = barrierLamp;
             dir.ArchiveDoor = archDoor; dir.RoutingLamp = routingLamp; dir.Octa = octa; dir.RecordOcta = recordOcta; dir.CityLights = cityLights.ToArray();
-            dir.DebrisMeshes = HallDebrisMeshes(); dir.DebrisMat = m.mid;
+            dir.DebrisMeshes = BiavianDebrisMeshes(); dir.DebrisMat = m.pale;   // QF23 (18): Biavian debris, not the asteroid's gears
             dir.InsetCam = insetCam; dir.InsetCat = insetCat; dir.InsetPose = insetPose;
             dir.Vision6 = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_06_mothership.mp4");
             AddProbe(new Vector3(0f, 10f, 0f), new Vector3(50f, 24f, 50f), Vector3.zero);

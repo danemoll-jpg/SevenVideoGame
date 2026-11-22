@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF23: Dan's mothership (Round 17) review (Dan, 2026-11-21) — to do (24 items; Dan: "we are getting so close to being done")
+## Quick fix QF23: Dan's mothership (Round 17) review (Dan, 2026-11-21) — done, status below; release 0.17.2 (Dan: "we are getting so close to being done")
 Commit first. All standing rules + the repeat-item rule (why the last fix didn't hold, fix the cause, prove it in normal play
 from the player's camera, never "done" on a partial fix). Release **0.17.x** (next patch); "QF23 — status"; "For Dan to check (QF23)".
 
@@ -288,6 +288,167 @@ from the player's camera, never "done" on a partial fix). Release **0.17.x** (ne
     - Test with Dan-like saves: (a) every chapter finished in an older build, then visit each world from the star map; (b) finishing
       chapters in different orders; nothing out of place plays. List what you found playing wrongly and why (was it the missing
       "seen" flags from older saves, or a real trigger bug?).
+
+## QF23 — status (2026-11-21): done, exe-verified off-screen; release 0.17.2 published (game-1702)
+Proof runs: see "Proofs" at the end (numbers from the check runs' `capture_log.txt`).
+
+**The repeats — why the last fix didn't hold, and the real cause:**
+- **(5) 7's arms in the chair (QF12 10 / QF13 15).** Those fixes moved the palm to the *top of his back* and made the hands *let
+  go*; neither touched how the arms look while seated. The stroke slid along her *forward* axis while Panther lies *across* her
+  lap (head to her left), so it rubbed across him; the wrist kept the clip's angle (rotation weight 0); no elbow hint; and the
+  other arm had no target at all - `sit_idle` laid it into her thighs, under him. Now: the left hand strokes along his length
+  (neck → rump, slow, lift-and-return, pauses, an ear scratch every fourth stroke), palm laid flat on his back after the IK pass
+  (`SevenTableIK.PalmTo`, self-calibrating palm side, fingers a little apart), elbow hints both arms; the right hand rests on his
+  side by his hip, above her thigh. Measured every frame (`LAP ARMS (QF23 5)`).
+- **(22) The octahedron touch (QF18 20).** Round 17 *did* use the shared sequence - but nothing made sure the hand could arrive:
+  she stood 1.4 m from the octahedron, the target was ~1 m from her shoulder, and the QF13 safety net let the hand go (out of
+  reach). `VisionTouch.Into` now steps her into reach first, turns the palm to the shape, measures the fingertip gap to the
+  actual face (the octahedron's faces are at r/√3, not the 0.32 m sphere it was given) and corrects it (`vision touch (QF18 20 /
+  QF23 22)` logs before / after). Every rune-touch in every chapter goes through it (the Moon, Venus, Mars, the asteroid, the
+  mothership; Europa's is a reach from the bike, as designed).
+- **(12) Objectives from the story (QF18 9).** The rule was in CLAUDE.md, but Round 17 was built from the script's beats and the
+  script's objectives had no lines of their own; the check looked for *a line*, not for *a reason*. Fixed with short new lines
+  (below) and a checklist item in CLAUDE.md: every objective has a preceding story line or an on-screen cause.
+- **Bike hold / saucer checks.** The saucer check (QF13) proved the prefab is unchanged but never looked at what was *around*
+  it; the walls came from the director at runtime. New: `SAUCER CLEARANCE (QF23 6)` at build (every scene, fails the build) and
+  at runtime in check runs.
+
+**The single cause of the left knee (8):** every NPC walk clip (Elarim / guardian, Reptilian, Viper, Machinist, Biavians - all
+Mixamo animation downloads) was imported with `CreateFromThisModel`, so its Humanoid avatar's reference ("zero") pose was the
+clip file's **first frame** - and Mixamo walks start with the **left knee bent ~60°** and the right ~20° (measured in the `.meta`
+skeletons). Unity reads every bend relative to that reference, so on the T-posed NPC bodies the left knee lost ~60° of its bend
+all game long, the right only ~20°. 7 was never affected: her clips copy her own T-pose avatar. Fixed once in
+`ApplyMixamoHumanMap`: the reference legs, feet and spine are squared to the same canonical T-pose as the arms, for every body
+and every clip source. Build check `KNEE CHECK (QF23 8)` (table below) fails the build if left / right ranges differ > 8°.
+
+**The other two single causes found:**
+- **(6) The walls through the saucer:** every door / partition pivot is built *at* its place, but `Restore` / `Door` /
+  `DoorMove` set absolute `localPosition`s ((0, 14, 0) = "raised", zero = "shut"), which put both chamber partitions, both
+  barriers, the archive door, partition A and the passage doors at the world origin = the receiving berth. Every move is now an
+  offset from its home.
+- **(14) The garden shifting back and forth:** `MemoryEcho` pulsed its scale by 0.4 % - the echo roots sit at the world origin
+  while the parts stand ~270 m away, so the "tiny" pulse slid the whole remembered garden ~1 m back and forth.
+- **(7) The strands:** the two sheathed arc-blade hilts - both ran from her spine to her RIGHT side, curving forward into her
+  flank, posed once before the animator ran. Now an X between her shoulder blades, re-posed every frame (`PoseHilts`).
+
+**Item by item - what changed, where:**
+| # | What | Where |
+|---|---|---|
+| 1 | The mothership is **white** (pearl hull, a soft self-glow, faint latitude seams, hull lights) and stationed **in Veyra's ring plane**: ring bands with gaps all round, drifting ice in front of it and behind it, the planet huge beyond; the saucer itself is inside the rings, above the plane. ONE builder for every view (BIA_01's wide, the approach, the window / vanish view aboard - so the departure too), the star map's mothership mark now sits on the ring band | `Runtime/VeyraScene.cs` (new), `Chapter1AboardBiaveh.BuildExterior`, `SaucerOutside.ShowBiavehSpace`, `StarMap` |
+| 2 | BIA_01_06a-d (Saturn / sister ship / "aunt ship"), voiced; lore in the Log + Field Guide | spec, `biaveh_dialogue.json`, `adventure_log.json`, `field_guide.json`; `BiavehDialogue.Scene` plays lettered inserts in order |
+| 3 | Arrival talks in the pilot's chair with the vanish effect: **EUR_01** (was the window), **MAR_01** (was the window + shoulder), **BIA_01 + BIA_02** (now with the hull fade), AST_01 unchanged (already). Venus has no arrival talk aboard (VEN_C01 is on Venus). Debriefs keep QF16's staging; the next-destination choices stay at the console | staging table, `HullAway(away, tag, shot)` shared, `Chapter1AboardEuropa/Mars/Biaveh` |
+| 4 | The door: the saucer flies up and **hovers** at the closed seamless door (the seam glows) while BIA_02_06-10 play; the iris = **10 curved overlapping leaves on pivots round a drive ring** (`IrisAperture`: the open swing solved so the clear radius is 7.7 m vs the saucer's 6 m; shut coverage 100 %), snaps open in 0.45 s (whirr-click), the saucer slips through in 0.9 s, the leaves spiral shut in 0.35 s (clack); front shot, pass-through, reverse from inside | `IrisAperture.cs` (new), `Chapter1AboardBiaveh.BiavehArrival`, SFX `bia_iris_snap_open/shut` |
+| 5 | Lap arms (above) | `SevenTableIK` (hints, `PalmTo`), `Chapter1AboardVenus.Stroke` (+ `LapMeasure`) |
+| 6 | Berth: the walls were doors / partitions moved to the origin (above). The berth now holds the saucer without touching: the lit landing ring, four slim white arms curving up to stop short of the rim, the beam's landing pad. `SAUCER CLEARANCE (QF23 6)` on every scene (build fails) + at runtime; the one exemption is the Moon prison's impound clamps (they grip the captured saucer by design) | `BiavehDirector.Home/Off`, builder berth, `SaucerClearance.cs`, `FightDemoBuilderQF23Checks.cs` |
+| 7 | The strands = the sheathed hilts (above) | `ChapterSevenBlades.PoseHilts` |
+| 8 | The left knee (above) | `FightDemoBuilderVenus.ApplyMixamoHumanMap`; `KNEE CHECK (QF23 8)` |
+| 9 | No waiting on walkers: BIA_03 Nela to the resident and back to the display (cuts), BIA_06 the crossing (cut: they are mostly across, ~2 s of walking), BIA_11 Nela (cut); the asteroid's `TrackWalk` cuts any walk longer than ~2 s (AST a16b, a20b, a49c); Venus VEN_C12 (the guardian already near the display), C04 (the attendant comes in near), B04/C08 (both start close, walk together briefly); Mars MAR_08 (the walk into the temple is a cut). Kept: Venus "Follow me" (the player walks with him - in control); Mars' guard / worker / caretaker walks happen while the dialogue continues (nobody waits on them) | directors; `WALK CUT (QF23 9)` lines |
+| 10 | Panther's cutaways = the REAL saucer interior (`Assets/Saucer/SaucerInterior.prefab`, placed far below the level), lit; the display shows a live top-down map round her (her marker; Ratwing's once linked); his moods: Watch, Hunt (butt wiggle, tail lashing, chattering, pawing at the marker), Bat (a dangling cable), Composed, Twitch, Paws, Purr - at BIA_03_10, BIA_04_06-08, BIA_04_N2, BIA_05_01 / 11-13, BIA_06_06-08, BIA_08_06a / 07, BIA_08_15, BIA_09_N2, BIA_09_16. SFX `cat_chatter`, `cat_paw_tap`. Europa / Mars / the asteroid get the same set (the first-look cut) | `AboardCut.cs` (new), `FightDemoBuilderAboardCut.cs` (new), `BiavehDirector.Cutaway` |
+| 11 | The purr: three close-miked takes (`cat_purr_a/b/c`, normalised to the same loudness), on the voice bus at full volume, the music ducks under it, swells with her stroke; plays before BIA_09_16 (and through 16-17), BIA_12, EUR_17, AST_10, the Venus lap scenes, every chair scene with him in her lap, free roam on her lap | `Purr` (in `AboardCut.cs`), `MusicSystem` duck, `CatCompanion`, aboard scenes |
+| 12 | Story before every objective (new lines below); payoffs: relay lights, the bridge settling, the district lights, the routing control's three marks lighting | directors, spec |
+| 13 | (a) the bridge problem explained + shown; (b) the seedlings = an open tray of young plants (soft leaves, glowing tips, unfurling fronds) spilling over the sides; (c) brisk crossing (a cut); (d) a carrying walk (`MarsFolk.Carry`: the walk keeps stepping, two-bone IK holds the tray) + `NPC GLIDE (QF23 13d)` in every check run; (e) the seedlings resident keeps the female look and is re-voiced female (premade "Matilda": BIA_06_01 / 03); another resident is the masculine variant (`MarsFolk.MakeMasculine`) | builder, `MarsFolk`, `NpcGlideProbe.cs` (new), voices |
+| 14 | The garden echo explained as she arrives (BIA_07_N1-N2), breathes slowly in and out, the shifting gone (above); the remembered doorway is the clue, the echo fades for good when the relay reconnects | `MemoryEcho`, `BiavehDirectorFlow.Garden` |
+| 15 | (a) Nela links the ship to the inner sensors (BIA_04_N1 / N2), the first look at the console display; Europa / Mars / the asteroid get an automatic first-look cut (his first line in the level); (b) the opening set up: Panther's line, a beat on the opening, the lit control, a close shot of Ratwing glancing up and gathering his feet, then "He's looking at the upper opening" | `AboardCut.AutoFirstLook`, `RatwingRig.LookUp/Gather` |
+| 16 | Nela explains the shielding (BIA_08_N1); a shimmering threshold, the marker flickers out; the "paws" joke as written (cutaway: he looks down, lifts a paw, sets it down neatly) | `BiavehDirectorFlow.Passage` |
+| 17 | No controls box at any boss fight (Venus, Mars, the asteroid, the mothership); small first-time prompts at the moment (`BossFight.Tip`); all hints moved to the bottom of the screen | `BossFight`, `ChapterUI`, four directors |
+| 18 | Throwables: the mothership now has Biavian debris (canisters, cracked hull panels, a planter, a light-globe housing, a partition segment) placed where he forced the entrance; the asteroid keeps gears / pipes / gauge plates; Mars (Viper's plaza) uses fallen stonework (rock pieces of the damaged plaza); Venus (the Wormmaster's chamber) stones and root chunks; Europa has no throw fight | `FightDemoBuilderBiavehDebris.cs` (new) |
+| 19 | Partitions explained (BIA_09_N1 / N2); Panther's stun calls (S1-S3), partition calls (C1 / C2) + a beam of light on the station + the partition's edge glowing + the pulsing bar mark; stage three: one short arc into the compartment | `RatwingFight.StationBeam`, `BossFight.WaitingOnObjective / Moment`, `ChapterUI.PulseMark`, `BiavehDirectorTemple` |
+| 20 | Ratwing's motion (procedural on his generic rig - a Humanoid retarget would need a re-rig): the flap cycle, overlapping wing motion, glides, banking, the snap-open before a dive, the landing brace, the twitchy idle, talking / sneer; and he no longer stays upside down after clinging (the slerp from an exactly opposite rotation) | `RatwingRig.cs` |
+| 21 | Blade hits shock him (white arcs, `blade_zap`, he seizes), the swoop counter (a slash as he dives past shocks him out of the air), the "Arc blades" first-time prompt, Panther / 7 react once (BIA_09_B1 / B2); without the blades the fight is unchanged | `RatwingFight` |
+| 22 | The touch (above) | `VisionTouch` |
+| 23 | Records from one list (`RecordSet`): the chair arm (all six, the octahedron too), the journey's rings (the cuboctahedron + octahedron added) | `RecordSet.cs` (new), `PlaceRecords`, `TravelPassage.Collected` |
+| 24 | Revisits: a finished world = the passage + a "visited" card + free exploration (Europa, Mars, the asteroid, the mothership, **the Moon** - it used to restart Chapter 1); TRV_AST never replays once the asteroid is found and either chapter was played; picking a finished chapter at TRV_AST = a revisit; `SaveMigration` marks every scene of a complete chapter seen (older saves) and retires MAR_13C once the asteroid / mothership is finished; Scene Select never writes the real route flags; a new game clears the mothership save too | `ShipConsole.Revisit`, `Chapter1Aboard.RevisitWorld`, `SaveMigration.cs` (new), `WorldFlags`, `SaveGame.NewGame` |
+
+**What was found playing wrongly (24):** (1) the Moon from the star map restarted Chapter 1; (2) MAR_13C replayed for saves that had
+the old `combined` flag but not `combinedSeen` (anything before 0.15.5) - and with it TRV_AST, whose choice then reopened a
+FINISHED asteroid / mothership (its home scenes AST_10 / AST_11 / BIA_13 replayed, with the wrong branch once Cattalus was seen);
+(3) choosing the mothership while `asteroidFound` was unset replayed TRV_AST even with the mothership done; (4) Scene Select
+sessions wrote the real route flags; (5) a new game kept the mothership save. Both causes: missing flags in older saves AND real
+trigger bugs (1, 3, 4, 5). **Progression-critical beats that may still play later:** MAR_13C (only while neither the asteroid nor
+the mothership is finished), the Cattalus lead (AST_11B / BIA_13B at the console, once).
+
+**New lines (31, voiced; Dan to review - the rows are in `Docs/CHAPTER_BIAVEH.md` marked *(QF23 …)*):**
+| id | who | line |
+|---|---|---|
+| `BIA_01_06a` | 7 | I thought their mothership was in the rings of Saturn. *(Dan's)* |
+| `BIA_01_06b` | Panther | That one is. This is a sister ship. *(Dan's)* |
+| `BIA_01_06c` | 7 | A sister ship. So… the aunt ship? *(Dan's)* |
+| `BIA_01_06d` | Panther | That was a terrible joke. *(Dan's)* |
+| `BIA_04_N1` | Nela | I've linked your ship to our inner sensors. Your companion will be able to follow him. *(Dan's proposed)* |
+| `BIA_04_N2` | Panther | Delighted. *(Dan's proposed)* |
+| `BIA_05_N1` | Nela | The relay is in that cabinet at the junction. He tore its coupling loose. Seat it again and this district will hear us. |
+| `BIA_06_N1` | Nela | That relay also held our bridge in line. Without it the span drifted apart, and our people are stranded on the far side. |
+| `BIA_06_N2` | Nela | The bridge's service controls are at the chasm's edge. Bring the segments back together. |
+| `BIA_06_01`, `_03` | Resident | (re-voiced with a female voice - the text unchanged) |
+| `BIA_07_N1` | Nela | Careful. This garden is remembering itself. The damaged relay is leaking an old memory of it into the present. Some of what you see isn't really there. *(Dan's proposed)* |
+| `BIA_07_N2` | Panther | The old layout and the new one don't agree. Look for what's real. *(Dan's proposed)* |
+| `BIA_07_N3` | Nela | The second relay is behind the garden wall. Its old door was sealed when the garden was rebuilt. |
+| `BIA_07_N4` | Panther | There's a service opening above the glass. He can get round through it. The control's beside you. *(Dan's proposed)* |
+| `BIA_08_N1` | Nela | The relay beyond this door sits inside the archive's shielding. Nothing reaches through it. Not our sensors, not our thoughts. Not even yours. *(Dan's proposed)* |
+| `BIA_08_06a` | Panther | My… paws? *(Dan's)* |
+| `BIA_08_06b` | 7 | Pause. The silence. *(Dan's)* |
+| `BIA_08_07` | Panther | Ah. An expressive pause. *(Dan's change, re-voiced)* |
+| `BIA_08_N2` | 7 | An airlock. One door at a time. |
+| `BIA_08_N3` | 7 | No power. Its coupling's on the floor. |
+| `BIA_09_N1` | Nela | Our partitions can wall off sections of this shaft. Close them and he'll have less and less room to fly, and nowhere left to run. *(Dan's proposed)* |
+| `BIA_09_N2` | Panther | A smaller room. My favourite kind of hunt. *(Dan's proposed)* |
+| `BIA_09_S1` / `S2` / `S3` | Panther | He's stunned. Hit him now! *(Dan's)* / He's down. Now! / Go, while he's dazed. |
+| `BIA_09_C1` / `C2` | Panther | Close the partition! / Now the partition. The station's lit! *(Dan's)* |
+| `BIA_09_B1` / `B2` | Panther / 7 | He doesn't like those. / Good. *(Dan's)* |
+| `BIA_10_N1` | Nela | The archive opens only to all three districts together. The control at its entrance takes each relay's mark, in the order you restored them. |
+
+**Proofs (exe, muted - audio peak 0 in every run, off-screen, Below Normal; testing went well past 20 minutes - Dan allowed it for
+the proofs: ~14 builds and ~20 runs while the fixes were made to hold):**
+| Run | Result |
+|---|---|
+| Build checks, every scene | `KNEE CHECK (QF23 8)`: 0 failures in all 7 scenes (table below); `SAUCER CLEARANCE (QF23 6)`: 0 in all scenes (the Moon impound clamps exempt by design); every other build check passes |
+| Mothership autopilot `-biacp 0 -biablades -testspeed 2` (BIA_01 → BIA_13A) | soft-locks 0; `BIKE HOLD CHECK biaveh: PASS`; `LAP ARMS`: 855 frames - inside her legs 0, inside her body 0, sunk inside him 0, palm 0.7 cm off his back; the iris: 10 leaves, clear radius 7.68 m vs 6 m, shut coverage 100 %; the hull dissolves round the chair (reveal 1.00) and comes back; `BLADES SHEATHED`: the hilts' farthest point 0.27 m from the chest bone, lowest −0.13 m; the octahedron: she steps 0.69 m in, **fingertips +0.1 cm from the face**; `BOSS ratwing` 2:38, 23 stuns, melee most of the damage; `RATWING FIGHT`: Panther's stun calls 9, partition calls 2, station beam 1, arc-blade shocks 116, **swoop counter 1**; `STAGE THREE`: sealed 11.3 s after he fled; `PURR` before BIA_09_16 at −14 dBFS (the music ducked); records on the arm include the octahedron; `NPC GLIDE`: 0; `DIALOGUE FRAMING` still blocked 0; `EMPTY SHOTS` 0; `RIDE CAMERA` all 0 |
+| Player-style `-biaplay -testspeed 2` (free aboard → console → star map → the whole chapter → BIA_13A) | **`MOTHERSHIP PLAYTEST: 1/1, soft-locks 0`**, 15.5 game-min; one skip on the ride home (the bike pressed against the chamber wall south of its door - fixed after: out through the door's middle first) → re-proved: `-biacp 6 -biaplay` **1/1, soft-locks 0, skips 0**; stage three sealed in 4.3 s |
+| Idle test `-biacp 5 -bossidle` | `BOSS IDLE TEST (ratwing): knocked down after 26.4 s - PASS` |
+| Revisit `-qf23revisit` (Dan-like old save: every chapter finished, newer flags missing) | `SAVE MIGRATION`: Venus 17, Europa 19, Mars 5, asteroid 12, mothership 4 scenes marked seen, MAR_13C retired; the Moon / Europa / Mars / the asteroid / the mothership revisited: **0 lines spoken, no story scene, no scene change** each; records for asteroid-first / mothership-first / both: ok; **`QF23 REVISIT CHECK: PASS`** |
+| Europa arrival `-europa` / Mars arrival `-mars` | staging `Chair`, the hull dissolves (reveal 1.00) and comes back; `LAP ARMS` 0 / 0 / 0, palm 0.5-1.0 cm; the purr on |
+| Rune touches (other chapters) | Mars and the asteroid: fingertips **+0.1 cm** (each stepped 0.2 m in); the Moon: she steps 0.31 m in and leans 37°, and the floating dodecahedron drifts 9.4 cm to meet her fingers - **−0.6 cm** (touching); Venus: the cube sits inside its cage (she is held 1.7 m out), so it floats out between the stems to meet her fingers - **−0.7 cm** (QF18 had passed a "radius" 1.2 m outside the cube's face: no contact was ever possible there either); the Europa touch is a reach from the bike (as designed) |
+| Chapter 1 `-chapter1` | the autopilot soft-locks at the mining cut after the vision - **identical on the 0.17.1 release** (run for comparison): an old autopilot issue at that climb, not a QF23 change; player-style Chapter 1 is unchanged by QF23 |
+
+**Knee table (QF23 8)** - every NPC walk now bends both knees as the same clip does on Y Bot (`Docs/Previews/qf23/knees_*.txt`):
+| scene | NPC | walk | left knee range | right knee range | the same clip on Y Bot |
+|---|---|---|---|---|---|
+| Venus | the guardian | walk_v2 | 1-60° (59) | 3-57° (54) | (Venus has no Y Bot row - within 5°) |
+| Mars | worker / trader | reptilian walk | 26-88° (63) | 5-79° (74) | L 63 / R 74 - identical |
+| Mars | Viper | tunneler walk | 16-79° (62) | 22-73° (52) | L 62 / R 52 - identical |
+| Asteroid | the Machinist | tunneler walk | 16-79° (62) | 22-73° (52) | identical |
+| Mothership | residents | reptilian walk | 26-88° (63) | 5-79° (74) | identical |
+| Moon / Europa | Scree | 7's walk | 40-87° (48) | 35-83° (48) | - |
+Before the fix the reference poses held the left knee at 57-68° and the right at 17-23° (`KNEES in the reference … left 68 -> 0, right 17 -> 0` in the build log): the left knee lost that bend all game long.
+
+**Not covered / notes:** Ratwing is a generic rig, so the humanoid clip set (talk / point / hit / get up) can't be retargeted onto him without a re-rig - his life is procedural (item 20); the old clip "sequence" (hanging asleep) no longer plays (it kept him upside down). The arrival talks' hologram moves to the console in front of the chair for MAR_01. The purr files were normalised after generation (`cat_purr_a/b/c`): re-running `generate_sfx.py --force` for them would undo that. Europa's rune touch is a reach from the bike (as designed). The window / vanish view at Veyra is the same composition scaled to the Saucer scene's 2.5 km camera.
+
+## For Dan to check (QF23)
+1. **BIA_01 / BIA_02:** the white mothership in Veyra's rings (wide, orbs, the window and the vanish view from the chair), the new
+   Saturn / sister-ship / "aunt ship" exchange, the saucer hovering at the closed door during "That's the door?" … "Slowly sounds
+   excellent", the shutter snapping open and spiralling shut. Does the door read as a camera shutter?
+2. **Arrival talks in the chair with the hull gone:** EUR_01, MAR_01, AST_01, BIA_01 - and the debriefs still on the sofa / floor.
+3. **Panther in her lap:** her stroking hand along his back (palm flat, small pauses, an ear scratch), the other hand resting on his
+   side - in every chair scene. And the purr: loud enough? (`cat_purr_a/b/c`, voice bus).
+4. **The berth:** no slabs through the saucer; the ring + four slim arms.
+5. **Behind 7 with the blades owned:** the two hilts as a neat X on her back - no strands.
+6. **NPC walks, everywhere:** both knees bending (the guardian, the Reptilians, Viper, the Machinist, the Biavians).
+7. **No waiting on walkers:** BIA_03, BIA_06's crossing, BIA_11; the Machinist's walks; Venus C04 / C12 / C08; Mars's temple.
+8. **Panther's cutaways:** the real ship interior, his hunting moods (butt wiggle, chattering, pawing at Ratwing's marker, the
+   cable), "My… paws?". Europa / Mars / the asteroid: the first-look cut to the console display.
+9. **Every mothership objective explained first** - the new lines (list above) for review: keep, change or cut.
+10. **The seedlings tray** (plants spilling over) and her carrying walk; the female voice for her; the masculine resident.
+11. **The garden:** the echo explained, breathing slowly, no shifting; gone for good after the relay.
+12. **BIA_07's opening:** Panther points it out, the beat on the gap and the control, Ratwing glancing up and gathering his feet.
+13. **BIA_08:** the shielding explained and shown; the "paws" joke as written.
+14. **Boss fights (all four):** no controls box; the small prompts at the moment; hints at the bottom of the screen.
+15. **The Ratwing fight:** partitions explained; Panther's stun / partition calls; the beam on the station and the pulsing bar mark;
+    stage three quick; the arc blades shocking him (and the dive counter); Ratwing upright and livelier (flap, glide, bank, brace).
+16. **The octahedron touch** - her fingers on the face; and the Moon / Mars / asteroid touches.
+17. **Records:** all six on the chair arm in AST_11B / BIA_13B (and in the journey's rings).
+18. **Revisiting finished worlds from the star map:** passage + "visited" card only; nothing out of place (your own save first -
+    the migration runs on start).
+
 
 ## Quick fix QF21: Dan's Asteroid review (Dan, 2026-11-21) — done, status below; release 0.16.1
 Commit first. All standing rules + the repeat-item rule. Release **0.16.1**; "QF21 — status"; "For Dan to check (QF21)".
