@@ -1,5 +1,232 @@
 # Active Development Plan — 7: The Observer
 
+## Polish pass P1: after QF30, Code's own list (Dan, 2026-11-23: "after this is done, Code can do whatever else it needs to do. I just want a good version I can show") — to do after QF30
+**Protect the showable build first:** QF30's 1.0.0-rc2 stays published and untouched as the version Dan shows (tag it; never
+overwrite or delete it). Everything below goes into later builds (1.0.0-rc3 …) and must not break what rc2 does.
+1. The deferred items: QF29 item 3 (shrink the image-gate baseline with real fixes: the dark Moon prison frames, the near-threshold
+   shots), QF29 item 2's determinism (captures that don't flip between runs), the Europa shots past the ice passage never re-tested.
+2. Anything in the QF / Round statuses marked "open", "not covered", "known" or "weak spots" that's still true: fix or say why not.
+3. A full player-style run of the whole game, start to credits (the Moon → Venus → Mars / Europa → the asteroid / the mothership →
+   Cattalus → the finale), both race outcomes: soft-locks 0, every build check passing; a list of anything a player would notice.
+4. Performance: frame time in each chapter's heaviest scene on Dan's PC settings; fix hitches over ~50 ms.
+5. Publish 1.0.0-rc3 only if it passes everything rc2 does and more; write a short "what changed since rc2" for Dan.
+Never stop to ask; note decisions in TODO.md.
+
+## Quick fix QF30: Dan's 1.0.0-rc1 review: the ending (Dan, 2026-11-23) — to do
+Dan: "the end is mostly good but I have a few fixes."
+
+1. **FIN_01 has no scenery: the talk about the Moon plays against nothing.** With the hull vanished round the egg chair there's
+   nothing outside. They're talking about the Moon ("Looks smaller from out here"), so the Moon must be there: large in the window /
+   the open view, the saucer approaching it as in Chapter 1's opening composition reversed, with stars, Earth beyond it if Chapter 1
+   shows it, and the lunar entrance they'll fly into. The lines that refer to it are framed on it (7 looking at it; cut to the Moon).
+   Same check for every arrival talk in every chapter: the hull-away view always shows the place they're arriving at (QF16 / QF24
+   window rule), never an empty void. Add it to the image-quality gate's subject list (the destination must be visible).
+
+2. **FIN_05: the third rune's placement is hidden behind a pole.** When she places the third rune, a pole / column stands between the
+   camera and the socket, so you can't see the rune go in or the chamber respond. Fix the shot (move the camera, or the pole, or the
+   socket) so every placement shows her hand, the rune and its socket clearly, all seven. Extend the image-quality gate's subject
+   test to every rune placement (the socket and the rune must be visible and not blocked by geometry). Captures of all seven.
+
+3. **Her hand stays stuck in the touch pose after she touches the archive** (FIN_06 / FIN_11, the central surface). Repeat of the
+   standing rule "hand IK is released after use" (CLAUDE.md) and QF28 5's `hold.Release` / `ReleaseAll`: say why it didn't release
+   here. The hand stays on the surface only while the script says it does (FIN_06 through "Yes. Share it."; FIN_11_08 through the
+   memories / FIN_12; FIN_13 "7 removes her hand from the archive"), then eases back to her side over ~0.4 s, including on a skip or
+   interruption. Add a build check: after every touch / hold / placement in every chapter, no hand IK weight remains on once the
+   scene moves on (log any limb still driven 1 s after its moment ends).
+
+4. **7 and Panther clip into the base of the archive** (the central platform). Their feet / legs / bodies pass into its base. Give the
+   platform a proper collider matching its visible shape and stand them at its edge or on it (on its top surface if they step up),
+   never inside it: her marks for the touch, Panther's spot beside her, where she lays him (FIN_11), where she sits / kneels. Check
+   every pose in the chamber, both the walk-up and the staged shots. Extend the NPC-placement / intersection build check to the
+   player and Panther against every prop in staged scenes (any limb or body inside solid geometry fails), in every chapter.
+
+5. **Tunneler's drill head doesn't spin like a drill in the finale: a regression** (Dan: "We had fixed this earlier the first time we
+   saw him, not sure why it reverted back"). The Europa fix (QF, "Tunneler's drill spins — done": a continuous rotation about the
+   cone's own axis, faster on louder syllables, spinning down after he stops, never twisting back and forth; `DrillSpin` /
+   `28 full turns, top speed 1123 deg/s`) didn't carry into the finale: say why (a new rig / controller for the finale, the old
+   loudness twist re-used, the spin on a different axis?). One shared drill-head component for every appearance: Europa's screen,
+   the finale's speakers / FIN_08 / FIN_09 / the barrier: always spinning about the cone's axis (talking: faster on louder syllables;
+   fighting: full speed on the drill strike; contained: spinning down to a stop as his machinery powers down). Add a build check: in
+   every scene with Tunneler, the drill's rotation is about its own axis and never reverses.
+
+6. **Tunneler's platform is just a floating disc, and the drilling Panther mentions isn't there.**
+   - **His platform:** make it read as his mining machine, not a plain disc: a heavy industrial rig in his style (ring-segmented like
+     his body, riveted plates, a spiral-drilled rim), hover thrusters / exhaust vents underneath with dust kicking up, work lights,
+     cables and hoses running up into him, two articulated arms ending in smaller spiral drills that spin when he attacks, a control
+     yoke he grips. Silhouette must read in the fog. Same rig wherever he appears in the finale (entrance, fight, the barrier).
+   - **The drills:** FIN_07_05 ("Can you stop the drilling around this chamber?") and FIN_11_03 ("The drilling has stopped") need
+     visible drilling. Through openings / cracks in the chamber walls and along the service route: big mining drills (his spiral style)
+     boring into the old structure, rock dust, sparks, a grinding rumble that shakes debris loose; mining lights. When the Scree reach
+     the controls (FIN_07) they visibly **slow and stop** (spin down, dust settles, the rumble fades) and stay stopped afterwards. His
+     entrance (FIN_08) is a drill machine breaking through the mining access passage. Framed on screen when they're talked about.
+
+7. **7 clips through Tunneler's platform** in the fight. The rig (item 6) gets a solid collider matching its visible shape (body, arms,
+   rim) that 7 can't pass through: she's pushed out / stopped at its edge, melee hits land on its surface, a dodge or knockback can't
+   put her inside it, and the camera doesn't end up inside it either (CameraBodyGuard). Same for Panther and any thrown object.
+   Covered by item 4's intersection check (player vs every solid in staged scenes and fights).
+
+8. **When Tunneler is stunned she can't reach him to hit him** (he's up on the hovering rig). On a telekinesis stun: the rig's
+   thrusters sputter out and it **drops and settles on the floor, tilted toward her**, so he's at her height; its low deck / rim is a
+   step-up she can **jump onto** (her existing jump; a clear ledge) to land punches / kicks on him. The stun window is long enough to
+   get there and land a few blows (~4–5 s). When it ends, the thrusters fire, the rig rises and she's pushed off its edge safely
+   (never inside it, item 7). A context prompt only if needed (QF24 17). Prove it from the player's camera: stun → the rig drops →
+   she jumps on / reaches him → hits land (his reaction) → he rises.
+
+9. **Where the power needs turning on isn't obvious; highlight it.** Every power objective in the finale (FIN_03's junction: rerouting
+   the power / the lock; FIN_08's connection Tunneler damages) gets the place to go clearly marked: the control itself glows /
+   pulses softly, a beam or light column over it visible from across the area (as the mothership's partition stations, QF23 19), a
+   dead / sparking cable or conduit leading to it, and the objective marker on it; the worker / Panther says where ("The breaker by
+   the far wall"). Once used, the glow changes to the "done" state (CLAUDE.md: every objective has a clear done state). Check every
+   chapter's objectives the same way: from where the objective is given, the player can see where to go. Captures from the player's
+   camera at the moment each objective appears.
+
+10. **"Open the barrier": highlight it the same way (item 9), and explain what it's for.** The spec says "establish the containment
+    barrier before it is needed"; it isn't. Mark the barrier's control (glow, light column, marker) and the barrier itself (its frame
+    lit when it can be used), and set it up in the story. Proposed lines (Dan to confirm; use them unless he changes them):
+    - In FIN_05, as they look round the chamber (Panther looking at the barrier's frame):
+      **FIN_05_04a Panther:** "That frame across the side bay. It's an old maintenance barrier."
+      **FIN_05_04b 7:** "For sealing off that end of the chamber?"
+      **FIN_05_04c Panther:** "And whatever's in it."
+    - When the third objective comes up in FIN_08:
+      **FIN_08_P1 Scree Worker** (over the network): "The old maintenance barrier! Open it and get him inside. We can lock it from here."
+    Show the barrier when it's mentioned. Voice them with the existing voices.
+
+11. **The chamber's controls block the view, she clips through them, and they look plain.** (The control stations in the chamber /
+    fight area: the connection Tunneler damages, the barrier control, any console round the archive.)
+    - **View:** the fight / follow camera never sits behind a control so it fills the frame: pull it aside, fade a control that comes
+      between camera and 7 (as with other occluders), and place the controls round the room's edge, not in the open floor where the
+      fight happens.
+    - **Clipping:** solid colliders matching their shapes (item 4's intersection check covers them).
+    - **Look:** redesign them as ancient lunar archive controls in the chamber's style (the dodecahedron's era): a carved stone pedestal
+      rising into a slanted face with an inset geometric panel (the rune shapes as engraved glyphs), a ring of light-lines that run
+      along grooves into the floor conduits, a central palm-plate / crystal node that lights when active; damaged states (cracked,
+      sparking, the light-lines dead) and restored states (lines lit and flowing). Mining-era add-ons Tunneler bolted on (cables,
+      a crude metal housing) where it helps the story. Readable silhouettes in the fog; before / after captures.
+
+12. **Panther's sacrifice (FIN_09) is missed: she's in no danger, and his leap doesn't read.** Restage it as Dan imagined:
+    1. **The danger is real and clear.** As she turns back toward the platform after restoring the connection, Tunneler's rig
+       roars up behind her and he drives his **drill** (head or the rig's drill arm) straight at her back, close and fast: a low
+       angle over her shoulder showing the spinning drill a few metres from her, then her, unaware. The player sees she'll be hit.
+    2. **"Seven!"** (FIN_09_01): cut to Panther at the chamber edge, already moving.
+    3. **He grows mid-stride into his large combat form** (big and powerful, clearly larger than the small cat; still not the
+       meadow's giant) and **leaps between them**, a wide side-on shot with all three in frame: 7 turning, Panther in the air between
+       her and the drill, Tunneler behind it.
+    4. **Cut on the moment the drill meets him** (no impact shown): a hard cut / a flash to black for a beat, the drill's sound
+       stopping, **the music cut dead**.
+    5. **Back on him already falling:** he hits the floor, slides, and collapses, **still in his large form** (he shrinks only as he
+       dies, item 15). 7's reaction: she starts toward him (as the script).
+    6. Then FIN_09_02 "The barrier." and the trap as written.
+    Keep it non-graphic (no wound, no blood); the weight comes from the clarity of what he does. Captures of each beat.
+
+13. **FIN_10: her hands are in weird, stuck positions while she holds and talks to Panther.** (Same family as item 3 and QF28 5.)
+    She kneels / sits with him gathered in her lap: one arm cradling under his body, the other hand on his head / side, stroking
+    (FIN_10_04 he presses his head into her hand; "Her hand continues stroking him once before becoming still"). Hands rest **on** his
+    fur (the QF28 hold solver against his body's real surface: palms flat on him, fingers relaxed and curled, never inside him,
+    never bent back or twisted), moving gently with the stroke and his breathing; when she carries him to the platform (FIN_11), a
+    proper two-armed carry; when she lays him down, her hand stays near him, relaxed. Released when each moment ends (item 3's check).
+    Close-up captures of every pose in FIN_10 / FIN_11 / FIN_13 (her last touch of his head).
+
+14. **FIN_10: his death isn't clear, and then she glides backwards on her knees and stands up facing the wrong way.**
+    - **Make the death clear** (still gentle, no graphic detail): his breathing visibly slows (the chest / flank rise and fall, a soft
+      breath sound each time, slower and shallower), one last breath, then **stillness**: the breathing motion stops, his head settles
+      fully into her hand, his eyes close (or his ears / whiskers go slack), his tail goes limp; the purr that ran under the scene
+      stops. A beat of total silence. She waits; "None comes." Her hand strokes him once, then stops (the script). Hold.
+    - **No gliding:** never move her while she kneels unless an animation moves her (CLAUDE.md "no gliding" applies to 7 too); no
+      root drift during the kneel / hold. Find what slid her (a root-motion clip, a position blend, the camera rig moving her?).
+    - **Standing up:** she rises **facing him** (the way she was facing), keeping her eyes on him, then turns to the archive only when
+      the scene turns her (FIN_11, carrying him to the platform). Any change of facing is animated (a turn), never a snap.
+    - Add a check: no character's position or facing changes during a kneel / sit / lie pose, and no snapped turn on a pose change.
+
+15. **FIN_10–FIN_11: he shrinks as the life leaves him; "Panther, no!"; and why she carries him (he just vanishes now).**
+    - **He stays large until he dies:** she reaches him lying on his side in his large form and kneels at his head, gathering his head
+      into her lap / against her (not the small cat in her lap yet). FIN_10's lines play like this.
+    - **As the life leaves him, he shrinks:** over his last breaths (item 14) he slowly, smoothly shrinks back to his ordinary cat
+      size, ending small and still in her arms / lap (Dan: "we should do this anyway"). No pop; a gentle shrink, her arms following
+      him in.
+    - **Her line when he's gone (new, Dan's words):** **FIN_10_08b 7:** "Panther, no!" Broken, disbelieving, then **she cries a
+      little**: a few soft sobs / shaky breaths (ElevenLabs Seven voice with a crying delivery; the eleven_v3 audio tags such as
+      [crying] if available), her head bowed over him, shoulders shaking. Placed after "None comes." and before her hand's last stroke
+      goes still; then the long silence as written.
+    - **Why she carries him (FIN_11):** she won't leave him behind while she finishes. Make it read: she lifts him gently in both arms
+      against her chest, **FIN_11_05a 7** (softly, to him): "You're staying with me." (proposed; Dan to confirm), carries him to the
+      platform and lays him beside the archive surface, one hand resting on him while she touches the archive with the other.
+    - **He never disappears:** he stays visible beside her through FIN_11–FIN_13: the memories, "Received", the worker's "We'll look
+      after him", her last touch of his head before the light. Find why he vanished (a despawn when the carry ended?) and fix it.
+
+16. **After she lays Panther down there's no direction, and Tunneler just stands there, not visibly trapped.**
+    - **Tunneler is visibly contained from FIN_09 on:** inside the side bay, the barrier's field / bars clearly closed in front of him
+      (lit, humming), the worker's lock engaged (a lock light), his rig's thrusters dead, the drills spun down (item 5), the rig
+      sagged on the floor; he presses against the barrier once, then gives up. Never standing loose in the room.
+    - **The Scree take him (Dan: "prove he is no longer a threat"; 7 never kills, so the Scree restrain him, not hurt him):** after
+      FIN_11_05 "We're coming down", the Scree workers arrive (the existing model, several, the worker leading). While 7 is with
+      Panther / at the archive, they go to the barrier, pull the power cables out of his rig, clamp heavy mining restraints / chains
+      on him and the rig, and take the controls from it: Tunneler slumps, beaten. Seen in the background of her shots and in one
+      short cut. **His last quip and their answer** (Dan wants one; proposed, Dan to confirm), in one short cut
+      after she has laid Panther down and before the Archive's prompt (never during FIN_10's silence), Tunneler chained, the Scree round
+      him: **FIN_11_05b Tunneler** (sneering, still sure of himself): "Fine. Keep your history. You'll still need someone to run the
+      drills." · **FIN_11_05c Second Scree Voice** (ScreeWorker2, calm, not gloating): "We always have." His drill head spins down to
+      a stop on it (item 5). Then in FIN_13 he's led away / sits chained while the worker comes to the doorway.
+    - **What to do next:** once Panther is laid down, the archive surface pulses (item 9's highlight: glow, light column, marker),
+      and **the Archive prompts her** (Dan): FIN_11_06 "Continue?" plays a few seconds after she has laid him down and straightened up
+      (never during FIN_10's silence), wherever she is; if she lingers, it asks once more, softly, after ~20 s, then waits. The
+      objective reads "Return to the archive" (from the story; no timer). Her answer "Yes." / "All of it." plays when she touches it.
+
+17. **Never leave the player without a next step** (Dan: "there was no indicator whatsoever what to do before"). Standing rule for
+    every chapter: whenever control returns after a scene, there's an active objective from the story, its place is highlighted
+    (item 9) and, where natural, someone says it, unless the moment is deliberately free (free exploration aboard / in a city, or
+    the scripted silence of FIN_10, which still ends in a prompt). Add a build check: every control return in every chapter has an
+    objective or is on the "free" list; log any stretch over ~15 s with control and nothing to do. Add the rule to CLAUDE.md.
+
+18. **FIN_11's memory of their meal shows 7 not seated in her chair** (a bad capture of the galley scene: she's floating / standing
+    beside the chair while they eat). Replace it with a correct shot: re-capture the Chapter 1 galley meal from the current build
+    with her properly seated at the table, Panther with his bowl, both in frame, a warm composition. Check **every** still / clip
+    in the FIN_11 memories (and the FIN_06 / FIN_12 montages) for the same kind of fault (clipping, floating, wrong poses, stuck
+    hands, empty frames, characters cut off), re-capture any that fail, and run them all through the image-quality gate. List each
+    memory image with what it shows in the status.
+
+19. **Every world in the "Received" montage (FIN_12) gets a voice** (Dan: "we have voices for all of them, so let's get them all").
+    Mars, Europa and Cattalus are silent now. Proposed lines (Dan to confirm; use them unless he changes them), each over its place:
+    - **Mars** (the shared crossing / temple, both kingdoms' people together): **FIN_12_03a Caretaker:** "Both kingdoms can read it
+      now. The same record, on both sides of the crossing."
+    - **Europa** (the temple, the Cetaceans gathering; the familiar call underneath): **FIN_12_03b Keeper** (telepathic): "We hear it.
+      We will carry it in our songs."
+    - **Cattalus** (the Cat-a-tron shows the old meadow; the cats fall still): **FIN_12_06a Juniper** (quiet, watching the screen,
+      seeing Panther in the record): "Oh… Panther. You went all the way." No gag (the script).
+    Keep the existing ones (the Scree, the Venus Guardian, the Machinist, Nela). Each world's line plays over its own shot, the
+    speaker or their people in frame; one line at a time.
+
+20. **FIN_13: after "You can rest now." she steps into the light and begins to ascend** (Dan), like the saucer's beam lifts her.
+    Order: the pale light falls across the chamber (plain, calm, no symbols / figure) → "You can rest now." (RestVoice) → she looks
+    down at Panther and touches his head (her last touch, item 13) → she rises and **walks forward into the column of light** (a few
+    deliberate steps, facing it) → standing in it, she **lifts gently off the floor and rises**, the same slow, weightless way the
+    saucer's underside beam raises her (her familiar beam pose / float: arms relaxed, hair and clothes drifting up), the light
+    brightening round her → her silhouette softens into it → fade through white → FIN_14. Wide enough to see the chamber below her,
+    Panther resting by the archive, the Scree in the doorway looking up. Calm and warm, not a technical effect.
+
+21. **FIN_14: start the colour meadow at ~0:17 of the master, so the giant Panther simply walks on** (Dan: clip the start, no small
+    cat). Checked frame by frame in `cattalus_meadow_color.mov`: the small cat runs off to the right by ~0:16.5; **at 0:17.0 she stands
+    alone, back to the camera, looking across the field** (the arrival shot); **the giant Panther's head enters from the right at
+    ~0:18** and he walks on beside her. So: fade in from white at **0:17.0** (no small cat in any frame), "Panther?" (FIN_14_01) as
+    he appears, "Hello." (FIN_14_02) as he reaches her, then the rest of the master as planned to the resting image. Check the first
+    and last frames used: no small cat, no hard jump.
+
+22. **The Scree's buzzing can still be heard in the heaven scene.** Every world sound must stop before FIN_14: the Scree noise / chatter,
+    the chamber hum, the archive, machinery, drills, Tunneler, ambience loops, any 3D sound left playing. On the fade through white,
+    fade out **every** audio source except the music cue and the ending's own sounds, and stop / pause the lunar scene's sources (or
+    unload them). FIN_14 has only: the meadow music, wind and grass, the two lines, Panther's purr, then the credits theme. Add a
+    check: during FIN_14 and the credits, list every playing AudioSource; anything not on the ending's list fails. Same check at every
+    chapter change / scene cut (nothing from the previous place carries over).
+
+23. **The credits keep flashing back to 7 on the Moon between Kyle's art.** The credits must be a clean, self-contained sequence: Kyle's
+    pieces (and the cards) on black, cross-fading only into each other, never revealing the game scene behind (the lunar chamber,
+    7, any camera). Turn the game cameras / scene off (or cover them with an opaque layer) for the whole credits; check every frame
+    of the credits run (a capture every second: no frame may show the game world).
+24. **Move Kyle's quote credit to after the quote (Dan: it's a surprise for Kyle).** Remove "Closing lines from *7* (2014) by Kyle G
+    Anderson" from the scrolling credits. After 7's sign-off ("...signing out!"), hold a beat, then show it alone, centred, softly:
+    **"Closing lines from *7* (2014) by Kyle G Anderson"**, held ~4 s, then the slow fade to black and the menu.
+    **Keep it a surprise:** don't mention the quote, the sign-off or Kyle's book anywhere Kyle might see before playing: the release
+    notes / GitHub release text, README, the launcher, the Log / Field Guide, loading tips. Call it "the ending" in public notes.
+
 ## Quick fix QF28: Dan's 0.18.2 review: the Cattalus race (Dan, 2026-11-22) — items 1-5 done, status below; release 0.18.3 NOT published (the image gate fails - see the status)
 Dan: "mostly good. My main complaints are around the race itself."
 

@@ -725,9 +725,8 @@ Fade to credits with the quiet purr and meadow ambience continuing briefly.
    shared crossing, Europa's temple with the Keeper's call, the Machinist at the archive, the mothership's memory structures (Nela),
    the Cat-a-tron showing `vision_07`'s meadow while the cats in the square fall still. Back in the chamber: "Record complete."
 13. **FIN_13:** the pale light (plain, no symbols, no figure); her silhouette softens into it; **fade through white**.
-14. **FIN_14 — full colour:** Dan's colour master `Art/Video/color/cattalus_meadow_color.mov`. The arrival shot "from behind" is
-   taken from the master itself (around 0:12–0:14 she stands with her back to the camera looking across the field), then the giant
-   Panther's arrival (from ~0:14), FIN_14_01 "Panther?" / FIN_14_02 "Hello." over it, the touch, the run, the tree, the resting
+14. **FIN_14 — full colour:** Dan's colour master `Art/Video/color/cattalus_meadow_color.mov`. The master starts at **0:17.0** (Dan,
+   QF30 21): she stands alone, back to the camera (the arrival shot); the giant Panther walks on from the right at ~0:18; no small cat, FIN_14_01 "Panther?" / FIN_14_02 "Hello." over it, the touch, the run, the tree, the resting
    image held. The Cattalus lines are not replayed. No new video needed. This is the only colour in the game.
 15. **Credits:** after the held image, the purr and meadow ambience continue briefly, then the credits roll over **Kyle's original
    art** (`Art/Reference/kyle_*.jpg`, slow fades / gentle drift) to `credits_theme.mp3` (3:00; pace the credits to it). No scene
