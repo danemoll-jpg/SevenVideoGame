@@ -27,7 +27,20 @@ Dan: "mostly good. My main complaints are around the race itself."
    holds a rune or object (the dodecahedron, the cube, the others) the same way. Close-up captures from the player's camera of each
    hold, plus a build check: no finger bone inside the held object, wrist angles within natural limits.
 
-## Round 19: "The Moon Finale", the last chapter (Dan, 2026-11-22) — to do after QF28
+## Quick fix QF29: get 0.18.3 out, and the Europa passage (Dan, 2026-11-23) — items 1-2 done, status below; 3 deferred; ships in 1.0.0-rc1
+QF28 is done but 0.18.3 wasn't published: the release image gate fails on 58 baseline shots, many of which flip between runs. Dan
+can't test the race fixes until there's a release.
+1. **Europa's ice passage first:** the check run's autopilot jams at the start of the dive (and 0.18.2's run soft-locked there).
+   Find out whether a **player** can get stuck there (play it as a player: every approach angle and speed), fix the cause, and say
+   what it was. A soft-lock in a finished chapter outranks everything else.
+2. **The release gate's policy:** the gate must block **new or worse** failures, not the known baseline. A release is allowed when
+   every failing shot is already in `Tools/image_gate_baseline.json` and none got worse; the release notes list the baseline count.
+   Never loosen the thresholds or exempt shots by name to pass (as you rightly refused). Make the flipping captures deterministic
+   (fixed capture time / camera settle, the same frame every run) so a shot either passes or fails, not both.
+3. **DEFERRED (Dan, 2026-11-23: the ending comes first):** shrinking the baseline further waits until after Round 19.
+4. **Don't publish a separate QF29 release** (Dan, 2026-11-23): go straight on to Round 19 and publish once, with the finale.
+
+## Round 19: "The Moon Finale", the last chapter (Dan, 2026-11-22) — items 1-16 done, status below; 1.0.0-rc1 built, NOT published (the release image gate - see the status)
 Commit a checkpoint first. Runs overnight. **Never stop to ask**: make the reasonable call and list it under "Round 19 — decisions
 made". **Every standing rule in `CLAUDE.md` applies from the first line**, including the image-quality gate (QF26) and the hand rules
 (QF28). Release **1.0.0-rc1** (the whole game, start to credits); "Round 19 — status"; "For Dan to check (Round 19)".
@@ -76,12 +89,186 @@ spells the villain "Tunnler": he is **Tunneler** (the existing model and voice).
       FIN_15_04 "...in love..." · FIN_15_05 "this is 7..." · FIN_15_06 "...signing out!"
     - Voice: `Seven`, warm and close, a little smile in it, speaking to the player; the first lines tender, the last one bright and
       playful. Keep Kyle's punctuation / capitalisation exactly in the text. Then a slow fade to black, a beat of silence, the menu.
-    - Credit line in the credits: **"Closing lines from *7* (2014) by Kyle"** (Kyle's book; use his full name as it appears elsewhere
-      in the credits).
+    - Credit line in the credits: **"Closing lines from *7* (2014) by Kyle G Anderson"**.
+16. **The credits' content (Dan, 2026-11-23).** Kyle and Dan worked on the storyline and ideas together; Kyle was also the consultant
+    for the alien races and for the characters' backgrounds. Proposed order (cards, over Kyle's art):
+    - **7: The Observer**
+    - Created by **Dan Moll** and **Kyle G Anderson**
+    - Story and ideas: **Dan Moll & Kyle G Anderson**
+    - Alien races and character backgrounds: **Kyle G Anderson** (consultant)
+    - Original concept art: **Kyle G Anderson**
+    - Game design, direction and development: **Dan Moll**
+    - Music: produced by **Dan Moll** with Suno · Voices: produced by **Dan Moll** with ElevenLabs (the announcer voice from Dan's
+      *Tee'd Off*) · Models: Tripo, rigged with Mixamo · Visions and the meadow: produced by **Dan Moll** with Grok Imagine
+    - Character art prepared for 3D and script finalising: with the help of ChatGPT
+    - **Music** card(s): the song titles (Dan: list them, without the "Seven - " prefix his files carry), in play order:
+      The Observer · Beneath the Mine · Free-Range · The First Garden · Venus Underground · Europa · Europa Base ·
+      Mars · Viper · Asteroid City · Machinist · Biaveh Mothership · Ratwing · Patches of Sun · The Grand Circuit · The Leaning Tree ·
+      Beneath the Moon City · I Was There · Tunneler on the Moon · Seven Ages · Closing Credits.
+      Music by Dan Moll with Suno. Use these titles (Dan's actual Suno names), not the working titles in MUSIC.md.
+    - Built with Unity and Blender · Developed with Claude (Anthropic)
+    - "Closing lines from *7* (2014) by Kyle G Anderson"
+    - Thank you for playing. (Then 7's sign-off, item 15.)
+    Dan can change any of it; keep the card text in one data file (`Credits.txt` / a ScriptableObject) so edits don't need code.
 
 **Proof:** a player-style run from the star map through the credits, 0 soft-locks; a retry of the confrontation; every build check
 passing, including the image-quality gate, the hand checks and the voice overlap / duplicate checks; captures of every scene from the
 player's camera (the FIN_14 captures in colour). Describe what the key shots show in the status.
+
+## Round 19 — status (2026-11-23): items 1-16 built and proven; 1.0.0-rc1 (build 1900, with QF28 + QF29) built but NOT published
+The Moon finale is playable from the star map to the credits and back to the menu. Scene `Finale`
+(`Editor/FightDemoBuilderFinale.cs`), flow `FinaleDirector.cs` + `FinaleDirectorFlow.cs` (FIN_02-07) + `FinaleDirectorEnd.cs`
+(FIN_08-15, the credits), the fight `TunnelerFight.cs` (+ `boss_tuning.json` "tunneler"), saves `FinaleState.cs` (`seven_finale`,
+select `seven_finale_select`), FIN_01 aboard `Chapter1AboardFinale.cs`, numbers `FinaleLayout.cs`, lines
+`Tools/Voice/make_finale_lines.py` -> `Resources/Finale/finale_dialogue.json` + `Docs/FINALE-LINES.md` (115 lines, all voiced:
+`generate_finale_voices.py` -> `Resources/FinaleVoice/`), the credits text `Resources/Finale/credits.txt`.
+
+**Proof**
+- **Player-style run** (`-finplay -testspeed 2`, `FinalePlaytest.cs`: a virtual pad on the real input actions, reading only what a player
+  sees): free aboard at Cattalus -> the console -> the star map (through the gateway home, the Moon, A, A) -> FIN_01 (the stick guides the
+  saucer to the berth) -> the whole chapter -> the credits -> the main menu. `FINALE PLAYTEST: 1/1, soft-locks 0, skips taken 0`, 14.3
+  game-minutes; the runes placed in 40 s (under a minute); the confrontation 2:43 (played by the boss pilot as a player), all three
+  objectives; the save marked finished.
+- **The retry** (`-fincp 5 -finretry`): she goes down once mid-fight; `RETRY (QF20): his energy 60.0% before -> 60.0% after (identical)`,
+  the objectives done stay done; she then opens the barrier and restores the conduit; melee 89 % of the damage.
+- **Checks, every run:** VOICE OVERLAP 0, VOICE REPEAT 0 (the script's own "Yes." / "Thank you." repeats are marked), DIALOGUE FRAMING
+  still blocked 0, EMPTY SHOTS 0, TK AUDIT 0 completed without moving, POST FX 0, MUSIC no undeclared silence, HOLD (QF28 5) deepest
+  finger point -3.0 mm, wrist <= 59 deg - OK. Build checks on `Finale`: SAUCER CHECK unchanged prefab, COPLANAR 0 left, HOLES 0,
+  NPC PLACEMENT 0, KNEE 0, HOLD CORRIDOR 0, SAUCER CLEARANCE 0, NORMALS 0, RIDE POSE OK.
+- **Image gate - the finale passes:** in the release gate runs the finale (FIN_01 aboard: 29 shots; the chapter to the credits: 123)
+  passes every shot on most builds, and the final player-style run passed all 136 of its shots. Its colour FIN_14 captures are in colour.
+- **The release is NOT published.** `IMAGE GATE RELEASE (QF26 2)` still ends FAIL: on each build one to three borderline shots that are
+  not in the baseline fail (edges 5.8-5.95 % or range 0.28-0.35 in heavy haze) - which ones changes from build to build and even from
+  run to run: on build 37 Mars `m07_low_angle_reveal_viper_lit_from_beneath`, the Moon's `t_hang_keys` and the finale's
+  `f36b_the_barrier_control_opened`; on build 36 two Europa beam frames and `f36`; before that the saucer demo's reveal and two Moon fight
+  frames (all fixed in turn: real reframings, work lamps over the terrace fight and the bay worker, the Moon grade +0.22, the Europa
+  passage). **Why it still flips:** QF29's fixed time step does not make the runs deterministic yet - two runs of the same build differ
+  from the first seconds (proved: two scratch runs of build 38, 108 differing shot lines). Two real-time waits were found
+  and frame-counted (the fight's hit-stop, the capture burst spacing), but many systems still time things with `Time.unscaledTime` /
+  real time (teaching prompts, control-back captures, gallery / async loads). Nothing was loosened, nothing was added to the baseline.
+  **Next:** make every check-run clock game-time (unscaled timers -> `Time.time` when `DemoBoot.Deterministic`), re-run the gate twice to
+  prove identical results, then fix whatever still fails for real and publish 1.0.0-rc1.
+
+**Key shots (I looked at them):**
+- FIN_01: the title card over black; 7 in the egg chair with Panther in her lap, the hull dissolving round them; then the saucer from
+  high behind, gliding down into the Moon's bay to the white guide ring.
+- FIN_02: over her shoulder at the berth's edge, the city's lit towers rising into the haze beyond the district; the low two-shot of her
+  and Panther looking out; a mining tower cutting up out of the city; the saucer hovering over the service berth.
+- FIN_03: a Scree worker at the opened junction box; the terminal's restricted markings (bars and a crossed seal); 7 at the power panel
+  (the lever, the lamp lit); the rusted lock rising in her telekinesis and the barred gate going up; the narrow crossing with the city
+  below on both sides.
+- FIN_04: the ancient door framed straight on as in vision_01 (the stepped portal, the band of marks, the concentric rings); her hand on
+  it; the leaves parting with light from the chamber behind.
+- FIN_05: the round chamber, seven pedestals round the lit platform; each rune in her hands, then set in its cup, the socket ring lit and
+  that world's vision still glowing on the wall behind it; the seven walls lit together.
+- FIN_06: the vision fragments full screen (the door, the first garden, the cetaceans, the bridge, the workshop and the bird, the
+  mothership, the meadow and the cat), cutting back to her hand on the archive; Panther against her leg.
+- FIN_07: light running out through the floor conduits; a city terminal lit with a worker at it; the drill towers' bits slowing.
+- FIN_08: Tunneler bursting in through the mining access in sparks and dust; the low angle, lit from beneath by his craft; his close-ups;
+  the fight (drill strikes, charges with their white lanes, debris slams; stuns, punches and kicks); the barrier control lit; the
+  conduit cut.
+- FIN_09: Panther, grown to his combat size, leaping between them; the cut to her face at the impact (the music gone); him small and
+  still on the floor; Tunneler driven into the alcove and the field closing; his craft's lights going out.
+- FIN_10: 7 kneeling with Panther against her knees, her hands on his fur (no HUD, no music); the insert of his head in her hand.
+- FIN_11: the archive pulsing in the dark; she carries him to the platform and lays him beside it; the memories: the visions, then
+  their own moments (the first meeting, his bowl, his head in her lap, the race, the meadow).
+- FIN_12: the Scree at their own stations; the received montage (Venus, Mars, Europa's cetaceans, the Machinist, the mothership's
+  memory echo, the Cat-a-tron turning to the old meadow); "Record complete." over the full chamber.
+- FIN_13: the worker stopped at the doorway; the pale column of light through the oculus; her looking up; her silhouette softening into
+  it; white.
+- FIN_14: **colour**: she stands in the sunlit meadow under the leaning tree, small Panther at her feet; the giant black Panther walks in;
+  her hand on his face; running together; resting her head against him under the tree, held.
+- Credits: Kyle's pieces in turn, the credits rolling on the right; then Kyle's thank-you page whole, 7's six lines on a soft dark panel;
+  black; the menu ("the journey is complete").
+
+**Weak spots (honest):** the FIN_01 exterior is the baked Moon level seen from high above (blocky host pieces in the foreground of the
+first approach shot); the carry in FIN_11 shows her more than him; Panther's lap pose is "against her knees" (she kneels), not curled on
+her thighs; the FIN_12 montage uses stills from earlier check runs for six worlds (no live sets), with the Europa part taken from vision
+3's cetaceans; the inpainted first-meeting memory has a soft patch where its subtitle was.
+
+### Round 19 — decisions made (Code; Dan can change any of them)
+- **Where it is built:** a new scene `Finale` (`Editor/FightDemoBuilderFinale.cs`) round Chapter 1's city (the same `BuildCity`, the
+  Moon atmosphere and grade): the service berth (the saucer hovers over it), the walkway, the junction, the narrow crossing, the landing
+  and the ancient door, the round archive chamber. FIN_01 plays aboard (`Chapter1AboardFinale.cs`), as every arrival does.
+- **FIN_02's reveal** is the over-the-shoulder shot of Chapter 1's 6b, aimed up past the berth's walls at the city's lit towers; the
+  mining is four drill towers rising out of the city below the district (their bits stop turning in FIN_07).
+- **FIN_03's three steps** (the spec's "reroute power, release a mechanical lock, cross a short maintenance section") = X at the power
+  panel (the lever, the lamp), telekinesis lifts the rusted lock off the gate (it rises, is set down, the gate goes up), the narrow
+  crossing. Each has a line first (new: FIN_03_P1-P4) and a visible result.
+- **The seven runes** are hand-sized copies of the seven shapes (her records), each taken in both hands and set into its socket; the
+  socket lights and a still from that world's vision appears on the wall behind it, with a sound from that world.
+- **FIN_05_P1** "One for every place we've been." (Panther) before the placement, so the objective has a reason.
+- **The confrontation's order:** keep him off the platform (her blows drive his bar to the first mark) -> open the old maintenance
+  barrier (X at its control; the elder says it still has power, FIN_08_P5) -> he cuts the west conduit (FIN_08_P4) -> restore it (X);
+  "Connection restored." (FIN_08_P6) and FIN_09 begins. The barrier comes before the conduit so it is established before it is needed
+  (the spec's pacing note) and restoring the connection still triggers the leap (FIN_09's trigger). Panther's calls: "The drill - move!",
+  "He's going for the platform!", and once "Over here, you lump of scrap!" (he draws Tunneler off the conduit for 4.5 s).
+- **The final action** is telekinesis: Tunneler, knocked back by the impact, is driven into the barrier's alcove (he visibly moves),
+  the field closes, the worker holds the lock. No banner.
+- **FIN_10:** 7 kneels (a new kneeling pose in `SevenRestPose`, sitting back on her heels) with Panther lying against her knees, her
+  hands on his fur; his breathing is a slow rise and fall that stops. No HUD, no music (a declared silence).
+- **FIN_12** uses the game's own views of each place (stills from earlier check runs, HUD cropped) and the Europa vision's cetaceans
+  for Europa (no capture of its temple existed); the Cat-a-tron still has vision 7's meadow on its screen. The lunar city part is live.
+- **FIN_13's voice** is unnamed on screen (no speaker label).
+- **The confrontation's pilot rule (QF29):** when his bar waits at a mark for an objective, the boss pilot (check runs and player-style
+  runs) goes to the objective instead of stunning him again - the finale's gate run had stalled on 1400 stuns. Every boss uses it.
+- **Brighter Moon (gate):** the Moon's grade got +0.22 post-exposure and the finale chamber a higher ambient (0.32), lighter stone and
+  stronger lamps - the chamber shots read as one dark grey before; the terrace fight and the bay worker in Chapter 1 got work lamps.
+- **FIN_14** plays the colour game copy from 0:12 to the end; "Panther?" at 0:19.8, "Hello." at 0:22.8; the final frame is held, then
+  the fade to the credits with the purr and the breeze.
+- **The credits** follow Dan's item 16 card order and names exactly (Kyle G Anderson without the stop, as in item 16), the song titles in
+  play order, "Closing lines from *7* (2014) by Kyle G Anderson", "Thank you for playing."; the card text is one data file,
+  `Resources/Finale/credits.txt` (Unity rich text: edit it without code). The text rolls on the right over a dimmed band while Kyle's 14
+  pieces fade in turn (gentle drift); holding Start for 2 s skips to the sign-off.
+- **The sign-off** is on a soft dark panel low on the screen over Kyle's thank-you page shown whole (it is white: white text alone was
+  unreadable).
+- **Finished mark:** the main menu's chapter entry reads "The Moon: Somewhere to Come Back To - the journey is complete" once the
+  credits have played; the Log's last entry unlocks.
+
+## For Dan to check (Round 19)
+1. **Play the finale from the star map** after Cattalus (Continue or the star map's Moon): the title card, the egg chair, guiding the
+   saucer in, the walk down with Panther. Scene Select also has its eight sections.
+2. **FIN_03's junction** (switch the power, lift the rusted lock with telekinesis, the narrow crossing) - does each step read from the
+   worker's lines? Is the crossing narrow enough to feel like one, wide enough to walk?
+3. **The rune placement** (one press per socket; her hands on each piece; the world on the wall behind). Under a minute in the run.
+4. **The confrontation** - about 2-3 minutes: is it short enough that FIN_10 stays the climax? The barrier comes before the conduit
+   (decision below). Panther's "Over here, you lump of scrap!" draws him off once.
+5. **FIN_09 / FIN_10** - the leap, the cut at the impact, the silence; 7 kneeling with Panther against her knees (a new kneeling pose,
+   not a lap pose). The emotional beat is the one to judge.
+6. **FIN_14 in colour** and **the credits**: the card text is in `Unity/Assets/Resources/Finale/credits.txt` (your item 16 order and
+   names; edit it freely, no code). Hold Start 2 s to skip to 7's sign-off. Check the voice-cast lines and that every name is right.
+7. **The menu after the end:** "The Moon: Somewhere to Come Back To - the journey is complete"; the Log's last entries.
+8. **Europa's ice passage (QF29 1):** ride over the shelf into the hole from any side - it should never catch on the passage's mouth now.
+9. **The race fixes (QF28)** ship with 1.0.0-rc1 once it is published (the first release since 0.18.2).
+
+## QF29 — status (2026-11-23): item 1 done; item 2's policy done, its determinism NOT yet (see Round 19's status); item 3 deferred; no separate release
+1. **Europa's ice passage - yes, a player could get stuck, and it is fixed.** A new player-style test, `-europadivetest`
+   (`EuropaDiveTest.cs`), stops the story at "Dive through the passage" and makes 60 attempts from every side of the passage's mouth
+   (near / far, straight on, from the side, from behind), with five habits (follows the white light; dives at once; stays level until
+   over the hole; half throttle; brakes and restarts) at the normal frame rate and at 20 and 15 fps, driving the bike with pad inputs.
+   **Before: 34 of 48 attempts that started on the shelf wedged at the mouth** (z 2.2-2.8, y 0.4) and never got in - every habit, every
+   frame rate. **After: 60 of 60 through, stuck 0, slowest 12.9 s.**
+   **The cause:** the ice-passage tube (`IcePassage`, a 7.2 m radius tube mesh) began at (0, 3, 9) - *above* the ice - so its wall stood
+   across the shelf at z ~2. Since QF15 the swimming bike collides with every mesh, both faces; a bike coming over the ice ran into the
+   tube's outside wall (only riders already inside the hole got through). The second guide point was also wrong: (0, -2, 22) lay inside
+   the ice field's 2 m slab just past its hole, so the light led the bike into the slab's lip. QF28's sub-steps (exact moves instead of
+   one long step that could jump the lip) made the check run's autopilot hit it every time; 0.18.2's soft-lock there was the same wall.
+   **Fixes:** the tube now starts in the hole below the surface, tilted down the dive (the shelf side is open); the dive route drops
+   through the hole and runs under the slab with the bike's body clear of it (`EuropaLayout.Dive`, now 7 points); and the swimming
+   bike's "stuck" speed cut is per second of game time (QF28's sub-steps applied it once per sub-step, so a slow frame cut 0.36 or less
+   of her speed every frame she grazed a wall; `-noqf29fix` = the old cut). The check run's log line now says where the bike is and
+   what it last slid along.
+2. **The release gate's policy** (`Tools/image_gate_score.py`, called by `Tools/Run-ImageGate.ps1`): a release is allowed when every
+   failing shot is already in `Tools/image_gate_baseline.json` **and none got worse** than its reference (`Tools/image_gate_reference.json`:
+   which criteria each baseline shot failed and by how much, recorded once from the first deterministic run; worse = a criterion it did
+   not fail before, or a failed measure further past its threshold: range by > 0.02, edges / white / black by > 1 point). NaN anywhere
+   fails; a chapter without a baseline (Cattalus, the finale) must pass every shot. The thresholds are untouched; nothing is exempted by
+   name. The report and the release notes state the baseline count.
+   **Deterministic captures:** every check run now advances game time by a fixed 1/50 s per rendered frame (`Time.captureDeltaTime`,
+   whatever the PC's speed) and seeds the random generator on every scene load (`DemoBoot`, `-nodeterministic` = as before), so a capture
+   is the same frame every run - a shot passes or fails, not both. **Not achieved yet:** two runs of one build still differ (many clocks
+   are real time - `Time.unscaledTime`, async loads); the hit-stop and the capture bursts are frame-counted now. Details in Round 19's status.
+3. Skipped (Dan, 2026-11-23). 4. No separate release: QF28 + QF29 ship in 1.0.0-rc1 with the finale.
 
 ## QF28 + the image-gate baseline — status (2026-11-22): QF28 items 1-5 done; baseline 130 -> 58; release 0.18.3 NOT published
 Version 0.18.3 / build 1803 is built (Unity\Builds\Seven) but **not packaged or published**: `IMAGE GATE RELEASE (QF26 2)` ends **FAIL**

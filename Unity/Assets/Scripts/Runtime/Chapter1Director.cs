@@ -1931,7 +1931,7 @@ namespace Seven
         }
         IEnumerator Burst(string name, int n, float every)
         {
-            for (int i = 0; i < n; i++) { yield return Shot($"{name}_{i}"); yield return new WaitForSecondsRealtime(every); }
+            for (int i = 0; i < n; i++) { yield return Shot($"{name}_{i}"); if (DemoBoot.Deterministic) { for (int k = 0; k < Mathf.Max(1, Mathf.RoundToInt(every / DemoBoot.CaptureStep)); k++) yield return null; } else yield return new WaitForSecondsRealtime(every); }
         }
 
         void OnSevenFight(string what)
@@ -2213,7 +2213,7 @@ namespace Seven
             {
                 foreach (var w in Workers) ScreeFeet(w, "worker " + w.name);
                 if (Workers.Length > 0) yield return AbdomenClearance(Workers[0], "worker", 2.4f);
-                if (Workers.Length > 0) yield return GuardView("s07_checkonly_scree_worker_bay", Workers[0], 3.0f);
+                if (Workers.Length > 0) yield return GuardView("s07_checkonly_scree_worker_bay", Workers[0], 3.4f, 0.9f, 54f);
                 if (Workers.Length > 4) yield return GuardView("s07_checkonly_scree_worker_terrace", Workers[4], 3.0f);
             }
             if (Auto)
@@ -2427,7 +2427,7 @@ namespace Seven
 
         // ------------------------------------------------------------------------------------------ QF4 Scree checks
         /// <summary>Check runs only: a short close view of a Scree (front three-quarter), then back to the camera as it was.</summary>
-        IEnumerator GuardView(string name, ScreeGuard g, float dist)
+        IEnumerator GuardView(string name, ScreeGuard g, float dist, float lookUp = 0f, float fov = 45f)
         {
             if (g == null) yield break;
             bool was = Cam.InShot;
@@ -2438,7 +2438,7 @@ namespace Seven
                 var c = at + Quaternion.AngleAxis(yaw, Vector3.up) * g.transform.forward * dist + Vector3.up * 0.35f;
                 if (!Physics.CheckSphere(c, 0.3f, ~0, QueryTriggerInteraction.Ignore) && ChapterCamera.ClearLine(c, at)) { pos = c; break; }
             }
-            Cam.Shot(pos, at, 0.01f, true, 45f);
+            Cam.Shot(pos, at + Vector3.up * lookUp, 0.01f, true, fov);   // QF29: s07 takes in its work lamp (the bay worker read as one dark grey)
             yield return null;
             yield return Shot(name);
             if (!was) Cam.Follow(); else Cam.Shot(Cam.transform.position, at, 0.01f, true);

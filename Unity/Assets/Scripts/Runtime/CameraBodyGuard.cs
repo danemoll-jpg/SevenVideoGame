@@ -14,6 +14,8 @@ namespace Seven
     {
         ChapterCamera _cc; readonly List<Renderer> _bodies = new List<Renderer>(); float _next, _nextBikes; HoverBike[] _bikes;
         public static int Pushes;
+        /// <summary>Round 19: big moving bodies that are not skinned (Tunneler on his craft) - the camera is kept out of them too.</summary>
+        public static readonly List<Renderer> Extra = new List<Renderer>();
         void LateUpdate()
         {
             if (_cc == null) _cc = GetComponent<ChapterCamera>();
@@ -26,6 +28,7 @@ namespace Seven
                 _next = Time.unscaledTime + 1.5f; _bodies.Clear();
                 foreach (var sm in FindObjectsByType<SkinnedMeshRenderer>(FindObjectsSortMode.None))
                     if (sm.enabled && sm.gameObject.activeInHierarchy && !sm.transform.IsChildOf(_cc.Target.root) && sm.GetComponentInParent<ChapterSeven>() == null && sm.GetComponentInParent<HoverBike>() == null) _bodies.Add(sm);
+                Extra.RemoveAll(x => x == null); foreach (var r in Extra) if (r.enabled && r.gameObject.activeInHierarchy) _bodies.Add(r);
             }
             var cam = transform.position; var tgt = _cc.Target.position + Vector3.up * 1.2f;
             for (int pass = 0; pass < 3; pass++)

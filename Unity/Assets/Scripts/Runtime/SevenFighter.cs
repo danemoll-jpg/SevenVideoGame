@@ -162,7 +162,8 @@ namespace Seven
             if (PauseMenu.IsOpen || seconds <= 0f) yield break;
             Time.timeScale = 0.05f;
             float t0 = Time.realtimeSinceStartup;
-            while (Time.realtimeSinceStartup - t0 < seconds) { if (PauseMenu.IsOpen) yield break; yield return null; }
+            if (DemoBoot.Deterministic) { for (int i = 0; i < Mathf.Max(1, Mathf.RoundToInt(seconds / DemoBoot.CaptureStep)); i++) { if (PauseMenu.IsOpen) yield break; yield return null; } }   // QF29
+            else while (Time.realtimeSinceStartup - t0 < seconds) { if (PauseMenu.IsOpen) yield break; yield return null; }
             if (!PauseMenu.IsOpen) Time.timeScale = DemoBoot.TestSpeed;
         }
 

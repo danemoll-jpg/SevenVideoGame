@@ -269,6 +269,8 @@ namespace Seven
         public void SetFade(float alpha, float shade = 0f) { Build(); _fade.color = new Color(shade, shade, shade, alpha); }
 
         RawImage _video;
+        /// <summary>Round 19: the canvas root (the credits build their layers here, above everything else).</summary>
+        public Transform CanvasRoot { get { Build(); return _video.transform.parent; } }
         public float VideoAlpha => _video != null && _video.enabled ? _video.color.a : 0f;
         /// <summary>Show a video texture full-screen: fills the height, crops the sides (no stretching).</summary>
         public void SetVideo(Texture tex, float srcAspect, float alpha)

@@ -109,6 +109,7 @@ namespace Seven
             if (u.StartsWith("cattalus>=")) return int.TryParse(u.Substring(10), out var cc) && CattalusState.Reached && CattalusState.Checkpoint >= cc;   // Round 18: CattalusLayout.Cp*
             if (u.StartsWith("biaveh>=")) return int.TryParse(u.Substring(8), out var bc) && BiavehState.Reached && BiavehState.Checkpoint >= bc;   // Round 17: BiavehLayout.Cp*
             if (u.StartsWith("europa>=")) return int.TryParse(u.Substring(8), out var ec) && EuropaState.Reached && EuropaState.Checkpoint >= ec;   // Round 14: EuropaLayout.Cp*
+            if (u.StartsWith("finale>=")) return int.TryParse(u.Substring(8), out var fc) && FinaleState.OwnReached && (FinaleState.OwnComplete || FinaleState.Reached && FinaleState.Checkpoint >= fc);   // Round 19: FinaleLayout.Cp*
             return false;
         }
 
@@ -303,7 +304,7 @@ namespace Seven
             var notes = VisitedNotes();
             if (extraNotes != null) foreach (var kv in extraNotes) notes[kv.Key] = kv.Value;
             if (selectable != null) foreach (var id in selectable) if (!shown.Contains(id)) shown.Add(id);
-            // Round 18: after CAT_12 the star map offers only the Moon (the finale: a 'to be continued' card in this build)
+            // Round 18 / 19: after CAT_12 the star map offers only the Moon (the finale)
             if (selectable == null && CattalusState.OwnComplete) selectable = new List<string> { "moon" };
             _map.Configure(shown, selectable ?? shown, notes, Here(), select);
             LastStarMapLog = $"star map: shown [{string.Join(", ", _map.ShownIds())}], selectable [{string.Join(", ", _map.SelectableIds())}], ship at {Here()}, selected {_map.Selected}";
@@ -822,9 +823,13 @@ namespace Seven
             }
             if (id == "moon" && CattalusState.OwnComplete)
             {
-                // the way back to the Moon is set (CAT_12) - the finale isn't built yet
-                yield return ComingSoonCard("The Moon  —  to be continued");
-                _map.SetConfirm(false); Redraw();
+                // Round 19: the way back to the Moon (CAT_12) - the finale. Finished = a revisit (its story never replays)
+                if (!FinaleState.Released) { yield return ComingSoonCard("The Moon  —  to be continued"); _map.SetConfirm(false); Redraw(); _busy--; yield break; }
+                if (FinaleState.OwnComplete) { yield return Revisit("moon", "The Moon"); _busy--; yield break; }
+                ReleaseForTravel();
+                yield return TravelPassage.Run("moon");
+                if (UI != null) yield return UI.Fade(1f, 0.8f);
+                if (FinaleState.OwnHasProgress) FinaleState.ContinueOwn(); else FinaleState.StartFresh();
                 _busy--;
                 yield break;
             }

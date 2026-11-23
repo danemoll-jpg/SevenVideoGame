@@ -121,7 +121,7 @@ namespace Seven
     /// "seven_test_routes"), so they hold whichever chapter set them; a new game clears them.</summary>
     public static class WorldFlags
     {
-        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen, mothershipKnown; }
+        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen, mothershipKnown, gameFinished; }
         static string Key => DemoBoot.CaptureDir != null ? "seven_test_routes" : "seven_routes";
         static R Get() { var j = PlayerPrefs.GetString(Key, ""); return string.IsNullOrEmpty(j) ? new R() : JsonUtility.FromJson<R>(j) ?? new R(); }
         /// <summary>QF23 (24): a Scene Select session never writes the player's real route flags (it could unlock or consume
@@ -180,6 +180,20 @@ namespace Seven
                 Put(new R { combined = true, combinedSeen = true, asteroidFound = true, asteroidDone = true, biavehDone = true, mothershipKnown = true, cattalusSeen = true });
                 SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("biaveh");
             }
+            // Round 19 (-fincp / -finale / -finplay): every world done including Cattalus (CAT_12 set the Moon route); the saucer
+            // over Cattalus in Veyra's system; a fresh finale
+            if (what == "finale")
+            {
+                VenusState.FakeDoneForTest();
+                MarsState.ResetForTest(); MarsState.Fake(MarsLayout.CpDone, true);
+                EuropaState.ClearTestSave(); EuropaState.ResetForTest(); for (int c = 0; c <= EuropaLayout.CpDone; c++) EuropaState.Reach(c);
+                AsteroidState.ClearTestSave(); AsteroidState.ResetForTest(); AsteroidState.Fake(AsteroidLayout.CpDone, true);
+                BiavehState.ClearTestSave(); BiavehState.ResetForTest(); BiavehState.Fake(BiavehLayout.CpDone, true);
+                CattalusState.ClearTestSave(); CattalusState.ResetForTest(); CattalusState.Fake(CattalusLayout.CpDone, true);
+                FinaleState.ResetForTest();
+                Put(new R { combined = true, combinedSeen = true, asteroidFound = true, asteroidDone = true, biavehDone = true, mothershipKnown = true, cattalusSeen = true });
+                SaucerLocation.System = StarMap.Bia; SaucerLocation.Set("cattalus");
+            }
             // QF24 (22): Dan's order - the asteroid finished first, then the mothership (BIA_13 must be the Cattalus talk, B)
             if (what == "biaveh_astdone")
             {
@@ -233,7 +247,12 @@ namespace Seven
         public static bool CattalusUnlocked => VenusDone && MarsDone && EuropaDone && AsteroidDone && BiavehDone;
         /// <summary>Round 18: Cattalus finished (CAT_12 played) - the star map then offers only the Moon.</summary>
         public static bool CattalusDone => CattalusState.OwnComplete;
-        public static bool FinalMoonUnlocked => false;
+        /// <summary>Round 19: the way back to the Moon (CAT_12 set it) - the finale.</summary>
+        public static bool FinalMoonUnlocked => CattalusDone && FinaleState.Released;
+        public static bool FinaleDone => FinaleState.OwnComplete;
+        /// <summary>Round 19: the whole game finished (the finale's credits played on the player's own save).</summary>
+        public static bool GameFinished => Get().gameFinished || FinaleState.GameFinished;
+        public static void MarkGameFinished() { var r = Get(); r.gameFinished = true; Put(r); }
         public static string Summary() => $"world flags: Venus {VenusDone}, Mars {MarsDone}, Europa {EuropaDone}, combined records {(CombinedSeen ? "seen" : CombinedPlayed ? "flag set, never seen to the end" : "not yet")} -> Biaveh {(BiavehUnlocked ? "unlocked" : "locked")}, asteroid {(AsteroidFound ? "found" : "undiscovered")}, Cattalus {(CattalusUnlocked ? "unlocked" : "locked")}, final Moon {(FinalMoonUnlocked ? "unlocked" : "locked")}";
     }
     /// <summary>Round 15: Mars's dialogue (Resources/Mars/mars_dialogue.json, from Tools/Voice/make_mars_lines.py) and its

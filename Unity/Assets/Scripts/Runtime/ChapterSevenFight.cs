@@ -397,7 +397,8 @@ namespace Seven
         {
             float prev = Time.timeScale; if (prev < 0.2f) yield break;
             Time.timeScale = prev * 0.06f;
-            yield return new WaitForSecondsRealtime(frames / 60f);
+            if (DemoBoot.Deterministic) { for (int i = 0; i < Mathf.Max(1, Mathf.RoundToInt(frames / 60f / DemoBoot.CaptureStep)); i++) yield return null; }   // QF29: frame-counted in check runs (real time broke determinism)
+            else yield return new WaitForSecondsRealtime(frames / 60f);
             if (!PauseMenu.IsOpen) Time.timeScale = prev;
         }
 

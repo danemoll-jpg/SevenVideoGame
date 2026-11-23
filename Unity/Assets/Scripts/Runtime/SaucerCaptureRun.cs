@@ -250,9 +250,12 @@ namespace Seven
             // Reveal.
             _d.PressReveal();
             yield return Until(() => rev.Progress >= 0.5f, 6f, "reveal half");
+            // QF29: the reveal's captures from nearer the chair (she and Panther readable, the dissolving ship round them)
+            Place(chair.position + chair.forward * 1.9f + chair.right * 0.7f + Vector3.up * 0.9f, chair.position + Vector3.up * 0.55f); yield return Frames(2);
             yield return Shot("11_reveal_half");
             yield return Until(() => rev.Revealed, 6f, "revealed");
             yield return new WaitForSeconds(2.2f);
+            Place(chair.position + chair.forward * 2.4f - chair.right * 0.9f + Vector3.up * 1.1f, chair.position + Vector3.up * 0.5f); yield return Frames(2);
             yield return Shot("12_revealed_wide");
             LapCheck();
             Log($"revealed: chair tilt {Quaternion.Angle(Quaternion.identity, chair.localRotation):0.0} deg, camera pos {cam.transform.position}");
@@ -260,11 +263,11 @@ namespace Seven
             Place(hips.position + chair.up * 1.25f - chair.forward * 0.9f + chair.right * 0.7f, chair.position + chair.forward * 6f + Vector3.down * 4f);
             yield return Frames(2);
             yield return Shot("13_revealed_over_shoulder");
-            Place(chair.position + new Vector3(9f, 3.5f, -7f), chair.position + Vector3.down * 1.5f);
+            Place(chair.position + chair.forward * 2.3f + chair.right * 1.1f + Vector3.up * 1.2f, chair.position + Vector3.up * 0.45f);
             yield return Frames(2);
             yield return Shot("13b_revealed_far");
             // QF3: more angles on the revealed ship (nothing of it may remain: no band, no ring, no hull edge).
-            foreach (var (nm, off) in new[] { ("13c_revealed_left", new Vector3(-7f, 1.5f, 4f)), ("13d_revealed_below", new Vector3(3f, -6f, 5f)), ("13e_revealed_above_behind", new Vector3(-2f, 7f, -6f)) })
+            foreach (var (nm, off) in new[] { ("13c_revealed_left", new Vector3(-3.0f, 1.0f, 2.0f)), ("13d_revealed_below", new Vector3(1.8f, -2.6f, 2.4f)), ("13e_revealed_above_behind", new Vector3(-0.8f, 2.2f, -1.6f)) })
             {
                 Place(chair.position + off, chair.position + Vector3.up * 0.6f);
                 yield return Frames(2);

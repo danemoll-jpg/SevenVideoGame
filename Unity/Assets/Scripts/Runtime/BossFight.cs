@@ -584,6 +584,16 @@ namespace Seven
         }
 
         // ---------------------------------------------------------------- her side: strikes, throws, takedown
+        /// <summary>Round 19: a fight the STORY ends (the finale: restoring the connection triggers FIN_09 - no takedown, no victory
+        /// banner): he stops where he is, nothing more lands either way.</summary>
+        protected void FinishByStory(string how)
+        {
+            if (Over) return;
+            Markers.Hide(); _puddles.Clear(); Markers.ClearPuddles(); CageUntil = 0f;
+            SetState(St.Hold, 0f); Over = true;
+            PhaseLog.Add($"ended by the story at {Clock(Time.time - FightStart)} ({how})");
+            Log($"boss {Def.id}: the fight ends by the story - {how}");
+        }
         public bool IsOut => !Reachable || State == St.Pinned || Over;
         public bool Dazed => State == St.Dazed;
         public bool TakeBlow(Vector3 dir, bool takedown)
@@ -851,6 +861,8 @@ namespace Seven
             if (_shot.Contains(key)) return; _shot.Add(key);
             StartCoroutine(Shoot($"boss_{Def.id}_{key}", when == "telegraph" ? 0.6f * StateLen : when == "active" ? Mathf.Min(0.12f, StateLen * 0.4f) : 0.3f));
         }
+        /// <summary>Where the "_side" capture of a fight moment stands (Round 19: a walled arena keeps it inside).</summary>
+        protected virtual Vector3 SidePos(Vector3 mid, Vector3 side, float dist) => mid + side * dist + Vector3.up * 3.2f;
         protected IEnumerator Shoot(string name, float delay)
         {
             for (float t = 0f; t < delay; t += Time.deltaTime) yield return null;
@@ -858,7 +870,7 @@ namespace Seven
             // and from the side of the line between them (a second angle of the same moment)
             var mid = (Her + transform.position) * 0.5f; var side = Vector3.Cross(Vector3.up, Flat(transform.position - Her).normalized);
             float span = Flat(transform.position - Her).magnitude;
-            yield return Cap.ShotFrom(name + "_side", mid + side * Mathf.Max(6f, span * 1.1f) + Vector3.up * 3.2f, mid + Vector3.up * 1f, 50f);
+            yield return Cap.ShotFrom(name + "_side", SidePos(mid, side, Mathf.Max(6f, span * 1.1f)), mid + Vector3.up * 1f, 50f);
         }
     }
 

@@ -66,7 +66,8 @@ namespace Seven
         void Start()
         {
             // QF16 (1): the saucer is where this aboard part happens (the windows show that world)
-            SaucerLocation.Set(CattalusState.ArrivalAboard || CattalusState.HomeAboard ? "cattalus" : BiavehState.ArrivalAboard || BiavehState.HomeAboard ? "biaveh" : AsteroidState.ArrivalAboard || AsteroidState.HomeAboard ? "asteroid" : EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
+            SaucerLocation.Set(FinaleState.ArrivalAboard ? "moon" : CattalusState.ArrivalAboard || CattalusState.HomeAboard ? "cattalus" : BiavehState.ArrivalAboard || BiavehState.HomeAboard ? "biaveh" : AsteroidState.ArrivalAboard || AsteroidState.HomeAboard ? "asteroid" : EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
+            if (FinaleState.ArrivalAboard) { StartFinale(); return; }                                // Round 19: the Moon finale's FIN_01 aboard
             if (CattalusState.ArrivalAboard || CattalusState.HomeAboard) { StartCattalus(); return; }   // Round 18: Cattalus's aboard scenes
             if (BiavehState.ArrivalAboard || BiavehState.HomeAboard) { StartBiaveh(); return; }      // Round 17: the mothership's aboard scenes
             if (AsteroidState.ArrivalAboard || AsteroidState.HomeAboard) { StartAsteroid(); return; } // Round 16: the asteroid's aboard scenes

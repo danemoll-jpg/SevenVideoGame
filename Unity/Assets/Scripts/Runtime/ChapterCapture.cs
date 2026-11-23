@@ -86,7 +86,7 @@ namespace Seven
             // QF28 pass: never a capture (a long frame) while she rides fast - the check run's own hitch drove the Europa bike into the
             // ice passage's bend; the frame waits (up to 6 s) until she is under 15 m/s
             if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && _ctlWait < 6f && FastRide()) { _ctlAt = Time.unscaledTime + 0.3f; _ctlWait += 0.3f; }
-            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt) { _ctlAt = -1f; _ctlShots++; StartCoroutine(Shot($"ctl_control_back_{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}")); }
+            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt) { _ctlAt = -1f; _ctlShots++; var rb = HoverBike.RiddenNow; if (rb != null) ImageGate.Expect(rb.transform, "7 on her bike (the player's view while riding)", 0f, "ctl_control_back"); StartCoroutine(Shot($"ctl_control_back_{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}")); }
         }
 
         /// <summary>QF13: the same frame from a second, fixed angle (a side view) without moving the player's camera - a

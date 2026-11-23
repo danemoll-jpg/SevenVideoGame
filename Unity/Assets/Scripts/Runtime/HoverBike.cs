@@ -35,6 +35,8 @@ namespace Seven
         /// <summary>QF28 (1): a boost - add speed now (up to <paramref name="cap"/>).</summary>
         public void Kick(float add, float cap) { Speed = Mathf.Min(Speed + add, cap); }
         public bool Riding { get; private set; }
+        /// <summary>QF29: the bike being ridden now (a riding frame's subject is 7 on her bike), or null.</summary>
+        public static HoverBike RiddenNow { get { foreach (var b in FindObjectsByType<HoverBike>(FindObjectsSortMode.None)) if (b.Riding || (b.Rider != null && Vector3.Distance(b.Rider.transform.position, b.transform.position) < 2.5f && b.gameObject.activeInHierarchy)) return b; return null; } }
         public float Speed { get; private set; }
         public bool Stuck => _stuckFor > 2.5f;
         public Vector3 LastSafe { get; private set; }
@@ -180,7 +182,9 @@ namespace Seven
             p = SlideSwim(from, p);
             if (SwimClamp != null) { var q = SwimClamp(p); if ((q - p).sqrMagnitude > 1e-8f) p = SlideSwim(p, q); }   // QF15 (2): the clamp is swept too
             float moved = (p - from).magnitude;
-            if (Speed > 1f && moved < Speed * dt * 0.25f) { _stuckFor += dt; Speed *= 0.6f; } else _stuckFor = Mathf.Max(0f, _stuckFor - dt);
+            // QF29 (1): the cut is per second of game time, not per step - QF28's sub-steps applied 0.6 once per sub-step, so a slow
+            // frame (a slow PC, a check run at speed) took 0.36 or less of her speed every frame she grazed the passage's lip
+            if (Speed > 1f && moved < Speed * dt * 0.25f) { _stuckFor += dt; Speed *= DemoBoot.NoQF29Fix ? 0.6f : Mathf.Pow(0.6f, dt * 60f); } else _stuckFor = Mathf.Max(0f, _stuckFor - dt);
             transform.position = p;
             Odometer += moved;
             if (DemoBoot.CaptureDir != null) MeasureInside(from, p);
@@ -200,6 +204,8 @@ namespace Seven
         // up to four surfaces, and the clamp's correction is swept the same way (a clamp into a wall is refused).
         public static Transform[] IgnoreRoots = new Transform[0];
         public int Depenetrations { get; private set; }
+        /// <summary>QF29 (1): what the swimming bike last slid along (check-run logs).</summary>
+        public string LastSlide { get; private set; } = "-";
         public const float Skin = 0.06f;
         Vector3 SlideSwim(Vector3 from, Vector3 to)
         {
@@ -219,7 +225,7 @@ namespace Seven
                 var nrm = hit.normal; if (Vector3.Dot(nrm, md) > 0f) nrm = -nrm;            // a back face: the normal toward the bike
                 mv = Vector3.ProjectOnPlane(rest, nrm);
                 if (Vector3.Dot(nrm, md) < -0.6f) Speed *= Mathf.Pow(0.4f, Time.deltaTime);   // head-on: scrapes speed off
-                WallSlides++;
+                WallSlides++; LastSlide = hit.collider != null ? hit.collider.name : "?";
             }
             return c0 - Vector3.up * 0.6f;
         }

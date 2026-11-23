@@ -77,7 +77,7 @@ namespace Seven
         /// checks stay short (standing rule: under ~20 min of testing per round). Default 1.</summary>
         public static float TestSpeed { get; private set; } = 1f;
         /// <summary>QF5 cat-follow test / QF6 playtest: the chapter runs as for a person (no autopilot, no check-run shortcuts).</summary>
-        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || QF23Revisit || AstPlay || BiaPlay || CatPlay;
+        public static bool PlayerSim => CatFollowTest > 0 || Playtest > 0 || SceneSelectTest || VenusPlay || VenusPlay2 || EuropaPlay || MarsPlay || QF20Check || QF23Revisit || AstPlay || BiaPlay || CatPlay || FinPlay;
         /// <summary>QF10: -venusplay = a player-style Venus run on a virtual gamepad (B01 -> C05, the telekinesis bridge, a hint
         /// and a skip), <see cref="VenusPlaytest"/>. -venushintfast = the player fallback's hint after 12 s / skip offer after
         /// 30 s instead of 45 s / 2 min (so the check can show both quickly).</summary>
@@ -141,6 +141,13 @@ namespace Seven
         /// <summary>Round 18: -catcp n (check run at Cattalus checkpoint n; 0 = CAT_01 aboard, 6 = home), -cattalus (as from the star map),
         /// -catplay (the player-style run), -catrace (the check run's autopilot races; on by default in check runs), -catlose (the runner-up path).</summary>
         public static int CatCp { get; private set; } = -1;
+        /// <summary>Round 19: -fincp n (check run at checkpoint n of the Moon finale; 0 = FIN_01 aboard), -finale (as from the star
+        /// map), -finplay (the player-style run: free aboard -> the console -> the star map -> the finale -> the credits), -finretry
+        /// (the confrontation run lets her go down once, then retries).</summary>
+        public static int FinCp { get; private set; } = -1;
+        public static bool Finale { get; private set; }
+        public static bool FinPlay { get; private set; }
+        public static bool FinRetry { get; private set; }
         public static bool Cattalus { get; private set; }
         public static bool CatPlay { get; private set; }
         public static bool CatLose { get; private set; }
@@ -160,6 +167,13 @@ namespace Seven
         public static string Routes { get; private set; }
         /// <summary>QF15 (2): -europawalltest = the automated wall test (EuropaWallTest; starts at checkpoint 2 unless -europacp is given).</summary>
         public static bool EuropaWallTest { get; private set; }
+        /// <summary>QF29 (1): -europadivetest = can a player get stuck at the start of the ice passage (EuropaDiveTest; starts at Europa's arrival).</summary>
+        public static bool EuropaDiveTest { get; private set; }
+        public static bool NoQF29Fix { get; private set; }
+        /// <summary>QF29 (2): a check run's fixed game-time step per frame (-nodeterministic = real time, as before).</summary>
+        public const float CaptureStep = 1f / 50f;
+        public static bool NoDeterministic { get; private set; }
+        public static bool Deterministic => CaptureDir != null && !NoDeterministic;
         /// <summary>QF17: -bossidle = the idle test - in a boss fight nobody presses anything (he must put her down within ~60 s),
         /// the run ends at her first knockdown. -bosscheck = the boss check: a run stops right after the fight.</summary>
         public static bool BossIdle { get; private set; }
@@ -241,6 +255,10 @@ namespace Seven
                 if (args[i] == "-cattalus") Cattalus = true;
                 if (args[i] == "-catplay") CatPlay = true;
                 if (args[i] == "-catlose") CatLose = true;
+                if (args[i] == "-fincp" && i + 1 < args.Length && int.TryParse(args[i + 1], out var fcp)) FinCp = fcp;
+                if (args[i] == "-finale") Finale = true;
+                if (args[i] == "-finplay") FinPlay = true;
+                if (args[i] == "-finretry") { FinRetry = true; BossDownOnce = true; }
                 if (args[i] == "-qf28holds") QF28Holds = true;
                 if (args[i] == "-catrace") CatRace = true;
                 if (args[i] == "-asteroid") Asteroid = true;
@@ -253,6 +271,9 @@ namespace Seven
                 if (args[i] == "-marspick" && i + 1 < args.Length) MarsPick = args[i + 1];
                 if (args[i] == "-routes" && i + 1 < args.Length) Routes = args[i + 1];
                 if (args[i] == "-europawalltest") EuropaWallTest = true;
+                if (args[i] == "-europadivetest") EuropaDiveTest = true;
+                if (args[i] == "-noqf29fix") NoQF29Fix = true;
+                if (args[i] == "-nodeterministic") NoDeterministic = true;
                 if (args[i] == "-bossidle") { BossIdle = true; BossCheck = true; }
                 if (args[i] == "-bosscheck") BossCheck = true;
                 if (args[i] == "-bossnovice") BossNovice = true;
@@ -289,11 +310,20 @@ namespace Seven
                 Application.Quit();
             }
             if (EuropaWallTest && EuropaCp < 0) EuropaCp = EuropaLayout.CpSettlement;
+            if (EuropaDiveTest && EuropaCp < 0) EuropaCp = 0;
             if (CaptureDir == null) TestSpeed = 1f;          // only ever for automated check runs
             if (TestSpeed != 1f)
             {
                 Time.timeScale = TestSpeed;
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => { if (!PauseMenu.IsOpen) Time.timeScale = TestSpeed; };
+            }
+            // QF29 (2): deterministic check runs - game time advances a fixed 1/50 s per rendered frame (whatever the PC's speed) and the
+            // random generator is seeded on every scene load, so a capture shows the same frame every run (a shot passes or fails, not both)
+            if (CaptureDir != null && !NoDeterministic)
+            {
+                Time.captureDeltaTime = CaptureStep;
+                UnityEngine.Random.InitState(29);
+                UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => UnityEngine.Random.InitState(29 + s.buildIndex);
             }
             bool forceFullscreen = CaptureDir == null && !WindowFromCommandLine && !Application.isEditor;
             FullscreenToggle.Install(forceFullscreen);

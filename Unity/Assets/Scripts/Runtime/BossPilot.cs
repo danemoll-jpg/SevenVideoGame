@@ -100,6 +100,9 @@ namespace Seven
                 else I.Takedown = true;
                 return I;
             }
+            // 4b) QF29: his bar waits at its mark for an objective (it pulses, the place is lit, a companion calls it) - a player goes
+            // there now instead of stunning him again and again (the Moon finale's run stalled here: 1400 stuns, never the barrier)
+            if (f.WaitingOnObjective && f.PilotObjective().HasValue) goto objective;
             // 5) staggered: press the advantage (strikes)
             if (f.State == BossFight.St.Staggered && !f.IsOut)
             {
@@ -123,6 +126,7 @@ namespace Seven
                 if (d < 6f) { I.Move = toBn; I.Run = true; I.Why = "close in while open"; return I; }
             }
             // 7) an objective of this phase (a pylon, a device)
+            objective:
             var obj = f.PilotObjective();
             if (obj.HasValue)
             {

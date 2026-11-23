@@ -426,7 +426,7 @@ namespace Seven
         void LateUpdate()
         {
             BaseCutaway();
-            if (Bike != null && Bike.Riding && Shots && Time.frameCount % 300 == 0) Log($"bike (QF13 10/13): speed {Bike.Speed:0.0} m/s, pitch {Bike.SwimPitch:0} deg, wall slides so far {Bike.WallSlides}, camera speed push {Cam.SpeedKick:0.00}");
+            if (Bike != null && Bike.Riding && Shots && Time.frameCount % 300 == 0) Log($"bike (QF13 10/13): at {Bike.transform.position:0.0}, speed {Bike.Speed:0.0} m/s, pitch {Bike.SwimPitch:0} deg, wall slides so far {Bike.WallSlides} (last along '{Bike.LastSlide}', depenetrations {Bike.Depenetrations}), camera speed push {Cam.SpeedKick:0.00}");
             // hidden during cutscenes (marker too); inside the base's small rooms the light stays small (no halo filling the room)
             if (GuideLight != null && Cam != null)
             {
@@ -855,7 +855,7 @@ namespace Seven
         {
             // QF13 (12): flying controls - the stick steers left / right AND up / down (push forward = dive, pull back = climb)
             Teach((ControlsLegend.Btn.Move, HoverBike.InvertPitch ? "Steer - push up to climb, pull back to dive" : "Steer - push forward to dive, pull back to climb"), (ControlsLegend.Btn.Tk, "Forward"));
-            yield return Wait(7f); if (Auto) yield return Shot("t_swim_steer_and_pitch");
+            yield return Wait(2.6f); if (Auto) yield return Shot("t_swim_steer_and_pitch"); yield return Wait(4.4f);
             Teach((ControlsLegend.Btn.Block, "Brake"));
             yield return Wait(5f);
             Teach();
@@ -876,7 +876,8 @@ namespace Seven
                 yield return Wait(0.4f);
                 var wh = WhichWay(EuropaLayout.Descent[0]); UI.Hint(wh, 3f);
                 Log($"guide marker (QF13 9) facing away from the light: marker {UI.MarkerState} at {UI.MarkerScreen}, hint \"{wh}\"");
-                yield return Shot("qf13_09_light_behind_her_edge_arrow");
+                ImageGate.Expect(Bike.transform, "7 on the bike, the light behind her", 0f, "qf13_09_light_behind");
+                if (Cap != null) yield return Cap.ShotFrom("qf13_09_light_behind_her_edge_arrow", Bike.transform.position - Bike.transform.forward * 2.6f + Bike.transform.right * 1.2f - Vector3.up * 1.0f, Bike.transform.position + Vector3.up * 1.6f, 52f);
                 Bike.transform.rotation = Quaternion.Euler(0f, y0, 0f); Cam.SnapBehind();
                 yield return Wait(0.3f);
                 Log($"guide marker (QF13 9) facing the light: marker {UI.MarkerState}");

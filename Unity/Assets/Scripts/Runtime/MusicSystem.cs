@@ -78,12 +78,13 @@ namespace Seven
                 case "Asteroid": return "asteroid_city";
                 case "Biaveh": return "biaveh_mothership";
                 case "Cattalus": return "cattalus_city";
+                case "Finale": return Seven.FinaleDirector.I != null ? Seven.FinaleDirector.I.ThemeNow : "moon_descent";
                 case "Menu": return "main_theme";
                 default: return null;
             }
         }
         /// <summary>A boss's own track (started by BossFight.Begin, the fight's first moment).</summary>
-        public static string BossTrack(string boss) => boss == "viper" ? "mars_viper" : boss == "machinist" ? "asteroid_machinist" : boss == "ratwing" ? "biaveh_ratwing" : boss == "wormmaster" ? "venus_underground" : null;
+        public static string BossTrack(string boss) => boss == "tunneler" ? "moon_tunneler" : boss == "viper" ? "mars_viper" : boss == "machinist" ? "asteroid_machinist" : boss == "ratwing" ? "biaveh_ratwing" : boss == "wormmaster" ? "venus_underground" : null;
         /// <summary>Does the player have control right now (a chapter's follow camera, no fade, no hold)?</summary>
         public static System.Func<bool> HasControl = DefaultControl;
         static bool DefaultControl()

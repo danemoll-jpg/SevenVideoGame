@@ -273,7 +273,8 @@ namespace Seven
             yield return RiseAboveCattalus();
             CattalusState.Reach(CattalusLayout.CpDone);
             if (DemoBoot.CaptureDir != null) Cap?.Log($"CATTALUS CHAPTER DONE: {CattalusState.Summary()}; {WorldFlags.Summary()} - the star map now offers only the Moon");
-            yield return UI.Title("TO BE CONTINUED", 0.8f, 2.4f, 0.8f);
+            // Round 19: no "to be continued" - the route to the Moon is set; the console takes them there (the finale)
+            if (!FinaleState.Released) yield return UI.Title("TO BE CONTINUED", 0.8f, 2.4f, 0.8f);
             _stroke = 0f; if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
             _ik.ReleaseAll("CAT_12 ends");
             yield return ExitStaging("CAT_12 ends");

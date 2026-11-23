@@ -344,6 +344,7 @@ namespace Seven
                 if (Viper != null) Viper.Play("idle");
             }
             yield return Wait(0.4f);
+            if (Viper != null) { Cam.Shot(L.PlatformAt - Flat(L.PlatformAt - P7).normalized * 11f + Vector3.up * 5.0f, Viper.transform.position + Vector3.up * 1.2f, 0.01f, true, 40f); ImageGate.Expect(Viper.transform, "Viper on his platform, lit from beneath", 0f, "m07_"); yield return null; }   // QF29: the capture framed on him (a cut, not the eased hold)
             yield return Shot("m07_low_angle_reveal_viper_lit_from_beneath");
             var vp = Viper != null ? HeadOf(Viper) : L.PlatformAt + Vector3.up * (L.PlatformTop + 2f);
             ViperCloseUp();
@@ -395,6 +396,11 @@ namespace Seven
             if (Worker != null) { Worker.Face(P7); Seven.transform.rotation = Quaternion.LookRotation(Flat(Worker.transform.position - P7)); }
             { var wq = Worker != null ? Worker.transform.position : P7 + Vector3.right; var md = (P7 + wq) * 0.5f; var sd = Vector3.Cross(Vector3.up, Flat(wq - P7).normalized); TwoShot(md, sd, 3.0f, 1.5f, 1.4f, 42f, 0.5f); }
             yield return Say("MAR_03", 11, 14);                  // There's an old maintenance route ... / Can the transport get through? / Not anymore... / Then I'll take a look.
+            { // QF29: the capture's two-shot from a side clear BOTH ways (0.18.3's was inside the bank wall: a flat grey frame)
+              var wq = Worker != null ? Worker.transform.position : P7 + Vector3.right; var md = (P7 + wq) * 0.5f + Vector3.up * 1.3f; var sd = Vector3.Cross(Vector3.up, Flat(wq - P7).normalized);
+              foreach (var c in new[] { md + sd * 3.2f + Vector3.up * 0.3f, md - sd * 3.2f + Vector3.up * 0.3f, md + sd * 2.2f + Vector3.up * 1.2f, md - sd * 2.2f + Vector3.up * 1.2f })
+                  if (ChapterCamera.ClearLine(c, md) && ChapterCamera.ClearLine(md, c) && !Physics.CheckSphere(c, 0.3f, ~0, QueryTriggerInteraction.Ignore)) { Shoot(c, md, 44f, 0.01f); break; }
+              yield return Wait(0.2f); }
             yield return Shot("m09b_the_worker_tells_her_about_the_old_route");
             // Panther sees it from the saucer: the entrance - the old ramp cut into the bank, the half-buried gateway
             Shoot(new Vector3(-46.5f, 6.5f, -36f), new Vector3(-55.5f, -2.5f, -14f), 48f, 0.01f);

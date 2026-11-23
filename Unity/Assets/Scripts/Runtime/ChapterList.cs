@@ -96,7 +96,22 @@ namespace Seven
                 PlayFromStart = () => { Chapter1State.Reset(); CattalusState.StartFresh(); },
                 Sections = CattalusSections,
             },
+            new ChapterDef
+            {
+                Id = "finale", Name = "The Moon: Somewhere to Come Back To",
+                // Round 19: the last chapter - reached, or Cattalus is done (CAT_12's Moon route)
+                Reached = () => FinaleState.Released && (FinaleState.OwnReached || WorldFlags.FinalMoonUnlocked),
+                HasProgress = () => FinaleState.OwnHasProgress, Confirm = "Start the Moon finale over? Your progress there will be reset.",
+                PlayFromStart = () => { Chapter1State.Reset(); FinaleState.StartFresh(); },
+                Sections = FinaleSections,
+            },
         };
+        static (string label, System.Action start)[] FinaleSections()
+        {
+            var l = new List<(string label, System.Action start)>();
+            foreach (var (label, cp) in FinaleState.SelectEntries) { int c = cp; l.Add((label, () => { Chapter1State.Reset(); FinaleState.StartAt(c); })); }
+            return l.ToArray();
+        }
 
         static (string label, System.Action start)[] MoonSections()
         {

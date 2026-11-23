@@ -10,7 +10,7 @@ namespace Seven
     /// </summary>
     public class SevenRestPose : MonoBehaviour
     {
-        public enum Kind { None, Lie, SitFloor }
+        public enum Kind { None, Lie, SitFloor, Kneel }
         public Kind Pose;
         Animator _a;
         struct P { public float hipDrop; public Vector3 spine; public float neck, head; public Vector3 thigh, shin, foot, upL, foreL, upR, foreR; }
@@ -29,6 +29,14 @@ namespace Seven
             upR = new Vector3(0.55f, -0.80f, 0.25f), foreR = new Vector3(0.92f, -0.05f, -0.35f),
         };
 
+        /// <summary>Round 19 (FIN_10): kneeling, sitting back on her heels, leaning a little forward over what is in front of her knees.</summary>
+        static readonly P KneelP = new P
+        {
+            hipDrop = 0.50f, spine = new Vector3(14f, 10f, 8f), neck = 16f, head = 10f,
+            thigh = new Vector3(0.93f, -0.33f, 0.10f), shin = new Vector3(-0.96f, -0.26f, 0.04f), foot = new Vector3(-0.85f, -0.5f, 0f),
+            upL = new Vector3(0.45f, -0.88f, 0.12f), foreL = new Vector3(0.9f, -0.35f, -0.2f),
+            upR = new Vector3(0.45f, -0.88f, 0.12f), foreR = new Vector3(0.9f, -0.35f, -0.2f),
+        };
         public static SevenRestPose On(GameObject seven, Kind k)
         {
             var r = seven.GetComponent<SevenRestPose>() ?? seven.AddComponent<SevenRestPose>();
@@ -46,7 +54,7 @@ namespace Seven
         void LateUpdate()
         {
             if (Pose == Kind.None || _a == null) return;
-            var p = Pose == Kind.Lie ? Lie : Sit;
+            var p = Pose == Kind.Lie ? Lie : Pose == Kind.Kneel ? KneelP : Sit;
             var F = transform.forward; var U = transform.up; var L = -transform.right;
             Vector3 Dir(Vector3 v, float side) => (F * v.x + U * v.y + L * (v.z * side)).normalized;
             Vector3 Lean(float deg) { float r = deg * Mathf.Deg2Rad; return (U * Mathf.Cos(r) + F * Mathf.Sin(r)).normalized; }

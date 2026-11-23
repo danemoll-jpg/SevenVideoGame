@@ -153,7 +153,10 @@ namespace Seven.EditorTools
             // ---------------------------------------------------------------- the ice passage (a tube) and its water surface
             {
                 var v = new List<Vector3>(); var t = new List<int>();
-                var path = new List<Vector3> { new Vector3(0f, 3f, 9f) }; path.AddRange(E.Dive); path.Add(new Vector3(0f, -40f, 128f));
+                // QF29 (1): the tube began at (0, 3, 9) - above the ice - so its wall stood across the shelf at z ~2 and a bike arriving
+                // over the ice wedged against it (a player soft-lock; only riders already inside the hole got through). It now begins
+                // in the hole, below the surface, tilted down the dive: the shelf side is open.
+                var path = new List<Vector3> { new Vector3(0f, -0.5f, 12f) }; for (int i = 1; i < E.Dive.Length; i++) path.Add(E.Dive[i]); path.Add(new Vector3(0f, -40f, 128f));
                 Inside(v, t, path, 7.2f, 18);
                 MeshObject("IcePassage", SaveMesh(SmoothFinish(v, t), "Europa_Passage"), m.ice, world);
                 var w = Block("WaterSurface", new Vector3(-8f, E.WaterY - 0.02f, 24f), new Vector3(8f, E.WaterY, 40f), m.water, world, false);

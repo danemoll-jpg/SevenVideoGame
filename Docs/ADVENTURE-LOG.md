@@ -137,3 +137,13 @@ entry covers the rescue, the beam and the larger interior (checkpoints 7-8) and 
 - **Maintenance interruption** (`ast_fight`, unlock `asteroid>=7`): He was waiting for them. His tools are locked away and his cradle holds him; nothing of him is broken.
 - **A little bird** (`ast_archive`, unlock `asteroid>=8`): They stopped the whole line to mend one small bird. I knew what it would sound like before it moved.
 - **Something left for them** (`ast_home`, unlock `asteroid>=10`): He keeps what is left safe now. Preservation mode: the essential lights stay on, and for the first time the cavern is quiet.
+
+
+## Chapter — The Moon: somewhere to come back to (Round 19)
+
+- **Back by choice** (`fin_return`, unlock `finale>=1`): Last time all I wanted was to get away from it. This time we parked somewhere without a prison attached.
+- **The people keeping it running** (`fin_scree`, unlock `finale>=3`): A Scree worker repairs Tunneler's equipment in a section he calls unsafe. They opened the old route for us. I said we'd bring something back.
+- **The door I knew** (`fin_door`, unlock `finale>=4`): The door from my first vision. They weren't surprised to see me. I think I belonged here.
+- **Witness** (`fin_witness`, unlock `finale>=5`): Seven records in seven sockets, and the gaps between them. The archive called me a witness. I was there. I said yes.
+- **Eight more** (`fin_panther`, unlock `finale>=6`): He saw it before I did.
+- **Received** (`fin_end`, unlock `finale>=8`): The record is complete, and it isn't mine to keep any more. The Scree have their stations. The worlds have their histories.

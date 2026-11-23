@@ -31,7 +31,10 @@ namespace Seven
         public static readonly Vector3 OpeningAt = new Vector3(0f, 0f, 12f);    // the hole in the ice
 
         // ---- the ride: waypoints (the guiding lights follow these; check runs and the player-style run steer by them)
-        public static readonly Vector3[] Dive = { new Vector3(0f, 1.2f, 11f), new Vector3(0f, -2f, 22f), new Vector3(0f, -9f, 42f), new Vector3(0f, -16f, 64f), new Vector3(0f, -26f, 92f), new Vector3(0f, -38f, 120f) };
+        // QF29 (1): the second point was (0, -2, 22) - inside the ice field's 2 m slab (y -2..0; its hole only spans z 7..17): the guide
+        // light led the bike into the slab's lip just past the hole (the check run's jam since QF28, 0.18.2's soft-lock). Now the route
+        // drops through the hole (z 9 -> 16) and runs under the slab with the bike's body clear of it (core below y -3).
+        public static readonly Vector3[] Dive = { new Vector3(0f, 0.6f, 9f), new Vector3(0f, -4.2f, 15.5f), new Vector3(0f, -6.5f, 28f), new Vector3(0f, -9f, 42f), new Vector3(0f, -16f, 64f), new Vector3(0f, -26f, 92f), new Vector3(0f, -38f, 120f) };
         public static readonly Vector3[] Descent = { new Vector3(0f, -44f, 140f), new Vector3(14f, -52f, 170f), new Vector3(34f, -58f, 200f), new Vector3(52f, -60f, 228f) };
         public static readonly Vector3 HugeOnePath0 = new Vector3(-90f, -78f, 150f), HugeOnePath1 = new Vector3(140f, -74f, 200f);
         public static readonly Vector3[] ToSettlement = { new Vector3(64f, -60f, 246f), new Vector3(78f, -61f, 262f), new Vector3(88f, -62f, 274f) };

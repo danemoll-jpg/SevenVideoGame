@@ -321,7 +321,7 @@ namespace Seven.EditorTools
                     var mp = UnityEngine.Object.Instantiate(caveProfile); mp.name = "Moon_Volume"; AssetDatabase.CreateAsset(mp, moonVol);
                     var comps = mp.components.ToList(); mp.components.Clear();
                     foreach (var c in comps) { var cc = UnityEngine.Object.Instantiate(c); cc.name = c.name; mp.components.Add(cc); AssetDatabase.AddObjectToAsset(cc, mp); }
-                    if (mp.TryGet<UnityEngine.Rendering.Universal.ColorAdjustments>(out var mca)) { Log($"GRADE (QF28 pass) Moon (its cave volume): contrast {mca.contrast.value:0} -> 24"); mca.contrast.value = 24f; }
+                    if (mp.TryGet<UnityEngine.Rendering.Universal.ColorAdjustments>(out var mca)) { Log($"GRADE (QF28 pass) Moon (its cave volume): contrast {mca.contrast.value:0} -> 24"); mca.contrast.value = 24f; mca.postExposure.value = 0.22f; Log("GRADE (QF29 pass) Moon: post-exposure +0.22 (the prison / bay / chamber frames read as one dark grey)"); }
                     EditorUtility.SetDirty(mp); vol.sharedProfile = mp;
                 }
             }
@@ -439,6 +439,9 @@ namespace Seven.EditorTools
                 var sg = w.AddComponent<Seven.ScreeGuard>(); sg.Post = p; sg.PostFacing = f; sg.PostState = "work"; sg.ScanAngle = 0f; sg.UseGround = false;
                 workers.Add(sg);
             }
+            // QF29: work lamps - over the terrace where the Scree stop her (the fight under a lamp, not in the dark) and over the bay worker
+            Lamp("TerraceFightLamp", new Vector3(16.5f, L.Lower + 3.4f, -40.6f), 16f, 7f, m.glow, null, new Vector3(0.6f, 0.08f, 0.16f));
+            if (ScreeWorkSpots.Length > 0) Lamp("BayWorkLamp", ScreeWorkSpots[0].Item1 + new Vector3(0.8f, 3.0f, 0.6f), 10f, 3.6f, m.glow, null, new Vector3(0.5f, 0.08f, 0.14f));
 
             var ui = new GameObject("ChapterUI").AddComponent<Seven.ChapterUI>();
             ui.Cam = cam;

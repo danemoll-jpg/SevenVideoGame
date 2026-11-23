@@ -801,6 +801,154 @@
      "windSound": "ratwing_flap"
     }
    ]
+  },
+  {
+   "id": "tunneler",
+   "name": "Tunneler",
+   "sevenHits": 6,
+   "sevenMoveScale": 1.6,
+   "openTime": 1.8,
+   "staggerTime": 3.4,
+   "strikesForStagger": 3,
+   "throwFlight": 0.35,
+   "debrisRespawn": 5.0,
+   "tkRange": 13.0,
+   "objectiveTime": 0.0,
+   "stunTime": 3.6,
+   "throwChip": 0.02,
+   "strikeDamage": 0.04,
+   "kickDamage": 0.06,
+   "bladeDamage": 0.05,
+   "openStrikeScale": 0.3,
+   "dazedAt": -1.0,
+   "phases": [
+    {
+     "name": "keep him off the platform",
+     "staggers": 2,
+     "endAt": 0.6,
+     "gapMin": 1.5,
+     "gapMax": 2.5,
+     "tempo": 1.0,
+     "moveSpeed": 2.6,
+     "keep": 5.0,
+     "attacks": [
+      "drill_strike",
+      "drill_charge"
+     ],
+     "combos": []
+    },
+    {
+     "name": "the damaged connection",
+     "staggers": 2,
+     "endAt": 0.3,
+     "gapMin": 1.3,
+     "gapMax": 2.2,
+     "tempo": 1.12,
+     "moveSpeed": 2.9,
+     "keep": 5.0,
+     "attacks": [
+      "drill_strike",
+      "drill_charge",
+      "debris_slam"
+     ],
+     "combos": []
+    },
+    {
+     "name": "the old barrier",
+     "staggers": 2,
+     "endAt": -1.0,
+     "gapMin": 1.2,
+     "gapMax": 2.0,
+     "tempo": 1.22,
+     "moveSpeed": 3.1,
+     "keep": 5.0,
+     "attacks": [
+      "drill_strike",
+      "drill_charge",
+      "debris_slam"
+     ],
+     "combos": [
+      "drill_strike>drill_charge"
+     ]
+    }
+   ],
+   "attacks": [
+    {
+     "telegraph": 0.9,
+     "active": 0.32,
+     "recover": 0.9,
+     "open": 1.0,
+     "damage": 1,
+     "knock": 1.4,
+     "range": 4.2,
+     "width": 1.4,
+     "angle": 130.0,
+     "speed": 12.0,
+     "count": 1,
+     "puddle": 0.0,
+     "blockable": true,
+     "dodgeable": true,
+     "jumpable": false,
+     "minDist": 0.0,
+     "maxDist": 7.0,
+     "weight": 1.4,
+     "sound": "fight_swing",
+     "windSound": "europa_drill",
+     "id": "drill_strike",
+     "kind": "sweep",
+     "answer": "block or dodge"
+    },
+    {
+     "telegraph": 1.1,
+     "active": 0.6,
+     "recover": 1.1,
+     "open": 1.2,
+     "damage": 1,
+     "knock": 1.8,
+     "range": 14.0,
+     "width": 2.0,
+     "angle": 0.0,
+     "speed": 18.0,
+     "count": 1,
+     "puddle": 0.0,
+     "blockable": false,
+     "dodgeable": true,
+     "jumpable": false,
+     "minDist": 4.0,
+     "maxDist": 24.0,
+     "weight": 1.6,
+     "sound": "europa_drill",
+     "windSound": "europa_drill",
+     "id": "drill_charge",
+     "kind": "lunge",
+     "answer": "dodge sideways"
+    },
+    {
+     "telegraph": 1.0,
+     "active": 0.45,
+     "recover": 0.9,
+     "open": 0.6,
+     "damage": 1,
+     "knock": 1.4,
+     "range": 9.0,
+     "width": 1.0,
+     "angle": 360.0,
+     "speed": 13.0,
+     "count": 1,
+     "puddle": 0.0,
+     "blockable": false,
+     "dodgeable": false,
+     "jumpable": true,
+     "minDist": 0.0,
+     "maxDist": 12.0,
+     "weight": 0.9,
+     "sound": "europa_rupture",
+     "windSound": "creature_rumble",
+     "id": "debris_slam",
+     "kind": "ring",
+     "answer": "jump"
+    }
+   ]
   }
  ]
 }

@@ -159,3 +159,16 @@ Foundries, transport tunnels, rail carriers and enormous moving assemblies, with
 `ast_bird` · unlock `asteroid>=3`
 
 A small wind-up bird; one wing repaired several times with mismatched pieces. Wound, it gives one uneven chirp and flaps a wing.
+
+
+### The archive chamber
+
+`fin_archive` · unlock `finale>=5`
+
+A round chamber beneath the lunar city, older than the mine: seven sockets round a central platform, walls for showing what it holds. It was built to bring the surviving records together - and to recognise a witness.
+
+### The lunar network
+
+`fin_network` · unlock `finale>=5`
+
+The city's old public network, locked behind Tunneler's restricted markings for years. Reopened, the Scree stations can hear each other, read their own history and run the city's controls themselves.
