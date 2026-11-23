@@ -61,6 +61,7 @@ namespace Seven.EditorTools
                 if (c.name == "BackLight") { c.rotation = Quaternion.Euler(35f, 150f, 0f); var l = c.GetComponent<Light>(); l.intensity = 0.7f; l.shadowStrength = 0.6f; }
                 if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(50f, 330f, 0f); c.GetComponent<Light>().intensity = 0.35f; }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Asteroid", 0.98f, 0.8f, 16f);   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoAsteroidPath);
             Object.DestroyImmediate(inst);
             return prefab;

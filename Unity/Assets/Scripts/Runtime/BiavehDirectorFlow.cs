@@ -155,6 +155,7 @@ namespace Seven
             Shoot(new Vector3(16f, 7f, -16f), new Vector3(0f, 2.5f, 4f), 52f, 0.01f);
             StartCoroutine(UI.Fade(0f, 1.6f));
             yield return Wait(1.4f);
+            if (Saucer != null) ImageGate.Expect(Saucer, "the saucer in the receiving berth", 0f, "b01_"); else ImageGate.ExpectPoint(new Vector3(0f, 2.5f, 4f), "the receiving berth", 0f, "b01_");   // QF26 (2)
             yield return Shot("b01_the_receiving_berth");
             yield return HoldBikeOut(L.BikePad, 90f);
             Shoot(L.SaucerAt + new Vector3(9f, 2.4f, -9f), L.SaucerAt + new Vector3(0f, 2.2f, 0f), 46f, 0.01f);
@@ -179,6 +180,7 @@ namespace Seven
             Shoot(c0, P7 + new Vector3(-20f, 2f, 0f), 52f, 0.01f);
             StartCoroutine(RevealAir(true));
             for (float t = 0f; t < 1f; t += Time.deltaTime / 5f) { float u = Mathf.SmoothStep(0f, 1f, t); Cam.Shot(Vector3.Lerp(c0, c1, u), Vector3.Lerp(P7 + new Vector3(-20f, 2f, 0f), new Vector3(-230f, 120f, 10f), u), 1.2f, false, Mathf.Lerp(52f, 66f, u)); yield return null; }
+            ImageGate.ExpectPoint(new Vector3(-230f, 120f, 10f), "the city curving up the shell", 0f, "b04_");   // QF26 (2)
             yield return Shot("b04_the_city_curves_up_the_shell");
             yield return Say("BIA_03", 1, 3);                    // People live all the way up there? / Yes. Most of us never visit every district. / I can believe that.
             TwoShot((P7 + L.NelaAt) * 0.5f, Vector3.Cross(Vector3.up, Flat(L.NelaAt - P7).normalized), 3.0f, 1.3f, 1.3f, 44f, 0.5f);
@@ -268,6 +270,7 @@ namespace Seven
             foreach (var p in new[] { L.CabinetAt, L.Relay2At, L.Relay3At })
             { var g = GameObject.CreatePrimitive(PrimitiveType.Cylinder); Destroy(g.GetComponent<Collider>()); g.transform.position = p + Vector3.up * 30f; g.transform.localScale = new Vector3(0.6f, 30f, 0.6f); g.GetComponent<Renderer>().sharedMaterial = Markers.Additive(0.8f); beacons.Add(g); }
             yield return Wait(1.2f);
+            ImageGate.ExpectPoint(L.Relay2At + Vector3.up * 2f, "the relays and the line of light", 0f, "b10_");   // QF26 (2)
             yield return Shot("b10_the_shared_route_a_line_of_light_to_the_three_relays");
             Log("BIA_04: the route shared one way - a line of light along the roads to the three relays (a navigation impression, not a vision)");
             foreach (var g in dots) Destroy(g, 0.6f);
@@ -289,20 +292,27 @@ namespace Seven
                 yield return StopBike(1.6f);
                 yield return Cutscene(true);
                 // something moves high above: LOW ANGLE - Ratwing clings beneath the bridge, partly hidden by its supports
-                Shoot(new Vector3(L.RatwingPerch.x - 6f, 0.9f, 7f), L.RatwingPerch + Vector3.down * 1.2f, 44f, 0.01f);
+                // QF26 (2): the camera stands on the ground there (0.18.2 put it at y 0.9 - under the shell's rising floor: the shot was
+                // fog seen through the underside of the ground) and the haze thins a little for the look up at him
+                var lowCam = new Vector3(L.RatwingPerch.x - 6f, 0f, 7f); lowCam.y = Mathf.Max(Ground.Height(lowCam.x, lowCam.z), L.ShellRise(lowCam.x, lowCam.z)) + 0.9f;
+                StartCoroutine(FogThin(0.6f, 0.3f));
+                Shoot(lowCam, L.RatwingPerch + Vector3.down * 1.2f, 44f, 0.01f);
                 AudioKit.Play("ratwing_flap", L.RatwingPerch, 0.5f, 0f, AudioKit.Bus.Sfx, 50f);
                 yield return Wait(0.8f);
+                if (Ratwing != null) ImageGate.Expect(Ratwing, "Ratwing beneath the bridge", 0f, "b11_");   // QF26 (2)
                 yield return Shot("b11_low_angle_ratwing_beneath_the_bridge");
                 yield return Cutaway("b11a_aboard_the_display_he_has_him", AboardCut.Mood.Watch, "screen", 0.5f, "BIA_05_01");   // There. Above you. (the instruments: where his eyes are)
-                Shoot(new Vector3(L.RatwingPerch.x - 6f, 0.9f, 7f), L.RatwingPerch + Vector3.down * 1.2f, 44f, 0.01f);
+                Shoot(lowCam, L.RatwingPerch + Vector3.down * 1.2f, 44f, 0.01f);
                 yield return Say("BIA_05", 2, 2);                // I see him.
                 // he unfolds his wings and drops onto a distant platform
                 yield return FlyRat(L.RatwingDrop, L.RatwingDrop.y, 2.2f);
                 if (Ratwing != null) Ratwing.rotation = Quaternion.LookRotation(Flat(P7 - Ratwing.position));
                 Shoot(P7 + new Vector3(-2.4f, 1.4f, -2f), L.RatwingDrop + Vector3.up * 1.2f, 30f, 0.5f);
                 yield return Wait(0.5f);
+                if (Ratwing != null) ImageGate.Expect(Ratwing, "Ratwing on the distant platform", 0f, "b12_");   // QF26 (2)
                 yield return Shot("b12_ratwing_on_the_distant_platform");
                 yield return Say("BIA_05", 3, 3);                // They've found someone to run their errands.
+                StartCoroutine(FogThin(0f, 1.0f));
                 if (Riding) { if (!Bike.Dismount()) Bike.Dismount(true); }
                 Seven.Lock(true);
                 yield return Say("BIA_05", 4, 7);                // You've made quite a mess. / They can tidy up... / For their own archive? / They seem very attached to it.
@@ -631,6 +641,7 @@ namespace Seven
             yield return Wait(0.8f);
             yield return Hold.Open(null, s => { if (s > 0.02f) ShowBike(true); });
             ShowBike(true);
+            if (Hold != null) ImageGate.Expect(Hold.transform, "the open bike hold", 0f, "b01b_");   // QF26 (2)
             yield return Shot("b01b_the_bike_hold_open");
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
             {

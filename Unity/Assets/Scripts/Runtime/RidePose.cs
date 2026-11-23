@@ -12,7 +12,7 @@ namespace Seven
     public static class RidePose
     {
         public static int Checks, Bad;
-        static float _worstHips, _worstPalm, _worstFoot, _worstHead = 99f; static string _scene; static float _since; static bool _shot;
+        static float _worstHips, _worstPalm, _worstFoot, _worstHead = 99f; static string _scene; static float _since; static bool _shot; static ChapterCamera _cc; static float _ctlFor;
         public static void Sample(ChapterSeven s, HoverBike b)
         {
             if (DemoBoot.CaptureDir == null || s == null || b == null) return;
@@ -50,11 +50,16 @@ namespace Seven
             if (bad) Bad++;
             _worstHips = Mathf.Max(_worstHips, hips); _worstPalm = Mathf.Max(_worstPalm, palm); _worstFoot = Mathf.Max(_worstFoot, foot); _worstHead = Mathf.Min(_worstHead, headOver);
             if (bad && Bad <= 5) Log($"RIDE POSE (QF24 15) {sc}: OFF - hips {hips * 100f:0.0} cm from the seat point, palms {g.x * 100f:0.0} / {g.y * 100f:0.0} cm from the grips, feet {g.z * 100f:0.0} / {g.w * 100f:0.0} cm, head {headOver * 100f:0} cm over the saddle{(inside ? ", HER HEAD / CHEST INSIDE THE FAIRING" : "")}");
-            if (!_shot && ChapterCapture.I != null && Time.time - _since > 2f)
+            // QF26 (2): the riding camera's capture only while she really rides with control (0.18.2 took it as a junction cutscene
+            // began: the camera already swinging to the junction, the bike out of frame)
+            bool ctl = false; try { ctl = MusicSystem.HasControl != null && MusicSystem.HasControl(); } catch { }
+            if (_cc == null) _cc = Object.FindAnyObjectByType<ChapterCamera>();
+            if (!(ctl && (_cc == null || !_cc.InShot))) _ctlFor = Time.time;
+            if (!_shot && ChapterCapture.I != null && Time.time - _since > 2f && Time.time - _ctlFor > 1.5f && Mathf.Abs(b.Speed) < 15f && !b.Swim)
             {
                 _shot = true;
                 var c = ChapterCapture.I;
-                c.StartCoroutine(c.Shot($"qf24_15_ride_{sc}_riding_camera"));
+                ImageGate.Expect(s.transform, "7 riding", 0f, "_riding_camera"); c.StartCoroutine(c.Shot($"qf24_15_ride_{sc}_riding_camera"));
                 var side = b.transform.right; var at = b.Seat != null ? b.Seat.position : b.transform.position;
                 c.StartCoroutine(c.ShotFrom($"qf24_15_ride_{sc}_side", at + side * 2.6f + Vector3.up * 0.6f + b.transform.forward * 0.3f, at + Vector3.up * 0.35f, 40f));
                 Log($"RIDE POSE (QF24 15) {sc}: seated - hips {hips * 100f:0.0} cm from the seat point, palms {g.x * 100f:0.0} / {g.y * 100f:0.0} cm from the grips, feet {g.z * 100f:0.0} / {g.w * 100f:0.0} cm from the panels, head {headOver * 100f:0} cm over the saddle, head / chest inside the fairing {(inside ? "YES" : "no")}");

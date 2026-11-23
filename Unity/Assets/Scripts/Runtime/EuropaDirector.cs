@@ -714,7 +714,7 @@ namespace Seven
                 float u = Mathf.SmoothStep(0f, 1f, t);
                 Saucer.position = Vector3.Lerp(from, land, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 8f;
                 Cam.Shot(land + new Vector3(34f, 12f, -34f), Saucer.position, 2f, false, 55f);
-                if (!shot && t > 0.45f) { shot = true; StartCoroutine(Shot("e01_extreme_wide_ice_field")); }
+                if (!shot && t > 0.45f) { shot = true; ImageGate.Expect(Saucer, "the saucer crossing the ice field", 0f, "e01_"); StartCoroutine(Shot("e01_extreme_wide_ice_field")); }
                 yield return null;
             }
             Saucer.position = land;
@@ -741,9 +741,11 @@ namespace Seven
             yield return WalkSeven(EuropaLayout.BikeDown - Bike.transform.right * 1.05f, 6f);
             Seven.Lock(true);
             Bike.Mount(); FollowCamera();
-            { var g = Bike.GripL.position; Shoot(g - Bike.transform.right * 0.9f + Vector3.up * 0.35f + Bike.transform.forward * 0.5f, g, 32f, 0.01f); }
+            // QF26 (2): the insert from its own camera (0.18.2's Shoot came right after Mount, and the riding camera took the frame
+            // back: the capture was a white wall of hull and haze)
             yield return Wait(0.8f);
-            yield return Shot("e04_insert_hands_in_the_grips");
+            { var g = Bike.GripL.position; ImageGate.Expect(Bike.transform, "her hands in the grips", 0f, "e04_");
+              if (Shots && Cap != null) yield return Cap.ShotFrom("e04_insert_hands_in_the_grips", g - Bike.transform.right * 0.9f + Vector3.up * 0.35f + Bike.transform.forward * 0.5f, g, 32f); }
             Shoot(Bike.transform.position + Bike.transform.forward * 4.5f + Bike.transform.right * 2.5f + Vector3.up * 1.2f, Bike.transform.position + Vector3.up * 1f, 46f, 0.6f);
             yield return Say("EUR_02");
             Complete("EUR_02");
@@ -773,17 +775,20 @@ namespace Seven
             var camAt = mouth + dir * 6.2f + tan * 2.6f - Vector3.up * 0.3f;
             Shoot(camAt, mouth - Vector3.up * 0.1f, 42f, 0.01f);
             yield return Wait(1.0f);
+            if (Saucer != null) ImageGate.Expect(Saucer, "the saucer's seamless hull", 0f, "qf13_05a");   // QF26 (2)
             yield return Shot("qf13_05a_europa_hull_seamless");
             yield return Hold.Open(null, s =>
             {
                 if (s > 0.02f) ShowBike(true);     // QF14 (3): the room behind the panel - the bike sits in its cradles
-                if (!_holdShot && s > 0.5f) { _holdShot = true; StartCoroutine(Shot("qf13_05b_europa_hold_opening_player_view")); }
+                if (!_holdShot && s > 0.5f) { _holdShot = true; if (Saucer != null) ImageGate.Expect(Saucer, "the hold opening in the hull", 0f, "qf13_05b"); StartCoroutine(Shot("qf13_05b_europa_hold_opening_player_view")); }
             });
             ShowBike(true);
+            ImageGate.Expect(Bike.transform, "the bike in the open hold", 0f, "qf13_05c");   // QF26 (2)
             yield return Shot("qf13_05c_europa_hold_open_bike_inside");
             if (Cap != null)          // QF14 (3): the bay straight on (the reference's view)
             {
                 var axis = Hold.transform.position + Vector3.up * (SaucerBeam.ShipBelly + 0.72f);
+                ImageGate.Expect(Bike.transform, "the bike in its cradles in the bay", 0f, "bay_straight");   // QF26 (2)
                 yield return Cap.ShotFrom("qf14_03_europa_bay_straight_on", axis + dir * 7.2f, axis + dir * 2.0f, 30f);
             }
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
@@ -791,7 +796,7 @@ namespace Seven
                 float u = Mathf.SmoothStep(0f, 1f, t);
                 Bike.Glide(Vector3.Lerp(Hold.Inside, Hold.Outside, u), yawOut, bottomIn);
                 Cam.Shot(camAt + dir * 1.5f * u, Bike.transform.position + Vector3.up * (bottomIn - Bike.transform.position.y + 0.4f), 0.8f, false, 42f);
-                if (t > 0.6f && t - Time.deltaTime / 2.8f <= 0.6f) StartCoroutine(Shot("qf13_05d_europa_bike_glides_out_of_the_hold"));
+                if (t > 0.6f && t - Time.deltaTime / 2.8f <= 0.6f) { ImageGate.Expect(Bike.transform, "the bike gliding out", 0f, "qf13_05d"); StartCoroutine(Shot("qf13_05d_europa_bike_glides_out_of_the_hold")); }
                 yield return null;
             }
             StartCoroutine(CloseHoldLater(1.2f));
@@ -805,6 +810,7 @@ namespace Seven
             }
             Bike.EndGlide(); Bike.Place(settle, settleYaw);
             while (Hold.IsOpen) yield return null;
+            if (Saucer != null) ImageGate.Expect(Saucer, "the hull seamless again", 0f, "qf13_05e");   // QF26 (2)
             yield return Shot("qf13_05e_europa_bike_out_hull_seamless_again");
             Log("QF13 (5): the bike came out of the bike hold and settled on the shelf; the hold closed seamlessly (7 comes down in the beam)");
         }

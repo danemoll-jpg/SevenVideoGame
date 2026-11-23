@@ -108,6 +108,7 @@ namespace Seven
             StartCoroutine(UI.Fade(0f, 1.6f));
             yield return Wait(0.8f);
             if (OuterGate != null) yield return OuterGate.Move(true, 3.2f);
+            if (OuterGate != null) ImageGate.Expect(OuterGate.transform, "the outer gate, shut", 0f, "a01_");   // QF26 (2)
             yield return Shot("a01_the_receiving_chamber_the_outer_gate_shut");
             // the bike lowers out of the bike hold onto its pad; 7 comes down the beam onto hers (no ramp)
             yield return HoldBikeOut(L.BikePad, 270f);
@@ -186,6 +187,7 @@ namespace Seven
             Shoot(L.ContainerAt + new Vector3(5f, 3f, -6f), L.ContainerAt + Vector3.up * 0.8f, 46f, 0.5f);
             _cut = true;
             yield return Wait(0.5f);
+            if (Container != null) ImageGate.Expect(Container, "the container under the scanner", 0f, "a07_");   // QF26 (2)
             yield return Shot("a07_the_scanner_on_the_container");
             yield return SayIds("AST_02_P3");                     // Material registered. Proceed to sorting.
             StartCoroutine(ContainerToSorting());
@@ -204,6 +206,7 @@ namespace Seven
             if (ServiceDoor != null) StartCoroutine(ServiceDoor.Move(false, 2.6f));
             if (DoorLine != null) StartCoroutine(DoorLine.Run(0, DoorLine.Count - 1, 2.2f));
             yield return Wait(1.6f);
+            if (ServiceDoor != null) ImageGate.Expect(ServiceDoor.transform, "the service entrance", 0f, "a08_");   // QF26 (2)
             yield return Shot("a08_the_service_entrance_opens");
             yield return Wait(1.2f);
             SetZone("ServiceDoor", true);
@@ -254,6 +257,7 @@ namespace Seven
             yield return Wait(0.8f);
             yield return Hold.Open(null, s => { if (s > 0.02f) ShowBike(true); });
             ShowBike(true);
+            if (Hold != null) ImageGate.Expect(Hold.transform, "the open bike hold", 0f, "a01b_");   // QF26 (2)
             yield return Shot("a01b_the_bike_hold_open");
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
             {
@@ -298,15 +302,18 @@ namespace Seven
                 Shoot(c0, bp + new Vector3(-6f, 1.4f, 0f), 50f, 0.01f);
                 StartCoroutine(FogThin(0.85f, 2f));
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 4.5f) { float u = Mathf.SmoothStep(0f, 1f, t); Cam.Shot(Vector3.Lerp(c0, c1, u), Vector3.Lerp(bp + new Vector3(-6f, 1.4f, 0f), look, u), 1.2f, false, Mathf.Lerp(50f, 62f, u)); yield return null; }
+                ImageGate.ExpectPoint(look, "the city that still works", 0f, "a10_");   // QF26 (2)
                 yield return Shot("a10_the_city_that_still_works_wide");
                 yield return Say("AST_03", 1, 2);                 // It's all still going. / Yes.
                 Shoot(bp + new Vector3(-3f, 2.2f, 6f), new Vector3(-183f, 1f, 76f), 40f, 0.6f);
                 yield return Wait(0.5f);
+                ImageGate.ExpectPoint(new Vector3(-183f, 1f, 76f), "the empty workstations", 0f, "a11_");   // QF26 (2)
                 yield return Shot("a11_the_empty_workstations");
                 yield return Say("AST_03", 3, 4);                 // But there's nobody at the stations. / I haven't found anyone yet.
                 // the objective's reason: the junctions are set for the carriers, not for her
                 Shoot(bp + new Vector3(2f, 3f, 4f), L.Junctions[0] + Vector3.up * 1f, 44f, 0.6f);
                 yield return Wait(0.4f);
+                ImageGate.ExpectPoint(L.Junctions[0] + Vector3.up * 1f, "the first junction", 0f, "a12_");   // QF26 (2)
                 yield return Shot("a12_the_first_junction_set_for_the_carriers");
                 yield return SayIds("AST_03_P1", "AST_03_P2");     // ... set for the carriers, not for you. / Then I'll borrow them.
                 StartCoroutine(FogThin(0f, 2f));
@@ -351,6 +358,7 @@ namespace Seven
             AsteroidState.DoStep("junction" + (i + 1));
             int n = AsteroidState.StepsDone("junction");
             Log($"junction {i + 1} aligned (the turntable turned into line, the route lights ran ahead) - Junctions {n} / 3");
+            ImageGate.ExpectPoint(c + Vector3.up * 0.5f, "the junction turned into line", 0f, "a13_");   // QF26 (2)
             yield return Shot($"a13_junction{i + 1}_aligned_route_lights_ahead");
             UI.Hint($"Junctions {n} / 3", 2.5f);
             yield return Cutscene(false);

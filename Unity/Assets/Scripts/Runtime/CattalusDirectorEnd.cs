@@ -24,6 +24,7 @@ namespace Seven
             {
                 // at the grid, on the bike: X = race; A = a practice lap first (offered by the steward), the first time only
                 var grid = CattalusCourse.AtDist(-16f);
+                if (!practiced) Race.DuchessToGrid();                          // QF28 (4): she waits at the grid in her racer
                 CattalusCourse.Around(CattalusCourse.IndexAtDist(-16f));      // the course round the grid is open to ride onto
                 Objective("Race the Grand Circuit - ride to the start line");
                 bool go = false, practice = false;
@@ -83,6 +84,7 @@ namespace Seven
                 case "duchess_finished": case "finished": if (_raceLines++ == 0) StartCoroutine(SayIds("CAT_07_CALL3")); break;
             }
             if (m.StartsWith("section:") || m == "lead" || m == "behind" || m == "crash") Log($"race moment: {m} at {Race.HerDist:0} m ({(Race.Leading ? "leading" : "behind")}, {CattalusState.Fmt(Race.ClockNow)})");
+            DuchessShots(m);                                                   // QF28 (4)
             if (m == "section:3" || m == "section:2" || m == "section:1") StartCoroutine(Shot($"c2{m.Substring(8)}_race_{CattalusCourse.SectionNames[int.Parse(m.Substring(8))].Replace(' ', '_').Replace("-", "_")}"));
         }
 
@@ -232,15 +234,25 @@ namespace Seven
             var f = Flat(Seven.transform.forward).normalized; var r = Vector3.Cross(Vector3.up, f);
             Seven.Place(P7 - f * 0.45f, f); Seven.Lock(true);                         // a step back from the trophy
             var held = P7 + Vector3.up * 1.18f + f * 0.34f;
-            tik.enabled = true; tik.Ease = 2.5f;
-            tik.LeftPos = held - r * (RuneSizes.SphereR + 0.02f); tik.LeftW = 1f; tik.LeftPalmN = r; tik.LeftPalmW = 1f;
-            tik.RightPos = held + r * (RuneSizes.SphereR + 0.02f); tik.RightW = 1f; tik.RightPalmN = -r; tik.RightPalmW = 1f;
+            // QF28 (5): her hands cup it - both palms under and round its real surface, fingers curled until they touch it (never
+            // through it), the wrists natural (HandHold; was: palms pushed at its sides with the clip's wrists and fixed curls)
+            tik.enabled = true; tik.Ease = 2.5f; tik.LeftW = 0f; tik.RightW = 0f; tik.LeftPalmW = 0f; tik.RightPalmW = 0f;
             tik.LookPos = held; tik.LookW = 0.8f;
             if (Sphere != null) Sphere.SetParent(null, true);                         // released from the cradle
+            var hold = HoldPose.On(Seven.gameObject);
+            if (Sphere != null) hold.Hold(Sphere, true, true, "the sphere (both hands)", RuneSizes.SphereR);
             for (float t = 0f; t < 1f; t += Time.deltaTime / 0.8f) { if (Sphere != null) Sphere.position = Vector3.Lerp(sp, held, Mathf.SmoothStep(0f, 1f, t)); yield return null; }
+            yield return Wait(0.5f);
             Shoot(held + r * 0.8f + f * 0.25f + Vector3.up * 0.06f, held, 30f, 0.01f);
-            yield return Wait(0.6f);
+            yield return Wait(0.3f);
+            if (Sphere != null) ImageGate.Expect(Sphere, "the sphere between her hands", 0f, "c43_");
             yield return Shot("c43_the_sphere_rests_between_her_hands_lines_across_it");
+            // the player's view of the hold, close (her hands from in front and a little above)
+            Shoot(held + f * 0.75f + Vector3.up * 0.28f - r * 0.2f, held, 34f, 0.01f);
+            yield return Wait(0.3f);
+            if (Sphere != null) ImageGate.Expect(Sphere, "the sphere cupped in her hands", 0f, "c43b_");
+            yield return Shot("c43b_hold_close_her_hands_cup_the_sphere");
+            LogHold("CAT_09 the sphere, both hands", hold);
             Log($"CAT_09: the sphere between her hands - {RuneSizes.SphereR * 200f:0} cm across (hand-sized), the lines lit, the cradle released");
             // the return
             HerFaceCloseUp();
@@ -248,20 +260,30 @@ namespace Seven
             yield return Wait(1.2f);                             // CAT_09_06: a small laugh, then she studies the sphere again
             yield return Say("CAT_09", 7, 8);                     // There was a mark on the container... / We can compare it with the records...
             // she traces the tree's shape in the air
-            tik.LeftW = 0f; tik.RightPos = P7 + Vector3.up * 1.5f + f * 0.45f + r * 0.2f;
+            // QF28 (5): the sphere rests in her LEFT palm (cupped under it) while the right hand traces the shape
+            if (Sphere != null) { var lp = held - r * 0.04f - Vector3.up * 0.02f; for (float t = 0f; t < 1f; t += Time.deltaTime / 0.5f) { Sphere.position = Vector3.Lerp(held, lp, Mathf.SmoothStep(0f, 1f, t)); yield return null; } hold.Hold(Sphere, true, false, "the sphere (left palm)", RuneSizes.SphereR); }
+            tik.RightPos = P7 + Vector3.up * 1.5f + f * 0.45f + r * 0.2f; tik.RightW = 1f;
             yield return Say("CAT_09", 9, 9);                     // And a tree. Out in a field. Leaning over, with a low branch like this.
             var pose = Cat != null ? Cat.GetComponent<CatPoseOverlay>() : null; if (pose != null) pose.EarToward = P7;
             TwoShot((P7 + (Cat != null ? Cat.transform.position : P7)) * 0.5f, Vector3.right, 2.2f, 0.8f, 0.8f, 40f, 0.3f);
             yield return Say("CAT_09", 10, 12);                   // I know that place. / It's still here? / Come with me.
             if (pose != null) pose.EarToward = null;
             // she puts the sphere safely away (the pocket - as the dodecahedron on the Moon)
-            tik.ReleaseAll("CAT_09 the sphere put away");
+            LogHold("CAT_09 the sphere, left palm", hold);
+            hold.Release("CAT_09 the sphere put away"); tik.ReleaseAll("CAT_09 the sphere put away");
             if (Sphere != null) Sphere.gameObject.SetActive(false);
             if (Trophy != null) Trophy.gameObject.SetActive(false);
             bool first = CattalusState.AwardRecord();
             Log($"the Cattalus record + its sphere: awarded {(first ? "now (first time)" : "ALREADY - no second award")} (awards {CattalusState.RecordAwards}, must be 1)");
             Complete("CAT_09");
             yield return Cutscene(false);
+        }
+        /// <summary>QF28 (5): the hold measured now (each hand: the deepest finger point vs the surface, the wrist bend).</summary>
+        void LogHold(string what, HoldPose h)
+        {
+            var an = Seven.GetComponentInChildren<Animator>(); if (an == null || Sphere == null) return;
+            var s = new HandHold.Surface(Sphere, RuneSizes.SphereR);
+            foreach (var right in new[] { false, true }) { if (right ? !h.Right : !h.Left) continue; var rep = HandHold.Measure(an, right, s); Log($"HOLD (QF28 5) {what}, {(right ? "right" : "left")} hand: deepest finger point {rep.Deepest * 1000f:0.0} mm ({rep.Where}), fingertips touching {rep.Touching} of 5, wrist bend {rep.Wrist:0} deg - {(rep.Deepest >= HandHold.InsideMax && rep.Wrist <= HandHold.WristMax ? "ok" : "FAIL")}"); }
         }
         UnityEngine.Video.VideoPlayer _vp; RenderTexture _vpRT;
         /// <summary>Vision 7: Art/Video/vision_07_cattalus.mp4 (12 s) with the in-engine insert of the dodecahedron's mark on the box

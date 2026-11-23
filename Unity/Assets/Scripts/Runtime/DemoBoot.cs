@@ -144,6 +144,8 @@ namespace Seven
         public static bool Cattalus { get; private set; }
         public static bool CatPlay { get; private set; }
         public static bool CatLose { get; private set; }
+        /// <summary>QF28 (5): -qf28holds = a short Cattalus run that poses 7 with every hand-held rune (close-ups + HOLD lines), then quits.</summary>
+        public static bool QF28Holds { get; private set; }
         public static bool CatRace { get; private set; }
         public static bool Asteroid { get; private set; }
         public static bool AstPlay { get; private set; }
@@ -239,6 +241,7 @@ namespace Seven
                 if (args[i] == "-cattalus") Cattalus = true;
                 if (args[i] == "-catplay") CatPlay = true;
                 if (args[i] == "-catlose") CatLose = true;
+                if (args[i] == "-qf28holds") QF28Holds = true;
                 if (args[i] == "-catrace") CatRace = true;
                 if (args[i] == "-asteroid") Asteroid = true;
                 if (args[i] == "-astbird") AstBird = true;

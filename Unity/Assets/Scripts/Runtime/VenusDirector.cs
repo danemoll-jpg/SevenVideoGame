@@ -410,7 +410,7 @@ namespace Seven
                 float u = Mathf.SmoothStep(0f, 1f, t);
                 Saucer.position = Vector3.Lerp(top, land, u);
                 Cam.Shot(VenusLayout.SaucerAt + new Vector3(-55f + 25f * u, 22f - 12f * u, -60f + 30f * u), Saucer.position, 0.6f, false, 52f);
-                if (t > 0.45f && t - Time.deltaTime / 7f <= 0.45f) StartCoroutine(Shot("v01_descent_under_the_clouds"));
+                if (t > 0.45f && t - Time.deltaTime / 7f <= 0.45f) { ImageGate.Expect(Saucer, "the saucer descending under the clouds", 0f, "v01_"); StartCoroutine(Shot("v01_descent_under_the_clouds")); }
                 yield return null;
             }
             Saucer.position = land;
@@ -545,6 +545,7 @@ namespace Seven
             yield return Shot("v07_b01_low_three_quarter_bike");
             { var g = Bike.GripL.position; Shoot(g + Bike.transform.right * -0.9f + Vector3.up * 0.35f + Bike.transform.forward * 0.5f, g, 32f, 0.6f); }   // insert: her hand in the grip
             yield return Wait(0.9f);
+            ImageGate.Expect(Bike.transform, "her hand in the bike's grip", 0f, "v07b_");   // QF26 (2)
             yield return Shot("v07b_b01_insert_hand_in_the_grip");
             yield return Say("VEN_B01", 5, 5, false);                      // "I'll watch the ship."
             // 7 starts to mount the hover bike, then pauses - and turns to him
@@ -777,23 +778,27 @@ namespace Seven
             Shoot(mouth + dir * 6.2f + tan * 2.6f - Vector3.up * 0.3f, mouth - Vector3.up * 0.1f, 42f, 1.2f);
             yield return Wait(1.3f);
             LogBikeThroughHull("hull closed, before the hatch opens");
+            if (Saucer != null) ImageGate.Expect(Saucer, "the saucer's seamless hull", 0f, "v06a_");   // QF26 (2)
             yield return Shot("v06a_b01_seamless_hull");
             // QF13 (1): the shared hold (SaucerHold): the seam lights, the panel sinks into the hull and slides round inside
             // it, the seam goes dark again - an empty opening (flat unlit inside) with only the bike in it
             Material seamM = null, backM = null;
-            yield return Hold.Open(() => StartCoroutine(Shot("v06b_b01_hatch_seam_glows")), slide =>
+            yield return Hold.Open(() => { if (Saucer != null) ImageGate.Expect(Saucer, "the hatch seam on the hull", 0f, "v06b_"); StartCoroutine(Shot("v06b_b01_hatch_seam_glows")); }, slide =>
             {
                 if (slide > 0.02f && !_bikeShown) BikeShown(true);     // QF14 (3): the room behind the panel - the bike sits in its cradles
                 if (Shots && !_bikeShown && !_hullCheckLogged) { _hullCheckLogged = true; LogBikeThroughHull("hatch opening (panel " + (slide * 100f).ToString("0") + " % open)"); }
-                if (Shots && slide > 0.5f && !_holdMidShot) { _holdMidShot = true; StartCoroutine(Shot("qf13_01a_b01_hold_half_open_player_view")); }
+                if (Shots && slide > 0.5f && !_holdMidShot) { _holdMidShot = true; if (Saucer != null) ImageGate.Expect(Saucer, "the hold opening in the hull", 0f, "qf13_01a"); StartCoroutine(Shot("qf13_01a_b01_hold_half_open_player_view")); }
             });
             BikeShown(true);
+            if (Saucer != null) ImageGate.Expect(Saucer, "the open hatch, light inside", 0f, "v06c_");   // QF26 (2)
             yield return Shot("v06c_b01_hatch_open_light_inside");
             // QF14 (3): the bay straight on (the reference's view) and close from the player's side, same instant
             if (Shots && Cap != null)
             {
                 var axis = VenusLayout.SaucerAt + Vector3.up * (VenusLayout.SaucerHover + 0.72f);
+                ImageGate.Expect(Bike.transform, "the bike in its cradles in the bay", 0f, "bay_straight");   // QF26 (2)
                 yield return Cap.ShotFrom("qf14_03_bay_straight_on", axis + dir * 7.2f, axis + dir * 2.0f, 30f);
+                ImageGate.Expect(Bike.transform, "the bike in its cradles in the bay", 0f, "bay_three");
                 yield return Cap.ShotFrom("qf14_03_bay_three_quarter", axis + dir * 6.8f + tan * 2.2f + Vector3.up * 0.15f, axis + dir * 1.8f, 34f);
             }
             // the bike glides out on its hover glow, unhurried
@@ -803,7 +808,7 @@ namespace Seven
                 float u = Mathf.SmoothStep(0f, 1f, t);
                 Bike.Glide(Vector3.Lerp(inBay, outAt, u), yawOut, bottomIn);
                 Cam.Shot(mouth + dir * 6.2f + tan * 2.6f - Vector3.up * 0.3f + dir * 1.5f * u, Bike.transform.position + Vector3.up * (bottomIn - Bike.transform.position.y + 0.4f), 0.8f, false, 42f);
-                if (t > 0.6f && t - Time.deltaTime / 2.8f <= 0.6f) StartCoroutine(Shot("v06d_b01_bike_glides_out"));
+                if (t > 0.6f && t - Time.deltaTime / 2.8f <= 0.6f) { ImageGate.Expect(Bike.transform, "the bike gliding out", 0f, "v06d_"); StartCoroutine(Shot("v06d_b01_bike_glides_out")); }
                 yield return null;
             }
             // it turns slowly and settles beside her at riding height with a low hum; the hatch closes behind it
@@ -814,7 +819,7 @@ namespace Seven
             {
                 float u = Mathf.SmoothStep(0f, 1f, t);
                 Bike.Glide(Vector3.Lerp(outAt, settle, u), Mathf.LerpAngle(yawOut, 0f, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t * 1.2f))), Mathf.Lerp(bottomIn, settleBottom, u * u));
-                if (t > 0.55f && t - Time.deltaTime / 3.0f <= 0.55f) StartCoroutine(Shot("v06e_b01_bike_turns_and_settles"));
+                if (t > 0.55f && t - Time.deltaTime / 3.0f <= 0.55f) { ImageGate.Expect(Bike.transform, "the bike settling", 0f, "v06e_"); StartCoroutine(Shot("v06e_b01_bike_turns_and_settles")); }
                 yield return null;
             }
             Bike.EndGlide(); Bike.Place(settle, 0f);
@@ -824,8 +829,9 @@ namespace Seven
             while (_hatchOpen) yield return null;
             Shoot(mouth + dir * 5.5f - tan * 2.2f + Vector3.up * 0.2f, mouth, 40f, 0.01f);
             yield return Wait(0.2f);
+            if (Saucer != null) ImageGate.Expect(Saucer, "the hull seamless again", 0f, "v06g_");   // QF26 (2)
             yield return Shot("v06g_b01_hull_seamless_again");
-            if (Shots) { Shoot(VenusLayout.SaucerAt + Chapter1Director.SaucerCheckOffset, VenusLayout.SaucerAt + Vector3.up * 1.6f, 45f, 0.01f); yield return Wait(0.3f); yield return Shot("saucer_side_by_side_venus"); }
+            if (Shots) { Shoot(VenusLayout.SaucerAt + Chapter1Director.SaucerCheckOffset, VenusLayout.SaucerAt + Vector3.up * 1.6f, 45f, 0.01f); yield return Wait(0.3f); if (Saucer != null) ImageGate.Expect(Saucer, "the saucer", 0f, "saucer_side"); yield return Shot("saucer_side_by_side_venus"); }
             Log($"hatch (QF10): opened along the seam, the bike glided out and settled at riding height; closed again - panel offset {(Hatch != null ? Hatch.localRotation.eulerAngles.y : 0f):0.000} deg, scale {(Hatch != null ? Hatch.localScale.x : 1f):0.000}, seam emission {(seamM != null ? seamM.GetColor("_EmissionColor").r : 0f):0.000}, bay light {(BayLight != null ? BayLight.intensity : 0f):0.00}");
         }
         bool _hatchOpen = true, _bikeShown = true, _hullCheckLogged, _holdMidShot;

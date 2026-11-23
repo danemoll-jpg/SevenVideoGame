@@ -127,7 +127,8 @@ namespace Seven
             {
                 var cm = GetComponent<Camera>(); if (_baseFov <= 0f) _baseFov = cm.fieldOfView;
                 float k = Mathf.Clamp01((_bike.Speed - 8f) / 16f);
-                SpeedKick = Mathf.MoveTowards(SpeedKick, k, dt * 0.8f);
+                if (RaceMode) k += 0.6f * Mathf.Clamp01((_bike.Speed - 24f) / 12f);       // QF28 (1): the race widens the view further with speed
+                SpeedKick = Mathf.MoveTowards(SpeedKick, k, dt * (SpeedKick > k ? 1.6f : 0.8f));
                 cm.fieldOfView += (_baseFov + 6f * SpeedKick - cm.fieldOfView) * (1f - Mathf.Exp(-dt / 1.2f));
             }
             // the player may look around; the offset eases back once the stick is let go (R3 / R: at once, smoothly)

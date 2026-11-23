@@ -88,6 +88,12 @@ namespace Seven
             }
         }
 
+        /// <summary>QF26 (2): a view of a place / thing names what it is of (the gate checks it is in frame, unblocked, readable).</summary>
+        IEnumerator ShotV(string name, Transform subject, string what)
+        {
+            if (subject != null) ImageGate.Expect(subject, what, 0f, name.Substring(0, Mathf.Min(name.Length, 12)));
+            yield return ShotV(name);
+        }
         IEnumerator ShotV(string name)
         {
             if (DemoBoot.CaptureDir == null || Cap == null) yield break;

@@ -62,6 +62,7 @@ namespace Seven
             Begin(Mood.Watch);
             var (p, l) = Frame("screen"); cam.Shot(p, l, 0.01f, true, 40f);
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) yield return null;
+            ImageGate.ExpectPoint(l, "the console display (what the saucer's instruments see)", 0f, "first_look");   // QF26 (2): the point the cut frames (the Display transform's bounds include the far map rig)
             if (DemoBoot.CaptureDir != null && ChapterCapture.I != null) { ChapterCapture.I.Log($"FIRST LOOK (QF23 15a) {UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}: on his first line here ({lineId}) a cut to the saucer's console - the display shows her marker and the area round her"); yield return ChapterCapture.I.Shot("qf23_first_look_the_console_display_" + UnityEngine.SceneManagement.SceneManager.GetActiveScene().name); }
             for (float t = 0.4f; t < 1.9f; t += Time.deltaTime) yield return null;
             End();
@@ -213,6 +214,8 @@ namespace Seven
             var (p, l) = Frame(frame);
             cam.Subjects.Clear(); cam.Shot(p, l, 0.01f, true, 40f);
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) yield return null;
+            if (frame == "screen") ImageGate.ExpectPoint(l, "the console display", 0.5f);   // QF26 (2): the cut is a view of the display
+            else if (Cat != null) ImageGate.Expect(Cat, "Panther aboard", 0.5f);
             if (capture != null) yield return capture();
             for (float t = 0.4f; t < hold; t += Time.deltaTime) yield return null;
         }

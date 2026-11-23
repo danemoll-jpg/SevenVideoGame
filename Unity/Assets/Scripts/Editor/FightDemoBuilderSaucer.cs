@@ -758,6 +758,7 @@ namespace Seven.EditorTools
             int gi = 0;
             foreach (Transform c in inst.transform)
                 if (c.name.StartsWith("Glow") && gi < glows.Length) { c.position = glows[gi].Item1; c.localScale = glows[gi].Item2; gi++; }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Saucer (above the city)", 0.98f, 0.95f);   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoAbovePath);
             UnityEngine.Object.DestroyImmediate(inst);
             Log("atmosphere variant saved " + AtmoAbovePath);

@@ -138,6 +138,7 @@ namespace Seven
             yield return Shot("01b_ship_wide_back");
             Place(new Vector3(0f, 1.25f, 1.0f), new Vector3(0f, 0.8f, 6.0f));
             yield return Frames(3);
+            { var ch = GameObject.Find("ChairPivot"); if (ch != null) ImageGate.Expect(ch.transform, "7's egg chair by the window", 0f, "01c_"); }   // QF26 (2)
             yield return Shot("01c_window_chair");
             Log($"ship bounds check: camera inside clamp radius {cam.ShellRadius}, ceiling at centre {cam.CeilingAt(0):0.00} m");
             cam.Hold = false;

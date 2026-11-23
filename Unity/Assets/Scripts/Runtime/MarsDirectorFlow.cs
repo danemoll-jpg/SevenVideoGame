@@ -95,7 +95,7 @@ namespace Seven
             if (Atmo != null) { Atmo.DistanceDensity *= 0.25f; Atmo.MaxFog *= 0.6f; }
             Shoot(new Vector3(-150f, 190f, 230f), L.FaceAt + new Vector3(20f, 0f, -20f), 52f, 0.01f);
             StartCoroutine(UI.Fade(0f, 1.8f));
-            for (float t = 0f; t < 3.2f; t += Time.deltaTime) { if (t > 1.6f && t < 1.62f) StartCoroutine(Shot("m00b_from_high_the_plain_and_the_cydonia_mesa")); yield return null; }
+            for (float t = 0f; t < 3.2f; t += Time.deltaTime) { if (t > 1.6f && t < 1.62f) { ImageGate.ExpectPoint(L.FaceAt + new Vector3(20f, 27f, -20f), "the plain and the Cydonia mesa (its top, 26 m up)", 0f, "m00b_"); StartCoroutine(Shot("m00b_from_high_the_plain_and_the_cydonia_mesa")); } yield return null; }
             var camAt = new Vector3(-150f, 46f, -120f);
             Shoot(camAt, new Vector3(0f, 0f, 120f), 58f, 1.2f);
             AudioKit.Play("saucer_descent", null, 0.7f);
@@ -106,8 +106,8 @@ namespace Seven
                 Saucer.position = Vector3.Lerp(from, land, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 24f;
                 var look = Vector3.Lerp(new Vector3(0f, 0f, 120f), Saucer.position, Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t * 1.4f - 0.2f)));
                 Cam.Shot(Vector3.Lerp(camAt, land + new Vector3(30f, 10f, -32f), u * u), look, 1.6f, false, 58f);
-                if (!s1 && t > 0.18f) { s1 = true; StartCoroutine(Shot("m01_extreme_wide_the_divided_plain")); }
-                if (!s2 && t > 0.7f) { s2 = true; StartCoroutine(Shot("m02_the_saucer_lands_outside_the_approaches")); }
+                if (!s1 && t > 0.18f) { s1 = true; ImageGate.ExpectPoint(new Vector3(0f, 2f, 120f), "the divided plain (the saucer a speck crossing it)", 0f, "m01_"); StartCoroutine(Shot("m01_extreme_wide_the_divided_plain")); }
+                if (!s2 && t > 0.7f) { s2 = true; ImageGate.ExpectPoint(Saucer.position + Vector3.down * 1f, "the saucer landing outside the approaches", 0f, "m02_"); StartCoroutine(Shot("m02_the_saucer_lands_outside_the_approaches")); }
                 yield return null;
             }
             Saucer.position = land;
@@ -168,6 +168,7 @@ namespace Seven
             yield return Wait(0.8f);
             yield return Hold.Open(null, s => { if (s > 0.02f) ShowBike(true); });
             ShowBike(true);
+            if (Hold != null) ImageGate.Expect(Hold.transform, "the open bike hold", 0f, "m02b_");   // QF26 (2)
             yield return Shot("m02b_the_bike_hold_open");
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2.8f)
             {
@@ -333,7 +334,7 @@ namespace Seven
                 var p0 = L.PlatformAt + Vector3.down * 3f; var p1 = L.PlatformAt + Vector3.up * L.PlatformTop;
                 if (Viper != null) Viper.transform.SetPositionAndRotation(p0 + Vector3.up * 0.4f, Quaternion.LookRotation(Flat(P7 - L.PlatformAt)));
                 if (PlatformLight != null) PlatformLight.enabled = true;
-                var lowCam = L.PlatformAt - Flat(L.PlatformAt - P7).normalized * 13f + Vector3.up * 1.2f;       // low angle, far enough to see him above the deck
+                var lowCam = L.PlatformAt - Flat(L.PlatformAt - P7).normalized * 13f + Vector3.up * 2.6f;   // QF28 pass (the gate): at 1.2 m the glowing barrier filled the lower third (23 % white)       // low angle, far enough to see him above the deck
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 3.6f)
                 {
                     ViperPlatform.position = Vector3.Lerp(p0, p1, Mathf.SmoothStep(0f, 1f, t));
@@ -398,6 +399,7 @@ namespace Seven
             // Panther sees it from the saucer: the entrance - the old ramp cut into the bank, the half-buried gateway
             Shoot(new Vector3(-46.5f, 6.5f, -36f), new Vector3(-55.5f, -2.5f, -14f), 48f, 0.01f);
             yield return Say("MAR_03", 15, 15);                  // I see it from here. A ramp cut into the bank, east of you.
+            ImageGate.ExpectPoint(new Vector3(-55.5f, -0.5f, -14f), "the route entrance in the bank", 0f, "m09c_");   // QF26 (2)
             yield return Shot("m09c_the_route_entrance_shown");
             yield return Cutscene(false);
             if (Worker != null) Worker.WalkTo(L.WorkerAt, 1.2f);            // back to the transport
@@ -421,6 +423,7 @@ namespace Seven
             yield return Shot("m10a_the_span_chained_up");
             Shoot(L.DrawTower + new Vector3(5.5f, 2.4f, 4.2f), L.DrawTower + new Vector3(2.0f, 2.2f, 1.6f), 40f, 0.6f);
             yield return Wait(1.8f);
+            ImageGate.ExpectPoint(L.DrawTower + new Vector3(2.0f, 2.2f, 1.6f), "the lock and the order plaque", 0f, "m10b_");   // QF26 (2)
             yield return Shot("m10b_the_lock_and_the_order_plaque");
             yield return Cutscene(false);
             Objective("One kingdom raised and chained the span - break the lock on its winding drum (get off, RT)");

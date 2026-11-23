@@ -276,7 +276,8 @@ namespace Seven.EditorTools
             for (int i = 0; i <= n; i++)
             {
                 var p = K.At(i); var d = K.Dir(i); var side = Vector3.Cross(Vector3.up, d).normalized;
-                v.Add(p - side * hw + Vector3.up * 0.02f); v.Add(p + side * hw + Vector3.up * 0.02f); v.Add(p - side * hw + Vector3.down * 0.6f); v.Add(p + side * hw + Vector3.down * 0.6f);
+                // QF28 (1): banked into the corners (K.Edge: the inner edge lower)
+                v.Add(K.Edge(i, -hw) + Vector3.up * 0.02f); v.Add(K.Edge(i, hw) + Vector3.up * 0.02f); v.Add(K.Edge(i, -hw) + Vector3.down * 0.6f); v.Add(K.Edge(i, hw) + Vector3.down * 0.6f);
                 float s = i * K.Step / 8f; uv.Add(new Vector2(0f, s)); uv.Add(new Vector2(1f, s)); uv.Add(new Vector2(0f, s)); uv.Add(new Vector2(1f, s));
             }
             for (int i = 0; i < n; i++)
@@ -287,17 +288,31 @@ namespace Seven.EditorTools
                 t.AddRange(new[] { a + 1, b + 1, a + 3, a + 3, b + 1, b + 3 });           // right skirt
                 t.AddRange(new[] { a + 2, a + 3, b + 2, a + 3, b + 3, b + 2 });           // underside
             }
-            var mesh = new Mesh { indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 }; mesh.SetVertices(v); mesh.SetUVs(0, uv); mesh.SetTriangles(t, 0); mesh.RecalculateNormals();
-            MeshObject("CourseRoad", SaveMesh(mesh, "Cat_CourseRoad"), m.road, parent, true);
+            // QF28 (1): kerbs - alternating light / dark blocks along both edges every 2 m (the ground streams past at speed), 9 cm proud,
+            // each 10 % short of the next; part of the road's own mesh (two more submeshes) so they can never z-fight with it
+            var kL = new List<int>(); var kD = new List<int>();
+            foreach (var sg in new[] { -1f, 1f })
+                for (int i = 0; i < n; i++)
+                {
+                    var a0 = K.Edge(i, sg * (hw - 0.05f)) + Vector3.up * 0.09f; var a1 = K.Edge(i, sg * (hw - 0.95f)) + Vector3.up * 0.09f;
+                    var b0 = Vector3.Lerp(a0, K.Edge(i + 1, sg * (hw - 0.05f)) + Vector3.up * 0.09f, 0.9f); var b1 = Vector3.Lerp(a1, K.Edge(i + 1, sg * (hw - 0.95f)) + Vector3.up * 0.09f, 0.9f);
+                    int bi = v.Count; v.Add(a0); v.Add(a1); v.Add(b1); v.Add(b0); for (int q = 0; q < 4; q++) uv.Add(Vector2.zero);
+                    var tl = i % 2 == 0 ? kL : kD;
+                    // facing up whichever side it is on
+                    var nrm = Vector3.Cross(a1 - a0, b0 - a0); if (nrm.y >= 0f) tl.AddRange(new[] { bi, bi + 1, bi + 3, bi + 1, bi + 2, bi + 3 }); else tl.AddRange(new[] { bi, bi + 3, bi + 1, bi + 1, bi + 3, bi + 2 });
+                }
+            var mesh = new Mesh { indexFormat = UnityEngine.Rendering.IndexFormat.UInt32 }; mesh.SetVertices(v); mesh.SetUVs(0, uv); mesh.subMeshCount = 3; mesh.SetTriangles(t, 0); mesh.SetTriangles(kL, 1); mesh.SetTriangles(kD, 2); mesh.RecalculateNormals();
+            var roadGo = MeshObject("CourseRoad", SaveMesh(mesh, "Cat_CourseRoad"), m.road, parent, true);
+            roadGo.GetComponent<MeshRenderer>().sharedMaterials = new[] { m.road, m.paper, m.cardDark };
             // rails (rope-wrapped, scratching-post style) on both edges; center dashes; supports under raised parts
             var k = new AK();
             var (rv, rt) = k.Of(m.rail);
             foreach (var sg in new[] { -1f, 1f })
             {
                 var rail = new List<Vector3>();
-                for (int i = 0; i <= n; i += 2) { var p = K.At(i); var side = Vector3.Cross(Vector3.up, K.Dir(i)).normalized; rail.Add(p + side * sg * (hw + 0.25f) + Vector3.up * 0.75f); }
+                for (int i = 0; i <= n; i += 2) rail.Add(K.Edge(i, sg * (hw + 0.25f)) + Vector3.up * 0.75f);
                 Sweep(rv, rt, rail, 0.16f, false, 6);
-                for (int i = 0; i < n; i += 6) { var p = K.At(i); var side = Vector3.Cross(Vector3.up, K.Dir(i)).normalized; Sweep(rv, rt, new[] { p + side * sg * (hw + 0.25f), p + side * sg * (hw + 0.25f) + Vector3.up * 0.8f }, 0.09f, false, 5); }
+                for (int i = 0; i < n; i += 6) { var e = K.Edge(i, sg * (hw + 0.25f)); Sweep(rv, rt, new[] { e, e + Vector3.up * 0.8f }, 0.09f, false, 5); }
             }
             var (dv, dt) = k.Of(m.paper);
             for (int i = 0; i < n; i += 5) { var p = K.At(i) + Vector3.up * 0.04f; var d = K.Dir(i); var side = Vector3.Cross(Vector3.up, d).normalized; Q(dv, dt, p - side * 0.12f, p + side * 0.12f, p + side * 0.12f + d * 3.2f, p - side * 0.12f + d * 3.2f, false); }
@@ -314,11 +329,11 @@ namespace Seven.EditorTools
                 var side = Vector3.Cross(Vector3.up, K.Dir(i)).normalized;
                 foreach (var sg in new[] { -1f, 1f })
                 {
-                    var q = new Vector3(p.x, 0f, p.z) + side * sg * (hw - 1.2f);
+                    var q = new Vector3(p.x, 0f, p.z) + side * sg * (hw - 1.2f); float qTop = K.Edge(i, sg * (hw - 1.2f)).y;
                     // never a post through another part of the course (the spiral's lower turns pass under its upper ones)
                     bool clash = false; for (int j = 0; j < n && !clash; j++) { var o = K.At(j); if (o.y < p.y - 2f && new Vector2(o.x - q.x, o.z - q.z).sqrMagnitude < (hw + 1.5f) * (hw + 1.5f)) clash = true; }
                     if (clash) continue;
-                    Append(sv, st, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.55f, 0f), new Vector2(0.45f, 0.3f), new Vector2(0.45f, p.y - 0.6f), new Vector2(0f, p.y - 0.6f) }, 0f, 360f, 10, null, q));
+                    Append(sv, st, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.55f, 0f), new Vector2(0.45f, 0.3f), new Vector2(0.45f, qTop - 0.6f), new Vector2(0f, qTop - 0.6f) }, 0f, 360f, 10, null, q));
                 }
             }
             k.Save("Course", parent);
@@ -332,7 +347,7 @@ namespace Seven.EditorTools
         {
             var p = K.At(i); var d = K.Dir(i); var side = Vector3.Cross(Vector3.up, d).normalized; float hw = K.HalfWidth + 0.9f;
             var k = new AK(); var (pv, pt) = k.Of(m.sisal); var (cv, ct) = k.Of(m.cardDark); var (ov, ot) = k.Of(m.fabric);
-            foreach (var sg in new[] { -1f, 1f }) Append(pv, pt, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.45f, 0f), new Vector2(0.35f, 0.4f), new Vector2(0.35f, 7.6f), new Vector2(0.6f, 7.8f), new Vector2(0f, 8.1f) }, 0f, 360f, 10, null, p + side * sg * hw));
+            foreach (var sg in new[] { -1f, 1f }) { var e = K.Edge(i, sg * hw); Append(pv, pt, Lathe(new[] { new Vector2(0f, -0.4f), new Vector2(0.45f, -0.4f), new Vector2(0.35f, 0.4f), new Vector2(0.35f, 7.6f + p.y - e.y), new Vector2(0.6f, 7.8f + p.y - e.y), new Vector2(0f, 8.1f + p.y - e.y) }, 0f, 360f, 10, null, e)); }   // QF28 (1): on the banked edge, tops level
             var arch = new List<Vector3>(); for (int a = 0; a <= 16; a++) { float u = a / 16f; arch.Add(p + side * Mathf.Lerp(-hw, hw, u) + Vector3.up * (7.6f + Mathf.Sin(u * Mathf.PI) * 1.6f)); }
             Sweep(cv, ct, arch, 0.12f, false, 6);
             for (int a = 1; a < 16; a += 2)
@@ -353,7 +368,7 @@ namespace Seven.EditorTools
         {
             var p = K.At(i); var d = K.Dir(i); var side = Vector3.Cross(Vector3.up, d).normalized; float hw = K.HalfWidth + 1.2f;
             var k = new AK(); var (fv, ft) = k.Of(m.sisal);
-            foreach (var sg in new[] { -1f, 1f }) Append(fv, ft, Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.5f, 0f), new Vector2(0.4f, 0.3f), new Vector2(0.4f, 10.5f), new Vector2(0f, 10.6f) }, 0f, 360f, 10, null, p + side * sg * hw));
+            foreach (var sg in new[] { -1f, 1f }) { var e = K.Edge(i, sg * hw); Append(fv, ft, Lathe(new[] { new Vector2(0f, -0.4f), new Vector2(0.5f, -0.4f), new Vector2(0.4f, 0.3f), new Vector2(0.4f, 10.5f + p.y - e.y), new Vector2(0f, 10.6f + p.y - e.y) }, 0f, 360f, 10, null, e)); }
             var (bv, bt) = k.Of(m.card); MBox(bv, bt, p + Vector3.up * 10.8f, new Vector3(hw * 2f + 1.2f, 0.8f, 0.9f), Quaternion.LookRotation(side).eulerAngles.y, 0.01f);
             // a warning stripe of glow on the beam (the readable signal: it swings across the road)
             var (gv, gt) = k.Of(m.glowSoft); Sweep(gv, gt, new[] { p - side * hw + Vector3.up * 10.35f, p + side * hw + Vector3.up * 10.35f }, 0.06f, false, 4);

@@ -92,6 +92,9 @@ namespace Seven
         public void ExpectOutside()
         {
             if (_levelGo != null && _levelGo.activeInHierarchy && LevelView.TryGetValue(Showing, out var v)) { ImageGate.ExpectPoint(_levelGo.transform.TransformPoint(v.S + (v.aim - v.S) * 0.35f), $"the {Showing} level outside", 0f, "window_view"); return; }
+            // the mothership's window view is a composition (the egg in Veyra's rings): its subject is the egg, not the whole group
+            // (whose bounds' middle lies behind the hull - "blocked")
+            if (_bia != null && _bia.activeInHierarchy) foreach (var vs in VeyraScene.All) if (vs != null && vs.Root != null && vs.Egg != null && vs.Root.IsChildOf(_bia.transform)) { ImageGate.Expect(vs.Egg, "the white mothership outside the window", 0f, "window_view"); return; }
             foreach (var g in new[] { Venus, Europa, Mars, Moon, City, Asteroid, Space, _bia })
                 if (g != null && g.activeInHierarchy) { ImageGate.Expect(g.transform, $"the view outside ({Showing})", 0f, "window_view"); return; }
         }

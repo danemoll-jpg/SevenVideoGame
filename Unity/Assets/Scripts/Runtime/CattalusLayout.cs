@@ -128,7 +128,7 @@ namespace Seven
     /// </summary>
     public static class CattalusCourse
     {
-        public const float HalfWidth = 7f, Step = 2f;
+        public const float HalfWidth = 8f, Step = 2f;      // QF28 (1): 14 -> 16 m wide (the race runs at ~34 m/s now)
         public static readonly Vector3 StartAt = new Vector3(52f, 0f, 150f);          // the start / finish line (heading -z)
         public static readonly Vector3 ColumnC = new Vector3(52f + (440f - 52f) * 1.5f, 0f, 150f);
         public const float ColumnR = 40f, SpiralTurns = 450f, SpiralTop = 28f;
@@ -153,10 +153,10 @@ namespace Seven
             var top = C + new Vector3(0f, SpiralTop, ColumnR);
             c.AddRange(new (Vector3, int)[]
             {
-                (top + new Vector3(34f, 0f, 6f), 2), (S(480f, SpiralTop, 236f), 2), (S(470f, SpiralTop - 1f, 300f), 2), (S(420f, SpiralTop - 2f, 360f), 2),
+                (top + new Vector3(28f, 0f, 2f), 2), (top + new Vector3(52f, 0f, 22f), 2), (S(480f, SpiralTop, 236f), 2), (S(470f, SpiralTop - 1f, 300f), 2), (S(420f, SpiralTop - 2f, 360f), 2),
                 (S(360f, SpiralTop - 4f, 400f), 2), (S(300f, SpiralTop - 6f, 440f), 2),
                 (S(262f, 19f, 462f), 3), (S(230f, 16f, 470f), 3), (S(190f, 16f, 470f), 3), (S(150f, 16f, 470f), 3), (S(112f, 16f, 470f), 3),
-                (S(72f, 14f, 452f), 4), (S(100f, 10f, 392f), 4), (S(62f, 7f, 332f), 4), (S(96f, 4f, 272f), 4), (S(62f, 1f, 216f), 4), (S(52f, 0f, 186f), 5),
+                (S(64f, 14.5f, 468f), 4), (S(52f, 13f, 430f), 4), (S(88f, 10f, 380f), 4), (S(62f, 7f, 332f), 4), (S(96f, 4f, 272f), 4), (S(62f, 1f, 216f), 4), (S(52f, 0f, 186f), 5),
             });
             return c;
         }
@@ -217,10 +217,32 @@ namespace Seven
         {
             float turn = 0f;
             for (int k = 0; k < 12; k++) turn = Mathf.Max(turn, Vector3.Angle(Dir(i + k), Dir(i + k + 4)));   // degrees over 8 m, looking 24 m ahead
-            float lat = 9.5f;                                                   // lateral grip (m/s²)
+            float lat = 15f;                                                    // lateral grip (m/s²) - QF28 (1): the wider, banked road (was 9.5)
             float r = turn < 0.5f ? 9999f : 8f / (turn * Mathf.Deg2Rad);
             return Mathf.Min(vmax, Mathf.Sqrt(lat * r));
         }
+        /// <summary>QF28 (1): signed turn at sample i (deg per 16 m; + = turning right).</summary>
+        public static float Turn(int i) => Vector3.SignedAngle(Dir(i - 4), Dir(i + 4), Vector3.up);
+        static float[] _bank;
+        /// <summary>QF28 (1): the road's bank at sample i (deg, + = the right edge lower: banked into a right-hand turn), up to 9 deg
+        /// in the corners, smoothed along the road (the spiral is banked all the way round).</summary>
+        public static float Bank(int i)
+        {
+            if (_bank == null)
+            {
+                int n = Count; var raw = new float[n]; _bank = new float[n];
+                for (int k = 0; k < n; k++) raw[k] = Mathf.Clamp(Turn(k) * 0.45f, -9f, 9f);
+                for (int k = 0; k < n; k++) { float a = 0f; for (int j = -10; j <= 10; j++) a += raw[((k + j) % n + n) % n]; _bank[k] = a / 21f; }
+            }
+            return _bank[((i % Count) + Count) % Count];
+        }
+        /// <summary>QF28 (1): the road surface at sample i, <paramref name="lateral"/> m to the right of the middle (the bank included).</summary>
+        public static Vector3 Edge(int i, float lateral)
+        {
+            var side = Vector3.Cross(Vector3.up, Dir(i)).normalized;
+            return At(i) + side * lateral + Vector3.up * BankY(i, lateral);
+        }
+        public static float BankY(int i, float lateral) => -lateral * Mathf.Tan(Bank(i) * Mathf.Deg2Rad);
         /// <summary>The gates: every ~140 m (the start line first), each on a sample index.</summary>
         public static List<int> Gates()
         {
@@ -269,7 +291,7 @@ namespace Seven
                 var p0 = At(i); var p1 = At(i + 1); var A = new Vector2(p0.x, p0.z); var B = new Vector2(p1.x, p1.z);
                 var ab = B - A; float u = ab.sqrMagnitude > 1e-6f ? Mathf.Clamp01(Vector2.Dot(q - A, ab) / ab.sqrMagnitude) : 0f;
                 float d = (A + ab * u - q).sqrMagnitude;
-                if (d < best) { best = d; y = Mathf.Lerp(p0.y, p1.y, u); }
+                if (d < best) { best = d; var sd = new Vector2(ab.y, -ab.x).normalized; float lat = Vector2.Dot(q - (A + ab * u), sd); y = Mathf.Lerp(p0.y, p1.y, u) + BankY(u < 0.5f ? i : i + 1, lat); }
             }
             return Mathf.Sqrt(best);
         }

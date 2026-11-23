@@ -135,6 +135,7 @@ namespace Seven.EditorTools
                     c.GetComponent<Light>().intensity = 0.16f;
                 }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Ratwing cave", 0.98f, 0.95f, 14f);   // the bright cave mouth is its contrast   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoCavePath);
             UnityEngine.Object.DestroyImmediate(inst);
             Log("atmosphere variant saved " + AtmoCavePath);

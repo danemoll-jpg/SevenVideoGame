@@ -39,6 +39,9 @@ namespace Seven
 
         Coroutine _tr;
         Vector3 _vel; float _airT, _peakY, _noGrabUntil, _landT, _towardFor, _camLift;
+        /// <summary>QF28 pass: the ledge she just let go of (the air grab caught it again 0.3 s into the drop - she hung there for
+        /// good: the Moon check run's soft-lock at the mining cut). Cleared when she lands.</summary>
+        MoonTraversal.Ledge _letGoOf;
         bool _inPlace, _falling, _hardLanding;
         string _airClip;
         float _ikW; T.Ledge _ikLedge;
@@ -267,6 +270,7 @@ namespace Seven
 
         void Land(float h)
         {
+            _letGoOf = null;
             LastFallHeight = _peakY - h;
             var move = MoveInput(out _);
             _landT = 0f;
@@ -308,6 +312,7 @@ namespace Seven
             var fv = new Vector3(_vel.x, 0f, _vel.z);
             foreach (var L in T.Ledges)
             {
+                if (L == _letGoOf) continue;
                 float raw = Vector3.Dot(p - L.A, L.Dir);
                 if (raw < 0.2f || raw > L.Length - 0.2f) continue;
                 var q = L.At(raw);
@@ -379,6 +384,7 @@ namespace Seven
             HangLedge = null; _ikW = 0f; _ikLedge = null;
             _vel = -L.Fwd * 0.5f; _inPlace = false; _falling = false; _airT = 0f; _peakY = transform.position.y;
             _noGrabUntil = Time.time + 0.5f;
+            _letGoOf = L;                                   // QF28 pass: never caught again on the way down (let go = drop)
             _airClip = HasState("fall_idle") ? "fall_idle" : "idle";
             Play(_airClip, 0.2f);
             Current = Mode.Air;

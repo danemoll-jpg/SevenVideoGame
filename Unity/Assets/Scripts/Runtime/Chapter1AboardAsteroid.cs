@@ -101,7 +101,7 @@ namespace Seven
             Cut(new Vector3(0f, 1.7f, 0f) + wf * 5.9f, new Vector3(0f, -6f, 0f) + wf * 120f, 52f);   // QF24 (1): ahead of the egg chair (it stands at r 4.4)
             yield return UI.Fade(0f, 1.4f);
             yield return Wait(1.0f);
-            yield return ShotV("aa01_the_asteroid_through_the_window");
+            yield return ShotV("aa01_the_asteroid_through_the_window", SaucerOutside.I != null && SaucerOutside.I.Asteroid != null ? SaucerOutside.I.Asteroid.transform : null, "the asteroid outside the window");
             CutPilot("two");
             // QF21 (1): as they talk about the asteroid, the ship dissolves round them - the pilot's-chair effect (ShipReveal,
             // the button that makes the ship see-through), started from her seat; the chair and his seat beside it stay solid
@@ -110,9 +110,9 @@ namespace Seven
             Cat.LapNudge(-8f);                                               // his ears turn toward a faint mechanical sound
             yield return SayA("AST_01", 2, 2);                               // Through it, from what I can see.
             OpenSpaceShot();
-            yield return ShotV("aa01b_the_hull_dissolves_round_them");
+            yield return ShotV("aa01b_the_hull_dissolves_round_them", Seven.transform, "7 in the egg chair, the hull dissolving");
             yield return SayA("AST_01", 3, 4);                               // Someone really wanted a workshop. / ...every workshop.
-            yield return ShotV("aa02_one_section_intact_one_stripped");
+            yield return ShotV("aa02_one_section_intact_one_stripped", Seven.transform, "7 in the egg chair, the asteroid beyond");
             _stroke = 0f;                                                    // her hand stops stroking his back
             CutPilot("lap");
             yield return SayA("AST_01", 5, 6);                               // There are lights. / Mm-hmm. Something is still working.
@@ -125,7 +125,7 @@ namespace Seven
             // the scene ends: the hull rebuilds round them before she goes down to disembark
             OpenSpaceShot();
             yield return HullAway(false);
-            yield return ShotV("aa04b_the_hull_back");
+            yield return ShotV("aa04b_the_hull_back", Seven.transform, "7 in the egg chair, the hull back");
             AsteroidState.CompleteScene("AST_01");
             AsteroidState.Reach(AsteroidLayout.CpReceiving);
             _ik.ReleaseAll("AST_01 ends");
@@ -183,7 +183,9 @@ namespace Seven
         {
             // beside and a little ahead of the chair, looking back past her profile toward the asteroid (never the chair's back)
             var wf = Flat(Polar(9f, WindowA, 0f)).normalized; var side = Vector3.Cross(Up, wf);
-            Cut(PilotHead + side * 2.6f + wf * 1.2f + Up * 0.15f, InEggChair ? PilotHead + wf * 3.2f - side * 0.5f - Up * 0.45f : PilotHead + wf * 7f - side * 1.2f - Up * 0.9f, 60f);   // QF24 (1): from the egg chair her profile stays in frame against the world
+            // QF28 pass (the image gate): 0.18.2's framing looked past her into the dissolving shell - she was out of the frame. Beside
+            // and ahead of the chair, aimed between her and the window: her profile in the egg chair, the open space beyond
+            Cut(PilotHead + side * 2.4f + wf * 1.8f + Up * 0.25f, PilotHead + wf * 1.4f - side * 0.2f - Up * 0.25f, 58f);   // QF24 (1): from the egg chair her profile stays in frame against the world
         }
         /// <summary>AST_01_07: she gently lifts him off her lap onto the adjoining seat (the co-pilot pod beside the chair).</summary>
         IEnumerator LiftCatToSeat()

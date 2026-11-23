@@ -136,6 +136,27 @@ namespace Seven
             }
             return Mathf.Min(tone + glow, 1.25f);   // the shader clamps the same (QF26)
         }
+        /// <summary>QF26 rule (QF28 pass): keep the fog colour - the tone plus the in-fog glows - at or below <paramref name="budget"/>
+        /// (~1.0; the shader clamps at 1.25). Measured over 96 view directions from five spots round the level; the far tone is
+        /// capped at <paramref name="farCap"/> first, then the glow strength scaled until the brightest direction fits. Returns a
+        /// report line. Used by the builders for every world and at runtime by presets that blend to new fog numbers.</summary>
+        public string FitFogBudget(float budget = 0.98f, float farCap = 0.8f)
+        {
+            var cams = new System.Collections.Generic.List<Vector3> { transform.position + new Vector3(0f, 2f, 0f) };
+            foreach (Transform c in transform) if (c.name.StartsWith("Glow") && c.gameObject.activeSelf) { var q = c.position; cams.Add(new Vector3(q.x * 0.5f, 2f, q.z * 0.5f)); if (cams.Count >= 5) break; }
+            var dirs = new System.Collections.Generic.List<Vector3>(); for (int i = 0; i < 96; i++) { float y = 1f - (i + 0.5f) / 96f * 1.4f, r = Mathf.Sqrt(Mathf.Max(0f, 1f - y * y)), ph = i * 2.39996f; dirs.Add(new Vector3(Mathf.Cos(ph) * r, y, Mathf.Sin(ph) * r).normalized); }
+            float Max() { float m = 0f; foreach (var c in cams) foreach (var d in dirs) m = Mathf.Max(m, FogColourAlong(c, d, SkyDistance)); return m; }
+            float m0 = Max(), far0 = FarBrightness, zen0 = ZenithBrightness, g0 = GlowIntensity;
+            if (m0 > budget)
+            {
+                FarBrightness = Mathf.Min(FarBrightness, farCap); ZenithBrightness = Mathf.Min(ZenithBrightness, Mathf.Max(farCap, 0.85f));
+                float lo = 0f, hi = 1f;
+                if (Max() > budget) { for (int it = 0; it < 14; it++) { float k = (lo + hi) * 0.5f; GlowIntensity = g0 * k; if (Max() > budget) hi = k; else lo = k; } GlowIntensity = g0 * lo; }
+            }
+            LastBudget = Max();
+            return $"brightest fog colour {m0:0.00} -> {LastBudget:0.00} (far tone {far0:0.00} -> {FarBrightness:0.00}, zenith {zen0:0.00} -> {ZenithBrightness:0.00}, glow intensity {g0:0.00} -> {GlowIntensity:0.00}; must be <= ~1.0)";
+        }
+        [System.NonSerialized] public float LastBudget;
         /// <summary>The fog colour at the horizon of a camera (its forward, levelled, out to the sky distance).</summary>
         public static string Report(Camera cam)
         {

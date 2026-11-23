@@ -143,9 +143,10 @@ namespace Seven.EditorTools
             foreach (Transform c in inst.transform)
             {
                 if (c.name.StartsWith("Glow") && gi < glows.Length) { c.position = glows[gi].Item1; c.localScale = glows[gi].Item2; gi++; }
-                if (c.name == "BackLight") { c.rotation = Quaternion.Euler(22f, 200f, 0f); var l = c.GetComponent<Light>(); l.intensity = 1.1f; l.shadowStrength = 0.8f; }
+                if (c.name == "BackLight") { c.rotation = Quaternion.Euler(22f, 200f, 0f); var l = c.GetComponent<Light>(); l.intensity = 1.45f; l.shadowStrength = 0.85f; }   // QF28 pass (the gate): 1.1 left the prison one dark tone (range 0.22-0.28)
                 if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(35f, 20f, 0f); c.GetComponent<Light>().intensity = 0.22f; }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Moon", 0.98f, 0.95f, 20f);   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoMoonPath);
             UnityEngine.Object.DestroyImmediate(inst);
             Log("atmosphere variant saved " + AtmoMoonPath);
@@ -313,6 +314,16 @@ namespace Seven.EditorTools
             {
                 var vgo = new GameObject("MoonVolume"); var vol = vgo.AddComponent<Volume>();
                 vol.isGlobal = true; vol.priority = 10f; vol.sharedProfile = caveProfile;
+                // QF28 pass (the image gate): the Moon's own copy of the cave grade with more contrast (+24 vs the cave's +14) - the
+                // prison and the bay frames sat at tonal range 0.2-0.3, one dark tone; the cave's profile itself is left as it is
+                {
+                    const string moonVol = AtmoDir + "/Moon_Volume.asset"; AssetDatabase.DeleteAsset(moonVol);
+                    var mp = UnityEngine.Object.Instantiate(caveProfile); mp.name = "Moon_Volume"; AssetDatabase.CreateAsset(mp, moonVol);
+                    var comps = mp.components.ToList(); mp.components.Clear();
+                    foreach (var c in comps) { var cc = UnityEngine.Object.Instantiate(c); cc.name = c.name; mp.components.Add(cc); AssetDatabase.AddObjectToAsset(cc, mp); }
+                    if (mp.TryGet<UnityEngine.Rendering.Universal.ColorAdjustments>(out var mca)) { Log($"GRADE (QF28 pass) Moon (its cave volume): contrast {mca.contrast.value:0} -> 24"); mca.contrast.value = 24f; }
+                    EditorUtility.SetDirty(mp); vol.sharedProfile = mp;
+                }
             }
 
             var world = new GameObject("MoonPrison").transform;

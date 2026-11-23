@@ -38,6 +38,7 @@ namespace Seven
             if (Keeper != null) Keeper.GlideTo(Keeper.transform.position + (EuropaLayout.Approach[3] - Keeper.transform.position).normalized * 4f, 1.5f);
             Shoot(Bike.transform.position + Vector3.up * 2.5f - to * 3f, EuropaLayout.Approach[4], 40f, 1.2f);
             yield return Wait(1.0f);
+            ImageGate.ExpectPoint(EuropaLayout.Approach[4], "the distant industrial structure", 0f, "e12_");   // QF26 (2)
             yield return Shot("e12_the_distant_industrial_structure");
             yield return Say("EUR_06", 9, 12);                  // Below the old shelf ... The Scree? / Yes. / Show me the way in.
             Complete("EUR_06");
@@ -109,6 +110,7 @@ namespace Seven
             Shoot(P7 + Vector3.up * 0.6f - Flat(EuropaLayout.ScreenAt - P7).normalized * 1.4f + Seven.transform.right * 0.7f, EuropaLayout.ScreenAt, 52f, 0.01f);
             yield return Wait(0.6f);
             yield return Say("EUR_08", 1, 1);                   // You.
+            if (Screen != null) ImageGate.Expect(Screen.transform, "Tunneler on the display", 0f, "e16_");   // QF26 (2)
             yield return Shot("e16_tunneler_on_the_screen_low_angle");
             // medium on 7: she stops, then looks directly at the display
             var hd = Seven.Bone(HumanBodyBones.Head); var hp = hd != null ? hd.position : P7 + Vector3.up * 1.6f;

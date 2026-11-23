@@ -74,13 +74,18 @@ namespace Seven
         // ---- QF26 (1): control came back -> one gated frame a moment later (the white-out stayed on after control returned and
         // QF24's POST FX check only looked at the depth-of-field switch, never at the picture)
         bool _hadControl; float _noControlFor, _ctlAt = -1f; int _ctlShots;
+        float _ctlWait; HoverBike _fastBike;
+        bool FastRide() { foreach (var b in FindObjectsByType<HoverBike>(FindObjectsSortMode.None)) if (b.Riding && Mathf.Abs(b.Speed) > 15f) return true; return false; }
         void WatchControl()
         {
             bool control = false; try { control = MusicSystem.HasControl != null && MusicSystem.HasControl(); } catch { }
             if (!control) { _noControlFor += Time.unscaledDeltaTime; _hadControl = false; return; }
-            if (!_hadControl && _noControlFor > 1.0f && _ctlShots < 40) _ctlAt = Time.unscaledTime + 0.8f;
+            if (!_hadControl && _noControlFor > 1.0f && _ctlShots < 40) { _ctlAt = Time.unscaledTime + 0.8f; _ctlWait = 0f; }
             _hadControl = true; _noControlFor = 0f;
             if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && ChapterUI.Live != null && ChapterUI.Live.FadeAlpha > 0.05f) _ctlAt = Time.unscaledTime + 0.3f;   // still fading in: the frame the player first sees clearly
+            // QF28 pass: never a capture (a long frame) while she rides fast - the check run's own hitch drove the Europa bike into the
+            // ice passage's bend; the frame waits (up to 6 s) until she is under 15 m/s
+            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && _ctlWait < 6f && FastRide()) { _ctlAt = Time.unscaledTime + 0.3f; _ctlWait += 0.3f; }
             if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt) { _ctlAt = -1f; _ctlShots++; StartCoroutine(Shot($"ctl_control_back_{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}")); }
         }
 
@@ -126,6 +131,7 @@ namespace Seven
             if (RidePose.Checks > 0) Log(RidePose.Summary());                      // QF24 (15)
             Log($"POST FX (QF24 24): close-up depth of field found still on when control returned {CloseUpFocus.Releases}x - each released within a frame (longest {CloseUpFocus.LongestOnWithControl * 1000f:0} ms)");
             if (MothershipInterior.Shown > 0 || RecordDisplay.Built > 0) Log($"QF24 (2/4): record displays built {RecordDisplay.Built}, the mothership's interior shown {MothershipInterior.Shown}x");
+            if (HandHold.Frames > 0) Log(HandHold.Summary());                       // QF28 (5)
             Log(ImageGate.Summary(DemoBoot.CaptureDir));                          // QF26 (2)
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");

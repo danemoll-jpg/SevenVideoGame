@@ -27,7 +27,7 @@ namespace Seven
         readonly Transform[][][] _fingers = new Transform[2][][];
         float[] _grip = new float[2];
         /// <summary>Shape centre to palm surface (m): the shape rests against the palm, fingers curled round it.</summary>
-        public float PalmGap = 0.012f;
+        public float PalmGap = 0.018f;   // QF28 (5): 12 mm put the shape 4.6 mm into her thumb's base
         public float GripError { get; private set; }
         Transform _pouch;
         Light _glow;
@@ -113,6 +113,8 @@ namespace Seven
             centre = Vector3.Lerp(h[0].position, h[2].position, 0.62f);
             // the thumb sits on the palm side: use it to pick the sign
             if (h[4] != null && Vector3.Dot(h[4].position - centre, normal) < 0f) normal = -normal;
+            // QF28 (5): the palm side as the hold solver decides it (the fingers' curl; the thumb alone flipped it on her rig)
+            if (_anim != null && HandHold.Palm(_anim, side == 0, out _, out var hn, out _)) normal = hn;
             return true;
         }
 
@@ -157,6 +159,9 @@ namespace Seven
                 _grip[sd] = Mathf.MoveTowards(_grip[sd], want ? 1f : 0f, Time.deltaTime * 4f);
                 if (_grip[sd] > 0.001f) Curl(sd, _grip[sd]);
             }
+            // QF28 (5): the held shape measured against the fingers (check runs): no finger bone inside it, the wrist natural
+            if (DemoBoot.CaptureDir != null && _anim != null && (At == Where.Hand || At == Where.HandLeft) && _blend >= 1f && _grip[At == Where.HandLeft ? 1 : 0] > 0.99f && Surf() != null)
+                HandHold.Note("the dodecahedron in her hand", HandHold.Measure(_anim, At == Where.Hand, _surf));
             if (!show) return;
             TargetPose(out var p, out var r);
             if (_blend < 1f)
@@ -177,6 +182,9 @@ namespace Seven
         /// joint turns about the palm's across-axis, in whichever direction brings its fingertip toward the palm).</summary>
         void Curl(int side, float w)
         {
+            // QF28 (5): close the fingers until they touch the shape's real surface (never through it) - the same solver as every
+            // other hold; the fixed curl below is only the fallback when the shape has no mesh
+            if (_anim != null && Surf() != null && Shape.gameObject.activeInHierarchy) { HandHold.CurlTo(_anim, side == 0, _surf, w); return; }
             if (_fingers[side] == null || !PalmFrame(side, out var c, out var n, out var al)) return;
             for (int f = 0; f < 5; f++)
             {
@@ -196,6 +204,13 @@ namespace Seven
             }
         }
 
+        HandHold.Surface _surf; Transform _surfOf;
+        HandHold.Surface Surf()
+        {
+            if (Shape == null) return null;
+            if (_surfOf != Shape) { _surfOf = Shape; MeshFilter best = null; foreach (var mf in Shape.GetComponentsInChildren<MeshFilter>(true)) if (mf.sharedMesh != null && (best == null || mf.sharedMesh.bounds.size.sqrMagnitude > best.sharedMesh.bounds.size.sqrMagnitude)) best = mf; _surf = best != null ? new HandHold.Surface(best.transform, best.sharedMesh) : null; }
+            return _surf;
+        }
         Renderer[] _rends;
         bool _shown = true;
         /// <summary>Shape renderers on / off (never SetActive: the galley toggles the object itself during the reveal).</summary>

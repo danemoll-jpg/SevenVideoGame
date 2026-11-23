@@ -12,6 +12,7 @@ namespace Seven
         {
             Restore(cp);
             yield return null; yield return null;
+            if (DemoBoot.QF28Holds) { yield return HoldCheck(); yield break; }       // QF28 (5)
             StartCoroutine(Vignettes());
             if (cp <= L.CpCity) { BikeHoldWatch.Begin("cattalus", Hold, Bike, Saucer); yield return Arrive(); yield return City(); Checkpoint(L.CpScreen); }
             else yield return UI.Fade(0f, 1.2f);
@@ -216,6 +217,15 @@ namespace Seven
             Shoot(L.ScreenView + new Vector3(1.2f, 1.0f, -3f), L.ScreenAt, 34f, 0.4f);
             yield return DialogueFraming.Over("the trophy rotating on the screen", SayIds("CAT_04_02"));      // One champion. One magnificent trophy!
             yield return Shot("c12_the_trophy_rotates_on_the_screen_the_sphere_in_its_cradle");
+            // QF28 (2): the advert really shows the sphere in the trophy's ring - measured on the screen's own camera, plus a close look
+            if (Shots && Screen != null)
+            {
+                Log(Screen.SphereReport());
+                Shoot(L.ScreenView + new Vector3(0.4f, 1.6f, -2f), L.ScreenAt, 17f, 0.01f); yield return Wait(0.6f);
+                ImageGate.ExpectPoint(L.ScreenAt, "the Cat-a-tron's trophy advert", 0f, "c12b_");
+                yield return Shot("c12b_the_advert_close_the_sphere_crowns_the_trophy");
+                Log(Screen.SphereReport());
+            }
             // she stops; Panther steps closer
             HerFaceCloseUp();
             yield return Say("CAT_04", 3, 4);                     // Panther. / I see it.

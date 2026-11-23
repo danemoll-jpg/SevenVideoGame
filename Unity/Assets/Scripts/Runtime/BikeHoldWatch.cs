@@ -63,7 +63,9 @@ namespace Seven
             if (_saucer != null) ImageGate.Expect(_saucer, "the saucer and its bike hold"); else if (_hold != null) ImageGate.Expect(_hold.transform, "the bike hold");     // QF26 (2)
             yield return ChapterCapture.I.Shot($"hold_{_world}_hatch_opens");
             for (float t = 0f; t < 3f; t += Time.deltaTime) yield return null;
-            if (_bike != null) ImageGate.Expect(_bike.transform, "the bike"); else if (_hold != null) ImageGate.Expect(_hold.transform, "the bike hold");
+            // the bike once it shows (Venus keeps it hidden in the bay until its own slower glide-out): else the open hold on the saucer
+            bool bikeShows = false; if (_bike != null) foreach (var r in _bike.GetComponentsInChildren<Renderer>()) if (r.enabled && !r.forceRenderingOff && !(r is ParticleSystemRenderer)) { bikeShows = true; break; }
+            if (bikeShows) ImageGate.Expect(_bike.transform, "the bike"); else if (_saucer != null) ImageGate.Expect(_saucer, "the open bike hold on the saucer"); else if (_hold != null) ImageGate.Expect(_hold.transform, "the bike hold");
             yield return ChapterCapture.I.Shot($"hold_{_world}_bike_lowers_out");
             if (DemoBoot.HoldCheck)
             {

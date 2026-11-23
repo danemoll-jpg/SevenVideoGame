@@ -91,12 +91,22 @@ Style prompt for the cover: warm cinematic orchestral reprise, the same melody, 
 
 **Status:** made by Dan in Suno ("Seven - Closing Credits", 3:00) and saved as `Unity/Assets/Audio/Music/credits_theme.mp3` (2026-11-22). Pace the credits to the track (~3:00) so the last card lands as the music ends.
 
-# The Moon finale (proposed 2026-11-22; the chapter isn't scripted yet)
+# The Moon finale (Round 19; script `Docs/CHAPTER_FINALE.md`, 2026-11-22)
 
-Chapter 1's `moon_prison.mp3` stays for the mine / prison if the finale passes through it. New tracks:
+Order: FIN_01 `aboard_saucer` → FIN_02's city reveal `main_theme` (Chapter 1's swell) → FIN_02 berth to FIN_05 `moon_descent` →
+FIN_06–07 `moon_witness` → FIN_08 first attack to FIN_09's impact `moon_tunneler` (cut dead at the impact) → FIN_10 and the start of
+FIN_11 **silence** → FIN_11 resuming the archive to FIN_13's white `moon_transfer` → FIN_14 `cattalus_meadow` → credits `credits_theme`.
+
+New tracks (Dan, Suno, instrumental):
 
 | File | Title | Where it plays | Style prompt |
 | --- | --- | --- | --- |
-| `moon_descent.mp3` | Beneath the City | The return to the Moon and the descent to the chamber below the lunar city | dark ambient orchestral, slow 65 bpm, low strings and deep drones, distant soft choir, faint echo of the main theme melody on glassy bells, ancient and vast, a sense of arrival and destiny, cavernous reverb, building quietly, loopable |
-| `moon_tunneler.mp3` | Tunneler | The final confrontation with Tunneler | dark driving industrial orchestral, heavy low percussion and machinery rhythm, grinding metallic textures, urgent low brass, tense string ostinato, minor key, relentless but not heroic, loopable |
-| `moon_transfer.mp3` | Seven Ages | After the sacrifice: 7 completes the transfer, the light through the seven temples, her ascension | tender and grieving then luminous, solo piano and soft strings, wordless female vocal rising, the main theme melody slowly emerging, swelling into a bright transcendent peak, glassy bells, then fading into white silence, about 3 minutes, not loopable |
+| `moon_descent.mp3` | Beneath the City | The berth, the service district, the Scree junction, the door, the chamber and the rune placement | dark ambient orchestral, slow 65 bpm, low strings and deep drones, distant soft choir, faint echo of the main theme melody on glassy bells, ancient and vast, a sense of arrival and destiny, cavernous reverb, building quietly, loopable |
+| `moon_witness.mp3` | I Was There | FIN_06 the revelation ("Witness recognized", the vision fragments, "Yes. Share it.") and FIN_07 the network opening | intimate and luminous, solo piano and warm low strings, soft wordless female vocal, wonder and grief together, slow 60 bpm, gentle rising arpeggios like light travelling, swelling softly as the network opens, loopable |
+| `moon_tunneler.mp3` | Tunneler | FIN_08 the confrontation, from his first attack to the impact in FIN_09 | dark driving industrial orchestral, heavy low percussion and machinery rhythm, grinding metallic textures, urgent low brass, tense string ostinato, minor key, relentless but not heroic, loopable |
+| `moon_transfer.mp3` | Seven Ages | FIN_11 resuming the archive, the memories, FIN_12 "Received", FIN_13 the light and the fade to white | tender and grieving then luminous, solo piano and soft strings, wordless female vocal rising, the main theme melody slowly emerging, swelling into a bright transcendent peak, glassy bells, then fading into white silence, about 3 minutes, not loopable |
+
+`moon_transfer` can be a Suno **Cover** of `main_theme.mp3` so the melody carries into the credits.
+
+**Status:** all four made by Dan in Suno and saved in `Unity/Assets/Audio/Music/` (2026-11-22), ~3:00 each: "Beneath the Moon City" = `moon_descent.mp3`, "I Was There" = `moon_witness.mp3`, "Tunneler on the Moon" = `moon_tunneler.mp3`, "Seven Ages" = `moon_transfer.mp3`. `moon_transfer` plays once: time FIN_11–FIN_13 so the fade to white lands near its end (fade it out if the scenes run shorter).
+

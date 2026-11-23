@@ -185,3 +185,25 @@ picks premade voices) and lists which in the status. Voices match the looks.
   race calls). **Dan (2026-11-22): use the "Barker" voice from his game Tee'd Off** (repo `C:\Users\danmo\Tee-dOff`: find the
   Barker's ElevenLabs voice ID in its voice tools / config, or Dan's saved ElevenLabs voice named Barker). Stadium PA treatment
   (slight echo) in the square; the plain voice when heard through the screen close up. Don't design a new announcer voice.
+
+## The Moon finale (Round 19) — voice names `Archive`, `ScreeWorker2`, `RestVoice`
+**Status: all three created and saved by Dan in ElevenLabs (2026-11-22).**
+Everyone else reuses an existing voice: 7, Panther, Tunneler, the Scree worker (`ScreeWorker`), the Venus Guardian (the "Elarim
+Voice"), the Machinist, Nela (the "Biavian Guide").
+- **Archive** — the chamber's recorded system voice (FIN_05, FIN_06, FIN_11, FIN_12). Not a character. Design:
+  "A calm, soft, ageless voice, neither clearly male nor female, quiet and restrained, slightly distant as if recorded long ago,
+  gentle and precise, warm underneath, unhurried with small pauses. Clear studio recording." Preview text: "Records received.
+  Witness recognized. Living testimony available. Permission to preserve and share? Record complete." In Unity: a faint
+  chamber reverb and a very light shimmer, no robotic effect.
+- **ScreeWorker2** — the second Scree voice (FIN_07_04, FIN_12_02), heard over the network. Description:
+  "An older, larger humanoid creature of the same weary laboring people, with a low, steady, gravelly voice, slower and calmer than
+  the younger workers, worn by years of hard labor but firm and quietly determined, a natural elder others listen to. Speaks in short,
+  plain sentences. Gender-neutral, a faint raspy texture, no accent, close to the microphone, studio-quality recording, no background
+  noise." Preview text: "These controls belong to the city. He locked us out of them. Send them to the other districts. We have
+  waited long enough." In Unity: a light comms filter and Dan's Scree noise underneath, like the first worker.
+- **RestVoice** — FIN_13's "You can rest now." **Dan (2026-11-22): it's used, and the implication is that it's God / Jesus.**
+  Description: "A deep, resonant, majestic male voice of immense warmth and quiet authority, large and full like it fills a vast
+  space, yet gentle and loving rather than stern, slow and unhurried, every word calm and certain, as if a father is speaking softly
+  to a tired child. Rich low tones, no accent, studio-quality recording, no background noise." Preview text: "You can rest now.
+  You have done well. Come home." In Unity: a large, soft, warm space around it (a long gentle reverb, a subtle low swell), never
+  harsh or echoing like a PA; it should feel like it surrounds her. Never shown or named on screen.

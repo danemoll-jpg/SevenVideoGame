@@ -64,6 +64,7 @@ namespace Seven.EditorTools
                 if (c.name == "BackLight") { c.rotation = Quaternion.Euler(40f, 200f, 0f); var l = c.GetComponent<Light>(); l.intensity = 0.75f; l.shadowStrength = 0.55f; }
                 if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(45f, 20f, 0f); c.GetComponent<Light>().intensity = 0.4f; }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Biaveh", 0.98f, 0.8f, 20f);   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoBiavehPath);
             Object.DestroyImmediate(inst);
             return prefab;

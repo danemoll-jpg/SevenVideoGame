@@ -137,6 +137,7 @@ namespace Seven
 
         void Start()
         {
+            if (GetComponent<CameraBodyGuard>() == null) gameObject.AddComponent<CameraBodyGuard>();   // QF28 pass
             if (Target != null) _seven = Target.GetComponent<ChapterSeven>();
             Pitch = DefaultPitch;
             if (Target != null) { Yaw = Target.eulerAngles.y; _focus = Target.position + Vector3.up * LookHeight; }

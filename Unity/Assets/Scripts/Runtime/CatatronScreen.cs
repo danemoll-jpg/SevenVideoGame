@@ -64,7 +64,17 @@ namespace Seven
                     if (GhostRacer != null) { var b = GhostRacer.position - GhostRacer.forward * 9f + Vector3.up * 3.2f + GhostRacer.right * Mathf.Sin(_t * 0.4f) * 3f; Aim(b, GhostRacer.position + GhostRacer.forward * 6f, 46f); }
                     break;
                 case Mode.Trophy:
-                    if (Trophy != null) { float a = _t * 28f; var c = Trophy.position + Vector3.up * 1.4f; Aim(c + Quaternion.Euler(0f, a, 0f) * new Vector3(0f, 0.4f, -3.2f), c, 34f); }
+                    // QF28 (2): the advert is framed on the trophy's top ring and the sphere in its cradle (0.18.2 aimed 1.4 m above the
+                    // trophy's base: the trophy sat small at the bottom of the screen and its sphere was a few pale pixels). A slow orbit
+                    // that alternates the whole trophy (the sphere crowning it) with a close push-in on the sphere.
+                    if (Trophy != null)
+                    {
+                        var sph = TrophySphere(); var top = sph != null ? sph.position : Trophy.position + Vector3.up * 1.0f;
+                        float a = _t * 24f, push = 0.5f + 0.5f * Mathf.Sin(_t * 0.35f);
+                        var look = Vector3.Lerp(Vector3.Lerp(Trophy.position, top, 0.62f), top, push);
+                        float dist = Mathf.Lerp(2.4f, 0.9f, push);
+                        Aim(look + Quaternion.Euler(0f, a, 0f) * new Vector3(0f, Mathf.Lerp(0.35f, 0.12f, push), -dist), look, 30f);
+                    }
                     break;
                 case Mode.Mark:
                     if (MarkPoint != null) { var c = MarkPoint.position; var f = MarkPoint.forward; Aim(c + f * 0.9f + Vector3.up * 0.1f, c, 22f); }
@@ -80,6 +90,19 @@ namespace Seven
                     break;
             }
         }
+        /// <summary>QF28 (2): is the sphere on the advert (the screen camera's frame) - in its cradle, in frame, how big.</summary>
+        public string SphereReport()
+        {
+            var sph = TrophySphere();
+            if (sph == null) return $"TROPHY SPHERE (QF28 2): mode {Now} - the sphere is NOT in the trophy's cradle (FAIL before CAT_09)";
+            if (ScreenCam == null) return "TROPHY SPHERE (QF28 2): no screen camera";
+            var v = ScreenCam.WorldToViewportPoint(sph.position); float h = RuneSizes.SphereR * 2f / (2f * Mathf.Max(0.01f, v.z) * Mathf.Tan(ScreenCam.fieldOfView * 0.5f * Mathf.Deg2Rad));
+            bool inFrame = v.z > 0f && v.x > 0.05f && v.x < 0.95f && v.y > 0.05f && v.y < 0.95f;
+            return $"TROPHY SPHERE (QF28 2): mode {Now} - the sphere in the trophy's cradle, {(inFrame ? "in the advert's frame" : "OUT of the advert's frame")} at ({v.x:0.00}, {v.y:0.00}), {h * 100f:0} % of the screen's height - {(Now == Mode.Trophy && inFrame && h > 0.06f ? "ok" : Now == Mode.Trophy ? "FAIL" : "-")}";
+        }
+        Transform _sph;
+        /// <summary>QF28 (2): the sphere while it is still in the trophy's cradle (it leaves only at the touch, CAT_09).</summary>
+        public Transform TrophySphere() { if (_sph == null && Trophy != null) _sph = Trophy.Find("Sphere"); return _sph != null && _sph.gameObject.activeInHierarchy && _sph.IsChildOf(Trophy) ? _sph : null; }
         void Aim(Vector3 pos, Vector3 look, float fov) { ScreenCam.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(look - pos)); ScreenCam.fieldOfView = fov; }
         void OnDestroy() { if (_rt != null) _rt.Release(); }
     }

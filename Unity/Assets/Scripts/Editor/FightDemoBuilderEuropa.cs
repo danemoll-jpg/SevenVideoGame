@@ -89,6 +89,7 @@ namespace Seven.EditorTools
                 if (c.name == "BackLight") { c.rotation = Quaternion.Euler(70f, 160f, 0f); var l = c.GetComponent<Light>(); l.intensity = 0.8f; l.shadowStrength = 0.4f; }
                 if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(75f, 20f, 0f); c.GetComponent<Light>().intensity = 0.35f; }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Europa", 0.98f, 0.8f, 6f);   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoEuropaPath);
             Object.DestroyImmediate(inst);
             return prefab;
@@ -300,7 +301,8 @@ namespace Seven.EditorTools
                 foreach (var z in E.Zones) { if (z.Name == "Shelf") continue; Block($"Floor_{z.Name}", new Vector3(z.X0, y - 0.4f, z.Z0), new Vector3(z.X1, y, z.Z1), m.metal, bs); }
                 // the outer shell: one box round the whole base (seen from inside), a ceiling at 3.6 m
                 Block("BaseCeiling", new Vector3(-226f, y + 3.6f, 444f), new Vector3(-147f, y + 4.0f, 508f), m.metalDark, bs, false);
-                void Wall(string n, float x0, float z0, float x1, float z1) => Block(n, new Vector3(x0, y, z0), new Vector3(x1, y + 3.6f, z1), m.metalDark, bs);
+                var wallSegs = new List<(float x0, float z0, float x1, float z1)>();
+                void Wall(string n, float x0, float z0, float x1, float z1) { Block(n, new Vector3(x0, y, z0), new Vector3(x1, y + 3.6f, z1), m.metalDark, bs); wallSegs.Add((x0, z0, x1, z1)); }
                 // room walls (doors are gaps; the doors themselves are separate blocks)
                 Wall("W_DockW", -183.6f, 444f, -183f, 456f); Wall("W_DockE", -176f, 453.5f, -175.4f, 456f);
                 Wall("W_PressW", -183.6f, 456f, -183f, 463f); Wall("W_PressE", -179f, 456f, -178.4f, 463f);
@@ -314,6 +316,27 @@ namespace Seven.EditorTools
                 Wall("W_TransS", -224.6f, 481f, -209.2f, 481.6f); Wall("W_TransN", -224.6f, 495f, -209.2f, 495.6f);
                 Wall("W_MachS", -170.4f, 480f, -148.4f, 480.6f); Wall("W_MachN", -170.4f, 499f, -148.4f, 499.6f); Wall("W_MachE", -149f, 480f, -148.4f, 499.6f);
                 Wall("W_WinW", -183.6f, 493.6f, -183f, 504.5f); Wall("W_WinE", -179f, 493.6f, -178.4f, 504.5f);
+                // QF28 pass (the image gate, QF26): the base walls were plain dark slabs - the corridor and room shots had almost nothing
+                // in them (edge density 4.5 %). Industrial detail on both faces of every wall: structural ribs every 1.6 m, a pipe run
+                // at 2.9 m, a skirting strip, and a soft lit strip under the ceiling (white, as every light in the game).
+                {
+                    var dk = new AK(); var (wrv, wrt) = dk.Of(m.metal); var (wpv, wpt) = dk.Of(m.metalDark); var (wgv, wgt) = dk.Of(m.glow);
+                    foreach (var (wx0, wz0, wx1, wz1) in wallSegs)
+                    {
+                        bool wAlongZ = (wz1 - wz0) > (wx1 - wx0); float wLen = wAlongZ ? wz1 - wz0 : wx1 - wx0; if (wLen < 1.2f) continue;
+                        float wcx = (wx0 + wx1) * 0.5f, wcz = (wz0 + wz1) * 0.5f, wHalf = (wAlongZ ? wx1 - wx0 : wz1 - wz0) * 0.5f;
+                        foreach (var wsg in new[] { -1f, 1f })
+                        {
+                            Vector3 WFace(float wu, float wh, float wout) => wAlongZ ? new Vector3(wcx + wsg * (wHalf + wout), y + wh, wz0 + wu) : new Vector3(wx0 + wu, y + wh, wcz + wsg * (wHalf + wout));
+                            Vector3 WSz(float walong, float whgt, float wdepth) => wAlongZ ? new Vector3(wdepth, whgt, walong) : new Vector3(walong, whgt, wdepth);
+                            for (float wu = 0.6f; wu < wLen - 0.3f; wu += 1.6f) MBox(wrv, wrt, WFace(wu, 1.75f, 0.06f), WSz(0.14f, 3.5f, 0.12f), 0f, 0f);
+                            MBox(wrv, wrt, WFace(wLen * 0.5f, 2.9f, 0.16f), WSz(wLen - 0.2f, 0.16f, 0.16f), 0f, 0f);       // the pipe run
+                            MBox(wpv, wpt, WFace(wLen * 0.5f, 0.12f, 0.05f), WSz(wLen - 0.1f, 0.24f, 0.1f), 0f, 0f);       // skirting
+                            MBox(wgv, wgt, WFace(wLen * 0.5f, 3.42f, 0.05f), WSz(wLen - 0.6f, 0.05f, 0.06f), 0f, 0f);      // the lit strip
+                        }
+                    }
+                    dk.Save("EuBaseWallDetail", bs, false, false);
+                }
                 doorHolding = Block("Door_Holding", new Vector3(-192.2f, y, 486.4f), new Vector3(-191.4f, y + 3.4f, 489.6f), m.metal, bs);
                 doorTransport = Block("Door_Transport", new Vector3(-209.4f, y, 486.4f), new Vector3(-208.6f, y + 3.4f, 489.6f), m.metal, bs);
                 doorMachine = Block("Door_Machine", new Vector3(-170.8f, y, 486.4f), new Vector3(-170f, y + 3.4f, 489.6f), m.metal, bs);

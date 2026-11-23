@@ -134,12 +134,12 @@ namespace Seven
             var lookRings = camA + Vector3.Slerp(toEgg, toPlanet, 0.55f) * 1700f;
             for (float t = 0f; t < 0.2f; t += Time.deltaTime) { ExteriorTick(); Cut(camA, lookRings, 58f); yield return null; }
             yield return UI.Fade(0f, 1.4f);
-            yield return ShotV("ba01a_opens_on_veyras_rings");
+            yield return ShotV("ba01a_opens_on_veyras_rings", _egg, "the white mothership");
             for (float t = 0f; t < 3.2f; t += Time.deltaTime) { ExteriorTick(); if (saucer != null) saucer.position = p0 + toEgg * t * 6f; float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 2.4f)); Cut(camA + toEgg * t * 5f, Vector3.Lerp(lookRings, _veyra.EggPos, u), Mathf.Lerp(58f, 50f, u)); yield return null; }
-            yield return ShotV("ba01_extreme_wide_the_white_mothership_in_veyras_rings");
+            yield return ShotV("ba01_extreme_wide_the_white_mothership_in_veyras_rings", _egg, "the white mothership");
             // one orb crosses the foreground: the mothership is still far away
             if (_orbs != null && _orbs[1] != null) { var o = _orbs[1]; for (float t = 0f; t < 2.4f; t += Time.deltaTime) { ExteriorTick(); o.position = camA + toEgg * 220f + side * Mathf.Lerp(-160f, 160f, t / 2.4f) + n * 10f; Cut(camA + toEgg * 16f, _veyra.EggPos - n * 120f, 50f); yield return null; } }
-            yield return ShotV("ba02_an_orb_crosses_the_foreground");
+            yield return ShotV("ba02_an_orb_crosses_the_foreground", (_orbs != null ? _orbs[1] : _egg), "an orb crossing");
             if (saucer != null) saucer.position = p0;
             // INTERIOR (QF23 3): the pilot's chair at the front window, Panther in her lap; as they talk the hull fades away
             Win(true);
@@ -162,13 +162,13 @@ namespace Seven
             // the three things moving round it
             Win(false);
             for (float t = 0f; t < 2.6f; t += Time.deltaTime) { ExteriorTick(); Cut(_veyra.EggPos - toEgg * 1900f + side * 500f + n * 160f, _veyra.EggPos, 40f); yield return null; }
-            yield return ShotV("ba04_three_orbs_round_the_white_mothership");
+            yield return ShotV("ba04_three_orbs_round_the_white_mothership", _egg, "the white mothership and its orbs");
             Win(true); CutPilot("two");
             yield return SayB("BIA_01", 7, 8);                   // And those three things moving around it? / Let's wait to be invited...
             // BIA_02: one orb adjusts its course and holds near their approach; Nela's voice
             _orbHold = true; Win(false);
             if (_orbs != null && _orbs[0] != null) for (float t = 0f; t < 2f; t += Time.deltaTime) { ExteriorTick(); _orbs[0].position = Vector3.Lerp(_orbs[0].position, p0 + toEgg * 120f + side * 70f + n * 10f, Time.deltaTime * 2f); Cut(p0 - toEgg * 40f - side * 30f + n * 14f, p0 + toEgg * 110f + side * 60f, 46f); yield return null; }
-            yield return ShotV("ba05_an_orb_holds_position_near_their_approach");
+            yield return ShotV("ba05_an_orb_holds_position_near_their_approach", (_orbs != null && _orbs.Length > 0 ? _orbs[0] : _egg), "the orb near their approach");
             Win(true); CutPilot("two");
             yield return SayB("BIA_02", 1, 5);                   // Welcome to Veyra. I am Nela... / Oh-hello. / Forgive me... / A little... / A considerable improvement...
             // QF24 (4): the vanish effect ends here, before the door - the hull comes back round them while they are still
@@ -192,7 +192,7 @@ namespace Seven
                 if (_seamR != null) Glowing.Set(_seamR, Mathf.Clamp01(t - 1.5f) * 0.9f);
                 yield return null;
             }
-            yield return ShotV("ba06_the_saucer_hovers_at_the_closed_door");
+            yield return ShotV("ba06_the_saucer_hovers_at_the_closed_door", saucer, "the saucer at the door");
             // the conversation about the door, hovering in front of it (a slow drift round the saucer, the door behind it)
             // QF24 (3): the door talk runs beside the hover shot; the scene waits for the TALK to finish (before, it waited on
             // Dlg.Busy, which is false in the pause between two lines - the scene moved on and lines 11-13 started over 7-10)
@@ -205,7 +205,7 @@ namespace Seven
                 float a = Mathf.Lerp(-0.5f, 0.5f, Mathf.Clamp01(t / 14f));
                 var cp = hover + Quaternion.Euler(0f, a * 40f, 0f) * new Vector3(-18f, 5f, -16f);
                 Cut(cp, hover + Vector3.forward * 22f, 44f);
-                if (t > 2f && t < 2.1f) yield return ShotV("ba06b_hovering_the_door_behind_the_saucer");
+                if (t > 2f && t < 2.1f) yield return ShotV("ba06b_hovering_the_door_behind_the_saucer", saucer, "the saucer at the door");
                 yield return null;
             }
             // FRONT, then the snap: the leaves swing and spiral back just wider than the saucer, a sharp whirr-click
@@ -214,7 +214,7 @@ namespace Seven
             yield return Wait(0.35f);
             AudioKit.Play("bia_iris_snap_open", null, 1f);
             if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_02 (QF23 4): the iris snaps open - {IrisInfo()}");
-            for (float t = 0f; t < 0.45f; t += Time.deltaTime) { ExteriorTick(); _ap.Set(Mathf.SmoothStep(0f, 1f, t / 0.45f)); Cut(front, _irisAt, 40f); if (t > 0.2f && t < 0.24f) yield return ShotV("ba07_front_the_leaves_spiral_open"); yield return null; }
+            for (float t = 0f; t < 0.45f; t += Time.deltaTime) { ExteriorTick(); _ap.Set(Mathf.SmoothStep(0f, 1f, t / 0.45f)); Cut(front, _irisAt, 40f); if (t > 0.2f && t < 0.24f) yield return ShotV("ba07_front_the_leaves_spiral_open", _iris, "the iris door"); yield return null; }
             _ap.Set(1f);
             // the saucer slips through in that instant
             for (float t = 0f; t < 0.9f; t += Time.deltaTime)
@@ -222,17 +222,17 @@ namespace Seven
                 ExteriorTick();
                 if (saucer != null) saucer.position = Vector3.Lerp(hover, _irisAt + Vector3.forward * 24f, Mathf.SmoothStep(0f, 1f, t / 0.9f));
                 Cut(front + Vector3.forward * 6f, saucer != null ? saucer.position : _irisAt, 42f);
-                if (t > 0.42f && t < 0.46f) yield return ShotV("ba07b_the_saucer_slips_through");
+                if (t > 0.42f && t < 0.46f) yield return ShotV("ba07b_the_saucer_slips_through", saucer, "the saucer slipping through");
                 yield return null;
             }
             // REVERSE from inside: the leaves spiral shut very quickly behind them - a solid clack; the ringed planet disappears
             if (_inside != null) _inside.gameObject.SetActive(true);      // QF24 (4): the interior round the reverse shot
             var inside = _irisAt + Vector3.forward * 46f + Vector3.up * -3f + Vector3.right * 4f;
             AudioKit.Play("bia_iris_snap_shut", null, 1f);
-            for (float t = 0f; t < 0.35f; t += Time.deltaTime) { ExteriorTick(); _ap.Set(1f - Mathf.SmoothStep(0f, 1f, t / 0.35f)); Cut(inside, _irisAt, 44f); if (t > 0.15f && t < 0.19f) yield return ShotV("ba08_reverse_the_leaves_spiral_shut"); yield return null; }
+            for (float t = 0f; t < 0.35f; t += Time.deltaTime) { ExteriorTick(); _ap.Set(1f - Mathf.SmoothStep(0f, 1f, t / 0.35f)); Cut(inside, _irisAt, 44f); if (t > 0.15f && t < 0.19f) yield return ShotV("ba08_reverse_the_leaves_spiral_shut", _iris, "the iris door"); yield return null; }
             _ap.Set(0f); CameraShake.Quake(0.12f, 0.15f);
             yield return Wait(0.5f);
-            yield return ShotV("ba08b_shut_the_planet_gone");
+            yield return ShotV("ba08b_shut_the_planet_gone", _iris, "the iris door");
             if (_seamR != null) Glowing.Set(_seamR, 0f);
             yield return InsideTheMothership(saucer);
             if (mainCam != null && _far0 > 0f) mainCam.farClipPlane = _far0;
@@ -272,7 +272,7 @@ namespace Seven
                 glide += Speed * Time.deltaTime; float z = Mathf.Min(z0 + glide, z1);
                 saucer.position = _inside.Route(z) + Vector3.up * Mathf.Sin(t * 1.1f) * 0.2f;
                 Cut(P() + new Vector3(-26f, -7f, -14f), P() + Vector3.forward * 26f + Vector3.down * 4f, 50f);
-                if (t > 2.5f && t < 2.55f) yield return ShotV("ba09_inside_the_saucer_glides_in_the_guide_lights_ripple");
+                if (t > 2.5f && t < 2.55f) yield return ShotV("ba09_inside_the_saucer_glides_in_the_guide_lights_ripple", saucer, "the saucer inside the mothership");
                 yield return null;
             }
             // 2) ahead and low over the route: the lights run toward the camera, the saucer following them
@@ -282,7 +282,7 @@ namespace Seven
                 saucer.position = _inside.Route(z);
                 var cam = _inside.Route(Mathf.Min(z + 70f, z1 + 20f)) + new Vector3(9f, -30f, 0f);
                 Cut(cam, P() + Vector3.down * 2f, 44f);
-                if (t > 2f && t < 2.05f) yield return ShotV("ba09b_inside_ahead_the_lights_lead_to_the_berth");
+                if (t > 2f && t < 2.05f) yield return ShotV("ba09b_inside_ahead_the_lights_lead_to_the_berth", saucer, "the saucer inside the mothership");
                 yield return null;
             }
             // 3) high and wide: the saucer settles into the receiving berth, the docking arms round it
@@ -292,7 +292,7 @@ namespace Seven
                 float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 5f));
                 saucer.position = Vector3.Lerp(from, berth, u);
                 Cut(berth + new Vector3(-48f, 26f, -40f), Vector3.Lerp(from, berth, 0.7f), 46f);
-                if (t > 4.6f && t < 4.65f) yield return ShotV("ba09c_inside_the_saucer_settles_into_the_receiving_berth");
+                if (t > 4.6f && t < 4.65f) yield return ShotV("ba09c_inside_the_saucer_settles_into_the_receiving_berth", saucer, "the saucer at the berth");
                 if (t > 25f) break;                                   // watchdog
                 yield return null;
             }

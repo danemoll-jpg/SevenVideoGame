@@ -182,23 +182,30 @@ namespace Seven
             Bounds b = default; bool any = false;
             foreach (var r in _rs) { if (!r.enabled || r.forceRenderingOff || r is ParticleSystemRenderer) continue; if (!any) { b = r.bounds; any = true; } else b.Encapsulate(r.bounds); }
             if (!any) return 0f;
-            Vector2 mn = new Vector2(1f, 1f), mx = new Vector2(0f, 0f); bool front = false;
+            Vector2 mn = new Vector2(1f, 1f), mx = new Vector2(0f, 0f); bool front = false, behind = false;
             for (int i = 0; i < 8; i++)
             {
                 var c = b.center + Vector3.Scale(b.extents, new Vector3((i & 1) == 0 ? -1 : 1, (i & 2) == 0 ? -1 : 1, (i & 4) == 0 ? -1 : 1));
-                var v = cam.WorldToViewportPoint(c); if (v.z <= cam.nearClipPlane) continue; front = true;
+                var v = cam.WorldToViewportPoint(c); if (v.z <= cam.nearClipPlane) { behind = true; continue; } front = true;
                 mn = Vector2.Min(mn, new Vector2(v.x, v.y)); mx = Vector2.Max(mx, new Vector2(v.x, v.y));
             }
             if (!front) return 0f;
+            // QF28 pass: a subject that reaches past the camera (an insert right at the bike's grip) runs off the frame on that side -
+            // its corners behind the camera project nowhere, so its in-front extent is widened to the frame's edge
+            if (behind) { var vc = cam.WorldToViewportPoint(b.center); if (vc.x < 0.5f) mn.x = 0f; else mx.x = 1f; if (vc.y < 0.5f) mn.y = 0f; else mx.y = 1f; }
             mn = Vector2.Max(mn, Vector2.zero); mx = Vector2.Min(mx, Vector2.one);
             if (mx.x <= mn.x || mx.y <= mn.y) return 0f;
-            // unblocked: a clear line to its middle, its top or its bottom third - or, for a figure, its head, chest, hips or a hand
-            var pts = new List<Vector3>(); foreach (var f in new[] { 0.5f, 0.8f, 0.25f }) pts.Add(b.center + Vector3.up * b.extents.y * (f * 2f - 1f));
+            // unblocked: a clear line to some part of it - a 3 x 3 x 3 grid across its bounds (QF28 pass: three points down its middle
+            // ran through whatever sits INSIDE the subject - the bike in the saucer's bay - and called the saucer blocked) - or, for a
+            // figure, its head, chest, hips or a hand
+            var pts = new List<Vector3>();
+            for (int gx = -1; gx <= 1; gx++) for (int gy = -1; gy <= 1; gy++) for (int gz = -1; gz <= 1; gz++) pts.Add(b.center + Vector3.Scale(b.extents * 0.7f, new Vector3(gx, gy, gz)));
             var an = t.GetComponentInChildren<Animator>();
             if (an != null && an.isHuman) foreach (var hb in new[] { HumanBodyBones.Head, HumanBodyBones.Chest, HumanBodyBones.Hips, HumanBodyBones.RightHand, HumanBodyBones.LeftHand }) { var bt = an.GetBoneTransform(hb); if (bt != null) pts.Add(bt.position); }
             foreach (var p in pts) if (PointVisible(cam, p, out _, t)) { visible = true; break; }
             return (mx.x - mn.x) * (mx.y - mn.y);
         }
+        static readonly RaycastHit[] _hits = new RaycastHit[64];
         static bool PointVisible(Camera cam, Vector3 p, out float blockedAt, Transform self = null)
         {
             blockedAt = 0f;
@@ -207,10 +214,17 @@ namespace Seven
             var o = cam.transform.position; var d = p - o; float len = d.magnitude;
             if (len < 0.05f) return true;
             // solid geometry only: grass, loose props and the subject's own colliders never hide it
-            if (CameraOccluders.Ready && CameraOccluders.AnyRay(o, d / len, len - 0.4f, CameraOccluders.SolidMask, out float dist, CameraOccluders.SolidMask))
-            {
-                if (self == null || !Physics.Raycast(o, d / len, out var hit, len, CameraOccluders.SolidMask, QueryTriggerInteraction.Ignore) || !hit.transform.IsChildOf(self)) { blockedAt = dist; return false; }
-            }
+            if (!CameraOccluders.Ready || !CameraOccluders.AnyRay(o, d / len, len - 0.4f, CameraOccluders.SolidMask, out float dist, CameraOccluders.SolidMask)) return true;
+            if (self == null) { blockedAt = dist; return false; }
+            // QF26 (2) fix: the subject's OWN surfaces never hide it (a saucer's middle lies inside its hull) - only other geometry
+            // does. Before, only real colliders were checked for that; the visual-mesh occluders of the subject itself "blocked" it.
+            var dir = d / len; float lim = len - 0.4f;
+            int n = Physics.RaycastNonAlloc(o, dir, _hits, lim, CameraOccluders.SolidMask, QueryTriggerInteraction.Ignore);
+            // a small collision volume that ENCLOSES the probed point (the bike's hull round its rider) is not in front of it
+            bool Encloses(Collider c) => c != null && c.bounds.size.magnitude < 6f && c.bounds.Contains(p);
+            for (int i = 0; i < n; i++) if (!_hits[i].transform.IsChildOf(self) && !Encloses(_hits[i].collider)) { blockedAt = _hits[i].distance; return false; }
+            n = CameraOccluders.RaycastAll(o, dir, lim, _hits, CameraOccluders.SolidMask);
+            for (int i = 0; i < n; i++) { var r = CameraOccluders.RendererOf(_hits[i].collider); if ((r == null || !r.transform.IsChildOf(self)) && !(r != null && r.bounds.size.magnitude < 6f && r.bounds.Contains(p))) { blockedAt = _hits[i].distance; return false; } }
             return true;
         }
 

@@ -146,6 +146,8 @@ namespace Seven.EditorTools
             else Log($"HOLES CHECK (QF18 13) {scene}: not a zone level - skipped");
             KickStatesCheck(scene);
             QF23SceneChecks(scene);
+            VehicleFrontCheck(scene);       // QF28 (3)
+            if (scene == "Cattalus") HoldCheck(scene);   // QF28 (5): her rig is the same in every scene - checked once
         }
 
         /// <summary>QF20 (2): 7's animator in every chapter scene carries the kick states (Y = kick in boss fights).</summary>

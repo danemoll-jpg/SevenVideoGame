@@ -1718,6 +1718,18 @@ namespace Seven
             var glows = new List<Transform>();
             foreach (Transform c in a.transform) if (c.name.StartsWith("Glow")) glows.Add(c);
             var gp0 = glows.ConvertAll(g => g.position); var gs0 = glows.ConvertAll(g => g.localScale);
+            // QF28 pass - the QF26 fog-colour rule (<= ~1.0) for the city preset too: its numbers summed to the 1.25 clamp in every
+            // city shot. The target tone / glow strength are fitted once with the final glows in place, then the blend runs to them.
+            {
+                float f0 = a.FarBrightness, z0 = a.ZenithBrightness, g0 = a.GlowIntensity, r0 = a.GlowRadius, s0 = a.SkyDistance, n0 = a.NearBrightness, b0 = a.BrightnessDistance;
+                a.FarBrightness = to[12]; a.ZenithBrightness = to[14]; a.GlowIntensity = to[15]; a.GlowRadius = to[16]; a.SkyDistance = to[10]; a.NearBrightness = to[11]; a.BrightnessDistance = to[13];
+                for (int i = 0; i < glows.Count && i < glowPos.Length; i++) { glows[i].position = glowPos[i]; glows[i].localScale = glowScale[i]; }
+                var rep = a.FitFogBudget(0.98f, 0.95f);
+                to[12] = a.FarBrightness; to[14] = a.ZenithBrightness; to[15] = a.GlowIntensity;
+                a.FarBrightness = f0; a.ZenithBrightness = z0; a.GlowIntensity = g0; a.GlowRadius = r0; a.SkyDistance = s0; a.NearBrightness = n0; a.BrightnessDistance = b0;
+                for (int i = 0; i < glows.Count && i < glowPos.Length; i++) { glows[i].position = gp0[i]; glows[i].localScale = gs0[i]; }
+                if (Auto) Cap.Log("FOG BUDGET (QF26 rule) the city look: " + rep);
+            }
             for (float t = seconds > 0f ? 0f : 1f; t <= 1f + 1e-4f; t += seconds > 0f ? Time.deltaTime / seconds : 2f)
             {
                 float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t));
@@ -1898,7 +1910,16 @@ namespace Seven
             var s = EngagedScree(); if (s == null) yield break;
             for (float t = 0f; t < 4f && Flat(s.transform.position - Seven.transform.position).magnitude > 1.7f; t += Time.deltaTime) { Seven.ScriptMove = Flat(s.transform.position - Seven.transform.position).normalized; yield return null; }
             Seven.ScriptMove = Vector3.zero;
-            Cam.Shot(Seven.transform.position + Vector3.Cross(Vector3.up, Flat(s.transform.position - Seven.transform.position).normalized) * 3.6f + Vector3.up * 1.6f, (Seven.transform.position + s.transform.position) * 0.5f + Vector3.up * 1.1f, 0.01f, true, 50f);
+            {
+                // QF28 pass (the image gate): the side with room - 0.18.2 always took the same side, and near the terrace wall the
+                // camera sat inside it (a black frame). Each side is probed from the pair's middle; the camera stops 0.4 m short of a wall.
+                var mid = (Seven.transform.position + s.transform.position) * 0.5f + Vector3.up * 1.1f;
+                var sd = Vector3.Cross(Vector3.up, Flat(s.transform.position - Seven.transform.position).normalized);
+                float Room(Vector3 dir) { var o = mid; var d = (dir * 3.6f + Vector3.up * 0.5f); return CameraOccluders.Ready && CameraOccluders.AnyRay(o, d.normalized, d.magnitude, CameraOccluders.SolidMask, out float hd, CameraOccluders.SolidMask) ? hd : d.magnitude; }
+                float r1 = Room(sd), r2 = Room(-sd); var side = r1 >= r2 ? sd : -sd; float room = Mathf.Max(r1, r2);
+                var camPos = mid + (side * 3.6f + Vector3.up * 0.5f).normalized * Mathf.Max(1.2f, room - 0.4f);
+                Cam.Shot(camPos, mid, 0.01f, true, 50f);
+            }
             Seven.AutoAttack = true; StartCoroutine(Burst("qf10_combo", 8, 0.07f));
             yield return Wait(0.17f); Seven.AutoAttack = true;          // pressed early: buffered, chains at the first moment it may
             yield return Wait(0.2f); Seven.AutoAttack = true;
@@ -2042,12 +2063,14 @@ namespace Seven
             Cam.Shot(povEye, upCurve, 0.01f, true, 64f);
             pan = StartCoroutine(LookAlong(povEye, upCurve, sky + side * 30f, 7f, 64f));
             yield return Wait(1.2f);
+            if (City != null) ImageGate.Expect(City.transform, "the city up the curve - the traffic and the towers", 0f, "c02b_");   // QF26 (2): their view (a place)
             yield return Shot("c02b_pov_up_the_curve_traffic_towers");
             yield return Dlg.PlayScene(65, 1, 2);            // I've never seen the inside of a moon before. / Most people insist on looking at the outside.
             // she barely hears him: her attention (and the shot) follows a stream of traffic overhead
             Cut6b();
             pan = StartCoroutine(LookAlong(povEye, sky + side * -40f, sky + side * 60f, 2.6f, 60f));
             for (float t = 0f; t < 1.4f; t += Time.deltaTime) { ik.LookPos = sky + side * Mathf.Lerp(-40f, 60f, t / 1.4f); yield return null; }
+            if (City != null) ImageGate.Expect(City.transform, "the traffic over the city", 0f, "c02c_");
             yield return Shot("c02c_pov_following_the_traffic");
             yield return Dlg.PlayScene(65, 3, 4);            // Are those cars? / Apparently we escaped just in time for traffic.
             ik.LookPos = p7 + cityDir * 30f + Vector3.up * 6f; ik.LookW = 0.6f;
@@ -2057,6 +2080,7 @@ namespace Seven
             Cam.Shot(wPos, p7 + Vector3.up * 1.5f, 0.01f, true, 40f);
             pan = StartCoroutine(LookAlong(wPos, p7 + Vector3.up * 1.5f, p7 + Vector3.up * 12f, 7f, 40f));
             yield return Wait(2.4f);
+            ImageGate.ExpectPoint(p7 + Vector3.up * 1.0f, "their small figures at the terrace exit", 0f, "c03_");   // QF26 (2): small by design (the extreme wide)
             yield return Shot("c03_extreme_wide_small_figures");
             yield return Wait(1.0f);
             yield return Dlg.PlayScene(65, 5, 5);            // There are people living all the way up there.
@@ -2089,6 +2113,7 @@ namespace Seven
             Cam.Shot(eye, MoonLayout.BasinCenter + new Vector3(-60f, -10f, 0f), 0.01f, true, 34f);
             pan = StartCoroutine(LookAlong(eye, MoonLayout.BasinCenter + new Vector3(-90f, -10f, 0f), MoonLayout.BasinCenter + new Vector3(40f, 10f, 60f), 5f, 34f));
             yield return Wait(2.6f);
+            ImageGate.ExpectPoint(MoonLayout.BasinCenter + new Vector3(-25f, -10f, 30f), "the lower districts", 0f, "c06_");   // a point on the pan (the city's own bounds sit round its host)
             yield return Shot("c06_her_view_the_lower_districts");
             yield return Wait(1.0f);
             Cut6b();
@@ -2383,7 +2408,7 @@ namespace Seven
                 foreach (var r in RimGlow) Glow(r, 3.2f + Mathf.Clamp01(u * 2f) * 2f);
                 Cam.Shot(new Vector3(29f, MoonLayout.Bay + 3f, -61f), Saucer.position + Vector3.up * 0.5f, 0.35f);
                 if (!shot1 && u > 0.3f) { shot1 = true; yield return Shot("s08_liftoff_rising"); }
-                if (!shot2 && u > 0.72f) { shot2 = true; yield return Shot("s08_liftoff_leaving"); }
+                if (!shot2 && u > 0.72f) { shot2 = true; ImageGate.Expect(Saucer, "the saucer leaving", 0f, "s08_liftoff_leaving"); yield return Shot("s08_liftoff_leaving"); }
                 yield return null;
             }
             yield return UI.Fade(1f, 1.2f);

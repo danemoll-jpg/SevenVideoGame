@@ -48,7 +48,12 @@ namespace Seven
         public float ChewSeconds { get; private set; }
 
         Transform _chest, _neck, _head, _earL, _earR, _spine;
-        readonly Transform[] _legU = new Transform[2], _legL = new Transform[2], _legF = new Transform[2];
+        readonly Transform[] _legU = new Transform[4], _legL = new Transform[4], _legF = new Transform[4];   // FL, FR, HL, HR
+        /// <summary>QF28 (4): riding a racer - crouched low in its padded bed (all four legs folded under her), head up, ears laid
+        /// back, tail wrapped round her side. 0..1 (eases); <see cref="RideDrop"/> = how far her root sits below the seat point.</summary>
+        public float Ride; float _ride;
+        public float RideDrop { get; private set; }
+        public void RideNow() { _ride = Ride; }
         float _eat, _lean, _tilt, _ear, _t;
         public bool HasEars => _earL != null && _earR != null;
         /// <summary>The muzzle (approx.): the head bone pushed a little forward along the cat.</summary>
@@ -72,6 +77,12 @@ namespace Seven
                     case "FR_upper": _legU[1] = t; break;
                     case "FR_lower": _legL[1] = t; break;
                     case "FR_foot": _legF[1] = t; break;
+                    case "HL_upper": _legU[2] = t; break;
+                    case "HL_lower": _legL[2] = t; break;
+                    case "HL_foot": _legF[2] = t; break;
+                    case "HR_upper": _legU[3] = t; break;
+                    case "HR_lower": _legL[3] = t; break;
+                    case "HR_foot": _legF[3] = t; break;
                     case "neck": _neck = t; break;
                     case "head": _head = t; break;
                     case "earL": _earL = t; break;
@@ -79,6 +90,8 @@ namespace Seven
                 }
                 if (t.name.StartsWith("tail")) _tail.Add(t);
             }
+            // QF28 (4): the crouch drop - the lower of the shoulder / hip joints above her root, folded to ~40 %
+            { float hj = float.MaxValue; for (int i = 0; i < 4; i++) if (_legU[i] != null) hj = Mathf.Min(hj, _legU[i].position.y - transform.position.y); RideDrop = hj < float.MaxValue ? Mathf.Max(0f, hj * 0.8f) : 0f; }
             // rest offsets (rig: muzzle 3.3 cm ahead / 2.7 cm below the head bone at 0.25 m shoulder height)
             if (_head != null)
             {
@@ -109,6 +122,7 @@ namespace Seven
             if (crouch > 0.01f) Rot(_spine, right, crouch);
             var back = -Vector3.ProjectOnPlane(fwd, Vector3.up).normalized * PawBack * _eat;
             if (legs) { PlantLeg(0, a0 + back, f0); PlantLeg(1, a1 + back, f1); }
+            RidePose(dt, right, fwd);
             float g = Mathf.Lerp(1f, EatGain, _eat);
             Rot(_chest, right, 16f * _eat * g - 6f * _lean);
             Rot(_neck, right, 52f * _eat * g - 10f * _lean);
@@ -164,6 +178,33 @@ namespace Seven
                     float flick = Mathf.Max(0f, Mathf.Sin(_t * 9f)) * Mathf.Max(0f, Mathf.Sin(_t * 0.9f)) * 10f;
                     ear.rotation = Quaternion.AngleAxis(Mathf.Clamp(yaw, -70f, 70f) * 0.55f * _ear, Vector3.up) * Quaternion.AngleAxis(-flick * _ear, right) * ear.rotation;
                 }
+            }
+        }
+
+        /// <summary>QF28 (4): the riding crouch, after the clip: legs folded under (two-bone IK), head up, ears back, tail wrapped.</summary>
+        void RidePose(float dt, Vector3 right, Vector3 fwd)
+        {
+            _ride = Mathf.MoveTowards(_ride, Ride, dt * 2.5f);
+            if (_ride < 0.01f) return;
+            var up = transform.up;
+            for (int i = 0; i < 4; i++)
+            {
+                if (_legU[i] == null || _legL[i] == null || _legF[i] == null) continue;
+                var a = _legU[i].position; float len = (_legL[i].position - a).magnitude + (_legF[i].position - _legL[i].position).magnitude;
+                bool front = i < 2;
+                var tgt = a - up * len * 0.22f + fwd * len * (front ? 0.36f : 0.50f);          // folded flat: she lies low in the bed          // tucked under: front paws under the chest, hind feet folded forward
+                PlantLeg(i, Vector3.Lerp(_legF[i].position, tgt, _ride), _legF[i].rotation);
+            }
+            Rot(_neck, right, -14f * _ride); Rot(_head, right, -10f * _ride);                 // head up behind the windscreen
+            if (_earL != null) _earL.rotation = Quaternion.AngleAxis(-50f * _ride, right) * _earL.rotation;   // ears laid back
+            if (_earR != null) _earR.rotation = Quaternion.AngleAxis(-50f * _ride, right) * _earR.rotation;
+            // the tail wrapped round her right side, toward her front paws
+            var to = transform.position + right * 0.22f * transform.lossyScale.x + fwd * 0.18f * transform.lossyScale.x + up * 0.04f * transform.lossyScale.x;
+            for (int i = 0; i < _tail.Count; i++)
+            {
+                var tb = _tail[i]; if (tb == null) continue; float k = (i + 1f) / _tail.Count;
+                var want = to - tb.position; if (want.sqrMagnitude < 1e-6f) continue;
+                tb.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(tb.up, want.normalized), _ride * 0.55f * k) * tb.rotation;
             }
         }
 

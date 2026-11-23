@@ -122,6 +122,7 @@ namespace Seven.EditorTools
                 if (c.name == "BackLight") { c.rotation = Quaternion.Euler(47f, 215f, 0f); var l = c.GetComponent<Light>(); l.intensity = 1.55f; l.shadows = LightShadows.Soft; l.shadowStrength = 0.72f; }
                 if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(30f, 40f, 0f); c.GetComponent<Light>().intensity = 0.32f; }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Cattalus", 1.05f, 0.9f, float.NaN);   // QF26 look kept as it is   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoCattalusPath);
             Object.DestroyImmediate(inst);
             return prefab;
@@ -519,7 +520,18 @@ namespace Seven.EditorTools
             Transform MakeRacer(string n, Transform parent)
             {
                 var r = new GameObject(n).transform; r.SetParent(parent, false);
-                if (racerModel != null) { var rm = (GameObject)PrefabUtility.InstantiatePrefab(racerModel); rm.name = "RacerModel"; rm.transform.SetParent(r, false); }
+                if (racerModel != null)
+                {
+                    var rm = (GameObject)PrefabUtility.InstantiatePrefab(racerModel); rm.name = "RacerModel"; rm.transform.SetParent(r, false);
+                    // QF28 (3): turn the model so its nose (the narrow end with the windscreen) leads along +Z, the racer's travel
+                    // direction - Dan's export came in nose to -Z, so the racer flew backwards everywhere (grid, race, highlights)
+                    if (MeasureRacer(r, out var front, out _, out var why))
+                    {
+                        float yaw = Vector3.SignedAngle(front, Vector3.forward, Vector3.up);
+                        rm.transform.localRotation = Quaternion.Euler(0f, yaw, 0f) * rm.transform.localRotation; rm.transform.localPosition = Quaternion.Euler(0f, yaw, 0f) * rm.transform.localPosition;
+                        Log($"VEHICLE FRONT (QF28 3): {n} model turned {yaw:0} deg so its nose leads ({why})");
+                    }
+                }
                 else
                 {
                     // the procedural stand-in after cat_racer_ref.png: a teardrop hull, a round padded bed, a windscreen, two rear fan pods, number 8
@@ -535,8 +547,19 @@ namespace Seven.EditorTools
                 return r;
             }
             var racer = MakeRacer("DuchessRacer", world); racer.position = K.StartAt + new Vector3(3.5f, 0.65f, 8f);
-            if (duchessModel != null || duchess != null) { var dSeat = new GameObject("DuchessSeat").transform; dSeat.SetParent(racer, false); dSeat.localPosition = new Vector3(0f, 0.36f, -0.05f); }
+            // QF28 (4): her seat = the measured top of the padded bed (the cavity between the windscreen and the fan pods)
+            Vector3 SeatOf(Transform rr) { MeasureRacer(rr, out _, out var bed, out _); if (racerModel == null) bed = new Vector3(0f, 0.36f, -0.05f); return bed; }
+            if (duchessModel != null || duchess != null) { var dSeat = new GameObject("DuchessSeat").transform; dSeat.SetParent(racer, false); dSeat.localPosition = SeatOf(racer); Log($"DUCHESS SEAT (QF28 4): the padded bed at {dSeat.localPosition} in the racer"); }
             var ghost = MakeRacer("GhostRacer", world); ghost.position = K.AtDist(60f) + Vector3.up * 0.9f;   // on the course (it flies the loop for the screen)
+            // QF28 (4): the highlights' racer carries Duchess too (last year's race on the Cat-a-tron: she rides it, crouched)
+            if (duchess != null)
+            {
+                var gSeat = new GameObject("DuchessSeat").transform; gSeat.SetParent(ghost, false); gSeat.localPosition = SeatOf(ghost);
+                var gd = Object.Instantiate(duchess.gameObject, gSeat); gd.name = "DuchessHighlights"; gd.transform.localPosition = Vector3.zero; gd.transform.localRotation = Quaternion.identity;
+                var gcf = gd.GetComponent<Seven.CatFolk>(); if (gcf != null) { gcf.Role = "DuchessHighlights"; }
+                var gpo = gd.GetComponent<Seven.CatPoseOverlay>(); if (gpo != null) gpo.Ride = 1f;
+                gd.AddComponent<Seven.SeatDrop>();
+            }
 
             // ---------------------------------------------------------------- the screen, the race, the guide light, UI, dialogue, the director
             var screen = face.AddComponent<Seven.CatatronScreen>(); screen.ScreenCam = scam; screen.Face = face.GetComponent<Renderer>(); screen.Trophy = trophy; screen.MarkPoint = markGo.transform; screen.Retreat = retreat; screen.AnnouncerDesk = desk; screen.GhostRacer = ghost;

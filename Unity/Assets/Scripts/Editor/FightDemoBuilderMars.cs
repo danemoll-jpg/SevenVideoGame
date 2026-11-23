@@ -153,6 +153,7 @@ namespace Seven.EditorTools
                 if (c.name == "BackLight") { c.rotation = Quaternion.Euler(28f, 200f, 0f); var l = c.GetComponent<Light>(); l.intensity = 1.1f; l.shadowStrength = 0.6f; }
                 if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(50f, 30f, 0f); c.GetComponent<Light>().intensity = 0.45f; }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Mars", 0.98f, 0.8f, 14f);   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoMarsPath);
             Object.DestroyImmediate(inst);
             return prefab;
@@ -350,7 +351,8 @@ namespace Seven.EditorTools
               MBlock("PlatformColumn", plat.position + new Vector3(-0.8f, -12f, -0.8f), plat.position + new Vector3(0.8f, -0.4f, 0.8f), m.metal, plat, false);
               MBlock("PlatformUnderGlow", plat.position + new Vector3(-1.8f, -0.48f, -1.8f), plat.position + new Vector3(1.8f, -0.42f, 1.8f), m.glow, plat, false); }
             var plight = new GameObject("PlatformLight").AddComponent<Light>(); plight.transform.SetParent(plat, false); plight.transform.position = plat.position + Vector3.down * 0.8f; plight.transform.rotation = Quaternion.Euler(-90f, 0f, 0f);
-            plight.type = LightType.Spot; plight.spotAngle = 80f; plight.range = 14f; plight.intensity = 6f; plight.shadows = LightShadows.Soft; plight.enabled = false;
+            plight.type = LightType.Spot; plight.spotAngle = 60f; plight.range = 9f; plight.intensity = 2.6f;   // QF28 pass (the gate): 6 / 14 m blew the wall behind him to white (23 % of the frame)
+            plight.shadows = LightShadows.Soft; plight.enabled = false;
             // the supply transport (a cargo hover-cart with crates of water filters)
             var transport = new GameObject("SupplyTransport").transform; transport.SetParent(cross, false); transport.position = M.TransportAt;
             {

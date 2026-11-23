@@ -320,6 +320,7 @@ namespace Seven.EditorTools
                 if (c.name == "BackLight") { c.rotation = Quaternion.Euler(52f, 165f, 0f); var l = c.GetComponent<Light>(); l.intensity = 0.95f; l.shadowStrength = 0.45f; }
                 if (c.name == "FrontFill") { c.rotation = Quaternion.Euler(60f, 15f, 0f); c.GetComponent<Light>().intensity = 0.45f; }
             }
+            FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Venus");   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)
             var prefab = PrefabUtility.SaveAsPrefabAsset(inst, AtmoVenusPath);
             Object.DestroyImmediate(inst);
             Log("atmosphere variant saved " + AtmoVenusPath);

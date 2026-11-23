@@ -30,6 +30,10 @@ namespace Seven
         // QF13 (13): Dan - "way too slow, make it fast everywhere": on land about twice the top speed and acceleration (the
         // paths, the bridge and the turns were checked at speed; it still slows to walking pace near people)
         public float MaxSpeed = 24f, Accel = 13f, Brake = 20f, Drag = 3f, TurnRate = 115f, HoverHeight = 0.5f;
+        /// <summary>QF28 (1): extra engine pitch range at full speed (the race: a stronger, higher whine).</summary>
+        [System.NonSerialized] public float PitchBoost;
+        /// <summary>QF28 (1): a boost - add speed now (up to <paramref name="cap"/>).</summary>
+        public void Kick(float add, float cap) { Speed = Mathf.Min(Speed + add, cap); }
         public bool Riding { get; private set; }
         public float Speed { get; private set; }
         public bool Stuck => _stuckFor > 2.5f;
@@ -351,7 +355,9 @@ namespace Seven
         {
             float dt = Time.deltaTime;
             _bob += dt;
-            if (Riding && Swim) SwimUpdate(dt);
+            // QF28 pass: one long frame (a hitch, a check run's capture) at 25 m/s moved the swimming bike 5+ m in a single step and
+            // wedged it in the ice passage's wall for good - a long frame is integrated in steps of at most 1/30 s
+            if (Riding && Swim) { int n = Mathf.Clamp(Mathf.CeilToInt(dt / 0.033f), 1, 40); for (int i = 0; i < n; i++) SwimUpdate(dt / n); }
             else if (Riding)
             {
                 float steer, throttle;
@@ -433,8 +439,8 @@ namespace Seven
             float sp = Mathf.Clamp01(Mathf.Abs(Speed) / MaxSpeed);
             HumLevel = Riding ? 0.55f + 0.35f * sp : (gameObject.activeInHierarchy ? 0.32f : 0f);
             WhooshLevel = Riding ? 0.75f * sp * sp : 0f;
-            if (_hum != null) { AudioKit.SetBaseVolume(_hum, HumLevel); _hum.pitch = 0.85f + 0.55f * sp; }
-            if (_whoosh != null) { AudioKit.SetBaseVolume(_whoosh, WhooshLevel); _whoosh.pitch = 0.9f + 0.3f * sp; }
+            if (_hum != null) { AudioKit.SetBaseVolume(_hum, HumLevel); _hum.pitch = 0.85f + (0.55f + PitchBoost) * sp; }
+            if (_whoosh != null) { AudioKit.SetBaseVolume(_whoosh, WhooshLevel); _whoosh.pitch = 0.9f + (0.3f + PitchBoost * 0.6f) * sp; }
             if (Riding && Rider != null) Rider.RideSeat(this);     // QF10: seated before the animator runs (hands / feet IK on the current grips)
         }
 
