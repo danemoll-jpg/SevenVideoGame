@@ -52,6 +52,10 @@ namespace Seven
         /// <summary>QF28 (4): riding a racer - crouched low in its padded bed (all four legs folded under her), head up, ears laid
         /// back, tail wrapped round her side. 0..1 (eases); <see cref="RideDrop"/> = how far her root sits below the seat point.</summary>
         public float Ride; float _ride;
+        /// <summary>QF30 (14): the stillness after his last breath - ears slack (laid out and down), the tail limp along the floor, the
+        /// head settled down into her hand (toward <see cref="SettleTo"/>), and a breathing rise of the flank (0..1 amplitude) while alive.</summary>
+        [Range(0f, 1f)] public float Slack, Breath; public float BreathRate = 1.6f; public Vector3? SettleTo;
+        float _slack, _breathT;
         public float RideDrop { get; private set; }
         public void RideNow() { _ride = Ride; }
         float _eat, _lean, _tilt, _ear, _t;
@@ -165,6 +169,7 @@ namespace Seven
                 }
                 if (TailTwitch > 0.01f) tb.rotation = Quaternion.AngleAxis(Mathf.Sin(_t * 7f + i) * 14f * TailTwitch * k, transform.up) * tb.rotation;
             }
+            Stillness(dt, right, fwd);
             if (_ear > 0.001f && EarToward.HasValue && _head != null)
             {
                 // the ear nearer to her turns toward her (yaw about up) and gives a small flick
@@ -178,6 +183,37 @@ namespace Seven
                     float flick = Mathf.Max(0f, Mathf.Sin(_t * 9f)) * Mathf.Max(0f, Mathf.Sin(_t * 0.9f)) * 10f;
                     ear.rotation = Quaternion.AngleAxis(Mathf.Clamp(yaw, -70f, 70f) * 0.55f * _ear, Vector3.up) * Quaternion.AngleAxis(-flick * _ear, right) * ear.rotation;
                 }
+            }
+        }
+
+        /// <summary>QF30 (14): breathing (the chest / flank rises and falls) and, after the last breath, slack ears, a limp tail, the head
+        /// settled. Eases; never pops.</summary>
+        void Stillness(float dt, Vector3 right, Vector3 fwd)
+        {
+            _slack = Mathf.MoveTowards(_slack, Slack, dt * 0.35f);
+            if (Breath > 0.001f && _chest != null)
+            {
+                _breathT += dt * BreathRate * Mathf.PI * 2f * 0.5f;
+                float b = (0.5f - 0.5f * Mathf.Cos(_breathT)) * Breath;
+                _chest.localScale = Vector3.one * (1f + 0.06f * b);
+                Rot(_chest, right, -3f * b);
+            }
+            else if (_chest != null && _chest.localScale != Vector3.one) _chest.localScale = Vector3.MoveTowards(_chest.localScale, Vector3.one, dt * 0.2f);
+            if (_slack < 0.001f) return;
+            var up = transform.up;
+            if (_earL != null) _earL.rotation = Quaternion.AngleAxis(-55f * _slack, right) * Quaternion.AngleAxis(25f * _slack, fwd) * _earL.rotation;
+            if (_earR != null) _earR.rotation = Quaternion.AngleAxis(-55f * _slack, right) * Quaternion.AngleAxis(-25f * _slack, fwd) * _earR.rotation;
+            if (_head != null && SettleTo.HasValue)
+            {
+                var want = SettleTo.Value - _head.position; var cur = fwd;
+                if (want.sqrMagnitude > 1e-6f) _head.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(cur, want.normalized), 0.45f * _slack) * _head.rotation;
+            }
+            // the tail lies limp: each joint drops toward the floor along the body's back direction
+            for (int i = 0; i < _tail.Count; i++)
+            {
+                var tb = _tail[i]; if (tb == null) continue; float k = (i + 1f) / _tail.Count;
+                var want = (-fwd - Vector3.up * 0.6f).normalized;
+                tb.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(tb.up, want), _slack * 0.5f * k) * tb.rotation;
             }
         }
 

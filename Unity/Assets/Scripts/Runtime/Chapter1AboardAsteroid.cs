@@ -168,6 +168,7 @@ namespace Seven
                 for (float t = 0f; t < 10f && rev.Progress < 0.999f; t += Time.deltaTime) yield return null;
                 rev.Duration = d0;
                 if (DemoBoot.CaptureDir != null) Cap?.Log($"{tag} (QF21 1 / QF23 3): open space round them (reveal {rev.Progress:0.00})");
+                yield return ArrivalView(tag, shot);
             }
             else
             {
@@ -178,6 +179,19 @@ namespace Seven
                 if (DemoBoot.CaptureDir != null) Cap?.Log($"{tag} (QF21 1 / QF23 3): the hull is back (reveal {rev.Progress:0.00}) before she goes to disembark");
             }
         }
+        /// <summary>QF30 (1): with the hull gone, the place they are arriving at must be outside the window - logged for every arrival talk
+        /// (ARRIVAL VIEW) and one gated frame looking out from her seat with the destination as its declared subject.</summary>
+        IEnumerator ArrivalView(string tag, string shot)
+        {
+            if (SaucerOutside.I == null) yield break;
+            var dest = SaucerOutside.I.DestinationPoint(out var what);
+            var wf = Flat(Polar(9f, WindowA, 0f)).normalized;
+            if (!dest.HasValue) { ArrivalEmpty++; if (DemoBoot.CaptureDir != null) Cap?.Log($"ARRIVAL VIEW (QF30 1) {tag}: NOTHING outside the window ({SaucerOutside.I.Showing}) - an empty void"); yield break; }
+            float ang = Vector3.Angle(wf, dest.Value - PilotHead);
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"ARRIVAL VIEW (QF30 1) {tag}: {what} outside - {ang:0} deg off the window's line, {(dest.Value - PilotHead).magnitude:0} m away");
+            if (DemoBoot.CaptureDir != null && Cap != null) { ImageGate.ExpectPoint(dest.Value, $"the destination outside: {what} (QF30 1)", 0f, "_arrival_view"); yield return Cap.ShotFrom(shot + "_arrival_view", PilotHead + Up * 0.15f - wf * 0.3f, dest.Value, 62f); }
+        }
+        public static int ArrivalEmpty;
         /// <summary>The two of them in open space with the asteroid filling the view (wide, from behind and beside the chair).</summary>
         void OpenSpaceShot()
         {

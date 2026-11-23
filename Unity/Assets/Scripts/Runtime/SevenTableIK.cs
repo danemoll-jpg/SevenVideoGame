@@ -183,6 +183,8 @@ namespace Seven
             _headB.rotation = Quaternion.AngleAxis(yaw * 0.6f, up) * Quaternion.AngleAxis(pitch * 0.6f, right) * _headB.rotation;
         }
 
+        /// <summary>QF30 (3): the weights actually applied now (eased).</summary>
+        public float RightNow => _r; public float LeftNow => _l;
         public bool Settled => Mathf.Abs(_r - RightW) < 0.01f && Mathf.Abs(_l - LeftW) < 0.01f;
     }
 }

@@ -205,6 +205,43 @@ apply to every asset and scene:
   Every world shown through the saucer's window has its own haze preset (`SaucerOutside.Looks`); a level staged far from the
   deck sets `Atmosphere.HeightOffset`.
 
+## The ending's lessons — STANDING RULES (Dan, QF30, 2026-11-23; every chapter, now and later)
+- **Never leave the player without a next step.** Whenever control returns after a scene there is an active objective from the
+  story, its place is highlighted and, where natural, someone says it - unless the moment is declared free (free exploration aboard
+  / in a city, a scripted silence: `QF30Watch.Free(why)`), which still ends in a prompt. Check runs log `NO NEXT STEP (QF30 17)`
+  (control 15 s with nothing to do); build check `CONTROL RETURNS (QF30 17)` lists every control return without a next step (the
+  finale fails the build on any).
+- **The place to go is clearly marked.** Every objective's control glows / pulses, a soft light column stands over it, a dead or
+  sparking cable leads to it where it is a power objective, the marker sits on it; done = the column goes out and it lights steady
+  (`FinaleDirector.Highlight` / `BeaconDone`). Check runs log `OBJECTIVE VIEW (QF30 9)` (is its marker on screen from where it is
+  given); `-objviews` captures the player's view as each objective appears (the finale always).
+- **Hands let go when the moment ends** - on a skip or interruption too. A hand on a target (SevenTableIK, HoldPose) is released
+  when its scripted moment ends and ALWAYS when control comes back (the directors' `Cutscene(false)`); a choice inside a touch
+  (FIN_06 "Share it") stays inside the scene. Check runs log `HAND IK LEFT ON (QF30 3)` (must be 0); build check
+  `HAND IK RELEASE (QF30 3)`. Hands that rest on a body rest on its surface (palms on the fur, targets from its bones every frame).
+- **Nobody stands, kneels or lies inside a prop.** Every staged spot is checked at build time (`STAGING MARKS (QF30 4)`: the floor
+  under it, a body-sized capsule clear of every mesh); every capture checks 7's and Panther's limbs against solid geometry
+  (`BODY vs PROPS (QF30 4)`); props people stand by get a Ground obstacle matching their VISIBLE footprint (a wide base included).
+- **No gliding, no snapped turns.** A kneeling / sitting / lying 7 is pinned where the pose began (`SevenRestPose.PinHere`; the
+  wall push never moves a posed body); she rises with an eased Rise(); every change of facing is an animated turn (`TurnTo`).
+  Check runs log `POSE DRIFT (QF30 14)`.
+- **One component per recurring character part:** Tunneler's drill head is `DrillHead` everywhere (about the cone's own axis,
+  never reversing; build check `DRILL AXIS (QF30 5)` in every scene with him). A fix to a character is made in the shared
+  component, never re-implemented in a new chapter (QF30 5: the finale's own drill code undid QF13's Europa fix).
+- **The arrival view shows the place.** With the hull vanished, the window shows where they are arriving (the Moon itself for
+  FIN_01: `MoonApproach`), never a void; every hull-away logs `ARRIVAL VIEW (QF30 1)` and takes a gated frame with the
+  destination as its subject.
+- **Placements and touches are framed clear:** her hands, the object and its target in view with nothing between (`RuneShot`:
+  the first clear framing, logged `RUNE SHOT (QF30 2)`).
+- **A place's sounds stay in that place.** On a scene cut every sound of the previous place fades and stops (FIN_13 -> FIN_14:
+  `StopWorldAudio`); check runs log `AUDIO CARRY (QF30 22)` at every scene change and `AUDIO AUDIT (QF30 22)` in the ending
+  (anything not on its list fails).
+- **The credits are a sequence of their own:** on an opaque black layer, the game camera rendering nothing; a frame a second is
+  checked (`CREDITS (QF30 23)`). Kyle's closing-lines credit shows only after 7's sign-off and never in any public text (release
+  notes, README, launcher, Log / Field Guide, loading tips; build check `SURPRISE (QF30 24)`) - call it "the ending" in public notes.
+- **Memory and montage stills come from the current build and pass the image gate** - no character floating, cut off, clipping, or
+  somewhere they cannot be at that moment (FIN_12's Cattalus stills no longer show 7 and Panther in the square).
+
 ## Boss fights — STANDING RULE (Dan, QF17, 2026-11-20; every boss, now and later)
 Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing there." Never again:
 - **The boss moves and actively attacks her** — several distinct, **telegraphed** attacks (a clear wind-up: his pose, a
@@ -551,7 +588,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Rounds 1–19 + QF1–QF29 built (2026-11-23); 1.0.0-rc1 (the whole game, start to credits) built but NOT published - the release image gate still flips on borderline shots (check runs are not yet deterministic; status in `TODO.md`); 0.18.2 is the latest release.** Round 19 = "The Moon Finale" (the last chapter, status + "For Dan to check (Round 19)" in `TODO.md`); QF29 = Europa's ice passage (a player soft-lock: the passage tube stood above the ice) + the release gate's policy (new or worse failures block, deterministic captures). QF28 code: `CattalusCourse.Bank/Edge`, `CattalusRace.RaceTop/GateBoost/SpeedCues/SeatDuchess`, `CatPoseOverlay.Ride`, `HandHold` + `HoldPose` (every hand hold; build check `HOLD CHECK (QF28 5)`), `FightDemoBuilderQF28Checks.cs` (`VEHICLE FRONT (QF28 3)`, `MeasureRacer`, `FogBudget` -> `Atmosphere.FitFogBudget`), `CameraBodyGuard`; `-qf28holds` (hold close-ups). QF27 = Dan's meadow clip in, timed. QF26 = the Cattalus white-out (NaN normals + bloom, captures were LDR): the image-quality gate (standing rules above). Round 18 = Chapter "Cattalus — Panther's homeworld" (first playable pass; the meadow cinematic in-engine until Dan's clips are in). QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
+**Rounds 1–19 + QF1–QF30 built (2026-11-23); 1.0.0-rc2 (the whole game, start to credits, with Dan's QF30 review of the ending) PUBLISHED - `game-1901`, git tag `v1.0.0-rc2`: the version Dan shows; never overwrite it. Next: polish pass P1 (`TODO.md`) into 1.0.0-rc3.** QF30 = the ending reworked (the "ending's lessons" standing rules above; code `FinaleDirectorQF30*.cs`, `DrillHead`, `TunnelerRig`, `MoonApproach`, `QF30Watch`, `FightDemoBuilderFinaleQF30.cs`, `FightDemoBuilderQF30Checks.cs`). Round 19 = "The Moon Finale" (the last chapter, status + "For Dan to check (Round 19)" in `TODO.md`); QF29 = Europa's ice passage (a player soft-lock: the passage tube stood above the ice) + the release gate's policy (new or worse failures block, deterministic captures). QF28 code: `CattalusCourse.Bank/Edge`, `CattalusRace.RaceTop/GateBoost/SpeedCues/SeatDuchess`, `CatPoseOverlay.Ride`, `HandHold` + `HoldPose` (every hand hold; build check `HOLD CHECK (QF28 5)`), `FightDemoBuilderQF28Checks.cs` (`VEHICLE FRONT (QF28 3)`, `MeasureRacer`, `FogBudget` -> `Atmosphere.FitFogBudget`), `CameraBodyGuard`; `-qf28holds` (hold close-ups). QF27 = Dan's meadow clip in, timed. QF26 = the Cattalus white-out (NaN normals + bloom, captures were LDR): the image-quality gate (standing rules above). Round 18 = Chapter "Cattalus — Panther's homeworld" (first playable pass; the meadow cinematic in-engine until Dan's clips are in). QF25 = Dan's 0.17.3 review (Veyra planet-sized and every mothership shot framed on the ship; screen UI on its own camera at the origin - no shaking subtitles; no line plays twice: the "Scale, screen text and lines" rules above). QF24 = Dan's 0.17.2 review (24 items; the egg-chair, records, one-line-at-a-time, telepathic-framing, prompts, music and post-processing rules above). QF23 = Dan's mothership review (24 items; the "Staging, pacing and the world" standing rules above). Round 17 = Chapter "The Biavian Mothership (Veyra) — the Connected Mind Age" (first playable pass). QF22 = the Biavian contact is the mothership at Veyra (star map, window view, re-voiced lines; `WorldFlags.ContactName`). QF21 = Dan's Asteroid review (the camera rules, wrong-state prompts, mount first, the Machinist's calm / steps / restraint, the blades held out, the foundry hall, System, AST_01's dissolving hull). Round 16 = Chapter "The Asteroid — the Great Machine Age"
 (first playable pass). QF20 = the Biaveh discovery can't be missed, kicks on Y,
 bosses keep their damage. QF19 = the Viper fight's pylons work (one press). QF18 = show it, don't write it + Dan's Mars review
 (the "Show, don't caption" rules above; Mars's ground, ramps, collision, puzzles, story beats, Viper, the boss loop with

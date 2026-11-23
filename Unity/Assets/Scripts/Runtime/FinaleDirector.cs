@@ -61,6 +61,8 @@ namespace Seven
         public string Prompt { get; private set; }
         public ControlsLegend.Btn PromptBtn { get; private set; }
         public bool InCutscene => _cut;
+        /// <summary>QF30 (3): a choice inside a scene (FIN_06 "Share it": her hand stays on the archive until she answers).</summary>
+        public bool AwaitsChoice { get; private set; }
         public float HintAfter => DemoBoot.VenusHintFast ? 12f : 45f;
         public float SkipAfter => DemoBoot.VenusHintFast ? 30f : 120f;
 
@@ -83,10 +85,16 @@ namespace Seven
             if (Workers != null) foreach (var w in Workers) if (w != null) ex.Add(w.transform);
             foreach (var t in new[] { GuideLight, Tunneler, TunnelerCraft, Dodecahedron, PowerLever, GateLockT, GateLeaf, DoorLeafL, DoorLeafR, BarrierField, Lock }) if (t != null) ex.Add(t);
             if (Sockets != null) foreach (var t in Sockets) if (t != null) ex.Add(t);
+            if (WallDrills != null) foreach (var t in WallDrills) if (t != null) ex.Add(t);          // QF30 (6): they spin
+            if (Crew != null) foreach (var c in Crew) if (c != null) ex.Add(c.transform);
             CameraOccluders.IncludeHuge = true;
             CameraOccluders.Build(ex.ToArray());
             ChapterCamera.RideIgnore = ex.ToArray();
             Dlg.LineStarted += OnLine;
+            EnsureHover();                                                                            // QF30 (6): the rig hovers / sags
+            if (Rig != null && Rig.Hull == null) Rig.Hull = _hover;
+            if (TunnelerDrill != null) _dh = DrillHead.On(TunnelerDrill, Tunneler);                  // QF30 (5): the one shared drill
+            SetupWallDrills();
             DialogueFraming.Speaker = id => id == "seven" ? Seven.transform : id == "cat" ? (Cat != null ? Cat.transform : null)
                 : id == "worker" ? Worker?.transform : id == "worker2" ? Elder?.transform : id == "tunneler" ? Tunneler : null;
             _amb = AudioKit.Loop("amb_underground", null, null, 0.3f, AudioKit.Bus.Ambience);
@@ -104,9 +112,8 @@ namespace Seven
         void OnLine(VoiceBank.Line l)
         {
             // the Scree speak with their heads turned to her; Tunneler's drill turns with his voice (as on Europa's screen)
-            if (l.Speaker == "tunneler") _tunTalk = Time.time + 2.5f;
+            if (l.Speaker == "tunneler") StartCoroutine(TunnelerTalks(l));
         }
-        float _tunTalk;
 
         void LateUpdate()
         {
@@ -123,14 +130,24 @@ namespace Seven
                     GuideLight.rotation = Quaternion.LookRotation(GuideLight.position - Cam.transform.position);
                 }
             }
-            // Tunneler's drill: turning while he speaks / attacks, spinning down after (never twisting back)
-            if (TunnelerDrill != null) { float want = Time.time < _tunTalk ? 520f : _drillWant; _drillSpeed = Mathf.MoveTowards(_drillSpeed, want, 900f * Time.deltaTime); TunnelerDrill.Rotate(Vector3.up, _drillSpeed * Time.deltaTime, Space.Self); }
+            // Tunneler's drill (QF30 5: the shared DrillHead - about the cone's own axis, never reversing) and his rig at rest
+            TickRig();
             Ground.Obstacles.Clear();
             Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(L.PlatformAt.x, L.PlatformAt.z), R = L.PlatformR + 0.3f });
             if (Sockets != null) foreach (var s in Sockets) if (s != null) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(s.position.x, s.position.z), R = 0.6f });
             foreach (var w in new[] { Worker, Elder }) if (w != null && w.gameObject.activeInHierarchy) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(w.transform.position.x, w.transform.position.z), R = 0.45f });
+            // QF30 (7): Tunneler's rig is solid - she (and Panther, who walks the same ground) stops at its rim; only while it sits on the
+            // floor after a stun may she jump up onto its deck (item 8)
+            if (TunnelerCraft != null && TunnelerCraft.gameObject.activeInHierarchy && Rig != null)
+            {
+                var c = TunnelerCraft.position; bool onDeck = Rig.DeckZone != null && Rig.DeckZone.Enabled && Flat(P7 - c).magnitude < Rig.DeckR + 0.1f;
+                bool hop = Seven.InFight && Seven.Act == ChapterSeven.FightAct.Hop;
+                if (!onDeck && !hop) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(c.x, c.z), R = Rig.Radius });
+            }
+            // QF30 (11): the controls are solid too
+            foreach (var cp in new[] { L.BarrierControl, L.ConduitAt }) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(cp.x, cp.z), R = 0.62f });
         }
-        float _drillSpeed, _drillWant;
+        float _drillWant;
         public float DrillSpeed { get => _drillWant; set => _drillWant = value; }
 
         // ------------------------------------------------------------------------------------------ helpers (as Cattalus)
@@ -144,7 +161,15 @@ namespace Seven
             _cut = on;
             Seven.Lock(on);
             if (on) SetPrompt(null);
-            if (!on) { if (Seven.Current == ChapterSeven.Mode.Touch || Seven.Current == ChapterSeven.Mode.Gesture) Seven.Release(); FollowCamera(); }
+            if (!on)
+            {
+                if (Seven.Current == ChapterSeven.Mode.Touch || Seven.Current == ChapterSeven.Mode.Gesture) Seven.Release();
+                // QF30 (3): control never comes back with a hand still on a target (1.0.0-rc1: her hand stayed on the archive while the
+                // player chose "Share it" - the cutscene gave control back between the touch and her answer and nothing released it)
+                var ik = Seven.GetComponent<SevenTableIK>(); if (ik != null) ik.ReleaseAll("control back (QF30 3)");
+                var hp = Seven.GetComponent<HoldPose>(); if (hp != null) hp.Release("control back (QF30 3)");
+                FollowCamera();
+            }
             yield return null;
         }
         void FollowCamera() { Cam.Target = Seven.transform; Cam.Distance = 3.8f; Cam.LookHeight = 1.45f; Cam.AutoBehind = Auto; Cam.DefaultPitch = 15f; Cam.Follow(); }
@@ -266,7 +291,7 @@ namespace Seven
         IEnumerator Telekinesis(Vector3 target, float range, string what, string hint, Renderer glow = null, Vector3[] autoPath = null, Transform track = null)
         {
             bool hit = false;
-            bool InView() { if (track != null) target = track.position; if (Auto) return Flat(target - P7).magnitude < range; var to = Flat(target - P7); if (to.magnitude > range) return false; if (to.magnitude < 3.5f) return true; return Vector3.Angle(Flat(Cam.transform.forward), to) < 50f || Vector3.Angle(Flat(Seven.transform.forward), to) < 50f; }
+            bool InView() { if (track != null) target = track.position; if (Auto) return Flat(target - P7).magnitude < range; var to = Flat(target - P7); if (to.magnitude > range) return false; if (to.magnitude < 4.5f) return true; return Vector3.Angle(Flat(Cam.transform.forward), to) < 50f || Vector3.Angle(Flat(Seven.transform.forward), to) < 50f; }
             IEnumerator P()
             {
                 for (float t = 0f; !hit; t += Time.deltaTime)

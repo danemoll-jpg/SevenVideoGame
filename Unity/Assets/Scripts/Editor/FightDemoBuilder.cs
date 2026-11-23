@@ -52,6 +52,7 @@ namespace Seven.EditorTools
             {
                 BuildAll();
                 try { QF24GlobalChecks(); } catch (Exception e) { BuildFailures.Add("QF24 global checks threw: " + e.Message); }
+                try { QF30GlobalChecks(); } catch (Exception e) { BuildFailures.Add("QF30 global checks threw: " + e.Message); }
                 try { QF25GlobalChecks(); } catch (Exception e) { BuildFailures.Add("QF25 global checks threw: " + e.Message); }
                 code = BuildPlayer() ? 0 : 1;
                 // QF18: a scene that fails a build check (holes, z-fighting, NPC placement) fails the build (the player is still written)

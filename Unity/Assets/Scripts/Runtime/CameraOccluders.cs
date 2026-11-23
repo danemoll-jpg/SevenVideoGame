@@ -29,7 +29,7 @@ namespace Seven
         public static int Count => _items.Count;
         public static bool Ready => _scene.IsValid() && _builtFor.IsValid() && _builtFor == SceneManager.GetActiveScene();
 
-        static readonly string[] LooseProps = { "Chunk", "Rubble", "Lump", "Stone", "Crate", "Cart", "Debris", "Pipe", "Barricade", "Bracket", "Rock", "Shard", "Piece", "Fallen" };
+        static readonly string[] LooseProps = { "Chunk", "Rubble", "Lump", "Stone", "Crate", "Cart", "Debris", "Pipe", "Barricade", "Bracket", "Rock", "Shard", "Piece", "Fallen", "Console" };   // QF30 (11): a control between the camera and 7 fades
         static readonly string[] Architecture = { "Door", "Frame", "Rim", "Leaf", "Wall", "Arch", "Rib", "Column", "Pillar", "Gate", "Jamb", "Lintel", "Emblem", "Mechanism", "Pedestal", "Alcove" };
         /// <summary>QF9: may this mesh fade out of the camera's way? Never architecture.</summary>
         /// <summary>-noqf9fix = 0.10.5's behaviour (architecture under 2.6 m could fade; solids faded when still blind) - repro only.</summary>

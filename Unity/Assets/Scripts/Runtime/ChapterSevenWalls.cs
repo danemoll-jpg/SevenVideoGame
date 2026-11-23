@@ -21,6 +21,9 @@ namespace Seven
         public static int WallFrames, WallPushFrames;
         public static float WallWorstNeed, WallWorstLeft;
         public static string WallWorstAt, WallWorstLeftAt, BodyFit;
+        SevenRestPose _restPose;
+        /// <summary>QF30 (14): the push the wall clearance WOULD have applied to a posed body (the 1.0.0-rc1 glide's cause), never applied.</summary>
+        public static float PosedPushWanted; public static string PosedPushBy;
         static readonly int WallMask = ~((1 << 20) | (1 << 22) | (1 << 5) | (1 << 2));
 
         static readonly HumanBodyBones[] Core = { HumanBodyBones.Head, HumanBodyBones.UpperChest, HumanBodyBones.Chest, HumanBodyBones.Hips, HumanBodyBones.LeftLowerArm, HumanBodyBones.RightLowerArm, HumanBodyBones.LeftLowerLeg, HumanBodyBones.RightLowerLeg, HumanBodyBones.LeftShoulder, HumanBodyBones.RightShoulder };
@@ -56,6 +59,16 @@ namespace Seven
             if (Anim == null || !Anim.isHuman) return;
             if (BodyFit == null) MeasureBodyFit();
             if (Current == Mode.Float || !CameraOccluders.Ready) { _wallPush = Vector3.zero; return; }
+            // QF30 (14): a posed body (kneeling, sitting on the floor, lying) is never pushed: her shins along the floor met the finale
+            // chamber's floor rubble and the eased push slid her backwards on her knees (1.0.0-rc1). Logged as what it would have done.
+            if (_restPose == null) _restPose = GetComponent<SevenRestPose>();
+            if (_restPose != null && _restPose.Pose != SevenRestPose.Kind.None)
+            {
+                var rootP = transform.position; var needP = Vector3.zero; string byP = null;
+                foreach (var bb in Core) NeedOf(bb, rootP, ref needP, ref byP);
+                needP.y = 0f; if (needP.magnitude > PosedPushWanted) { PosedPushWanted = needP.magnitude; PosedPushBy = $"{_restPose.Pose} ({byP})"; }
+                _wallPush = Vector3.zero; return;
+            }
             var root = transform.position;
             var need = Vector3.zero; string by = null;
             foreach (var bb in Core) NeedOf(bb, root, ref need, ref by);

@@ -8,11 +8,30 @@ namespace Seven
     /// character's forward, up U = its up, her left L) - the lying pose is authored upright, the staging turns her root onto her
     /// back. Relaxed, fully clothed, arms and legs at rest (the non-sexual presentation rule). A slow breath moves the chest.
     /// </summary>
+    [DefaultExecutionOrder(300)]
     public class SevenRestPose : MonoBehaviour
     {
         public enum Kind { None, Lie, SitFloor, Kneel }
         public Kind Pose;
         Animator _a;
+        // QF30 (14): Dan - "she glides backwards on her knees and stands up facing the wrong way". While a pose holds, nothing may move
+        // her root or turn her: the root is pinned where the pose began (the cause in 1.0.0-rc1 was the QF8 wall push - her shins along
+        // the floor met the chamber's floor rubble and pushed her whole body out, eased: a slow glide; ChapterSevenWalls now leaves a
+        // posed body alone). Getting up is eased (Rise: the pose weight goes to 0 over RiseTime), never a snap; she keeps her facing.
+        public float Weight { get; private set; }
+        public float RiseTime = 1.2f;
+        Kind _last = Kind.None; Vector3 _pin; Quaternion _pinR; bool _pinned;
+        public static int DriftFrames; public static float WorstDrift, WorstTurn; public static string WorstWhy;
+        /// <summary>Hold the current pose at her current spot (call after placing her).</summary>
+        public void PinHere() { _pin = transform.position; _pinR = transform.rotation; _pinned = true; }
+        /// <summary>Get up: the pose eases out over RiseTime, the root stays pinned until she is up.</summary>
+        public void Rise() { _rising = true; }
+        bool _rising;
+        public bool Posed => Pose != Kind.None && Weight > 0.01f;
+        /// <summary>QF30: ease into the pose over 0.8 s (the finale's kneel); the older aboard poses stay as they were (set at once).</summary>
+        public bool EaseIn;
+        /// <summary>QF30 (15): her head bowed over him (deg added to the spine / neck lean) and her shoulders shaking as she cries (0..1).</summary>
+        public float Bow, Sob; float _bow, _sob;
         struct P { public float hipDrop; public Vector3 spine; public float neck, head; public Vector3 thigh, shin, foot, upL, foreL, upR, foreR; }
         static readonly P Lie = new P
         {
@@ -44,17 +63,33 @@ namespace Seven
         }
         void Awake() { _a = GetComponentInChildren<Animator>(); }
         Transform B(HumanBodyBones b) => _a != null ? _a.GetBoneTransform(b) : null;
-        static void Aim(Transform bone, Transform child, Vector3 want)
+        static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
+        float _w = 1f;
+        void Aim(Transform bone, Transform child, Vector3 want)
         {
             if (bone == null || child == null) return;
             var cur = child.position - bone.position;
             if (cur.sqrMagnitude < 1e-8f) return;
-            bone.rotation = Quaternion.FromToRotation(cur.normalized, want.normalized) * bone.rotation;
+            bone.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(cur.normalized, want.normalized), _w) * bone.rotation;
         }
+        public static string DriftReport() => $"POSE DRIFT (QF30 14): frames something tried to move or turn 7 while she knelt / sat / lay {DriftFrames} (pinned back; worst {WorstDrift * 100f:0.0} cm, {WorstTurn:0} deg{(WorstWhy != null ? ", " + WorstWhy : "")}) - she never moves during a pose";
         void LateUpdate()
         {
-            if (Pose == Kind.None || _a == null) return;
+            if (Pose != _last) { if (Pose != Kind.None) { Weight = _last == Kind.None && EaseIn ? 0f : 1f; _rising = false; } _last = Pose; }
+            if (Pose == Kind.None || _a == null) { Weight = 0f; _pinned = false; return; }
+            Weight = _rising ? Mathf.MoveTowards(Weight, 0f, Time.deltaTime / Mathf.Max(0.1f, RiseTime)) : Mathf.MoveTowards(Weight, 1f, Time.deltaTime / 0.8f);
+            if (_pinned)
+            {
+                float drift = Vector3.Distance(Flat(transform.position), Flat(_pin)); float turn = Quaternion.Angle(transform.rotation, _pinR);
+                if (drift > 0.01f || turn > 1f)
+                {
+                    DriftFrames++; if (drift > WorstDrift) { WorstDrift = drift; WorstWhy = $"{Pose} at {_pin}"; } WorstTurn = Mathf.Max(WorstTurn, turn);
+                    transform.SetPositionAndRotation(new Vector3(_pin.x, transform.position.y, _pin.z), _pinR);
+                }
+            }
+            if (_rising && Weight <= 0f) { Pose = Kind.None; _last = Kind.None; _rising = false; _pinned = false; return; }
             var p = Pose == Kind.Lie ? Lie : Pose == Kind.Kneel ? KneelP : Sit;
+            float w = Mathf.SmoothStep(0f, 1f, Weight); _w = w;
             var F = transform.forward; var U = transform.up; var L = -transform.right;
             Vector3 Dir(Vector3 v, float side) => (F * v.x + U * v.y + L * (v.z * side)).normalized;
             Vector3 Lean(float deg) { float r = deg * Mathf.Deg2Rad; return (U * Mathf.Cos(r) + F * Mathf.Sin(r)).normalized; }
@@ -65,15 +100,17 @@ namespace Seven
                 var head0 = B(HumanBodyBones.Head);
                 float height = head0 != null ? Vector3.Dot(head0.position - transform.position, U) + 0.12f : 1.7f;
                 // the hips' height above her root, measured each frame from the animator's pose, then dropped to the floor pose
-                hips.position = transform.position + Vector3.ProjectOnPlane(hips.position - transform.position, U) + U * Mathf.Max(0.12f, Vector3.Dot(hips.position - transform.position, U) - p.hipDrop * height / 1.7f);
+                hips.position = transform.position + Vector3.ProjectOnPlane(hips.position - transform.position, U) + U * Mathf.Max(0.12f, Vector3.Dot(hips.position - transform.position, U) - p.hipDrop * w * height / 1.7f);
             }
             float breath = 0.5f - 0.5f * Mathf.Cos(Time.time * 2f * Mathf.PI / 4f);
             var spine = B(HumanBodyBones.Spine); var chest = B(HumanBodyBones.Chest); var upper = B(HumanBodyBones.UpperChest);
             var neck = B(HumanBodyBones.Neck); var head = B(HumanBodyBones.Head);
-            Aim(spine, chest != null ? chest : neck, Lean(p.spine.x - breath * 0.6f));
-            if (chest != null) Aim(chest, upper != null ? upper : neck, Lean(p.spine.y - breath * 0.6f));
-            if (upper != null) Aim(upper, neck, Lean(p.spine.z - breath * 1.4f));
-            Aim(neck, head, Lean(p.neck));
+            _bow = Mathf.MoveTowards(_bow, Bow, Time.deltaTime * 12f); _sob = Mathf.MoveTowards(_sob, Sob, Time.deltaTime * 1.5f);
+            float shake = _sob * (1.6f * Mathf.Sin(Time.time * 2f * Mathf.PI * 2.3f) * Mathf.Max(0f, Mathf.Sin(Time.time * 2f * Mathf.PI * 0.45f)));
+            Aim(spine, chest != null ? chest : neck, Lean(p.spine.x + _bow * 0.4f - breath * 0.6f));
+            if (chest != null) Aim(chest, upper != null ? upper : neck, Lean(p.spine.y + _bow * 0.3f - breath * 0.6f + shake));
+            if (upper != null) Aim(upper, neck, Lean(p.spine.z + _bow * 0.3f - breath * 1.4f + shake * 1.4f));
+            Aim(neck, head, Lean(p.neck + _bow * 0.5f));
             foreach (var (side, s) in new[] { ("L", 1f), ("R", -1f) })
             {
                 bool l = side == "L";

@@ -107,6 +107,8 @@ namespace Seven
             if (f.State == BossFight.St.Staggered && !f.IsOut)
             {
                 I.Why = "strikes while he reels";
+                // QF30 (8): his rig sits on the floor - a player jumps up onto its deck at the rim, then closes in
+                if (f.StepUp > 0f && d > f.StepUp - 0.45f && d < f.StepUp + 1.6f && s.transform.position.y < f.transform.position.y + 0.2f) { I.Move = toBn; I.Hop = d < f.StepUp + 0.9f; I.Why = "jumps up onto his rig"; return I; }
                 if (d > 1.5f) { I.Move = toBn; I.Run = true; }
                 else if (Time.time >= _nextStrike) { Strike(ref I); _nextStrike = Time.time + 0.28f; }
                 return I;

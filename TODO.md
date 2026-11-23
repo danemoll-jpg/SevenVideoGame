@@ -1,7 +1,7 @@
 # Active Development Plan — 7: The Observer
 
 ## Polish pass P1: after QF30, Code's own list (Dan, 2026-11-23: "after this is done, Code can do whatever else it needs to do. I just want a good version I can show") — to do after QF30
-**Protect the showable build first:** QF30's 1.0.0-rc2 stays published and untouched as the version Dan shows (tag it; never
+**Protect the showable build first:** QF30's 1.0.0-rc2 (published 2026-11-23 as `game-1901`, git tag `v1.0.0-rc2`) stays published and untouched as the version Dan shows (tag it; never
 overwrite or delete it). Everything below goes into later builds (1.0.0-rc3 …) and must not break what rc2 does.
 1. The deferred items: QF29 item 3 (shrink the image-gate baseline with real fixes: the dark Moon prison frames, the near-threshold
    shots), QF29 item 2's determinism (captures that don't flip between runs), the Europa shots past the ice passage never re-tested.
@@ -12,7 +12,7 @@ overwrite or delete it). Everything below goes into later builds (1.0.0-rc3 …)
 5. Publish 1.0.0-rc3 only if it passes everything rc2 does and more; write a short "what changed since rc2" for Dan.
 Never stop to ask; note decisions in TODO.md.
 
-## Quick fix QF30: Dan's 1.0.0-rc1 review: the ending (Dan, 2026-11-23) — to do
+## Quick fix QF30: Dan's 1.0.0-rc1 review: the ending (Dan, 2026-11-23) — items 1-24 done, status below; release 1.0.0-rc2
 Dan: "the end is mostly good but I have a few fixes."
 
 1. **FIN_01 has no scenery: the talk about the Moon plays against nothing.** With the hull vanished round the egg chair there's
@@ -177,8 +177,10 @@ Dan: "the end is mostly good but I have a few fixes."
     the scripted silence of FIN_10, which still ends in a prompt). Add a build check: every control return in every chapter has an
     objective or is on the "free" list; log any stretch over ~15 s with control and nothing to do. Add the rule to CLAUDE.md.
 
-18. **FIN_11's memory of their meal shows 7 not seated in her chair** (a bad capture of the galley scene: she's floating / standing
-    beside the chair while they eat). Replace it with a correct shot: re-capture the Chapter 1 galley meal from the current build
+18. **FIN_11's memory of their meal shows 7 not seated in her chair.** Dan's screenshot of the exact image to replace:
+    `Docs/Previews/qf30/dan_bad_meal_memory.png` (the galley table with the dodecahedron and Panther's bowl, Panther on the table;
+    7 hovering beside the left stool, half off it, legs through it, hand to her face: an old capture from before her seating was
+    fixed). Never use this image or any capture from that old version. Replace it with a correct shot: re-capture the Chapter 1 galley meal from the current build
     with her properly seated at the table, Panther with his bowl, both in frame, a warm composition. Check **every** still / clip
     in the FIN_11 memories (and the FIN_06 / FIN_12 montages) for the same kind of fault (clipping, floating, wrong poses, stuck
     hands, empty frames, characters cut off), re-capture any that fail, and run them all through the image-quality gate. List each
@@ -226,6 +228,157 @@ Dan: "the end is mostly good but I have a few fixes."
     **"Closing lines from *7* (2014) by Kyle G Anderson"**, held ~4 s, then the slow fade to black and the menu.
     **Keep it a surprise:** don't mention the quote, the sign-off or Kyle's book anywhere Kyle might see before playing: the release
     notes / GitHub release text, README, the launcher, the Log / Field Guide, loading tips. Call it "the ending" in public notes.
+
+## QF30 — status (2026-11-23): items 1-24 done; release 1.0.0-rc2 (build 1901, `game-1901`) PUBLISHED (Latest)
+Dan's review of the ending, built in order. New code: `Runtime/FinaleDirectorQF30.cs` (the place-to-go beacons, the mining drills, the
+rig at rest, the entrance breakthrough), `FinaleDirectorQF30End.cs` (rune framings, the barrier set-up, Panther's states, the
+restraints), `FinaleDirectorQF30Scenes.cs` (FIN_09-FIN_11 and FIN_13 restaged), `DrillHead.cs`, `TunnelerRig.cs`, `MoonApproach.cs`,
+`QF30Watch.cs` (the check-run checks); builder `Editor/FightDemoBuilderFinaleQF30.cs` (the rig, the wall drills, the archive's controls,
+the cables, STAGING MARKS, DRILL AXIS) and `Editor/FightDemoBuilderQF30Checks.cs` (HAND IK RELEASE, CONTROL RETURNS, SURPRISE). Standing
+rules added to CLAUDE.md ("The ending's lessons").
+
+**Proof** — the player-style run from the star map (free aboard at Cattalus -> the console -> the Moon -> FIN_01 -> the whole chapter ->
+the credits -> Kyle's line -> the menu), `-finplay -testspeed 2`, captured from the player's camera: `FINALE PLAYTEST: 1/1, soft-locks 0, skips taken 0` (14.2 game-min), the confrontation played by the boss pilot as a player, the image gate on every one of its 343 captures PASS (0 failed, NaN 0).
+- QF30 checks in the run: HAND IK LEFT ON 0, BODY vs PROPS 0 of ~318 captures, NO NEXT STEP 0, AUDIO CARRY 0, AUDIO AUDIT (FIN_14, its
+  last image, the credits) nothing off the ending's list, CREDITS 150 frames checked - game world visible 0, POSE DRIFT 0 frames,
+  STUN REACH: the rig dropped on every stun, she jumped onto its deck and landed her blows there; VOICE OVERLAP 0, VOICE REPEAT 0,
+  DIALOGUE FRAMING still blocked 0.
+- Build checks (every build): DRILL AXIS Europa + Finale (11 turns, wobble 0.00 deg, reversals 0), STAGING MARKS Finale 0 of 18,
+  HAND IK RELEASE 0 files without a release, CONTROL RETURNS (the finale 0; the other chapters: 1 listed for the polish pass, see
+  `Docs/Previews/qf30/control_returns.txt`), SURPRISE 0.
+- Release gate (`Tools/Run-ImageGate.ps1`, the QF29 policy, baseline 58, nothing loosened): **IMAGE GATE RELEASE (QF26 2): PASS** for 1.0.0-rc2 (`Builds/ImageGate/gate_1.0.0-rc2.txt`): the finale 201 shots / FIN_01 41 shots /
+  Cattalus 26 / Mars 29 all pass; the other chapters only their known baseline shots (no new or worse, NaN 0). Getting there fixed real
+  causes, not the gate: Chapter 1's `t_hang_keys` (the check run's keyboard-variant frame was taken after the autopilot had let go of the
+  ledge - game time now holds while both layouts of a lesson are captured), Mars `m07` (Viper was 3.5 % of the frame at 11 m - closer,
+  lower), Europa's first control-back frame (it landed inside the check run's own staged test - the bike turned away from the light; the
+  control-back frame now waits for that test), FIN_01's mid-dissolve frame (the Moon is its declared subject), the finale's conduit cut
+  (an eased framing made it depend on when the capture landed - a cut now). The check runs are still not deterministic (QF29 2):
+  borderline shots can flip between runs - polish pass P1 item 1.
+
+**Item by item (and, for each repeat, why the earlier fix didn't hold)**
+1. **FIN_01's Moon:** `MoonApproach` builds the Moon in front of the window when the hull vanishes (650 m off, 37 deg across, shading
+   baked so it reads in any light): the lit face and bright limb, the lunar entrance ringed with light on its near face, Earth beyond,
+   the stars. "Looks smaller from out here" plays over her shoulder on it, then a cut to the Moon and the entrance; the wide shot has her
+   in the chair with the Moon looming. *Why the window rule didn't hold:* FIN_01 looked for the level view (QF18 `LevelView`), and the
+   Moon has none - the baked Moon level was hidden during the chair talk, so "moon" meant the old plain 200 m below the window's line:
+   an empty void. *Every chapter now:* each hull-away logs `ARRIVAL VIEW (QF30 1)` and takes a gated frame looking out with the destination
+   as its declared subject (`<shot>_arrival_view`).
+2. **The third rune's placement:** each placement is framed by `RuneShot` - the first of 12 framings (from her side first) with her hands,
+   the rune and its socket in clear view (no geometry, no other socket, not the platform between); Panther waits on the far side of her.
+   All seven placements captured (`f15_rune_<n>_..._in_her_hands`, `f15b_..._goes_in`), each with the socket as the gated subject.
+3. **Her hand stuck on the archive (repeat):** *why the release didn't hold:* the touch released correctly at its own end, but FIN_06
+   gave control back BETWEEN the touch and her answer ("Share it" was a control-time prompt) and nothing released a hand at a control
+   return - the SevenTableIK safety net only lets go when she walks away or the target is out of reach, so standing still the hand stayed.
+   Now: "Share it" is answered inside the scene, the hand stays through "Yes. Share it." then eases off; FIN_11_08's hand stays through the
+   memories and FIN_12 and leaves in FIN_13; every director `Cutscene(false)` releases every hand (skips / interruptions too). Checks:
+   HAND IK LEFT ON (run) and HAND IK RELEASE (build).
+4. **Clipping into the archive's base:** the platform's visible skirt reached 1.2 m past its top while Ground's obstacle stopped bodies
+   at +0.55 - her feet, Panther and where she laid him were inside it. The base now stays within +0.3 m (a near-vertical carved base), every
+   stand mark is outside it (`FinaleLayout.Stand`, StandR = PlatformR + 0.55), she leans in to touch the top; Panther is laid ON the
+   archive's top. Checks: STAGING MARKS (build, 18 spots, rays + body capsules vs every mesh) and BODY vs PROPS (every capture, every
+   chapter). *Why QF18's NPC PLACEMENT didn't catch it:* it checks NPCs at their built spots, never 7 / Panther where scenes stage them.
+5. **Tunneler's drill (regression):** *why:* Round 19 did not reuse Europa's code - it wrote a second drill in `FinaleDirector.LateUpdate`
+   that turned the DrillHead about its own local Y (`Rotate(Vector3.up, ..., Space.Self)`); the FBX comes from Blender (Z up), so that axis
+   is one of the cone's sides - it tumbled end over end - and BossFight set a new speed every frame (900 / 1400 / 0), so it jerked. Now one
+   component, `DrillHead`, everywhere (Europa's screen, his entrance, the fight, the barrier): about the cone's axis measured from the mesh
+   at build time, one direction only, faster on louder syllables, full speed on a strike, spinning down when he's contained. Build check
+   DRILL AXIS in every scene with him.
+6. **His rig and the drilling:** the plain disc is now a mining rig (`BuildTunnelerRig`): ring-segmented riveted hull, the spiral-drilled
+   rim (a coil round the edge), four hover thrusters with exhaust and dust kicked up, two work lights, cables and hoses into his back, two
+   articulated arms with small spiral drills (spinning when he attacks), the yoke. Five big spiral drills bore into the old structure
+   (three through the chamber wall, two on the service route): dust, sparks, a grinding rumble (new SFX `drill_grind_rock`), stones shaken
+   loose. FIN_07_05 is said over a drill boring in; they visibly spin down, the dust settles, the rumble fades (`f30_the_drilling_slows_and_stops`)
+   and stay stopped; FIN_11_03 plays over the stopped drill. His entrance: the drilling grinds behind the rubble blocking the mining
+   access, then the rig bursts through (the rubble lies where it fell and can be thrown in the fight).
+7. **She clipped through his rig:** the rig is solid - a Ground obstacle at its rim for her (and Panther, on the same ground) and the
+   camera guard; only while it sits on the floor after a stun can she jump onto its deck.
+8. **The stun she can reach:** on a telekinesis stun the thrusters sputter, the rig drops onto the floor tilted toward her, its deck becomes
+   walkable (a masked Ground zone following the tilt) and she jumps up onto it (stun 4.8 s); her blows land there; when he recovers she
+   is slid off its edge and it rises. Proof from the player's camera: `f37b_stunned_the_rig_drops_to_the_floor`, `f37c_she_jumps_up_onto_his_rig`,
+   `f37d_her_blows_land_on_him`, `f37e_he_recovers_the_rig_rises`; in the proof run she jumped onto the deck 5 times and landed 51 blows there.
+9. **The place to go is marked:** `Highlight` (the control pulses, a light column over it, the dead / sparking cable leading to it, the
+   marker) and `BeaconDone` (column out, lit steady, light runs along the cable) on FIN_03's power panel and gate lock, every socket, the
+   archive, FIN_08's barrier control and the cut conduit's control, the barrier itself in FIN_09 and the archive in FIN_11. Every chapter:
+   OBJECTIVE VIEW logs each objective as it appears; the finale captures the player's view at each (`obj_...`; `-objviews` for any chapter).
+10. **The barrier explained:** FIN_05_04a-c (Panther / 7 / Panther) play over her shoulder toward the barrier's frame across the side bay,
+    its lights waking; FIN_08_P7 (the worker, over the network) replaces FIN_08_P5 when its objective comes up. The frame's light strips
+    glow while it can be used, the control is highlighted.
+11. **The controls:** both rebuilt as the archive's own consoles (carved pedestal into a slanted face, the rune glyphs engraved on the
+    inset panel, a ring of light-lines in grooves running to the floor conduits, a crystal palm node; Tunneler's crude housing and cables
+    bolted onto the conduit's), moved to the room's edge, solid (obstacles), and they fade if they come between the camera and 7. States:
+    dormant / live (`f36a_*_before`), damaged - lines dead, node dark (`f38b`), restored - lines lit (`f38c`).
+12. **Panther's sacrifice restaged:** the rig roars up behind her, the drill at her back (low, past her shoulder: `f39`), then her,
+    unaware (`f39b`); "Seven!" on Panther already running at the chamber's edge (`f40a`); he grows mid-stride and leaps between them
+    (wide, side-on, all three: `f40`); a hard cut to black on the impact - the drill's sound and the music cut dead (`f41`); back on him
+    already falling: he lands, slides and collapses, still large (`f41b`); she starts toward him; "The barrier."
+13. **Her hands on him (repeat of the QF28 family):** *why:* FIN_10 aimed her hands at fixed offsets from his ROOT (`root + up 0.24`),
+    never his body - with her placed a metre away they hung in the air or sank into him. Now `HandsOnHim` sets the targets every frame on
+    his head and neck surface (from his bones, palms toward him, relaxed fingers, elbow hints) so they follow his breathing and the
+    shrink; a stroke runs from his head to his neck once; a two-armed carry with both palms under him; laid down, her hand rests on him.
+    Close-ups: `f44`, `f45_insert...`, `f45b_insert...`, `f46`, `f47c`, `f48`, `f49`, `f49c`, `f57`.
+14. **His death clear; no gliding (repeat of "nobody glides"):** his breathing (the overlay's chest rise + a soft breath sound each time,
+    new SFX `cat_breath_slow`) slows and grows shallow; one last breath; stillness - the breathing stops, his head settles into her hand,
+    ears slack, the tail limp, the purr stops; total silence. *The glide:* the QF8 wall push - kneeling, her shins along the floor met the
+    chamber's floor rubble and the eased push slid her backwards; the NPC GLIDE probe only watches NPCs. Now a posed body is pinned where
+    the pose began and never pushed, she eases into the kneel and rises with `Rise()` facing him; every change of facing is an animated
+    turn (`TurnTo`). POSE DRIFT 0 frames.
+15. **He shrinks as he dies; "Panther, no!"; the carry:** large until he dies, his head against her; over his last breaths he shrinks
+    smoothly to his ordinary size about his head (her hands follow him in); FIN_10_08b "Panther, no!" (Seven voice, v3 with [crying]
+    [soft sobs] [shaky breath]) with her head bowed and shoulders shaking, then the hand's last stroke and the silence. FIN_11: she rises
+    facing him, lifts him in both arms, FIN_11_05a "You're staying with me.", carries him and lays him on the archive. *Why he vanished:*
+    he was laid at the platform's foot - inside its wide skirt (item 4). He now stays visible on the archive to the end.
+16. **Tunneler contained and taken:** from FIN_09 the field is closed and humming, the lock light on, the thrusters dead, the drills spun
+    down, the rig sagged on the floor; he presses against the field once. After "We're coming down" the Scree crew are at the barrier (a
+    cut: never a walk to wait for), restraints round him and the rig, chains to floor anchors; one short cut for his quip FIN_11_05b and
+    the elder's answer FIN_11_05c, his drill spinning down to a stop. Then the objective "Return to the archive", the archive pulses;
+    FIN_11_06 "Continue?" 3 s after she straightens up, FIN_11_06b once more, softer, after ~20 s; "Yes." / "All of it." when she touches it.
+17. **Never without a next step:** standing rule in CLAUDE.md; NO NEXT STEP (every check run, 0 in the finale) and CONTROL RETURNS (build).
+18. **The memories:** all checked. Replaced from the current build: the first meeting (the cell with Panther clearly in frame; the old
+    one had him as a speck in the dark), his bowl (her seated at the galley table, Panther at his bowl - the old one had her perched off
+    the stool), the race (her on her racer on the course - the old one was a dot). "Relief" dropped (no clean capture of it exists: she
+    was cut off in every frame). FIN_12's Cattalus stills cropped (they showed 7 and Panther standing in the square during FIN_12). The
+    memories now: the first meeting (the cell), his bowl (the galley meal), his head in her lap (the egg chair), the race, his silhouette in the meadow, her head against him; every frame passes the gate.
+19. **Every world speaks in FIN_12:** FIN_12_03a the Caretaker (Mars, both kingdoms' people in the temple), FIN_12_03b the Keeper (Europa,
+    the Cetaceans), FIN_12_06a Juniper (the old meadow on the Cat-a-tron) - each over its own still, one at a time; the Scree, the
+    Guardian, the Machinist and Nela kept.
+20. **Her ascent:** after "You can rest now." and her last touch of his head, she turns and walks into a column of the pale light beside
+    the archive, lifts off the floor in the beam's float pose and rises 4 m as the light brightens and her silhouette softens - wide, the
+    chamber below, Panther on the archive, the Scree at the barrier (`f57b`, `f58`) - fade through white.
+21. **FIN_14 from 0:17:** checked frame by frame in the game copy: a speck of the small cat's tail is still at the right edge through
+    17.5 s, so it starts at **17.6 s** (the first frame with no trace of him); the giant's head enters at ~18.0 s; "Panther?" at 18.6 s,
+    "Hello." at 22.8 s; the rest of the master as before to the held resting image.
+22. **The Scree's buzz in heaven:** *why:* FIN_14 plays inside the Moon scene, so nothing unloaded the lunar sounds. On the fade through
+    white every source of the Moon fades and stops (the Scree, the chamber, the drills, the barrier, Tunneler) and their makers are switched
+    off; AUDIO AUDIT in FIN_14 and the credits (nothing off the list) and AUDIO CARRY at every scene change in every chapter.
+23. **The credits on black:** an opaque black layer under the whole sequence, the game camera's culling mask 0 and every world renderer
+    off; a frame captured and checked every second (150 frames, game world visible 0).
+24. **Kyle's credit:** removed from the rolling credits; after 7's sign-off and a beat it appears alone, centred, softly, held ~4 s, then the
+    slow fade to black and the menu. Never in public text (build check SURPRISE; the rc2 release notes call it "the ending").
+
+### QF30 — decisions made (Code; Dan can change any of them)
+- **FIN_08_P1** in Dan's list clashed with Panther's existing "The drill - move!" (FIN_08_P1): the worker's barrier line is **FIN_08_P7**
+  and it replaces FIN_08_P5 (the elder's older line saying the same thing; its audio removed).
+- **The barrier stays the second objective** (before the conduit) - established before it is needed, now set up in FIN_05.
+- **FIN_14 starts at 17.6 s**, not 17.0 (the game copy still shows the tail tip until 17.5 s).
+- **"Relief" dropped from the memories** (six moments now) - no capture of that moment frames her whole.
+- **The Scree crew are already at the barrier** when the story cuts to them (QF23: never lock the player while NPCs walk).
+- **The ascent column** falls beside the archive (north-west), not on the platform, so she can walk into it.
+- **The archive asks "Continue?" twice at most** (3 s after she straightens up, then once more after ~20 s), then waits.
+- **FIN_10 / FIN_11 HUD:** no HUD through his death and the silence (as the spec); the objective "Return to the archive" appears only
+  when control returns (Dan's item 16 + 17).
+
+## For Dan to check (QF30)
+1. **FIN_01:** the hull vanishes onto the Moon - is it large and clear enough, with the entrance ringed in light and Earth beyond?
+2. **The confrontation:** his new mining rig (arms, drills, thrusters); stun him with a throw - the rig drops; **jump (A) onto its deck**
+   and hit him; he rises and slides you off. Is ~5 s on the deck enough?
+3. **The drills:** are the drills boring into the chamber readable, and does their stopping (FIN_07) read as the Scree's doing?
+4. **FIN_09:** the drill at her back, "Seven!", his leap, the cut to black - does it land?
+5. **FIN_10:** his death (breathing slowing, the shrink as he goes, the stillness), "Panther, no!" and her tears - is the crying take right?
+6. **FIN_11:** the carry and "You're staying with me.", Tunneler's quip and "We always have.", the Archive's "Continue?".
+7. **FIN_13:** the walk into the light and the rise.
+8. **FIN_14 at 17.6 s** - the giant walks in with no small cat.
+9. **The credits on black, and Kyle's line after the sign-off.**
+10. Proposed lines voiced: FIN_05_04a-c, FIN_08_P7, FIN_10_08b, FIN_11_05a-c, FIN_11_06b, FIN_12_03a/b, FIN_12_06a (`Docs/FINALE-LINES.md`).
 
 ## Quick fix QF28: Dan's 0.18.2 review: the Cattalus race (Dan, 2026-11-22) — items 1-5 done, status below; release 0.18.3 NOT published (the image gate fails - see the status)
 Dan: "mostly good. My main complaints are around the race itself."

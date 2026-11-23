@@ -191,6 +191,8 @@ namespace Seven
         protected virtual bool Allowed(AttackDef a) => true;
         /// <summary>The pilot (check runs / player-style runs): where an objective of this phase is and how it is used.</summary>
         public virtual (Vector3 at, string how)? PilotObjective() => null;
+        /// <summary>QF30 (8): while &gt; 0 he sits low on something she must jump up onto to reach him (the rim's radius from his centre).</summary>
+        public virtual float StepUp => 0f;
         /// <summary>Extra visuals of an attack (globs, worms, the beam) - per frame while it is active.</summary>
         protected virtual void AttackFx(AttackDef a, float u) { }
         protected virtual void AttackStarted(AttackDef a) { }
@@ -890,6 +892,21 @@ namespace Seven
             if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", Texture2D.whiteTexture);
             if (m.HasProperty("_Intensity")) m.SetFloat("_Intensity", k);
             if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", Color.white * k);
+            return m;
+        }
+        static Texture2D _dot;
+        /// <summary>QF30: a runtime particle material with a soft round dot (never the square additive quad - QF12).</summary>
+        public static Material AdditiveMatTex(float k)
+        {
+            if (_dot == null)
+            {
+                _dot = new Texture2D(64, 64, TextureFormat.RGBA32, false) { name = "SoftDot", wrapMode = TextureWrapMode.Clamp };
+                for (int y = 0; y < 64; y++) for (int x = 0; x < 64; x++) { float d = new Vector2(x - 31.5f, y - 31.5f).magnitude / 31.5f; float a = Mathf.Clamp01(1f - d); a = a * a * (3f - 2f * a); _dot.SetPixel(x, y, new Color(a, a, a, a)); }
+                _dot.Apply();
+            }
+            var m = Additive(k);
+            if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", _dot);
+            if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", _dot);
             return m;
         }
         public static void Init()

@@ -103,6 +103,8 @@ namespace Seven
         /// <summary>Round 12 (2d): -openingshot = Chapter 1 with the opening shot, captured, stops in the cell.</summary>
         public static bool OpeningShot { get; private set; }
         public static bool VenusHintFast { get; private set; }
+        /// <summary>QF30 (9): -objviews = a capture from the player's camera as each objective appears (every chapter; the finale always).</summary>
+        public static bool ObjViews { get; private set; }
         /// <summary>Round 13 check switches: -r13 bridge|tremor|encounter|debrief|console|consolefresh|reactions (each a short
         /// focused run; see TODO.md "Round 13 - status"). Venus ones start at their Scene Select entry.</summary>
         public static string R13 { get; private set; }
@@ -222,6 +224,7 @@ namespace Seven
                 if (args[i] == "-chapter2") Chapter2 = true;
                 if (args[i] == "-venusplay") { VenusPlay = true; Chapter2 = true; }
                 if (args[i] == "-venushintfast") VenusHintFast = true;
+                if (args[i] == "-objviews") ObjViews = true;
                 if (args[i] == "-venusselect" && i + 1 < args.Length) VenusSelect = args[i + 1];
                 if (args[i] == "-venusselecttest") { VenusSelectTest = true; VenusSelect = "C01"; }
                 if (args[i] == "-menuvenusconfirm") MenuVenusConfirm = true;

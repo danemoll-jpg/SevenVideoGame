@@ -66,6 +66,9 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 | `FIN_05_02` | Panther | We knew some of it. |  |
 | `FIN_05_03` | 7 | Enough to keep going. | Small smile |
 | `FIN_05_04` | Panther | Mm-hmm. |  |
+| `FIN_05_04a` | Panther | That frame across the side bay. It's an old maintenance barrier. | Thoughtful, observant |
+| `FIN_05_04b` | 7 | For sealing off that end of the chamber? | Curious, quiet |
+| `FIN_05_04c` | Panther | And whatever's in it. | Dry, quiet |
 | `FIN_05_05` | Archive | Records received. | Soft, restrained |
 | `FIN_05_06` | Archive | Witness recognized. |  |
 | `FIN_05_07` | 7 | Witness? | Almost to herself |
@@ -118,8 +121,8 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 | `FIN_08_P2` | Panther | He's going for the platform! | Urgent |
 | `FIN_08_P3` | Panther | Over here, you lump of scrap! | Defiant, dry |
 | `FIN_08_P4` | Panther | He's cut the conduit. The light's gone out on the left. | Urgent, practical |
-| `FIN_08_P5` | Scree elder | The old maintenance barrier still has power. Open it, and we will hold the lock. | Purposeful, resolute |
 | `FIN_08_P6` | Archive | Connection restored. | Restrained |
+| `FIN_08_P7` | Scree worker | The old maintenance barrier! Open it and get him inside. We can lock it from here. | Urgent, over the network |
 
 ## FIN_09 — The leap
 
@@ -139,6 +142,7 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 | `FIN_10_05` | 7 | Just stay with me. | Her voice breaks |
 | `FIN_10_06` | Panther | Don’t worry… I have eight more. | A faint trace of his familiar dry humour, whispered |
 | `FIN_10_08` | 7 | You’d better. | Barely manages it |
+| `FIN_10_08b` | 7 | Panther, no! | Broken, disbelieving; then she cries a little |
 
 ## FIN_11 — What she carries
 
@@ -149,7 +153,11 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 | `FIN_11_03` | Scree worker | The drilling has stopped. He can’t reach the controls. | Gentle report |
 | `FIN_11_04` | 7 | Good. |  |
 | `FIN_11_05` | Scree worker | We’re coming down. |  |
+| `FIN_11_05a` | 7 | You're staying with me. | Softly, to him |
+| `FIN_11_05b` | Tunneler | Fine. Keep your history. You'll still need someone to run the drills. | Sneering, still sure of himself |
+| `FIN_11_05c` | Scree elder | We always have. | Calm, not gloating |
 | `FIN_11_06` | Archive | Continue? | Quiet |
+| `FIN_11_06b` | Archive | Continue? | Softer |
 | `FIN_11_07` | 7 | Yes. | A pause, then certainty |
 | `FIN_11_08` | 7 | All of it. |  |
 
@@ -160,9 +168,12 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 | `FIN_12_01` | Scree worker | We have it. Our records… they’re here. | Quiet wonder |
 | `FIN_12_02` | Scree elder | Send them to the other districts. | Purposeful |
 | `FIN_12_03` | Guardian | Received. We will keep it open. | Calm commitment |
+| `FIN_12_03a` | Caretaker | Both kingdoms can read it now. The same record, on both sides of the crossing. | Quiet wonder |
+| `FIN_12_03b` | Keeper | We hear it. We will carry it in our songs. | Slow, calm |
 | `FIN_12_04` | Machinist | Preservation record complete. | A small pause |
 | `FIN_12_05` | Machinist | Public access enabled. | Deliberate |
 | `FIN_12_06` | Nela | We hear you, Seven. | Warm and quiet |
+| `FIN_12_06a` | Juniper | Oh... Panther. You went all the way. | Quiet, moved |
 | `FIN_12_07` | Archive | Record complete. | Softly |
 | `FIN_12_08` | Archive | All connected archives have received it. |  |
 

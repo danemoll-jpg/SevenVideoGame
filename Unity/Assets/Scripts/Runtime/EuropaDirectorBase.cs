@@ -131,7 +131,7 @@ namespace Seven
             yield return Shot("e17_security_barriers_close");
             if (alarm != null) StartCoroutine(AudioKit.Fade(alarm, 0f, 3f, true));
             Complete("EUR_08");
-            Log($"Tunneler's drill (QF13 11): spun continuously while he spoke - {DrillTurns} full turns, top speed {DrillMaxSpeed:0} deg/s, spinning down when he stopped (never twisting back)");
+            Log(Drill != null ? Drill.Report("Europa (Tunneler on the screen)") : "DRILL HEAD (QF30 5) Europa: he never spoke in this run");
             yield return Cutscene(false);
             // reach the worker holding area: the override panel beside the barred door (no guard is ever harmed)
             Objective("Reach the worker holding area");

@@ -66,6 +66,7 @@ namespace Seven
             if (_cam == null) yield break;
             Chapter1State.ShotCount++;
             var file = $"{Chapter1State.ShotCount:00}_{name}.png";
+            QF30Watch.BeforeShot(file);                                           // QF30 (4): limbs through props
             var gate = ImageGate.Save(_rt, _cam, DemoBoot.CaptureDir, file);   // QF26 (2): every capture is gated
             Log($"shot {file}  audioPeak={_peak:0.000000}  cursorVisible={Cursor.visible}");
             Log(gate);
@@ -74,6 +75,9 @@ namespace Seven
         // ---- QF26 (1): control came back -> one gated frame a moment later (the white-out stayed on after control returned and
         // QF24's POST FX check only looked at the depth-of-field switch, never at the picture)
         bool _hadControl; float _noControlFor, _ctlAt = -1f; int _ctlShots;
+        static float _holdCtlUntil;
+        /// <summary>QF30: a check-run test stages a view (the bike turned away from the light) - the control-back frame waits until it is over.</summary>
+        public static void HoldControlShot(float seconds) { _holdCtlUntil = Time.unscaledTime + seconds; }
         float _ctlWait; HoverBike _fastBike;
         bool FastRide() { foreach (var b in FindObjectsByType<HoverBike>(FindObjectsSortMode.None)) if (b.Riding && Mathf.Abs(b.Speed) > 15f) return true; return false; }
         void WatchControl()
@@ -86,6 +90,7 @@ namespace Seven
             // QF28 pass: never a capture (a long frame) while she rides fast - the check run's own hitch drove the Europa bike into the
             // ice passage's bend; the frame waits (up to 6 s) until she is under 15 m/s
             if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && _ctlWait < 6f && FastRide()) { _ctlAt = Time.unscaledTime + 0.3f; _ctlWait += 0.3f; }
+            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && Time.unscaledTime < _holdCtlUntil) _ctlAt = _holdCtlUntil + 0.05f;   // a staged check-run test owns the view
             if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt) { _ctlAt = -1f; _ctlShots++; var rb = HoverBike.RiddenNow; if (rb != null) ImageGate.Expect(rb.transform, "7 on her bike (the player's view while riding)", 0f, "ctl_control_back"); StartCoroutine(Shot($"ctl_control_back_{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}")); }
         }
 
@@ -132,6 +137,7 @@ namespace Seven
             Log($"POST FX (QF24 24): close-up depth of field found still on when control returned {CloseUpFocus.Releases}x - each released within a frame (longest {CloseUpFocus.LongestOnWithControl * 1000f:0} ms)");
             if (MothershipInterior.Shown > 0 || RecordDisplay.Built > 0) Log($"QF24 (2/4): record displays built {RecordDisplay.Built}, the mothership's interior shown {MothershipInterior.Shown}x");
             if (HandHold.Frames > 0) Log(HandHold.Summary());                       // QF28 (5)
+            Log(QF30Watch.Summary());                                              // QF30 (3/4/9/14/17/22)
             Log(ImageGate.Summary(DemoBoot.CaptureDir));                          // QF26 (2)
             Log(summary);
             Log($"audio output peak over the whole run = {_peak:0.000000} (muted={DemoBoot.Muted}, listenerVolume={AudioListener.volume})");

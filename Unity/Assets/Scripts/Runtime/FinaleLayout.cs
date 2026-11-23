@@ -48,8 +48,39 @@ namespace Seven
         }
         public static Vector3 SocketTop(int i) => Socket(i) + Vector3.up * 1.15f;
         public static readonly Vector3 BarrierAt = new Vector3(24.2f, Y, -162f);         // the old maintenance barrier's alcove (east)
-        public static readonly Vector3 BarrierControl = new Vector3(21.6f, Y, -167.6f);  // its side control (X)
-        public static readonly Vector3 ConduitAt = new Vector3(2.4f, Y, -158f);          // the conduit Tunneler damages (west)
+        // QF30 (11): the controls stand at the room's edge (r 12.4-12.6), out of the open floor where the fight happens
+        public static readonly Vector3 BarrierControl = new Vector3(22.4f, Y, -168.0f);  // its side control (X)
+        public static readonly Vector3 ConduitAt = new Vector3(0.2f, Y, -156.9f);        // the conduit Tunneler damages (west)
+        /// <summary>QF30 (6): the big mining drills boring into the old structure - round the chamber (yaw from +z, height) and along the
+        /// service route (position, boring direction).</summary>
+        public static readonly (float yaw, float h, float scale)[] ChamberDrills = { (231f, 3.6f, 1f), (283f, 5.4f, 0.85f), (128f, 2.8f, 0.9f) };
+        public static readonly (Vector3 at, Vector3 dir)[] RouteDrills = { (new Vector3(1.3f, Y + 2.9f, -116.5f), Vector3.right), (new Vector3(18.6f, Y + 3.5f, -135.6f), Vector3.left) };
+        public static Vector3 ChamberDrillAt(int i) { var d = ChamberDrills[i]; float a = d.yaw * Mathf.Deg2Rad; return ChamberC + new Vector3(Mathf.Sin(a) * (ChamberR + 0.3f), d.h, Mathf.Cos(a) * (ChamberR + 0.3f)); }
+        /// <summary>QF30 (4): where people stand round the platform: the platform's base reaches PlatformR + 0.3, a body needs 0.25 more.</summary>
+        public const float StandR = PlatformR + 0.55f;
+        public static Vector3 Stand(float yawDeg, float r = StandR) { float a = yawDeg * Mathf.Deg2Rad; return PlatformAt + new Vector3(Mathf.Sin(a) * r, 0f, Mathf.Cos(a) * r); }
+        /// <summary>QF30 (15): Panther laid on the archive's top, beside where her hand rests (yaw 0 = toward the entrance).</summary>
+        public static Vector3 PantherOnArchive => PlatformAt + new Vector3(0.36f, PlatformH, 1.72f);   // on her LEFT (she faces -z: +x is her left) - her left hand rests on him
+        /// <summary>QF30 (14/15): the large Panther lies on his side here, his head toward +x; she kneels at his head.</summary>
+        public static Vector3 PantherHead => PantherFalls + new Vector3(1.05f, 0f, 0.15f);
+        public static Vector3 KneelSpot => PantherFalls + new Vector3(1.85f, 0f, 0.3f);
+        /// <summary>QF30 (16): the Scree crew round the barrier (FIN_11 / FIN_13).</summary>
+        public static Vector3 CrewAt(int i) => BarrierAt + new Vector3(-2.3f - (i % 2) * 0.9f, 0f, -2.0f + i * 2.0f);
+        /// <summary>QF30 (4) build check STAGING MARKS: every staged spot (what, where, body radius, height, the floor it stands on).</summary>
+        public static (string what, Vector3 p, float r, float h, float floor)[] Marks()
+        {
+            var l = new System.Collections.Generic.List<(string, Vector3, float, float, float)>
+            {
+                ("7 at the archive (the touch)", Stand(0f), 0.24f, 1.6f, Y), ("Panther beside her at the archive", Stand(-24f, StandR + 0.15f), 0.2f, 0.35f, Y),
+                ("7 at the archive (FIN_13)", Stand(8f), 0.24f, 1.6f, Y), ("7 kneeling at his head (FIN_10)", KneelSpot, 0.3f, 1.1f, Y),
+                ("Panther lying, large (FIN_09/10)", PantherFalls, 0.5f, 0.55f, Y), ("Panther laid on the archive (FIN_11)", PantherOnArchive, 0.16f, 0.25f, Y + PlatformH),
+                ("7 at the conduit control", ConduitAt + (ChamberC - ConduitAt).normalized * 1.6f, 0.24f, 1.6f, Y), ("7 at the barrier control", BarrierControl + (ChamberC - BarrierControl).normalized * 1.2f, 0.24f, 1.6f, Y),
+            };
+            for (int i = 0; i < 7; i++) { var s = Socket(i); var toS = (s - ChamberC); toS.y = 0f; l.Add(($"7 placing rune {i + 1}", s - toS.normalized * 0.95f, 0.24f, 1.6f, Y)); }
+            for (int i = 0; i < 3; i++) l.Add(($"Scree crew {i + 1} at the barrier", CrewAt(i), 0.3f, 1.8f, Y));
+            return l.ToArray();
+        }
+        public static Vector3 HandOnArchive => PlatformAt + new Vector3(-0.28f, PlatformH + 0.02f, 2.0f);   // on her RIGHT: the right hand
         public static readonly Vector3 MiningAccess = new Vector3(11.5f, Y, -178.5f);    // he forces his way in here (south)
         public static readonly Vector3 TunnelerStart = new Vector3(11.5f, Y, -173.5f);
         public static readonly Vector3 HerFightStart = new Vector3(11.5f, Y, -158.2f);

@@ -344,7 +344,7 @@ namespace Seven
                 if (Viper != null) Viper.Play("idle");
             }
             yield return Wait(0.4f);
-            if (Viper != null) { Cam.Shot(L.PlatformAt - Flat(L.PlatformAt - P7).normalized * 11f + Vector3.up * 5.0f, Viper.transform.position + Vector3.up * 1.2f, 0.01f, true, 40f); ImageGate.Expect(Viper.transform, "Viper on his platform, lit from beneath", 0f, "m07_"); yield return null; }   // QF29: the capture framed on him (a cut, not the eased hold)
+            if (Viper != null) { Cam.Shot(L.PlatformAt - Flat(L.PlatformAt - P7).normalized * 7.5f + Vector3.up * 3.4f, Viper.transform.position + Vector3.up * 1.3f, 0.01f, true, 38f); /* QF30 (gate): closer and lower - he was 3.5 % of the frame at 11 m */ ImageGate.Expect(Viper.transform, "Viper on his platform, lit from beneath", 0f, "m07_"); yield return null; }   // QF29: the capture framed on him (a cut, not the eased hold)
             yield return Shot("m07_low_angle_reveal_viper_lit_from_beneath");
             var vp = Viper != null ? HeadOf(Viper) : L.PlatformAt + Vector3.up * (L.PlatformTop + 2f);
             ViperCloseUp();

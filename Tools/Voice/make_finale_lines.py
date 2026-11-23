@@ -20,7 +20,9 @@ SPK = {"7": ("seven", "7", "seven"), "Panther": ("cat", "Panther", "cat"), "Scre
        "Second Scree Voice": ("worker2", "Scree elder", "ScreeWorker2"), "Archive": ("archive", "Archive", "Archive"),
        "Tunnler": ("tunneler", "Tunneler", "Tunneler"), "Tunneler": ("tunneler", "Tunneler", "Tunneler"),
        "Elarim Voice": ("guardian", "Guardian", "Guardian"), "Machinist": ("machinist", "Machinist", "machinist"),
-       "Biavian Guide": ("nela", "Nela", "Nela"), "Voice": ("rest", "", "RestVoice")}
+       "Biavian Guide": ("nela", "Nela", "Nela"), "Voice": ("rest", "", "RestVoice"),
+       # QF30 (19): the worlds that were silent in FIN_12's montage get their own voices (Dan's saved voices)
+       "Caretaker": ("caretaker", "Caretaker", "caretaker"), "Keeper": ("keeper", "Keeper", "Keeper"), "Juniper": ("juniper", "Juniper", "juniper")}
 VOCAL = ("laugh", "chuckle", "breath", "quiet", "quietly", "soft", "softly", "gentle", "dry", "amused", "warm", "tired", "bitter",
          "urgent", "weak", "frightened", "firm", "resolute", "surprised", "determined", "calm", "controlled", "anger", "sharper",
          "simple", "reassur", "sincere", "open", "respectful", "wonder", "grief", "breathless", "breaks", "whisper", "worn",
@@ -28,7 +30,7 @@ VOCAL = ("laugh", "chuckle", "breath", "quiet", "quietly", "soft", "softly", "ge
          "unhurried", "familiar", "caught", "patient", "almost", "barely", "tears", "smile", "small", "clear")
 STAGE = ("looks", "glances", "watches", "steps", "moves", "stops", "shows", "indicates", "returns", "meets", "touches", "hand",
          "places", "advances", "holds", "stands", "lowers", "starts", "tail", "camera", "beside", "toward", "searching", "settles")
-REPEAT = re.compile(r"^(FIN_08_P[1-3]|FIN_11_07|FIN_13_03)$")      # Panther's fight calls may repeat; "Yes." (FIN_11_07) and "Thank you." (FIN_13_03) are the script's own repeats of earlier words
+REPEAT = re.compile(r"^(FIN_08_P[1-3]|FIN_11_07|FIN_13_03|FIN_11_06b)$")      # QF30: the Archive asks "Continue?" once more if she lingers      # Panther's fight calls may repeat; "Yes." (FIN_11_07) and "Thank you." (FIN_13_03) are the script's own repeats of earlier words
 row = re.compile(r"^\|\s*(FIN_\w+?)\s*\|\s*([^|]+?)\s*\|\s*(.+?)\s*\|\s*(.*?)\s*\|$")
 head = re.compile(r"^#{2,4}\s+(FIN_\w+?)\s+—\s+(.+?)\s*$")
 
@@ -52,9 +54,24 @@ EXTRA = [
     ("FIN_08_P2", "Panther", "He's going for the platform!", "Urgent"),
     ("FIN_08_P3", "Panther", "Over here, you lump of scrap!", "Defiant, dry"),
     ("FIN_08_P4", "Panther", "He's cut the conduit. The light's gone out on the left.", "Urgent, practical"),
-    ("FIN_08_P5", "Second Scree Voice", "The old maintenance barrier still has power. Open it, and we will hold the lock.", "Purposeful, resolute"),
+    # (QF30 10: FIN_08_P5 "The old maintenance barrier still has power..." replaced by Dan's worker line FIN_08_P7 - the old id would have clashed with FIN_08_P1)
     ("FIN_08_P6", "Archive", "Connection restored.", "Restrained"),
+    # QF30 - Dan's review of 1.0.0-rc1 (proposed by Dan; used unless he changes them)
+    ("FIN_05_04a", "Panther", "That frame across the side bay. It's an old maintenance barrier.", "Thoughtful, observant"),
+    ("FIN_05_04b", "7", "For sealing off that end of the chamber?", "Curious, quiet"),
+    ("FIN_05_04c", "Panther", "And whatever's in it.", "Dry, quiet"),
+    ("FIN_08_P7", "Scree Worker", "The old maintenance barrier! Open it and get him inside. We can lock it from here.", "Urgent, over the network"),
+    ("FIN_10_08b", "7", "Panther, no!", "Broken, disbelieving; then she cries a little"),
+    ("FIN_11_05a", "7", "You're staying with me.", "Softly, to him"),
+    ("FIN_11_05b", "Tunneler", "Fine. Keep your history. You'll still need someone to run the drills.", "Sneering, still sure of himself"),
+    ("FIN_11_05c", "Second Scree Voice", "We always have.", "Calm, not gloating"),
+    ("FIN_11_06b", "Archive", "Continue?", "Softer"),
+    ("FIN_12_03a", "Caretaker", "Both kingdoms can read it now. The same record, on both sides of the crossing.", "Quiet wonder"),
+    ("FIN_12_03b", "Keeper", "We hear it. We will carry it in our songs.", "Slow, calm"),
+    ("FIN_12_06a", "Juniper", "Oh... Panther. You went all the way.", "Quiet, moved"),
 ]
+# QF30 (15): the exact v3 performance for lines that need more than one tag (the subtitle text stays the plain line)
+TAGGED = {"FIN_10_08b": "[broken, disbelieving] Panther, no! [crying] [soft sobs] [shaky breath]"}
 
 
 def vocal(cell):
@@ -83,8 +100,9 @@ for lid, who, said, act in rows:
     if who not in SPK: unknown.append(f"{lid} ({who})"); continue
     speaker, label, voice = SPK[who]
     text = said.replace("Tunnler", "Tunneler")
-    lines.append({"id": lid, "scene": sid, "speaker": speaker, "label": label, "text": text, "direction": vocal(act) or (act if lid.startswith(("FIN_13_04", "FIN_15", "FIN_03_P", "FIN_05_P", "FIN_08_P")) else ""),
-                  "action": act, "voice": voice, "repeat": bool(REPEAT.match(lid)), "proposed": "_P" in lid})
+    lines.append({"id": lid, "scene": sid, "speaker": speaker, "label": label, "text": text, "direction": vocal(act) or (act if lid.startswith(("FIN_13_04", "FIN_15", "FIN_03_P", "FIN_05_P", "FIN_08_P")) or lid[-1].isalpha() else ""),
+                  "tagged": TAGGED.get(lid, ""),
+                  "action": act, "voice": voice, "repeat": bool(REPEAT.match(lid)), "proposed": "_P" in lid or lid[-1].isalpha()})
 
 order = lambda l: (int(l["scene"].split("_")[1]), l["id"])
 lines.sort(key=order)

@@ -190,7 +190,9 @@ namespace Seven.EditorTools
               // the floor: one round slab inside the wall (out to the mining access and the alcove)
               { var (flv, flt) = ak.Of(stone); Append(flv, flt, Lathe(new[] { new Vector2(0f, 0f), new Vector2(F.ChamberR + 0.6f, 0f), new Vector2(F.ChamberR + 0.6f, -0.5f), new Vector2(0f, -0.5f) }, 0f, 360f, 48, null, c0)); }
               // the rim of the floor and the platform (stepped, the archive surface on top)
-              Append(v, t, Lathe(new[] { new Vector2(0f, F.PlatformH), new Vector2(F.PlatformR, F.PlatformH), new Vector2(F.PlatformR + 0.3f, F.PlatformH - 0.3f), new Vector2(F.PlatformR + 0.5f, 0.3f), new Vector2(F.PlatformR + 1.1f, 0.25f), new Vector2(F.PlatformR + 1.2f, 0f) }, 0f, 360f, 40, null, c0)); }
+              // QF30 (4): the platform's base stays inside PlatformR + 0.3 (the 1.0.0-rc1 skirt out to +1.2 m swallowed her feet, Panther
+              // and where she laid him - Ground's obstacle circle stopped them at +0.55, inside the visible skirt)
+              Append(v, t, Lathe(new[] { new Vector2(0f, F.PlatformH), new Vector2(F.PlatformR, F.PlatformH), new Vector2(F.PlatformR + 0.12f, F.PlatformH - 0.08f), new Vector2(F.PlatformR + 0.12f, F.PlatformH - 0.2f), new Vector2(F.PlatformR + 0.04f, 0.26f), new Vector2(F.PlatformR + 0.24f, 0.1f), new Vector2(F.PlatformR + 0.3f, 0f) }, 0f, 360f, 40, null, c0)); }
             // mining dust and rubble over the old floor; the barrier alcove's frame; the mining access passage's mouth
             { var (dv, dt) = ak.Of(dust); var rnd = new System.Random(19); for (int i = 0; i < 70; i++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, r = 4f + (float)rnd.NextDouble() * 9.4f; Ellipsoid(dv, dt, c0 + new Vector3(Mathf.Sin(a) * r, 0.0f, Mathf.Cos(a) * r), new Vector3(0.5f + (float)rnd.NextDouble() * 0.9f, 0.035f, 0.4f + (float)rnd.NextDouble() * 0.8f), 3, 14); } }
             { var (v, t) = ak.Of(m.metalDark); MBox(v, t, F.BarrierAt + new Vector3(0f, 4.6f, 0f), new Vector3(1.2f, 0.8f, 6.4f), 0f, 0.02f); foreach (var sz in new[] { -3.1f, 3.1f }) MBox(v, t, F.BarrierAt + new Vector3(0f, 2.5f, sz), new Vector3(1.0f, 5f, 0.5f), 0f, 0.02f); MBox(v, t, F.BarrierAt + new Vector3(2.2f, 2.5f, 0f), new Vector3(0.6f, 5f, 6.4f), 0f, 0.02f); }
@@ -200,11 +202,12 @@ namespace Seven.EditorTools
             var surf = new List<Vector3>(); var surfT = new List<int>(); surf.AddRange(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(F.PlatformR - 0.15f, 0.01f) }, 0f, 360f, 32, null, Vector3.zero).vertices); surfT.AddRange(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(F.PlatformR - 0.15f, 0.01f) }, 0f, 360f, 32, null, Vector3.zero).triangles);
             var surface = MeshObject("ArchiveSurface", SaveMesh(SmoothFinish(surf, surfT), "Fin_ArchiveSurface"), new Material(soft) { name = "Fin_archive_surface" }, chamber, false); surface.transform.position = c0 + Vector3.up * F.PlatformH;
             var cond = new List<Vector3>(); var condT = new List<int>();
-            for (int i = 0; i < 7; i++) { var s = F.Socket(i); Sweep(cond, condT, new[] { s + Vector3.up * 0.03f, Vector3.Lerp(s, c0, 0.5f) + Vector3.up * 0.03f, c0 + Flat(s - c0).normalized * (F.PlatformR + 1.1f) + Vector3.up * 0.03f }, 0.06f, false, 5); }
+            for (int i = 0; i < 7; i++) { var s = F.Socket(i); Sweep(cond, condT, new[] { s + Vector3.up * 0.03f, Vector3.Lerp(s, c0, 0.5f) + Vector3.up * 0.03f, c0 + Flat(s - c0).normalized * (F.PlatformR + 0.32f) + Vector3.up * 0.03f }, 0.06f, false, 5); }
             var conduit = MeshObject("ArchiveConduits", SaveMesh(SmoothFinish(cond, condT), "Fin_ArchiveConduits"), new Material(soft) { name = "Fin_conduits" }, chamber, false);
-            var brk = new List<Vector3>(); var brkT = new List<int>(); Sweep(brk, brkT, new[] { F.ConduitAt + Vector3.up * 0.4f, F.ConduitAt + new Vector3(0f, 3.6f, 0f), F.ConduitAt + new Vector3(0.6f, 6.6f, -1.4f) }, 0.12f, false, 6);
+            var cwd = Flat(F.ConduitAt - c0).normalized; var cwb = c0 + cwd * 13.9f; var cws = Vector3.Cross(Vector3.up, cwd);
+            var brk = new List<Vector3>(); var brkT = new List<int>(); Sweep(brk, brkT, new[] { F.ConduitAt + cwd * 0.5f + Vector3.up * 0.5f, cwb + Vector3.up * 0.6f, cwb + Vector3.up * 3.6f, cwb + Vector3.up * 6.6f + cws * 1.4f }, 0.12f, false, 6);
             var conduitBreak = MeshObject("DamagedConduit", SaveMesh(SmoothFinish(brk, brkT), "Fin_DamagedConduit"), new Material(soft) { name = "Fin_conduit_west" }, chamber, false);
-            { var jk2 = new AK(); var (v, t) = jk2.Of(m.metalDark); MBox(v, t, F.ConduitAt + new Vector3(-0.5f, 0.9f, 0f), new Vector3(0.6f, 1.8f, 1.2f), 0f, 0.01f); jk2.Save("ConduitJunctionBox", chamber, false); }
+            var conduitConsole = ArchiveConsole("ConduitConsole", F.ConduitAt, Flat(c0 - F.ConduitAt), c0, m, stone, stoneDark, soft, chamber, true);   // QF30 (11)
             // the seven sockets (lathed pedestals with a cup) and their lights; a projection wall behind each
             for (int i = 0; i < 7; i++)
             {
@@ -224,10 +227,21 @@ namespace Seven.EditorTools
             var barrier = GameObject.CreatePrimitive(PrimitiveType.Quad); Object.DestroyImmediate(barrier.GetComponent<Collider>()); barrier.name = "BarrierField"; barrier.transform.SetParent(chamber, false);
             barrier.transform.position = F.BarrierAt + new Vector3(-0.55f, 2.3f, 0f); barrier.transform.rotation = Quaternion.LookRotation(Vector3.left); barrier.transform.localScale = new Vector3(6f, 4.6f, 1f);
             barrier.GetComponent<Renderer>().sharedMaterial = Markers_Field(); barrier.SetActive(false);
-            var bctl = new GameObject("BarrierControl").transform; bctl.SetParent(chamber, false); bctl.position = F.BarrierControl; bctl.rotation = Quaternion.LookRotation(Vector3.left);
-            Renderer barrierLight;
-            { var bk = new AK(); var (v, t) = bk.Of(m.metal); MBox(v, t, new Vector3(0f, 0.75f, 0f), new Vector3(0.9f, 1.5f, 0.5f), 0f, 0.01f); foreach (var g in bk.Save("BarrierControlBody", bctl, false)) g.transform.localPosition = Vector3.zero;
-              var lv = new List<Vector3>(); var lt = new List<int>(); Ellipsoid(lv, lt, new Vector3(0f, 1.6f, 0f), Vector3.one * 0.1f, 5, 8); barrierLight = MeshObject("BarrierLamp", SaveMesh(SmoothFinish(lv, lt), "Fin_BarrierLamp"), new Material(soft) { name = "Fin_barrier_lamp" }, bctl, false).GetComponent<Renderer>(); }
+            // QF30 (11): the barrier's control in the archive's style, at the room's edge; QF30 (10): the frame lights when it can be used
+            var barrierConsole = ArchiveConsole("BarrierConsole", F.BarrierControl, Flat(c0 - F.BarrierControl), F.BarrierAt, m, stone, stoneDark, soft, chamber, false);
+            var bctl = barrierConsole.root; Renderer barrierLight = barrierConsole.node;
+            Renderer barrierFrameLines;
+            { var fl = new List<Vector3>(); var ft = new List<int>();
+              foreach (var sz in new[] { -2.8f, 2.8f }) Sweep(fl, ft, new[] { F.BarrierAt + new Vector3(-0.52f, 0.05f, sz), F.BarrierAt + new Vector3(-0.52f, 4.15f, sz) }, 0.03f, false, 4);
+              Sweep(fl, ft, new[] { F.BarrierAt + new Vector3(-0.62f, 4.2f, -2.8f), F.BarrierAt + new Vector3(-0.62f, 4.2f, 2.8f) }, 0.03f, false, 4);
+              barrierFrameLines = MeshObject("BarrierFrameLines", SaveMesh(SmoothFinish(fl, ft), "Fin_BarrierFrameLines"), new Material(soft) { name = "Fin_barrier_frame" }, chamber, false).GetComponent<Renderer>(); }
+            // QF30 (9): the dead cables that lead to each power objective (they light when it is done)
+            var powerCable = DeadCable("PowerCable", new[] { new Vector3(11.5f, F.Y + 0.02f, -118.6f), new Vector3(9.4f, F.Y + 0.02f, -117.6f), new Vector3(7.2f, F.Y + 0.02f, -115.6f), F.PowerPanel + new Vector3(0.45f, 0.02f, 0f) }, m, soft, district);
+            var barrierCable = DeadCable("BarrierCable", new[] { F.BarrierAt + new Vector3(-0.6f, 0.02f, -3.1f), F.BarrierAt + new Vector3(-1.4f, 0.02f, -4.4f), F.BarrierControl + Flat(F.BarrierAt - F.BarrierControl).normalized * 0.75f + Vector3.up * 0.02f }, m, soft, chamber);
+            // QF30 (6): the big mining drills boring into the old structure round the chamber and along the service route
+            var wallDrills = new List<Transform>();
+            for (int i = 0; i < F.ChamberDrills.Length; i++) { var at = F.ChamberDrillAt(i); wallDrills.Add(WallDrill("ChamberDrill" + i, at, Flat(c0 - at).normalized + Vector3.down * 0.18f, F.ChamberDrills[i].scale, m, chamber)); }
+            for (int i = 0; i < F.RouteDrills.Length; i++) wallDrills.Add(WallDrill("RouteDrill" + i, F.RouteDrills[i].at, F.RouteDrills[i].dir, 0.7f, m, district));
             var lockT = new GameObject("ExternalLock").transform; lockT.SetParent(chamber, false); lockT.position = F.BarrierAt + new Vector3(-0.7f, 4.0f, -3.1f);
             { var lk = new AK(); var (v, t) = lk.Of(m.metalDark); MBox(v, t, Vector3.zero, new Vector3(0.6f, 0.6f, 0.6f), 0f, 0.02f); foreach (var g in lk.Save("Lock", lockT, false)) g.transform.localPosition = Vector3.zero; }
             // the pale light (FIN_13): a soft column falling through the oculus - plain, no symbols, off until then
@@ -293,22 +307,22 @@ namespace Seven.EditorTools
             var worker = Scree("Scree_Worker", F.WorkerAt, Vector3.right, "work");
             var elder = Scree("Scree_Elder", new Vector3(19f, F.Y, -114.5f), Vector3.left, "work"); elder.transform.localScale = Vector3.one * 1.08f;
             var others = new List<Seven.ScreeGuard> { Scree("Scree_BerthWorker", new Vector3(21f, F.Y, -76f), Vector3.left, "work"), Scree("Scree_BerthWorker2", new Vector3(2.2f, F.Y, -86f), Vector3.right, "work") };
+            // QF30 (16): the crew who come down after FIN_11_05 and take Tunneler (hidden until then)
+            var crew = new List<Seven.ScreeGuard>();
+            for (int i = 0; i < 3; i++) { var cr = Scree("Scree_Crew" + i, new Vector3(10.5f + i, F.Y, -146f), Vector3.back, "idle"); cr.gameObject.SetActive(false); crew.Add(cr); }
 
             // ---------------------------------------------------------------- Tunneler on his mining craft (hidden until FIN_08)
             var craft = new GameObject("TunnelerCraft").transform; craft.SetParent(world, false); craft.position = F.TunnelerStart; craft.rotation = Quaternion.LookRotation(Vector3.forward);
-            { var tk = new AK(); var (v, t) = tk.Of(m.metalDark);
-              Append(v, t, Lathe(new[] { new Vector2(0f, 0.3f), new Vector2(1.8f, 0.3f), new Vector2(2.1f, 0.55f), new Vector2(1.9f, 0.85f), new Vector2(0f, 0.85f) }, 0f, 360f, 24, null, Vector3.zero));
-              foreach (var sx in new[] { -1f, 1f }) Sweep(v, t, new[] { new Vector3(sx * 1.6f, 0.6f, -0.6f), new Vector3(sx * 2.4f, 1.2f, 0.6f), new Vector3(sx * 2.2f, 1.6f, 1.4f) }, 0.22f, false, 6);
-              var (gv, gt) = tk.Of(m.glow); Append(gv, gt, Lathe(new[] { new Vector2(1.2f, 0.28f), new Vector2(1.5f, 0.28f) }, 0f, 360f, 24, null, Vector3.zero));
-              foreach (var g in tk.Save("CraftBody", craft, false)) g.transform.localPosition = Vector3.zero; }
+            var rig = BuildTunnelerRig(craft, m, soft);
             Transform tunneler = null, drill = null;
             if (tunModel != null)
             {
-                var tm = (GameObject)PrefabUtility.InstantiatePrefab(tunModel); tm.name = "Tunneler"; tm.transform.SetParent(craft, false); tm.transform.localPosition = Vector3.up * 0.85f; tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
+                var tm = (GameObject)PrefabUtility.InstantiatePrefab(tunModel); tm.name = "Tunneler"; tm.transform.SetParent(rig.Hull, false); tm.transform.localPosition = Vector3.up * rig.DeckTop; tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
                 tunneler = tm.transform; drill = tm.GetComponentsInChildren<Transform>(true).FirstOrDefault(x => x.name == "DrillHead");
                 var tmat = Dissolve("Europa_tunneler", Gray(0.5f), 0.35f, false); foreach (var r in tm.GetComponentsInChildren<Renderer>()) r.sharedMaterial = tmat;
+                if (drill != null) { var dh = Seven.DrillHead.On(drill, tunneler); dh.Bake(); DrillAxisCheck("Finale", dh); }   // QF30 (5): the one shared drill
             }
-            var under = new GameObject("CraftLightFromBelow").AddComponent<Light>(); under.transform.SetParent(craft, false); under.transform.localPosition = new Vector3(0f, 0.4f, 1.6f); under.transform.localRotation = Quaternion.Euler(-60f, 180f, 0f);
+            var under = new GameObject("CraftLightFromBelow").AddComponent<Light>(); under.transform.SetParent(rig.Hull, false); under.transform.localPosition = new Vector3(0f, 0.4f, 1.6f); under.transform.localRotation = Quaternion.Euler(-60f, 180f, 0f);
             under.type = LightType.Spot; under.range = 8f; under.spotAngle = 70f; under.intensity = 5f; under.shadows = LightShadows.Soft;
             craft.gameObject.SetActive(false);
 
@@ -335,6 +349,10 @@ namespace Seven.EditorTools
             d.Sockets = sockets.ToArray(); d.SocketLights = socketLights.ToArray(); d.PlatformSurface = surface.GetComponent<Renderer>(); d.ConduitGlow = conduit.GetComponent<Renderer>(); d.ConduitBreak = conduitBreak.GetComponent<Renderer>();
             d.ProjectionWalls = proj.ToArray(); d.BarrierField = barrier.transform; d.BarrierControlT = bctl; d.Lock = lockT; d.BarrierLight = barrierLight; d.PaleLight = pale.GetComponent<Renderer>();
             d.MiningDrills = drills.ToArray(); d.CityTerminals = terminals.ToArray(); d.Dodecahedron = dodeca;
+            d.Rig = rig; d.WallDrills = wallDrills.ToArray(); d.Crew = crew.ToArray();
+            d.BarrierFrameLines = barrierFrameLines; d.BarrierLines = barrierConsole.lines; d.ConduitLines = conduitConsole.lines; d.ConduitNode = conduitConsole.node; d.ConduitConsoleT = conduitConsole.root;
+            d.PowerCable = powerCable; d.BarrierCable = barrierCable;
+            StagingMarksCheck();
             d.Visions = visions; d.MeadowGray = meadow; d.MeadowColour = colour;
             d.Memories = Directory.GetFiles(Path.Combine(ProjectRoot, "Assets/Resources/Finale/Memories"), "*.png").OrderBy(x => x).Select(p => (Texture)AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Resources/Finale/Memories/" + Path.GetFileName(p))).Where(x => x != null).ToArray();
             d.KyleArt = Directory.GetFiles(Path.Combine(ProjectRoot, "Assets/Resources/Finale/Kyle"), "*.jpg").Where(p => !p.Contains("thank_you")).OrderBy(x => x).Select(p => (Texture)AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Resources/Finale/Kyle/" + Path.GetFileName(p))).Where(x => x != null).ToArray();

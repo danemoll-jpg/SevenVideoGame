@@ -147,43 +147,26 @@ namespace Seven
         // after every line - a twitch. Now it is a real drill: a continuous rotation about its own axis (the cone's axis =
         // his body's up through the collar socket), faster on louder syllables, spinning down smoothly when he stops (it
         // keeps its angle - never snaps back), with a slight forward nod on stressed words.
-        float _drillAngle, _drillSpeed; Coroutine _drillSpin; Quaternion _drillRest; bool _drillRestSet;
-        public float DrillMaxSpeed { get; private set; }
-        public int DrillTurns => Mathf.FloorToInt(Mathf.Abs(_drillAngle) / 360f);
+        // QF30 (5): the drill is the shared DrillHead component now (the same in the finale): talking drives its loudness.
+        DrillHead _drillHead;
+        public float DrillMaxSpeed => _drillHead != null ? _drillHead.MaxSpeed : 0f;
+        public int DrillTurns => _drillHead != null ? _drillHead.Turns : 0;
+        public DrillHead Drill => _drillHead;
         IEnumerator TunnelerTalks(VoiceBank.Line l)
         {
             var src = FindVoiceSource(); var buf = new float[256];
             if (TunnelerHead == null) yield break;
-            if (!_drillRestSet) { _drillRest = TunnelerHead.localRotation; _drillRestSet = true; }
-            if (_drillSpin == null) _drillSpin = StartCoroutine(DrillSpin());
+            if (_drillHead == null) _drillHead = DrillHead.On(TunnelerHead, Tunneler);
             float t0 = Time.time;
             while (Dlg.Current == l && Time.time - t0 < 12f)
             {
                 float lvl = 0f;
                 if (src != null && src.isPlaying) { src.GetOutputData(buf, 0); foreach (var v in buf) lvl = Mathf.Max(lvl, Mathf.Abs(v)); }
                 if (lvl <= 0.0001f && (src == null || !src.isPlaying || DemoBoot.Muted)) lvl = 0.25f + 0.2f * Mathf.Abs(Mathf.Sin((Time.time - t0) * 7.3f)) * Mathf.Abs(Mathf.Sin((Time.time - t0) * 2.1f));   // no audible voice (muted runs): a syllable rhythm
-                _drillTarget = 240f + Mathf.Clamp01(lvl * 2.2f) * 900f;      // deg/s: always turning while he speaks, faster on loud syllables
-                _drillNod = Mathf.Clamp01(lvl * 2f) * 7f;
+                _drillHead.Talk = Mathf.Clamp01(lvl * 2.2f) + 0.001f;      // always turning while he speaks, faster on loud syllables
                 yield return null;
             }
-            _drillTarget = 0f; _drillNod = 0f;
-        }
-        float _drillTarget, _drillNod, _drillNodNow;
-        IEnumerator DrillSpin()
-        {
-            while (TunnelerHead != null)
-            {
-                float dt = Time.deltaTime;
-                _drillSpeed = Mathf.MoveTowards(_drillSpeed, _drillTarget, (_drillTarget > _drillSpeed ? 2400f : 380f) * dt);   // quick to spin up, a long spin-down
-                _drillAngle += _drillSpeed * dt;
-                DrillMaxSpeed = Mathf.Max(DrillMaxSpeed, _drillSpeed);
-                _drillNodNow = Mathf.Lerp(_drillNodNow, _drillNod, dt * 10f);
-                var parent = TunnelerHead.parent;
-                var axisLocal = parent != null ? parent.InverseTransformDirection(Tunneler != null ? Tunneler.up : Vector3.up) : Vector3.up;
-                var rightLocal = parent != null ? parent.InverseTransformDirection(Tunneler != null ? Tunneler.right : Vector3.right) : Vector3.right;
-                TunnelerHead.localRotation = Quaternion.AngleAxis(_drillNodNow, rightLocal) * Quaternion.AngleAxis(_drillAngle, axisLocal) * _drillRest;
-                yield return null;
-            }
+            _drillHead.Talk = 0f;
         }
 
         // ------------------------------------------------------------------------------------------ helpers
@@ -872,6 +855,7 @@ namespace Seven
             if (Shots)
             {
                 // QF13 (9) check: she faces away from the light (as Dan did) - the edge arrow and the "which way" hint
+                ChapterCapture.HoldControlShot(1.6f);   // QF30 (gate): the control-back frame is the player's view, not this staged test (the bike turned away)
                 float y0 = Bike.transform.eulerAngles.y; Bike.transform.rotation = Quaternion.Euler(0f, y0 + 180f, 0f); Cam.SnapBehind();
                 yield return Wait(0.4f);
                 var wh = WhichWay(EuropaLayout.Descent[0]); UI.Hint(wh, 3f);

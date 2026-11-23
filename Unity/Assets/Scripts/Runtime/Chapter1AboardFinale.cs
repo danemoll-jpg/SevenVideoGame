@@ -101,12 +101,23 @@ namespace Seven
             _strokeRoutine = StartCoroutine(Stroke()); _stroke = 1f;
             if (_catPose != null) _catPose.LookAt = PilotHead + PilotFwd * 20f;
             CutPilot("two");
+            // QF30 (1): outside the vanishing hull, the Moon itself - large ahead, the lunar entrance on its face, Earth beyond, the stars
+            if (SaucerOutside.I != null) SaucerOutside.I.Show("space");
+            var wfw = Flat(Polar(9f, WindowA, 0f)).normalized;
+            var ma = MoonApproach.Build(PilotHead, wfw, 650f, 220f);
             StartCoroutine(HullAway(true, "FIN_01", "fa02h"));
-            var moonP = SaucerOutside.I != null ? SaucerOutside.I.LevelPoint(MoonLayout.BasinCenter + Vector3.up * 80f) : null;
-            if (moonP.HasValue) { var hd = PilotHead; Cut(hd - PilotFwd * 0.55f + PilotRight * 0.3f + Up * 0.25f, moonP.Value, 38f); }
-            yield return DialogueFraming.Over("the Moon's interior through the window (QF24 7)", SayF("FIN_01", 1, 1));   // Looks smaller from out here.
-            if (moonP.HasValue) ImageGate.ExpectPoint(moonP.Value, "the Moon's interior", 0f, "fa03_");
+            var moonP = ma.Moon.position;
+            { var hd = PilotHead; Cut(hd - wfw * 0.6f + Vector3.Cross(Up, wfw) * 0.35f + Up * 0.22f, moonP, 40f); }    // over her shoulder: she looks at it
+            ImageGate.Expect(ma.Moon, "the Moon ahead, the hull dissolving", 0f, "fa02h");     // the mid-dissolve frame (taken during the line) is of the Moon too
+            for (float t = 0f; t < 6f && Director.Reveal != null && Director.Reveal.Progress < 0.3f; t += Time.deltaTime) yield return null;
+            ImageGate.Expect(ma.Moon, "the Moon ahead of the window", 0f, "fa03_");
+            yield return DialogueFraming.Over("the Moon ahead, through the open hull (QF24 7)", SayF("FIN_01", 1, 1));   // Looks smaller from out here.
             yield return ShotV("fa03_she_watches_the_moon");
+            // cut to the Moon: its face, the entrance they will fly into
+            Cut(PilotHead + wfw * 0.4f + Up * 0.1f, Vector3.Lerp(ma.Moon.position, ma.Entrance.position, 0.35f), 50f);
+            ImageGate.Expect(ma.Moon, "the Moon and the lunar entrance", 0f, "fa03b_");
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) yield return null;
+            yield return ShotV("fa03b_the_moon_and_the_entrance");
             CutPilot("lap");
             yield return SayF("FIN_01", 2, 2);                   // You've had a busy few weeks.
             CutPilot("two");
@@ -115,12 +126,13 @@ namespace Seven
             yield return SayF("FIN_01", 5, 5);                   // Still could be.
             CutPilot("lap");
             yield return SayF("FIN_01", 6, 7);                   // Let's park somewhere else. / Mm. Somewhere without a prison attached.
-            OpenSpaceShot();
+            { var sd = Vector3.Cross(Up, wfw); Cut(PilotHead - wfw * 2.4f + sd * 1.3f + Up * 0.7f, PilotHead + wfw * 8f - Up * 1.2f, 52f); }   // behind and beside the chair: her, and the Moon ahead
             for (float t = 0f; t < 1.5f; t += Time.deltaTime) yield return null;
             ImageGate.Expect(Seven.transform, "7 in the egg chair, the Moon round her", 0f, "fa04_");
             yield return ShotV("fa04_the_hull_gone_the_moon_round_them");
             if (_catPose != null) { _catPose.LookAt = null; _catPose.EarToward = null; }
             yield return HullAway(false, "FIN_01");
+            if (MoonApproach.Current != null) Destroy(MoonApproach.Current.gameObject);      // the guided approach shows the real level
             // GAMEPLAY: the completed map shows a maintenance approach below the city - guide the saucer in to the service berth
             yield return GuideToBay(saucer, p0, bay);
             if (mainCam != null && _farF > 0f) mainCam.farClipPlane = _farF;

@@ -18,6 +18,10 @@ namespace Seven
 
         public enum Mode { Free, Locked, Touch, Gesture, Look, Float, Air, Hang, Climb, Land, Fight, Ride }
         public Mode Current { get; private set; } = Mode.Free;
+        /// <summary>QF30: the 7 in the active scene (the check-run watchers read her).</summary>
+        public static ChapterSeven Live { get { if (_live == null || !_live.isActiveAndEnabled) _live = FindFirstObjectByType<ChapterSeven>(); return _live; } }
+        static ChapterSeven _live;
+        public Animator AnimNow => Anim;
         [System.NonSerialized] public bool Sneak;
         [System.NonSerialized] public bool ScriptDriven;
         [System.NonSerialized] public Vector3 ScriptMove;      // world direction * 0..1 (check runs / cutscenes)

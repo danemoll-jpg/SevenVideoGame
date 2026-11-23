@@ -19,8 +19,15 @@ namespace Seven
     {
         public Transform Body;                       // Tunneler on the craft (tilts with his attacks)
         public FinaleDirector Dir;
+        public TunnelerRig Rig;                      // QF30 (6/8): his mining rig
+        public void AddThrowable(Transform t) => AddDebris(t);
+        /// <summary>QF30 (8): stunned, the rig sits on the floor tilted toward her; its rim is a step she jumps onto.</summary>
+        public override float StepUp => Rig != null && Rig.Dropped && _settled ? Rig.Radius : 0f;
+        bool _wasDown, _settled; public int DeckLandings, DeckStrikes;
+        /// <summary>QF30 (8) proof from the player's camera: "drop", "deck", "strike", "rise".</summary>
+        public System.Action<string> StunBeat;
         public bool BarrierOpen, ConduitCut, ConduitRestored;
-        float _h = 0.6f, _tilt, _yawKick;
+        float _h = 0.6f, _tilt, _yawKick; bool _onDeck;
         Vector3? _distract; float _distractUntil;
 
         public void Setup(Mesh[] debris, Material mat)
@@ -91,7 +98,7 @@ namespace Seven
         /// <summary>The place to go while his bar waits on the barrier: a soft beam of light down onto its control (QF23 19).</summary>
         public void StationLit(bool on)
         {
-            if (on && _beam == null && !BarrierOpen)
+            if (on && _beam == null && !BarrierOpen && false)
             {
                 _beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder); Destroy(_beam.GetComponent<Collider>()); _beam.name = "BarrierStationBeam";
                 _beam.transform.position = L.BarrierControl + Vector3.up * 8f; _beam.transform.localScale = new Vector3(1.2f, 8f, 1.2f);
@@ -120,6 +127,7 @@ namespace Seven
             Seven.Place(L.HerFightStart, Vector3.back);
         }
         protected override Vector3 Origin(AttackDef a) => transform.position;
+        protected override void StrikeLanded(string blow, bool counted) { if (_onDeck) { DeckStrikes++; StunBeat?.Invoke("strike"); } }
         protected override void AttackStarted(AttackDef a) { if (Dir != null) Dir.DrillSpeed = 1100f; }
 
         // ---------------------------------------------------------------- how the craft moves (hover, tilt, the drill)
@@ -151,10 +159,29 @@ namespace Seven
                     drill = 1400f; break;
                 case St.Recover: tilt = Open ? -4f : 0f; h = Open ? 0.35f : 0.6f; drill = Open ? 60f : 300f; break;
                 case St.Staggered: case St.Dazed: case St.Pinned:
-                    h = 0.3f + Mathf.Sin(Time.time * 5f) * 0.05f; tilt = Mathf.Sin(Time.time * 3.1f) * 9f; drill = 0f; break;
+                    // QF30 (8): the thrusters sputter out - the rig drops onto the floor, tilted toward her (his head comes down to her)
+                    h = 0.16f; tilt = 9f; drill = 0f; break;
+            }
+            bool down = st == St.Staggered || st == St.Dazed || st == St.Pinned;
+            if (Rig != null)
+            {
+                if (down && !_wasDown) { Rig.Drop(true); _settled = false; Log($"boss {Def.id}: QF30 (8) stunned - the rig drops onto the floor, tilted toward her"); StunBeat?.Invoke("drop"); }
+                if (down) { if (!_settled && _h < 0.22f) { _settled = true; } Rig.UpdateDeck(_settled); }
+                if (!down && _wasDown)
+                {
+                    // back up: she is pushed off its edge first (never left inside it), then the thrusters fire and it rises
+                    var d = Flat(Her - transform.position); float r = d.magnitude;
+                    if (r < Rig.Radius + 0.3f) { var o = r > 0.05f ? d / r : -transform.forward; Seven.Slide(o, Rig.Radius + 0.4f - r, 0.35f); Log($"boss {Def.id}: QF30 (8) he recovers - she is slid off the rig's edge ({r:0.00} m from its centre)"); }
+                    Rig.UpdateDeck(false); Rig.Drop(false); _settled = false; StunBeat?.Invoke("rise");
+                }
+                _wasDown = down;
+                if (down && _settled && Rig.DeckZone != null && Rig.DeckZone.Enabled && Flat(Her - transform.position).magnitude < Rig.DeckR && Her.y > transform.position.y + 0.2f && !_onDeck) { _onDeck = true; DeckLandings++; Log($"boss {Def.id}: QF30 (8) she jumped up onto his rig's deck"); StunBeat?.Invoke("deck"); }
+                if (!down || Her.y < transform.position.y + 0.1f) _onDeck = false;
+                Rig.ArmDrillWant = st == St.Active ? 1700f : st == St.Telegraph ? 900f : down ? 0f : 220f;
+                if (Rig.Arms != null) for (int i = 0; i < Rig.Arms.Length; i++) if (Rig.Arms[i] != null) { float sw = st == St.Active ? -28f : st == St.Telegraph ? 12f : down ? 20f : 0f; Rig.Arms[i].localRotation = Quaternion.Slerp(Rig.Arms[i].localRotation, Quaternion.Euler(sw, 0f, 0f), Time.deltaTime * 6f); }
             }
             if (st != St.Active) _yawKick = Mathf.MoveTowards(_yawKick, 0f, 200f * Time.deltaTime);
-            _h = Mathf.MoveTowards(_h, h, (st == St.Active ? 9f : 2.5f) * Time.deltaTime);
+            _h = Mathf.MoveTowards(_h, h, (st == St.Active ? 9f : st == St.Staggered || st == St.Dazed ? 4f : 2.5f) * Time.deltaTime);
             _tilt = Mathf.MoveTowards(_tilt, tilt, 60f * Time.deltaTime);
             if (Body != null) { Body.localPosition = Vector3.up * _h; Body.localRotation = Quaternion.Euler(_tilt, _yawKick, 0f); }
             if (Dir != null && st != St.Hold) Dir.DrillSpeed = drill;

@@ -112,6 +112,7 @@ namespace Seven
                 if (d.ChapterDone) break;
                 if (d.SkipOffered) { _skips++; Log($"skip offered on '{d.WaitingFor}' - taken"); Press(Y); yield return WaitR(1.5f); continue; }
                 _held = 0u; _lt = 0f; _rt = 0f;
+                if (d.AwaitsChoice && _phase == 0 && _presses.Count == 0) { _stick = Vector2.zero; Press(X); _xs++; Log($"X at '{d.Prompt}' (a choice inside the scene)"); yield return WaitR(0.8f); continue; }
                 if (d.InCutscene || d.InCredits) { _stick = Vector2.zero; continue; }
                 if (BossFight.Active != null && !BossFight.Active.Over) { continue; }   // the confrontation: BossPilot plays it as a player would
                 var seven = d.Seven.transform.position;

@@ -2890,12 +2890,16 @@ namespace Seven
             if (Auto)
             {
                 for (float w = 0f; !Legend.TeachFull && w < 3f; w += Time.deltaTime) yield return null;
+                // QF30 (gate): both layouts of a lesson are the SAME moment - game time holds while the keyboard variant fades in (the
+                // legend fades on unscaled time); before, the autopilot had already let go of the ledge by the second frame (t_hang_keys)
+                float ts = Time.timeScale; Time.timeScale = 0f;
                 yield return Shot($"t_{id}_xbox");
                 Legend.SetMode(false); Legend.Teach(items);
                 yield return null;
-                for (float w = 0f; !Legend.TeachFull && w < 3f; w += Time.deltaTime) yield return null;
+                for (float w = 0f; !Legend.TeachFull && w < 3f; w += Time.unscaledDeltaTime) yield return null;
                 yield return Shot($"t_{id}_keys");
                 Legend.SetMode(true); Legend.Teach(items);
+                if (Time.timeScale == 0f) Time.timeScale = ts;
             }
             while (true)
             {

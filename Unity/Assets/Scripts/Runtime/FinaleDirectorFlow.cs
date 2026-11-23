@@ -59,6 +59,14 @@ namespace Seven
             }
             DrillSpeed = cp > L.CpConfront ? 0f : 160f;
             if (MiningDrills != null) _drillsOn = cp <= L.CpChamber;
+            _drillsOn = cp <= L.CpChamber; if (!_drillsOn) StopWorldDrillsNow();                                  // QF30 (6): stopped in FIN_07, stay stopped
+            if (cp <= L.CpConfront && !FinaleState.SceneDone("FIN_08_entrance")) BuildPlug();                    // QF30 (6): the mining access is blocked until he breaks through
+            Glow(PowerCable, cp > L.CpJunction || FinaleState.StepDone("power") ? 1.0f : 0f);
+            Glow(BarrierCable, cp > L.CpConfront || FinaleState.StepDone("barrier") ? 1.0f : 0f);
+            Glow(BarrierFrameLines, cp > L.CpConfront ? 1.4f : 0.08f); Glow(BarrierLines, cp > L.CpConfront ? 1.0f : 0.12f); Glow(BarrierLight, cp > L.CpConfront ? 1.6f : 0.15f);
+            Glow(ConduitLines, cp > L.CpChamber ? 0.7f : 0.1f); Glow(ConduitNode, cp > L.CpChamber ? 0.9f : 0.1f);
+            if (cp > L.CpConfront) { _rigUp = false; _sag = 7f; if (Rig != null) Rig.PowerDown(); Restrained(cp >= L.CpEnding); if (_barrierHum == null) _barrierHum = AudioKit.Loop("bia_barrier", null, L.BarrierAt + Vector3.up * 2f, 0.22f, AudioKit.Bus.Sfx, 2f, 20f); }   // QF30 (16): contained in the barrier from FIN_09 on
+            if (Crew != null) for (int i = 0; i < Crew.Length; i++) if (Crew[i] != null) { bool on = cp >= L.CpEnding; Crew[i].gameObject.SetActive(on); if (on) { Crew[i].transform.position = L.CrewAt(i); Crew[i].transform.rotation = Quaternion.LookRotation(Flat(L.BarrierAt - L.CrewAt(i))); } }
             if (Dodecahedron != null) Dodecahedron.gameObject.SetActive(false);
             if (cp >= L.CpChamber) ChamberLook();
             // where she starts
@@ -69,12 +77,18 @@ namespace Seven
                 case L.CpDoor: at = new Vector3(11.5f, L.Y, -134f); face = Vector3.back; break;
                 case L.CpChamber: at = new Vector3(11.5f, L.Y, -150.8f); face = Vector3.back; break;
                 case L.CpConfront: at = L.HerFightStart; face = Vector3.back; break;
-                case L.CpAfter: at = L.PantherFalls + new Vector3(0.9f, 0f, 0.4f); face = Vector3.left; break;
-                case L.CpEnding: at = L.PlatformAt + new Vector3(0f, 0f, L.PlatformR + 0.7f); face = Vector3.back; break;
+                case L.CpAfter: at = L.KneelSpot + new Vector3(0.9f, 0f, 0.6f); face = Flat(L.PantherHead - L.KneelSpot); break;
+                case L.CpEnding: at = L.Stand(0f); face = Vector3.back; break;
                 default: at = L.BeamDown + new Vector3(0f, 0f, -2f); face = Vector3.back; break;
             }
             Seven.Place(at, face);
-            if (Cat != null) { Cat.gameObject.SetActive(cp < L.CpAfter); if (cp < L.CpAfter) { Cat.Place(at + new Vector3(0.9f, 0f, 0.4f), face); Cat.Follow(); } }
+            if (Cat != null)
+            {
+                Cat.gameObject.SetActive(true);
+                if (cp < L.CpAfter) { Cat.Place(at + new Vector3(0.9f, 0f, 0.4f), face); Cat.Follow(); }
+                else if (cp == L.CpAfter) PantherFallen(true);                                                       // QF30 (15): large, lying on his side where he fell
+                else PantherOnTheArchive();                                                                          // QF30 (15): he stays with her to the end
+            }
             if (Worker != null) { Worker.gameObject.SetActive(cp <= L.CpChamber || cp >= L.CpEnding); }
             FollowCamera(); Cam.SnapBehind();
             Log($"restore: {FinaleState.Summary()} -> at {at}");
@@ -122,6 +136,7 @@ namespace Seven
         {
             // the mining machinery outside the chamber: drilling until the Scree stop it (FIN_07)
             if (MiningDrills != null) foreach (var d in MiningDrills) if (d != null) { _drillRate = Mathf.MoveTowards(_drillRate, _drillsOn ? 180f : 0f, 40f * Time.deltaTime); d.Rotate(Vector3.up, _drillRate * Time.deltaTime, Space.Self); }
+            TickWallDrills(); TickBeacons();                                                                       // QF30 (6 / 9)
         }
         float _drillRate = 180f;
 
@@ -228,7 +243,9 @@ namespace Seven
             if (!FinaleState.StepDone("power"))
             {
                 Objective("Switch the old route's power back on at the panel");
+                var beacon = Highlight("the power panel", L.PowerPanel + new Vector3(0.3f, 0f, 0f), PowerCable, PowerPanelLamp);
                 yield return Interact(L.PowerPanel + new Vector3(1.0f, 0f, 0f), "Switch the power", "the power panel", "The panel on the left wall of the junction", new[] { L.PowerPanel + new Vector3(1.2f, 0f, 0.2f) });
+                BeaconDone(beacon, 1.6f);
                 yield return Cutscene(true);
                 Seven.Touch(L.PowerPanel + Vector3.up * 1.2f);
                 AudioKit.Play("ast_door_manual", L.PowerPanel + Vector3.up, 0.9f);
@@ -245,6 +262,7 @@ namespace Seven
             {
                 yield return SayIds("FIN_03_P2");                    // The gate lock rusted shut years ago. We were never strong enough to lift it.
                 Objective("Lift the rusted lock off the gate");
+                var lockBeacon = Highlight("the rusted gate lock", L.GateAt + new Vector3(0f, 0f, 0.6f), null, GateLockT != null ? GateLockT.GetComponentInChildren<Renderer>() : null);
                 yield return Telekinesis(L.GateLock, 9f, "the rusted gate lock", "The lock above the gate - telekinesis", null, new[] { new Vector3(11.5f, L.Y, -115f) }, GateLockT);
                 yield return Cutscene(true);
                 Shoot(L.GateAt + new Vector3(4.6f, 2.4f, 5.4f), L.GateAt + Vector3.up * 1.8f, 50f, 0.01f);
@@ -259,7 +277,7 @@ namespace Seven
                 Seven.SetEnergyPoint(0.6f, 0.6f);
                 AudioKit.Play("ast_door_manual", L.GateAt + Vector3.up * 2f, 1f);
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 1.4f) { if (GateLeaf != null) GateLeaf.position = L.GateAt + Vector3.up * Mathf.SmoothStep(0f, 3.6f, t); yield return null; }
-                SetZone("GateZ", true); FinaleState.DoStep("gate");
+                SetZone("GateZ", true); FinaleState.DoStep("gate"); BeaconDone(lockBeacon, 0f);
                 ImageGate.ExpectPoint(L.GateAt + Vector3.up * 1.6f, "the open gate");
                 yield return Shot("f09_the_gate_rises");
                 Log("FIN_03: the rusted lock lifted away by telekinesis, the gate rises");
@@ -351,7 +369,9 @@ namespace Seven
                 if (FinaleState.RunesPlaced > i) continue;
                 Objective($"Place the {L.SocketRunes[i]}  -  {i} / 7");
                 var spot = L.Socket(i) + Flat(L.ChamberC - L.Socket(i)).normalized * 1.05f;
+                var sb = Highlight($"socket {i + 1}", L.Socket(i), null, i < SocketLights.Length ? SocketLights[i] : null);
                 yield return Interact(L.Socket(i), $"Place the {L.SocketRunes[i]}", $"socket {i + 1} ({L.SocketWorlds[i]})", "A socket round the chamber's edge", new[] { spot }, null, 1.9f);
+                BeaconDone(sb, 0.4f);
                 yield return PlaceRune(i);
             }
             Objective(null);
@@ -365,6 +385,7 @@ namespace Seven
             yield return Shot("f22_the_seven_records_align_the_walls_lit");
             TwoShot((P7 + Cat.transform.position) * 0.5f, Vector3.right, 2.6f, 0.9f, 0.9f, 44f, 0.3f);
             yield return Say("FIN_05", 1, 4);                       // We carried all of this... / We knew some of it. / Enough to keep going. / Mm-hmm.
+            yield return BarrierSetUp();                            // QF30 (10): FIN_05_04a-c, the barrier shown as it is mentioned
             // the platform responds to her: the Archive (a recorded system voice, no figure)
             Glow(PlatformSurface, 0.4f);
             AudioKit.Play("europa_seal_tone", L.PlatformAt + Vector3.up, 0.7f);
@@ -388,10 +409,13 @@ namespace Seven
             var hold = HoldPose.On(Seven.gameObject);
             rune.position = P7 + Vector3.up * 1.05f + toS * 0.34f;
             hold.Hold(rune, true, true, $"the {L.SocketRunes[i]}", RuneR(i));
-            Shoot(stand - toS * 1.6f + Vector3.Cross(Vector3.up, toS) * 1.2f + Vector3.up * 1.5f, P7 + Vector3.up * 1.0f + toS * 0.3f, 42f, 0.01f);
-            ImageGate.Expect(Seven.transform, $"7 with the {L.SocketRunes[i]} in her hands");
+            // QF30 (2): Panther waits on the far side of her from the camera, and the shot is the first framing with her hands, the rune
+            // and the socket all in clear view (rc1's fixed angle had a column / pedestal between the camera and the third socket)
+            var cam = RuneShot(i, stand, toS);
+            if (Cat != null) Cat.Place(stand + Flat(stand - cam).normalized * 0.9f - toS * 0.4f, toS);
+            ImageGate.Expect(Sockets != null && i < Sockets.Length ? Sockets[i] : Seven.transform, $"socket {i + 1} and the {L.SocketRunes[i]} in her hands");
             yield return Wait(0.45f);
-            if (i == 0 || i == 6) yield return Shot($"f15_rune_{i + 1}_{L.SocketRunes[i]}_in_her_hands");
+            yield return Shot($"f15_rune_{i + 1}_{L.SocketRunes[i]}_in_her_hands");
             var a = rune.position; var b = L.SocketTop(i) + Vector3.up * 0.16f;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 0.55f) { rune.position = Vector3.Lerp(a, b, Mathf.SmoothStep(0f, 1f, t)); yield return null; }
             hold.Release("placed in its socket");
@@ -399,6 +423,9 @@ namespace Seven
             Glow(i < SocketLights.Length ? SocketLights[i] : null, 1.6f);
             ShowWall(i, 1f);
             var wall = ProjectionWalls != null && i < ProjectionWalls.Length ? ProjectionWalls[i] : null;
+            yield return Wait(0.35f);
+            ImageGate.Expect(Sockets != null && i < Sockets.Length ? Sockets[i] : Seven.transform, $"the {L.SocketRunes[i]} set in socket {i + 1}");
+            yield return Shot($"f15b_rune_{i + 1}_{L.SocketRunes[i]}_goes_in");
             if (wall != null) { Shoot(stand - toS * 1.0f + Vector3.Cross(Vector3.up, toS) * 1.4f + Vector3.up * 1.6f, Vector3.Lerp(b, wall.transform.position, 0.72f), 46f, 0.01f); ImageGate.Expect(wall.transform, $"{L.SocketWorlds[i]} on the wall"); }
             // a phrase of that world's sound
             string[] cue = { "vision_shimmer", "grass_rustle", "europa_call_deep", "mars_vision_stone", "ast_steam_whistle", "bia_barrier", "cat_gate_chime" };
@@ -414,11 +441,13 @@ namespace Seven
         IEnumerator Witness()
         {
             Objective("Put your hand on the archive");
-            yield return Interact(L.PlatformAt + new Vector3(0f, 0f, L.PlatformR + 0.7f), "Touch the archive", "the archive surface", "The central platform", new[] { L.PlatformAt + new Vector3(0f, 0f, L.PlatformR + 0.8f) }, null, 2.2f);
+            var ab = Highlight("the archive surface", L.PlatformAt + new Vector3(0f, 0f, L.PlatformR * 0.6f), null, PlatformSurface);
+            yield return Interact(L.Stand(0f), "Touch the archive", "the archive surface", "The central platform", new[] { L.Stand(0f) + new Vector3(0f, 0f, 0.1f) }, null, 2.2f);
+            BeaconDone(ab, 0.3f);
             yield return Cutscene(true);
             MusicSystem.Play("moon_witness", 3f); ThemeNow = "moon_witness";
-            Seven.Place(L.PlatformAt + new Vector3(0f, 0f, L.PlatformR + 0.62f), Vector3.back);
-            if (Cat != null) Cat.Place(L.PlatformAt + new Vector3(0.75f, 0f, L.PlatformR + 0.95f), Vector3.back);
+            Seven.Place(L.Stand(0f), Vector3.back);
+            if (Cat != null) Cat.Place(L.Stand(-24f, L.StandR + 0.15f), Vector3.back);
             yield return HandOnSurface(true);
             Shoot(P7 + new Vector3(1.4f, 1.1f, 0.9f), P7 + new Vector3(0f, 0.95f, -0.5f), 38f, 0.01f);
             yield return Wait(0.6f);
@@ -443,16 +472,18 @@ namespace Seven
             yield return Shot("f27_the_display_the_gaps");
             HerFaceCloseUp();
             yield return Say("FIN_06", 11, 14);                     // That's why it's incomplete. ... Someone should.
-            yield return Cutscene(false);
-            // the player confirms the release (one press)
+            // the player confirms the release (one press) - inside the scene: her hand stays on the archive until her answer (QF30 3)
             Objective("Share it");
             bool yes = false;
             SetPrompt("Share it");
-            yield return Until(() => { if (Input.Interact.WasPressedThisFrame() || Auto) yes = true; return yes; }, "the release confirmed", 30f, "Share it - press the button", null, () => yes = true);
+            float sh0 = Time.time;
+            AwaitsChoice = true;
+            while (!yes) { if (Input.Interact.WasPressedThisFrame() || (Auto && Time.time - sh0 > 1.2f)) yes = true; yield return null; }
+            AwaitsChoice = false;
             SetPrompt(null); Objective(null);
-            yield return Cutscene(true);
             HerFaceCloseUp();
             yield return Say("FIN_06", 15, 15);                     // Yes. Share it.
+            yield return HandOnSurface(false);                      // QF30 (3): the touch ends with her answer
             Log("FIN_06: the release confirmed by one press");
             Complete("FIN_06");
         }
@@ -462,8 +493,9 @@ namespace Seven
             ik.enabled = true; ik.Alive = true; ik.Ease = 2.2f;
             if (on)
             {
-                ik.RightPos = L.PlatformAt + new Vector3(0.25f, L.PlatformH + 0.03f, L.PlatformR - 0.35f);
-                ik.RightPalmN = Vector3.down; ik.RightPalmW = 1f; ik.RightFingerDir = Vector3.back; ik.RightW = 1f;
+                // QF30 (4): she stands clear of the platform's base (StandR) and leans in a little; the palm lies flat on the surface
+                ik.RightPos = L.HandOnArchive; ik.RightPalmN = Vector3.up; ik.RightPalmW = 1f; ik.RightFingerDir = Vector3.back; ik.RightW = 1f;
+                ik.Lean = 12f; ik.LeanDir = Flat(L.PlatformAt - P7);
                 ik.LookPos = L.PlatformAt + Vector3.up * 1.2f; ik.LookW = 0.6f;
             }
             else ik.ReleaseAll("her hand off the archive");
@@ -508,7 +540,6 @@ namespace Seven
             for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f) { Glow(ConduitGlow, t * 0.6f); Glow(ConduitBreak, t * 0.6f); yield return null; }
             ImageGate.Expect(ConduitGlow.transform, "light running out through the old conduits");
             yield return Shot("f28_light_runs_through_the_conduits");
-            yield return HandOnSurface(false);
             // the junction: the worker's terminal comes alive (the network shown on the terminals, the workers' lines over it)
             var term = CityTerminals != null && CityTerminals.Length > 0 ? CityTerminals[0] : null;
             if (CityTerminals != null) foreach (var t in CityTerminals) Glow(t, 1.3f);
@@ -526,16 +557,19 @@ namespace Seven
             yield return Say("FIN_07", 2, 2);                       // The chamber is reconnecting the old network.
             if (term != null) Shoot(term.transform.position + new Vector3(2.2f, 1.2f, 2.4f), term.transform.position, 46f, 0.01f);
             yield return Say("FIN_07", 3, 4);                       // There are records here... / These controls belong to the city. He locked us out of them.
-            if (Cat != null) TwoShot((P7 + Cat.transform.position) * 0.5f, Vector3.right, 2.4f, 0.8f, 0.7f, 42f, 0.3f);
-            yield return Say("FIN_07", 5, 5);                       // Can you stop the drilling around this chamber?
+            // QF30 (6): the drilling she means is on screen as she says it - a drill boring through the chamber wall, dust and sparks
+            var wd = WallDrills != null && WallDrills.Length > 0 ? WallDrills[0] : null;
+            if (wd != null) { DrillShot(wd, true); ImageGate.Expect(wd, "a mining drill boring through the chamber wall"); yield return Wait(0.4f); yield return Shot("f29b_a_drill_boring_into_the_chamber"); }
+            yield return DialogueFraming.Over("the mining drill boring into the chamber wall (QF24 7)", Say("FIN_07", 5, 5));   // Can you stop the drilling around this chamber?
             yield return Say("FIN_07", 6, 6);                       // We can reach the controls now. Give us a moment.
-            // the drilling outside slows (the towers' bits spin down)
+            // the drilling slows and stops (the bits spin down, the dust settles, the rumble fades) - and stays stopped
             _drillsOn = false;
+            if (wd != null) { DrillShot(wd, true); ImageGate.Expect(wd, "the drill spinning down"); }
+            yield return Wait(Auto ? 3.5f : 5f);
+            yield return Shot("f30_the_drilling_slows_and_stops");
             var dr = MiningDrills != null && MiningDrills.Length > 0 ? MiningDrills[0] : null;
-            if (dr != null) { Shoot(dr.position + new Vector3(12f, 76f, 16f), dr.position + Vector3.up * 64f, 50f, 0.01f); ImageGate.Expect(dr.parent, "the drilling slowing"); }
-            AudioKit.Play("europa_drill", null, 0.4f);
-            yield return Wait(1.6f);
-            yield return Shot("f30_the_drilling_slows");
+            if (dr != null) { Shoot(dr.position + new Vector3(12f, 76f, 16f), dr.position + Vector3.up * 64f, 50f, 0.01f); ImageGate.Expect(dr.parent, "the drill towers stopped"); yield return Wait(0.6f); yield return Shot("f30b_the_drill_towers_stopped"); }
+            Log($"QF30 (6): the drilling stopped - the wall drills spin {_wallRate:0} deg/s, the towers {_drillRate:0} deg/s (both spinning down to 0)");
             // Tunneler over the industrial speakers (his voice heard over the chamber; no worker answers)
             Shoot(L.ChamberC + new Vector3(0f, 3.4f, 9.6f), L.MiningAccess + Vector3.up * 3f, 52f, 0.01f);
             ImageGate.ExpectPoint(L.MiningAccess + Vector3.up * 2f, "the mining access passage his voice comes from");

@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-181 sounds.
+183 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -189,5 +189,7 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `cat_gate_open` | A small ornate garden gate swinging open on a squeaky hinge, a light metal latch click. | 1.5 |  | Round 18: CAT_02 the public gate |
 | `cat_screen_jingle` | A short bright cheerful sports television jingle with a whoosh, upbeat brass stab, two seconds. | 2.5 |  | Round 18: the Cat-a-tron (highlights, the prize ad) |
 | `cat_meadow_breeze` | A warm open meadow: a soft steady breeze through tall grass, a few distant birds, insects humming gently. | 12 | yes | Round 18: CAT_10 the meadow (loop) |
+| `cat_breath_slow` | A large black cat lying still, one slow soft shallow breath in and out through the nose, close and quiet, tired, no purr, no meow. | 1.6 |  | QF30 (14): Panther's slow breaths as he dies (FIN_10) |
+| `drill_grind_rock` | A huge industrial mining drill grinding slowly into old stone far away: a deep low rumble, stone cracking, a little debris falling. | 6 | yes | QF30 (6): the mining drills boring into the old structure (loop) |
 | `cat_toy_swing` | A large soft hanging toy swinging past on a rope: a whoosh and a creak of the rope, a little jingle bell. | 1.5 |  | Round 18: the toy boulevard's swinging obstacles |
 | `cat_gate_chime` | A small bright chime as a racer passes through a glowing gate, a soft sparkle. | 1 |  | Round 18: a race gate passed |

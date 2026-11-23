@@ -220,6 +220,8 @@ SFX = [
     ("cat_gate_open", "A small ornate garden gate swinging open on a squeaky hinge, a light metal latch click.", 1.5, False, "Round 18: CAT_02 the public gate"),
     ("cat_screen_jingle", "A short bright cheerful sports television jingle with a whoosh, upbeat brass stab, two seconds.", 2.5, False, "Round 18: the Cat-a-tron (highlights, the prize ad)"),
     ("cat_meadow_breeze", "A warm open meadow: a soft steady breeze through tall grass, a few distant birds, insects humming gently.", 12, True, "Round 18: CAT_10 the meadow (loop)"),
+    ("cat_breath_slow", "A large black cat lying still, one slow soft shallow breath in and out through the nose, close and quiet, tired, no purr, no meow.", 1.6, False, "QF30 (14): Panther's slow breaths as he dies (FIN_10)"),
+    ("drill_grind_rock", "A huge industrial mining drill grinding slowly into old stone far away: a deep low rumble, stone cracking, a little debris falling.", 6, True, "QF30 (6): the mining drills boring into the old structure (loop)"),
     ("cat_toy_swing", "A large soft hanging toy swinging past on a rope: a whoosh and a creak of the rope, a little jingle bell.", 1.5, False, "Round 18: the toy boulevard's swinging obstacles"),
     ("cat_gate_chime", "A small bright chime as a racer passes through a glowing gate, a soft sparkle.", 1, False, "Round 18: a race gate passed")
 ]

@@ -27,6 +27,8 @@ V2 = {
     "rest": {"stability": 0.75, "similarity_boost": 0.85, "style": 0.15, "use_speaker_boost": True, "speed": 0.82},
     "worker": {"stability": 0.6, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True, "speed": 0.95},
     "worker2": {"stability": 0.7, "similarity_boost": 0.8, "style": 0.15, "use_speaker_boost": True, "speed": 0.88},
+    "keeper": {"stability": 0.7, "similarity_boost": 0.8, "style": 0.15, "use_speaker_boost": True, "speed": 0.85},
+    "caretaker": {"stability": 0.6, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True, "speed": 0.95},
     "tunneler": {"stability": 0.6, "similarity_boost": 0.8, "style": 0.3, "use_speaker_boost": True, "speed": 0.95},
 }
 V3 = {"stability": 0.5, "similarity_boost": 0.8, "use_speaker_boost": True}
@@ -63,7 +65,9 @@ def main():
         if os.path.exists(path) and not force: kept += 1; continue
         text = l["text"].replace("’", "'").replace("‘", "'").replace("—", ", ").replace("…", "...")
         sp = l["speaker"]
-        if sp in ("archive", "rest"):
+        if l.get("tagged"):
+            model, st, text = "eleven_v3", V3, l["tagged"]          # QF30 (15): several audio tags (crying)
+        elif sp in ("archive", "rest"):
             model, st = "eleven_multilingual_v2", V2[sp]
         elif sp == "seven" or l["direction"]:
             model, st = "eleven_v3", V3

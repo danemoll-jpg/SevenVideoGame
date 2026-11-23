@@ -140,6 +140,17 @@ namespace Seven
         /// transit tower"); null while no level is shown.</summary>
         public Vector3? LevelPoint(Vector3 levelPos) => _levelGo != null && _levelGo.activeInHierarchy ? _levelGo.transform.TransformPoint(levelPos) : (Vector3?)null;
         public bool LevelShown => _levelGo != null && _levelGo.activeSelf;
+        /// <summary>QF30 (1): the place they are arriving at, as the window shows it (the hull-away talks must show it, never a void).</summary>
+        public Vector3? DestinationPoint(out string what)
+        {
+            what = Showing;
+            if (MoonApproach.Current != null && MoonApproach.Current.Moon != null) { what = "the Moon ahead (FIN_01)"; return MoonApproach.Current.Moon.position; }
+            if (_levelGo != null && _levelGo.activeInHierarchy && LevelView.TryGetValue(Showing, out var v)) { what = $"the {Showing} level below"; return _levelGo.transform.TransformPoint(v.S + (v.aim - v.S) * 0.35f); }
+            if (VeyraEgg != null && _bia != null && _bia.activeInHierarchy) { what = "the mothership at Veyra"; return VeyraEgg.position; }
+            if (Asteroid != null && Asteroid.activeInHierarchy) { what = "the asteroid"; var r = Asteroid.GetComponentInChildren<Renderer>(); return r != null ? r.bounds.center : Asteroid.transform.position; }
+            if (Moon != null && Moon.activeInHierarchy) { what = "the Moon's surface"; var r = Moon.GetComponentInChildren<Renderer>(); return r != null ? r.bounds.center : Moon.transform.position; }
+            return null;
+        }
         void ShowLevel(string w)
         {
             if (_levelGo != null && _levelW != w) { Destroy(_levelGo); _levelGo = null; }
