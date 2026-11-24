@@ -55,6 +55,12 @@ def main():
         print(f'{name}: {"saved voice " + v["voice_id"] if v else "MISSING"}')
     if "--list" in sys.argv: return
     os.makedirs(OUT, exist_ok=True)
+    if "--prune" in sys.argv:   # QF31: remove the audio of lines the script no longer has (the "no line plays twice" rule: old lines + their audio go)
+        ids = {l["id"] for l in d["lines"]}
+        for f in sorted(os.listdir(OUT)):
+            if f.endswith(".mp3") and f[:-4] not in ids:
+                os.remove(os.path.join(OUT, f)); print("pruned", f)
+                if os.path.exists(os.path.join(OUT, f + ".meta")): os.remove(os.path.join(OUT, f + ".meta"))
     made, kept, waiting, failed = 0, 0, [], []
     for l in d["lines"]:
         if only and l["id"] not in only: continue

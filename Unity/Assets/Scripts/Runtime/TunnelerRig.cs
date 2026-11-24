@@ -23,6 +23,8 @@ namespace Seven
         public float DeckR = 1.85f;             // the walkable deck inside the rim
         public float ArmDrillWant;              // deg/s (0 = stopped)
         public bool ThrustersOn = true;
+        /// <summary>QF31 (10): settled flush after a stun - the whole rig (to its rim) is walkable, no jump needed.</summary>
+        public bool WalkOn;
         public bool Dropped { get; private set; }
         public float ArmDrillSpeed { get; private set; }
         public int ArmDrillReversals { get; private set; }
@@ -104,12 +106,13 @@ namespace Seven
             if (_deck == null)
             {
                 _deck = new Ground.Zone { Name = "RigDeck", Enabled = false };
-                _deck.Mask = (x, z) => { var c = transform.position; return (new Vector2(x - c.x, z - c.z)).sqrMagnitude < DeckR * DeckR; };
+                _deck.Mask = (x, z) => { var c = transform.position; float r = WalkOn ? Radius + 0.05f : DeckR; return (new Vector2(x - c.x, z - c.z)).sqrMagnitude < r * r; };
                 _deck.Field = (x, z) => DeckHeight(new Vector3(x, 0f, z));
                 Ground.Zones.Insert(0, _deck);
             }
             var p = transform.position;
-            _deck.Min = new Vector2(p.x - DeckR, p.z - DeckR); _deck.Max = new Vector2(p.x + DeckR, p.z + DeckR);
+            float rr = WalkOn ? Radius + 0.05f : DeckR;
+            _deck.Min = new Vector2(p.x - rr, p.z - rr); _deck.Max = new Vector2(p.x + rr, p.z + rr);
             _deck.Enabled = on;
         }
         /// <summary>The deck's surface under (x, z): the hull's deck plane (it tilts with the hull).</summary>
@@ -118,8 +121,9 @@ namespace Seven
             var h = Hull != null ? Hull : transform;
             var top = h.TransformPoint(Vector3.up * DeckTop); var n = h.up;
             if (Mathf.Abs(n.y) < 0.2f) return top.y;
-            // plane through top with normal n: n.(p - top) = 0 -> y
-            return top.y - (n.x * (q.x - top.x) + n.z * (q.z - top.z)) / n.y;
+            // plane through top with normal n: n.(p - top) = 0 -> y (never below the floor under it)
+            float y = top.y - (n.x * (q.x - top.x) + n.z * (q.z - top.z)) / n.y;
+            return Mathf.Max(y, transform.position.y + 0.01f);
         }
         void OnDestroy() { if (_deck != null) Ground.Zones.Remove(_deck); }
     }

@@ -49,11 +49,13 @@ namespace Seven
         public static Vector3 SocketTop(int i) => Socket(i) + Vector3.up * 1.15f;
         public static readonly Vector3 BarrierAt = new Vector3(24.2f, Y, -162f);         // the old maintenance barrier's alcove (east)
         // QF30 (11): the controls stand at the room's edge (r 12.4-12.6), out of the open floor where the fight happens
-        public static readonly Vector3 BarrierControl = new Vector3(22.4f, Y, -168.0f);  // its side control (X)
-        public static readonly Vector3 ConduitAt = new Vector3(0.2f, Y, -156.9f);        // the conduit Tunneler damages (west)
+        // QF31 (9): each control (and the light column over it while it is the place to go) stands midway between two screens - the
+        // barrier's at rc2's 118.8 deg sat in front of Europa's screen seen from the south (the fight's side now)
+        public static readonly Vector3 BarrierControl = new Vector3(21.27f, Y, -169.8f); // its side control (X), 128.6 deg (between Europa's and Mars's screens)
+        public static readonly Vector3 ConduitAt = new Vector3(0.2f, Y, -156.9f);        // the conduit Tunneler damages (west), 294 deg (rc2's place: no screen behind its column; the wall drill moved off it)
         /// <summary>QF30 (6): the big mining drills boring into the old structure - round the chamber (yaw from +z, height) and along the
         /// service route (position, boring direction).</summary>
-        public static readonly (float yaw, float h, float scale)[] ChamberDrills = { (231f, 3.6f, 1f), (283f, 5.4f, 0.85f), (128f, 2.8f, 0.9f) };
+        public static readonly (float yaw, float h, float scale)[] ChamberDrills = { (231.4f, 3.6f, 1f), (334.3f, 5.4f, 0.85f), (25.7f, 2.8f, 0.9f) };   // QF31: each in a gap between two screens, clear of the two controls (128.6 / 282.9 deg)
         public static readonly (Vector3 at, Vector3 dir)[] RouteDrills = { (new Vector3(1.3f, Y + 2.9f, -116.5f), Vector3.right), (new Vector3(18.6f, Y + 3.5f, -135.6f), Vector3.left) };
         public static Vector3 ChamberDrillAt(int i) { var d = ChamberDrills[i]; float a = d.yaw * Mathf.Deg2Rad; return ChamberC + new Vector3(Mathf.Sin(a) * (ChamberR + 0.3f), d.h, Mathf.Cos(a) * (ChamberR + 0.3f)); }
         /// <summary>QF30 (4): where people stand round the platform: the platform's base reaches PlatformR + 0.3, a body needs 0.25 more.</summary>
@@ -72,8 +74,8 @@ namespace Seven
             var l = new System.Collections.Generic.List<(string, Vector3, float, float, float)>
             {
                 ("7 at the archive (the touch)", Stand(0f), 0.24f, 1.6f, Y), ("Panther beside her at the archive", Stand(-24f, StandR + 0.15f), 0.2f, 0.35f, Y),
-                ("7 at the archive (FIN_13)", Stand(8f), 0.24f, 1.6f, Y), ("7 kneeling at his head (FIN_10)", KneelSpot, 0.3f, 1.1f, Y),
-                ("Panther lying, large (FIN_09/10)", PantherFalls, 0.5f, 0.55f, Y), ("Panther laid on the archive (FIN_11)", PantherOnArchive, 0.16f, 0.25f, Y + PlatformH),
+                ("7 kneeling at his head (FIN_10 - FIN_13)", KneelSpot, 0.3f, 1.1f, Y),
+                ("Panther lying, large (FIN_09/10)", PantherFalls, 0.5f, 0.55f, Y),
                 ("7 at the conduit control", ConduitAt + (ChamberC - ConduitAt).normalized * 1.6f, 0.24f, 1.6f, Y), ("7 at the barrier control", BarrierControl + (ChamberC - BarrierControl).normalized * 1.2f, 0.24f, 1.6f, Y),
             };
             for (int i = 0; i < 7; i++) { var s = Socket(i); var toS = (s - ChamberC); toS.y = 0f; l.Add(($"7 placing rune {i + 1}", s - toS.normalized * 0.95f, 0.24f, 1.6f, Y)); }
@@ -82,7 +84,53 @@ namespace Seven
         }
         public static Vector3 HandOnArchive => PlatformAt + new Vector3(-0.28f, PlatformH + 0.02f, 2.0f);   // on her RIGHT: the right hand
         public static readonly Vector3 MiningAccess = new Vector3(11.5f, Y, -178.5f);    // he forces his way in here (south)
-        public static readonly Vector3 TunnelerStart = new Vector3(11.5f, Y, -173.5f);
+        public static readonly Vector3 TunnelerStart = new Vector3(11.5f, Y, -175.5f);   // QF31 (8): the breach's mouth (he came through the torn wall)
+        // ---- QF31 (8): the fight space. The archive's table lowers flush into a shallow light well; the pedestals sink into the floor;
+        // his rig tears the south wall open onto the mining cavern beyond - a wide, flat worked-out floor the fight spills into.
+        public const float WellR = PlatformR + 0.32f;                                    // the well's rim (the floor's hole)
+        public const float WellDepth = 0.12f;                                            // the archive's surface below the floor once lowered
+        public const float SocketSink = 1.06f;                                           // the pedestals sink until their cups are flush
+        /// <summary>The wall panels he tears out (yaw from +z, degrees): either side of the old access opening, + its lintel.</summary>
+        public static readonly float[] BreachPanels = { 163.125f, 196.875f };
+        public const float BreachHalfDeg = 18f;
+        public static readonly Vector3 CavernC = new Vector3(11.5f, Y, -192.5f);
+        public const float CavernX0 = -9f, CavernX1 = 32f, CavernZ0 = -206f, CavernZ1 = -177.4f, CavernH = 16f;
+        /// <summary>The cavern's dressing that bodies walk round: spoil heaps, parked drill carts, light masts (x, z, radius).</summary>
+        public static readonly Vector3[] CavernProps =
+        {
+            new Vector3(-6.2f, -186f, 2.2f), new Vector3(-6.4f, -199.5f, 2.6f), new Vector3(29.2f, -185f, 2.4f), new Vector3(29.4f, -200f, 2.3f),
+            new Vector3(3.5f, -203.6f, 2.0f), new Vector3(20f, -203.8f, 2.2f),
+            new Vector3(-2.8f, -193f, 1.1f), new Vector3(26.4f, -193.4f, 1.1f),
+            new Vector3(-4.6f, -180.6f, 0.35f), new Vector3(27.6f, -180.6f, 0.35f), new Vector3(1.0f, -204.5f, 0.35f), new Vector3(22.2f, -204.5f, 0.35f),
+        };
+        /// <summary>QF31 (8): the fight arena = the chamber's open floor (the well kept clear) + the breach + the cavern.</summary>
+        public static Vector3 ClampArena(Vector3 p, float wallMargin, float wellMargin)
+        {
+            var c = ChamberC; var d = p - c; d.y = 0f; float r = d.magnitude;
+            Vector3 inCircle; { float rMin = PlatformR + wellMargin, rMax = ChamberR - wallMargin; var dd = d; if (r < rMin) dd = (r < 0.01f ? Vector3.back : d / r) * rMin; else if (r > rMax) dd = d / r * rMax; inCircle = c + dd; }
+            Vector3 inBreach = new Vector3(Mathf.Clamp(p.x, 8.4f, 14.6f), Y, Mathf.Clamp(p.z, -180f, -171.5f));
+            Vector3 inCavern = new Vector3(Mathf.Clamp(p.x, CavernX0 + wallMargin + 1f, CavernX1 - wallMargin - 1f), Y, Mathf.Clamp(p.z, CavernZ0 + wallMargin + 1f, CavernZ1 - 1.2f));
+            Vector3 best = inCircle; float bd = (Flat(p) - Flat(inCircle)).sqrMagnitude;
+            foreach (var q in new[] { inBreach, inCavern }) { float k = (Flat(p) - Flat(q)).sqrMagnitude; if (k < bd) { bd = k; best = q; } }
+            foreach (var o in CavernProps) { var od = new Vector2(best.x - o.x, best.z - o.y); float rr = o.z + wallMargin * 0.5f; if (od.sqrMagnitude < rr * rr) { od = od.sqrMagnitude < 1e-4f ? Vector2.up * rr : od.normalized * rr; best = new Vector3(o.x + od.x, Y, o.y + od.y); } }
+            best.y = Y; return best;
+        }
+        public static bool InCavern(Vector3 p) => p.z < -176.6f;
+        /// <summary>QF31 (10): the nearest point (with a margin) of the floor she can walk on - the enabled rectangle zones (never a masked
+        /// zone like his rig's deck). His arena is clamped to it, so wherever he is stunned she can walk to him.</summary>
+        public static Vector3 NearestWalkable(Vector3 p, float pad)
+        {
+            Vector3 best = p; float bd = float.MaxValue;
+            foreach (var z in Ground.Zones)
+            {
+                if (!z.Enabled || z.Mask != null) continue;
+                float px = Mathf.Min(pad, (z.Max.x - z.Min.x) * 0.45f), pz = Mathf.Min(pad, (z.Max.y - z.Min.y) * 0.45f);
+                var q = new Vector3(Mathf.Clamp(p.x, z.Min.x + px, z.Max.x - px), p.y, Mathf.Clamp(p.z, z.Min.y + pz, z.Max.y - pz));
+                float d = (Flat(q) - Flat(p)).sqrMagnitude; if (d < bd) { bd = d; best = q; }
+            }
+            return best;
+        }
+        static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
         public static readonly Vector3 HerFightStart = new Vector3(11.5f, Y, -158.2f);
         public static readonly Vector3 PantherEdge = new Vector3(3.4f, Y, -166.6f);      // where Panther calls from (the chamber's edge)
         public static readonly Vector3 PantherFalls = new Vector3(7.2f, Y, -165.6f);     // FIN_09: he falls clear of the machinery
@@ -105,6 +153,8 @@ namespace Seven
             R("ChamberN", 5f, -156.6f, 18f, -150.6f),
             R("ChamberS", 5f, -172f, 18f, -167.4f),
             R("Alcove", 21f, -165f, 26f, -159f),                                    // the barrier's alcove (open)
+            R("Breach", 6.5f, -180f, 16.5f, -170.5f, false),                        // QF31 (8): the torn wall (opens when his rig breaks through)
+            R("Cavern", CavernX0, CavernZ0, CavernX1, -179f, false),                // QF31 (8): the mining cavern beyond
         };
         public static bool Walkable(Vector3 p, float pad = 0.3f) { foreach (var z in Ground.Zones) if (z.Enabled && z.Contains(p.x, p.z, pad)) return true; return false; }
         public static string ZoneAt(Vector3 p) => Ground.ZoneName(p.x, p.z) ?? "-";

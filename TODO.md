@@ -1,6 +1,207 @@
 # Active Development Plan — 7: The Observer
 
-## Polish pass P1: after QF30, Code's own list (Dan, 2026-11-23: "after this is done, Code can do whatever else it needs to do. I just want a good version I can show") — to do after QF30
+## Quick fix QF31: the ending reworked + the fight space (Dan's 1.0.0-rc2 review, 2026-11-23) — A, A2, B, C done, status below; release 1.0.0-rc3
+Keep 1.0.0-rc2 published and tagged as it is (Dan's showable build); this goes into **1.0.0-rc3**. Where Dan's new heaven video
+isn't in yet, use the stand-in noted and make his clips drop in by file name.
+
+### A. The new ending order (replaces FIN_10 end → FIN_14; Dan's rework)
+The carry, "You're staying with me", the walk back to the archive and the separate memory step go. New sequence:
+1. **FIN_09** restaged per A2 below (the sacrifice; Tunneler trapped, the Scree take him; his last quip and "We always have." play **before**
+   Panther's last moments, right after the lock, so nothing interrupts what follows).
+2. **FIN_10** as QF30 (she reaches him; the lines; he shrinks as the life leaves him; "Panther, no!"; she cries).
+3. **She grieves, kneeling over him, and remembers him (the memories of Panther):** still kneeling, holding him, crying softly, she
+   remembers. Their moments together play as her memories, intercut with her bowed over him: in-game moments of the two of them
+   (their first meeting in the cell, Panther's "free-range", the galley meal (seated correctly), his head in her lap, the Venus naming,
+   the guarding by the ramp, his cutaways aboard, the quiet passage reconnection, the Cattalus race, Juniper's street, the meadow
+   silhouette). **Dan may compile these himself:** use `Art/Video/panther_memories.mp4` if present (grayscale, any length up to ~60 s;
+   play it over her, with her sobs / breathing and `moon_transfer` low). Until then, Code builds the montage from fresh in-game
+   captures (correct poses only, every image through the gate) and **exports the raw clips to `Art/Video/memory_clips/`** (short
+   1920×1044 h264 clips, 3–6 s each, named by moment) so Dan can edit his own.
+4. **The archive takes her memories as she grieves:** as the memories play, the archive's light runs out along the floor conduits
+   to where she kneels and under them both: her lived testimony, Panther included, completes the record (no walking back, no
+   carry). **FIN_12 "Received" with every voice stays** (Dan: "I don't want to lose all the voices saying they are connected"):
+   Archive "Record complete." → the montage of every world with its line (QF30 19: the Scree, the Venus Guardian, the Caretaker,
+   the Keeper, the Machinist, Nela, Juniper) → back to her, still kneeling over him.
+   **The worlds' shots must not show 7 or Panther (Dan: "very careful"):** they're in the chamber at this moment, so every montage
+   shot is of the place and its people only. Reused sets / cameras / captures that include 7, Panther, the saucer with them, their
+   bike or their stand-ins are not allowed; hide them from those cameras or capture fresh shots without them. Add a gate check:
+   the "Received" montage frames contain no 7 / Panther renderers (and no Panther in the Cat-a-tron unless it's the old vision).
+5. **"You can rest now." is removed** (no voice in the chamber). The light simply begins to fall on her; she lifts her head toward it.
+   **The Voice moves into heaven** (Dan, see step 7, heaven_06).
+6. **A beam of light pulls them both up:** a column of pale, warm light falls on them (like the saucer's underside beam but softer,
+   no technical effects); she draws Panther close in her arms and they lift off the floor together, rising slowly, weightless (her
+   beam float; his small body held against her), the chamber, the archive and the Scree in the doorway falling away below, the light
+   filling the frame → white.
+7. **Heaven (new, all video, Dan makes it with Grok Imagine; colour):** opens on **Panther's eye opening**; 7, who has been crying all
+   this time, opens hers too, realises they're together in a new place, and her tears of sadness turn to tears of happiness; they play
+   as in the colour meadow; the camera rises, wider and wider: a beautiful sunrise over mountains, birds, wildlife. Clips (Dan, in
+   order): `Art/Video/color/heaven_01.mp4` … `heaven_06.mp4` (see the prompts in `Docs/MODELS-NEEDED.md` "Heaven"). Play them in
+   colour, cut together with soft dissolves, "Panther?" / "Hello." over the reunion (heaven_03), **the Voice (RestVoice) over
+   heaven_05–06 as the camera rises and they grow smaller in the frame** (Dan): "Well done, good and faithful servant! You were
+   faithful over a few things; I will put you in charge of many things. Share your master's joy." Slow, warm, unhurried, with the
+   large soft space round it; time it so the last words land as they're tiny in the wide sunrise shot, then hold before the credits; the meadow music (`cattalus_meadow`)
+   or `moon_transfer`'s ending, birdsong / wind / the purr (no lunar sound, QF30 22). **Stand-in until they exist:** the old colour
+   master from 0:17 (QF30 21). Then the credits as QF30 (on black, Kyle's art, the sign-off, Kyle's credit after it).
+
+### A2. Panther's sacrifice must be readable (repeat of QF30 12: say why it still didn't read)
+Dan: "you can't even tell what happens to him. It doesn't need to be gory but I also don't think we should hide it." Drop the cut-away
+at the impact. Show it, without gore (no blood, no wound, no piercing):
+- **Slow it down and hold the key frames:** the drill bearing down on 7's back (she's unaware) → "Seven!" → Panther growing as he
+  runs → his leap, side-on, all three in frame → **the moment of contact, shown**: the spinning drill strikes his flank / shoulder
+  mid-air (a brief slow-motion beat, ~0.5 s at reduced speed), a burst of sparks and rock dust off the drill, a heavy impact sound,
+  his body jolting with the blow → **he's thrown clear**, tumbling through the air past her, and hits the floor hard, sliding to a
+  stop on his side → **he doesn't get up**: he tries once to lift his head and can't; his breathing is laboured. The drill stalls
+  against nothing, Tunneler's rig staggers back from the force. Music cut dead on the contact; then only her voice and his breathing.
+- **7 sees it happen:** a close shot of her turning in time to see him hit (her face), then running to him.
+- Camera: wide enough that the player clearly sees **the drill hit Panther instead of her**. No graphic detail, but nothing hidden.
+- Then "The barrier." and the trap; then FIN_10.
+Captures of each beat from the cutscene camera.
+
+### B. The fight space (Dan: "too crowded")
+8. **Open the chamber up for the fight.** After the seven runes are placed and the release begins (FIN_06/07), **the rune pedestals
+   sink into the floor** (the runes staying set and glowing in flush sockets), and **the big central table / platform lowers flush**
+   into the floor as a shallow **light well** (the spec's "central archive surface or shallow light well"; it doesn't need to be a
+   raised table: she touches the archive at the well's rim; the release lights it). When **Tunneler breaks in (FIN_08)**, his drill
+   machine tears open the chamber's far wall onto **the mining cavern beyond**: a much larger, open, flat floor (his worked-out
+   excavation: drills, lights, spoil heaps at the edges), and the fight spills out into it: a wide arena with room to dodge and
+   circle, the chamber (the light well he's trying to reach) at one side. Keep the control stations (QF30 11) at the arena's edge.
+   Captures of the open room and the arena from the fight camera.
+9. **Each rune's vision repeats on its own screen.** In FIN_05, as she places each rune, **its vision plays on the wall screen /
+   projection panel for that world** (`vision_01` for the Moon … `vision_07` for Cattalus) and keeps looping there softly, so the
+   chamber fills with the seven visions. **The ocean (Europa) vision is blocked by a light beam:** move the beam or the screen so
+   every screen is clear from the player's view (gate check on each screen).
+
+### C. The stun window
+10. **Reaching Tunneler when he's stunned is too hard / impossible.** Make it effortless: when stunned, the rig settles **flush with
+    the floor** (its deck edge ≤ 0.3 m, a walk-on step, no jump needed), tilted toward her, and her melee reaches him from the deck
+    edge (a short lunge onto it when she attacks in range). The stun window ~6 s. Prove it with the player-style autopilot: stun →
+    reach → hits land **10 of 10 tries**, and from the player's camera.
+
+**Repeat items:** say why QF30 8 (the stun) didn't work in play. Never stop to ask; note decisions in TODO.md. Publish 1.0.0-rc3
+(rc2 stays as it is), write the QF31 status and "For Dan to check (QF31)", then go on with the rest of polish pass P1.
+
+## QF31 — status (2026-11-24): A, A2, B, C done; release 1.0.0-rc3 (build 1902, `game-1902`) — 1.0.0-rc2 (`game-1901`, tag `v1.0.0-rc2`) untouched
+New code: `Runtime/FinaleDirectorQF31.cs` (FIN_09 restaged, the grief + memories + the archive's light, FIN_12 reordered, the rise, heaven,
+the screens, the sinking room, the breach, the stun proof), `Runtime/ClipRecorder.cs` (`-memclips` raw clips / `-recstills` checked stills),
+`Runtime/FrameProbe.cs` (P1 4), `Editor/FightDemoBuilderFinaleQF31.cs` (the table as its own piece over a light well, the breach pieces, the
+mining cavern, the screen loops, the heaven / memories drop-ins), `Tools/Run-MemoryCaptures.ps1` + `Tools/Video/encode_memclips.py`.
+Changed: `TunnelerFight` / `TunnelerRig` / `ChapterSevenFight` / `BossFight` / `BossPilot` (reach to a big body's edge, the walk-on stun),
+`FinaleLayout` (the cavern, the arena, the controls between screens), `MusicSystem.Level`, `make_finale_lines.py` (cut lines, the Voice's new
+line), `generate_finale_voices.py --prune`, 4 new SFX (`seven_sob_soft`, `seven_breath_shaky`, `cat_breath_labored`, `drill_impact_heavy`).
+
+**Proof (1.0.0-rc3, muted, off-screen, `-testspeed 2`; I looked at the key captures - described below):**
+- **The whole finale** (`-fincp 1`, the release gate's run): FIN_02 -> the credits, soft-locks 0; **IMAGE GATE 203 shots, failed 0, NaN 0**;
+  `RECEIVED MONTAGE (QF31 4)`: the seven world stills 7 / Panther 0 each (three re-captured with them hidden, four kept - checked by eye),
+  the live city shots 7 / Panther visible 0 of 2; `SCREEN VIEW (QF31 9)`: every placement (shot + control back), all seven from three
+  places, five spots round the fight with the barrier's column lit - behind a light beam 0 everywhere; `STUN REACH (QF31 10)` in the real
+  fight: stuns 8, reached and hit 8 (first blow 0.8 s on average); VOICE OVERLAP 0, VOICE REPEAT 0, HAND IK LEFT ON 0, BODY vs PROPS 0,
+  NO NEXT STEP 0, POSE DRIFT 0, AUDIO CARRY 0, AUDIO AUDIT (heaven stand-in, its last image, the credits) 0 off the list, CREDITS 0 frames
+  with the world showing.
+- **`STUN TEST (QF31 10): 10/10`** (`-fincp 5 -stuntest 10`): ten stuns as a telekinetic hit gives them, from random spots 3-9 m round him,
+  the boss pilot plays her as a player (walks / runs in, strikes) - all ten reached and hit, first blow 1.0 s into the 6 s window on
+  average, no jump, 0 blows whiffed; the rig's near edge 0.01-0.02 m when settled; 20 captures from the player's camera (`stun_test_NN_a/b`).
+- **Build checks** (every build): STAGING MARKS Finale 0 of 16, DRILL AXIS Europa + Finale OK, HAND IK RELEASE 0 files without a release,
+  CONTROL RETURNS (the finale 0), PROMPTS 0, DUPLICATE LINES PASS, SURPRISE 0, SAUCER / HOLD CORRIDOR as before - no build check failing.
+- **Release gate** (`Tools/Run-ImageGate.ps1`, every chapter): **IMAGE GATE RELEASE (QF26 2): PASS** (`Builds/ImageGate/gate_1.0.0-rc3.txt`) -
+  no new or worse failure, NaN 0; and **the baseline shrank 58 -> 36**: the 22 baseline shots that passed in both rc2's and rc3's gate
+  runs were removed (Europa 18, Mars 2, the Moon 1, Venus 1) - P1 item 1.
+- **What the key shots show:** `f27c` the open chamber - the seven sockets flush rings on the floor, the table a glowing disc in the floor,
+  the seven screens lit with their visions; `f32b` the south wall torn open, the rig in the breach, the cavern's lamps beyond; `f36c` the fight
+  camera: 7 on a clear floor, the well behind her, Tunneler in the breach; `f40` Panther large in mid-air between her and the rig; `f41` the
+  burst of sparks round the drill with him on it; `f41a` her face; `f41b` him tumbling past her; `f50`/`f53` her bowed over him from in front;
+  `f51_*` the memory clips full screen; `f51b` the light pooled on the floor under them; `f55` her face lifted in the light; `f56` the column on
+  them both, wide; `f57` him held in her arms; `f58` the two rising, small in the light; stun shots - she stands on the settled rig's edge
+  striking him (`f37d`). Weak spots: `f41d` (he tries to lift his head) reuses QF30's lying pose, which reads as rolled half onto his back;
+  `f38b` (the conduit control damaged) is half-blocked by the rig's hull in this run.
+
+**Item by item**
+A. **The new ending order.** `Flow`: FIN_08 -> FIN_09 (A2) -> FIN_10 -> `Grieve` -> FIN_12 (`ReceivedQF31`) -> `RisenTogether` -> heaven -> credits.
+ 1. FIN_09: the trap, the lock, then (a cut - they're already there) the Scree crew round him, restraints on, and his last quip FIN_11_05b +
+    "We always have." FIN_11_05c right after the lock - nothing interrupts Panther's last moments.
+ 2. FIN_10 as QF30 (her hands on him, he shrinks as the life leaves him, "Panther, no!"), a soft sob added, the silence shorter (it flows into 3).
+ 3. **She grieves:** still kneeling, his head in her hands, bowed (the rest pose's bow 26 deg, soft sobbing - `seven_sob_soft` /
+    `seven_breath_shaky` every few seconds), `moon_transfer` low (`MusicSystem.Level` 0.45). The memories play intercut with her bowed over
+    him (four framings of her, alternating): `Art/Video/panther_memories.mp4` when it is in (made grayscale by the builder, played whole),
+    until then **Code's raw in-game clips** (`Art/Video/memory_clips/`, below), else the old stills.
+ 4. **The archive takes them:** as the memories play, the archive's light runs out of the well along the floor to where she kneels and
+    spreads under them both (`ArchiveLightToHer`); no walk back, no carry, no "Continue?". FIN_12: the Archive's "Record complete." over her
+    -> the Scree at their own city terminals -> every world with its voice (Venus' Guardian, the Caretaker, the Keeper, the Machinist, Nela,
+    Juniper) -> back to her, still kneeling over him -> "All connected archives have received it."
+    **No 7 / Panther in those shots:** three rc2 stills showed them (Venus: their bike; Mars: 7 between the kingdoms' people; Cattalus: the
+    race on the Cat-a-tron with their racers) - replaced by fresh captures with 7, Panther, their bike and the saucer hidden
+    (`-recstills`): Venus = the Guardian standing in the temple, Mars = the caretaker with the guards (reframed on them), Cattalus = Duchess
+    with the trophy in the square. Europa (the vision painting), the asteroid (the Machinist), the mothership (Nela) and the meadow (the old
+    vision on the Cat-a-tron - allowed) kept, checked by eye. **Gate check:** `RECEIVED MONTAGE (QF31 4)` - the stills' capture-time check
+    (`Resources/Finale/Received/received_check.json`: 7 / Panther renderers in frame after hiding, must be 0) + the live city shots checked
+    in the run (frustum + clear line to any renderer of 7 / Panther, must be 0).
+ 5. "You can rest now." removed (no voice in the chamber). The light simply begins to fall on her; she lifts her head toward it.
+ 6. A column of pale warm light falls on them both (from the oculus, the same soft additive light, no technical effects); she draws Panther
+    into her arms (the two-armed carry, palms under him), rises, and they lift off the floor together, weightless (her beam float, him held
+    against her), the chamber, the well and the Scree in the doorway falling away below as the camera tilts up after them; their silhouette
+    softens; the light fills the frame -> white. Every lunar sound fades and stops (QF30 22).
+ 7. **Heaven:** `HeavenQF31` plays Dan's six colour clips by name (`Art/Video/color/heaven_01..06.mp4`; the builder copies them, colour, every
+    grade off) with 1.2 s dissolves between two layers: "Panther?" / "Hello." over heaven_03 (0.8 s / ~4 s in), the purr, laughter as they run,
+    **the Voice (RestVoice, new line FIN_13_04)** timed from heaven_05 so its last words land ~2.8 s before heaven_06 ends (they are tiny in
+    the wide sunrise), the last frame held, `cattalus_meadow` + breeze + the purr, then the credits as QF30. **Stand-in (they are not in
+    yet):** the colour master from 17.6 s as QF30, the Voice placed to end 3.5 s before its held last image.
+
+A2. **Panther's sacrifice, shown** (`TheLeap`): the drill at her back (`f39`), her unaware (`f39b`), "Seven!" on him already running
+    (`f40a`), he grows mid-stride and leaps, side-on, all three in frame (`f40`) -> **contact, shown:** the spinning drill's tip meets his
+    flank mid-air (the leap is aimed at the measured tip), time slows to 0.22x for 0.5 s, sparks and rock dust burst off the drill, a heavy
+    blunt impact (new `drill_impact_heavy` + `land_hard`), his body jolts, the music cut dead on it (`f41`) -> her face as she sees it
+    (`f41a`, an animated turn - she started turning at his cry) -> he is thrown clear, tumbling past her (~1 m from her), hits the floor hard
+    and slides to a stop on his side, still large (`f41b`, `f41c`) -> he tries once to lift his head toward her and can't; two laboured
+    breaths (`cat_breath_labored`, `f41d`). The drill stalls, the rig staggers back nose-up. She runs to him; "The barrier."; the trap.
+    No blood, no wound, nothing pierces him.
+    **Why QF30's version didn't read:** the cut to black came on the frame BEFORE contact (the drill never touched him on screen); back from black he was already falling with no link to the drill (no contact frame, no sparks, no impact - the drill's sound was CUT, which reads as silence, not a hit); and the leap was framed so wide the drill and he were small. So it read as "he jumped and fell".
+
+B8. **The fight space.** When the release begins (FIN_07) the seven pedestals sink flush into the floor (the runes stay set and glowing in
+    their cups) and the archive's table lowers into the floor as a shallow light well (12 cm down, its rim a ring of light; she touches it
+    from the rim later) - the open floor is clear (`f27b`, `f27c`). FIN_08: his rig tears the chamber's south wall open (the two panels round
+    the old access + its lintel burst in as rubble that lies loose to be thrown) onto **the mining cavern** beyond: 41 x 29 m of flat
+    worked-out floor, rough rock walls and roof, spoil heaps along the walls, two parked drill carts, four light masts with work lamps
+    (`f32b`). The fight spills out into it: his arena is the chamber's floor (the well kept clear) + the breach + the cavern
+    (`FinaleLayout.ClampArena`), throwables in both; the two control stations stay at the chamber's edge. Captures from the fight camera
+    (`f36c`, `f36d`).
+B9. **Each rune's vision on its own screen:** as each rune goes in, its vision (a 480 px grayscale loop made by the builder) starts on that
+    world's screen and keeps looping there, muted - the chamber fills with the seven visions. **Europa's screen was blocked by the barrier
+    control's light column** (the place-to-go beam at 118.8 deg stood in front of Europa's screen at 102.9 deg seen from the south - the
+    fight's side). The barrier's control now stands midway between Europa's and Mars's screens (128.6 deg); the conduit's stays at rc2's place (294 deg - no
+    screen behind its column); the three wall drills moved into free gaps between screens (231, 334, 26 deg) - two had ended up over the controls. Gate check `SCREEN VIEW
+    (QF31 9)`: every lit screen from the placement shot, the control-back view, three views of all seven, and five spots round the fight with
+    the barrier's column on - points behind a light beam must be 0.
+C10. **The stun.** Stunned, the rig swings to face her and settles flush on the floor (hull at the floor, tilted 12 deg toward her: its near
+    edge 0.01-0.02 m), the rim obstacle is off and the whole rig is walkable - she walks straight on; her blows are measured to his body's
+    edge (`ReachPad` = rim - 0.5 m) and her lunge closes onto it; the window 6.0 s. `STUN TEST (QF31 10): 10/10`.
+    **Why QF30 8 didn't work in play:** two faults stacked. (1) Her blows were measured to the rig's CENTRE (punch reach 1.9 m, kick 2.2 m) while its rim (a Ground obstacle at 2.35 m) stopped her - from the floor no blow could ever land; the only way was a jump onto a deck 0.78 m up inside that rim, and the rim obstacle lifted only while her fight hop ran, so a jump from slightly too far (or a run-up) hit the rim and dropped back. The autopilot hopped from a measured spot at the exact moment (5 landings in the QF30 proof) - a player doesn't. (2) Found by QF31's stun test: during the fight the chamber's north band (`ChamberN`, by the doorway) was switched OFF for her (so she couldn't be driven out) while his arena still reached into it - stunned up there he was simply out of her reach, she stopped at an invisible line 1.2 m from his rim. Now: reach is measured to his body's edge (`ReachPad`), the stunned rig settles flush and is walked onto, only the door's own zone closes, and his arena is clamped to floor she can walk on (`FinaleLayout.NearestWalkable`), his rim ~1 m clear of the well's ring.
+
+### QF31 — decisions made (Code; Dan can change any of them)
+- **Lines cut** (Dan's rework drops their moments): FIN_11_01-05 (the worker's exchange after his death), FIN_11_05a ("You're staying with me."),
+  FIN_11_06 / 06b / 07 / 08 (the Archive's "Continue?", "Yes.", "All of it."), FIN_13_01 / 03 ("We'll look after him." / "Thank you." - she
+  takes him with her). Their audio removed (`generate_finale_voices.py --prune`). FIN_11_05b / 05c moved to FIN_09 (after the lock).
+- **FIN_13_04 (RestVoice) re-voiced** with Dan's new line ("Well done, good and faithful servant! ...", ~14 s, multilingual v2, slow).
+- **FIN_12's order:** "Record complete." first (over her), the montage, then "All connected archives have received it." over her as the return.
+- **The stun window 6.0 s** (was 4.8); the rig settles flush (hull at the floor, tilted 12 deg toward her) - its near edge ~0.13 m.
+- **Memory montage (stand-in):** Code's ten raw clips, 4.6 s each (a long clip plays its last moments), her bowed over him between every two.
+  mem_04 (his head in her lap) is the QF30 still as a slow push-in (`_STILL` in its name) - the lap capture fell outside the run.
+- **The meadow memory** (mem_10) is cut from Dan's own grey meadow clip (19.4-25.0 s, the giant beside her).
+- **Received stills:** Cattalus = Duchess with the trophy in the square (no line, as before); Mars reframed on the caretaker and guards.
+- **The cavern** sits beyond the south wall (x -9..32, z -206..-177): the fight's "chamber at one side" with the light well he goes for.
+
+## For Dan to check (QF31)
+1. **FIN_09:** do you now clearly see the drill hit Panther instead of her (the slow beat, sparks, him thrown past her, unable to rise)?
+2. **Her grief and the memories** (FIN_10 -> FIN_12): the pacing, her crying, `moon_transfer` low; the montage is Code's in-game clips until
+   your edit is in - drop `Art/Video/panther_memories.mp4` (any length to ~60 s) and rebuild. Raw clips for your edit: `Art/Video/memory_clips/`.
+3. **The archive's light** reaching her and spreading under them both; "Received" with every voice - no 7 or Panther in those shots.
+4. **The rise:** the column of light on them both, him in her arms, rising together -> white.
+5. **Heaven:** drop `Art/Video/color/heaven_01.mp4 ... heaven_06.mp4` and rebuild - they play by name with dissolves, the Voice over 05-06.
+   Until then the colour master from 17.6 s with the Voice near its end.
+6. **The fight space:** the pedestals and table sinking, the wall torn open, the fight out in the cavern - roomy enough?
+7. **The stun:** throw something, then simply walk onto the settled rig's edge and hit him (no jump). Is ~6 s right?
+8. **The screens:** each rune's vision looping on its own screen; Europa's clear.
+9. The new SFX (her sobs, his laboured breaths, the impact) and the Voice's take.
+
+## Polish pass P1: after QF30, Code's own list (Dan, 2026-11-23: "after this is done, Code can do whatever else it needs to do. I just want a good version I can show") — partly done (status below); 1.0.0-rc3 published
 **Protect the showable build first:** QF30's 1.0.0-rc2 (published 2026-11-23 as `game-1901`, git tag `v1.0.0-rc2`) stays published and untouched as the version Dan shows (tag it; never
 overwrite or delete it). Everything below goes into later builds (1.0.0-rc3 …) and must not break what rc2 does.
 1. The deferred items: QF29 item 3 (shrink the image-gate baseline with real fixes: the dark Moon prison frames, the near-threshold
@@ -11,6 +212,31 @@ overwrite or delete it). Everything below goes into later builds (1.0.0-rc3 …)
 4. Performance: frame time in each chapter's heaviest scene on Dan's PC settings; fix hitches over ~50 ms.
 5. Publish 1.0.0-rc3 only if it passes everything rc2 does and more; write a short "what changed since rc2" for Dan.
 Never stop to ask; note decisions in TODO.md.
+
+## Polish pass P1 — status (2026-11-24): items 1 (part), 4 (part), 5 done with 1.0.0-rc3; 2 and 3 not done - why below
+1. **The image-gate baseline: 58 -> 36** - the 22 baseline shots that passed in BOTH rc2's and rc3's full gate runs were removed (Europa 18:
+   the dive / pressure chamber / barriers / the base walk-in sequence / the riding camera; Mars 2; the Moon's terrace passage; Venus's riding
+   camera). Thresholds untouched, nothing exempted. **Not done:** the dark Moon prison frames (still 7 baseline shots in the Moon run), the
+   asteroid's 6 and the mothership's 11. **Determinism (QF29 2): not achieved** - unchanged since rc1 (real-time clocks remain); two gate
+   runs in a row nonetheless gave the same verdicts for every baseline shot above. **Europa past the ice passage:** not re-tested beyond the
+   gate's Europa run (checkpoint 0) - its 18 shots passing twice are all from that run.
+2. **Open / known items in the statuses: not worked through** this round (QF31 took it). Settled by QF31: Round 19's weak spots "the carry
+   in FIN_11 shows her more than him" (the carry is gone), "the FIN_12 montage uses stills ... (no live sets)" (three re-captured, checked),
+   "the inpainted first-meeting memory" (the montage is clips now). Still listed: CONTROL RETURNS (QF30 17) has 1 place outside the finale
+   (`Docs/Previews/qf30/control_returns.txt`); FIN_01's blocky host pieces; Panther's lap pose against her knees.
+3. **A full player-style run of the whole game (start to credits, both race outcomes): not done.** At `-testspeed 2` the chapters' own
+   player-style runs add up to well over an hour of game time, far past the 20-minute testing rule (CLAUDE.md rule 4) - it needs Dan's OK
+   as an investigation. What rc3 has instead: the release gate's run of every chapter's opening + the WHOLE finale, the stun test, and the
+   memory-capture runs (Chapter 1's cell, the galley, Venus B01 + its temple, Mars's temple, the mothership's quiet passage, Cattalus's
+   square + the race): soft-locks 0 in all of them.
+4. **Frame time:** new `FrameProbe` logs `FRAME TIME (P1 4) <scene>` in every check run (real frame time, capture frames left out; check runs
+   are minimized at Below Normal, so an upper bound). From rc3's gate runs: median 2.6-4.7 ms everywhere except Venus (16.7 ms, p95 25.6);
+   hitches over 50 ms: the Saucer's first 2 s after loading (130-870 ms, shader / asset warm-up), Europa 1 (371 ms), the asteroid 3, the
+   mothership 2, Chapter 1 3, Mars 1 (53 ms), Cattalus 0. **Fixed:** the seven screen videos that stalled the finale (VideoPlayers ->
+   frame loops) and the memory montage's clip loads (the next clip prepared while one plays). **Not fixed:** the saucer's load warm-up, Venus's
+   frame time (the grass?) and the finale's spikes near the crossing (67 s, 120-180 ms) - next.
+5. **1.0.0-rc3 published** (`game-1902`, Latest; rc2 `game-1901` retained). What changed since rc2: QF31 above (the release notes say it in
+   public words: "the ending reworked", never Kyle's credit).
 
 ## Quick fix QF30: Dan's 1.0.0-rc1 review: the ending (Dan, 2026-11-23) — items 1-24 done, status below; release 1.0.0-rc2
 Dan: "the end is mostly good but I have a few fixes."

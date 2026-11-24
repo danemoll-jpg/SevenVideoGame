@@ -85,6 +85,8 @@ namespace Seven
             if (Workers != null) foreach (var w in Workers) if (w != null) ex.Add(w.transform);
             foreach (var t in new[] { GuideLight, Tunneler, TunnelerCraft, Dodecahedron, PowerLever, GateLockT, GateLeaf, DoorLeafL, DoorLeafR, BarrierField, Lock }) if (t != null) ex.Add(t);
             if (Sockets != null) foreach (var t in Sockets) if (t != null) ex.Add(t);
+            if (ArchivePlatform != null) ex.Add(ArchivePlatform);                                   // QF31 (8): it lowers into the floor
+            if (BreachPieces != null) foreach (var t in BreachPieces) if (t != null) ex.Add(t);   // QF31 (8): torn out in FIN_08
             if (WallDrills != null) foreach (var t in WallDrills) if (t != null) ex.Add(t);          // QF30 (6): they spin
             if (Crew != null) foreach (var c in Crew) if (c != null) ex.Add(c.transform);
             CameraOccluders.IncludeHuge = true;
@@ -133,8 +135,10 @@ namespace Seven
             // Tunneler's drill (QF30 5: the shared DrillHead - about the cone's own axis, never reversing) and his rig at rest
             TickRig();
             Ground.Obstacles.Clear();
-            Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(L.PlatformAt.x, L.PlatformAt.z), R = L.PlatformR + 0.3f });
-            if (Sockets != null) foreach (var s in Sockets) if (s != null) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(s.position.x, s.position.z), R = 0.6f });
+            // QF31 (8): once the release begins the table is a light well (its rim kept clear) and the pedestals are flush (walk over them)
+            Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(L.PlatformAt.x, L.PlatformAt.z), R = _sunk ? L.WellR + 0.05f : L.PlatformR + 0.3f });
+            if (Sockets != null && !_sunk) foreach (var s in Sockets) if (s != null) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(s.position.x, s.position.z), R = 0.6f });
+            if (_breached) foreach (var o in L.CavernProps) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(o.x, o.y), R = o.z });
             foreach (var w in new[] { Worker, Elder }) if (w != null && w.gameObject.activeInHierarchy) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(w.transform.position.x, w.transform.position.z), R = 0.45f });
             // QF30 (7): Tunneler's rig is solid - she (and Panther, who walks the same ground) stops at its rim; only while it sits on the
             // floor after a stun may she jump up onto its deck (item 8)
@@ -142,7 +146,8 @@ namespace Seven
             {
                 var c = TunnelerCraft.position; bool onDeck = Rig.DeckZone != null && Rig.DeckZone.Enabled && Flat(P7 - c).magnitude < Rig.DeckR + 0.1f;
                 bool hop = Seven.InFight && Seven.Act == ChapterSeven.FightAct.Hop;
-                if (!onDeck && !hop) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(c.x, c.z), R = Rig.Radius });
+                bool walkOn = Rig.WalkOn && Rig.DeckZone != null && Rig.DeckZone.Enabled;                // QF31 (10): settled flush - she walks straight on
+                if (!onDeck && !hop && !walkOn) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(c.x, c.z), R = Rig.Radius });
             }
             // QF30 (11): the controls are solid too
             foreach (var cp in new[] { L.BarrierControl, L.ConduitAt }) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(cp.x, cp.z), R = 0.62f });

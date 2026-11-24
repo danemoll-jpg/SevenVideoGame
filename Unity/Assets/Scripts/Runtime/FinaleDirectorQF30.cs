@@ -157,7 +157,8 @@ namespace Seven
             if (_plug.Count > 0) return;
             for (int i = 0; i < 16; i++)
             {
-                var go = new GameObject("AccessRubble" + i); go.AddComponent<MeshFilter>().sharedMesh = Markers.Rock(300 + i, new Vector3(0.9f, 0.7f, 0.8f) * Random.Range(0.7f, 1.2f)); go.AddComponent<MeshRenderer>().sharedMaterial = RockMat();
+                // QF31 (8): smaller stones (rc2's 0.9 m blocks, flung far in, carpeted the fight's floor)
+                var go = new GameObject("AccessRubble" + i); go.AddComponent<MeshFilter>().sharedMesh = Markers.Rock(300 + i, new Vector3(0.6f, 0.46f, 0.52f) * Random.Range(0.75f, 1.1f)); go.AddComponent<MeshRenderer>().sharedMaterial = RockMat();
                 go.transform.position = L.MiningAccess + new Vector3(-2.4f + (i % 4) * 1.6f, 0.5f + (i / 4) * 1.15f, -0.6f + Random.Range(-0.2f, 0.2f)); go.transform.rotation = Random.rotation;
                 _plug.Add(go.transform);
             }
@@ -168,7 +169,7 @@ namespace Seven
         IEnumerator BurstPlug()
         {
             var vel = new List<Vector3>();
-            foreach (var p in _plug) vel.Add(new Vector3(Random.Range(-3f, 3f), Random.Range(1.5f, 4f), Random.Range(5f, 9f)));
+            foreach (var p in _plug) vel.Add(new Vector3(Random.Range(-2.5f, 2.5f), Random.Range(1.2f, 3f), Random.Range(1.8f, 4.5f)));   // QF31 (8): they tumble in near the breach, not across the floor
             for (float t = 0f; t < 1.6f; t += Time.deltaTime)
             {
                 for (int i = 0; i < _plug.Count; i++)

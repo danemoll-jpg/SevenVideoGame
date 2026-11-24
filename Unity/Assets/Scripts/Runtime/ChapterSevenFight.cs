@@ -330,7 +330,7 @@ namespace Seven
                 foreach (var s in FightTargets())
                 {
                     if (s == null || s.IsOut) continue;
-                    var to = Flat(s.transform.position - transform.position); float d = to.magnitude;
+                    var to = Flat(s.transform.position - transform.position); float d = to.magnitude - (s is BossFight sbf ? sbf.ReachPad : 0f);
                     float ang = Vector3.Angle(Flat(transform.forward), to);
                     var mv = MoveInput(out _);
                     if (mv.sqrMagnitude > 0.1f) ang = Mathf.Min(ang, Vector3.Angle(mv, to));    // or where she is steering
@@ -340,7 +340,8 @@ namespace Seven
         }
 
         static Vector3 Flat(Vector3 v) { v.y = 0f; return v; }
-        float Dist(IFightTarget s) => Flat(s.transform.position - transform.position).magnitude;
+        static float Pad(IFightTarget t) => t is BossFight b ? b.ReachPad : 0f;
+        float Dist(IFightTarget s) => Flat(s.transform.position - transform.position).magnitude - Pad(s);
         void FaceTarget(float deg) { if (_target != null) FaceTowards(_target.transform.position, deg); }
         void ToFightIdle() { Freeze(false); Act = FightAct.Idle; Play("fight_idle", 0.12f); }
 
@@ -369,7 +370,7 @@ namespace Seven
                 var to = Flat(_target.transform.position - transform.position);
                 float ang = Vector3.SignedAngle(Flat(transform.forward), to, Vector3.up);
                 transform.rotation = Quaternion.AngleAxis(Mathf.Clamp(ang, -AssistCone, AssistCone), Vector3.up) * transform.rotation;
-                float d = to.magnitude; if (d > 1.15f && d < AssistRange) Slide(to.normalized, Mathf.Min(d - 1.05f, 1.2f), 0.12f);
+                float d = to.magnitude - Pad(_target); if (d > 1.15f && d < AssistRange) Slide(to.normalized, Mathf.Min(d - 1.05f, 1.2f), 0.12f);   // QF31 (10): the lunge closes onto a big body's rim
             }
             float hit = state == "finisher" ? FinisherHit : HitOf(state);
             _curBlow = state; _curHit = hit;
@@ -384,7 +385,7 @@ namespace Seven
             FightTimings.Add($"{LastBlow} button->active {Time.time - _blowPressed:0.000}s");
             if (_target == null) return;
             var to = Flat(_target.transform.position - transform.position);
-            if (to.magnitude > (IsKick(LastBlow) ? 2.2f : IsBlade(LastBlow) ? 2.5f : 1.9f)) return;      // the blades reach further      // whiffed - out of reach (kicks reach a little further)
+            if (to.magnitude - Pad(_target) > (IsKick(LastBlow) ? 2.2f : IsBlade(LastBlow) ? 2.5f : 1.9f)) { if (_target is BossFight wb) wb.Whiffs++; return; }   // QF31 (10): measured to his body's edge      // the blades reach further      // whiffed - out of reach (kicks reach a little further)
             if (_target.TakeBlow(to.normalized, takedown))
             {
                 HitsLanded++; FightEvent?.Invoke(takedown ? "takedown_landed" : "hit");

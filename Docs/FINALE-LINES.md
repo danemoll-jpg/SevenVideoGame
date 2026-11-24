@@ -148,18 +148,8 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 
 | id | speaker | line | direction |
 |---|---|---|---|
-| `FIN_11_01` | Scree worker | Seven? | Quiet, uncertain |
-| `FIN_11_02` | 7 | I’m here. | Worn, steadying herself |
-| `FIN_11_03` | Scree worker | The drilling has stopped. He can’t reach the controls. | Gentle report |
-| `FIN_11_04` | 7 | Good. |  |
-| `FIN_11_05` | Scree worker | We’re coming down. |  |
-| `FIN_11_05a` | 7 | You're staying with me. | Softly, to him |
 | `FIN_11_05b` | Tunneler | Fine. Keep your history. You'll still need someone to run the drills. | Sneering, still sure of himself |
 | `FIN_11_05c` | Scree elder | We always have. | Calm, not gloating |
-| `FIN_11_06` | Archive | Continue? | Quiet |
-| `FIN_11_06b` | Archive | Continue? | Softer |
-| `FIN_11_07` | 7 | Yes. | A pause, then certainty |
-| `FIN_11_08` | 7 | All of it. |  |
 
 ## FIN_12 — Received
 
@@ -181,9 +171,7 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 
 | id | speaker | line | direction |
 |---|---|---|---|
-| `FIN_13_01` | Scree worker | We’ll look after him. | Gentle promise |
-| `FIN_13_03` | 7 | Thank you. | Softly |
-| `FIN_13_04` | (the voice) | You can rest now. | Deep, warm, gentle authority |
+| `FIN_13_04` | (the voice) | Well done, good and faithful servant! You were faithful over a few things; I will put you in charge of many things. Share your master's joy. | Deep, warm, slow and unhurried, loving, with a large soft space round it |
 
 ## FIN_14 — Somewhere to come back to
 

@@ -86,7 +86,7 @@ namespace Seven.EditorTools
             foreach (var z in F.Zones)
             {
                 if (z.Name == "GateZ" || z.Name == "DoorZ" || z.Name.StartsWith("Chamber")) continue;   // the chamber's floor is one round slab (below)
-                MGround("Ground_" + z.Name, new Vector3(z.X0, F.Y - 0.5f, z.Z0), new Vector3(z.X1, F.Y, z.Z1), z.Name == "Crossing" ? m.grate : z.Name == "Landing" || z.Name == "Alcove" ? m.ancient : m.metal, world);
+                MGround("Ground_" + z.Name, new Vector3(z.X0, F.Y - 0.5f, z.Z0), new Vector3(z.X1, F.Y, z.Z1), z.Name == "Crossing" ? m.grate : z.Name == "Landing" || z.Name == "Alcove" ? m.ancient : z.Name == "Cavern" || z.Name == "Breach" ? m.rock : m.metal, world);
             }
             MGround("Ground_GateZ", new Vector3(9.6f, F.Y - 0.5f, -121.6f), new Vector3(13.4f, F.Y, -118.8f), m.metal, world);
             MGround("Ground_DoorZ", new Vector3(9.4f, F.Y - 0.5f, -151.2f), new Vector3(13.6f, F.Y, -140.4f), m.ancient, world);
@@ -174,6 +174,7 @@ namespace Seven.EditorTools
             var chamber = new GameObject("ArchiveChamber").transform; chamber.SetParent(world, false);
             var ak = new AK();
             var c0 = F.ChamberC; var proj = new List<Renderer>(); var sockets = new List<Transform>(); var socketLights = new List<Renderer>();
+            var breachPanelAt = new List<(Vector3 p, float a)>();
             { var (v, t) = ak.Of(stoneDark);
               // the wall: 32 dressed panels round the circle, openings at the entrance (north), the mining access (south) and the alcove (east)
               for (int i = 0; i < 32; i++)
@@ -182,25 +183,31 @@ namespace Seven.EditorTools
                   bool north = a < 12f || a > 348f, south = a > 168f && a < 192f, east = a > 79f && a < 101f;
                   if (north || south || east) continue;
                   var p = c0 + new Vector3(Mathf.Sin(r) * (F.ChamberR + 0.4f), F.ChamberH * 0.5f, Mathf.Cos(r) * (F.ChamberR + 0.4f));
+                  if (F.BreachPanels.Any(b => Mathf.Abs(b - a) < 1f)) { breachPanelAt.Add((p, a)); continue; }   // QF31 (8): built on their own (his rig tears them out)
                   MBox(v, t, p, new Vector3(2.9f, F.ChamberH, 0.8f), a, 0.03f);
               }
               // over the openings: lintels; the ceiling ring with its oculus (the pale light falls through it in FIN_13)
-              foreach (var a in new[] { 0f, 90f, 180f }) { float r = a * Mathf.Deg2Rad; MBox(v, t, c0 + new Vector3(Mathf.Sin(r) * (F.ChamberR + 0.4f), F.ChamberH - 1.6f, Mathf.Cos(r) * (F.ChamberR + 0.4f)), new Vector3(5.4f, 3.2f, 0.9f), a, 0.03f); }
+              foreach (var a in new[] { 0f, 90f }) { float r = a * Mathf.Deg2Rad; MBox(v, t, c0 + new Vector3(Mathf.Sin(r) * (F.ChamberR + 0.4f), F.ChamberH - 1.6f, Mathf.Cos(r) * (F.ChamberR + 0.4f)), new Vector3(5.4f, 3.2f, 0.9f), a, 0.03f); }
+              breachPanelAt.Add((c0 + new Vector3(0f, F.ChamberH - 1.6f, -(F.ChamberR + 0.4f)), 1000f));   // the access's lintel goes with the breach (QF31 8)
               Append(v, t, Lathe(new[] { new Vector2(F.ChamberR + 1.2f, F.ChamberH), new Vector2(3.6f, F.ChamberH + 2.2f), new Vector2(3.4f, F.ChamberH + 2.6f), new Vector2(F.ChamberR + 1.2f, F.ChamberH + 0.6f) }, 0f, 360f, 48, null, c0));
               // the floor: one round slab inside the wall (out to the mining access and the alcove)
-              { var (flv, flt) = ak.Of(stone); Append(flv, flt, Lathe(new[] { new Vector2(0f, 0f), new Vector2(F.ChamberR + 0.6f, 0f), new Vector2(F.ChamberR + 0.6f, -0.5f), new Vector2(0f, -0.5f) }, 0f, 360f, 48, null, c0)); }
+              { var (flv, flt) = ak.Of(stone); Append(flv, flt, Lathe(new[] { new Vector2(F.WellR, -0.6f), new Vector2(F.WellR, 0f), new Vector2(F.ChamberR + 0.6f, 0f), new Vector2(F.ChamberR + 0.6f, -0.5f), new Vector2(F.WellR + 0.02f, -0.6f) }, 0f, 360f, 48, null, c0)); }   // QF31 (8): an annulus - the archive's table lowers into the hole (the light well)
               // the rim of the floor and the platform (stepped, the archive surface on top)
               // QF30 (4): the platform's base stays inside PlatformR + 0.3 (the 1.0.0-rc1 skirt out to +1.2 m swallowed her feet, Panther
               // and where she laid him - Ground's obstacle circle stopped them at +0.55, inside the visible skirt)
-              Append(v, t, Lathe(new[] { new Vector2(0f, F.PlatformH), new Vector2(F.PlatformR, F.PlatformH), new Vector2(F.PlatformR + 0.12f, F.PlatformH - 0.08f), new Vector2(F.PlatformR + 0.12f, F.PlatformH - 0.2f), new Vector2(F.PlatformR + 0.04f, 0.26f), new Vector2(F.PlatformR + 0.24f, 0.1f), new Vector2(F.PlatformR + 0.3f, 0f) }, 0f, 360f, 40, null, c0)); }
+              }
+            // QF31 (8): the archive's table is its own piece now (it lowers flush into the floor as a shallow light well once the release begins)
+            var platform = BuildArchivePlatform(c0, stoneDark, soft, chamber, out var wellRim);
             // mining dust and rubble over the old floor; the barrier alcove's frame; the mining access passage's mouth
             { var (dv, dt) = ak.Of(dust); var rnd = new System.Random(19); for (int i = 0; i < 70; i++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, r = 4f + (float)rnd.NextDouble() * 9.4f; Ellipsoid(dv, dt, c0 + new Vector3(Mathf.Sin(a) * r, 0.0f, Mathf.Cos(a) * r), new Vector3(0.5f + (float)rnd.NextDouble() * 0.9f, 0.035f, 0.4f + (float)rnd.NextDouble() * 0.8f), 3, 14); } }
             { var (v, t) = ak.Of(m.metalDark); MBox(v, t, F.BarrierAt + new Vector3(0f, 4.6f, 0f), new Vector3(1.2f, 0.8f, 6.4f), 0f, 0.02f); foreach (var sz in new[] { -3.1f, 3.1f }) MBox(v, t, F.BarrierAt + new Vector3(0f, 2.5f, sz), new Vector3(1.0f, 5f, 0.5f), 0f, 0.02f); MBox(v, t, F.BarrierAt + new Vector3(2.2f, 2.5f, 0f), new Vector3(0.6f, 5f, 6.4f), 0f, 0.02f); }
-            { var (v, t) = ak.Of(m.rockDark); foreach (var sx in new[] { -3.2f, 3.2f }) MBox(v, t, F.MiningAccess + new Vector3(sx, 2.6f, -1.5f), new Vector3(1.4f, 5.2f, 5f), 0f, 0.1f); MBox(v, t, F.MiningAccess + new Vector3(0f, 5.6f, -1.5f), new Vector3(7.6f, 1.2f, 5f), 0f, 0.1f); }
             ak.Save("Chamber", chamber, false);
+            // QF31 (8): the wall panels his rig tears out + the mining cavern beyond (the fight spills into it)
+            var breach = BuildBreach(breachPanelAt, stoneDark, chamber);
+            BuildMiningCavern(m, dust, world);
             // the archive surface (a shallow light well), the conduits from the sockets, the conduit he damages
             var surf = new List<Vector3>(); var surfT = new List<int>(); surf.AddRange(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(F.PlatformR - 0.15f, 0.01f) }, 0f, 360f, 32, null, Vector3.zero).vertices); surfT.AddRange(Lathe(new[] { new Vector2(0f, 0.01f), new Vector2(F.PlatformR - 0.15f, 0.01f) }, 0f, 360f, 32, null, Vector3.zero).triangles);
-            var surface = MeshObject("ArchiveSurface", SaveMesh(SmoothFinish(surf, surfT), "Fin_ArchiveSurface"), new Material(soft) { name = "Fin_archive_surface" }, chamber, false); surface.transform.position = c0 + Vector3.up * F.PlatformH;
+            var surface = MeshObject("ArchiveSurface", SaveMesh(SmoothFinish(surf, surfT), "Fin_ArchiveSurface"), new Material(soft) { name = "Fin_archive_surface" }, platform, false); surface.transform.position = c0 + Vector3.up * F.PlatformH;
             var cond = new List<Vector3>(); var condT = new List<int>();
             for (int i = 0; i < 7; i++) { var s = F.Socket(i); Sweep(cond, condT, new[] { s + Vector3.up * 0.03f, Vector3.Lerp(s, c0, 0.5f) + Vector3.up * 0.03f, c0 + Flat(s - c0).normalized * (F.PlatformR + 0.32f) + Vector3.up * 0.03f }, 0.06f, false, 5); }
             var conduit = MeshObject("ArchiveConduits", SaveMesh(SmoothFinish(cond, condT), "Fin_ArchiveConduits"), new Material(soft) { name = "Fin_conduits" }, chamber, false);
@@ -352,6 +359,8 @@ namespace Seven.EditorTools
             d.Rig = rig; d.WallDrills = wallDrills.ToArray(); d.Crew = crew.ToArray();
             d.BarrierFrameLines = barrierFrameLines; d.BarrierLines = barrierConsole.lines; d.ConduitLines = conduitConsole.lines; d.ConduitNode = conduitConsole.node; d.ConduitConsoleT = conduitConsole.root;
             d.PowerCable = powerCable; d.BarrierCable = barrierCable;
+            d.ArchivePlatform = platform; d.WellRim = wellRim; d.BreachPieces = breach;                      // QF31 (8)
+            d.VisionLoops = VisionLoops(); d.Heaven = HeavenClips(); d.MemoriesVideo = MemoriesVideo(); d.MemoryClips = MemoryClipsIn();   // QF31 (9 / A)
             StagingMarksCheck();
             d.Visions = visions; d.MeadowGray = meadow; d.MeadowColour = colour;
             d.Memories = Directory.GetFiles(Path.Combine(ProjectRoot, "Assets/Resources/Finale/Memories"), "*.png").OrderBy(x => x).Select(p => (Texture)AssetDatabase.LoadAssetAtPath<Texture2D>("Assets/Resources/Finale/Memories/" + Path.GetFileName(p))).Where(x => x != null).ToArray();

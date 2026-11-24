@@ -179,6 +179,11 @@ namespace Seven
         /// <summary>QF17: -bossidle = the idle test - in a boss fight nobody presses anything (he must put her down within ~60 s),
         /// the run ends at her first knockdown. -bosscheck = the boss check: a run stops right after the fight.</summary>
         public static bool BossIdle { get; private set; }
+        /// <summary>QF31 (10): the stun-reach proof - n forced stuns in the Moon finale's fight, the pilot walks in and strikes each time.</summary>
+        public static int StunTest { get; private set; }
+        /// <summary>QF31: capture spec for raw memory clips / montage stills ("shot=name:secs,..."; see ClipRecorder).</summary>
+        public static string MemClips { get; private set; }
+        public static string RecStills { get; private set; }
         public static bool BossCheck { get; private set; }
         /// <summary>QF17: -bossnovice = the pilot plays like a first-time player (the first-time fight length).</summary>
         public static bool BossNovice { get; private set; }
@@ -278,6 +283,9 @@ namespace Seven
                 if (args[i] == "-noqf29fix") NoQF29Fix = true;
                 if (args[i] == "-nodeterministic") NoDeterministic = true;
                 if (args[i] == "-bossidle") { BossIdle = true; BossCheck = true; }
+                if (args[i] == "-stuntest" && i + 1 < args.Length && int.TryParse(args[i + 1], out var stn)) { StunTest = stn; BossCheck = true; }
+                if (args[i] == "-memclips" && i + 1 < args.Length) MemClips = args[i + 1];
+                if (args[i] == "-recstills" && i + 1 < args.Length) RecStills = args[i + 1];
                 if (args[i] == "-bosscheck") BossCheck = true;
                 if (args[i] == "-bossnovice") BossNovice = true;
                 if (args[i] == "-bossdownonce") BossDownOnce = true;

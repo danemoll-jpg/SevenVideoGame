@@ -52,7 +52,7 @@ namespace Seven
         bool _stopped;
         void Update()
         {
-            if (!_stopped && DemoBoot.StopAfter > 0f && Time.time > DemoBoot.StopAfter) { _stopped = true; Finish($"stopped after {DemoBoot.StopAfter:0} s of game time (-stopafter)"); }
+            if (!_stopped && DemoBoot.StopAfter > 0f && Time.time > DemoBoot.StopAfter && !ClipRecorder.Recording) { _stopped = true; Finish($"stopped after {DemoBoot.StopAfter:0} s of game time (-stopafter)"); }
             if (_cam != null) WatchControl();
             AudioListener.GetOutputData(_buf, 0);
             foreach (var v in _buf) _peak = Mathf.Max(_peak, Mathf.Abs(v));
@@ -67,9 +67,11 @@ namespace Seven
             Chapter1State.ShotCount++;
             var file = $"{Chapter1State.ShotCount:00}_{name}.png";
             QF30Watch.BeforeShot(file);                                           // QF30 (4): limbs through props
+            FrameProbe.CaptureFrame = Time.frameCount;                            // P1 (4): a capture frame is not a hitch
             var gate = ImageGate.Save(_rt, _cam, DemoBoot.CaptureDir, file);   // QF26 (2): every capture is gated
             Log($"shot {file}  audioPeak={_peak:0.000000}  cursorVisible={Cursor.visible}");
             Log(gate);
+            ClipRecorder.OnShot(this, _cam, name);                                // QF31: raw memory clips / the "Received" stills
         }
 
         // ---- QF26 (1): control came back -> one gated frame a moment later (the white-out stayed on after control returned and
@@ -105,6 +107,7 @@ namespace Seven
             var src = _cam.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             var dst = c.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>() ?? go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             if (src != null) { dst.renderPostProcessing = src.renderPostProcessing; dst.antialiasing = src.antialiasing; }
+            FrameProbe.CaptureFrame = Time.frameCount;
             var rt = ImageGate.NewRT(_rt.width, _rt.height);
             var req = new UnityEngine.Rendering.Universal.UniversalRenderPipeline.SingleCameraRequest { destination = rt };
             if (UnityEngine.Rendering.RenderPipeline.SupportsRenderRequest(c, req)) UnityEngine.Rendering.RenderPipeline.SubmitRenderRequest(c, req);
@@ -119,6 +122,7 @@ namespace Seven
 
         public void Finish(string summary)
         {
+            FrameProbe.Final();                         // P1 (4): real frame time in the last scene
             Log(ChapterCat.SpeedReport());              // QF11: never the walk cycle on the spot
             if (ChapterCamera.RideFrames > 0) Log(ChapterCamera.RideSummary());   // QF15 (1)
             if (HoverBike.SwimFrames > 0) Log(HoverBike.InsideSummary());         // QF15 (2)

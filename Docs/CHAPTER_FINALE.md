@@ -712,7 +712,7 @@ Fade to credits with the quiet purr and meadow ambience continuing briefly.
    damages, open the old maintenance barrier). She can be knocked down: retry from the start of FIN_08 with the objectives done so
    far kept. Panther calls movement from the chamber edge and draws Tunneler away from a damaged control once. No controls box;
    context prompts only (QF24 17). Boss music starts with his first attack.
-9. **FIN_09:** a cutscene, not a skill check. Panther grows to his **combat size** (not the meadow's greatest form), leaps into the
+9. **FIN_09 (changed by Dan, QF31: the impact is SHOWN, not cut away from; no gore; see TODO QF31 A2):** a cutscene, not a skill check. Panther grows to his **combat size** (not the meadow's greatest form), leaps into the
    strike; **cut at the impact**, the music cuts out, 7's reaction. Then the barrier: the player traps Tunneler (one action), the
    worker locks it ("We have the lock."). No victory banner.
 10. **FIN_10 + FIN_11:** **no UI at all**: no objective, prompts, subtitles' speaker labels stay but no other HUD. Panther in his small

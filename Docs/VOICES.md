@@ -201,7 +201,7 @@ Voice"), the Machinist, Nela (the "Biavian Guide").
   plain sentences. Gender-neutral, a faint raspy texture, no accent, close to the microphone, studio-quality recording, no background
   noise." Preview text: "These controls belong to the city. He locked us out of them. Send them to the other districts. We have
   waited long enough." In Unity: a light comms filter and Dan's Scree noise underneath, like the first worker.
-- **RestVoice** — FIN_13's "You can rest now." **Dan (2026-11-22): it's used, and the implication is that it's God / Jesus.**
+- **RestVoice** — **QF31: the line is now** "Well done, good and faithful servant! You were faithful over a few things; I will put you in charge of many things. Share your master's joy." (replaces "You can rest now."; plays in heaven over the rising wide shot, QF31). Was: FIN_13's "You can rest now." **Dan (2026-11-22): it's used, and the implication is that it's God / Jesus.**
   Description: "A deep, resonant, majestic male voice of immense warmth and quiet authority, large and full like it fills a vast
   space, yet gentle and loving rather than stern, slow and unhurried, every word calm and certain, as if a father is speaking softly
   to a tired child. Rich low tones, no accent, studio-quality recording, no background noise." Preview text: "You can rest now.

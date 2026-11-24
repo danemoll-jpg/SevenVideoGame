@@ -21,9 +21,11 @@ namespace Seven
             if (cp <= L.CpDoor) { yield return TheDoor(); Checkpoint(L.CpChamber); }
             if (cp <= L.CpChamber) { yield return Runes(); yield return Witness(); yield return Network(); Checkpoint(L.CpConfront); }
             if (cp <= L.CpConfront) { yield return Confrontation(); yield return TheLeap(); Checkpoint(L.CpAfter); }
-            if (cp <= L.CpAfter) { yield return EightMore(); yield return WhatSheCarries(); yield return Received(); Checkpoint(L.CpEnding); }
-            yield return SheCanRest();
-            yield return ComeBackTo();
+            // QF31 (A): FIN_10 -> her grief + the memories of Panther + the archive taking them -> FIN_12 "Received" -> the light lifts them
+            // both -> heaven (the carry, "You're staying with me", the walk back to the archive and the separate memory step are gone)
+            if (cp <= L.CpAfter) { yield return EightMore(); yield return Grieve(); Checkpoint(L.CpEnding); }
+            yield return RisenTogether();
+            yield return HeavenQF31();
             yield return Credits();
         }
 
@@ -78,7 +80,7 @@ namespace Seven
                 case L.CpChamber: at = new Vector3(11.5f, L.Y, -150.8f); face = Vector3.back; break;
                 case L.CpConfront: at = L.HerFightStart; face = Vector3.back; break;
                 case L.CpAfter: at = L.KneelSpot + new Vector3(0.9f, 0f, 0.6f); face = Flat(L.PantherHead - L.KneelSpot); break;
-                case L.CpEnding: at = L.Stand(0f); face = Vector3.back; break;
+                case L.CpEnding: at = L.KneelSpot; face = Flat(L.PantherHead - L.KneelSpot); break;          // QF31: she is still kneeling over him
                 default: at = L.BeamDown + new Vector3(0f, 0f, -2f); face = Vector3.back; break;
             }
             Seven.Place(at, face);
@@ -87,9 +89,10 @@ namespace Seven
                 Cat.gameObject.SetActive(true);
                 if (cp < L.CpAfter) { Cat.Place(at + new Vector3(0.9f, 0f, 0.4f), face); Cat.Follow(); }
                 else if (cp == L.CpAfter) PantherFallen(true);                                                       // QF30 (15): large, lying on his side where he fell
-                else PantherOnTheArchive();                                                                          // QF30 (15): he stays with her to the end
+                else { PantherFallen(false); var o = CatOv; if (o != null) { o.Breath = 0f; o.Alive = false; o.Slack = 1f; } }   // QF31: small, still, where he fell - she takes him with her
             }
             if (Worker != null) { Worker.gameObject.SetActive(cp <= L.CpChamber || cp >= L.CpEnding); }
+            QF31Restore(cp);
             FollowCamera(); Cam.SnapBehind();
             Log($"restore: {FinaleState.Summary()} -> at {at}");
         }
@@ -121,7 +124,7 @@ namespace Seven
         {
             if (ProjectionWalls == null || i >= ProjectionWalls.Length || ProjectionWalls[i] == null) return;
             var r = ProjectionWalls[i]; r.enabled = a > 0.01f;
-            var tex = Resources.Load<Texture2D>($"Finale/VisionStills/vis_0{i + 1}");
+            var tex = WallTex(i);                                                    // QF31 (9): its vision playing (looping, muted), else the still
             var m = r.material;
             if (m.HasProperty("_TexA")) { m.SetTexture("_TexA", tex); float wa = 3.2f / 4.4f, ia = tex != null ? tex.width / (float)tex.height : 1.6f; m.SetVector("_RectA", new Vector4(1f, Mathf.Clamp01(wa / ia), 0f, 0f)); m.SetFloat("_Bright", 1.6f * a); m.SetFloat("_Bg", 0.02f * a); }
             else m.mainTexture = tex;
@@ -136,7 +139,7 @@ namespace Seven
         {
             // the mining machinery outside the chamber: drilling until the Scree stop it (FIN_07)
             if (MiningDrills != null) foreach (var d in MiningDrills) if (d != null) { _drillRate = Mathf.MoveTowards(_drillRate, _drillsOn ? 180f : 0f, 40f * Time.deltaTime); d.Rotate(Vector3.up, _drillRate * Time.deltaTime, Space.Self); }
-            TickWallDrills(); TickBeacons();                                                                       // QF30 (6 / 9)
+            TickWallDrills(); TickBeacons(); TickWalls();                                                        // QF31 (9): the screens' loops                                                                       // QF30 (6 / 9)
         }
         float _drillRate = 180f;
 
@@ -378,6 +381,9 @@ namespace Seven
             Log($"RUNE PLACEMENT (Round 19 5): 7 of 7 placed in {Time.time - t0:0.0} s (must be under a minute of play)");
             yield return Cutscene(true);
             Shoot(L.ChamberC + new Vector3(8.6f, 4.2f, 8.2f), L.ChamberC + Vector3.up * 2.2f, 58f, 0.01f);
+            ScreenViewCheck("all seven lit (the chamber, wide)", L.ChamberC + new Vector3(8.6f, 4.2f, 8.2f));
+            ScreenViewCheck("all seven lit (from the entrance)", new Vector3(11.5f, L.Y + 1.6f, -151.6f));
+            ScreenViewCheck("all seven lit (from the archive)", L.Stand(0f) + Vector3.up * 1.6f);
             Seven.Place(L.PlatformAt + new Vector3(0f, 0f, L.PlatformR + 1.6f), Vector3.back);
             if (Cat != null) Cat.Place(L.PlatformAt + new Vector3(1.0f, 0f, L.PlatformR + 1.9f), Vector3.back);
             ImageGate.ExpectPoint(L.ChamberC + Vector3.up * 2f, "the chamber assembling its display");
@@ -421,7 +427,7 @@ namespace Seven
             hold.Release("placed in its socket");
             AudioKit.Play("europa_device_place", b, 0.8f);
             Glow(i < SocketLights.Length ? SocketLights[i] : null, 1.6f);
-            ShowWall(i, 1f);
+            PlayWall(i);                                                             // QF31 (9): its vision plays on its own screen and keeps looping there
             var wall = ProjectionWalls != null && i < ProjectionWalls.Length ? ProjectionWalls[i] : null;
             yield return Wait(0.35f);
             ImageGate.Expect(Sockets != null && i < Sockets.Length ? Sockets[i] : Seven.transform, $"the {L.SocketRunes[i]} set in socket {i + 1}");
@@ -434,7 +440,10 @@ namespace Seven
             Log($"rune {i + 1} / 7: the {L.SocketRunes[i]} ({L.SocketWorlds[i]}) set into its socket - the socket lights, {L.SocketWorlds[i]} on the wall behind it");
             yield return Wait(1.1f);
             yield return Shot($"f16_rune_{i + 1}_{L.SocketRunes[i]}_placed_{L.SocketWorlds[i].Replace(" ", "_")}");
+            ScreenViewCheck($"rune {i + 1} placed (the shot)", Cam.transform.position);
             yield return Cutscene(false);
+            yield return null; yield return null;
+            ScreenViewCheck($"rune {i + 1} placed (control back)", Cam.transform.position);
         }
 
         // ------------------------------------------------------------------------------------------ FIN_06: she was there
@@ -534,6 +543,15 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ FIN_07: the network opens
         IEnumerator Network()
         {
+            // QF31 (8): the release begins - the pedestals sink flush, the table lowers into a shallow light well: the room opens up
+            Shoot(L.ChamberC + new Vector3(-9.6f, 5.6f, 8.8f), L.ChamberC + Vector3.up * 0.4f, 58f, 0.01f);
+            ImageGate.ExpectPoint(L.ChamberC + Vector3.up * 0.5f, "the pedestals sinking, the table lowering into the floor");
+            StartCoroutine(ShotAfter(2.0f, "f27b_the_pedestals_sink_the_table_lowers"));
+            yield return SinkArchive(Auto ? 3f : 4.2f);
+            Shoot(L.ChamberC + new Vector3(-9.6f, 5.6f, 8.8f), L.ChamberC + Vector3.up * 0.4f, 58f, 0.01f);
+            ImageGate.ExpectPoint(L.ChamberC, "the open chamber: the light well, the flush sockets");
+            yield return Wait(0.4f);
+            yield return Shot("f27c_the_open_chamber_the_light_well");
             // light moves out through the old conduits; terminals across the city begin receiving; the Scree stations can talk
             Shoot(L.ChamberC + new Vector3(-8f, 2.2f, -6f), L.ChamberC + new Vector3(2f, 0.4f, 2f), 54f, 0.01f);
             AudioKit.Play("europa_extraction_pulse", L.PlatformAt, 0.8f);

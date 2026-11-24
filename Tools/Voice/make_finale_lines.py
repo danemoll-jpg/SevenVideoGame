@@ -36,7 +36,8 @@ head = re.compile(r"^#{2,4}\s+(FIN_\w+?)\s+—\s+(.+?)\s*$")
 
 EXTRA = [
     # FIN_13: the one spoken line of the pale light (Dan 2026-11-22: used; RestVoice; never named on screen)
-    ("FIN_13_04", "Voice", "You can rest now.", "Deep, warm, gentle authority; slow"),
+    # QF31 (Dan): the Voice moves into heaven - over the rising wide shot (heaven_05-06), as they grow small in the sunrise
+    ("FIN_13_04", "Voice", "Well done, good and faithful servant! You were faithful over a few things; I will put you in charge of many things. Share your master's joy.", "Deep, warm, slow and unhurried; loving, with a large soft space round it"),
     # 7's sign-off at the end of the credits (Dan 2026-11-22; closing lines from Kyle's book "7" (2014); his punctuation kept)
     ("FIN_15_01", "7", "Remember who you are!", "Warm and close, tender, a little smile"),
     ("FIN_15_02", "7", "You are beyond this life.", "Warm, tender"),
@@ -92,7 +93,13 @@ for raw in open(SRC, encoding="utf-8").read().replace("\r\n", "\n").split("\n"):
     m = row.match(raw.strip())
     if m: rows.append(m.groups())
 for lid, who, said, act in EXTRA: rows.append((lid, who, said, act))
+# QF31 (Dan's rework of the ending): the carry, "You're staying with me", the walk back to the archive, the separate memory step
+# (the Archive's "Continue?" / "Yes." / "All of it.") and the worker's exchange after his death go; "We'll look after him." /
+# "Thank you." go with them (she takes him with her). Their audio is removed by generate_finale_voices.py --prune.
+CUT = {"FIN_11_01", "FIN_11_02", "FIN_11_03", "FIN_11_04", "FIN_11_05", "FIN_11_05a", "FIN_11_06", "FIN_11_06b", "FIN_11_07", "FIN_11_08",
+       "FIN_13_01", "FIN_13_02", "FIN_13_03"}
 for lid, who, said, act in rows:
+    if lid in CUT: continue
     if who in ("—", "-") or said.strip() in ("—", "-"): continue
     if lid in seen: continue
     seen.add(lid)

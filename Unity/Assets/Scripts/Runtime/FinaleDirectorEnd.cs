@@ -50,12 +50,14 @@ namespace Seven
                 // QF30 (6): the drilling grinds closer behind the rubble that blocks the mining access, then his rig bursts through it
                 var grind = AudioKit.Play("drill_grind_rock", L.MiningAccess, 1f, 0f, AudioKit.Bus.Sfx, 40f);
                 for (float t = 0f; t < 0.9f; t += Time.deltaTime) { if (Random.value < 0.25f) Sparks(L.MiningAccess + new Vector3(Random.Range(-2f, 2f), Random.Range(0.5f, 4f), -0.2f), 20); yield return null; }
-                AudioKit.Play("europa_demolition", L.MiningAccess, 1f); CameraShake.Quake(0.7f, 1.0f); StartCoroutine(BurstPlug());
+                yield return TearOpen();                                                   // QF31 (8): the wall round the access torn open onto the cavern
+                StartCoroutine(BurstPlug());
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f) { TunnelerCraft.position = Vector3.Lerp(a, L.TunnelerStart, Mathf.SmoothStep(0f, 1f, t)); if (t > 0.1f && Random.value < 0.2f) Sparks(L.MiningAccess + new Vector3(Random.Range(-3f, 3f), Random.Range(1f, 5f), 0f), 30); yield return null; }
                 if (grind != null) grind.Stop();
                 DrillSpeed = 220f; if (Rig != null) Rig.ArmDrillWant = 300f;
                 ImageGate.Expect(TunnelerCraft, "Tunneler forcing his way in");
                 yield return Shot("f32_tunneler_forces_his_way_in");
+                if (Shots) { ImageGate.ExpectPoint(L.CavernC + Vector3.up * 2f, "the torn wall and the mining cavern beyond"); yield return Cap.ShotFrom("f32b_the_wall_torn_open_the_cavern_beyond", L.ChamberC + new Vector3(-3.5f, 3.4f, 6.5f), L.CavernC + Vector3.up * 1.5f, 62f); }
                 // low angle, machinery lighting him from beneath
                 var b = TunBounds();
                 Shoot(L.TunnelerStart + new Vector3(2.6f, 0.4f, 4.2f), TunFace, 46f, 0.01f);
@@ -76,7 +78,7 @@ namespace Seven
                 KeyOff();
                 FinaleState.CompleteScene("FIN_08_entrance");
             }
-            else { TunnelerCraft.gameObject.SetActive(true); TunnelerCraft.position = L.TunnelerStart; Seven.Place(L.HerFightStart, Vector3.back); foreach (var p in _plug) if (p != null) Destroy(p.gameObject); _plug.Clear(); }
+            else { TunnelerCraft.gameObject.SetActive(true); TunnelerCraft.position = L.TunnelerStart; Seven.Place(L.HerFightStart, Vector3.back); if (!_breached) BreachNow(); }
             // the confrontation: the three objectives while he attacks; Panther calls from the chamber's edge
             if (Cat != null) { Cat.Place(L.PantherEdge, Vector3.right); Cat.Hold(L.ChamberC, "sit"); }
             EnsureHover();
@@ -87,30 +89,33 @@ namespace Seven
             if (rockMat.HasProperty("_BaseColor")) rockMat.SetColor("_BaseColor", new Color(0.3f, 0.3f, 0.3f));
             _fight.Setup(null, rockMat);
             foreach (var p in _plug) if (p != null) _fight.AddThrowable(p);                  // QF30 (6): the rubble he broke through lies where it fell - loose
+            foreach (var p in _breachRubble) if (p != null) _fight.AddThrowable(p);           // QF31 (8): the torn wall's stone, along the breach
             _fight.PlaceStart();
             if (FinaleState.StepDone("barrier")) _fight.ForceBarrierOpen();
             _fight.UI = UI; _fight.AutoPilot = DemoBoot.CaptureDir != null;
             _fight.Beat = PhaseBeatShot;
-            _fight.StunBeat = b => { if (_stunShots.Add(b) && Shots) StartCoroutine(Shot(b == "drop" ? "f37b_stunned_the_rig_drops_to_the_floor" : b == "deck" ? "f37c_she_jumps_up_onto_his_rig" : b == "strike" ? "f37d_her_blows_land_on_him" : "f37e_he_recovers_the_rig_rises")); };
+            _fight.StunBeat = b => { if (_stunShots.Add(b) && Shots) StartCoroutine(Shot(b == "drop" ? "f37b_stunned_the_rig_settles_flush" : b == "deck" ? "f37c_she_steps_onto_its_edge" : b == "strike" ? "f37d_her_blows_land_on_him" : "f37e_he_recovers_the_rig_rises")); };
             _fight.OnObjective = what =>
             {
                 if (what == "barrier") { FinaleState.DoStep("barrier"); StartCoroutine(BarrierOpens()); }
                 if (what == "conduit") { FinaleState.DoStep("conduit"); }
             };
             if (Shots) StartCoroutine(ControlsBefore());
-            _fight.PhaseObjective = ph => ph == 0 ? "Keep him away from the platform"
+            _fight.PhaseObjective = ph => ph == 0 ? "Keep him away from the archive"
                                        : ph == 1 ? "Open the old maintenance barrier - its control by the east alcove"
                                        : "Restore the connection he cut - the junction box on the west wall";
             yield return Cutscene(false);
             FollowCamera();
-            SetZone("DoorZ", false); SetZone("ChamberN", false);   // the doorway closes behind the fight (she can't be driven out of the chamber)
+            SetZone("DoorZ", false);   // the doorway closes behind the fight (she can't be driven out of the chamber). QF31 (10): ChamberN stays ON - rc2 switched the whole north band off for her while his arena still reached into it: stunned up there, he was out of her reach
             _fight.Begin(BossFight.Load("tunneler"), Seven, Cam);
             ThemeNow = "moon_tunneler";
+            if (Shots) StartCoroutine(ArenaShots());
             StartCoroutine(FightPrompts(_fight));
             _fight.Moment += FightMoment;
             StartCoroutine(FightCalls());
             int downs = 0;
             var run = StartCoroutine(_fight.Run(s => { if (s != null && !s.StartsWith("He is dazed")) Objective(s); }));
+            if (DemoBoot.StunTest > 0 && DemoBoot.CaptureDir != null) { yield return StunTest(DemoBoot.StunTest); yield break; }   // QF31 (10): the proof run ends here
             while (!_fight.Over && !_fight.Dazed)
             {
                 if (_fight.Knockdowns > downs) { downs = _fight.Knockdowns; FinaleState.CountRetry(); Log($"CONFRONTATION RETRY (Round 19 8): she went down ({downs}x) - the retry keeps the objectives done ({(_fight.BarrierOpen ? "barrier open" : "barrier closed")}, conduit {(_fight.ConduitRestored ? "restored" : _fight.ConduitCut ? "cut" : "whole")}) and his energy {_fight.Energy * 100f:0}%"); }
@@ -119,9 +124,9 @@ namespace Seven
             if (DemoBoot.BossIdle) yield break;
             StopCoroutine(run);
             _fight.Moment -= FightMoment;
-            SetZone("DoorZ", true); SetZone("ChamberN", true);
+            SetZone("DoorZ", true);
             Log(_fight.Summary());
-            Log($"STUN REACH (QF30 8): the rig dropped on each stun; she jumped up onto its deck {_fight.DeckLandings}x and landed {_fight.DeckStrikes} blows there; beats seen from the player's camera: {string.Join(", ", _stunShots)}");
+            Log($"STUN REACH (QF31 10): stuns {_fight.StunTries}, reached and hit in {_fight.StunReached} (first blow on average {(_fight.StunReached > 0 ? _fight.StunFirstHitSum / _fight.StunReached : 0f):0.0} s after the stun); she stepped onto its edge {_fight.DeckLandings}x (no jump), {_fight.DeckStrikes} blows there; whiffed blows {_fight.Whiffs}; {string.Join("; ", _fight.StunLog)}; beats seen from the player's camera: {string.Join(", ", _stunShots)}");
             Log($"TUNNELER FIGHT (Round 19 8): objectives - kept off the platform (phase 1 by her blows), barrier {(_fight.BarrierOpen ? "open" : "CLOSED")}, conduit {(_fight.ConduitRestored ? "restored" : "NOT restored")}; Panther's calls {_calls}, his distraction {(_distracted ? "used once" : "not used")}; retries {FinaleState.Retries}");
             Objective(null);
             if (DemoBoot.BossCheck && DemoBoot.CaptureDir != null && !DemoBoot.FinPlay) { Cap.Finish("boss check (Round 19): " + _fight.Summary()); yield break; }
@@ -175,6 +180,9 @@ namespace Seven
                 yield return Shot("f36_the_old_barrier_its_control_lit");     // (before the line: the framing may change for it)
                 yield return DialogueFraming.Over("the old maintenance barrier's alcove (the worker over the network)", SayIds("FIN_08_P7"));   // The old maintenance barrier! Open it and get him inside. We can lock it from here.
                 FollowCamera();
+                // QF31 (9): with the barrier's control lit (its light column on), every screen stays clear - from the fight's whole floor
+                foreach (var (w, at) in new[] { ("the breach mouth", L.TunnelerStart), ("the cavern", L.CavernC), ("the chamber's south", L.ChamberC + new Vector3(0f, 0f, -9f)), ("the chamber's west", L.ChamberC + new Vector3(-9f, 0f, 0f)), ("the entrance", L.ChamberC + new Vector3(0f, 0f, 9.5f)) })
+                    ScreenViewCheck($"FIN_08 the barrier's control lit - from {w}", at + Vector3.up * 1.7f);
             }
             else if (ended == 1)
             {
@@ -204,38 +212,15 @@ namespace Seven
             Log("FIN_08: the old maintenance barrier opened - the alcove is ready (its field will close behind him)");
         }
 
-        // QF30: FIN_09 - FIN_11 and FIN_13 are in FinaleDirectorQF30Scenes.cs (restaged after Dan's review of 1.0.0-rc1)
-        // ------------------------------------------------------------------------------------------ FIN_12: received
-        IEnumerator Received()
+        // QF30: FIN_10 in FinaleDirectorQF30Scenes.cs; QF31: FIN_09, the grief + memories, FIN_12 and the rise in FinaleDirectorQF31.cs
+        /// <summary>QF31 (8): the open room and the arena from the fight camera (the chamber, the breach, the cavern).</summary>
+        IEnumerator ArenaShots()
         {
-            // the lunar city: the Scree stations connected; the workers shut the mining down and secure the city's services
-            var term = CityTerminals != null && CityTerminals.Length > 0 ? CityTerminals[0] : null;
-            if (Worker != null && term != null) { Worker.gameObject.SetActive(true); Worker.transform.position = term.transform.position - term.transform.forward * 1.3f; Worker.transform.rotation = Quaternion.LookRotation(Flat(term.transform.position - Worker.transform.position)); }
-            if (Elder != null && CityTerminals != null && CityTerminals.Length > 1) { Elder.gameObject.SetActive(true); var t2 = CityTerminals[1]; Elder.transform.position = t2.transform.position - t2.transform.forward * 1.3f; Elder.transform.rotation = Quaternion.LookRotation(Flat(t2.transform.position - Elder.transform.position)); }
-            if (term != null) { Shoot(term.transform.position + new Vector3(2.6f, 1.3f, 2.8f), term.transform.position + Vector3.down * 0.2f, 46f, 0.01f); ImageGate.Expect(Worker != null ? Worker.transform : term.transform, "the Scree at their own stations"); }
-            yield return Wait(0.4f);
-            yield return Shot("f52_received_the_scree_at_their_stations");
-            yield return Say("FIN_12", 1, 1);                           // We have it. Our records... they're here.
-            if (Elder != null) Shoot(Elder.transform.position + Elder.transform.forward * 2.6f + Vector3.up * 1.5f + Elder.transform.right * 0.8f, Elder.transform.position + Vector3.up * 1.4f, 42f, 0.01f);
-            yield return Say("FIN_12", 2, 2);                           // Send them to the other districts.
-            // the worlds they visited (each from the game's own views of it): the record arrives
-            yield return Received("rec_1_venus", "Venus: the temple receives it", () => Say("FIN_12", 3, 3), null);
-            yield return Received("rec_2_mars", "Mars: the temple of both kingdoms - the caretaker", () => SayIds("FIN_12_03a"), "mars_vision_stone");   // QF30 (19)
-            yield return Received("rec_3_europa", "Europa: the Cetaceans gathering, the familiar call - the Keeper", () => SayIds("FIN_12_03b"), "europa_call_deep");
-            yield return Received("rec_4_asteroid", "the asteroid: the Machinist beside the archive", () => Say("FIN_12", 4, 5), null);
-            yield return Received("rec_5_mothership", "the mothership: the memory structures", () => Say("FIN_12", 6, 6), "bia_barrier");
-            yield return Received("rec_6_cattalus", "Cattalus: the Cat-a-tron", null, null, 1.4f);
-            yield return Received("rec_7_cattalus_meadow", "Cattalus: the old meadow on the Cat-a-tron, the square still - Juniper", () => SayIds("FIN_12_06a"), "cat_meadow_breeze", 2.6f);
-            UI.SetVideo(null, 1f, 0f);
-            // back in the chamber: the gaps are filled
-            for (int i = 0; i < 7; i++) { Glow(i < SocketLights.Length ? SocketLights[i] : null, 2.0f); ShowWall(i, 1.2f); }
-            Glow(PlatformSurface, 0.5f);
-            Shoot(L.ChamberC + new Vector3(-8.4f, 4.6f, 8f), L.ChamberC + Vector3.up * 2.4f, 58f, 0.01f);
-            ImageGate.ExpectPoint(L.ChamberC + Vector3.up * 2f, "the archive complete");
-            yield return Wait(0.6f);
-            yield return Shot("f53_the_archive_complete");
-            yield return DialogueFraming.Over("the archive (its voice)", Say("FIN_12", 7, 8));   // Record complete. / All connected archives have received it.
-            Complete("FIN_12");
+            yield return Wait(1.5f);
+            ImageGate.ExpectPoint(L.ChamberC + new Vector3(0f, 1f, -8f), "the arena: the chamber's open floor, the breach, the cavern");
+            yield return Shot("f36c_the_arena_from_the_fight_camera");
+            ImageGate.ExpectPoint(L.CavernC + Vector3.up * 1f, "the mining cavern (the arena's far side)");
+            yield return Cap.ShotFrom("f36d_the_arena_wide_chamber_and_cavern", L.TunnelerStart + new Vector3(2.5f, 6.5f, 6.5f), L.CavernC + new Vector3(0f, 0.5f, 2f), 66f);   // from above the breach, down into the cavern
         }
         IEnumerator Received(string still, string what, System.Func<IEnumerator> lines, string sfx, float hold = 2.4f)
         {
@@ -284,7 +269,10 @@ namespace Seven
                 (20.6f, "shot:f61_colour_video_frame_giant_panther_arrives"), (22.8f, "line:FIN_14_02"), (24.4f, "sfx:giant_purr:0.45"), (27.0f, "shot:f62_colour_video_frame_the_touch"),
                 (30.5f, "react:laugh_soft"), (38.0f, "sfx:grass_run:0.7"), (42.0f, "shot:f63_colour_video_frame_running_together"), (52.0f, "sfx:grass_run:0.5"),
                 (60.5f, "shot:f64_colour_video_frame_beneath_the_tree"), (62.0f, "sfx:land_soft:0.4"), (63.0f, "purr"), (72.0f, "shot:f65_colour_video_frame_her_head_against_him"),
+                // QF31 (A7): the Voice moves into heaven - in the stand-in, timed to end a few seconds before the master's last held image
+                (Mathf.Max(start + 30f, (float)clip.length - RestVoiceLen() - 3.5f), "line:FIN_13_04"),
             };
+            System.Array.Sort(cues, (a, b) => a.t.CompareTo(b.t));
             int ci = 0; AudioSource purr = null; bool fading = false; float t0 = Time.time;
             while (true)
             {
@@ -438,7 +426,8 @@ namespace Seven
             UnityEngine.SceneManagement.SceneManager.LoadScene("Menu");
         }
         /// <summary>QF30 (22): the only sounds allowed in FIN_14 and the credits (clip-name prefixes).</summary>
-        static readonly string[] EndingSounds = { "cattalus_meadow", "credits_theme", "cat_meadow_breeze", "grass_", "land_", "giant_purr", "cat_purr", "FIN_14", "FIN_15", "seven_", "Seven_" };
+        static readonly string[] EndingSounds = { "cattalus_meadow", "credits_theme", "cat_meadow_breeze", "grass_", "land_", "giant_purr", "cat_purr", "FIN_13_04", "FIN_14", "FIN_15", "seven_", "Seven_", "laugh_" };
+        static float RestVoiceLen() { var l = FinaleDialogue.Ids("FIN_13_04"); return l.Count > 0 && l[0].Clip != null ? l[0].Clip.length : 14f; }
         IEnumerator CreditsAudit() { yield return Wait(4f); QF30Watch.AudioAudit("the credits", EndingSounds); }
         /// <summary>QF30 (23): a capture every second of the credits (exempt "card" frames) + a check that the black layer is whole.</summary>
         IEnumerator CreditsFrame(int sec, GameObject black)

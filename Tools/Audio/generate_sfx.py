@@ -223,7 +223,12 @@ SFX = [
     ("cat_breath_slow", "A large black cat lying still, one slow soft shallow breath in and out through the nose, close and quiet, tired, no purr, no meow.", 1.6, False, "QF30 (14): Panther's slow breaths as he dies (FIN_10)"),
     ("drill_grind_rock", "A huge industrial mining drill grinding slowly into old stone far away: a deep low rumble, stone cracking, a little debris falling.", 6, True, "QF30 (6): the mining drills boring into the old structure (loop)"),
     ("cat_toy_swing", "A large soft hanging toy swinging past on a rope: a whoosh and a creak of the rope, a little jingle bell.", 1.5, False, "Round 18: the toy boulevard's swinging obstacles"),
-    ("cat_gate_chime", "A small bright chime as a racer passes through a glowing gate, a soft sparkle.", 1, False, "Round 18: a race gate passed")
+    ("cat_gate_chime", "A small bright chime as a racer passes through a glowing gate, a soft sparkle.", 1, False, "Round 18: a race gate passed"),
+    # QF31 (Dan's review of 1.0.0-rc2): the ending
+    ("seven_sob_soft", "A young woman crying softly and quietly, a few small shaky sobs and an uneven breath in, close and intimate, no words, no wailing.", 4, False, "QF31 (A3): 7 grieving over Panther, crying softly"),
+    ("seven_breath_shaky", "A young woman's single shaky, tearful breath in and a slow breath out, very quiet, close, no words.", 2.2, False, "QF31 (A3): her breathing between the memories"),
+    ("cat_breath_labored", "A large black cat lying hurt on its side, two short laboured, rough breaths in and out, quiet and strained, no growl, no meow.", 2.4, False, "QF31 (A2): Panther can't get up, his breathing laboured"),
+    ("drill_impact_heavy", "A heavy blunt impact: a spinning industrial drill slamming into something solid with a deep thud, a short metallic screech and grinding sparks, then the drill stalling. No voice.", 1.6, False, "QF31 (A2): the drill strikes Panther (no gore - a heavy blunt impact)")
 ]
 
 

@@ -17,6 +17,8 @@ namespace Seven
         float _duck = 1f;
         public static string Current { get; private set; }
         public const float DuckLevel = 0.35f;
+        /// <summary>QF31 (A3): a scene can play its track low (her grief: moon_transfer under her sobs). Reset to 1 on every scene load.</summary>
+        public static float Level = 1f;
 
         static MusicSystem I
         {
@@ -39,7 +41,7 @@ namespace Seven
             UnityEngine.SceneManagement.SceneManager.sceneLoaded += (sc, mode) =>
             {
                 ReportScene();                                             // QF24 (21): the last scene's silence audit
-                _silenceUntil = 0f; _silenceWhy = null; _quietFor = 0f; _longestQuiet = 0f; _guardStarts = 0; _sceneName = sc.name;
+                _silenceUntil = 0f; _silenceWhy = null; _quietFor = 0f; _longestQuiet = 0f; _guardStarts = 0; _sceneName = sc.name; Level = 1f;
                 // QF24 (21): a stale suspension from the last scene (a vision whose resume never came) never carries over
                 if (_suspended != null) { AudioKit.Log?.Invoke($"music (QF24 21): a suspension of '{_suspended}' left from the last scene cleared on loading {sc.name}"); _suspended = null; }
                 if (sc.name == "FightDemo" || sc.name == "FightDemo_Room" || sc.name == "Ratwing") Stop(1.5f);
@@ -193,7 +195,7 @@ namespace Seven
             }
             bool duckNow = DialoguePlayer.AnyBusy || Purr.Playing;   // QF23 (11): the music ducks under his purr too
             _duck = Mathf.MoveTowards(_duck, duckNow ? DuckLevel : 1f, Time.unscaledDeltaTime * (duckNow ? 2.5f : 0.8f));
-            float g = AudioKit.Gain(AudioKit.Bus.Music) * _duck;
+            float g = AudioKit.Gain(AudioKit.Bus.Music) * _duck * Mathf.Clamp01(Level);
             _a.volume = _aW * g; _b.volume = _bW * g;
         }
     }

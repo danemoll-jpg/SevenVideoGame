@@ -106,6 +106,7 @@ namespace Seven
         public float BeamFrom { get; private set; }
         bool _locked;
         // stats (the proof)
+        public int Whiffs;
         public int Attacks, HitsOnHer, Staggers, Knockdowns, Dodged, Blocked, Jumped, OutOfReach, Throws, Deflected, Strikes;
         // QF18 (19): his energy (1 = full) and where it went
         public float Energy { get; private set; } = 1f;
@@ -193,6 +194,8 @@ namespace Seven
         public virtual (Vector3 at, string how)? PilotObjective() => null;
         /// <summary>QF30 (8): while &gt; 0 he sits low on something she must jump up onto to reach him (the rim's radius from his centre).</summary>
         public virtual float StepUp => 0f;
+        /// <summary>QF31 (10): how far his body reaches out from his centre (a big rig: her blows land at its rim, not only at its middle).</summary>
+        public virtual float ReachPad => 0f;
         /// <summary>Extra visuals of an attack (globs, worms, the beam) - per frame while it is active.</summary>
         protected virtual void AttackFx(AttackDef a, float u) { }
         protected virtual void AttackStarted(AttackDef a) { }
@@ -689,6 +692,9 @@ namespace Seven
             foreach (var d in Pieces) if (d.T != null && !d.Gone) Markers.DebrisGlow(d.T, Open && !Paused && Flat(d.T.position - Her).magnitude < Def.tkRange);
         }
 
+        /// <summary>QF31 (10) proof only (-stuntest): a stun exactly as a telekinetic hit gives one; the energy put back between tries.</summary>
+        public void TestStun(string how) { _phaseStaggers = 0; Paused = false; StaggerHim(how); }
+        public void TestSetEnergy(float e) => Energy = e;
         void StaggerHim(string how)
         {
             Staggers++; _phaseStaggers++;

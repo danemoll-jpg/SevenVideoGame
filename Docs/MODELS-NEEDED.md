@@ -275,3 +275,18 @@ the front left foreleg), `Art/Reference/cat_racer_ref.png` (teardrop hover racer
 number 8), `Art/Reference/cat_trophy_ref.png` (paw-print base, rope-wrapped columns, urn with a rope bow, fluffy cat-tail handles,
 four curved prongs over an open ring). Next: Dan makes the Tripo models (`Art/Source/duchess/duchess_v1.glb` rigged quadruped,
 `cat_racer/cat_racer_v1.glb`, `cat_trophy/cat_trophy_v1.glb`). The sphere sits in the trophy's top ring, held between the prongs.
+
+## Heaven — the new ending (QF31, 2026-11-23; Dan, Grok Imagine, full colour)
+Six clips → `Art/Video/color/heaven_01.mp4` … `heaven_06.mp4` (any length ~6–10 s; Code converts). Same 7 and giant Panther as the
+colour meadow (`cattalus_meadow_color.mov`); a **sunrise** world: a wide meadow with the old leaning tree, mountains behind, warm
+golden-pink light from a low sun, mist in the valleys, birds. Start from a reference still, then each clip from the last frame of
+the previous one. Shared style line at the start of every prompt:
+`Cinematic, full natural color, a heavenly sunrise, warm golden and soft pink light from a low sun over distant mountains, mist in the valleys, dew on tall grass, gentle painterly realism, the same young woman (black pigtails with pearl ties, charcoal bodysuit, tall armored boots) and the same enormous black cat with golden eyes.`
+Reference still (image): `...a vast meadow at sunrise with an old leaning tree, snow-capped mountains behind, the enormous black cat lying asleep in the grass with the young woman curled asleep against his chest, both eyes closed, peaceful, birds in the sky.`
+1. `Extreme close-up of the enormous black cat's closed eye, warm sunrise light on his glossy fur and whiskers. Slowly the eye opens, revealing a golden iris that catches the light. Stillness, then a slow blink.`
+2. `Close-up of the young woman's face resting against the black cat's fur, her eyes closed, cheeks wet with tears. Her eyes slowly open, she blinks in the warm light, confused, then wonder spreads across her face as she realises where she is.`
+3. `Medium shot. She sits up in the dewy grass beside the enormous black cat as he lifts his head toward her. She takes his face in both hands, laughing and crying at once, tears of joy; he presses his head into her hands and closes his eyes contentedly.`
+4. `Wide shot. She jumps up laughing and runs through the tall sunlit grass; the enormous cat bounds playfully beside her, matching her pace, circling her; birds lift from the grass around them. Joyful, gentle, no teeth.`
+5. `They slow beneath the leaning tree; he lies down on his belly and she sits against his shoulder, resting her head against his fur, both at peace, the sun rising behind the mountains. The camera begins to rise slowly.`
+6. `The camera keeps rising, higher and wider, the two of them becoming small beneath the leaning tree in a vast golden meadow; the sun climbs over a range of mountains, mist glows in the valleys, a flock of birds crosses the sky, deer graze at the meadow's edge, a river shines in the distance. Breathtaking, peaceful, endless.`
+Negative for all: `bared teeth, aggression, extra limbs, extra fingers, saddle, collar, other people, text, watermark`.

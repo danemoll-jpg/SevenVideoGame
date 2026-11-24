@@ -12,6 +12,8 @@ namespace Seven
     /// </summary>
     public static class BossPilot
     {
+        /// <summary>QF31 (10) proof only (-stuntest): the pilot answers each stun as a player who wants to hit him (no objective detours).</summary>
+        public static bool StunTestMode;
         public struct Intent { public Vector3 Move; public bool Run, Dodge, Hop, Tk, Attack, Kick, Use, Takedown, Block, Skip; public string Why; }
         /// <summary>QF20 (2): a player mixes the buttons - X, X, Y, X, Y, Y ... (punch, punch, kick ...): one combo.</summary>
         static int _seq;
@@ -41,6 +43,7 @@ namespace Seven
             if (DemoBoot.BossDownOnce && f.Knockdowns == 0 && f.Phase >= 1 && f.Energy < 0.85f && f.State != BossFight.St.Dazed) { I.Move = Flat(boss0(f) - s.transform.position).normalized * 0.3f; I.Why = "lets him hit her (the retry test)"; return I; }
             var her = s.transform.position; var boss = f.transform.position;
             var toB = Flat(boss - her); float d = toB.magnitude; var toBn = d > 0.01f ? toB / d : Vector3.forward;
+            d = Mathf.Max(0f, d - f.ReachPad);                                       // QF31 (10): distances to a big body's edge, as a player judges them
 
             // 1) an attack coming: read it once per attack (a player's read), then answer at the right moment
             if ((f.State == BossFight.St.Telegraph || f.State == BossFight.St.Active) && f.Cur != null)
@@ -102,14 +105,14 @@ namespace Seven
             }
             // 4b) QF29: his bar waits at its mark for an objective (it pulses, the place is lit, a companion calls it) - a player goes
             // there now instead of stunning him again and again (the Moon finale's run stalled here: 1400 stuns, never the barrier)
-            if (f.WaitingOnObjective && f.PilotObjective().HasValue) goto objective;
+            if (f.WaitingOnObjective && f.PilotObjective().HasValue && !StunTestMode) goto objective;
             // 5) staggered: press the advantage (strikes)
             if (f.State == BossFight.St.Staggered && !f.IsOut)
             {
                 I.Why = "strikes while he reels";
                 // QF30 (8): his rig sits on the floor - a player jumps up onto its deck at the rim, then closes in
                 if (f.StepUp > 0f && d > f.StepUp - 0.45f && d < f.StepUp + 1.6f && s.transform.position.y < f.transform.position.y + 0.2f) { I.Move = toBn; I.Hop = d < f.StepUp + 0.9f; I.Why = "jumps up onto his rig"; return I; }
-                if (d > 1.5f) { I.Move = toBn; I.Run = true; }
+                if (d > 1.5f) { I.Move = Around(her, boss); I.Run = true; }   // QF31 (10): round the well / a prop in the way, as a player steers
                 else if (Time.time >= _nextStrike) { Strike(ref I); _nextStrike = Time.time + 0.28f; }
                 return I;
             }
@@ -125,7 +128,7 @@ namespace Seven
                 var deb = f.NearestDebrisAt;
                 if (deb.HasValue && Flat(deb.Value - her).magnitude < 9f && Flat(deb.Value - her).magnitude > f.Def.tkRange - 1f) { I.Move = Flat(deb.Value - her).normalized; I.Run = true; I.Why = "toward debris"; return I; }
                 if (d < 1.6f && Time.time >= _nextStrike) { Strike(ref I); _nextStrike = Time.time + 0.28f; I.Why = "strike while open"; return I; }
-                if (d < 6f) { I.Move = toBn; I.Run = true; I.Why = "close in while open"; return I; }
+                if (d < 6f) { I.Move = Around(her, boss); I.Run = true; I.Why = "close in while open"; return I; }
             }
             // 7) an objective of this phase (a pylon, a device)
             objective:
@@ -160,8 +163,25 @@ namespace Seven
         }
 
         /// <summary>Check runs: the intent through 7's script flags.</summary>
+        /// <summary>QF31 (10): the way to <paramref name="to"/>, steering round any ground obstacle (the light well, a prop) that the straight line
+        /// would run into - a player walks round it; the straight line pinned her against the well's rim.</summary>
+        public static Vector3 Around(Vector3 her, Vector3 to)
+        {
+            var dir = Flat(to - her); float len = dir.magnitude; if (len < 0.01f) return Vector3.forward; dir /= len;
+            foreach (var o in Ground.Obstacles)
+            {
+                var c = new Vector3(o.C.x, 0f, o.C.y); var hc = c - Flat(her); float t = Vector3.Dot(hc, dir); if (t < 0f || t > len) continue;
+                float need = o.R + 0.5f; if ((hc - dir * t).magnitude >= need) continue;
+                if ((Flat(to) - c).magnitude < o.R + 0.3f) continue;              // the target itself (his rig)
+                var side = Vector3.Cross(Vector3.up, dir); if (Vector3.Dot(side, hc) > 0f) side = -side;
+                return (dir * 0.45f + side).normalized;
+            }
+            return dir;
+        }
+        public static string LastWhy; public static Vector3 LastMove;
         public static void ApplyAuto(Intent I, ChapterSeven s)
         {
+            LastWhy = I.Why; LastMove = I.Move;
             s.ScriptDriven = true;
             s.ScriptMove = I.Move; s.ScriptRun = I.Run;
             if (I.Dodge) s.AutoDodge = true; if (I.Hop) s.AutoHop = true; if (I.Tk) s.AutoTk = true;
