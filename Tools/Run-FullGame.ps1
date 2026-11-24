@@ -22,7 +22,8 @@ foreach ($k in $sel) {
   $dir = Join-Path $Out $k
   if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
   $t0 = Get-Date
-  $r = powershell -File "$PSScriptRoot\Run-Check.ps1" -Out $dir -Exe $Exe -Args $pieces[$k] -TimeoutSec 3600
+  # in-process (a second powershell.exe re-parses the arguments and drops the quotes round -menupick "Venus|Venus: the debrief")
+  $r = & "$PSScriptRoot\Run-Check.ps1" -Out $dir -Exe $Exe -Args $pieces[$k] -TimeoutSec 3600
   $mins = ((Get-Date) - $t0).TotalMinutes
   $log = Join-Path $dir "capture_log.txt"
   $line = "no capture_log"

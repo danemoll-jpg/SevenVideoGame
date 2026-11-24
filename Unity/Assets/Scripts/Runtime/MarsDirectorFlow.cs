@@ -454,9 +454,16 @@ namespace Seven
                 var a = GateLine.Point(GateLine.Count - 1); var b = GateLine.Point(0);
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 2.6f) { var p = Vector3.Lerp(a, b, Mathf.SmoothStep(0f, 1f, t)); Cam.Shot(p + new Vector3(-4.2f, 1.2f, -1.5f), p, 0.3f, false, 46f); yield return null; }
                 if (GateFeed != null) StartCoroutine(GateFeed.Flicker(GateFeed.Count - 1, 2.4f));
-                Shoot(L.GateBreak + new Vector3(-3.6f, 0.6f, -1.6f), L.GateBreak + Vector3.down * 0.4f, 40f, 0.01f);
+                // P2 (gate): pulled back and up so the ramp under the break and the wall it runs along frame the two ends (the close
+                // framing showed two cable pieces floating in flat haze - nothing to place them)
+                StartCoroutine(FogThin(0.7f, 0.6f, 0.8f));
+                // along the wall, not at it (facing it, its plain face filled the frame - range 0.07): the cable on the wall at one side, the
+                // ramp's floor under the break and the open ravine on the other
+                Shoot(L.GateBreak + new Vector3(-2.2f, 0.8f, -9.5f), L.GateBreak + new Vector3(-0.6f, -0.9f, 0f), 56f, 0.01f);
                 yield return Wait(1.6f);
+                ImageGate.ExpectPoint(L.GateBreak, "the cut power line");
                 yield return Shot("m11b_the_cut_power_line");
+                StartCoroutine(FogThin(0f, 1.5f));
             }
             yield return Cutscene(false);
             Objective("The gate's power line was cut - follow it down the ramp to the break");

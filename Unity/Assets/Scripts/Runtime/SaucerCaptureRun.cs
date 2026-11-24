@@ -126,6 +126,9 @@ namespace Seven
         {
             var seven = _d.Seven; var cat = _d.Cat; var cam = _d.Cam; var rev = _d.Reveal; var legend = _d.Legend;
             if (legend != null) { legend.AutoSwitch = false; legend.gameObject.SetActive(false); }
+            // P2 (gate): the demo's own place, every run - where the saucer "is" is saved on the test keys and leaked in from whichever
+            // check run came before (after an asteroid run the reveal looked down on floating rocks; a shot passed or failed by run order)
+            SaucerLocation.System = "sol"; SaucerLocation.Set("moon");
             yield return new WaitForSeconds(3f);
             LogAudio();
 

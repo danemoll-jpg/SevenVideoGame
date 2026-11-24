@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Polish pass P2: the overnight clean-up (Dan, 2026-11-24, going to bed: "if there is some clean up, now is a good time") — to do
+## Polish pass P2: the overnight clean-up (Dan, 2026-11-24, going to bed: "if there is some clean up, now is a good time") — done in part, status + morning summary below
 **Protect the showable builds:** 1.0.0-rc2 and **1.0.0-rc3** stay published and untouched. This goes into **1.0.0-rc4**, published
 only if it passes everything rc3 does and more; otherwise leave it built and unpublished and say why.
 **Dan's OK for the long run:** the full start-to-credits playthrough may exceed the 20-minute testing rule tonight (an overnight
@@ -36,6 +36,150 @@ investigation, Dan's OK). Run it in pieces if that's safer; keep everything else
     cry with ElevenLabs Sound Effects (a big cat's low, pained, mournful cry, soft, not a scream). Same rule wherever he's hurt.
 12. In the morning summary for Dan (top of the status): what was fixed, what's still open, and whether rc4 was published, in plain words.
 Never stop to ask; note decisions in TODO.md. Commit and push.
+
+## Polish pass P2 — status (2026-11-24, overnight)
+### Morning summary (plain words)
+**Published?** **No - 1.0.0-rc4 is built (build 1903) but NOT published;** rc2 and rc3 are untouched. The release image gate fails on one
+shot: Mars's cut power line (`m11b`), a cutscene shot rc3's gate run never reached (the bike bug cut that run short) - the cable sits on a
+plain flat wall that fills the frame. Everything rc3's gate passed, rc4 passes. Say "publish rc4" and I will, or I'll give that wall detail first.
+**The most important find:** riding the bike was broken underneath in every world. Her drawn body sat on the bike, but the game
+thought she was ~100 m away (a unit error in the riding pose, hidden since QF10). In Venus that broke the walkway collapse and the
+"below the world" rescue, so rc3's Venus part 1 cannot be finished by a player-style run. Fixed: Venus now plays through from landing
+to the star map, and the asteroid, the mothership, Cattalus (won and lost) and the finale all play through to the end on rc4.
+**Fixed tonight:** her hands now really rest on Panther's fur whenever she strokes him in a chair (every chapter; measured within a few
+millimetres - before, about 20 cm in the air). Tunneler has a body that moves (breathing, weight shifts, swaying with his rig, pointing
+at the light well on "Shut it down", sweeping toward his workers, a fist brought down; still when he is restrained). The Scree keep their
+arms calm when idle or talking. Panther's dying sounds: the "breaths" were meows - now soft breaths, plus one low, weak cry when he
+hits the floor. The saucer no longer stutters when it loads (the gallery TV decoded Kyle's art on the main thread), Venus runs smoother
+(far grass thinned), and the last "no next step" place (Venus's return visit) is fixed.
+**Still open:** FIN_10 - her right hand still hovers above Panther's head as he dies (he is out of her reach where she kneels). Mars and
+Europa were not finished by the test bots tonight (bot limits found and partly fixed; Europa's escape: the guide light leads straight into
+the first falling support). The image-gate baseline (36 shots) was not reduced, and captures are still not fully repeatable.
+
+**Item by item**
+1. **The full run, start to credits** (`Tools/Run-FullGame.ps1`: each chapter's own player-style run in story order - the Moon, Venus 1 + 2, Mars,
+   Europa, the asteroid, the mothership, Cattalus won + lost, the finale to the credits and the menu; muted, minimized, one at a time;
+   Dan's OK for the length). Results on rc4 (the build-h run + reruns on build i):
+   | piece | result |
+   |---|---|
+   | the Moon (Chapter 1, menu -> galley) | PASS - `PLAYTEST: 1/1, soft-locks 0` |
+   | Venus 1 (landing -> the control discovery) | PASS - `1/1, bridge laid` (rc3: **0/1, soft-lock** - the bike bug below) |
+   | Venus 2 (the way down -> the star map) | PASS - `1/1`, the Wormmaster contained, the record awarded |
+   | Mars | NOT finished - the bot could not complete two steps (below); the game itself got past the gate's power line |
+   | Europa | the whole chapter to the escape (below), then the bot fails the escape every try |
+   | the asteroid | PASS - `1/1, soft-locks 0` (16 game-min, the Machinist fight included) |
+   | the mothership | PASS - `1/1, soft-locks 0` (18 game-min, Ratwing included) |
+   | Cattalus, won | PASS - champion 1:20.8 vs Duchess 1:25.6 (one run before that crashed once and came second) |
+   | Cattalus, lost | PASS - runner-up 1:53.5 vs 1:29.7, the trophy by a trade |
+   | the finale (star map -> credits -> menu) | PASS - `1/1, soft-locks 0`, every rune, the fight, FIN_09-14, the credits |
+   **A crash, once:** in the first full pass on build h the player crashed natively (inside Unity, no script frame) on Europa's arrival aboard, on the first lap stroke after the Saucer scene had reloaded. On build i (FurPalm hardened: caches dropped on every scene load, NaN / jump guards, inactive cats skipped) the same path ran through without a crash. `-nofurpalm` switches the new hand layer off if it is ever suspected again.
+   **The big find - the bike (every world):** the Blender-made `ride` clip carries its body position 100x too far (centimetres: her hips
+   ~96 m above her root and 36 m ahead, reached over the 0.3 s cross-fade into the pose). Since QF10 the hips-on-the-saddle pin hid it by
+   moving her ROOT ~100 m the other way: she was DRAWN on the bike, but everything that reads where she is was 100 m off - in Venus the
+   watchdog pulled her "back to safety" every frame, the walkway collapse fired at the wrong place and the objective "Stop before the
+   collapse" never cleared: **rc3's Venus part 1 soft-locks** (`VENUS PLAYTEST: 0/1`). Fixed at the source: `ChapterSevenRide` places her
+   body on the saddle in the IK pass, before the hands and feet are solved, and only a small bounded calibration is learned; her root stays
+   on the bike (`RIDE ROOT (P2 1)`: hips > 0.3 m off the saddle 0 frames). Venus part 1 now passes (`1/1, bridge laid`). The diagnostic
+   lines `RIDE DIAG (P2 1)` (root / hips / error) are in every check run's log.
+   **Stale player-style bots found (not game bugs, fixed):** Venus part 2 waited for the old destination screen (C13 now ends on the star
+   map); the asteroid's and the mothership's bots dismounted on every "Get off" prompt during "Ride through ..." objectives (their "bike
+   step" test looked for the word "bike"); Mars's and Europa's `-menupick "Venus|Venus: the debrief"` lost its quotes in the runner (now
+   in-process).
+2. **Europa past the ice passage:** re-run as a player (the Europa piece above): the dive, the great chamber, the settlement, the keeper, the industrial tunnel, the base (the pressure chamber, the control room, the barred door, the holding area, the lift's power, the schematic, the three devices, the transports) - all through, no soft-lock. **The escape ride:** the bot hits the first falling support at (-227, -89, 300) on every try (66 tries) - it steers straight at the guide light, and the light's line runs through that support. A player steers round it (the supports are lit, readable obstacles), but the light should probably lead past it - **open, not changed**. The 21 untested shots: the gate's Europa run now passes all but its 6 baseline shots; the shots past the passage are in this run's captures.
+3. **The open items:**
+   - CONTROL RETURNS: the last place outside the finale (Venus's return visit, `VenusDirectorPart2.cs`) is declared a free moment (it ends
+     at the saucer's beam prompt) - `CONTROL RETURNS (QF30 17)`: 0 places left.
+   - FIN_01's blocky host pieces: not changed tonight (art; still listed).
+   - Panther's lap pose against her knees (FIN_10): superseded by QF31 (she kneels holding his head) - and his hands-on moment is now on
+     his fur (item 8).
+   - New open item found: Chapter 1 started at checkpoint 6 (the gate's run) shows the first lesson with the camera pitched up at a ceiling
+     (`t_move_*`, a baseline shot) - a checkpoint-start framing, not looked into.
+4. **The image-gate baseline (36): not reduced tonight.** I looked at the failing shots (the Moon's dark city tunnels and the checkpoint
+   ceiling framing, the asteroid's Machinist close-ups at range 0.24-0.29, the mothership's exterior shots) - each needs its own light /
+   framing work and a 25-minute rebuild to prove; the bike and the four of Dan's visible items took the night. Thresholds untouched,
+   nothing exempted. **Determinism (QF29 2): not done** - real-time clocks remain; tonight's gate showed it: a few shots near a threshold
+   flip between runs (the saucer demo's reveal 13 / 13e at edges 4.5-5.7 %, the Moon's `t_hang` at 5.4 %, the finale's drill charge at
+   white 20.5 %), see the release section.
+5. **Performance:**
+   - The saucer's load hitches: the cause was **the gallery TV** - whenever the saucer loaded before the main menu's preload had finished
+     (or without the menu), it decoded, grayscaled and resized Kyle's full-size images on the main thread, one ~400 ms frame each. The file
+     read and the pixel work now run on a worker thread (`GalleryTV.LoadImageAsync`). Saucer: hitches over 50 ms 9 -> 0 (worst 454 -> 41 ms).
+   - `PreWarm` (every scene): the first frames behind the fade draw the camera's surroundings once in six directions (the finale also from
+     six places along the route to the chamber) - 12-69 ms on load.
+   - Venus: `-perfprobe` (new) measured it GPU-bound (grass, post, the atmosphere each ~4-7 ms). The grass now thins with distance
+     (40 -> 110 m down to 35 % of the blades - the rest lie flat, zero area - and none beyond 240 m; the hillsides still read as grass):
+     median 18.7 -> 17.5 ms, worst 486 -> 90 ms, hitches over 50 ms 111 -> 36.
+   - The finale near the crossing: the route is pre-warmed now; spikes remain in the fight area (~110 ms near (12, -159)) - not traced.
+6. **The memory clips** (`Art/Video/memory_clips/`, all 1920x1044 h264): mem_01 the first meeting in the cell (9 s - note: it cuts to a
+   railing walkway in its first 3 s; the meeting itself from ~3 s), mem_02 "free-range" (7 s - her talking; Panther is out of frame), mem_03
+   the galley meal (6 s), mem_04 his head in her lap (5 s, a still push-in), mem_05 the Venus naming (9 s), mem_06 look after the ship
+   (8 s), mem_07 the quiet passage reconnection (14 s), mem_08 the Cattalus race (7 s), mem_09 Juniper's street (7 s), mem_10 the meadow,
+   his silhouette beside her (5.6 s). Poses checked on a contact sheet: correct (no floating / clipping).
+8. **Petting on his fur** (`FurPalm.cs`): his body's real surface = his drawn meshes baked each frame (the lap mesh too); every hand on him
+   - the lap stroke in every chair / staging (one shared `Stroke`, every chapter), FIN_10, CAT_10 - is measured against it after every
+   other hand pass and the arm re-solved onto it (palm a few mm off the fur, the wrist kept); a stroke whose cat is out of reach lets go
+   instead of stroking air; FIN_10 holds (never lets go). **Why it floated:** the stroke's target was the top of his BOUNDING BOX over the
+   box's centre line - over the curled lap mesh that line crosses the ring's hollow; and the old measure compared the palm with that same
+   target, so it read "1 cm" while the hand was in the air (rc3: `LAP ARMS` palm vs his back median **19.5 cm**). FIN_10's hands were his
+   bones plus a guessed offset (her open hand above his head in the captures). Check: `PETTING (P2 8)` per moment + `pet_insert_*`
+   close-ups.
+   **Measured (rc4):** every lap stroke in every chair and staging - the asteroid's AST_01 / AST_10, the mothership's BIA_01, Cattalus's CAT_01 / CAT_12, Venus's debrief, the finale's FIN_01 - palm-to-fur median 0.0-0.1 cm, p95 0.0-0.4 cm (rc3: 19.5 cm). **FIN_10 is NOT fixed:** kneeling at his head (he is 2.7x and lying), her right hand still hovers ~24 cm above him (the captures show it); the targets now come from his surface, the hands hold and she bows toward him, and it is still out of reach - the kneeling spot (half a metre past his head) needs to move closer to him. Open.
+9. **Tunneler's body:** his model had no rig (the Mixamo files in `Art/Mixamo/tunneler` are Y Bot motion without his skin), so the
+   builder now skins him (`FightDemoBuilderTunnelerBody.cs`: a height blend up his stacked rings - root / hips / spine / chest / neck - and
+   each arm shoulder 1.84 m -> elbow 1.30 m -> claw 0.69 m; the drill head rides the neck bone, DRILL AXIS still passes) and
+   `TunnelerBody` moves him everywhere he appears: breathing, a weight shift with the spine counter-rolling, the neck drifting, his body
+   lagging with the rig's motion (bobbing, lunging, staggering) and slumping dazed when it drops; on loud syllables the chest pumps and the
+   forearms lift; one gesture per key line (FIN_08_01 "Shut it down." points at the light well, FIN_08_03 sweeps toward his workers'
+   terminals, FIN_08_05 a fist brought down, Europa's EUR_08 / 11 lines: point, lean in, fist, sweep, arms spread); restrained after his
+   capture = still apart from breathing. The upper arm swings at most 38 deg (it is part of the belly's side); the forearm and claw carry
+   the gesture. The yoke stands inside his belly on the rig (he cannot grip it) - so "leaning on the yoke" is the lean + the fist, not a
+   grip. Measured: chest 3-20 deg and arms 14-39 deg per line. Frozen one-second windows on screen: 0 of 118-168 in the finale, 0 of 27 on Europa's screen. Captures: `tun_gesture_insert_*` (one per gesture).
+10. **The Scree's arms:** `ScreeRig` (every Scree, every chapter): idle, looking round, alerted or in a conversation (a line within 12 m,
+    or its own), the arms settle into a weary hang (shoulders low, forearms a little forward, the chest bowed 5 deg) and what is left of
+    the clip's motion is slowed (low-pass); at most one small forearm gesture (~14 deg) on about half its own lines. Work at a station with
+    nobody talking, and the fights, keep their clips. `SCREE ARMS (P2 10)`: the upper arms 6-16 deg/s while calm.
+11. **Panther's sounds as he dies:** the "breaths" (`cat_breath_slow`, `cat_breath_labored`) were ElevenLabs takes that came out tonal at
+    0.6-1.9 kHz - those were the meows, one per breath. They are now made procedurally (`Tools/Audio/make_breath_sfx.py`: band-passed
+    noise with breath envelopes - no voice possible) and slow with his breathing; **one** low, weak, mournful cry (`cat_cry_low`,
+    ElevenLabs, 150-400 Hz falling, "not a meow") once, after he hits the floor (`PANTHER SOUNDS (P2 11)`); no second cry. He is hurt
+    nowhere else in the game.
+
+
+**The release (1.0.0-rc4, build 1903): built, NOT published** (rc2 `game-1901` and rc3 `game-1902` untouched). The release gate
+(`Builds/ImageGate/gate_1.0.0-rc4.txt`): every chapter "ok" except Mars - `m11b_the_cut_power_line` new (range 0.08: the cable on the
+ramp's plain wall). Tonight's gate runs also showed the flips QF29 (2) leaves open: the saucer demo's reveal 13 / 13e (fixed: it showed
+whichever place the previous run had left the saucer at), the finale's drill charge (fixed: the well's glow), the finale's f38c (fixed: a
+clear framing), the asteroid's inserts (fixed: declared subjects), the Moon's `qf9_seven_knocked_down` and one Biaveh control-back frame
+(each failed once, passed in the next run: timing). Because rc4 gets further in each fixed-length gate run (the bike works), more shots
+are reached than in rc3's runs: Mars 29 -> 31, the asteroid 43 -> 48, the mothership 52 -> 53.
+
+### P2 — decisions made (Code; Dan can change any of them)
+- **The riding fix is at the source** (her body placed on the saddle in the IK pass), not by re-importing the `ride` clip (its Blender
+  export is centimetres; re-exporting would change the pose QF24 15's build check compares against).
+- **A stroke whose cat is out of reach lets go** (P2 8: "if he isn't within reach the stroke doesn't play"); FIN_10 holds instead (never
+  lets go, she bows toward him) - it is the one moment where letting go would be wrong.
+- **Tunneler's gestures** are tied to his lines by id (`TunnelerBody.Gestures`: EUR_08_01 point, 08_03 lean in, 08_06 fist, 08_08 sweep,
+  08_10 arms spread, EUR_11_01 fist, 11_03 point, FIN_07_09 sweep, FIN_08_01 point at the light well, 08_03 sweep at the terminals, 08_05
+  fist); his upper arm swings at most 38 deg (part of the belly), the forearm and claw carry the rest. Change a gesture = one table line.
+- **The Scree calm** applies whenever a line is spoken within 12 m (or their own), and when idle / looking round / alert; work at a
+  station with nobody talking keeps the work clip.
+- **Panther's cry** plays once (FIN_09, after he lands); FIN_10 has breaths only (no second cry).
+- **Venus's far grass thins** (40-110 m to 35 %, none beyond 240 m) rather than being cut at a distance (the hillsides keep their grass).
+- **The light well glows 0.11 during the fight** (was 0.22: a clipped white disc filling a fifth of the fight view).
+- **Gate fixes were real fixes**, never thresholds: declared subjects for the asteroid's panel inserts, new framings (Mars's cut power
+  line along the wall, the finale's conduit control close up from a clear spot), the saucer demo's check run pinned to its own place
+  (it leaked in from the previous run), side captures in their own subject slot.
+- **Bots fixed, not the game:** Venus 2 ends at the star map, the bots treat "Ride ..." / route objectives as riding steps, Mars holds RT
+  on a "Hold:" prompt; the runner passes quoted switches in-process.
+
+## For Dan to check (P2)
+1. **Ride anywhere** (Venus especially): the bike, the walkway collapse in Venus, the "Stop before the collapse" moment.
+2. **Petting:** sit in the egg chair / the pilot's chair with Panther in your lap - her hand on his fur, stroking along him.
+3. **FIN_10:** still not right (her right hand above his head) - tell me if you'd rather she kneel closer or the moment be re-staged.
+4. **Tunneler's body:** Europa's screen (EUR_08 / 11) and FIN_08 - the pointing, the sweep, the fist; does he read as alive now?
+5. **The Scree:** calmer arms in the Moon city and the finale.
+6. **Panther's sounds** in FIN_09 / FIN_10: one low cry, then breathing only.
+7. **The saucer loading** (no stutter) and Venus's grass in the distance.
 
 ## Quick fix QF31: the ending reworked + the fight space (Dan's 1.0.0-rc2 review, 2026-11-23) — A, A2, B, C done, status below; release 1.0.0-rc3
 Keep 1.0.0-rc2 published and tagged as it is (Dan's showable build); this goes into **1.0.0-rc3**. Where Dan's new heaven video

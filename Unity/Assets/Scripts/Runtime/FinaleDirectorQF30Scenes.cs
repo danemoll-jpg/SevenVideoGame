@@ -133,22 +133,43 @@ namespace Seven
         Vector3 HandR() { var a = Seven.AnimNow; var h = a != null ? a.GetBoneTransform(HumanBodyBones.RightHand) : null; return h != null ? h.position : P7 + Vector3.up * 0.5f; }
         /// <summary>FIN_10: her hands rest ON his fur (targets on his head and neck surface every frame - they follow his breathing and the
         /// shrink; palms toward him, fingers relaxed); a stroke runs the right hand from his head to his neck once.</summary>
+        float _reachBow;
         IEnumerator HandsOnHim()
         {
+            _reachBow = 0f;
             var ik = IK; ik.Ease = 1.4f; ik.Alive = true; ik.Spread = 0.6f;
             while (_handsOn && Cat != null)
             {
                 var head = CatBone("head"); var neck = CatBone("neck") ?? head; if (head == null) { yield return null; continue; }
                 var her = P7 + Vector3.up * 0.6f; float s = Cat.transform.lossyScale.x;
                 var outH = (her - head.position); outH.y = Mathf.Max(outH.y, 0.15f); outH.Normalize(); var up = (outH + Vector3.up).normalized;
-                var hp = _stroke ? Vector3.Lerp(head.position, neck.position, _strokeU) : head.position;
-                ik.RightPos = hp + up * 0.055f * s + Vector3.up * 0.015f; ik.RightPalmN = up; ik.RightPalmW = 1f; ik.RightFingerDir = Flat(Cat.transform.forward); ik.RightW = 1f;
                 var under = (her - neck.position); under.y = 0f; under.Normalize();
-                ik.LeftPos = neck.position + under * 0.06f * s + Vector3.up * 0.01f; ik.LeftPalmN = under; ik.LeftPalmW = 0.8f; ik.LeftFingerDir = Vector3.down; ik.LeftW = 0.9f;
+                // P2 (8): the targets are ON his drawn surface (the side of his head / neck that faces her, found on the baked mesh) - the
+                // old targets were his bones plus a guessed offset, which put her open hand in the air above his head (rc3 / rc4 captures)
+                Vector3 OnFur(Vector3 from, Vector3 dirOut, out Vector3 n)
+                {
+                    n = dirOut;
+                    if (FurContact.Nearest(Cat.transform, from + dirOut * 0.5f * Mathf.Max(1f, s), out var sp, out var sn, out _)) { n = sn; return sp; }
+                    return from + dirOut * 0.06f * s;
+                }
+                var headP = _stroke ? Vector3.Lerp(head.position, neck.position, _strokeU) : head.position;
+                var hSurf = OnFur(headP, up, out var hN); var nSurf = OnFur(neck.position, (under + Vector3.up * 0.4f).normalized, out var nN);
+                ik.RightPos = hSurf + hN * 0.03f - Flat(Cat.transform.forward).normalized * 0.04f; ik.RightPalmN = hN; ik.RightPalmW = 1f; ik.RightFingerDir = Flat(Cat.transform.forward); ik.RightW = 1f;
+                ik.LeftPos = nSurf + nN * 0.03f; ik.LeftPalmN = nN; ik.LeftPalmW = 0.9f; ik.LeftFingerDir = Vector3.down; ik.LeftW = 0.9f;
                 ik.LeftHint = P7 + Vector3.up * 0.7f - Seven.transform.right * 0.5f; ik.LeftHintW = 0.6f; ik.RightHint = P7 + Vector3.up * 0.8f + Seven.transform.right * 0.5f; ik.RightHintW = 0.6f;
                 ik.LookPos = head.position; ik.LookW = 1f;
-                // P2 (8): both palms ON his fur (measured against his drawn body every frame, the arm re-solved onto it)
-                var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f); fp.Set(false, Cat.transform, "FIN_10 hand on his neck", 0.9f);
+                // and both palms held on him every frame (measured against his body after every other hand pass, never let go here)
+                var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f, true); fp.Set(false, Cat.transform, "FIN_10 hand on his neck", 0.9f, true);
+                // P2 (8): she bows toward him as far as her hands need - kneeling half a metre past his head, his head on the floor was beyond an
+                // arm's length from her shoulder (the hand stayed in the air whatever the arm solver did)
+                var rp = Seven.GetComponent<SevenRestPose>(); var sh = Seven.Bone(HumanBodyBones.RightUpperArm); var lo = Seven.Bone(HumanBodyBones.RightLowerArm); var hb = Seven.Bone(HumanBodyBones.RightHand);
+                if (rp != null && sh != null && lo != null && hb != null)
+                {
+                    float arm = Vector3.Distance(sh.position, lo.position) + Vector3.Distance(lo.position, hb.position) + 0.06f;
+                    float need = Vector3.Distance(sh.position, hSurf) - arm * 0.92f;
+                    _reachBow = Mathf.MoveTowards(_reachBow, Mathf.Clamp(_reachBow + need * 60f, 0f, 55f), Time.deltaTime * 30f);
+                    if (rp.Bow < _reachBow) rp.Bow = _reachBow;
+                }
                 yield return null;
             }
             Seven.GetComponent<FurPalm>()?.Off();

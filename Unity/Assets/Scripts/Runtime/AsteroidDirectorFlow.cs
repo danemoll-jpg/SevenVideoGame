@@ -452,11 +452,13 @@ namespace Seven
             if (CutterPanel != null) StartCoroutine(PanelIntoCutter());
             Shoot(new Vector3(-379f, 3.2f, 113.5f), new Vector3(-379f, 1.2f, L.ArchiveConveyorZ), 48f, 0.5f);
             yield return Wait(1.0f);
+            ImageGate.ExpectPoint(new Vector3(-379f, 1.2f, L.ArchiveConveyorZ), "the panel moving into the cutter");          // P2 (gate): what the shot is of
             yield return Shot("a18_a_panel_moves_into_the_cutter");
             // INSERT: the markings match those near the temple signal
-            if (CutterPanel != null) { var cpp = new Vector3(-381f, 1.0f, L.ArchiveConveyorZ); Shoot(cpp + new Vector3(2.6f, 0.4f, -0.3f), cpp, 30f, 0.01f); Glow(PanelGlyph, 1.4f); yield return Wait(1.1f); yield return Shot("a19_insert_the_panel_markings"); }
+            if (CutterPanel != null) { var cpp = new Vector3(-381f, 1.0f, L.ArchiveConveyorZ); Shoot(cpp + new Vector3(2.6f, 0.4f, -0.3f), cpp, 30f, 0.01f); Glow(PanelGlyph, 1.4f); yield return Wait(1.1f); ImageGate.Expect(CutterPanel, "the panel's markings (insert)"); yield return Shot("a19_insert_the_panel_markings"); }
             Shoot(L.TempleSignal + new Vector3(11f, -3.5f, 0f), L.TempleSignal, 30f, 0.01f); Glow(SignalGlyph, 1.6f);
             yield return Wait(1.1f);
+            ImageGate.ExpectPoint(L.TempleSignal, "the same markings at the temple signal (insert)");
             yield return Shot("a20_insert_the_same_markings_at_the_temple_signal");
             yield return Line("AST_04_12");                    // Wait. That came from the archive.
             yield return Line("AST_04_13");                    // Unused material is being reassigned.

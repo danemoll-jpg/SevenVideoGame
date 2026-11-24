@@ -213,16 +213,22 @@ namespace Seven
         static void Rot(Transform t, Vector3 axis, float deg) { if (t != null && Mathf.Abs(deg) > 1e-4f) t.rotation = Quaternion.AngleAxis(deg, axis) * t.rotation; }
 
         // ------------------------------------------------------------------ measures (check runs)
-        Quaternion _prevChest, _prevArm; bool _prev;
+        Quaternion _prevChest, _prevArm; bool _prev; float _winT;
         void Measure(bool speaking)
         {
             if (DemoBoot.CaptureDir == null) return;
             bool visible = false; foreach (var r in GetComponentsInChildren<Renderer>()) if (r.isVisible) { visible = true; break; }
-            if (visible)
+            // frozen = no visible change over half a second (a per-frame breath is below Quaternion.Angle's float resolution); the chest is
+            // measured against his root, so a still body on a moving rig counts as frozen too
+            if (visible && Time.deltaTime > 0f)
             {
-                Frames++;
-                if (_prev && Quaternion.Angle(_prevChest, Chest.rotation) < 0.001f && Quaternion.Angle(_prevArm, UpperR != null ? UpperR.rotation : Chest.rotation) < 0.001f && Time.deltaTime > 0f) FrozenFrames++;
-                _prevChest = Chest.rotation; _prevArm = UpperR != null ? UpperR.rotation : Chest.rotation; _prev = true;
+                _winT += Time.deltaTime; var rel = Quaternion.Inverse(transform.rotation) * Chest.rotation; var relA = Quaternion.Inverse(transform.rotation) * (UpperR != null ? UpperR.rotation : Chest.rotation);
+                if (!_prev) { _prevChest = rel; _prevArm = relA; _prev = true; _winT = 0f; }
+                else if (_winT >= 1.0f)
+                {
+                    Frames++; if (Quaternion.Angle(_prevChest, rel) < 0.03f && Quaternion.Angle(_prevArm, relA) < 0.03f) FrozenFrames++;
+                    _prevChest = rel; _prevArm = relA; _winT = 0f;
+                }
             }
             if (!speaking) return;
             _lineChest = Mathf.Max(_lineChest, Quaternion.Angle(_lc, Chest.rotation));
@@ -233,15 +239,13 @@ namespace Seven
             {
                 _shot = true;
                 var c = Chest.position; var side = transform.right * (_gRight ? 1f : -1f);
-                ChapterCapture.I.StartCoroutine(GestureShot("tun_gesture_" + (_gLine ?? "line").ToLowerInvariant() + "_" + _g.ToString().ToLowerInvariant(), c + transform.forward * 4.2f + side * 2.2f + Vector3.up * 0.3f, c + Vector3.down * 0.2f));
+                ChapterCapture.I.StartCoroutine(GestureShot("tun_gesture_insert_" + (_gLine ?? "line").ToLowerInvariant() + "_" + _g.ToString().ToLowerInvariant(), c + transform.forward * 4.2f + side * 2.2f + Vector3.up * 0.3f, c + Vector3.down * 0.2f));
             }
         }
         System.Collections.IEnumerator GestureShot(string name, Vector3 cam, Vector3 at)
         {
-            var keep = ImageGate.PushSubject();
-            ImageGate.Expect(transform, "Tunneler gesturing (his body)", 0f, "tun_gesture_");
+            ImageGate.ExpectSide("tun_gesture_insert_", transform, "Tunneler gesturing (his body)");
             yield return ChapterCapture.I.ShotFrom(name, cam, at, 45f);
-            ImageGate.PopSubject(keep);
         }
         void EndLine()
         {
@@ -253,6 +257,6 @@ namespace Seven
             }
             _line = null;
         }
-        public static string Summary() => $"TUNNELER BODY (P2 9): {Lines} of his lines seen, {LinesMoved} with his body clearly moving (chest > 2 deg or an arm > 4 deg); frozen frames while on screen {FrozenFrames} of {Frames} (must be 0)";
+        public static string Summary() => $"TUNNELER BODY (P2 9): {Lines} of his lines seen, {LinesMoved} with his body clearly moving (chest > 2 deg or an arm > 4 deg); one-second windows on screen with his body frozen {FrozenFrames} of {Frames} (must be 0)";
     }
 }

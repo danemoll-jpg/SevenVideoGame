@@ -112,7 +112,7 @@ namespace Seven
                 Sink(Mathf.SmoothStep(0f, 1f, t), rune0); if (secs <= 0f) break; yield return null;
             }
             Sink(1f, rune0);
-            Glow(WellRim, 0.7f); Glow(PlatformSurface, 0.22f);   // a soft well (it sits under the fight camera)
+            Glow(WellRim, 0.7f); Glow(PlatformSurface, 0.11f);   // a soft well (it sits under the fight camera; P2: 0.22 read as a clipped white disc filling a fifth of the fight view)
             Log($"QF31 (8): the rune pedestals sank flush into the floor (the runes set and glowing in their sockets), the archive's table lowered into a shallow light well ({L.WellDepth * 100f:0} cm), the rim lit - the open floor is clear");
         }
         void Sink(float u, Vector3[] rune0)
@@ -191,7 +191,21 @@ namespace Seven
             if (!FinaleState.SceneDone("FIN_09_leap"))
             {
                 BeaconDone(_conduitBeacon, 1.2f); Glow(ConduitBreak, 0.6f); Glow(ConduitLines, 1.2f); Glow(ConduitNode, 1.4f);
-                if (Shots) { ImageGate.ExpectPoint(L.ConduitAt + Vector3.up * 0.9f, "the conduit's control, restored"); yield return Cap.ShotFrom("f38c_the_conduit_control_restored", L.ConduitAt + Flat(L.ChamberC - L.ConduitAt).normalized * 3.4f + Vector3.up * 1.9f + Vector3.forward * 1.2f, L.ConduitAt + Vector3.up * 0.5f, 50f); }
+                if (Shots)
+                {
+                    // P2 (gate): the first framing round the control with a clear line to it (the fixed spot could fall inside his rig when
+                    // the fight ended near the conduit - a flat grey frame of its hull) - candidates on the chamber's side, every 25 deg
+                    // close enough that the carved face, its glyph panel and the lit rings fill the frame (from 3.4 m it read as a plain pedestal)
+                    var tgt = L.ConduitAt + Vector3.up * 0.7f; var inward = Flat(L.ChamberC - L.ConduitAt).normalized; var camAt = tgt + inward * 2.2f + Vector3.up * 0.7f;
+                    foreach (var deg in new[] { 20f, -20f, 0f, 45f, -45f, 70f, -70f })
+                    {
+                        var c = tgt + Quaternion.AngleAxis(deg, Vector3.up) * inward * 2.2f + Vector3.up * 0.7f; var d = tgt - c;
+                        bool rigIn = TunnelerCraft != null && TunnelerCraft.gameObject.activeInHierarchy && Rig != null && Flat(c - TunnelerCraft.position).magnitude < Rig.Radius + 0.6f;
+                        if (!rigIn && !CameraOccluders.Raycast(c, d.normalized, d.magnitude - 0.4f, out _)) { camAt = c; break; }
+                    }
+                    ImageGate.ExpectPoint(L.ConduitAt + Vector3.up * 0.9f, "the conduit's control, restored");
+                    yield return Cap.ShotFrom("f38c_the_conduit_control_restored", camAt, tgt, 46f);
+                }
                 StartCoroutine(DialogueFraming.Over("the restored conduit (the Archive's voice)", SayIds("FIN_08_P6")));   // Connection restored.
                 // 1. the danger: she turns back toward the archive, unaware; the rig roars up behind her, the drill at her back
                 var A = new Vector3(5.6f, L.Y, -159.6f); var toP = Flat(L.PlatformAt - A).normalized; var side = Vector3.Cross(Vector3.up, toP);

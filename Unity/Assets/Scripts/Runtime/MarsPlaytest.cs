@@ -104,6 +104,8 @@ namespace Seven
                 // the prompt: X (interact) or RT (telekinesis)
                 if (!string.IsNullOrEmpty(d.Prompt))
                 {
+                    // P2: a "Hold: ..." prompt (the gate's cut power line) needs RT held down, not tapped - the taps never filled it
+                    if (d.PromptBtn == ControlsLegend.Btn.Tk && d.Prompt != null && d.Prompt.StartsWith("Hold")) { _stick = Vector2.zero; _holdRT = false; _rt = 1f; _tks++; Log($"RT held at '{d.Prompt}'"); yield return WaitR(2.6f); _rt = 0f; continue; }
                     if (d.PromptBtn == ControlsLegend.Btn.Tk) { _stick = Vector2.zero; _rt = 0f; _holdRT = true; _tks++; yield return WaitR(0.5f); _holdRT = false; continue; }
                     if (_phase == 0 && _presses.Count == 0 && !(d.Prompt == "Ride" && !WantsBike(d)) && !(d.Prompt == "Get off" && !WantsOff(d))) { _stick = Vector2.zero; _rt = 0f; Press(X); _xs++; Log($"X at '{d.Prompt}'"); yield return WaitR(0.6f); continue; }
                 }
@@ -157,9 +159,9 @@ namespace Seven
                 if (!_arch.Contains(name) && Flat(p - at).magnitude < r && Mathf.Abs(p.y - at.y) < 4f) { _arch.Add(name); StartCoroutine(Cap.Shot(name)); }
         }
         // a player gets on the bike when the light is far, and off when the light is close by (an X / RT spot ahead)
-        static bool BikeStep(MarsDirector d) => (d.ObjectiveNow != null && d.ObjectiveNow.Contains("bike")) || (d.WaitingFor != null && d.WaitingFor.Contains("on the bike"));
+        static bool BikeStep(MarsDirector d) => (d.ObjectiveNow != null && (d.ObjectiveNow.Contains("bike") || d.ObjectiveNow.IndexOf("ride", System.StringComparison.OrdinalIgnoreCase) >= 0 || d.ObjectiveNow.Contains("route"))) || (d.WaitingFor != null && d.WaitingFor.Contains("on the bike"));   // P2: a riding step - never dismount at a passing "Get off" prompt
         static bool WantsBike(MarsDirector d) => d.NextMarker.HasValue && (BikeStep(d) || Flat(d.NextMarker.Value - d.Seven.transform.position).magnitude > 14f);
-        static bool WantsOff(MarsDirector d) => d.NextMarker.HasValue && !BikeStep(d) && Flat(d.NextMarker.Value - d.Bike.transform.position).magnitude < 12f;
+        static bool WantsOff(MarsDirector d) => d.NextMarker.HasValue && Flat(d.NextMarker.Value - d.Bike.transform.position).magnitude < (BikeStep(d) ? 4f : 12f);   // P2: on a riding step only once arrived
         IEnumerator WaitR(float s) { for (float t = 0f; t < s; t += Time.deltaTime) yield return null; }
         void OnDestroy() { if (_pad != null && _pad.added) InputSystem.RemoveDevice(_pad); }
     }

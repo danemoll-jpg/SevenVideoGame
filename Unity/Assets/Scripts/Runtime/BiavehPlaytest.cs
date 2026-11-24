@@ -172,7 +172,7 @@ namespace Seven
             yield return WaitR(2f);
             Cap.Finish($"MOTHERSHIP PLAYTEST: 1/1, soft-locks {_soft}, skips taken {_skips}, X presses {_xs}, telekinesis {_tks}, RB {_rbs}, climb presses {_climbs}, ({(Time.time - _t0) / 60f:0.0} game-min) - {BiavehState.Summary()}; {WorldFlags.Summary()}");
         }
-        static bool BikeStep(BiavehDirector d) => (d.ObjectiveNow != null && d.ObjectiveNow.Contains("bike")) || (d.WaitingFor != null && d.WaitingFor.Contains("on the bike"));
+        static bool BikeStep(BiavehDirector d) => (d.ObjectiveNow != null && (d.ObjectiveNow.Contains("bike") || d.ObjectiveNow.StartsWith("Ride") || d.ObjectiveNow.Contains("route"))) || (d.WaitingFor != null && d.WaitingFor.Contains("on the bike"));   // P2: a riding step - never dismount at a passing "Get off" prompt
         static bool WantsBike(BiavehDirector d) => d.NextMarker.HasValue && (BikeStep(d) || Flat(d.NextMarker.Value - d.Seven.transform.position).magnitude > 30f);
         static bool WantsOff(BiavehDirector d) => !d.OnRoute && d.NextMarker.HasValue && !BikeStep(d) && Flat(d.NextMarker.Value - d.Bike.transform.position).magnitude < 12f;
         void OnDestroy() { if (_pad != null && _pad.added) InputSystem.RemoveDevice(_pad); }

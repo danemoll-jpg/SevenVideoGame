@@ -38,9 +38,11 @@ namespace Seven
         public static void Expect(Transform t, string label, float seconds = 0f, string forShot = null) { _subject = t; _subjectPoint = null; _subjectLabel = label; _subjectFor = forShot; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
         /// <summary>A view of a place: the point must be in frame and unblocked (the city, the transit tower, the meadow).</summary>
         public static void ExpectPoint(Vector3 p, string label, float seconds = 0f, string forShot = null) { _subject = null; _subjectPoint = p; _subjectLabel = label; _subjectFor = forShot; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
-        /// <summary>P2 (8): a side capture (a petting close-up) declares its own subject without taking the director's pending one.</summary>
-        public static object PushSubject() => new object[] { _subject, _subjectPoint, _subjectLabel, _subjectFor, _subjectUntil };
-        public static void PopSubject(object o) { var a = (object[])o; _subject = (Transform)a[0]; _subjectPoint = (Vector3?)a[1]; _subjectLabel = (string)a[2]; _subjectFor = (string)a[3]; _subjectUntil = (float)a[4]; }
+        /// <summary>P2: a side capture (a petting close-up, Tunneler's gesture) declares its subject in its OWN slot, keyed by its file-name
+        /// prefix - never touching the director's pending one (a save / restore round it lost the asteroid's a18-a20 and Mars's m11b
+        /// subjects when the director declared in between).</summary>
+        static readonly Dictionary<string, (Transform t, string label)> _side = new Dictionary<string, (Transform, string)>();
+        public static void ExpectSide(string forShot, Transform t, string label) { _side[forShot] = (t, label); }
         static bool SubjectFor(string name) => _subjectFor == null || name.Contains(_subjectFor);
         static void SubjectUsed() { if (_subjectUntil < 0f || Time.time > _subjectUntil) { _subject = null; _subjectPoint = null; _subjectLabel = null; _subjectFor = null; } }
 
@@ -136,11 +138,22 @@ namespace Seven
                 // "nothing to see": little detail AND little contrast (a smooth, strongly lit shape - the cave mouth, the asteroid - is fine)
                 if (!insert && ((r.Edges < EdgesMin && r.Range < RangeStrong) || r.Edges < EdgesHard)) why.Add($"edges {r.Edges * 100f:0.0} % < {EdgesMin * 100f:0} % with range {r.Range:0.00} < {RangeStrong:0.00} (or < {EdgesHard * 100f:0} %)");
                 if (r.Black > BlackMax) why.Add($"black {r.Black * 100f:0} % > {BlackMax * 100f:0} %");
-                bool mine = SubjectFor(ln);
-                if (!SubjectInFrame(cam, out r.Subject, mine)) why.Add("no subject at a readable size (" + r.Subject + ")");
+                string sideKey = null; foreach (var kv in _side) if (ln.Contains(kv.Key)) { sideKey = kv.Key; break; }
+                if (sideKey != null)
+                {
+                    var sd = _side[sideKey]; bool vis = false; float a = 0f; if (sd.t != null) a = Area(cam, sd.t, out vis); bool okSide = sd.t != null && a >= SubjectMin && vis;
+                    r.Subject = $"'{sd.label}' {a * 100f:0.0} % of the frame{(okSide ? "" : ", blocked / too small")}";
+                    if (!okSide) why.Add("no subject at a readable size (" + r.Subject + ")");
+                }
+                else
+                {
+                    bool mine = SubjectFor(ln);
+                    if (!SubjectInFrame(cam, out r.Subject, mine)) why.Add("no subject at a readable size (" + r.Subject + ")");
+                }
             }
             else r.Subject = "exempt shot (fade / title / video / menu)";
-            if (SubjectFor(ln)) SubjectUsed();
+            bool sideShot = false; foreach (var kv in _side) if (ln.Contains(kv.Key)) sideShot = true;
+            if (!sideShot && SubjectFor(ln)) SubjectUsed();
             r.Pass = why.Count == 0; r.Why = string.Join("; ", why);
             return r;
         }

@@ -89,7 +89,7 @@ namespace Seven
             var s = S;
             if (s == null) { Log("no Venus-mode galley found"); Cap.Finish("VENUS PLAYTEST 2: 0/1 (saucer phase did not start)"); yield break; }
             // P2 (1): VEN_C13 now ends on the star map (the next-destination choice) - reaching it is the end of this run
-            bool MapUp() => ShipConsole.I != null && ShipConsole.I.Open && !(s.Dlg != null && s.Dlg.Busy);
+            bool MapUp() => ShipConsole.I != null && (ShipConsole.I.Choosing || ShipConsole.I.Open) && !(s.Dlg != null && s.Dlg.Busy);
             while (!s.Explored && !MapUp()) { if (s.Dlg != null && s.Dlg.Busy && Idle && s.UI.SubtitleVisible) Press(Y); yield return WaitR(0.3f); }
             if (MapUp())
             {
