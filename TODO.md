@@ -39,9 +39,10 @@ Never stop to ask; note decisions in TODO.md. Commit and push.
 
 ## Polish pass P2 — status (2026-11-24, overnight)
 ### Morning summary (plain words)
-**Published?** **No - 1.0.0-rc4 is built (build 1903) but NOT published;** rc2 and rc3 are untouched. The release image gate fails on one
-shot: Mars's cut power line (`m11b`), a cutscene shot rc3's gate run never reached (the bike bug cut that run short) - the cable sits on a
-plain flat wall that fills the frame. Everything rc3's gate passed, rc4 passes. Say "publish rc4" and I will, or I'll give that wall detail first.
+**Published?** **Yes - 1.0.0-rc4 (build 1903, `game-1903`) is published and Latest** (after your "fix the wall first", 2026-11-24 morning);
+rc3 (`game-1902`) and rc2 (`game-1901`) are retained. The release gate passes in every chapter (`Builds/ImageGate/gate_1.0.0-rc4.txt`:
+no new or worse failure, NaN 0). The last blocker was Mars's cut power line (`m11b`): the bank's face behind the cable was one plain flat
+plane - it is now dressed masonry (courses, pilasters, a coping), and the shot looks up the ramp to the dead gate (range 0.08 -> 0.54).
 **The most important find:** riding the bike was broken underneath in every world. Her drawn body sat on the bike, but the game
 thought she was ~100 m away (a unit error in the riding pose, hidden since QF10). In Venus that broke the walkway collapse and the
 "below the world" rescue, so rc3's Venus part 1 cannot be finished by a player-style run. Fixed: Venus now plays through from landing
@@ -145,13 +146,15 @@ other chapter, Mars included, plays through from start to end. The image-gate ba
     nowhere else in the game.
 
 
-**The release (1.0.0-rc4, build 1903): built, NOT published** (rc2 `game-1901` and rc3 `game-1902` untouched). The release gate
-(`Builds/ImageGate/gate_1.0.0-rc4.txt`): every chapter "ok" except Mars - `m11b_the_cut_power_line` new (range 0.08: the cable on the
-ramp's plain wall). Tonight's gate runs also showed the flips QF29 (2) leaves open: the saucer demo's reveal 13 / 13e (fixed: it showed
-whichever place the previous run had left the saucer at), the finale's drill charge (fixed: the well's glow), the finale's f38c (fixed: a
-clear framing), the asteroid's inserts (fixed: declared subjects), the Moon's `qf9_seven_knocked_down` and one Biaveh control-back frame
-(each failed once, passed in the next run: timing). Because rc4 gets further in each fixed-length gate run (the bike works), more shots
-are reached than in rc3's runs: Mars 29 -> 31, the asteroid 43 -> 48, the mothership 52 -> 53.
+**The release (1.0.0-rc4, build 1903): PUBLISHED** (`game-1903`, Latest; rc2 `game-1901` and rc3 `game-1902` untouched). The release gate
+passes in every chapter. On the way: Mars's `m11b` (the cut power line) failed three builds in a row - the cable's wall was a plain flat
+plane; fixed with dressed masonry on the east ramp's bank face (`EastRampRevetment` in `FightDemoBuilderMars.cs`) and a shot up the ramp
+to the dead gate (fog thinned near the cut without dimming the haze beyond). Tonight's gate runs also showed the flips QF29 (2) leaves
+open: the saucer demo's reveal 13 / 13e (fixed: it showed whichever place the previous run had left the saucer at), the finale's drill
+charge (fixed: the well's glow), the finale's f38c (fixed: a clear framing), the asteroid's inserts (fixed: declared subjects), the Moon's
+`qf9_seven_knocked_down` and one Biaveh control-back frame (each failed once, passed in the next run: timing). Because rc4 gets further in
+each fixed-length gate run (the bike works), more shots are reached than in rc3's runs: Mars 29 -> 31, the asteroid 43 -> 48, the
+mothership 52 -> 53.
 
 ### P2 — decisions made (Code; Dan can change any of them)
 - **The riding fix is at the source** (her body placed on the saddle in the IK pass), not by re-importing the `ride` clip (its Blender

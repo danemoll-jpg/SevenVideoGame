@@ -526,6 +526,37 @@ namespace Seven.EditorTools
             }
             var endUp = CableEnd("GateCableEndUpper", new Vector3(wallX, RampY(M.GateBreakZ + 1.1f) + 1.3f, M.GateBreakZ + 1.1f), new Vector3(-0.25f, -1.05f, -0.15f));
             var endLo = CableEnd("GateCableEndLower", new Vector3(wallX, RampY(M.GateBreakZ - 1.1f) + 1.3f, M.GateBreakZ - 1.1f), new Vector3(-0.85f, -1.15f, 0.55f));
+            // P2 (the release gate's m11b): the bank's face behind the power line was one plain flat plane - in the shot of the cut it filled
+            // the frame (range 0.08). Faced with the old dressed masonry the rest of the route uses: courses of blocks of varied length and
+            // depth (a few weathered back), shallow pilasters every 6 m with a coping course on top - kept 0.2 m off the cable's line.
+            {
+                var rv = new List<Vector3>(); var rt = new List<int>(); var rng = new System.Random(1124);
+                const float face = 60f, course = 0.55f, zFoot = -56f, zTopR = -12.6f;
+                for (int k = 0; fy + k * course < 0f; k++)
+                {
+                    float yb = fy + k * course, z = zFoot - 0.4f + (k % 2) * 0.8f;
+                    while (z < zTopR)
+                    {
+                        float len = 1.2f + (float)rng.NextDouble() * 1.1f, z1 = Mathf.Min(z + len, zTopR);
+                        if (yb + course > RampY(z1) - 0.05f)                                  // visible above the ramp's surface
+                        {
+                            float depth = rng.NextDouble() < 0.12 ? 0.04f : 0.09f + (float)rng.NextDouble() * 0.07f;
+                            float y0 = Mathf.Max(yb, RampY(z) - 0.6f), y1 = Mathf.Min(yb + course - 0.035f, -0.16f);   // under the coping
+                            if (y1 - y0 > 0.1f) MBox(rv, rt, new Vector3(face - depth * 0.5f + 0.01f, (y0 + y1) * 0.5f, (z + z1) * 0.5f), new Vector3(depth + 0.02f, y1 - y0, z1 - z - 0.035f), 0f, 0.015f);
+                        }
+                        z = z1;
+                    }
+                }
+                for (float z = zFoot + 3f; z < zTopR - 1f; z += 6f)                         // pilasters + their caps
+                {
+                    float y0 = RampY(z) - 0.6f;
+                    MBox(rv, rt, new Vector3(face - 0.09f, (y0 + 0f) * 0.5f, z), new Vector3(0.22f, -y0, 0.7f), 0f, 0.03f);
+                    MBox(rv, rt, new Vector3(face - 0.11f, -0.08f, z), new Vector3(0.26f, 0.28f, 0.9f), 0f, 0.03f);
+                }
+                MBox(rv, rt, new Vector3(face - 0.07f, -0.07f, (zFoot + zTopR) * 0.5f), new Vector3(0.18f, 0.18f, zTopR - zFoot - 0.1f), 0f, 0.02f);   // the coping course
+                MeshObject("EastRampRevetment", SaveMesh(Finish(rv, rt), "Mars_EastRampRevetment"), m.wall, maint, false);
+                Log($"P2: the east ramp's bank face (behind the gate's power line) dressed with masonry - {rt.Count / 3} triangles");
+            }
 
             // ---------------------------------------------------------------- the rims, the overlook + mechanism, the controls, the relay, the pier walk
             var anc = new GameObject("Ancient").transform; anc.SetParent(world, false);

@@ -456,10 +456,10 @@ namespace Seven
                 if (GateFeed != null) StartCoroutine(GateFeed.Flicker(GateFeed.Count - 1, 2.4f));
                 // P2 (gate): pulled back and up so the ramp under the break and the wall it runs along frame the two ends (the close
                 // framing showed two cable pieces floating in flat haze - nothing to place them)
-                StartCoroutine(FogThin(0.7f, 0.6f, 0.8f));
-                // along the wall, not at it (facing it, its plain face filled the frame - range 0.07): the cable on the wall at one side, the
-                // ramp's floor under the break and the open ravine on the other
-                Shoot(L.GateBreak + new Vector3(-2.2f, 0.8f, -9.5f), L.GateBreak + new Vector3(-0.6f, -0.9f, 0f), 56f, 0.01f);
+                StartCoroutine(FogThin(0.5f, 0.6f, 0f));                       // thinner near the cut, the bright haze beyond kept
+                // along the wall, not at it (facing it, its face filled the frame - range 0.07), looking up the ramp: the dressed wall and the
+                // cable at one side, the break ahead, the ramp's bright top and the sky over the gate beyond it (range from the light above)
+                Shoot(L.GateBreak + new Vector3(-2.2f, 0.4f, -9.5f), L.GateBreak + new Vector3(-0.8f, 1.6f, 5f), 58f, 0.01f);
                 yield return Wait(1.6f);
                 ImageGate.ExpectPoint(L.GateBreak, "the cut power line");
                 yield return Shot("m11b_the_cut_power_line");
