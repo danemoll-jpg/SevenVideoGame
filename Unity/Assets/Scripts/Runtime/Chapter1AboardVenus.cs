@@ -296,7 +296,7 @@ namespace Seven
         IEnumerator StandFromPilotChair()
         {
             // QF13 (15): standing up ends every seated hand moment (petting, the console, the armrest) - stop the stroke loop
-            _stroke = 0f; if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
+            _stroke = 0f; if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; } Seven.GetComponent<FurPalm>()?.Off();
             if (_ik != null) _ik.ReleaseAll("she stands up from the pilot's chair");
             if (Cat.Current == CatCompanion.Mode.OnLap) { Cat.HopOffLap(Flat(PilotHips + PilotRight * 1.0f - PilotFwd * 0.3f)); yield return Wait(Cat.HopTime + 0.1f); }
             Cat.LapFrame = null;
@@ -360,6 +360,15 @@ namespace Seven
                     _ik.RightPos = side + sn * 0.022f - PilotFwd * 0.04f; _ik.RightPalmN = sn; _ik.RightFingerDir = PilotFwd; _ik.RightPalmW = 1f;
                     _ik.RightHint = PilotHips + PilotRight * 0.30f + Up * 0.16f - PilotFwd * 0.06f; _ik.RightHintW = 1f;
                     _ik.RightW = Mathf.MoveTowards(_ik.RightW, onLap ? _stroke * 0.95f : 0f, Time.deltaTime * 2f);
+                }
+                // P2 (8): the palms ride ON his fur - FurPalm measures each palm against his drawn body after every hand pass and
+                // re-solves the arm onto it (or lets go when he is out of reach: no stroke in the air)
+                if (Cat != null)
+                {
+                    var fp = FurPalm.On(Seven.gameObject);
+                    string mom = "lap stroke " + (_staged ? StagedScene + " " + CurrentStage : InEggChair ? "egg chair" : "pilot's chair");
+                    fp.Set(false, Cat.transform, mom, onLap ? _stroke * (1f - Mathf.Clamp01(lift / 0.02f)) : 0f);
+                    fp.Set(true, Cat.transform, mom + " (other hand)", !_navHand && onLap ? _stroke : 0f);
                 }
                 // QF23 (11): purring whenever he is in her lap and she strokes him - swells with the stroke, fades when she stops
                 if (onLap && _stroke > 0.05f && _lapPurr == null && !_sceneHasPurr) { _lapPurr = Purr.Loop(Cat.transform, 0.85f); if (DemoBoot.CaptureDir != null) Cap?.Log("PURR (QF23 11): lap purr starts as she strokes him - " + Purr.Level()); }

@@ -38,6 +38,9 @@ namespace Seven
         public static void Expect(Transform t, string label, float seconds = 0f, string forShot = null) { _subject = t; _subjectPoint = null; _subjectLabel = label; _subjectFor = forShot; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
         /// <summary>A view of a place: the point must be in frame and unblocked (the city, the transit tower, the meadow).</summary>
         public static void ExpectPoint(Vector3 p, string label, float seconds = 0f, string forShot = null) { _subject = null; _subjectPoint = p; _subjectLabel = label; _subjectFor = forShot; _subjectUntil = seconds > 0f ? Time.time + seconds : -1f; }
+        /// <summary>P2 (8): a side capture (a petting close-up) declares its own subject without taking the director's pending one.</summary>
+        public static object PushSubject() => new object[] { _subject, _subjectPoint, _subjectLabel, _subjectFor, _subjectUntil };
+        public static void PopSubject(object o) { var a = (object[])o; _subject = (Transform)a[0]; _subjectPoint = (Vector3?)a[1]; _subjectLabel = (string)a[2]; _subjectFor = (string)a[3]; _subjectUntil = (float)a[4]; }
         static bool SubjectFor(string name) => _subjectFor == null || name.Contains(_subjectFor);
         static void SubjectUsed() { if (_subjectUntil < 0f || Time.time > _subjectUntil) { _subject = null; _subjectPoint = null; _subjectLabel = null; _subjectFor = null; } }
 

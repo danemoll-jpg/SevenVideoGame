@@ -327,6 +327,7 @@ namespace Seven.EditorTools
                 var tm = (GameObject)PrefabUtility.InstantiatePrefab(tunModel); tm.name = "Tunneler"; tm.transform.SetParent(rig.Hull, false); tm.transform.localPosition = Vector3.up * rig.DeckTop; tm.transform.localRotation = Quaternion.Euler(0f, 180f, 0f);
                 tunneler = tm.transform; drill = tm.GetComponentsInChildren<Transform>(true).FirstOrDefault(x => x.name == "DrillHead");
                 var tmat = Dissolve("Europa_tunneler", Gray(0.5f), 0.35f, false); foreach (var r in tm.GetComponentsInChildren<Renderer>()) r.sharedMaterial = tmat;
+                RigTunnelerBody(tm, "Finale");                                                                    // P2 (9): bones + body language
                 if (drill != null) { var dh = Seven.DrillHead.On(drill, tunneler); dh.Bake(); DrillAxisCheck("Finale", dh); }   // QF30 (5): the one shared drill
             }
             var under = new GameObject("CraftLightFromBelow").AddComponent<Light>(); under.transform.SetParent(rig.Hull, false); under.transform.localPosition = new Vector3(0f, 0.4f, 1.6f); under.transform.localRotation = Quaternion.Euler(-60f, 180f, 0f);

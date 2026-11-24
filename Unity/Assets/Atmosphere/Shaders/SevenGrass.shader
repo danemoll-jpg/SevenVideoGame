@@ -15,6 +15,11 @@ Shader "Seven/Grass"
         _WindSpeed ("Wind speed", Range(0,4)) = 1.1
         _GustScale ("Gust scale (1/m)", Range(0.001,0.2)) = 0.045
         _WindDir ("Wind direction (xz)", Vector) = (0.8, 0, 0.6, 0)
+        _ThinStart ("P2 (5): far blades start thinning (m)", Float) = 40
+        _ThinEnd ("P2 (5): thinned to _ThinKeep (m)", Float) = 110
+        _ThinKeep ("P2 (5): share of blades kept far away", Range(0,1)) = 0.35
+        _FadeStart ("P2 (5): the rest lie down (m)", Float) = 200
+        _FadeEnd ("P2 (5): none drawn (m)", Float) = 240
     }
     SubShader
     {
@@ -26,6 +31,7 @@ Shader "Seven/Grass"
         CBUFFER_START(UnityPerMaterial)
         half _Root, _Tip, _Translucency, _WindStrength, _WindSpeed, _GustScale;
         float4 _WindDir;
+        float _ThinStart, _ThinEnd, _ThinKeep, _FadeStart, _FadeEnd;
         CBUFFER_END
 
         float3 Sway(float3 ws, float h, float phase, float bladeH)
@@ -38,6 +44,14 @@ Shader "Seven/Grass"
             float bend = (gust + flutter) * _WindStrength * h * h * saturate(bladeH * 1.6);
             float3 o = float3(wd.x, 0, wd.y) * bend;
             o.y = -0.35 * bend * h;                // the tip dips a little as it bends
+            // P2 (5): far blades lower into the ground as they go into the haze (Venus's frame time: the grass was drawn to the far
+            // clip); GrassCull stops drawing whole chunks beyond _FadeEnd
+            // far away fewer blades are needed (each covers a few pixels; the field still reads as grass): from _ThinStart a growing share
+            // of blades (picked by their random phase) lies flat - a zero-area line, no pixels drawn - down to _ThinKeep at _ThinEnd
+            float d = distance(ws.xz, _WorldSpaceCameraPos.xz);
+            float keep = lerp(1.0, _ThinKeep, smoothstep(_ThinStart, _ThinEnd, d));
+            float gone = max(smoothstep(keep - 0.06, keep, phase), smoothstep(_FadeStart, _FadeEnd, d));
+            o.y -= gone * h * bladeH;
             return ws + o;
         }
         ENDHLSL

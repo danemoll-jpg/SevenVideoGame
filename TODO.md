@@ -1,5 +1,42 @@
 # Active Development Plan — 7: The Observer
 
+## Polish pass P2: the overnight clean-up (Dan, 2026-11-24, going to bed: "if there is some clean up, now is a good time") — to do
+**Protect the showable builds:** 1.0.0-rc2 and **1.0.0-rc3** stay published and untouched. This goes into **1.0.0-rc4**, published
+only if it passes everything rc3 does and more; otherwise leave it built and unpublished and say why.
+**Dan's OK for the long run:** the full start-to-credits playthrough may exceed the 20-minute testing rule tonight (an overnight
+investigation, Dan's OK). Run it in pieces if that's safer; keep everything else under the rule.
+1. **The full player-style run, start to credits** (the Moon → Venus → Mars / Europa → the asteroid / the mothership → Cattalus (win
+   and lose) → the finale → credits → Kyle's line → menu), from a new save, as a player would: soft-locks 0, every build check
+   passing. List **anything a player would notice** (by chapter), then fix what you can.
+2. **Europa past the ice passage:** re-test it as a player (the dive, the base, the escape) and its 21 untested shots.
+3. **The open items:** CONTROL RETURNS' one place outside the finale (`Docs/Previews/qf30/control_returns.txt`); FIN_01's blocky host
+   pieces; Panther's lap pose against her knees; anything else still listed as open / known / weak in the statuses.
+4. **The image-gate baseline (36):** the dark Moon prison frames (7), the asteroid's 6, the mothership's 11: real fixes (light,
+   framing, detail), never loosened thresholds or exemptions. **Capture determinism** (QF29 2): fixed capture times / settled cameras
+   so a shot gives the same verdict every run.
+5. **Performance:** the saucer's load warm-up hitches (pre-warm shaders / assets behind the title card), Venus's frame time (16.7 ms,
+   p95 25.6: the grass?), the finale's spikes near the crossing (67 s, 120–180 ms).
+6. **The memory clips for Dan:** confirm the raw in-game clips of 7 and Panther are exported to `Art/Video/memory_clips/` (named by
+   moment, 1920×1044 h264, correct poses) so Dan can cut his own `panther_memories.mp4` tomorrow; list them.
+8. **Petting in the air** (Dan: "often she is completely just petting in the air"). Every petting / stroking / touching of Panther,
+   in every chapter (her lap, the galley, the debriefs, Cattalus, the finale, the egg chair): the hand rides **on his fur**: QF28's hold
+   solver against his body's real surface (the hand's target follows a path over his head / neck / back as he moves and breathes),
+   palm on him, fingers relaxed, never above him or inside him. If he isn't within reach the stroke doesn't play. A build check: in
+   every petting moment, palm-to-fur distance stays under ~1 cm. Close-up captures of each.
+9. **Tunneler barely moves, apart from his head.** Give him body language everywhere he appears (Europa's screen, the finale's
+   speakers, FIN_08, the fight, the barrier): weight shifts and leans on his rig's yoke, gestures with his arms on key words
+   (pointing at the platform on "Shut it down", a sweep toward the terminals on "Those workers answer to me", a fist on the yoke),
+   the rig rocking / bobbing on its thrusters, his idle never frozen. Use his existing clips (idle, walk, roar) plus additive /
+   procedural layers. Captures / a short clip check showing his body moving during his lines.
+10. **The Scree's arms move too much.** Calm their talk / idle gestures: smaller, slower, occasional (most lines with hands still or
+    a single small gesture on a key word), weary posture, no constant arm waving. Every Scree in every chapter.
+11. **Panther's sounds as he dies: too many meows.** Replace the repeated meows with **one** low, weak, mournful cry (closer to a soft
+    howl / a pained low moan than a meow), placed once, after he hits the floor; maybe one faint, quieter one near the end of FIN_10
+    at most; otherwise only laboured breathing that slows (QF30 14) and the purr's fading. Never looped, never on every line. Make the
+    cry with ElevenLabs Sound Effects (a big cat's low, pained, mournful cry, soft, not a scream). Same rule wherever he's hurt.
+12. In the morning summary for Dan (top of the status): what was fixed, what's still open, and whether rc4 was published, in plain words.
+Never stop to ask; note decisions in TODO.md. Commit and push.
+
 ## Quick fix QF31: the ending reworked + the fight space (Dan's 1.0.0-rc2 review, 2026-11-23) — A, A2, B, C done, status below; release 1.0.0-rc3
 Keep 1.0.0-rc2 published and tagged as it is (Dan's showable build); this goes into **1.0.0-rc3**. Where Dan's new heaven video
 isn't in yet, use the stand-in noted and make his clips drop in by file name.

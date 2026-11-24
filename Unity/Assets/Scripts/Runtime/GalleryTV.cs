@@ -137,8 +137,8 @@ namespace Seven
                     _cacheIncluded++;
                     var path = Path.Combine(GalleryDir, e.file);
                     if (!File.Exists(path)) { log.AppendLine("missing file: " + e.file); continue; }
-                    Item it = null;
-                    try { it = LoadImageStatic(path, e, 2048); } catch (Exception ex) { log.AppendLine($"{e.file}: {ex.Message}"); }
+                    Item it = null; var ld = LoadImageAsync(path, e, 2048, x => it = x);
+                    while (true) { bool more; try { more = ld.MoveNext(); } catch (Exception ex) { log.AppendLine($"{e.file}: {ex.Message}"); break; } if (!more) break; yield return ld.Current; }
                     if (it != null) items.Add(it); else log.AppendLine("could not decode: " + e.file);
                     yield return null;
                 }
@@ -183,9 +183,8 @@ namespace Seven
                     IncludedInJson++;
                     var path = Path.Combine(GalleryDir, e.file);
                     if (!File.Exists(path)) { log.AppendLine("missing file: " + e.file); continue; }
-                    Item it = null;
-                    try { it = LoadImage(path, e); }
-                    catch (Exception ex) { log.AppendLine($"{e.file}: {ex.Message}"); }
+                    Item it = null; var ld = LoadImageAsync(path, e, MaxSide, x => it = x);
+                    while (true) { bool more; try { more = ld.MoveNext(); } catch (Exception ex) { log.AppendLine($"{e.file}: {ex.Message}"); break; } if (!more) break; yield return ld.Current; }
                     if (it == null) { log.AppendLine("could not decode: " + e.file); continue; }
                     Items.Add(it);
                     if (Items.Count == 1) { Index = 0; _prev = -1; _fade = 1f; Apply(); }
@@ -199,51 +198,61 @@ namespace Seven
             Debug.Log("[Seven] " + LoadLog);
         }
 
-        Item LoadImage(string path, GalleryEntry e) => LoadImageStatic(path, e, MaxSide);
-        static Item LoadImageStatic(string path, GalleryEntry e, int MaxSide)
+        /// <summary>P2 (5): one image, loaded without stalling the game - the file is read and the grayscale + downscale (the C# pixel
+        /// loops: ~300 ms on a large piece, the saucer's load hitches whenever the menu's preload had not finished) run on a worker
+        /// thread; only the JPG / PNG decode and the final texture upload stay on the main thread.</summary>
+        static IEnumerator LoadImageAsync(string path, GalleryEntry e, int MaxSide, Action<Item> done)
         {
+            var read = System.Threading.Tasks.Task.Run(() => File.ReadAllBytes(path));
+            while (!read.IsCompleted) yield return null;
+            if (read.IsFaulted) throw read.Exception.InnerException ?? read.Exception;
             var src = new Texture2D(2, 2, TextureFormat.RGBA32, false);
-            if (!src.LoadImage(File.ReadAllBytes(path), false)) { Destroy(src); return null; }
+            if (!src.LoadImage(read.Result, false)) { Destroy(src); done(null); yield break; }
             int sw = src.width, sh = src.height;
             var px = src.GetPixels32();
             Destroy(src);
-            // Grayscale (Rec. 709 weights on the stored sRGB values) ...
-            var lum = new float[sw * sh];
-            for (int i = 0; i < lum.Length; i++) { var c = px[i]; lum[i] = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b; }
-            // ... then shrink so the longest side is at most MaxSide (bilinear).
-            float s = Mathf.Min(1f, (float)MaxSide / Mathf.Max(sw, sh));
-            int w = Mathf.Max(1, Mathf.RoundToInt(sw * s)), h = Mathf.Max(1, Mathf.RoundToInt(sh * s));
-            var dst = new byte[w * h];
-            double sum = 0;
-            float fx = (float)sw / w, fy = (float)sh / h;
-            for (int y = 0; y < h; y++)
+            int w = 0, h = 0; byte[] dst = null; double sum = 0;
+            var work = System.Threading.Tasks.Task.Run(() =>
             {
-                float sy = Mathf.Clamp((y + 0.5f) * fy - 0.5f, 0f, sh - 1);
-                int y0 = (int)sy, y1 = Mathf.Min(y0 + 1, sh - 1); float ty = sy - y0;
-                for (int x = 0; x < w; x++)
+                // Grayscale (Rec. 709 weights on the stored sRGB values) ...
+                var lum = new float[sw * sh];
+                for (int i = 0; i < lum.Length; i++) { var c = px[i]; lum[i] = 0.2126f * c.r + 0.7152f * c.g + 0.0722f * c.b; }
+                // ... then shrink so the longest side is at most MaxSide (bilinear).
+                float s = Mathf.Min(1f, (float)MaxSide / Mathf.Max(sw, sh));
+                w = Mathf.Max(1, Mathf.RoundToInt(sw * s)); h = Mathf.Max(1, Mathf.RoundToInt(sh * s));
+                dst = new byte[w * h];
+                float fx = (float)sw / w, fy = (float)sh / h;
+                for (int y = 0; y < h; y++)
                 {
-                    float sx = Mathf.Clamp((x + 0.5f) * fx - 0.5f, 0f, sw - 1);
-                    int x0 = (int)sx, x1 = Mathf.Min(x0 + 1, sw - 1); float tx = sx - x0;
-                    float a = lum[y0 * sw + x0] + (lum[y0 * sw + x1] - lum[y0 * sw + x0]) * tx;
-                    float b = lum[y1 * sw + x0] + (lum[y1 * sw + x1] - lum[y1 * sw + x0]) * tx;
-                    float v = a + (b - a) * ty;
-                    byte bv = (byte)Mathf.Clamp(Mathf.RoundToInt(v), 0, 255);
-                    dst[y * w + x] = bv;
-                    float l = bv / 255f;
-                    sum += l <= 0.04045f ? l / 12.92f : Mathf.Pow((l + 0.055f) / 1.055f, 2.4f);
+                    float sy = Mathf.Clamp((y + 0.5f) * fy - 0.5f, 0f, sh - 1);
+                    int y0 = (int)sy, y1 = Mathf.Min(y0 + 1, sh - 1); float ty = sy - y0;
+                    for (int x = 0; x < w; x++)
+                    {
+                        float sx = Mathf.Clamp((x + 0.5f) * fx - 0.5f, 0f, sw - 1);
+                        int x0 = (int)sx, x1 = Mathf.Min(x0 + 1, sw - 1); float tx = sx - x0;
+                        float a = lum[y0 * sw + x0] + (lum[y0 * sw + x1] - lum[y0 * sw + x0]) * tx;
+                        float b = lum[y1 * sw + x0] + (lum[y1 * sw + x1] - lum[y1 * sw + x0]) * tx;
+                        float v = a + (b - a) * ty;
+                        byte bv = (byte)Mathf.Clamp(Mathf.RoundToInt(v), 0, 255);
+                        dst[y * w + x] = bv;
+                        float l = bv / 255f;
+                        sum += l <= 0.04045f ? l / 12.92f : Mathf.Pow((l + 0.055f) / 1.055f, 2.4f);
+                    }
                 }
-            }
+            });
+            while (!work.IsCompleted) yield return null;
+            if (work.IsFaulted) throw work.Exception.InnerException ?? work.Exception;
             var tex = new Texture2D(w, h, TextureFormat.R8, true, true)
             {
                 wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Trilinear, anisoLevel = 4, name = e.file,
             };
             tex.SetPixelData(dst, 0);
             tex.Apply(true, true);
-            return new Item
+            done(new Item
             {
                 File = e.file, Title = string.IsNullOrEmpty(e.title) ? Path.GetFileNameWithoutExtension(e.file) : e.title,
                 Tex = tex, Aspect = (float)sw / sh, AvgLum = (float)(sum / (w * h)), Size = new Vector2Int(sw, sh),
-            };
+            });
         }
 
         // ------------------------------------------------------------------------------ controls

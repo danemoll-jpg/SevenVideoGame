@@ -23,6 +23,8 @@ namespace Seven
         Vector3 _rideOffset;                       // root offset from the saddle (bike space), calibrated so the hips sit on it
         float _reachLean;                          // extra forward lean (degrees over the spine) so the palms reach the grips
         bool _rideCal;
+        /// <summary>P2 (1): how far the calibrated root offset may stray from the nominal one (m); check runs count the clamps.</summary>
+        public const float RideOffsetMax = 0.6f; public static int RideOffsetClamps, BodyPlaced, RideBigErr; int _diagN; Vector3 _bodyAdj;
         /// <summary>Check runs: palm centre to grip (left, right) and foot to its side-panel point (left, right), metres.</summary>
         public Vector4 RideGaps { get; private set; }
         public float RideHipsGap { get; private set; }
@@ -59,6 +61,12 @@ namespace Seven
         {
             if (Current != Mode.Ride || Anim == null || _bike == null) return;
             var b = _bike;
+            // P2 (1): the body on the saddle BEFORE the limbs are solved. The Blender-made "ride" clip carries its body position 100x too
+            // far (centimetres: the hips ~96 m above her root, 36 m ahead, reached over the 0.3 s cross-fade); since QF10 the hips pin
+            // in RideLateUpdate hid it by moving her ROOT ~100 m the other way - the drawn body sat right while everything that reads
+            // where she is (story triggers, the watchdog, the music zones, the reach to the grips) was 100 m off (the full run's Venus
+            // soft-lock). Now the body is placed here and only a small calibration (_bodyAdj, bounded) is learned from the hips.
+            if (b.Seat != null) { Anim.bodyPosition = b.Seat.position + b.Seat.rotation * (_bodyAdj + Vector3.up * 0.11f); BodyPlaced++; }
             // lean a little further into the turn (the bike's own roll already tilts her with it)
             float lean = -Mathf.Clamp(b.Turn / 14f, -1f, 1f) * RideTurnLean;
             // QF10 (Dan): the racing tuck - the whole upper body laid forward along the bike from the hips (the body
@@ -101,9 +109,26 @@ namespace Seven
             {
                 var want = b.Seat.position + b.Seat.up * 0.11f;                               // pelvis on the back of the saddle (measured)
                 var err = want - hips.position;
+                if (DemoBoot.CaptureDir != null && (err.magnitude > 1.5f || Time.frameCount % 150 == 0) && _diagN < 12)
+                {
+                    _diagN++;
+                    var hl = transform.InverseTransformPoint(hips.position);
+                    Debug.Log($"[Seven] RIDE DIAG (P2 1): frame {Time.frameCount} root {transform.position} hips {hips.position} hips in root space {hl} err {err.magnitude:0.00} m offset {_rideOffset} anim {(Anim != null ? Anim.enabled + " " + Anim.applyRootMotion + " " + State : "none")} active {gameObject.activeInHierarchy} mode {Current}");
+                    ChapterCapture.I?.Log($"RIDE DIAG (P2 1): root {transform.position} hips {hips.position} hips in root space {hl} err {err.magnitude:0.00} m offset {_rideOffset} state {State}");
+                }
                 RideHipsGap = err.magnitude;
                 _rideOffset += Quaternion.Inverse(b.Seat.rotation) * err;
-                transform.position += err; _rideCal = true;
+                // P2 (1): bounded - the error was folded into the stored offset every frame without limit, so whatever moved the hips
+                // apart from the root (the ride clip's own motion) built up: her ROOT drifted metres away from the drawn body (in the
+                // full run it reached y < -45 under Venus while she was drawn on the saddle) - the watchdog then pulled her "back to
+                // safety" every frame, the walkway collapse fired at the drifted spot and the hand reach was measured from it.
+                var nominal = new Vector3(0f, -0.5f, 0.1f);
+                if ((_rideOffset - nominal).magnitude > RideOffsetMax) { _rideOffset = nominal + Vector3.ClampMagnitude(_rideOffset - nominal, RideOffsetMax); RideOffsetClamps++; }
+                // the body placement's calibration (the clip's body point vs its hips), learned slowly and bounded
+                _bodyAdj = Vector3.ClampMagnitude(_bodyAdj + Quaternion.Inverse(b.Seat.rotation) * err * 0.5f, 0.35f);
+                if (err.magnitude < 0.3f) transform.position += err;                       // a big error is never folded into her root
+                else RideBigErr++;
+                _rideCal = true;
                 // R18: a hard start / braking - the hips snap back onto the saddle moves her whole body, feet included, off the
                 // panels the IK put them on: re-pin each leg (two-bone, knee toward the same hint the IK pass uses)
                 if (err.sqrMagnitude > 0.0004f)

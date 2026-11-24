@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-187 sounds.
+186 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -189,11 +189,10 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `cat_gate_open` | A small ornate garden gate swinging open on a squeaky hinge, a light metal latch click. | 1.5 |  | Round 18: CAT_02 the public gate |
 | `cat_screen_jingle` | A short bright cheerful sports television jingle with a whoosh, upbeat brass stab, two seconds. | 2.5 |  | Round 18: the Cat-a-tron (highlights, the prize ad) |
 | `cat_meadow_breeze` | A warm open meadow: a soft steady breeze through tall grass, a few distant birds, insects humming gently. | 12 | yes | Round 18: CAT_10 the meadow (loop) |
-| `cat_breath_slow` | A large black cat lying still, one slow soft shallow breath in and out through the nose, close and quiet, tired, no purr, no meow. | 1.6 |  | QF30 (14): Panther's slow breaths as he dies (FIN_10) |
 | `drill_grind_rock` | A huge industrial mining drill grinding slowly into old stone far away: a deep low rumble, stone cracking, a little debris falling. | 6 | yes | QF30 (6): the mining drills boring into the old structure (loop) |
 | `cat_toy_swing` | A large soft hanging toy swinging past on a rope: a whoosh and a creak of the rope, a little jingle bell. | 1.5 |  | Round 18: the toy boulevard's swinging obstacles |
 | `cat_gate_chime` | A small bright chime as a racer passes through a glowing gate, a soft sparkle. | 1 |  | Round 18: a race gate passed |
 | `seven_sob_soft` | A young woman crying softly and quietly, a few small shaky sobs and an uneven breath in, close and intimate, no words, no wailing. | 4 |  | QF31 (A3): 7 grieving over Panther, crying softly |
 | `seven_breath_shaky` | A young woman's single shaky, tearful breath in and a slow breath out, very quiet, close, no words. | 2.2 |  | QF31 (A3): her breathing between the memories |
-| `cat_breath_labored` | A large black cat lying hurt on its side, two short laboured, rough breaths in and out, quiet and strained, no growl, no meow. | 2.4 |  | QF31 (A2): Panther can't get up, his breathing laboured |
+| `cat_cry_low` | A single low, weak, mournful cry of a large wounded panther lying on the ground: a soft pained moan, low in pitch, fading out into a breath. Quiet and close. Not a meow, not a scream, not a roar, not a growl. | 2.6 |  | P2 (11): Panther hurt (FIN_09), once |
 | `drill_impact_heavy` | A heavy blunt impact: a spinning industrial drill slamming into something solid with a deep thud, a short metallic screech and grinding sparks, then the drill stalling. No voice. | 1.6 |  | QF31 (A2): the drill strikes Panther (no gore - a heavy blunt impact) |

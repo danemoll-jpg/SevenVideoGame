@@ -398,7 +398,11 @@ namespace Seven
         IEnumerator TriesToRise()
         {
             var ov = CatOv; var head = CatBone("head");
-            AudioKit.Play("cat_breath_labored", head != null ? head.position : Cat.transform.position, 0.8f);
+            // P2 (11): ONE low, weak, mournful cry after he hits the floor (never a meow, never repeated), then only laboured breathing
+            // (procedural breaths - Tools/Audio/make_breath_sfx.py) that slows in FIN_10, and the purr fading
+            AudioKit.Play("cat_cry_low", head != null ? head.position : Cat.transform.position, 0.75f, 0f, AudioKit.Bus.Sfx, 10f);
+            Log("PANTHER SOUNDS (P2 11): one low cry (cat_cry_low) after the fall; afterwards breaths only (procedural, no voice), no meows");
+            for (float t = 0f; t < 1.4f; t += Time.deltaTime) yield return null;
             if (ov != null) ov.LookAt = HerHead;
             for (float t = 0f; t < 0.9f; t += Time.deltaTime) yield return null;
             if (ov != null) { ov.LookAt = null; ov.Slack = 0.35f; }

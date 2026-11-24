@@ -141,6 +141,10 @@ namespace Seven
             Log($"POST FX (QF24 24): close-up depth of field found still on when control returned {CloseUpFocus.Releases}x - each released within a frame (longest {CloseUpFocus.LongestOnWithControl * 1000f:0} ms)");
             if (MothershipInterior.Shown > 0 || RecordDisplay.Built > 0) Log($"QF24 (2/4): record displays built {RecordDisplay.Built}, the mothership's interior shown {MothershipInterior.Shown}x");
             if (HandHold.Frames > 0) Log(HandHold.Summary());                       // QF28 (5)
+            if (FurContact.Any) Log(FurContact.Summary());                         // P2 (8)
+            if (TunnelerBody.Frames > 0 || TunnelerBody.Lines > 0) Log(TunnelerBody.Summary());   // P2 (9)
+            if (ScreeRig.CalmFrames > 0) Log(ScreeRig.Summary());                   // P2 (10)
+            Log($"RIDE ROOT (P2 1): body placed on the saddle in the IK pass {ChapterSeven.BodyPlaced} frames; frames the hips were still > 0.3 m off the saddle after it {ChapterSeven.RideBigErr} (never folded into her root); root offset clamps {ChapterSeven.RideOffsetClamps}");
             Log(QF30Watch.Summary());                                              // QF30 (3/4/9/14/17/22)
             Log(ImageGate.Summary(DemoBoot.CaptureDir));                          // QF26 (2)
             Log(summary);

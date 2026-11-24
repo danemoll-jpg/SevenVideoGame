@@ -96,6 +96,10 @@ namespace Seven
             EnsureHover();                                                                            // QF30 (6): the rig hovers / sags
             if (Rig != null && Rig.Hull == null) Rig.Hull = _hover;
             if (TunnelerDrill != null) _dh = DrillHead.On(TunnelerDrill, Tunneler);                  // QF30 (5): the one shared drill
+            // P2 (9): his body language - gestures aim at her, at the light well, at his workers' terminals
+            var tbody = Tunneler != null ? Tunneler.GetComponent<TunnelerBody>() : null;
+            if (tbody != null) tbody.Target = at => at == "her" ? P7 + Vector3.up * 1.2f : at == "platform" ? L.PlatformAt + Vector3.up * 0.3f
+                : at == "terminals" ? TerminalsAt() : (Vector3?)null;
             SetupWallDrills();
             DialogueFraming.Speaker = id => id == "seven" ? Seven.transform : id == "cat" ? (Cat != null ? Cat.transform : null)
                 : id == "worker" ? Worker?.transform : id == "worker2" ? Elder?.transform : id == "tunneler" ? Tunneler : null;
@@ -106,6 +110,13 @@ namespace Seven
             StartCoroutine(Flow(startCp));
         }
         AudioSource _amb;
+        Vector3? TerminalsAt()
+        {
+            var sum = Vector3.zero; int n = 0;
+            if (Workers != null) foreach (var w in Workers) if (w != null && w.gameObject.activeInHierarchy) { sum += w.transform.position; n++; }
+            foreach (var w in new[] { Worker, Elder }) if (w != null && w.gameObject.activeInHierarchy) { sum += w.transform.position; n++; }
+            return n > 0 ? sum / n + Vector3.up * 1.0f : (Vector3?)null;
+        }
         void OnDestroy() { if (Dlg != null) Dlg.LineStarted -= OnLine; if (I == this) I = null; DialogueFraming.Speaker = null; MoonTraversal.UseMoon(); }
         IEnumerator FirstFrame() { Cap.Log($"first frame (the finale): fade {UI.FadeAlpha:0.00} (1 = black)"); yield return Cap.Shot("f00_first_frame"); }
 

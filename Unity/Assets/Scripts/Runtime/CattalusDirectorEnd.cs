@@ -492,12 +492,14 @@ namespace Seven
             var cheek = pose != null ? pose.Eyes + Vector3.down * 0.25f : cat.transform.position + Vector3.up * 1.4f;
             var toCat = Flat(cheek - P7).normalized; var cside = Vector3.Cross(Vector3.up, toCat);
             tik.enabled = true; tik.Ease = 2.4f; tik.RightPos = cheek - toCat * 0.18f + cside * 0.12f; tik.RightW = 1f; tik.RightPalmN = toCat; tik.RightPalmW = 1f; tik.LookPos = cheek; tik.LookW = 0.8f;
+            var fpm = FurPalm.On(Seven.gameObject); fpm.Set(true, cat.transform, "CAT_10 her palm on his cheek", 1f);   // P2 (8): on his fur, not 18 cm short of it
             Shoot(P7 + cside * 2.2f + toCat * 0.4f + Vector3.up * 1.5f, (HerHead() + cheek) * 0.5f, 40f, 0.01f);
             yield return Wait(1.2f);
             yield return Shot("c53_meadow_seg3_her_palm_against_his_cheek");
+            fpm.Set(false, cat.transform, "CAT_10 both palms on his cheeks", 1f);
             tik.LeftPos = cheek - toCat * 0.18f - cside * 0.12f; tik.LeftW = 1f; tik.LeftPalmN = toCat; tik.LeftPalmW = 1f;
             for (float t = 0f; t < 1.4f; t += Time.deltaTime) { tik.RightPos = cheek - toCat * 0.18f + cside * (0.12f + Mathf.Sin(t * 6f) * 0.05f); yield return null; }
-            tik.ReleaseAll("CAT_10 seg 3");
+            tik.ReleaseAll("CAT_10 seg 3"); fpm.Off();
             if (pose != null) pose.Eat = 0f;
             cat.Scripted("stretch");                                                                // a playful crouch
             yield return Say("CAT_10", 13, 13);                   // Oh, really?

@@ -43,9 +43,91 @@ namespace Seven
             _phase = Random.Range(0f, 10f);
         }
 
+        // ------------------------------------------------------------------ P2 (10): calm arms
+        // Dan: "The Scree's arms move too much." Their clips are borrowed (7's idle / look-around / alert and their own work loop) -
+        // on a four-armed body every swing reads as waving, and the workers kept their work loop running through conversations.
+        // Whenever a Scree is idle, looking round, alerted or in a conversation (a line playing within 12 m of it, or its own line)
+        // the human arms settle toward a weary hang (shoulders low, forearms a little forward, the chest bowed a few degrees) and
+        // what is left of the clip's motion is slowed (a low-pass on the arm bones); while it speaks, at most one small gesture
+        // on about half its lines (a forearm lifting ~14 deg and back, ~1.4 s). Working at a station with nobody talking and the
+        // fight keep their clips. Check runs log `SCREE ARMS (P2 10)` (arm speed in deg/s while calm vs before).
+        Transform _loL, _loR, _hL, _hR, _neck; DialoguePlayer _dlg; ScreeGuard _guard; float _calm; bool _calmInit;
+        Quaternion _pUL, _pUR, _pLL, _pLR; VoiceBank.Line _gLine; float _gAt = -1f, _gT; bool _gOn, _gRight;
+        public static float CalmArmDegPerSec, RawArmDegPerSec; public static int CalmFrames;
+        static float _calmSum, _rawSum;
+        /// <summary>True when a conversation (or idle / look-around / alert) has this Scree's arms calmed.</summary>
+        public bool Calm => _calm > 0.5f;
+        bool WantsCalm(out bool speaking)
+        {
+            speaking = false;
+            if (_guard == null) _guard = GetComponent<ScreeGuard>();
+            if (_guard != null && (_guard.InFight || _guard.Engaged)) return false;
+            if (_dlg == null) _dlg = FindFirstObjectByType<DialoguePlayer>();
+            var line = _dlg != null ? _dlg.Current : null;
+            if (line != null)
+            {
+                var who = DialogueFraming.Speaker != null ? DialogueFraming.Speaker(line.Speaker) : null;
+                if (who == transform || (who != null && who.IsChildOf(transform))) { speaking = true; return true; }
+                if (who != null && (who.position - transform.position).sqrMagnitude < 144f) return true;
+                if (who == null && Camera.main != null && (Camera.main.transform.position - transform.position).sqrMagnitude < 144f) return true;
+            }
+            var st = _guard != null ? _guard.State : null;
+            return st == "idle" || st == "look_around" || st == "alert";
+        }
+        void CalmArms(float t)
+        {
+            if (!_calmInit) { _calmInit = true; _loL = Find("LeftLowerArm"); _loR = Find("RightLowerArm"); _hL = Find("LeftHand"); _hR = Find("RightHand"); _neck = Find("Neck"); }
+            bool want = WantsCalm(out bool speaking);
+            _calm = Mathf.MoveTowards(_calm, want ? 1f : 0f, Time.deltaTime / 0.6f);
+            float dt = Mathf.Max(1e-4f, Time.deltaTime);
+            float raw = (_upL != null ? Quaternion.Angle(_pUL, _upL.rotation) : 0f) + (_upR != null ? Quaternion.Angle(_pUR, _upR.rotation) : 0f);
+            if (_calm <= 0.001f || _chest == null) { Keep(); return; }
+            float w = Mathf.SmoothStep(0f, 1f, _calm);
+            var fwd = transform.forward; var right = transform.right;
+            // the weary posture: the chest bowed a little, the neck lower
+            _chest.rotation = Quaternion.AngleAxis(5f * w, right) * _chest.rotation;
+            if (_neck != null) _neck.rotation = Quaternion.AngleAxis(4f * w, right) * _neck.rotation;
+            // a single small gesture on about half of its own lines
+            if (speaking && _dlg.Current != _gLine) { _gLine = _dlg.Current; _gOn = Random.value < 0.5f; _gAt = Time.time + Random.Range(0.4f, 1.2f); _gRight = Random.value < 0.5f; }
+            float gest = 0f;
+            if (_gOn && _gAt > 0f && Time.time >= _gAt) { float u = (Time.time - _gAt) / 1.4f; gest = u < 1f ? Mathf.Sin(u * Mathf.PI) : 0f; if (u >= 1f) _gOn = false; }
+            foreach (var (up, lo, hand, sd) in new[] { (_upL, _loL, _hL, 1f), (_upR, _loR, _hR, -1f) })
+            {
+                if (up == null || lo == null) continue;
+                // the hang: the upper arm down beside the body, slightly forward and out; the forearm bent a little forward
+                var upDir = (-Vector3.up * 0.95f + fwd * 0.16f - right * sd * 0.12f).normalized;
+                var loDir = (-Vector3.up * 0.72f + fwd * 0.55f - right * sd * 0.05f).normalized;
+                Aim(up, lo, upDir, 0.85f * w);
+                if (hand != null) Aim(lo, hand, loDir, 0.8f * w);
+                bool g = gest > 0f && ((sd < 0f) == _gRight);
+                if (g) lo.rotation = Quaternion.AngleAxis(-14f * gest * w, right) * lo.rotation;
+            }
+            // what is left of the clip's motion is slowed (low-pass ~0.35 s)
+            float k = 1f - Mathf.Exp(-dt / 0.35f);
+            if (_upL != null) _upL.rotation = Quaternion.Slerp(_pUL, _upL.rotation, Mathf.Lerp(1f, k, w));
+            if (_upR != null) _upR.rotation = Quaternion.Slerp(_pUR, _upR.rotation, Mathf.Lerp(1f, k, w));
+            if (_loL != null) _loL.rotation = Quaternion.Slerp(_pLL, _loL.rotation, Mathf.Lerp(1f, k, w));
+            if (_loR != null) _loR.rotation = Quaternion.Slerp(_pLR, _loR.rotation, Mathf.Lerp(1f, k, w));
+            if (DemoBoot.CaptureDir != null && w > 0.95f)
+            {
+                float calmNow = (_upL != null ? Quaternion.Angle(_pUL, _upL.rotation) : 0f) + (_upR != null ? Quaternion.Angle(_pUR, _upR.rotation) : 0f);
+                CalmFrames++; _calmSum += calmNow / dt; _rawSum += raw / dt; CalmArmDegPerSec = _calmSum / CalmFrames; RawArmDegPerSec = _rawSum / CalmFrames;
+            }
+            Keep();
+        }
+        void Keep() { if (_upL != null) _pUL = _upL.rotation; if (_upR != null) _pUR = _upR.rotation; if (_loL != null) _pLL = _loL.rotation; if (_loR != null) _pLR = _loR.rotation; }
+        static void Aim(Transform bone, Transform child, Vector3 dir, float w)
+        {
+            var cur = child.position - bone.position; if (cur.sqrMagnitude < 1e-6f || w <= 0f) return;
+            bone.rotation = Quaternion.Slerp(bone.rotation, Quaternion.FromToRotation(cur.normalized, dir) * bone.rotation, w);
+        }
+        public static string Summary() => CalmFrames == 0 ? "SCREE ARMS (P2 10): no calm frames this run" :
+            $"SCREE ARMS (P2 10): {CalmFrames} calm frames (idle / talk) - the two upper arms moved {CalmArmDegPerSec:0.0} deg/s on average (the clip alone {RawArmDegPerSec:0.0} deg/s, incl. the settle)";
+
         void LateUpdate()
         {
             float t = Time.time + _phase;
+            CalmArms(t);
             _brace = Mathf.MoveTowards(_brace, Brace, Time.deltaTime * 2f);
             Twitch = Mathf.MoveTowards(Twitch, 0f, Time.deltaTime * 0.8f);
             var right = transform.right; var up = transform.up;

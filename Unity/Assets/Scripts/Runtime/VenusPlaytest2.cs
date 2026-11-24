@@ -88,7 +88,15 @@ namespace Seven
             for (float t = 0f; t < 10f && S == null; t += Time.deltaTime) yield return null;
             var s = S;
             if (s == null) { Log("no Venus-mode galley found"); Cap.Finish("VENUS PLAYTEST 2: 0/1 (saucer phase did not start)"); yield break; }
-            while (!s.Explored) { if (s.Dlg != null && s.Dlg.Busy && Idle && s.UI.SubtitleVisible) Press(Y); yield return WaitR(0.3f); }
+            // P2 (1): VEN_C13 now ends on the star map (the next-destination choice) - reaching it is the end of this run
+            bool MapUp() => ShipConsole.I != null && ShipConsole.I.Open && !(s.Dlg != null && s.Dlg.Busy);
+            while (!s.Explored && !MapUp()) { if (s.Dlg != null && s.Dlg.Busy && Idle && s.UI.SubtitleVisible) Press(Y); yield return WaitR(0.3f); }
+            if (MapUp())
+            {
+                Log($"aboard: VEN_C13 ended on the star map ({ShipConsole.I.Current}) - the destination choice is up");
+                Cap.Finish($"VENUS PLAYTEST 2: {(_soft == 0 ? 1 : 0)}/1, soft-locks {_soft}, knockdowns {VenusDirector.LastKnockdowns}, hints {VenusDirector.LastHints}, skips {VenusDirector.LastSkips}, the star map up for the next destination, {VenusState.Summary()}");
+                yield break;
+            }
             Log("aboard: free exploration - walking to her galley seat for Set course");
             var seven = s.Director.Seven.transform;
             for (float t = 0f; t < 20f && Flat(s.SeatStandPos - seven.position).magnitude > 0.5f; t += Time.deltaTime) { _stick = StickFor((s.SeatStandPos - seven.position).normalized); yield return null; }

@@ -1179,6 +1179,7 @@ namespace Seven
             Seven.gameObject.SetActive(false);
             yield return BeamDown(false);
             yield return Cutscene(false);
+            QF30Watch.Free("Venus return visit - free exploration of the gardens; the saucer's beam takes her back aboard (X under it)");   // P2 (3)
             FollowCamera(); Cam.SnapBehind();
             if (Shots) { yield return Wait(1f); yield return Shot("rv_01_return_visit"); }
             if (Auto) yield return WalkSeven(VenusLayout.BeamFoot + Vector3.forward * 1.2f, 8f);

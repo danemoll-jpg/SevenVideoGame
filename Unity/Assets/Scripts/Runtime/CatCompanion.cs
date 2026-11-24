@@ -277,6 +277,9 @@ namespace Seven
             var c = new Vector3(b.center.x, b.max.y, b.center.z) + d * Mathf.Clamp(along, -0.6f, 0.6f) * half;
             // the back curves down toward his ends: lower the point a little away from the middle
             c.y -= 0.35f * b.extents.y * along * along;
+            // P2 (8): onto his real fur - the highest surface of what is drawn under that point (over the curled lap mesh the box's
+            // centre line crosses the ring's hollow: the box-top point was in the air)
+            if (FurContact.TopAt(from, c, 0.04f, out var top, out _)) return top;
             return c;
         }
 

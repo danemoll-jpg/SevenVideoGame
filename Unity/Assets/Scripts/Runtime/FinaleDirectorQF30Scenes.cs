@@ -147,8 +147,11 @@ namespace Seven
                 ik.LeftPos = neck.position + under * 0.06f * s + Vector3.up * 0.01f; ik.LeftPalmN = under; ik.LeftPalmW = 0.8f; ik.LeftFingerDir = Vector3.down; ik.LeftW = 0.9f;
                 ik.LeftHint = P7 + Vector3.up * 0.7f - Seven.transform.right * 0.5f; ik.LeftHintW = 0.6f; ik.RightHint = P7 + Vector3.up * 0.8f + Seven.transform.right * 0.5f; ik.RightHintW = 0.6f;
                 ik.LookPos = head.position; ik.LookW = 1f;
+                // P2 (8): both palms ON his fur (measured against his drawn body every frame, the arm re-solved onto it)
+                var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f); fp.Set(false, Cat.transform, "FIN_10 hand on his neck", 0.9f);
                 yield return null;
             }
+            Seven.GetComponent<FurPalm>()?.Off();
         }
         IEnumerator BreathSounds()
         {
@@ -183,7 +186,7 @@ namespace Seven
         }
         bool _carry;
         /// <summary>Every hand this file drives lets go (his head / neck, the carry) - QF30 (3): called when each moment ends.</summary>
-        void HandsOff(string why) { _handsOn = false; _carry = false; IK.ReleaseAll(why); }
+        void HandsOff(string why) { _handsOn = false; _carry = false; IK.ReleaseAll(why); Seven.GetComponent<FurPalm>()?.Off(); }
         IEnumerator CarryHands()
         {
             var ik = IK;

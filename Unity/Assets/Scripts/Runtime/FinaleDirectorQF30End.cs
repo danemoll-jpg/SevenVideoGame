@@ -106,6 +106,7 @@ namespace Seven
         /// <summary>The Scree's heavy mining restraints round him and the rig, chains to the floor, his power cables pulled.</summary>
         void Restrained(bool on)
         {
+            var tb = Tunneler != null ? Tunneler.GetComponent<TunnelerBody>() : null; if (tb != null) tb.Locked = on;   // P2 (9): restrained = held still (breathing only)
             if (!on) { if (_chains != null) _chains.SetActive(false); return; }
             if (_chains == null && TunnelerCraft != null)
             {

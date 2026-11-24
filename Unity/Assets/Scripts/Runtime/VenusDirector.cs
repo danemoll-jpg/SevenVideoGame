@@ -1683,6 +1683,7 @@ namespace Seven
         public string Coverage => $"{_coverageShots} line shots, {_coverageMisses} misses";
 
         // ------------------------------------------------------------------------------------------ watchdog
+        float _belowLogAt;
         IEnumerator Watchdog()
         {
             while (true)
@@ -1692,7 +1693,13 @@ namespace Seven
                 if (_objective != null && UI.Objective != ObjectiveText) UI.SetObjective(ObjectiveText);
                 if (Bike.Riding && Bike.Stuck && !Auto) { Bike.Recover(); Log("WATCHDOG: the bike was stuck - recovered to the last safe spot"); }
                 // fell somewhere with no ground (never expected): back to the last safe spot
-                if (P7.y < -45f) { Seven.Place(Seven.LastSafe, Vector3.forward); Log("WATCHDOG: 7 below the world - back to safety"); }
+                // P2 (1): on the bike the bike is recovered (never Seven.Place under a rider), and the log says where (once a second at most)
+                if (P7.y < -45f && Time.time > _belowLogAt)
+                {
+                    _belowLogAt = Time.time + 1f;
+                    if (Bike != null && Bike.Riding) { Bike.Recover(); Log($"WATCHDOG: 7 below the world on the bike at {P7} (bike {Bike.transform.position}) - bike recovered"); }
+                    else { Seven.Place(Seven.LastSafe, Vector3.forward); Log($"WATCHDOG: 7 below the world at {P7} - back to safety"); }
+                }
             }
         }
 

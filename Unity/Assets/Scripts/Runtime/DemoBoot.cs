@@ -292,6 +292,7 @@ namespace Seven
                 if (args[i] == "-holdcheck") HoldCheck = true;
                 if (args[i] == "-rampcheck") RampCheck = true;
                 if (args[i] == "-landwalltest") LandWallTest = true;
+                if (args[i] == "-perfprobe" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var pp)) PerfProbe.After = pp;   // P2 (5)
                 if (args[i] == "-stopafter" && i + 1 < args.Length && float.TryParse(args[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var sa)) StopAfter = sa;
                 if (args[i] == "-openingshot") { OpeningShot = true; Chapter1 = true; }
                 if (args[i] == "-venuschain") VenusChain = true;
@@ -336,6 +337,7 @@ namespace Seven
                 UnityEngine.Random.InitState(29);
                 UnityEngine.SceneManagement.SceneManager.sceneLoaded += (s, m) => UnityEngine.Random.InitState(29 + s.buildIndex);
             }
+            PerfProbe.Install();                                                                   // P2 (5): -perfprobe <s>
             bool forceFullscreen = CaptureDir == null && !WindowFromCommandLine && !Application.isEditor;
             FullscreenToggle.Install(forceFullscreen);
             Debug.Log($"[Seven] boot: muted={Muted} listenerVolume={AudioListener.volume} capture={CaptureDir ?? "-"} fight={Fight} saucer={Saucer} ratwing={Ratwing} chapter1={Chapter1} forceFullscreen={forceFullscreen} mode={Screen.fullScreenMode}");
