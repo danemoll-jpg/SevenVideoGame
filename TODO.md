@@ -52,20 +52,20 @@ at the light well on "Shut it down", sweeping toward his workers, a fist brought
 arms calm when idle or talking. Panther's dying sounds: the "breaths" were meows - now soft breaths, plus one low, weak cry when he
 hits the floor. The saucer no longer stutters when it loads (the gallery TV decoded Kyle's art on the main thread), Venus runs smoother
 (far grass thinned), and the last "no next step" place (Venus's return visit) is fixed.
-**Still open:** FIN_10 - her right hand still hovers above Panther's head as he dies (he is out of her reach where she kneels). Mars and
-Europa were not finished by the test bots tonight (bot limits found and partly fixed; Europa's escape: the guide light leads straight into
-the first falling support). The image-gate baseline (36 shots) was not reduced, and captures are still not fully repeatable.
+**Still open:** FIN_10 - her right hand still hovers above Panther's head as he dies (he is out of her reach where she kneels). Europa's
+escape: the test bot (which steers at the guide light) hits the first falling support every try - the light leads straight into it; every
+other chapter, Mars included, plays through from start to end. The image-gate baseline (36 shots) was not reduced, and captures are still not fully repeatable.
 
 **Item by item**
 1. **The full run, start to credits** (`Tools/Run-FullGame.ps1`: each chapter's own player-style run in story order - the Moon, Venus 1 + 2, Mars,
    Europa, the asteroid, the mothership, Cattalus won + lost, the finale to the credits and the menu; muted, minimized, one at a time;
-   Dan's OK for the length). Results on rc4 (the build-h run + reruns on build i):
+   Dan's OK for the length). Results on rc4 (the build-h run + reruns on builds i and j - the builds differ only in the fixes noted below, not in gameplay):
    | piece | result |
    |---|---|
    | the Moon (Chapter 1, menu -> galley) | PASS - `PLAYTEST: 1/1, soft-locks 0` |
    | Venus 1 (landing -> the control discovery) | PASS - `1/1, bridge laid` (rc3: **0/1, soft-lock** - the bike bug below) |
    | Venus 2 (the way down -> the star map) | PASS - `1/1`, the Wormmaster contained, the record awarded |
-   | Mars | NOT finished - the bot could not complete two steps (below); the game itself got past the gate's power line |
+   | Mars (menu -> the Venus debrief's star map -> Mars -> the destination choice) | PASS on build j - `MARS PLAYTEST: 1/1, soft-locks 0` (14 game-min, Viper and the rune included; earlier passes stopped on two bot limits, fixed) |
    | Europa | the whole chapter to the escape (below), then the bot fails the escape every try |
    | the asteroid | PASS - `1/1, soft-locks 0` (16 game-min, the Machinist fight included) |
    | the mothership | PASS - `1/1, soft-locks 0` (18 game-min, Ratwing included) |
