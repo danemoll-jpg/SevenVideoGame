@@ -32,6 +32,8 @@ namespace Seven
         public bool EaseIn;
         /// <summary>QF30 (15): her head bowed over him (deg added to the spine / neck lean) and her shoulders shaking as she cries (0..1).</summary>
         public float Bow, Sob; float _bow, _sob;
+        /// <summary>QF32 (1): extra hip drop (m) - FIN_10's kneel sits lower (knees on the floor, not raised), so her hands reach him.</summary>
+        public float Drop;
         struct P { public float hipDrop; public Vector3 spine; public float neck, head; public Vector3 thigh, shin, foot, upL, foreL, upR, foreR; }
         static readonly P Lie = new P
         {
@@ -59,7 +61,7 @@ namespace Seven
         public static SevenRestPose On(GameObject seven, Kind k)
         {
             var r = seven.GetComponent<SevenRestPose>() ?? seven.AddComponent<SevenRestPose>();
-            r.Pose = k; return r;
+            r.Pose = k; r.Drop = 0f; return r;   // QF32: a new pose starts without FIN_10's extra drop (the caller sets it)
         }
         void Awake() { _a = GetComponentInChildren<Animator>(); }
         Transform B(HumanBodyBones b) => _a != null ? _a.GetBoneTransform(b) : null;
@@ -100,7 +102,7 @@ namespace Seven
                 var head0 = B(HumanBodyBones.Head);
                 float height = head0 != null ? Vector3.Dot(head0.position - transform.position, U) + 0.12f : 1.7f;
                 // the hips' height above her root, measured each frame from the animator's pose, then dropped to the floor pose
-                hips.position = transform.position + Vector3.ProjectOnPlane(hips.position - transform.position, U) + U * Mathf.Max(0.12f, Vector3.Dot(hips.position - transform.position, U) - p.hipDrop * w * height / 1.7f);
+                hips.position = transform.position + Vector3.ProjectOnPlane(hips.position - transform.position, U) + U * Mathf.Max(0.12f, Vector3.Dot(hips.position - transform.position, U) - p.hipDrop * w * height / 1.7f - Drop * w);
             }
             float breath = 0.5f - 0.5f * Mathf.Cos(Time.time * 2f * Mathf.PI / 4f);
             var spine = B(HumanBodyBones.Spine); var chest = B(HumanBodyBones.Chest); var upper = B(HumanBodyBones.UpperChest);

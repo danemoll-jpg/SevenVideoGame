@@ -116,6 +116,7 @@ namespace Seven
     {
         class Baked { public int Frame = -1; public readonly List<Vector3> P = new List<Vector3>(); public readonly List<Vector3> N = new List<Vector3>(); }
         static readonly Dictionary<Transform, Baked> _cache = new Dictionary<Transform, Baked>();
+        public static int FurScaleFixed;
         static Mesh _tmp; static readonly List<Vector3> _v = new List<Vector3>(), _n = new List<Vector3>(); static readonly HashSet<string> _sizeLogged = new HashSet<string>();
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.BeforeSceneLoad)]
@@ -135,6 +136,17 @@ namespace Seven
                 smr.BakeMesh(_tmp, false);
                 _tmp.GetVertices(_v); _tmp.GetNormals(_n);
                 var m = smr.transform.localToWorldMatrix;
+                // QF32 (1): at FIN_10's 2.7x the full matrix placed a body 3.6 m long round a renderer 1.5 m long (the scale counted twice -
+                // his hands' targets were in the air round him). Pick the placement whose size matches the renderer's own bounds: the full
+                // matrix, or position + rotation only (the bake already scaled).
+                if (_v.Count > 0)
+                {
+                    var lb = new Bounds(_v[0], Vector3.zero); for (int i = 1; i < _v.Count; i += 7) lb.Encapsulate(_v[i]);
+                    float want = smr.bounds.size.magnitude, s = Mathf.Abs(smr.transform.lossyScale.x);
+                    float full = lb.size.magnitude * s, noScale = lb.size.magnitude;
+                    if (want > 1e-4f && s > 1.05f && Mathf.Abs(Mathf.Log(noScale / want)) < Mathf.Abs(Mathf.Log(full / want)))
+                    { m = Matrix4x4.TRS(smr.transform.position, smr.transform.rotation, Vector3.one); FurScaleFixed++; }
+                }
                 int first = b.P.Count;
                 for (int i = 0; i < _v.Count; i++) { b.P.Add(m.MultiplyPoint3x4(_v[i])); b.N.Add(i < _n.Count ? m.MultiplyVector(_n[i]).normalized : Vector3.up); }
                 // check runs: once per cat and scale, the baked body's size vs the renderer's own bounds (proof the surface is where he is drawn)

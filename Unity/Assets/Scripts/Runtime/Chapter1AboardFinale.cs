@@ -53,7 +53,8 @@ namespace Seven
         void BuildMoonExterior(Vector3 bay)
         {
             var pf = Resources.Load<GameObject>("Outside/Outside_moon");
-            if (pf != null) { _moonWorld = Instantiate(pf); _moonWorld.name = "MoonExterior"; _moonWorld.transform.position = bay - MoonLayout.SaucerCentre; }
+            if (pf != null) { _moonWorld = Instantiate(pf); _moonWorld.name = "MoonExterior"; _moonWorld.transform.position = bay - MoonLayout.SaucerCentre; MoonExteriorDress.Dress(_moonWorld); }
+            if (DemoBoot.CaptureDir != null && pf != null) Cap?.Log($"FIN_01 EXTERIOR DRESSING (QF32 4): {MoonExteriorDress.Dressed} plain box pieces of the host dressed as worked stone ({MoonExteriorDress.Parts} parts: plinths, string courses, pilasters, cornices, fallen blocks)");
             var rg = new GameObject("BayGuideRing"); _bayRing = rg.transform; _bayRing.position = bay + Vector3.up * 0.6f;
             rg.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(9f, 10.5f, 0f); var mr = rg.AddComponent<MeshRenderer>(); mr.sharedMaterial = Markers.Additive(1.4f); mr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             var beam = GameObject.CreatePrimitive(PrimitiveType.Cylinder); Destroy(beam.GetComponent<Collider>()); beam.transform.SetParent(_bayRing, false); beam.transform.localPosition = Vector3.up * 40f; beam.transform.localScale = new Vector3(1.2f, 40f, 1.2f); beam.GetComponent<Renderer>().sharedMaterial = Markers.Additive(0.35f);

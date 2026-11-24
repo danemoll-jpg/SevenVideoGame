@@ -979,6 +979,34 @@ namespace Seven.EditorTools
                 go.AddComponent<Seven.Debris>();
             }
 
+            // QF32 (3): the sparring ground seen from above was one flat tone (the top-down orbit shot: range 0.09) - old worn
+            // flagstones in the grass round the arena, flush with the ground (1.5 cm proud, no colliders), pale weathered stone
+            {
+                var flagMat = Lit("World_flagstone", new Color(0.30f, 0.30f, 0.30f), 0.08f);
+                var fv = new List<Vector3>(); var ft = new List<int>(); var frnd = new System.Random(32);
+                float F() => (float)frnd.NextDouble();
+                var placed = new List<Vector3>();
+                for (int i = 0; i < 400 && placed.Count < 70; i++)
+                {
+                    float rr = 0.4f + Mathf.Sqrt(F()) * 7.0f, a = F() * Mathf.PI * 2f;
+                    var p = new Vector3(ac.x + Mathf.Cos(a) * rr, 0f, ac.z + Mathf.Sin(a) * rr);
+                    float s = Mathf.Lerp(0.35f, 0.75f, F());
+                    if (placed.Any(q => Vector3.Distance(q, p) < s * 0.9f + 0.3f)) continue;
+                    placed.Add(p);
+                    float yaw = F() * 360f;
+                    // an irregular flat stone: a 7-sided slab, its rim a little lower (weathered edges)
+                    int b0 = fv.Count; var cc = new Vector3(p.x, Seven.WorldGround.HillHeight(p.x, p.z) + 0.015f, p.z); fv.Add(cc);
+                    for (int k = 0; k < 7; k++)
+                    {
+                        float ang = (yaw + k * 360f / 7f + F() * 18f) * Mathf.Deg2Rad, rad = s * Mathf.Lerp(0.42f, 0.55f, F());
+                        float x = p.x + Mathf.Cos(ang) * rad, z = p.z + Mathf.Sin(ang) * rad;
+                        fv.Add(new Vector3(x, Seven.WorldGround.HillHeight(x, z) + 0.008f, z));
+                    }
+                    for (int k = 0; k < 7; k++) { ft.Add(b0); ft.Add(b0 + 1 + (k + 1) % 7); ft.Add(b0 + 1 + k); }
+                }
+                MeshObject("SparringFlagstones", SaveMesh(Finish(fv, ft), "World_Flagstones"), flagMat, world, false);
+            }
+
             // The distance: huge ring-terrace complexes, towers and a dark overhead arc, all fading into the fog.
             var far = new GameObject("Distance").transform;
             far.SetParent(world, false);

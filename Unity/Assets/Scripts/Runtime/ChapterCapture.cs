@@ -82,6 +82,7 @@ namespace Seven
         public static void HoldControlShot(float seconds) { _holdCtlUntil = Time.unscaledTime + seconds; }
         float _ctlWait; HoverBike _fastBike;
         bool FastRide() { foreach (var b in FindObjectsByType<HoverBike>(FindObjectsSortMode.None)) if (b.Riding && Mathf.Abs(b.Speed) > 15f) return true; return false; }
+        Vector3 _ctlCamP; Quaternion _ctlCamR = Quaternion.identity; int _ctlStill; float _ctlSettle;
         void WatchControl()
         {
             bool control = false; try { control = MusicSystem.HasControl != null && MusicSystem.HasControl(); } catch { }
@@ -93,7 +94,19 @@ namespace Seven
             // ice passage's bend; the frame waits (up to 6 s) until she is under 15 m/s
             if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && _ctlWait < 6f && FastRide()) { _ctlAt = Time.unscaledTime + 0.3f; _ctlWait += 0.3f; }
             if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && Time.unscaledTime < _holdCtlUntil) _ctlAt = _holdCtlUntil + 0.05f;   // a staged check-run test owns the view
-            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt) { _ctlAt = -1f; _ctlShots++; var rb = HoverBike.RiddenNow; if (rb != null) ImageGate.Expect(rb.transform, "7 on her bike (the player's view while riding)", 0f, "ctl_control_back"); StartCoroutine(Shot($"ctl_control_back_{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}")); }
+            // QF32 (3): repeatability - the frame is taken once the follow camera has SETTLED (still for 6 frames: < 2 cm, < 0.3 deg a frame),
+            // at most 1.5 s more; before, it could catch the camera mid-ease out of the cutscene (Biaveh's control-back frame: range 0.30
+            // in one run, 0.48 in the next)
+            var cm = Camera.main;
+            if (cm != null)
+            {
+                bool still = (cm.transform.position - _ctlCamP).sqrMagnitude < 0.0004f && Quaternion.Angle(cm.transform.rotation, _ctlCamR) < 0.3f;
+                _ctlStill = still ? _ctlStill + 1 : 0; _ctlCamP = cm.transform.position; _ctlCamR = cm.transform.rotation;
+            }
+            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt && _ctlStill < 6 && _ctlSettle < 1.5f) { _ctlSettle += Time.unscaledDeltaTime; return; }
+            if (_ctlAt > 0f && Time.unscaledTime >= _ctlAt) {
+                if (_ctlSettle > 0f) Log($"control back: frame taken after the camera settled ({_ctlSettle:0.00} s, still {_ctlStill} frames)");
+                _ctlSettle = 0f; _ctlAt = -1f; _ctlShots++; var rb = HoverBike.RiddenNow; if (rb != null) ImageGate.Expect(rb.transform, "7 on her bike (the player's view while riding)", 0f, "ctl_control_back"); StartCoroutine(Shot($"ctl_control_back_{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}")); }
         }
 
         /// <summary>QF13: the same frame from a second, fixed angle (a side view) without moving the player's camera - a

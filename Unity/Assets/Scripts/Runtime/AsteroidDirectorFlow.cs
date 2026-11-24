@@ -431,6 +431,15 @@ namespace Seven
             // he stops precisely in front of her; over-the-shoulder behind 7
             var stop = L.HallMeet + Flat(L.CutterAt - L.HallMeet).normalized * 4.2f;
             // QF21 (6): the camera moves with him as he leaves the cradle and walks to her (low, his scale) - never an empty shot
+            // QF32 (3) / QF24 (9): a soft white key light on him from her side, riding with him through the walk-up and the talk (his
+            // chrome read as one mid-grey against the hall - the a16b / a17 frames' tonal range was 0.21-0.29)
+            Light mKey = null;
+            if (m != null)
+            {
+                mKey = new GameObject("Machinist_Key").AddComponent<Light>(); mKey.type = LightType.Point; mKey.shadows = LightShadows.None;
+                mKey.range = 10f; mKey.intensity = 3.2f; mKey.color = Color.white;
+                StartCoroutine(KeyRides(mKey, m.transform));
+            }
             if (m != null) { yield return TrackWalk(m, stop, 1.0f, "a16b_he_walks_to_her", P7); m.Face(P7); }
             OverHerShoulderUp();
             yield return Wait(0.4f);
@@ -448,6 +457,7 @@ namespace Seven
             yield return Line("AST_04_10");                    // And... how long has that been?
             yield return Wait(0.6f);                           // a brief mechanical hesitation before the answer
             yield return Line("AST_04_11");                    // Restoration is ongoing.
+            if (mKey != null) Destroy(mKey.gameObject, 2f);
             // behind him an engraved wall panel moves into the cutting mechanism
             if (CutterPanel != null) StartCoroutine(PanelIntoCutter());
             Shoot(new Vector3(-379f, 3.2f, 113.5f), new Vector3(-379f, 1.2f, L.ArchiveConveyorZ), 48f, 0.5f);
@@ -511,6 +521,16 @@ namespace Seven
                 Shoot(cam, (at + hh) * 0.5f + Vector3.up * 0.4f, 50f, 0.01f); return;
             }
             Shoot(hh - d * 2f + Vector3.up * 0.3f, at, 50f, 0.01f);
+        }
+        /// <summary>QF32 (3): a key light that stays on a big character's front, from her side and above his chest, while it lives.</summary>
+        IEnumerator KeyRides(Light key, Transform who)
+        {
+            while (key != null && who != null)
+            {
+                var toHer = Flat(P7 - who.position); if (toHer.sqrMagnitude < 0.01f) toHer = who.forward; toHer.Normalize();
+                key.transform.position = who.position + Vector3.up * 3.4f + toHer * 2.6f + Vector3.Cross(Vector3.up, toHer) * 1.2f;
+                yield return null;
+            }
         }
         IEnumerator PanelIntoCutter()
         {

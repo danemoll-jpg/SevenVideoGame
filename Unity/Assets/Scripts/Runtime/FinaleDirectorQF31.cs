@@ -490,11 +490,9 @@ namespace Seven
         void KneelWithHim()
         {
             if (Cat != null && (Cat.enabled || Cat.transform.localScale.x > 1.2f)) { PantherFallen(false); var o = CatOv; if (o != null) { o.Breath = 0f; o.Alive = false; o.Slack = 1f; } }
-            var hb = CatBone("head"); var headP = hb != null ? hb.position : L.PantherHead; var body = Cat != null ? CatBounds().center : L.PantherFalls;
-            var away = Flat(headP - body); if (away.sqrMagnitude < 0.01f) away = Vector3.right; away.Normalize();
-            var kneel = Flat(headP) + away * 0.5f; kneel.y = L.Y;
-            Seven.Place(kneel, Flat(headP - kneel));
-            var rest = SevenRestPose.On(Seven.gameObject, SevenRestPose.Kind.Kneel); rest.EaseIn = false; rest.PinHere();
+            var kneel = KneelAtHead(out var face);                    // QF32 (1): her knees against his head
+            Seven.Place(kneel, face);
+            var rest = SevenRestPose.On(Seven.gameObject, SevenRestPose.Kind.Kneel); rest.EaseIn = false; rest.PinHere(); rest.Drop = 0.18f;
             _handsOn = true; StartCoroutine(HandsOnHim());
         }
         /// <summary>Back on her, bowed over him (alternating close framings).</summary>

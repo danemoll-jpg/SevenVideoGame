@@ -139,11 +139,13 @@ namespace Seven
         {
             if (GetComponent<CameraBodyGuard>() == null) gameObject.AddComponent<CameraBodyGuard>();   // QF28 pass
             if (Target != null) _seven = Target.GetComponent<ChapterSeven>();
+            if (_snapped) return;          // QF32 (5): a checkpoint start already snapped and settled the view - keep it
             Pitch = DefaultPitch;
             if (Target != null) { Yaw = Target.eulerAngles.y; _focus = Target.position + Vector3.up * LookHeight; }
             _dist = Distance;
             _look = _focus;
         }
+        bool _snapped;
 
         /// <summary>Cut or ease to a fixed framing.</summary>
         public void Shot(Vector3 pos, Vector3 look, float ease = 1.2f, bool cut = false, float fov = 0f)
@@ -196,7 +198,49 @@ namespace Seven
             if (RidingNow && !_shot) { RideSnapBehind(); return; }
             Yaw = Target.eulerAngles.y; Pitch = DefaultPitch;
             _focus = Target.position + Vector3.up * LookHeight; _dist = Distance;
+            _swinging = false; _occluded = 0f; _recentering = false; _pitchVel = _yawVel = 0f; _snapped = true;
             Place(1f);
+            SettleView();
+        }
+
+        /// <summary>QF32 (5): every snap behind her (every chapter's checkpoint start, restarts, fall resets) ends in a LEVEL, settled
+        /// view: the default pitch, her whole body seen, the boom at least 70 % out. If straight behind her is blocked or cramped (a
+        /// wall at her back, a low ceiling - rc4's Chapter 1 checkpoint 6 start), the nearest clear angle round her is taken instead,
+        /// at the default pitch first (a little steeper only if nothing level is open). Logged in check runs.</summary>
+        public static int SnapSettles, SnapTurned, SnapCramped;
+        void SettleView()
+        {
+            if (Target == null || Cutaway != null || RidingNow) return;
+            BodyPoints();
+            var f = _look; int mask = Lift > 0.05f ? CamMask & ~(1 << 21) : CamMask;
+            int seen = Seen(transform.position, mask); float d = (transform.position - f).magnitude;
+            float yaw0 = Yaw; bool turned = false;
+            if (seen < 3 || d < Distance * 0.7f)
+            {
+                float best = 999f, bestP = DefaultPitch;
+                foreach (var pitch in new[] { DefaultPitch, DefaultPitch + 10f, DefaultPitch + 20f })
+                {
+                    for (int k = 1; k <= 12; k++)
+                        foreach (var sg in new[] { 1f, -1f })
+                        {
+                            float y = Yaw + sg * k * 15f;
+                            var dd = Quaternion.Euler(pitch, y, 0f) * Vector3.back;
+                            if (CameraOccluders.AnySphere(f, 0.22f, dd, Distance * 0.8f, mask, out _)) continue;
+                            if (Seen(f + dd * Distance * 0.8f, mask) < 3) continue;
+                            if (Mathf.Abs(Mathf.DeltaAngle(Yaw, y)) < Mathf.Abs(Mathf.DeltaAngle(Yaw, best))) { best = y; bestP = pitch; }
+                        }
+                    if (best < 900f) break;
+                }
+                if (best < 900f) { Yaw = best; Pitch = bestP; _dist = Distance; Place(1f); turned = true; SnapTurned++; }
+                else SnapCramped++;
+            }
+            SnapSettles++;
+            if (DemoBoot.CaptureDir != null)
+            {
+                int s2 = Seen(transform.position, mask); float d2 = (transform.position - _look).magnitude;
+                float lookPitch = Vector3.SignedAngle(Vector3.ProjectOnPlane(transform.forward, Vector3.up), transform.forward, transform.right);
+                ChapterCapture.I?.Log($"CAMERA SETTLE (QF32 5) at {Target.position}: {(turned ? $"turned {Mathf.DeltaAngle(yaw0, Yaw):0} deg to a clear view" : seen < 3 || d < Distance * 0.7f ? "no clearer angle (kept behind her)" : "straight behind her")} - looking {(lookPitch >= 0f ? "down" : "UP")} {Mathf.Abs(lookPitch):0} deg, boom {d2:0.0} of {Distance:0.0} m, her body seen {s2}/3 (before {seen}/3, {d:0.0} m)");
+            }
         }
 
         void LateUpdate()

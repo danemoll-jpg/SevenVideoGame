@@ -65,7 +65,7 @@ namespace Seven
         public static Vector3 PantherOnArchive => PlatformAt + new Vector3(0.36f, PlatformH, 1.72f);   // on her LEFT (she faces -z: +x is her left) - her left hand rests on him
         /// <summary>QF30 (14/15): the large Panther lies on his side here, his head toward +x; she kneels at his head.</summary>
         public static Vector3 PantherHead => PantherFalls + new Vector3(1.05f, 0f, 0.15f);
-        public static Vector3 KneelSpot => PantherFalls + new Vector3(1.85f, 0f, 0.3f);
+        public static Vector3 KneelSpot => PantherFalls + new Vector3(1.6f, 0f, 0.25f);    // QF32 (1): her knees against his head (the scene places her from his drawn head)
         /// <summary>QF30 (16): the Scree crew round the barrier (FIN_11 / FIN_13).</summary>
         public static Vector3 CrewAt(int i) => BarrierAt + new Vector3(-2.3f - (i % 2) * 0.9f, 0f, -2.0f + i * 2.0f);
         /// <summary>QF30 (4) build check STAGING MARKS: every staged spot (what, where, body radius, height, the floor it stands on).</summary>

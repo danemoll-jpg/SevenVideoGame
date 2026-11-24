@@ -2046,6 +2046,10 @@ namespace Seven
             if (Flat(Cat.transform.position - (p7 + side * 0.95f)).magnitude > 0.6f) Cat.Place(p7 + side * 0.95f, cityDir);   // beside her for the two-shot
             Cat.Hold(p7 + cityDir * 20f, "sit");
             var mid = (p7 + Cat.transform.position) * 0.5f;
+            // QF32 (3): a soft white key on the two of them from the city side (the low two-shots were the chapter's darkest frames)
+            var key6b = new GameObject("Reveal6b_Key").AddComponent<Light>(); key6b.type = LightType.Point; key6b.shadows = LightShadows.None;
+            key6b.range = 6f; key6b.intensity = 2.4f; key6b.color = Color.white; key6b.transform.position = mid + cityDir * 2.2f + side * 1.2f + Vector3.up * 1.9f;
+            Destroy(key6b.gameObject, 40f);
             Cam.Shot(mid + cityDir * 2.9f + side * 0.9f + Vector3.up * 0.35f, mid + Vector3.up * 0.95f, 0.01f, true, 52f);
             var sky = p7 + cityDir * 60f + Vector3.up * 140f;
             ik.LookPos = p7 + cityDir * 8f + Vector3.up * 1.8f; ik.LookW = 1f;
@@ -2926,6 +2930,9 @@ namespace Seven
         {
             while (UI.FadeAlpha > 0.05f) yield return null;
             yield return Wait(1.4f);
+            // QF32 (5): the first lesson ("Move / Camera") shows with her on her feet in the settled follow view - never mid-climb or
+            // during a cutscene shot (rc4's checkpoint-6 start showed it while she already hung in the cut)
+            for (float w = 0f; (Seven.Current != ChapterSeven.Mode.Free || Dlg.Busy) && w < 30f; w += Time.deltaTime) yield return null;
             var p0 = Seven.transform.position; float yaw0 = Cam.Yaw, movedAt = -1f;
             StartTeach("move", () =>
             {

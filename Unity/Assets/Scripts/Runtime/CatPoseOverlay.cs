@@ -170,6 +170,7 @@ namespace Seven
                 if (TailTwitch > 0.01f) tb.rotation = Quaternion.AngleAxis(Mathf.Sin(_t * 7f + i) * 14f * TailTwitch * k, transform.up) * tb.rotation;
             }
             Stillness(dt, right, fwd);
+            CradlePose(dt);
             if (_ear > 0.001f && EarToward.HasValue && _head != null)
             {
                 // the ear nearer to her turns toward her (yaw about up) and gives a small flick
@@ -215,6 +216,34 @@ namespace Seven
                 var want = (-fwd - Vector3.up * 0.6f).normalized;
                 tb.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(tb.up, want), _slack * 0.5f * k) * tb.rotation;
             }
+        }
+
+        /// <summary>QF32 (1): his head drawn into her lap (FIN_10) - the neck (most) and the head (the rest) turn so his head moves toward
+        /// this point (her thighs, just above her knees), eased in, bounded (neck 35 deg, head 35 deg) so it never folds. Null = none.</summary>
+        public Vector3? Cradle; float _cradle;
+        public float CradleLift { get; private set; }
+        void CradlePose(float dt)
+        {
+            _cradle = Mathf.MoveTowards(_cradle, Cradle.HasValue ? 1f : 0f, dt * 0.8f);
+            if (_cradle < 0.001f || !Cradle.HasValue || _neck == null || _head == null) return;
+            float y0 = _head.position.y;
+            var to = Cradle.Value;
+            var cur = _head.position - _neck.position; var want = to - _neck.position;
+            if (cur.sqrMagnitude > 1e-6f && want.sqrMagnitude > 1e-6f)
+            {
+                var q = Quaternion.FromToRotation(cur.normalized, want.normalized);
+                q.ToAngleAxis(out float ang, out var ax); if (ang > 180f) ang -= 360f;
+                _neck.rotation = Quaternion.AngleAxis(Mathf.Clamp(ang, -35f, 35f) * Mathf.SmoothStep(0f, 1f, _cradle), ax) * _neck.rotation;
+            }
+            // the head follows the rest of the way (its own forward toward the point, a little)
+            var hf = _head.position - _neck.position; var hw = to - _head.position;
+            if (hw.sqrMagnitude > 1e-6f && hf.sqrMagnitude > 1e-6f)
+            {
+                var q = Quaternion.FromToRotation(hf.normalized, (hf.normalized + hw.normalized * 0.6f).normalized);
+                q.ToAngleAxis(out float ang, out var ax); if (ang > 180f) ang -= 360f;
+                _head.rotation = Quaternion.AngleAxis(Mathf.Clamp(ang, -35f, 35f) * _cradle, ax) * _head.rotation;
+            }
+            CradleLift = _head.position.y - y0;
         }
 
         /// <summary>QF28 (4): the riding crouch, after the clip: legs folded under (two-bone IK), head up, ears back, tail wrapped.</summary>

@@ -479,6 +479,7 @@ namespace Seven
                 Vector3 OnPath(float s) { if (s <= 0f) return pts[0] + (pts[0] - pts[1]).normalized * -s; for (int i = 1; i < pts.Length; i++) { if (s <= seg[i]) return Vector3.Lerp(pts[i - 1], pts[i], s / seg[i]); s -= seg[i]; } return pts[pts.Length - 1]; }
                 float Along(Vector3 p) { float best = float.MaxValue, acc = 0f, at = 0f; for (int i = 1; i < pts.Length; i++) { var ab = pts[i] - pts[i - 1]; float u = Mathf.Clamp01(Vector3.Dot(p - pts[i - 1], ab) / ab.sqrMagnitude); float d = (pts[i - 1] + ab * u - p).sqrMagnitude; if (d < best) { best = d; at = acc + u * seg[i]; } acc += seg[i]; } return at; }
                 var safe = SafeLine();
+                if (tries == 1) LogEscapeLine(safe);
                 if (Auto) StartCoroutine(AutoSwim(safe, 3.5f));
                 bool saidJunction = false, saidNext = false, saidNarrow = false, saidKeep = false, lowShot = false;
                 float lastRupture = 0f, lastDebris = 0f; float t0 = Time.time;
@@ -599,15 +600,49 @@ namespace Seven
         bool _escShot; float _seqAt; int _seqN;
         Vector3[] SafeLine()
         {
-            // the autopilot line: the tunnel's centre, with a side-step round each support
+            // the guide light's (and the autopilot's) line: the tunnel's centre, and past each support through the OPEN side of its
+            // diagonal beam. QF32 (2): rc4's side-step was 3.2 m sideways in the horizontal - for the third support that point sat ~1.6 m
+            // off the beam itself and the next centre point pulled the line back across it (the bot, which steers at the light, hit it
+            // every try). Now: the beam's own direction (as built: c + (-5, 4, 1) -> c + (4, -4.5, -1)) x the tunnel's direction = the
+            // way across that is clear of the beam; three points (before / beside / after) 3.6 m off its axis, the lower side
+            // preferred (a falling support comes from above), the side the tunnel has room for; centre points within 9 m dropped.
             var l = new List<Vector3>();
-            foreach (var p in EuropaLayout.Escape)
+            var pts = EuropaLayout.Escape;
+            foreach (var p in pts) { bool near = false; foreach (var s in EuropaLayout.EscapeSupports) if (Vector3.Distance(p, s) < 9f) near = true; if (!near) l.Add(p); }
+            foreach (var s in EuropaLayout.EscapeSupports)
             {
-                foreach (var s in EuropaLayout.EscapeSupports) if (Vector3.Distance(p, s) < 14f && (s - l.LastOrDefault(p)).sqrMagnitude > 1f) { var side = Vector3.Cross(Vector3.up, (p - s).normalized); l.Add(s + side * 3.2f); }
-                l.Add(p);
+                // the tunnel's direction at the support
+                int bi = 1; float bd = float.MaxValue;
+                for (int i = 1; i < pts.Length; i++) { var ab = pts[i] - pts[i - 1]; float u = Mathf.Clamp01(Vector3.Dot(s - pts[i - 1], ab) / ab.sqrMagnitude); float d = (pts[i - 1] + ab * u - s).sqrMagnitude; if (d < bd) { bd = d; bi = i; } }
+                var along = (pts[bi] - pts[bi - 1]).normalized;
+                var beam = (new Vector3(4f, -4.5f, -1f) - new Vector3(-5f, 4f, 1f)).normalized;
+                var n = Vector3.Cross(beam, along).normalized; if (n.y > 0f) n = -n;            // the lower open side first
+                Vector3 Pick(Vector3 dir) => s + dir * EscapeClear;
+                var lo = Pick(n); var hi = Pick(-n);
+                float loMove = (EuropaLayout.SwimClamp(lo, 1.3f) - lo).magnitude, hiMove = (EuropaLayout.SwimClamp(hi, 1.3f) - hi).magnitude;
+                var side = loMove <= hiMove + 0.3f ? n : -n;
+                foreach (float k in new[] { -7f, 0f, 7f }) l.Add(EuropaLayout.SwimClamp(Pick(side) + along * k, 1.3f));
             }
             l.Sort((a, b) => b.z.CompareTo(a.z));
             return l.ToArray();
+        }
+        const float EscapeClear = 3.6f;
+        /// <summary>QF32 (2): the nearest the guide line comes to each support's beam (axis distance minus its 0.55 m radius) - logged.</summary>
+        void LogEscapeLine(Vector3[] line)
+        {
+            var beam = (new Vector3(4f, -4.5f, -1f) - new Vector3(-5f, 4f, 1f));
+            for (int k = 0; k < EuropaLayout.EscapeSupports.Length; k++)
+            {
+                var c = EuropaLayout.EscapeSupports[k]; var a = c + new Vector3(-5f, 4f, 1f); float worst = float.MaxValue;
+                for (int i = 1; i < line.Length; i++)
+                    for (int j = 0; j <= 20; j++)
+                    {
+                        var p = Vector3.Lerp(line[i - 1], line[i], j / 20f);
+                        float u = Mathf.Clamp01(Vector3.Dot(p - a, beam) / beam.sqrMagnitude);
+                        worst = Mathf.Min(worst, (a + beam * u - p).magnitude - 0.55f);
+                    }
+                Log($"ESCAPE GUIDE (QF32 2): support {k} at {c} - the guide line passes {worst:0.00} m clear of its beam (rc4: through it); it falls when she is 48 m away (0.75 s), landed before she reaches it");
+            }
         }
         /// <summary>QF13 (14): a broken support drops into the tunnel ahead of her (from the ceiling, tumbling), dust.</summary>
         IEnumerator SupportFalls(Transform s)

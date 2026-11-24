@@ -52,15 +52,14 @@ namespace Seven
             var ov = CatOv; if (ov != null) { ov.Alive = true; ov.Slack = 0f; ov.SettleTo = null; ov.Breath = 0.85f; ov.BreathRate = 0.55f; }
             // she reaches him and kneels at his head, gathering his head against her (he is still large)
             // QF30 (15): she kneels right at his head - measured from his head bone as he lies (rc2 draft: a fixed spot a metre short)
-            var hb = CatBone("head"); var headP = hb != null ? hb.position : L.PantherHead; var body = CatBounds().center;
-            var away = Flat(headP - body); if (away.sqrMagnitude < 0.01f) away = Vector3.right; away.Normalize();
-            var kneel = Flat(headP) + away * 0.5f + Vector3.Cross(Vector3.up, away) * 0.12f; kneel.y = L.Y;
-            var faceHim = Flat(headP - kneel);
+            // QF32 (1): she kneels RIGHT at his head - her knees against it (placed from his drawn fur and her own leg length), so his head
+            // can be drawn into her lap and her hands rest on him (rc4: half a metre past his head, her hand hovered ~24 cm above him)
+            var kneel = KneelAtHead(out var faceHim);
             Shoot(L.PantherFalls + new Vector3(2.4f, 1.4f, 4.2f), L.PantherFalls + Vector3.up * 0.5f + Vector3.right * 0.6f, 48f, 0.01f);
             Seven.Lock(false); yield return WalkSeven(kneel, 3f); Seven.Lock(true);
             yield return TurnTo(faceHim, 0.5f);
             Seven.Place(kneel, faceHim);
-            var rest = SevenRestPose.On(Seven.gameObject, SevenRestPose.Kind.Kneel); rest.EaseIn = true; rest.PinHere(); rest.Bow = 0f; rest.Sob = 0f;
+            var rest = SevenRestPose.On(Seven.gameObject, SevenRestPose.Kind.Kneel); rest.EaseIn = true; rest.PinHere(); rest.Bow = 0f; rest.Sob = 0f; rest.Drop = 0.18f;
             _purr = Purr.Loop(Cat.transform, 0.5f);
             _handsOn = true; StartCoroutine(HandsOnHim());
             StartCoroutine(BreathSounds());
@@ -99,10 +98,32 @@ namespace Seven
                 Cat.transform.position = anchor + (Cat.transform.position - anchor) * k; Cat.transform.localScale = Vector3.one * s;
                 var b = CatBounds(); if (b.min.y < L.Y + 0.005f || b.min.y > L.Y + 0.03f) Cat.transform.position += Vector3.up * (L.Y + 0.012f - b.min.y);
                 if (_purr != null) _purr.volume = Mathf.Lerp(0.5f, 0.15f, u) * AudioKit.Gain(AudioKit.Bus.Voice);
-                if (t > 0.5f && !_shrinkShot) { _shrinkShot = true; StartCoroutine(Shot("f45c_he_shrinks_as_the_life_leaves_him")); }
+                if (t > 0.5f && !_shrinkShot)
+                {
+                    _shrinkShot = true; StartCoroutine(Shot("f45c_he_shrinks_as_the_life_leaves_him"));
+                    // QF32 (1): a close-up of her hands following him in as he gets smaller (a second camera; the shot on screen is untouched)
+                    if (ChapterCapture.I != null) { ImageGate.ExpectSide("f45d_", Cat.transform, "her hands on him as he shrinks (insert)"); ChapterCapture.I.StartCoroutine(ChapterCapture.I.ShotFrom("f45d_insert_her_hands_follow_him_as_he_shrinks", HandR() + side * 0.8f + Vector3.up * 0.4f, HandR(), 36f)); }
+                }
                 yield return null;
             }
             Cat.transform.localScale = Vector3.one;
+            // QF32 (1): he is small again and has shrunk away from her hands (toward his head) - she draws him in against her knees, his
+            // head into her lap (an eased slide; her hands ride on him the whole way)
+            {
+                var kL = Seven.Bone(HumanBodyBones.LeftLowerLeg); var kR = Seven.Bone(HumanBodyBones.RightLowerLeg); var hd = CatBone("head");
+                if (kL != null && kR != null && hd != null)
+                {
+                    var knees = Flat((kL.position + kR.position) * 0.5f); var want = knees + Flat(Seven.transform.forward).normalized * 0.12f;
+                    var delta = want - Flat(hd.position);
+                    if (delta.magnitude > 0.03f)
+                    {
+                        var c0 = Cat.transform.position; var mv = Vector3.ClampMagnitude(delta, 0.6f);
+                        for (float t = 0f; t < 1f; t += Time.deltaTime / 1.2f) { Cat.transform.position = c0 + mv * Mathf.SmoothStep(0f, 1f, t); yield return null; }
+                        Cat.transform.position = c0 + mv;
+                        Log($"FIN_10 GATHER (QF32 1): small again, she drew him {mv.magnitude:0.00} m in against her knees (his head into her lap)");
+                    }
+                }
+            }
             // one last breath, then stillness: the breathing stops, his head settles into her hand, ears slack, the tail limp; the purr stops
             if (ov != null) { ov.BreathRate = 0.18f; for (float t = 0f; t < 2.4f; t += Time.deltaTime) yield return null; ov.Breath = 0f; ov.Alive = false; ov.Slack = 1f; ov.SettleTo = HandR(); }
             _breathing = false;
@@ -114,6 +135,7 @@ namespace Seven
             // "Panther, no!" - broken, disbelieving; she cries a little, her head bowed over him
             rest.Bow = 22f; rest.Sob = 1f;
             Shoot(P7 + fwd * 1.1f + side * 1.0f + Vector3.up * 0.85f, HerHead + Vector3.down * 0.35f, 40f, 0.01f);
+            if (ChapterCapture.I != null) { ImageGate.ExpectSide("f46b_", Cat.transform, "her hands still on him at 'Panther, no!' (insert)"); ChapterCapture.I.StartCoroutine(ChapterCapture.I.ShotFrom("f46b_insert_her_hands_on_him_panther_no", HandR() + side * 0.8f + Vector3.up * 0.4f, HandR(), 36f)); }
             yield return SayIds("FIN_10_08b");                          // Panther, no!
             yield return Wait(Auto ? 1.5f : 3f);
             rest.Sob = 0.45f; AudioKit.Play("seven_sob_soft", HerHead, 0.55f, 0.03f, AudioKit.Bus.Voice, 10f);
@@ -134,9 +156,36 @@ namespace Seven
         /// <summary>FIN_10: her hands rest ON his fur (targets on his head and neck surface every frame - they follow his breathing and the
         /// shrink; palms toward him, fingers relaxed); a stroke runs the right hand from his head to his neck once.</summary>
         float _reachBow;
+        /// <summary>QF32 (1): where she kneels so her knees rest against his head: the near side of his drawn head (FurContact) from her
+        /// side, plus her own knee reach in the kneeling pose (thigh length x the pose's forward share + the knee cap), 2 cm short.</summary>
+        Vector3 KneelAtHead(out Vector3 face)
+        {
+            var hb = CatBone("head"); var nb = CatBone("neck"); var headP = hb != null ? hb.position : L.PantherHead; var body = Cat != null ? CatBounds().center : L.PantherFalls;
+            var away = Flat(headP - body); if (away.sqrMagnitude < 0.01f) away = Vector3.right; away.Normalize();
+            // rc5 first pass: in front of his head she knelt at his MUZZLE (it reaches ~0.35 m past the head bone at 2.7x) and his head / neck
+            // were beyond her reach. Now she kneels at the BACK of his head and neck (his spine side - he lies on his side), her knees against
+            // it: his head, his neck and his shoulder all within her arms' reach.
+            var aim = nb != null ? Vector3.Lerp(headP, nb.position, 0.35f) : headP;
+            var dorsal = Cat != null ? Flat(Cat.transform.up) : Vector3.zero;
+            if (dorsal.sqrMagnitude < 0.04f) dorsal = Vector3.Cross(Vector3.up, away);
+            dorsal.Normalize();
+            if (Cat != null && FurContact.Nearest(Cat.transform, aim + dorsal * 0.6f, out var bp, out _, out _) && FurContact.Nearest(Cat.transform, aim - dorsal * 0.6f, out var vp, out _, out _)
+                && Vector3.Dot(Flat(bp - aim), dorsal) > Vector3.Dot(Flat(aim - vp), dorsal) + 0.05f) dorsal = -dorsal;   // his back is the side whose fur is closer (his legs reach out on the belly side)
+            float dNear = 0.12f;
+            if (Cat != null && FurContact.Nearest(Cat.transform, aim + dorsal * 0.6f + Vector3.up * 0.05f, out var sp, out _, out _))
+                dNear = Mathf.Clamp(Vector3.Dot(Flat(sp - aim), dorsal), 0.03f, 0.35f);
+            var ul = Seven.Bone(HumanBodyBones.RightUpperLeg); var ll = Seven.Bone(HumanBodyBones.RightLowerLeg);
+            float thigh = ul != null && ll != null ? Vector3.Distance(ul.position, ll.position) : 0.42f;
+            float kneeFwd = thigh * 0.94f + 0.06f;
+            var kneel = Flat(aim) + dorsal * (dNear + kneeFwd - 0.06f); kneel.y = L.Y;        // her knees pressed 6 cm into his fur (against him)
+            face = Flat(aim - kneel);
+            Log($"FIN_10 STAGING (QF32 1): she kneels at the back of his head and neck, {Flat(kneel - aim).magnitude:0.00} m from it (his fur {dNear:0.00} m out on her side, her knees {kneeFwd:0.00} m ahead of her) - knees against him (rc4: past his head, out of reach)");
+            return kneel;
+        }
+        int _cradleLogged;
         IEnumerator HandsOnHim()
         {
-            _reachBow = 0f;
+            _reachBow = 0f; _cradleLogged = 0;
             var ik = IK; ik.Ease = 1.4f; ik.Alive = true; ik.Spread = 0.6f;
             while (_handsOn && Cat != null)
             {
@@ -152,27 +201,47 @@ namespace Seven
                     if (FurContact.Nearest(Cat.transform, from + dirOut * 0.5f * Mathf.Max(1f, s), out var sp, out var sn, out _)) { n = sn; return sp; }
                     return from + dirOut * 0.06f * s;
                 }
-                var headP = _stroke ? Vector3.Lerp(head.position, neck.position, _strokeU) : head.position;
-                var hSurf = OnFur(headP, up, out var hN); var nSurf = OnFur(neck.position, (under + Vector3.up * 0.4f).normalized, out var nN);
+                // QF32 (1): his head drawn into her lap - his neck / head turn toward her thighs just above her knees (CatPoseOverlay.Cradle);
+                // it stays there through his last breaths and the shrink (the point is hers, re-read every frame)
+                var ov = CatOv; var hipsB = Seven.Bone(HumanBodyBones.Hips); var kL = Seven.Bone(HumanBodyBones.LeftLowerLeg); var kR = Seven.Bone(HumanBodyBones.RightLowerLeg);
+                if (ov != null && hipsB != null && kL != null && kR != null)
+                {
+                    var knees = (kL.position + kR.position) * 0.5f;
+                    ov.Cradle = Vector3.Lerp(hipsB.position, knees, 0.72f) + Vector3.up * 0.07f;
+                    if (_cradleLogged < 2 && ov.CradleLift != 0f && Time.frameCount % 60 == 0) { _cradleLogged++; Log($"FIN_10 CRADLE (QF32 1): his head drawn toward her lap - lifted {ov.CradleLift * 100f:0} cm, head {Vector3.Distance(head.position, ov.Cradle.Value):0.00} m from her lap point"); }
+                }
+                var headP = _stroke ? Vector3.Lerp(head.position, neck.position, _strokeU) : Vector3.Lerp(head.position, neck.position, 0.25f);   // on his head and neck
+                var chestB = CatBone("chest") ?? neck;
+                var shoulderP = Vector3.Lerp(neck.position, chestB.position, 0.55f);                   // the other hand on his shoulder / side
+                var hSurf = OnFur(headP, up, out var hN);
+                var toHer = Flat(her - shoulderP).normalized;
+                var nSurf = OnFur(shoulderP, (toHer + Vector3.up * 0.9f).normalized, out var nN);
                 ik.RightPos = hSurf + hN * 0.03f - Flat(Cat.transform.forward).normalized * 0.04f; ik.RightPalmN = hN; ik.RightPalmW = 1f; ik.RightFingerDir = Flat(Cat.transform.forward); ik.RightW = 1f;
-                ik.LeftPos = nSurf + nN * 0.03f; ik.LeftPalmN = nN; ik.LeftPalmW = 0.9f; ik.LeftFingerDir = Vector3.down; ik.LeftW = 0.9f;
+                ik.LeftPos = nSurf + nN * 0.03f; ik.LeftPalmN = nN; ik.LeftPalmW = 0.9f; ik.LeftFingerDir = (-toHer + Vector3.down * 0.5f).normalized; ik.LeftW = 1f;
                 ik.LeftHint = P7 + Vector3.up * 0.7f - Seven.transform.right * 0.5f; ik.LeftHintW = 0.6f; ik.RightHint = P7 + Vector3.up * 0.8f + Seven.transform.right * 0.5f; ik.RightHintW = 0.6f;
                 ik.LookPos = head.position; ik.LookW = 1f;
                 // and both palms held on him every frame (measured against his body after every other hand pass, never let go here)
-                var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f, true); fp.Set(false, Cat.transform, "FIN_10 hand on his neck", 0.9f, true);
-                // P2 (8): she bows toward him as far as her hands need - kneeling half a metre past his head, his head on the floor was beyond an
-                // arm's length from her shoulder (the hand stayed in the air whatever the arm solver did)
-                var rp = Seven.GetComponent<SevenRestPose>(); var sh = Seven.Bone(HumanBodyBones.RightUpperArm); var lo = Seven.Bone(HumanBodyBones.RightLowerArm); var hb = Seven.Bone(HumanBodyBones.RightHand);
-                if (rp != null && sh != null && lo != null && hb != null)
+                var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f, true); fp.Set(false, Cat.transform, "FIN_10 hand on his shoulder", 1f, true);
+                // P2 (8) / QF32 (1): she bows toward him as far as EITHER hand needs (kneeling at his head now, the bow is small)
+                var rp = Seven.GetComponent<SevenRestPose>();
+                float Need(HumanBodyBones a, HumanBodyBones b, HumanBodyBones c, Vector3 target)
                 {
-                    float arm = Vector3.Distance(sh.position, lo.position) + Vector3.Distance(lo.position, hb.position) + 0.06f;
-                    float need = Vector3.Distance(sh.position, hSurf) - arm * 0.92f;
-                    _reachBow = Mathf.MoveTowards(_reachBow, Mathf.Clamp(_reachBow + need * 60f, 0f, 55f), Time.deltaTime * 30f);
+                    var sh = Seven.Bone(a); var lo = Seven.Bone(b); var hd = Seven.Bone(c);
+                    if (sh == null || lo == null || hd == null) return 0f;
+                    float arm = Vector3.Distance(sh.position, lo.position) + Vector3.Distance(lo.position, hd.position) + 0.06f;
+                    return Vector3.Distance(sh.position, target) - arm * 0.92f;
+                }
+                if (rp != null)
+                {
+                    float need = Mathf.Max(Need(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, hSurf),
+                                           Need(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, nSurf));
+                    _reachBow = Mathf.MoveTowards(_reachBow, Mathf.Clamp(_reachBow + need * 80f, 0f, 85f), Time.deltaTime * 30f);
                     if (rp.Bow < _reachBow) rp.Bow = _reachBow;
                 }
                 yield return null;
             }
             Seven.GetComponent<FurPalm>()?.Off();
+            if (CatOv != null) CatOv.Cradle = null;
         }
         IEnumerator BreathSounds()
         {
@@ -207,7 +276,7 @@ namespace Seven
         }
         bool _carry;
         /// <summary>Every hand this file drives lets go (his head / neck, the carry) - QF30 (3): called when each moment ends.</summary>
-        void HandsOff(string why) { _handsOn = false; _carry = false; IK.ReleaseAll(why); Seven.GetComponent<FurPalm>()?.Off(); }
+        void HandsOff(string why) { _handsOn = false; _carry = false; IK.ReleaseAll(why); Seven.GetComponent<FurPalm>()?.Off(); if (CatOv != null) CatOv.Cradle = null; }
         IEnumerator CarryHands()
         {
             var ik = IK;

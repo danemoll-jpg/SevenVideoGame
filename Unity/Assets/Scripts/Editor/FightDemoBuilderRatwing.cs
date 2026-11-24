@@ -132,7 +132,7 @@ namespace Seven.EditorTools
                 if (c.name == "FrontFill")
                 {
                     c.rotation = Quaternion.Euler(30f, 15f, 0f);
-                    c.GetComponent<Light>().intensity = 0.16f;
+                    c.GetComponent<Light>().intensity = 0.42f;   // QF32 (3): was 0.16 - his stance read as one dark tone (range 0.25-0.28); a front fill that models him
                 }
             }
             FogBudget(inst.GetComponent<Seven.Atmosphere>(), "Ratwing cave", 0.98f, 0.95f, 14f);   // the bright cave mouth is its contrast   // QF28 pass: the QF26 fog-colour rule (<= ~1.0)

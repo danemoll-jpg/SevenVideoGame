@@ -442,6 +442,12 @@ namespace Seven.EditorTools
             // QF29: work lamps - over the terrace where the Scree stop her (the fight under a lamp, not in the dark) and over the bay worker
             Lamp("TerraceFightLamp", new Vector3(16.5f, L.Lower + 3.4f, -40.6f), 16f, 7f, m.glow, null, new Vector3(0.6f, 0.08f, 0.16f));
             if (ScreeWorkSpots.Length > 0) Lamp("BayWorkLamp", ScreeWorkSpots[0].Item1 + new Vector3(0.8f, 3.0f, 0.6f), 10f, 3.6f, m.glow, null, new Vector3(0.5f, 0.08f, 0.14f));
+            // QF32 (3): the terrace exit (where the Scree block the way, and the reveal's low two-shots) and the bay floor under the
+            // scaffold were the darkest frames of the chapter (p95 0.23-0.28): a work lamp over each, on a bracket by the wall
+            Lamp("TerraceExitLamp", new Vector3(18.0f, L.Lower + 3.0f, -45.0f), 9f, 3.0f, m.glow, null, new Vector3(0.14f, 0.08f, 0.6f));
+            Lamp("BayFloorLamp", new Vector3(19.5f, L.Bay + 3.3f, -63.6f), 9f, 3.0f, m.glow, null, new Vector3(0.14f, 0.08f, 0.6f));
+            Block("TerraceExitLampPole", new Vector3(17.95f, L.Lower, -45.05f), new Vector3(18.05f, L.Lower + 2.96f, -44.95f), m.metal, null, false);
+            Block("BayFloorLampPole", new Vector3(19.45f, L.Bay, -63.65f), new Vector3(19.55f, L.Bay + 3.26f, -63.55f), m.metal, null, false);
 
             var ui = new GameObject("ChapterUI").AddComponent<Seven.ChapterUI>();
             ui.Cam = cam;

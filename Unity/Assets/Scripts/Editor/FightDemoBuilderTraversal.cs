@@ -244,6 +244,20 @@ namespace Seven.EditorTools
             Block("Mine_Bracket", new Vector3(15.65f, floor + 0.6f, -40.6f), new Vector3(15.75f, floor + 2.6f, -40.4f), m.metalDark, root);
             PointLight("PitGlow", new Vector3(16.5f, floor + 1.9f, -40.3f), 5.5f, 0.65f, root);
             PointLight("MineTopGlow", new Vector3(16.5f, L.Lower + 1.6f, -41.9f), 4f, 0.5f, root);
+            // QF32 (3): the cut's walls were bare slabs (the checkpoint-6 start view - tr13 / t_move - read as a flat dark box). Old
+            // mine shoring: steel ribs every ~0.8 m down both walls and two walers across them, 10 cm proud of the rock, no colliders
+            // (her hang line runs down the middle, 0.6 m clear of them); a working lamp on the east wall lights them.
+            {
+                var rv = new List<Vector3>(); var rt = new List<int>();
+                for (float z = -41.75f; z < z0 - 0.2f; z += 0.8f)
+                    foreach (var x in new[] { x0 + 0.05f, x1 - 0.05f })
+                        AddBox(rv, rt, new Vector3(x, (floor + L.Lower + 2.9f) * 0.5f, z), new Vector3(0.1f, L.Lower + 2.9f - floor, 0.14f));
+                foreach (var y in new[] { floor + 1.6f, L.Lower + 0.4f, L.Lower + 2.2f })
+                    foreach (var x in new[] { x0 + 0.11f, x1 - 0.11f })
+                        AddBox(rv, rt, new Vector3(x, y, (-42.0f + z0) * 0.5f), new Vector3(0.06f, 0.18f, z0 + 42.0f - 0.2f));
+                MeshObject("Mine_Shoring", SaveMesh(Finish(rv, rt), "Moon_MineShoring"), m.metalDark, root);
+            }
+            Lamp("MineWorkLamp", new Vector3(x1 - 0.14f, L.Lower + 1.2f, -40.2f), 6f, 1.6f, m.glow, root, new Vector3(0.08f, 0.1f, 0.34f));
         }
 
         // ------------------------------------------------------------------------------------------ bay descent
