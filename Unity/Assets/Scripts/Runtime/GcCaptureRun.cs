@@ -25,12 +25,13 @@ namespace Seven
         IEnumerator Start()
         {
             C = ChapterCapture.Ensure(); GcSave.ResetTest();
-            Log($"GC TEST (R20): proof {GcBoot.Proof}, split {GcBoot.Split}, menu {GcBoot.MenuShots}, trial {GcBoot.Trial}; test speed {DemoBoot.TestSpeed}");
+            Log($"GC TEST (R20): proof {GcBoot.Proof}, split {GcBoot.Split}, menu {GcBoot.MenuShots}, trial {GcBoot.Trial}, players {GcBoot.Players}; test speed {DemoBoot.TestSpeed}; tracks {GcTrack.Ids.Length}");
             yield return null;
             if (GcBoot.MenuShots) yield return MenuRun();
             if (GcBoot.Proof) yield return ProofRun();
             if (GcBoot.Split) yield return SplitRun();
             if (GcBoot.Trial) yield return TrialRun();
+            if (GcBoot.Players) yield return PlayersRun();
             Log(ImageGate.Summary(DemoBoot.CaptureDir));
             Log(GlyphSummary());
             C.Finish("GC TEST (R20) done");
@@ -72,9 +73,11 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ the AI proof
         IEnumerator ProofRun()
         {
-            int ok = 0, total = 0, falls = 0, through = 0; float worstMin = 999f;
+            int ok = 0, total = 0, falls = 0, through = 0, tracks = 0, dups = 0; float worstMin = 999f; var perRacer = new Dictionary<string, int>();
             foreach (var id in GcTrack.Ids)
             {
+                if (GcBoot.Only != null && !GcBoot.Only.Contains(id)) continue;
+                tracks++; int k = GcTrack.IndexOf(id);
                 GcGame.NextMode = GcGame.Mode.Race; GcGame.NextTrack = id; GcGame.NextRacers = new int[0]; GcGame.NextPads = new int[0];
                 _minAssist.Clear(); _loops.Clear(); _corks.Clear(); _jumps.Clear(); _cuts.Clear();
                 var run = StartCoroutine(Game.RaceRun());
@@ -82,7 +85,8 @@ namespace Seven
                 var cam = Observer(); var gc = cam.GetComponent<GcCam>(); gc.Target = Game.Racers[0]; gc.Snap();
                 foreach (var r in Game.Racers) { var rr = r; r.Event += (x, e) => Count(x, e); }
                 yield return Shot($"gc_{id}_grid_go", Subj(Game.Racers[0]), "the grid at the lights", cam);
-                bool loopShot = false, corkShot = false, jumpShot = false, cutShot = false, landShot = false, packShot = false, sideLoop = false;
+                if (Game.Racers.Select(r => r.Label).Distinct().Count() != Game.Racers.Count) dups++;
+                bool loopShot = false, corkShot = false, jumpShot = false, cutShot = false, landShot = false, packShot = false, sideLoop = false, setShot = string.IsNullOrEmpty(GcTrack.SetPieces[k]), setSide = setShot, pressShot = Game.PressList.Count == 0;
                 float t0 = Time.time;
                 while (!Game.Over)
                 {
@@ -101,6 +105,10 @@ namespace Seven
                     if (!jumpShot && focus.Air && focus.AirTime > 0.5f) { jumpShot = true; yield return Shot($"gc_{id}_the_jump", Subj(focus), "in the air over the gap", cam); yield return SideShot($"gc_{id}_the_jump_side", focus, new Vector3(-9f, -1f, 2f), 60f); }
                     if (jumpShot && !landShot && !focus.Air && focus.Landings > 0) { landShot = true; yield return Shot($"gc_{id}_landing", Subj(focus), "landed after the jump", cam); }
                     if (!packShot && Time.time - t0 > 6f) { packShot = true; yield return Shot($"gc_{id}_the_pack", Subj(focus), "the pack", cam); }
+                    // Round 21: each track's set-piece (from the racer's view, then from the side), the presses mid-stroke
+                    if (!setShot && (ff & GcTrack.F.SetPiece) != 0 && focus.On == focus.Main && FlagRun(focus.Main, focus.S, GcTrack.F.SetPiece) > 25f) { setShot = true; yield return Shot($"gc_{id}_setpiece", Subj(focus), GcTrack.SetPieces[k], cam); }
+                    if (setShot && !setSide && (ff & GcTrack.F.SetPiece) != 0 && FlagRun(focus.Main, focus.S, GcTrack.F.SetPiece) > 60f) { setSide = true; yield return SideShot($"gc_{id}_setpiece_side", focus, new Vector3(12f * AwaySide(focus, GcTrack.F.SetPiece), 4f, 6f), 62f); }
+                    if (!pressShot && Game.PressList.Any(p => GcGame.PressState(p, Game.PressClock) > 0.3f && GcGame.PressState(p, Game.PressClock) < 0.99f && focus.On.Ahead(focus.S, p.S) is float d && d > 12f && d < 45f)) { pressShot = true; yield return Shot($"gc_{id}_press_coming_down", Subj(focus), "a press coming down ahead", cam); }
                     var cutter = Game.Racers.FirstOrDefault(r => r.OnShortcut && r.S > 20f && r.S < r.On.Length - 30f);
                     if (!cutShot && cutter != null) { cutShot = true; gc.Target = cutter; gc.Snap(); yield return null; yield return null; yield return Shot($"gc_{id}_shortcut", Subj(cutter), "through the shortcut", cam); }
                     if (Time.time - t0 > 3f) foreach (var rd in FindObjectsByType<GcSevenRider>(FindObjectsSortMode.None)) { _rideN++; _hipsWorst = Mathf.Max(_hipsWorst, rd.HipsGap); _palmWorst = Mathf.Max(_palmWorst, Mathf.Max(rd.PalmGaps.x, rd.PalmGaps.y)); if (rd.HipsGap > 0.05f || Mathf.Max(rd.PalmGaps.x, rd.PalmGaps.y) > 0.05f) _rideOff++; }
@@ -112,14 +120,27 @@ namespace Seven
                 {
                     total++; bool done = r.Finished && r.Lap > Game.Laps; if (done) ok++;
                     falls += r.Falls; through += r.FallThroughs; _minAssist.TryGetValue(r, out var mn); if (mn > 0f) worstMin = Mathf.Min(worstMin, mn);
-                    Log($"GC PROOF (R20) {id}: {r.Label} (slot {r.Slot}, {r.Stats.Vehicle}) {(done ? "3 laps in " + GcGame.Fmt(r.FinishTime) : "DID NOT FINISH (lap " + r.Lap + ")")}, place {r.Place}; laps {string.Join(" / ", r.LapTimes.Select(GcGame.Fmt))}; falls {r.Falls}, fall-throughs {r.FallThroughs}, wall hits {r.WallHits}, bumps {r.Bumps}, loops {Get(_loops, r)}, corkscrews {Get(_corks, r)}, jumps {Get(_jumps, r)} (landed {r.Landings}), shortcuts {Get(_cuts, r)}, pickups {r.PadsTaken} (boosts {r.Boosts}, pushed {r.PushesHit}, shielded {r.Shielded}), slowest on a loop / the corkscrew {mn:0.0} m/s");
+                    if (done) { perRacer.TryGetValue(r.Label, out var c0); perRacer[r.Label] = c0 + 1; }
+                    Log($"GC PROOF (R20) {id}: {r.Label} (slot {r.Slot}, {r.Stats.Vehicle}) {(done ? "3 laps in " + GcGame.Fmt(r.FinishTime) : "DID NOT FINISH (lap " + r.Lap + ")")}, place {r.Place}; laps {string.Join(" / ", r.LapTimes.Select(GcGame.Fmt))}; falls {r.Falls}, fall-throughs {r.FallThroughs}, wall hits {r.WallHits}, bumps {r.Bumps}, loops {Get(_loops, r)}, corkscrews {Get(_corks, r)}, jumps {Get(_jumps, r)} (landed {r.Landings}), shortcuts {Get(_cuts, r)}, presses hit {r.PressHits}{(r.AI != null ? $" (dodged {r.AI.PressDodges} frames)" : "")}, jump speed capped {r.JumpCaps}, pickups {r.PadsTaken} (boosts {r.Boosts}, pushed {r.PushesHit}, shielded {r.Shielded}), slowest on a loop / the corkscrew {mn:0.0} m/s");
                 }
+                if (Game.PressList.Count > 0) Log($"GC PRESSES (R21) {id}: {Game.PressList.Count} presses came down {string.Join(" / ", Game.PressList.Select(p => p.Hits.ToString()))} times on a racer (pushed back + slowed, never wrecked)");
+                var ord = Game.Racers.OrderBy(r => r.Place).ToList();
+                Log($"GC AI ORDER (R21) {id}: {string.Join(" | ", ord.Select(r => $"{r.Place}. {r.Label} (skill {r.AI?.Skill:0.00}, pace {r.AI?.Pace:0.000}) {GcGame.Fmt(r.FinishTime)}"))}; spread {ord.Last().FinishTime - ord.First().FinishTime:0.0} s");
                 Game.Results = null; Game.Quit(); yield return null;
             }
             Log($"GC RIDE POSE (R20): 7 on her bike, {_rideN} samples - hips off the saddle point / a palm off its grip by more than 5 cm in {_rideOff} (worst hips {_hipsWorst * 100f:0.0} cm, palm {_palmWorst * 100f:0.0} cm)");
-            Log($"GC PROOF (R20): {ok} / {total} AI runs completed 3 laps (2 tracks x 6 racers, two of each vehicle); falls-through {through} (must be 0); falls off {falls}; slowest racer on a loop / the corkscrew {worstMin:0.0} m/s (the assist holds {GcRacer.MinAssistSpeed:0} m/s)");
+            Log($"GC PROOF (R21): {ok} / {total} AI runs completed 3 laps ({tracks} tracks x {GcStats.All.Length} racers, one of each per race - races with a duplicate racer {dups}, must be 0; per racer {string.Join(", ", perRacer.Select(kv => kv.Key + " " + kv.Value + " / " + tracks))}); falls-through {through} (must be 0); falls off {falls}; slowest racer on a loop / the corkscrew {worstMin:0.0} m/s (the assist holds {GcRacer.MinAssistSpeed:0} m/s)");
         }
         static Transform Subj(GcRacer r) => r.Visual != null ? r.Visual : r.transform;
+        /// <summary>Round 21: +1 / -1 = the side of the racer (its right / left) away from the middle of the samples with that flag (a
+        /// side camera on the spiral's inside stood in the giant vine trunk).</summary>
+        static float AwaySide(GcRacer r, GcTrack.F f)
+        {
+            var t = r.Main; var c = Vector3.zero; int n = 0; for (int i = 0; i < t.Count; i += 3) if ((t.Flag[i] & f) != 0) { c += t.P[i]; n++; }
+            if (n == 0) return 1f; c /= n; return Vector3.Dot(r.transform.right, r.transform.position - c) >= 0f ? 1f : -1f;
+        }
+        /// <summary>How far into a run of samples with that flag s is (0 = not in one).</summary>
+        static float FlagRun(GcTrack t, float s, GcTrack.F f) { int i = t.Idx(s), n = 0; while (n < t.Count && (t.Flag[(i - n + t.Count) % t.Count] & f) != 0) n++; return n * GcTrack.Step; }
         static bool Upside(GcRacer r) => Vector3.Dot(r.transform.up, Vector3.up) < -0.3f;
         void Count(GcRacer r, string e)
         {
@@ -168,7 +189,7 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ the split-screen race
         IEnumerator SplitRun()
         {
-            MakePads(); GcGame.SideBySide = GcBoot.Side;
+            MakePads(); GcGame.SideBySide = GcBoot.Side; GcGame.LapsOverride = 2;   // Round 21: 2 laps (the testing-time rule; the proof runs 3)
             var m = Game.Menu; m.Open(); yield return Wait(1f);
             // the real pages: player 1 presses A on "Single race"; player 2 presses A to join; each picks a racer; the track
             m.Pads[0] = _pads[0];
@@ -179,15 +200,23 @@ namespace Seven
             if (m.Players < 2) m.Join(_pads[1]);
             yield return MenuShot("gc_menu_join_two_players");
             yield return Press(0); yield return Wait(0.5f);   // "Race"
-            // racer select: player 1 keeps 7, player 2 moves right once to Duchess; each presses A
-            yield return Press(1, false, 1); yield return Wait(0.3f);
+            // racer select (Round 21: one of each): player 2 moves left onto 7 too; player 1 locks 7 in -> player 2 is moved off it, 7 is
+            // shown taken for player 2 and a press of A on it does nothing; player 2 then moves right (skipping 7) and locks in
+            yield return Press(1, false, -1); yield return Wait(0.3f);
+            int p2Before = m.Pick[1];
+            yield return Press(0); yield return Wait(0.4f);
+            bool shownTaken = m.IsTakenFor(1, 0); int p2After = m.Pick[1];
+            yield return MenuShot("gc_menu_racer_taken");
+            yield return Press(1, false, -1); yield return Wait(0.3f); int p2Left = m.Pick[1];
+            Log($"GC RACER SELECT (R21): player 2 on {GcStats.Of(p2Before).Racer}; player 1 locked 7 -> player 2 moved to {GcStats.Of(p2After).Racer}; 7 shown taken for player 2 {shownTaken}; player 2 pressed left -> {GcStats.Of(p2Left).Racer} (7 skipped {p2Left != 0})");
             yield return MenuShot("gc_menu_racer_select_two_players");
-            yield return Press(0); yield return Wait(0.3f); yield return Press(1); yield return Wait(0.6f);
+            yield return Press(1); yield return Wait(0.6f);
             Log($"GC SPLIT (R20): racers chosen P1 {GcStats.Of(m.Pick[0]).Racer}, P2 {GcStats.Of(m.Pick[1]).Racer} (page {m.PageName})");
             if (m.PageName != "Track") { m.Choose(0, 0); m.Choose(1, 1); m.Show(GcMenu.Page.Track); }
+            m.Select(GcTrack.IndexOf("venus")); yield return Wait(1.2f);   // Round 21: the split race on a Stage 2 track (the biggest set)
             yield return MenuShot("gc_menu_track_select");
             // the bot drives both human slots through the pads
-            _bots[0] = new GcAI(77, 0.92f); _bots[1] = new GcAI(78, 0.88f);
+            _bots[0] = GcAI.Human(77); _bots[1] = GcAI.Human(78);   // Round 21: the human-like driver
             var drive = StartCoroutine(DriveHumans());
             yield return Press(0); yield return Wait(1f);
             while (!Game.Running) yield return null;
@@ -207,12 +236,12 @@ namespace Seven
             }
             while (Game.Results == null) yield return null;
             var ms = Game.FrameMs.OrderBy(x => x).ToList();
-            if (ms.Count > 0) Log($"GC SPLIT FRAME TIME (R20): {ms.Count} race frames, mean {ms.Average():0.0} ms ({1000f / ms.Average():0} fps), p95 {ms[(int)(ms.Count * 0.95f)]:0.0} ms, frames over 16.7 ms {ms.Count(x => x > 16.7f) * 100f / ms.Count:0.0} % (2 player views + 4 AI, the check run's window minimized at 1280x720)");
+            if (ms.Count > 0) Log($"GC SPLIT FRAME TIME (R20): {ms.Count} race frames on {Game.Track.Name}, mean {ms.Average():0.0} ms ({1000f / ms.Average():0} fps), p95 {ms[(int)(ms.Count * 0.95f)]:0.0} ms, frames over 16.7 ms {ms.Count(x => x > 16.7f) * 100f / ms.Count:0.0} % (2 player views + 1 AI, the check run's window minimized at 1280x720)");
             foreach (var h in Game.Humans) Log($"GC SPLIT (R20): player {Game.Humans.IndexOf(h) + 1} ({h.Label}) place {h.Place}, {GcGame.Fmt(h.FinishTime)}, falls {h.Falls}, fall-throughs {h.FallThroughs}, pickups used {h.PadsTaken}, shortcut taken {(h.OnShortcut ? "yes" : "-")}");
             yield return Wait(1.5f);
             yield return MenuShot("gc_menu_results");
             StopCoroutine(drive); _want[0] = _want[1] = default;
-            m.Close(); Game.Quit(); yield return null;
+            m.Close(); Game.Quit(); GcGame.LapsOverride = 0; yield return null;
         }
         IEnumerator DriveHumans()
         {
@@ -241,6 +270,8 @@ namespace Seven
             m.Choose(0, 1); m.Show(GcMenu.Page.Racer); m.Pick[0] = 1; yield return Wait(0.3f); yield return MenuShot("gc_menu_racer_duchess");
             m.Pick[0] = 2; m.Show(GcMenu.Page.Racer); yield return Wait(0.3f); yield return MenuShot("gc_menu_racer_tunneler");
             m.Show(GcMenu.Page.Track); yield return Wait(1f); yield return MenuShot("gc_menu_track_cattalus");
+            m.Select(GcTrack.IndexOf("europa")); yield return Wait(1.5f); yield return MenuShot("gc_menu_track_europa");
+            m.Select(GcTrack.IndexOf("biaveh")); yield return Wait(1.5f); yield return MenuShot("gc_menu_track_mothership");
             m.Show(GcMenu.Page.Records); yield return Wait(0.5f); yield return MenuShot("gc_menu_best_times");
             m.Show(GcMenu.Page.Title);
         }
@@ -248,7 +279,7 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ the time trial + its ghost
         IEnumerator TrialRun()
         {
-            MakePads(); GcPads.Device[0] = _pads[0]; _bots[0] = new GcAI(91, 0.9f);
+            MakePads(); GcPads.Device[0] = _pads[0]; _bots[0] = GcAI.Human(91); GcGame.LapsOverride = 2;
             var drive = StartCoroutine(DriveHumans());
             for (int k = 0; k < 2; k++)
             {
@@ -263,6 +294,35 @@ namespace Seven
                 Log($"GC TRIAL (R20): run {k + 1}: {GcGame.Fmt(Game.Humans[0].FinishTime)}, laps {string.Join(" / ", Game.Humans[0].LapTimes.Select(GcGame.Fmt))}; best saved {GcGame.Fmt(GcSave.Best("cattalus", true))}; ghost file {(File.Exists(GcSave.GhostPath("cattalus")) ? "saved" : "MISSING")}");
                 Game.Quit(); yield return null;
             }
+            StopCoroutine(drive); _want[0] = default; GcGame.LapsOverride = 0;
+        }
+
+        // ------------------------------------------------------------------------------------------ Round 21: each racer as the player
+        /// <summary>Each racer once as the player (the human-like bot through a virtual pad, the real pad path) in a one-of-each race
+        /// against the two AI, one lap each on three of the new tracks: where the human-like driver finishes = the AI tuning's check.</summary>
+        IEnumerator PlayersRun()
+        {
+            MakePads(); GcPads.Device[0] = _pads[0]; GcPads.Device[1] = null;
+            var drive = StartCoroutine(DriveHumans());
+            var tracks = new[] { "mars", "asteroid", "biaveh" }; int placeSum = 0, n = 0;
+            GcGame.LapsOverride = 2;
+            for (int k = 0; k < GcStats.All.Length; k++)
+            {
+                _bots[0] = GcAI.Human(300 + k);
+                GcGame.NextMode = GcGame.Mode.Race; GcGame.NextTrack = tracks[k % tracks.Length]; GcGame.NextRacers = new[] { k }; GcGame.NextPads = new[] { 0 };
+                Game.Results = null;
+                StartCoroutine(Game.RaceRun());
+                while (!Game.Running) yield return null;
+                var cams = Game.Cams.Select(c => c.GetComponent<Camera>()).ToArray();
+                yield return Wait(10f);
+                yield return Shot($"gc_player_{GcStats.Of(k).Racer.ToLowerInvariant()}_{GcGame.NextTrack}", Subj(Game.Humans[0]), GcStats.Of(k).Racer + " as the player", cams);
+                while (Game.Results == null) yield return null;
+                var h = Game.Humans[0]; placeSum += h.Place; n++;
+                Log($"GC PLAYER (R21): {h.Label} as the player (human-like driver, pad 1) on {Game.Track.Name}, {Game.Laps} laps: place {h.Place} / {Game.Racers.Count}, {GcGame.Fmt(h.FinishTime)}, falls {h.Falls}, wall hits {h.WallHits}, presses hit {h.PressHits}; the AI: {string.Join(", ", Game.Racers.Where(r => !r.Human).Select(r => $"{r.Label} {r.Place}. {GcGame.Fmt(r.FinishTime)}"))}");
+                Game.Quit(); yield return null;
+            }
+            GcGame.LapsOverride = 0;
+            Log($"GC AI TUNING (R21): the human-like driver's average place {placeSum / (float)Mathf.Max(1, n):0.0} of 3 over {n} races (target: racing the AI - 1.5 to 2.5)");
             StopCoroutine(drive); _want[0] = default;
         }
 

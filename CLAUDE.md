@@ -588,6 +588,12 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**Round 21 (2026-11-25): 1.1.0-beta2 (build 2004, `game-2004`) - Grand Circuit Stage 2: five more tracks (Venus Gardens, Mars Canyon,
+Europa Under-Ice, Asteroid Foundry, the Mothership), one of each racer per race, the foundry's presses, the AI tuned against a human-like
+driver. Status, decisions and "For Dan to check (Round 21)" in `TODO.md`.** Next: Round 22 (more racers on Dan's ShiftStorm jets).
+**QF35 (2026-11-25): 1.0.0-rc9 (build 2003, `game-2003`) PUBLISHED - the Voice's one line in the chamber (FIN_13_V1, timed in
+`FinaleDirectorQF31.RisenTogether`).** Iteration tools: `BuildScenesFromCommandLine -onlyscenes mars,finale` (only those scenes + the
+player, after a full build of the same version), `Run-ImageGate.ps1 -GameDir <copy of a build>` (gate one release while the next builds).
 **QF34b (2026-11-25): 1.0.0-rc8 (build 2002, `game-2002`) PUBLISHED, Latest - FIN_10's hands on him after the shrink (`SevenTableIK.OwnsArms`: `SevenRestPose` leaves those arms to
 `SevenTableIK.SolveHeldArms`; the gather lifts his head onto her thighs; `InReach`). Status in `TODO.md` (QF34b).**
 **QF34 (2026-11-25): 1.0.0-rc7 (build 2001, `game-2001` - above beta1's 2000: the launcher only installs a higher build) PUBLISHED, Latest
@@ -1058,10 +1064,22 @@ scene (Round 10).
   (`GcBoot` switches, `GcSave`, `GcPads`, the ghost), `GcVehicles` + `GcSevenRider` / `GcCatRider`, `GcVoice` (lines
   `Resources/GrandCircuit/gc_lines.json`, voices `python Tools/Voice/generate_gc_voices.py` -> `Resources/GcVoice/`). Unlock: the card
   after the credits (`GcSave.Unlock`), the main menu's **Grand Circuit** row. UiOverlay leaves this scene's HUDs on the players' cameras.
-  Switches (with `-capture`): `-racingunlocked`, `-gcproof` (the AI, two of each vehicle, 3 laps on both tracks: `GC PROOF (R20)`),
+  Switches (with `-capture`): `-racingunlocked`, `-gcproof` (Round 21: one of each racer, 3 laps on every track: `GC PROOF (R21)`),
   `-gcsplit [-gcside]` (the setup pages through two virtual pads, then a split race driven by the bot through the pads: `GC SPLIT`,
   `GC SPLIT FRAME TIME`), `-gcmenu` (every page), `-gctrial` (a time trial, then one with its ghost). Quick tuning without a build:
   `python Tools/Model/gc_sim.py` (a Python model of the tracks, the handling and the AI).
+- **Round 21 — Grand Circuit Stage 2 (release 1.1.0-beta2, `game-2004`)** (status, decisions, "For Dan to check" in `TODO.md`): five
+  tracks `GcTrack.Venus / Mars / Europa / Asteroid / Mothership` (`GcTrack.Ids` = all seven, `Music` = each world's track, `SetPieces`;
+  flags `Press`, `SetPiece`), their worlds `Editor/FightDemoBuilderGrandCircuit2.cs` (`GcCarve` = the one carved ground height for the
+  mesh and every prop, `GcSupportsH` skips where the track passes under, the sets `BuildGcVenusSet` ...), the per-track arrays
+  `GcGame.Sets / Atmos / Lowest`, the foundry's presses (`GcGame.Press`, `PressAhead` for the AI), `GcMover` (spinning flywheel / gears,
+  shuttling rail carrier / crates), the Cetaceans on `Cetacean.Mode.Loop` beside the tube. **One of each racer** (`GcGame.SpawnField`;
+  racer select greys the other player's locked racer). **AI:** `GcAI.Pace` from skill, `GcAI.Human` = the human-like test driver.
+  Jumps cap the launch speed to land on the ramp (`JumpCaps`). Layout tools: `python Tools/Model/gc_close.py <Track> all [--keep n]`
+  (closes a plan by solving its level straights) + `gc_sim.py geom` (closing error, self-clearance) + `gc_sim.py <Track>` (lap times;
+  `GC_TRACK_SRC` = another GcTrack.cs). Switches: `-gcproof [-gconly venus,mars]` (one of each racer, 3 laps: `GC PROOF (R21)`,
+  `GC AI ORDER`, `GC PRESSES`), `-gcplayers` (each racer as the player via a pad: `GC PLAYER`, `GC AI TUNING (R21)`), `-gcsplit` now
+  tests the racer-taken rule (`GC RACER SELECT (R21)`) and races on Venus.
 - **QF29:** `-europadivetest` (`EuropaDiveTest.cs`: 60 player-style attempts at the ice passage's mouth, ends `DIVE TEST (QF29 1)`);
   `HoverBike.LastSlide`; the release gate = `Tools/image_gate_score.py` (no new or worse failure vs `image_gate_baseline.json` +
   `image_gate_reference.json`; a chapter without a baseline must pass every shot); check runs step a fixed game time (`Time.captureDeltaTime`

@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF35: the Voice's line in the chamber (QF34 item 9, not done yet) (Dan, 2026-11-25) — done, release 1.0.0-rc9 (build 2003, `game-2003`)
+## Quick fix QF35: the Voice's line in the chamber (QF34 item 9, not done yet) (Dan, 2026-11-25) — done, release 1.0.0-rc9 (build 2003, `game-2003`) PUBLISHED
 Do QF34 item 9 now: as the light column falls on 7 and Panther (FIN_13), she lifts her head toward it and the Voice (RestVoice, slow and
 warm, the large soft space round it) says **FIN_13_V1:** "Seven. Your watch is over. You kept their story through every age, and now it
 lives on beyond you. Rise, and come home to rest." (Dan approved.) Then she draws Panther close and they rise. Not shown or named on
@@ -22,9 +22,11 @@ screen. Voice it, time it, capture it; publish **1.0.0-rc9** (rc2–rc8 and beta
   columns are built of stone drums with a dark joint every 0.9 m (`ShelterColumnJoints`), the chamber floor is laid in dressed stone
   (dark joints in rings every 2.3 m and radial courses every 15 deg, `Fin_floor_joint`). Rebuilt with the new
   `BuildScenesFromCommandLine -onlyscenes mars,finale` (only those scenes again, then the player - every other scene as the full build
-  saved it), gated again.
+  saved it), gated again: **IMAGE GATE RELEASE PASS** (`gate_1.0.0-rc9.txt`; Mars 32 / 32, the finale 202 / 202, baseline 31, no NaN).
+  Published as `game-2003` (rc2-rc8 + beta1 retained). (The Tunneler `_active` shot did not fire in the re-run; the floor joints are in
+  every arena shot - f56 shows them.)
 
-## Round 21: "Grand Circuit" Stage 2: five more tracks (Dan, 2026-11-25) — to do after QF35
+## Round 21: "Grand Circuit" Stage 2: five more tracks (Dan, 2026-11-25) — done, release 1.1.0-beta2 (status below)
 Spec: `Docs/RACING_MODE.md` (Stage 2). The story game must not change; ships as **1.1.0-beta2** (beta1 and the rc builds untouched).
 One track per remaining world, each built from that world's look (monochrome, bright glowing track lights / edges / pads / gates),
 each with at least one loop or corkscrew, a big jump, a shortcut and a set-piece:
@@ -47,6 +49,85 @@ set-piece through the image gate; best times / ghosts per track; the track-selec
 track (Venus `venus_gardens`, Mars `mars_kingdoms`, Europa `europa_underwater`, the asteroid `asteroid_city`, the mothership
 `biaveh_mothership`) unless Dan adds racing versions. Also tune the AI against a human-like driver (Round 20's note: untuned).
 Never stop to ask; note decisions in TODO.md. Publish 1.1.0-beta2; status + "For Dan to check (Round 21)"; commit and push.
+
+## Round 21 — decisions made (Code, 2026-11-25; Dan said never stop to ask)
+- **The five tracks are turtle-piece data in `GcTrack`** like Stage 1 (Venus 2458 m, Mars 3012 m, Europa 2181 m, the Asteroid 1975 m, the
+  Mothership 1897 m a lap); each layout was closed with a new tool, `Tools/Model/gc_close.py` (a bounded least-squares over the level
+  straights' lengths - a sloped straight is never touched, `--keep` pins one: the Mars bridge stays 220 m), and checked with
+  `gc_sim.py geom` (closing error 0.3-9 m, spread over the flat parts as in Stage 1; nearest other part of the ribbon >= 20 m unless
+  9 m above / below it).
+- **Venus's "corkscrew up a giant vine trunk"** = a full banked spiral climbing 42 m round the trunk (the race rides round it) AND a
+  heartline corkscrew through the canopy at its top - the spiral alone is not a corkscrew (Dan's list asks for a loop or corkscrew).
+- **Mars's "big jumps"** = two jumps over the ravine (15 deg kickers, 75 m gaps) besides the long bridge; the carved arch stands round
+  the loop. **Europa's "drop into the great chamber"** = a 14 deg dive out of the tube into the chamber, then the jump over its floor
+  rift. **The asteroid's jump across the furnace hall** = a 65 m gap over a pit of furnace mouths. **The Mothership's jump** is over the
+  transfer chamber's well (Dan's list had no jump there; every track needs one).
+- **The foundry's presses / crushers** (`GcGame.Press`): eight heavy blocks, each over HALF the road (alternating sides), 2.6 s cycle -
+  a white warning plate lights under it 0.6 s before it lands, down 0.9 s, up; a racer caught is pushed back out and slowed (never
+  wrecked; a shield takes it); the other half is always open, so reading the rhythm always gets you through. The AI reads them
+  (`GcGame.PressAhead`: rides the open half, eases off if it can't get across in time).
+- **Jumps:** the launch speed is now also capped at what still lands on the landing ramp (`GcRacer.TakeOff`, `JumpCaps`) - the Python
+  model showed a boosted Duchess overshooting the longer Stage 2 gaps (51 falls on the asteroid).
+- **One of each racer (Dan's item 0):** `GcGame.SpawnField` = the humans' picks (a taken racer moves to the next free one) + the AI
+  filling the rest, 3 racers. Racer select: the racer the other player has locked in is greyed ("TAKEN BY PLAYER n"), skipped by
+  left / right, A on it does nothing; locking in a racer the other player was only browsing moves them off it.
+- **The AI tuned against a human-like driver:** a new test driver `GcAI.Human` (reacts 0.16 s late, a shorter look-ahead and a timid
+  line, lifts in the tight bends, stick noise, the air-brakes only well past the limit) plays every human slot in the check runs. The
+  Python model puts its lap within ~1 % of the perfect AI on these wide tracks, so the AI's skill now sets its pace (`GcAI.Pace`:
+  0.95-1.0 of the vehicle's top speed; the field's first AI 0.95 skill, the next 0.8); the rubber band +-5 %. **Duchess's top speed
+  53 -> 51.5** (the model had her ~5 % faster than 7 / Tunneler on every track; now ~3 %: light and floaty, she still loses bumps).
+- **Music:** each world's own track (`GcTrack.Music`), as Dan said; the menu keeps `cattalus_race`.
+- **Testing time:** the release proof is 7 tracks x 3 laps (the spec's "the AI completes 3 laps on every vehicle" on every track) -
+  ~19 min of game time on its own; the split race, the time trial and the players' races run 2 laps each to keep the rest short.
+
+## Round 21 — status (2026-11-25): done; release 1.1.0-beta2 (build 2004, `game-2004`) PUBLISHED, Latest (rc2-rc9 + beta1 retained)
+- **The five tracks** (each with a loop or corkscrew, a big jump, a shortcut and its set-piece; monochrome with the glowing ribbon,
+  gates, pads; each world's own atmosphere, its haze thinned for a race across a kilometre, and its own music):
+  - **Venus Gardens** 2458 m: the first garden, the vine-arch canopies over an S, round the stepped temple, the root-chasm jump, the
+    spiral climbing 42 m round the giant vine trunk + the corkscrew through the canopy at its top, the long run down, the burrows.
+  - **Mars Canyon** 3012 m: down the canyon between the two walled kingdoms, the shared crossing (a 220 m bridge on piers over the
+    ravine), two big jumps back over the ravine, the loop inside the carved stone arch, the maintenance route; the canyon walls in strata.
+  - **Europa Under-Ice** 2181 m: the glass tube (ribs, glowing rings, struts) under the ice ceiling with light patches through it,
+    the corkscrew inside the tube, the dive into the great chamber (ice columns, glowing fissures) and the jump over its rift, the
+    settlement (domes, a lit tower) on the shortcut, five Cetaceans (the whale and dolphins) swimming loops alongside the tube.
+  - **Asteroid Foundry** 1975 m: the conveyor run (belts, rollers, crates riding them), the press line (8 presses / crushers on a fixed
+    rhythm), the loop between two great turning flywheels, the furnace-hall jump, the rail carrier shuttling over the shortcut, gear
+    towers and chimneys.
+  - **The Mothership** 1897 m: inside the egg - the shell closing overhead, the white city rising up the shell's curve on a panelled floor
+    (seams + light lines), the corkscrew inside guide rings, the suspended bridge (pylons, cables, hangers), the memory columns, the jump
+    over the transfer chamber's well, the quiet passage.
+- **Release (`Builds/ImageGate/gate_1.1.0-beta2.txt`): IMAGE GATE RELEASE PASS** - every chapter (baseline 31, none new or worse, no NaN;
+  the story unchanged since rc9), the Grand Circuit 64 / 64 + the extra run 22 / 22. On the release build: the proof 21 / 21, falls 0,
+  falls-through 0; split screen on Venus mean 4.0 ms (250 fps), p95 7.0 ms, 0.8 % of frames over 16.7 ms; the human-like driver's
+  average place 1.7 of 3 (7 2nd on Mars, Duchess 1st on the asteroid, Tunneler 2nd on the Mothership, all within 0.5 s of the AI).
+  How it was built: Build everything, then (after the Grand Circuit's own gate failures below) the Grand Circuit scene again with
+  `BuildScenesFromCommandLine -onlyscenes grandcircuit` - every story scene is the full build's.
+- **Proof (check runs on the Grand Circuit iteration builds):** `GC PROOF (R21)` **21 / 21 AI runs completed
+  3 laps** (7 tracks x 3 racers, one of each per race, duplicates 0), **falls-through 0, falls off 0**, slowest racer on a loop / a
+  corkscrew 36 m/s (the assist holds 26); every jump landed (launch speed capped where needed). Presses: the AI dodged them (hit once in
+  a 3-lap race). `GC AI ORDER`: all-AI races finish within 0.8-5.4 s. **Racer select (two virtual pads, the real pages):** player 1
+  locked 7 -> player 2 was moved off it, 7 shown taken for player 2, left skipped it (`GC RACER SELECT (R21)`). **Split screen** (2
+  players + 1 AI, on Venus Gardens - the biggest set): mean 6.6 ms (152 fps), p95 12.1 ms, 2.5 % of frames over 16.7 ms. **Each racer
+  as the player** (the human-like driver through a pad, 2 laps): 7 on Mars 2nd, Duchess on the asteroid 3rd, Tunneler on the
+  Mothership 1st - finishes within 0.4 s of the AI; average place **2.0 of 3** (`GC AI TUNING (R21)`). Time trial + ghost: run 2 with
+  the ghost, best saved. Ride pose: 20665 samples, 0 off the saddle / grips. Keyboard keys on screen 0.
+- **Fixed on the way (found by the runs, not guessed):** the boost chevrons of a straight that runs into the line indexed past the end of
+  a closed track (four of the new tracks end on one: the ribbon was not built); the giant trunk's flared base reached into the spiral;
+  tree crowns hung into the spiral's air; props were placed on the uncarved ground height and floated over the chasms (`GcCarve` now
+  serves the ground and every prop); the Mars canyon / the shell floor read as one flat tone from the air (strata, rock scree, panel
+  seams); a side capture of a set-piece now stands on the side away from its centre. The first release gate then failed two jump
+  captures (Mars 5.3 %, the asteroid 5.5 % edges): the Mars canyon walls began right beside the first jump (moved out to 600 m, walls in
+  18 m strata), the foundry floor is laid in iron plates (`GcSeams`) - now 7.3 % and 12.7 %.
+
+## For Dan to check (Round 21)
+1. **Each new track** (Grand Circuit -> Single race): does each feel like its world, and is each set-piece clear at speed - the vine trunk
+   spiral + corkscrew (Venus), the bridge and the two ravine jumps (Mars), the tube + the Cetaceans alongside (Europa), the presses'
+   rhythm (the asteroid - the white plate lights before one comes down), the corkscrew inside the egg and the suspended bridge?
+2. **One of each racer:** with two players, the racer player 1 locked in is greyed out for player 2.
+3. **The AI:** races should be close now (the field's quick AI races you, the other is beatable). Too easy / too hard = the skill /
+   pace numbers in `GcGame.AiSkill` + `GcAI.Pace`.
+4. **Duchess is a little slower at the top** (51.5 instead of 53) - she won nearly every Stage 1 race.
+5. **Music** per world is the story's own track; say if you want racing versions (Suno prompts on request).
 
 ## Round 22: "Grand Circuit" Stage 3: more racers on Dan's ShiftStorm jets (Dan, 2026-11-25) — to do after Round 21 (Dan to confirm the roster)
 Dan's ShiftStorm vehicles (his own models, copied into `Art/Source/shiftstorm/<Design>/Plane.fbx` + `Plane_basecolor.jpg`; source

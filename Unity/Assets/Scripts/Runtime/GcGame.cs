@@ -21,15 +21,17 @@ namespace Seven
         // ---- set by the builder
         public GameObject BikeTpl, RacerTpl, RigTpl, SevenTpl, DuchessTpl;
         public Material Road, Under, Wall, Glow, GlowSoft, Pad, Frame, Trail, Shield, Wave, PickupMat, GhostMat; [System.NonSerialized] public Material HoverMat;
-        public GameObject CattalusSet, LunarSet, CattalusAtmo, LunarAtmo;
+        /// <summary>Round 21: one world set + atmosphere + lowest point per track, in <see cref="GcTrack.Ids"/> order (one shown at a time).</summary>
+        public GameObject[] Sets = new GameObject[0], Atmos = new GameObject[0]; public float[] Lowest = new float[0];
         public Camera CamTemplate;
-        public float CattalusLowest = -10f, LunarLowest = -60f;
 
         // ---- the race
         public enum Mode { Race, TimeTrial }
         public static Mode NextMode = Mode.Race; public static string NextTrack = "cattalus"; public static int[] NextRacers = { 0 }; public static int[] NextPads = { -1 };
         public static bool SideBySide;
-        public static bool StartDirect;                              // the menu chose a race: start it on load
+        public static bool StartDirect;
+        /// <summary>Round 21 check runs: a shorter race (the players run).</summary>
+        public static int LapsOverride;                              // the menu chose a race: start it on load
         public GcTrack Track; public readonly List<GcRacer> Racers = new List<GcRacer>();
         public readonly List<GcRacer> Humans = new List<GcRacer>();
         public int Laps = 3; public bool Running, Over; public float RaceT0;
@@ -64,12 +66,12 @@ namespace Seven
 
         public void ShowSet(string track)
         {
-            bool cat = track != "lunar";
-            if (CattalusSet != null) CattalusSet.SetActive(cat); if (LunarSet != null) LunarSet.SetActive(!cat);
-            // (the one going away first: an atmosphere switched off after the new one came on could clear the shared fog settings)
-            var off = cat ? LunarAtmo : CattalusAtmo; var on = cat ? CattalusAtmo : LunarAtmo;
-            if (off != null) off.SetActive(false); if (on != null) on.SetActive(true);
-            GcRacer.LowestY = cat ? CattalusLowest : LunarLowest;
+            int k = GcTrack.IndexOf(track);
+            for (int i = 0; i < Sets.Length; i++) if (Sets[i] != null) Sets[i].SetActive(i == k);
+            // (the ones going away first: an atmosphere switched off after the new one came on could clear the shared fog settings)
+            for (int i = 0; i < Atmos.Length; i++) if (i != k && Atmos[i] != null) Atmos[i].SetActive(false);
+            if (k < Atmos.Length && Atmos[k] != null) Atmos[k].SetActive(true);
+            GcRacer.LowestY = k < Lowest.Length ? Lowest[k] : -60f;
         }
 
         // ------------------------------------------------------------------------------------------ setup
@@ -99,19 +101,24 @@ namespace Seven
                     _pads.Add((k, p, Track.R[k], x));
                 }
             }
+            BuildPresses();
             Log($"GC TRACK (R20): {Track.Name} - {Track.Length:0} m a lap, closing error {Track.CloseError:0.0} m spread over the flat parts, {_pads.Count} pickup pads, {(Track.Branch != null ? $"the shortcut {Track.Branch.Length:0} m (s {Track.Branch.JoinFrom:0} -> {Track.Branch.JoinTo:0}, saves {Track.Ahead(Track.Branch.JoinFrom, Track.Branch.JoinTo) - Track.Branch.Length:0} m)" : "no shortcut")}");
         }
 
-        /// <summary>The field: the humans' choices first, then AI filling to six (two of each vehicle where possible), on a staggered
-        /// grid just behind the line.</summary>
+        /// <summary>Round 21 (Dan: no duplicate racers): the field is ONE of each racer - the humans' choices first (a racer already taken
+        /// goes to the next free one), the AI fills the rest; on a staggered grid just behind the line.</summary>
         public void SpawnField(int[] humanRacers, int[] pads, int fieldSize, bool ghosts = false)
         {
             foreach (var r in Racers) if (r != null) Destroy(r.gameObject);
             Racers.Clear(); Humans.Clear();
-            var picks = new List<(int racer, bool human, int pad)>();
-            for (int i = 0; i < humanRacers.Length; i++) picks.Add((humanRacers[i], true, pads != null && i < pads.Length ? pads[i] : -1));
-            var count = new int[3]; foreach (var p in picks) count[p.racer]++;
-            while (picks.Count < fieldSize) { int best = 0; for (int k = 1; k < 3; k++) if (count[k] < count[best]) best = k; count[best]++; picks.Add((best, false, -1)); }
+            int n = GcStats.All.Length; fieldSize = Mathf.Min(fieldSize, n);
+            var picks = new List<(int racer, bool human, int pad)>(); var taken = new bool[n];
+            for (int i = 0; i < humanRacers.Length && i < n; i++)
+            {
+                int want = Mathf.Clamp(humanRacers[i], 0, n - 1); for (int k = 0; k < n && taken[want]; k++) want = (want + 1) % n;
+                taken[want] = true; picks.Add((want, true, pads != null && i < pads.Length ? pads[i] : -1));
+            }
+            for (int k = 0; k < n && picks.Count < fieldSize; k++) if (!taken[k]) { taken[k] = true; picks.Add((k, false, -1)); }
             // humans start at the back of the grid (a race to win, not a lead to keep)
             var order = picks.Where(p => !p.human).Concat(picks.Where(p => p.human)).ToList();
             for (int i = 0; i < order.Count; i++)
@@ -120,13 +127,18 @@ namespace Seven
                 float s = Track.Length - 12f - i * 7f; float x = (i % 2 == 0 ? -1f : 1f) * 2.6f;
                 var r = MakeRacer(racer, i, human);
                 r.Init(Track, s, x); r.Human = human; r.PadIndex = pad;
-                if (!human) { r.AI = new GcAI(1000 + i * 17, 0.78f + 0.07f * (i % 3)); r.AI.ShortcutChance = racer == 2 ? 0.3f : 0.55f; }
+                if (!human) { int ai = order.Take(i).Count(p => !p.human); r.AI = new GcAI(1000 + i * 17, AiSkill(ai, order.Count(p => !p.human))); r.AI.ShortcutChance = racer == 2 ? 0.3f : 0.55f; }
                 r.Event = OnEvent; r.Snap();
                 Racers.Add(r); if (human) Humans.Add(r);
             }
             // humans in player order
             Humans.Sort((a, b) => a.PadIndex.CompareTo(b.PadIndex));
+            var who = Racers.Select(x => x.Label).ToList();
+            Log($"GC FIELD (R21): {string.Join(", ", Racers.Select(x => x.Label + (x.Human ? " (player)" : $" (AI, skill {x.AI.Skill:0.00}, pace {x.AI.Pace:0.000})")))}{(who.Distinct().Count() != who.Count ? " - DUPLICATE RACER" : " - one of each")}");
         }
+        /// <summary>Round 21 (the AI tuned against a human-like driver, TODO.md): the AI drivers' skill by their order - the first AI is
+        /// the quick one, the next a little slower (a human-like driver races them, neither lapping them nor lapped).</summary>
+        public static float AiSkill(int ai, int ais) => ais <= 1 ? 0.9f : Mathf.Lerp(0.95f, 0.8f, ai / (float)Mathf.Max(1, ais - 1));
 
         GcRacer MakeRacer(int racer, int slot, bool human)
         {
@@ -168,11 +180,11 @@ namespace Seven
             Over = false; Running = false; Paused = false;
             BuildTrack(NextTrack);
             bool trial = NextMode == Mode.TimeTrial;
-            SpawnField(NextRacers, NextPads, trial ? 1 : 6);
+            SpawnField(NextRacers, NextPads, trial ? 1 : GcStats.All.Length);
             MakeViews(Humans.Count);
             if (trial) { _ghost = GcGhost.Load(this, NextTrack); _rec = new GcGhostRecorder(); }
-            Laps = trial ? GcSave.TrialLaps : 3;
-            MusicSystem.Play("cattalus_race", 1.2f);
+            Laps = LapsOverride > 0 ? LapsOverride : trial ? GcSave.TrialLaps : 3;
+            MusicSystem.Play(GcTrack.Music[GcTrack.IndexOf(NextTrack)], 1.2f);   // Round 21: each world's own track
             foreach (var r in Racers) r.In = default;
             Moment?.Invoke("grid");
             // the lights: three low tones, one high: GO
@@ -198,10 +210,10 @@ namespace Seven
                 }
                 // rubber band (AI only, mild): relative to the best human
                 var bestHuman = Humans.Count > 0 ? Humans.Max(h => h.Distance) : float.NaN;
-                foreach (var r in Racers) if (!r.Human) r.TopScale = float.IsNaN(bestHuman) ? 1f : 1f + Mathf.Clamp((bestHuman - r.Distance) / 400f, -0.04f, 0.05f);
+                foreach (var r in Racers) if (!r.Human) r.TopScale = r.AI.Pace * (float.IsNaN(bestHuman) ? 1f : 1f + Mathf.Clamp((bestHuman - r.Distance) / 400f, -0.05f, 0.05f));
                 foreach (var r in Racers) r.Step(dt, Racers);
                 foreach (var r in Racers) { if (r.In.Use && r.Item != GcPickup.None) { var hit = r.UseItem(Racers); FxUse(r, hit); } }
-                Pads(dt);
+                Pads(dt); Presses(dt);
                 Positions(); GcVoice.Tick(this);
                 foreach (var r in Racers) { var sh = r.transform.Find("Shield"); if (sh != null) sh.gameObject.SetActive(r.ShieldT > 0f); }
                 _rec?.Add(Humans.Count > 0 ? Humans[0] : null, Time.time - RaceT0);
@@ -268,6 +280,95 @@ namespace Seven
             if (r.BoostT > 2f && tr != null) StartCoroutine(Flare(tr));
         }
         IEnumerator Flare(TrailRenderer tr) { float w = tr.startWidth; tr.startWidth = 0.6f; tr.time = 0.5f; yield return new WaitForSeconds(2f); if (tr != null) { tr.startWidth = w; tr.time = 0.25f; } }
+        // ------------------------------------------------------------------------------------------ Round 21: the foundry's presses
+        /// <summary>The Asteroid Foundry's presses and crushers: a heavy block over HALF the road (left, then right, in turn along the
+        /// line) coming down on a fixed, readable rhythm - a white warning plate lights on the road under it as it starts down (0.6 s), it
+        /// stays down 0.9 s, rises. A racer under a block that is down is pushed back out and slowed (never wrecked; a shield takes it).
+        /// The other half is always open, so a racer reading it is never caught.</summary>
+        public class Press { public float S, Side, Period, Phase, Last; public Transform Block, Warn; public Renderer WarnR; public int Hits; }
+        public readonly List<Press> PressList = new List<Press>();
+        public const float PressCycle = 2.6f, PressWarn = 0.6f, PressDown = 0.9f;
+        /// <summary>0 = up, 0..1 = coming down (the warning), 1 = down.</summary>
+        public static float PressState(Press p, float t)
+        {
+            float u = Mathf.Repeat(t + p.Phase, p.Period);
+            if (u < PressWarn) return u / PressWarn;
+            if (u < PressWarn + PressDown) return 1f;
+            if (u < PressWarn + PressDown + 0.5f) return 1f - (u - PressWarn - PressDown) / 0.5f;
+            return 0f;
+        }
+        public float PressClock => Running ? Time.time - RaceT0 : Time.time;
+        void BuildPresses()
+        {
+            PressList.Clear(); if (Track == null) return;
+            var root = new GameObject("Presses").transform; root.SetParent(_trackRoot, false);
+            int k = 0;
+            GameObject Cube(string n, Material m) { var c = GameObject.CreatePrimitive(PrimitiveType.Cube); Destroy(c.GetComponent<Collider>()); c.name = n; c.transform.SetParent(root, false); c.GetComponent<Renderer>().sharedMaterial = m; return c; }
+            for (int i = 0; i < Track.Count; i++)
+            {
+                if ((Track.Flag[i] & GcTrack.F.Press) == 0 || i % 30 != 15) continue;
+                var p = new Press { S = i * GcTrack.Step, Side = k % 2 == 0 ? -1f : 1f, Period = PressCycle, Phase = (k % 4) * 0.65f };
+                Track.Frame(p.S, out var pos, out var rot, out float hw);
+                // the press: a dark steel block over its half, guide columns either side, a crosshead, a white edge light on the block
+                var blk = Cube("PressBlock" + k, Frame); blk.transform.localScale = new Vector3(hw - 0.6f, 2.4f, 4f);
+                var edge = GameObject.CreatePrimitive(PrimitiveType.Cube); Destroy(edge.GetComponent<Collider>()); edge.name = "Edge"; edge.transform.SetParent(blk.transform, false);
+                edge.transform.localPosition = new Vector3(0f, -0.52f, -0.51f); edge.transform.localScale = new Vector3(1.02f, 0.05f, 0.03f); edge.GetComponent<Renderer>().sharedMaterial = Glow;
+                foreach (var cx in new[] { 0.3f, hw + 0.5f })
+                {
+                    var col = Cube("Guide", Wall); col.transform.SetPositionAndRotation(pos + rot * new Vector3(p.Side * cx, 4.5f, 0f), rot); col.transform.localScale = new Vector3(0.45f, 9f, 0.45f);
+                }
+                var beam = Cube("Crosshead", Frame); beam.transform.SetPositionAndRotation(pos + rot * new Vector3(p.Side * (hw * 0.5f + 0.2f), 9.1f, 0f), rot); beam.transform.localScale = new Vector3(hw + 0.8f, 0.6f, 1f);
+                var warn = Cube("PressWarn" + k, PickupMat); warn.transform.SetPositionAndRotation(pos + rot * new Vector3(p.Side * (hw * 0.5f), 0.04f, 0f), rot); warn.transform.localScale = new Vector3(hw - 1.2f, 0.02f, 3.6f);
+                p.WarnR = warn.GetComponent<Renderer>(); p.WarnR.enabled = false;
+                p.Block = blk.transform; p.Warn = warn.transform; PressList.Add(p); k++;
+                PlacePress(p, 0f);
+            }
+            if (PressList.Count > 0) Log($"GC PRESSES (R21): {PressList.Count} presses / crushers on {Track.Name} - cycle {PressCycle:0.0} s (warning {PressWarn:0.0} s, down {PressDown:0.0} s), half the road each, alternating sides");
+        }
+        void PlacePress(Press p, float st)
+        {
+            Track.Frame(p.S, out var pos, out var rot, out float hw);
+            float h = Mathf.Lerp(7.2f, 1.25f, st * st);
+            p.Block.SetPositionAndRotation(pos + rot * new Vector3(p.Side * (hw * 0.5f), h, 0f), rot);
+            p.WarnR.enabled = st > 0.001f;
+        }
+        void Presses(float dt)
+        {
+            if (PressList.Count == 0) return;
+            float t = PressClock;
+            foreach (var p in PressList)
+            {
+                float st = PressState(p, t); PlacePress(p, st);
+                // the slam you hear as it lands (the rhythm is audible as well as visible), near a player
+                if (st >= 0.999f && p.Last < 0.999f && Humans.Any(h => Vector3.Distance(h.transform.position, p.Block.position) < 70f)) AudioKit.Play("machinist_step_3", p.Block.position, 0.55f, 0.08f);
+                p.Last = st;
+                if (st < 0.95f) continue;
+                foreach (var r in Racers)
+                {
+                    if (r.Air || r.RespawnT > 0f || r.On != Track) continue;
+                    float ds = Track.Ahead(p.S - 2.2f, r.S); if (ds > 4.4f) continue;
+                    if (r.X * p.Side < 0.6f) continue;   // its half of the road only
+                    r.S = Track.Wrap(p.S - 2.6f);         // pushed back out from under it (non-lethal)
+                    if (r.ShieldT > 0f) { r.ShieldT = 0f; OnEvent(r, "shielded"); continue; }
+                    r.V = Mathf.Min(r.V, 14f); r.SlowT = Mathf.Max(r.SlowT, 1.2f); p.Hits++; r.PressHits++;
+                    OnEvent(r, "press");
+                }
+            }
+        }
+        /// <summary>For the AI: is a press ahead within lookAhead that will be down (or coming down) when this racer gets there?</summary>
+        public bool PressAhead(GcRacer me, float lookAhead, out float pressS, out float side)
+        {
+            pressS = 0f; side = 0f;
+            if (me.On != Track) return false;
+            foreach (var p in PressList)
+            {
+                float d = Track.Ahead(me.S, p.S); if (d > lookAhead) continue;
+                float v = Mathf.Max(8f, me.V), arrive = PressClock + (d - 2.5f) / v, leave = PressClock + (d + 2.5f) / v;
+                if (PressState(p, arrive) > 0.5f || PressState(p, leave) > 0.5f || PressState(p, (arrive + leave) * 0.5f) > 0.5f) { pressS = p.S; side = p.Side; return true; }
+            }
+            return false;
+        }
+
         public void PushRing(GcRacer from)
         {
             var go = new GameObject("PushWave"); go.transform.SetParent(transform, false);
@@ -304,12 +405,14 @@ namespace Seven
                 case "pushed": if (near) AudioKit.Play("fight_hit", r.transform.position, 0.5f); break;
                 case "shielded": AudioKit.Play("fight_block", r.transform.position, 0.5f); break;
                 case "bump": if (near) AudioKit.Play("fight_block", r.transform.position, 0.3f, 0.1f); break;
+                case "press": AudioKit.Play(PressSfx, r.transform.position, near ? 0.8f : 0.4f, 0.05f); break;
             }
             if (e.StartsWith("fall:")) Log($"GC FALL (R20): {r.Label} slot {r.Slot} {e.Substring(5)} at s {r.S:0} (lap {r.Lap}) - back on at the last gate");
             Moment?.Invoke(e + "|" + r.Slot);
             GcVoice.On(this, r, e);
         }
 
+        public static string PressSfx = "ast_clamp";
         public static string Fmt(float t) { if (t < 0f || float.IsNaN(t) || float.IsInfinity(t)) return "--:--.--"; int m = (int)(t / 60f); return $"{m}:{t - m * 60f:00.00}"; }
         public static void Log(string s) { Debug.Log("[Seven] " + s); ChapterCapture.I?.Log(s); }
 

@@ -17,7 +17,7 @@ namespace Seven
     /// </summary>
     public class GcTrack
     {
-        [System.Flags] public enum F { None = 0, Walls = 1, Gap = 2, Boost = 4, Pickup = 8, Assist = 16, Loop = 32, Cork = 64, Fork = 128, Start = 256, Tunnel = 512 }
+        [System.Flags] public enum F { None = 0, Walls = 1, Gap = 2, Boost = 4, Pickup = 8, Assist = 16, Loop = 32, Cork = 64, Fork = 128, Start = 256, Tunnel = 512, Press = 1024, SetPiece = 2048 }
 
         public struct Piece
         {
@@ -208,9 +208,274 @@ namespace Seven
             return Make("lunar", "Lunar Loop", new Vector3(0f, 1.2f, 0f), 0f, L);
         }
 
-        public static GcTrack ById(string id) => id == "lunar" ? Lunar() : Cattalus();
-        public static readonly string[] Ids = { "cattalus", "lunar" };
-        public static readonly string[] Names = { "Cattalus Grand Circuit (Unlimited)", "Lunar Loop" };
+        // ------------------------------------------------------------------------------------------ the Stage 2 tracks (Round 21)
+        /// <summary>Venus Gardens: out through the first garden, under the vine canopies (a gentle S), round the temple, the jump over
+        /// the root chasm, a spiral climb round the giant vine trunk with a corkscrew through the canopy at its top, the long run down,
+        /// the burrows (the shortcut, inside the right-hander), home.</summary>
+        public static GcTrack Venus()
+        {
+            const float W = 8f; var L = new List<Piece>
+            {
+                new Piece(60f, 0f, 0f, 0f, W, F.Walls | F.Start),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // the vine canopies: a gentle S under the arches
+                new Piece(70f, -25f, 0f, 0f, W, F.Walls | F.Tunnel),
+                new Piece(70f, 25f, 0f, 0f, W, F.Walls | F.Tunnel),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Tunnel | F.Pickup),
+                // round the temple (banked right)
+                new Piece(20f, 0f, 0f, 18f, W, F.Walls),
+                new Piece(120f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -18f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                // the jump over the root chasm
+                new Piece(40f, 0f, 12f, 0f, W, F.Walls | F.Boost),
+                new Piece(55f, 0f, -24f, 0f, W, F.Gap),
+                new Piece(40f, 0f, 12f, 0f, 9f, F.Walls),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // the giant vine trunk: one full right turn round it, climbing, banked in
+                new Piece(25f, 0f, 8f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(290f, 360f, 0f, 0f, W, F.Walls | F.Assist | F.SetPiece),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(25f, 0f, -8f, 0f, W, F.Walls),
+                // the corkscrew through the canopy at the top
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(120f, 0f, 0f, 360f, 7f, F.Walls | F.Cork | F.Assist),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls),
+                // the long run down out of the canopy (a banked right on the way)
+                new Piece(20f, 0f, -7f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(290f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(20f, 0f, 7f, 0f, W, F.Walls),
+                // the burrows: the shortcut runs under the roots inside the right-hander
+                new Piece(20f, 0f, 0f, 0f, 11f, F.Walls | F.Fork, 11f),
+                new Piece(150f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(433f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // home
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(70f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+            };
+            var t = Make("venus", "Venus Gardens", new Vector3(0f, 1.2f, 0f), 0f, L);
+            t.AddShortcut(1, 10f, 0.9f);
+            return t;
+        }
+
+        /// <summary>Mars Canyon: down the canyon between the two kingdoms, the shared crossing (a long bridge over the ravine), the big
+        /// jumps back and forth over the ravine, the loop through the carved arch, the maintenance route (the shortcut), home.</summary>
+        public static GcTrack Mars()
+        {
+            const float W = 8f; var L = new List<Piece>
+            {
+                new Piece(60f, 0f, 0f, 0f, W, F.Walls | F.Start),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                // down the canyon: a long descent with a sweeping S
+                new Piece(20f, 0f, -6f, 0f, W, F.Walls),
+                new Piece(90f, 30f, 0f, 0f, W, F.Walls | F.Pickup),
+                new Piece(90f, -30f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 6f, 0f, W, F.Walls),
+                // the shared crossing: a long straight bridge over the ravine
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(220f, 0f, 0f, 0f, W, F.Walls | F.Pickup | F.SetPiece),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls),
+                // the far rim: banked right
+                new Piece(20f, 0f, 0f, 18f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -18f, W, F.Walls),
+                // the first big jump back over the ravine
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(50f, 0f, 15f, 0f, W, F.Walls | F.Boost),
+                new Piece(75f, 0f, -30f, 0f, W, F.Gap),
+                new Piece(50f, 0f, 15f, 0f, 9f, F.Walls),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // the loop through the carved arch
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls),
+                new Piece(160f, 0f, 360f, 0f, 7f, F.Walls | F.Loop | F.Assist, -1f, 24f),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls),
+                // the maintenance route: the shortcut inside the right-hander
+                new Piece(20f, 0f, 0f, 0f, 11f, F.Walls | F.Fork, 11f),
+                new Piece(150f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(204f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // the second big jump over the ravine
+                new Piece(214f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(50f, 0f, 15f, 0f, W, F.Walls | F.Boost),
+                new Piece(75f, 0f, -30f, 0f, W, F.Gap),
+                new Piece(50f, 0f, 15f, 0f, 9f, F.Walls),
+                new Piece(214f, 0f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(324f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // home: banked right, the long straight past the kingdoms' walls
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                // up out of the canyon to the line
+                new Piece(20f, 0f, 5f, 0f, W, F.Walls),
+                new Piece(220f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                new Piece(20f, 0f, -5f, 0f, W, F.Walls),
+                new Piece(26f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+            };
+            var t = Make("mars", "Mars Canyon", new Vector3(0f, 1.2f, 0f), 0f, L);
+            t.AddShortcut(1, 10f, 0.9f);
+            return t;
+        }
+
+        /// <summary>Europa Under-Ice: the glass tube under the ice (the Cetaceans swim alongside outside), the corkscrew through the
+        /// tube, the drop into the great chamber, the jump across its floor, the settlement (the shortcut), the climb home.</summary>
+        public static GcTrack Europa()
+        {
+            const float W = 8f; var L = new List<Piece>
+            {
+                new Piece(60f, 0f, 0f, 0f, W, F.Walls | F.Start | F.Tunnel),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Tunnel | F.Boost),
+                new Piece(160f, -40f, 0f, 0f, W, F.Walls | F.Tunnel | F.Pickup | F.SetPiece),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Tunnel),
+                // the corkscrew through the tube
+                new Piece(130f, 0f, 0f, -360f, 7f, F.Walls | F.Cork | F.Assist | F.Tunnel),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Tunnel | F.Boost),
+                new Piece(150f, -50f, 0f, 0f, W, F.Walls | F.Tunnel),
+                // the drop into the great chamber
+                new Piece(20f, 0f, -14f, 0f, W, F.Walls),
+                new Piece(90f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(20f, 0f, 14f, 0f, W, F.Walls | F.Pickup),
+                // across the chamber: the jump over the ice-floor rift
+                new Piece(40f, 0f, 12f, 0f, W, F.Walls | F.Boost),
+                new Piece(55f, 0f, -24f, 0f, W, F.Gap),
+                new Piece(40f, 0f, 12f, 0f, 9f, F.Walls),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls),
+                // the settlement: the shortcut through its streets, inside the left-hander
+                new Piece(20f, 0f, 0f, 0f, 11f, F.Walls | F.Fork, 11f),
+                new Piece(150f, -90f, 0f, 0f, W, F.Walls),
+                new Piece(337f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // the climb back up into the tube, home
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(110f, -90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(20f, 0f, 9f, 0f, W, F.Walls | F.Tunnel),
+                new Piece(150f, 0f, 0f, 0f, W, F.Walls | F.Tunnel | F.Boost),
+                new Piece(20f, 0f, -9f, 0f, W, F.Walls | F.Tunnel),
+                new Piece(329f, 0f, 0f, 0f, W, F.Walls | F.Tunnel | F.Pickup),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls | F.Tunnel),
+                new Piece(100f, -90f, 0f, 0f, W, F.Walls | F.Tunnel),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls | F.Tunnel),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Tunnel),
+            };
+            var t = Make("europa", "Europa Under-Ice", new Vector3(0f, 1.2f, 0f), 0f, L);
+            t.AddShortcut(-1, 10f, 0.9f);
+            return t;
+        }
+
+        /// <summary>Asteroid Foundry: through the machine city - the conveyor run, the presses and crushers (a fixed rhythm; they push
+        /// you back, never wreck you), the loop round the great flywheel, the jump across the furnace hall, the rail carrier's track
+        /// (the shortcut), home.</summary>
+        public static GcTrack Asteroid()
+        {
+            const float W = 8f; var L = new List<Piece>
+            {
+                new Piece(60f, 0f, 0f, 0f, W, F.Walls | F.Start),
+                new Piece(18f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                // the conveyor run: the belts carry you (boost) past the machines
+                new Piece(113f, 0f, 0f, 0f, W, F.Walls | F.Boost | F.Pickup),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                // the press line: presses and crushers in a row, half the road each, in turn
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls),
+                new Piece(150f, 0f, 0f, 0f, W, F.Walls | F.Press | F.SetPiece),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // the loop round the great flywheel
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls),
+                new Piece(170f, 0f, 360f, 0f, 7f, F.Walls | F.Loop | F.Assist, -1f, 24f),
+                new Piece(20f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                // the rail carrier's track: the shortcut inside the right-hander
+                new Piece(20f, 0f, 0f, 0f, 11f, F.Walls | F.Fork, 11f),
+                new Piece(150f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(57f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // the jump across the furnace hall
+                new Piece(67f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(45f, 0f, 14f, 0f, W, F.Walls | F.Boost),
+                new Piece(65f, 0f, -28f, 0f, W, F.Gap),
+                new Piece(45f, 0f, 14f, 0f, 9f, F.Walls),
+                new Piece(57f, 0f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(175f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // home: a second press pair, banked right, the straight
+                new Piece(80f, 0f, 0f, 0f, W, F.Walls | F.Press),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(110f, 90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(173f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+            };
+            var t = Make("asteroid", "Asteroid Foundry", new Vector3(0f, 1.2f, 0f), 0f, L);
+            t.AddShortcut(1, 10f, 0.9f);
+            return t;
+        }
+
+        /// <summary>The Mothership: inside the egg - the interior city curving up the shell, the corkscrew round the shell's curve, the
+        /// suspended bridge over the chasm, the run past the memory structures, the jump over the transfer chamber, the quiet passage
+        /// (the shortcut), home.</summary>
+        public static GcTrack Mothership()
+        {
+            const float W = 8f; var L = new List<Piece>
+            {
+                new Piece(60f, 0f, 0f, 0f, W, F.Walls | F.Start),
+                new Piece(40f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                // the interior city curving up the shell: a long rising left sweep
+                new Piece(20f, 0f, 6f, -12f, W, F.Walls),
+                new Piece(160f, -90f, 0f, 0f, W, F.Walls | F.Pickup),
+                new Piece(20f, 0f, -6f, 12f, W, F.Walls),
+                // the corkscrew round the shell's curve
+                new Piece(30f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(130f, 0f, 0f, -360f, 7f, F.Walls | F.Cork | F.Assist),
+                new Piece(30f, 0f, 0f, 0f, W, F.Walls),
+                // the suspended bridge over the chasm
+                new Piece(20f, 0f, 0f, -14f, W, F.Walls),
+                new Piece(100f, -90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 14f, W, F.Walls),
+                new Piece(220f, 0f, 0f, 0f, W, F.Walls | F.Pickup | F.SetPiece),
+                // the run past the memory structures, the jump over the transfer chamber
+                new Piece(40f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+                new Piece(40f, 0f, 12f, 0f, W, F.Walls | F.Boost),
+                new Piece(55f, 0f, -24f, 0f, W, F.Gap),
+                new Piece(40f, 0f, 12f, 0f, 9f, F.Walls),
+                new Piece(30f, 0f, 0f, 0f, W, F.Walls),
+                // the quiet passage: the shortcut inside the left-hander
+                new Piece(20f, 0f, 0f, 0f, 11f, F.Walls | F.Fork, 11f),
+                new Piece(150f, -90f, 0f, 0f, W, F.Walls),
+                new Piece(30f, 0f, 0f, 0f, W, F.Walls | F.Pickup),
+                // down the shell, home
+                new Piece(20f, 0f, -6f, 0f, W, F.Walls),
+                new Piece(140f, 0f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 6f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, -16f, W, F.Walls),
+                new Piece(110f, -90f, 0f, 0f, W, F.Walls),
+                new Piece(20f, 0f, 0f, 16f, W, F.Walls),
+                new Piece(312f, 0f, 0f, 0f, W, F.Walls | F.Boost),
+            };
+            var t = Make("biaveh", "The Mothership", new Vector3(0f, 1.2f, 0f), 0f, L);
+            t.AddShortcut(-1, 10f, 0.9f);
+            return t;
+        }
+
+        public static GcTrack ById(string id)
+        {
+            switch (id) { case "lunar": return Lunar(); case "venus": return Venus(); case "mars": return Mars(); case "europa": return Europa(); case "asteroid": return Asteroid(); case "biaveh": return Mothership(); default: return Cattalus(); }
+        }
+        public static readonly string[] Ids = { "cattalus", "lunar", "venus", "mars", "europa", "asteroid", "biaveh" };
+        public static readonly string[] Names = { "Cattalus Grand Circuit (Unlimited)", "Lunar Loop", "Venus Gardens", "Mars Canyon", "Europa Under-Ice", "Asteroid Foundry", "The Mothership" };
+        /// <summary>Round 21: each world's own music (Dan may add racing versions later).</summary>
+        public static readonly string[] Music = { "cattalus_race", "cattalus_race", "venus_gardens", "mars_kingdoms", "europa_underwater", "asteroid_city", "biaveh_mothership" };
+        /// <summary>Round 21: what each track's set-piece is (the capture names it).</summary>
+        public static readonly string[] SetPieces = { "", "", "the spiral round the giant vine trunk", "the shared crossing over the ravine", "the glass tube under the ice, the Cetaceans outside", "the presses and crushers", "the suspended bridge inside the egg" };
+        public static int IndexOf(string id) { int i = System.Array.IndexOf(Ids, id); return i < 0 ? 0 : i; }
 
         /// <summary>A shortcut across the inside of the bend after the fork: a smooth Hermite curve from the fork (the fork side of the
         /// widened road) to just past the bend's end (beside the main line's fork-side lane), sampled every metre; narrow (half-width 5),
@@ -301,7 +566,7 @@ namespace Seven
                 // boost pads: chevrons across the middle, every 4 m in a boost piece
                 if ((Flag[i] & F.Boost) != 0 && i % 4 == 0)
                 {
-                    int i2 = Mathf.Min(i + 2, last);
+                    int i2 = Closed ? (i + 2) % n : Mathf.Min(i + 2, n - 1);   // Round 21: a boost straight that runs into the line wraps (it indexed past the end)
                     Quad(pv, pt, Pt(i, -2.4f, 0.03f), Pt(i, -1.1f, 0.03f), Pt(i2, -1.4f, 0.03f), Pt(i2, -0.1f, 0.03f));
                     Quad(pv, pt, Pt(i, 1.1f, 0.03f), Pt(i, 2.4f, 0.03f), Pt(i2, 0.1f, 0.03f), Pt(i2, 1.4f, 0.03f));
                 }

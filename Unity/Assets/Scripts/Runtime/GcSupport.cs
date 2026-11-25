@@ -7,12 +7,12 @@ using UnityEngine.InputSystem;
 namespace Seven
 {
     /// <summary>Round 20: the racing mode's switches (read once). -racingunlocked = the mode open without finishing the game (tests);
-    /// -gcproof (the AI on every vehicle, both tracks, 3 laps), -gcsplit (a 2-player split race: two virtual pads driven by the bot
+    /// -gcproof (the AI, one of each racer, every track, 3 laps; -gconly a,b = those tracks), -gcsplit (a 2-player split race: two virtual pads driven by the bot
     /// + 4 AI), -gcmenu (every setup page captured), -gctrial (a time trial, then a second with its ghost), -gcside (side by side).
     /// Test runs keep their own save keys (never the player's).</summary>
     public static class GcBoot
     {
-        static bool _read; static bool _unlocked, _proof, _split, _menu, _trial, _side, _quick; static float _speed = 1f;
+        static bool _read; static bool _unlocked, _proof, _split, _menu, _trial, _side, _quick, _players; static float _speed = 1f; static string _only;
         static void Read()
         {
             if (_read) return; _read = true;
@@ -26,6 +26,8 @@ namespace Seven
                 if (a[i] == "-gctrial") _trial = true;
                 if (a[i] == "-gcside") _side = true;
                 if (a[i] == "-gcquick") _quick = true;
+                if (a[i] == "-gcplayers") _players = true;
+                if (a[i] == "-gconly" && i + 1 < a.Length) _only = a[i + 1];
                 if (a[i] == "-testspeed" && i + 1 < a.Length) float.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _speed);
             }
         }
@@ -36,7 +38,11 @@ namespace Seven
         public static bool Trial { get { Read(); return _trial && DemoBoot.CaptureDir != null; } }
         public static bool Side { get { Read(); return _side; } }
         public static bool Quick { get { Read(); return _quick; } }
-        public static bool Any => Proof || Split || MenuShots || Trial;
+        /// <summary>Round 21: -gcplayers = each racer once as the player (the human-like bot through a virtual pad) against the AI.</summary>
+        public static bool Players { get { Read(); return _players && DemoBoot.CaptureDir != null; } }
+        /// <summary>Round 21: -gconly venus,mars = the proof on those tracks only (iteration).</summary>
+        public static string[] Only { get { Read(); return string.IsNullOrEmpty(_only) ? null : _only.Split(','); } }
+        public static bool Any => Proof || Split || MenuShots || Trial || Players;
         public static float Speed => DemoBoot.TestSpeed;
     }
 

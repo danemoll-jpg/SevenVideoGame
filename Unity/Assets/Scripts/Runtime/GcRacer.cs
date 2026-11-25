@@ -12,7 +12,7 @@ namespace Seven
     {
         public string Racer, Vehicle; public float Top, Accel, Handling, Weight, Grip;
         public static readonly GcStats Seven = new GcStats { Racer = "7", Vehicle = "her hover bike", Top = 50f, Accel = 15f, Handling = 1.0f, Weight = 1.0f, Grip = 1.0f };
-        public static readonly GcStats Duchess = new GcStats { Racer = "Duchess", Vehicle = "her racer #8", Top = 53f, Accel = 17f, Handling = 0.9f, Weight = 0.7f, Grip = 0.82f };
+        public static readonly GcStats Duchess = new GcStats { Racer = "Duchess", Vehicle = "her racer #8", Top = 51.5f, Accel = 17f, Handling = 0.9f, Weight = 0.7f, Grip = 0.82f };
         public static readonly GcStats Tunneler = new GcStats { Racer = "Tunneler", Vehicle = "his drill rig", Top = 52f, Accel = 11f, Handling = 0.85f, Weight = 1.7f, Grip = 1.1f };
         public static readonly GcStats[] All = { Seven, Duchess, Tunneler };
         public static GcStats Of(int i) => All[Mathf.Clamp(i, 0, All.Length - 1)];
@@ -36,7 +36,7 @@ namespace Seven
         public Transform Visual;                              // the vehicle + rider (its local up = the track's up)
         public int Lap, NextGate = 1, Gates; public float Progress; public bool Finished; public float FinishTime; public int Place;
         public bool Started; public float LapStart, BestLap = -1f, LastLap = -1f; public List<float> LapTimes = new List<float>();
-        public float LastGateS; public int Falls, WallHits, Bumps, PushesHit, Shielded, Boosts, PadsTaken, Landings, FallThroughs, Respawns;
+        public float LastGateS; public int Falls, WallHits, Bumps, PushesHit, Shielded, Boosts, PadsTaken, Landings, FallThroughs, Respawns, PressHits;
         public GcPickup Item = GcPickup.None; public float ShieldT, SlowT, BoostT, StunLat, RespawnT;
         public const float MinAssistSpeed = 26f;
         public float AirTime; public bool OnShortcut => On != null && On != Main;
@@ -162,12 +162,17 @@ namespace Seven
             var flat = land - start; float dh = flat.y; flat.y = 0f; float D = flat.magnitude;
             float th = Mathf.Asin(Mathf.Clamp(launchDir.y, -0.9f, 0.9f)); float cos = Mathf.Cos(th), tan = Mathf.Tan(th);
             float need = (D * tan - dh) > 0.5f ? Mathf.Sqrt(G * D * D / (2f * cos * cos * (D * tan - dh))) : 40f;
-            float v = Mathf.Max(V, need * 1.04f); if (V < need) JumpAssists++;
+            // Round 21: and at most the speed that still comes down on the landing ramp (~35 m past the gap's end): the longer Stage 2
+            // gaps (65-75 m, 14-15 deg kickers) threw a boosted Duchess past the landing (the Python model: 51 falls on the asteroid)
+            int i2 = Mathf.Min(i1 + 35, i1 + 400); var land2 = On.P[i2 % On.Count] + On.R[i2 % On.Count] * new Vector3(X, Hover, 0f);
+            var flat2 = land2 - start; float dh2 = flat2.y; flat2.y = 0f; float D2 = flat2.magnitude;
+            float most = (D2 * tan - dh2) > 0.5f ? Mathf.Sqrt(G * D2 * D2 / (2f * cos * cos * (D2 * tan - dh2))) : 999f;
+            float v = Mathf.Clamp(V, need * 1.04f, Mathf.Max(need * 1.08f, most * 0.97f)); if (V < need) JumpAssists++; if (V > v + 0.5f) JumpCaps++;
             _airPos = start; _airVel = launchDir * v; _airRot = Quaternion.LookRotation(launchDir, r * Vector3.up);
             _gapEnd = i1 % On.Count;
             Event?.Invoke(this, "jump");
         }
-        bool _wasAbove; int _gapEnd; public int JumpAssists;
+        bool _wasAbove; int _gapEnd; public int JumpAssists, JumpCaps;
 
         void StepAir(float dt)
         {

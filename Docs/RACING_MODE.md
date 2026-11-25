@@ -4,6 +4,10 @@
 > monochrome with glowing track lights). A bonus mode built **after** the main game is locked, in stages. Stage 1 = Round 20.
 > **Stage 1 built (Round 20, 2026-11-25, release 1.1.0-beta1):** status, proof and every decision made in `TODO.md` ("Round 20 —
 > decisions made", "Round 20 — status"); code `Runtime/Gc*.cs` + `Editor/FightDemoBuilderGrandCircuit.cs` (summary in CLAUDE.md).
+> **Stage 2 built (Round 21, 2026-11-25, release 1.1.0-beta2):** the five world tracks (`GcTrack.Venus / Mars / Europa / Asteroid /
+> Mothership`, their sets in `Editor/FightDemoBuilderGrandCircuit2.cs`), one of each racer per race, the foundry's presses, the AI tuned
+> against a human-like driver; status + decisions in `TODO.md` ("Round 21 — status"). Layout tools: `Tools/Model/gc_close.py` (closes a
+> track's plan by solving its straights) + `Tools/Model/gc_sim.py geom` (closing error, self-clearance).
 
 ## The idea
 A Wipeout-style anti-gravity racer using the game's characters, vehicles and worlds: loops, corkscrews, big jumps, boost pads,

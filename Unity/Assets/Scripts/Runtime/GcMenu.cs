@@ -38,7 +38,7 @@ namespace Seven
 
         public void Open()
         {
-            GcSave.Load(); Pick[0] = GcSave.LastRacer; _showTrack = GcTrack.Ids[Mathf.Clamp(GcSave.LastTrack, 0, 1)];
+            GcSave.Load(); Pick[0] = GcSave.LastRacer; _showTrack = GcTrack.Ids[Mathf.Clamp(GcSave.LastTrack, 0, GcTrack.Ids.Length - 1)];
             if (Game.Track == null || Game.Track.Id != _showTrack) Game.BuildTrack(_showTrack);
             MenuCam().gameObject.SetActive(true);
             MusicSystem.Play("cattalus_race", 1.5f);
@@ -70,7 +70,7 @@ namespace Seven
                 case Page.Track:
                     for (int i = 0; i < GcTrack.Ids.Length; i++) { int k = i; _items.Add((TrackLabel(k), () => StartRace(k), null)); }
                     _items.Add(("Back", () => Show(Page.Racer), null));
-                    _sel = Mathf.Clamp(GcSave.LastTrack, 0, 1);
+                    _sel = Mathf.Clamp(GcSave.LastTrack, 0, GcTrack.Ids.Length - 1);
                     break;
                 case Page.Results:
                     _items.Add(("Race again", () => { Close(); StartCoroutine(Restart()); }, null));
@@ -85,6 +85,7 @@ namespace Seven
                     _items.Add(("Back", () => Show(Page.Title), null));
                     break;
             }
+            if (p == Page.Track) { _flyS = 0f; }
             Draw();
             AudioKit.Play("menu_move", null, 0.4f);
         }
@@ -137,7 +138,7 @@ namespace Seven
             float top = Current == Page.Title ? 120f : Current == Page.Track ? 80f : -170f; if (Current == Page.Results) top = -200f; if (Current == Page.Records) top = -250f;
             for (int i = 0; i < _items.Count; i++)
             {
-                float y = top - i * 50f; if (Current == Page.Racer || Current == Page.Join || Current == Page.Results) y = top - i * 46f;
+                float y = top - i * 50f; if (Current == Page.Racer || Current == Page.Join || Current == Page.Results) y = top - i * 46f; if (Current == Page.Track) y = top + 60f - i * 46f;
                 var bar = Img(_canvas.transform, new Vector2(0, y), new Vector2(560, 42), new Color(0f, 0f, 0f, 0.45f)); _bars.Add(bar);
                 var t = Txt(bar.transform, _items[i].label, Vector2.zero, 26, white); _rows.Add(t);
             }
@@ -174,14 +175,20 @@ namespace Seven
                 _racerText[i].alignment = TextAnchor.MiddleCenter;
             }
         }
+        /// <summary>Round 21 (one of each racer per race): is this racer locked in by the other player?</summary>
+        bool TakenByOther(int player, int racer) { int o = 1 - player; return Players > 1 && o >= 0 && o < Players && _locked[o] && Pick[o] == racer; }
+        /// <summary>The next racer in that direction the other player has not locked in.</summary>
+        int NextFree(int player, int from, int dir) { int n = GcStats.All.Length, k = from; for (int i = 0; i < n; i++) { k = (k + dir + n) % n; if (!TakenByOther(player, k)) return k; } return from; }
         static string Bar(float v) { int n = Mathf.Clamp(Mathf.RoundToInt(v * 10f), 1, 10); return new string('|', n * 2) + new string('.', (10 - n) * 2); }
         void RacerText()
         {
             for (int i = 0; i < Players; i++)
             {
                 if (_racerText[i] == null) continue; var s = GcStats.Of(Pick[i]);
+                bool taken = TakenByOther(i, Pick[i]);
                 _racerText[i].text = (Players > 1 ? $"PLAYER {i + 1}\n" : "") + $"<   {s.Racer.ToUpperInvariant()}   >\n{s.Vehicle}\n\n" +
-                    $"Top speed  {Bar((s.Top - 44f) / 10f)}\nAcceleration  {Bar((s.Accel - 8f) / 10f)}\nHandling  {Bar((s.Handling - 0.6f) / 0.5f)}\nWeight  {Bar((s.Weight - 0.4f) / 1.4f)}\n\n" + (_locked[i] ? "LOCKED IN" : "A to lock in");
+                    $"Top speed  {Bar((s.Top - 44f) / 10f)}\nAcceleration  {Bar((s.Accel - 8f) / 10f)}\nHandling  {Bar((s.Handling - 0.6f) / 0.5f)}\nWeight  {Bar((s.Weight - 0.4f) / 1.4f)}\n\n" + (_locked[i] ? "LOCKED IN" : taken ? $"TAKEN BY PLAYER {2 - i}" : "A to lock in");
+                _racerText[i].color = taken && !_locked[i] ? new Color(0.5f, 0.5f, 0.5f) : Color.white;   // Round 21: a racer the other player has is greyed out
             }
         }
         void ResultsPanel()
@@ -197,12 +204,12 @@ namespace Seven
             var sb = new System.Text.StringBuilder();
             for (int k = 0; k < GcTrack.Ids.Length; k++)
             {
-                var id = GcTrack.Ids[k]; sb.AppendLine(GcTrack.Names[k].ToUpperInvariant());
-                sb.AppendLine($"best race {GcGame.Fmt(GcSave.Best(id, false))}   ·   best time trial {GcGame.Fmt(GcSave.Best(id, true))}   ·   best lap {GcGame.Fmt(GcSave.BestLap(id))}");
-                sb.AppendLine(string.Join("   ·   ", GcStats.All.Select(s => $"{s.Racer} {GcGame.Fmt(GcSave.BestBy(id, s.Racer))}"))); sb.AppendLine();
+                var id = GcTrack.Ids[k];
+                sb.AppendLine($"{GcTrack.Names[k].ToUpperInvariant()}   race {GcGame.Fmt(GcSave.Best(id, false))}  ·  time trial {GcGame.Fmt(GcSave.Best(id, true))}  ·  lap {GcGame.Fmt(GcSave.BestLap(id))}");
+                sb.AppendLine(string.Join("   ·   ", GcStats.All.Select(s => $"{s.Racer} {GcGame.Fmt(GcSave.BestBy(id, s.Racer))}")));
             }
-            var p = Img(_canvas.transform, new Vector2(0, 40), new Vector2(900, 380), new Color(0f, 0f, 0f, 0.55f));
-            var t = Txt(p.transform, sb.ToString(), Vector2.zero, 22, Color.white); ((RectTransform)t.transform).sizeDelta = new Vector2(880, 370);
+            var p = Img(_canvas.transform, new Vector2(0, 30), new Vector2(1000, 470), new Color(0f, 0f, 0f, 0.55f));
+            var t = Txt(p.transform, sb.ToString(), Vector2.zero, 17, Color.white); ((RectTransform)t.transform).sizeDelta = new Vector2(980, 460);
         }
 
         Image Img(Transform parent, Vector2 pos, Vector2 size, Color c)
@@ -245,7 +252,7 @@ namespace Seven
                 if (k.enterKey.wasPressedThisFrame || k.spaceKey.wasPressedThisFrame) { ok = true; if (Current == Page.Title) Pads[0] = null; }
                 if (k.escapeKey.wasPressedThisFrame || k.backspaceKey.wasPressedThisFrame) back = true;
             }
-            if (Current == Page.Racer && Players == 1 && lr != 0) { Pick[0] = (Pick[0] + lr + 3) % 3; AudioKit.Play("menu_move", null, 0.4f); Refresh(); lr = 0; }
+            if (Current == Page.Racer && Players == 1 && lr != 0) { int n = GcStats.All.Length; Pick[0] = (Pick[0] + lr + n) % n; AudioKit.Play("menu_move", null, 0.4f); Refresh(); lr = 0; }
             if (dir != 0 && _items.Count > 0) { _sel = (_sel + dir + _items.Count) % _items.Count; AudioKit.Play("menu_move", null, 0.35f); Refresh(); }
             if (lr != 0 && _sel < _items.Count && _items[_sel].adjust != null) { _items[_sel].adjust(lr); }
             if (ok && _sel < _items.Count) { AudioKit.Play("menu_confirm", null, 0.5f); _items[_sel].act(); }
@@ -274,17 +281,27 @@ namespace Seven
                 bool l = p != null ? p.dpad.left.wasPressedThisFrame : Keyboard.current != null && Keyboard.current.leftArrowKey.wasPressedThisFrame;
                 bool r = p != null ? p.dpad.right.wasPressedThisFrame : Keyboard.current != null && Keyboard.current.rightArrowKey.wasPressedThisFrame;
                 bool a = p != null ? p.buttonSouth.wasPressedThisFrame : Keyboard.current != null && Keyboard.current.enterKey.wasPressedThisFrame;
-                if (!_locked[i] && (l || r)) { Pick[i] = (Pick[i] + (r ? 1 : -1) + 3) % 3; AudioKit.Play("menu_move", null, 0.4f); Refresh(); }
-                if (a && !_locked[i]) { _locked[i] = true; Refresh(); AudioKit.Play("menu_confirm", null, 0.5f); if (AllLocked()) Show(Page.Track); }
+                if (!_locked[i] && (l || r)) { Pick[i] = NextFree(i, Pick[i], r ? 1 : -1); AudioKit.Play("menu_move", null, 0.4f); Refresh(); }
+                if (a && !_locked[i])
+                {
+                    if (TakenByOther(i, Pick[i])) { AudioKit.Play("menu_move", null, 0.5f); continue; }   // taken: never two of the same racer
+                    _locked[i] = true;
+                    int o = 1 - i; if (o < Players && !_locked[o] && Pick[o] == Pick[i]) Pick[o] = NextFree(o, Pick[o], 1);   // the other player moves off it
+                    Refresh(); AudioKit.Play("menu_confirm", null, 0.5f); if (AllLocked()) Show(Page.Track);
+                }
             }
         }
         /// <summary>Test hook: a player's racer choice.</summary>
-        public void Choose(int player, int racer) { Pick[player] = racer; _locked[player] = true; Refresh(); }
+        public void Choose(int player, int racer) { if (TakenByOther(player, racer)) racer = NextFree(player, racer, 1); Pick[player] = racer; _locked[player] = true; Refresh(); }
+        /// <summary>Test hook (Round 21): highlight a row (the track page's tracks are rows 0..6).</summary>
+        public void Select(int i) { _sel = Mathf.Clamp(i, 0, Mathf.Max(0, _items.Count - 1)); Refresh(); }
+        /// <summary>Test hook (Round 21): is that racer shown as taken for that player right now?</summary>
+        public bool IsTakenFor(int player, int racer) => TakenByOther(player, racer);
 
         void FlyCam()
         {
             if (_cam == null || !_cam.gameObject.activeSelf || Game.Track == null) return;
-            if (Current == Page.Track) { var id = GcTrack.Ids[Mathf.Clamp(_sel, 0, 1)]; if (id != Game.Track.Id) Game.BuildTrack(id); }
+            if (Current == Page.Track) { var id = GcTrack.Ids[Mathf.Clamp(_sel, 0, GcTrack.Ids.Length - 1)]; if (id != Game.Track.Id) { Game.BuildTrack(id); _flyS = 0f; } }
             _flyS += Time.unscaledDeltaTime * 22f;
             var t = Game.Track; t.Frame(_flyS, out var p, out var r, out _);
             t.Frame(_flyS + 40f, out var p2, out _, out _);

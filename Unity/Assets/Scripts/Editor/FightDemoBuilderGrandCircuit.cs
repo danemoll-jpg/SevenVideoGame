@@ -84,7 +84,7 @@ namespace Seven.EditorTools
             var cd = cam.GetUniversalAdditionalCameraData(); cd.renderPostProcessing = true; cd.requiresDepthTexture = true; cd.antialiasing = AntialiasingMode.SubpixelMorphologicalAntiAliasing;
             g.CamTemplate = cam;
 
-            // ---------------------------------------------------------------- the two worlds (one shown at a time)
+            // ---------------------------------------------------------------- the seven worlds (one shown at a time)
             var catAtmo = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(AtmoCattalusPath)); catAtmo.name = "Atmosphere_Cattalus";
             var moonAtmo = (GameObject)PrefabUtility.InstantiatePrefab(AssetDatabase.LoadAssetAtPath<GameObject>(AtmoMoonPath)); moonAtmo.name = "Atmosphere_Moon";
             var moonVolP = AssetDatabase.LoadAssetAtPath<VolumeProfile>(AtmoDir + "/Moon_Volume.asset");
@@ -94,12 +94,36 @@ namespace Seven.EditorTools
             // the Moon's haze is tuned for the prison's rooms; across a 2 km cavern it piled up to a white-out over the pit (the jump
             // captures: white 23-26 %, almost no edges) - thinner with distance and capped lower, the far haze a little darker
             { var a = moonAtmo.GetComponent<Seven.Atmosphere>(); if (a != null) { a.DistanceDensity *= 0.45f; a.MaxFog = Mathf.Min(a.MaxFog, 0.7f); a.FarBrightness *= 0.8f; a.GroundDensity *= 0.5f; Log($"GC LUNAR HAZE (R20): distance density {a.DistanceDensity:0.0000}, max fog {a.MaxFog:0.00}, far brightness {a.FarBrightness:0.00}"); } }
-            g.CattalusAtmo = catAtmo; g.LunarAtmo = moonAtmo;
-            var ct = T.Cattalus(); var lt = T.Lunar();
-            g.CattalusSet = BuildGcCattalusSet(ct).gameObject; g.LunarSet = BuildGcLunarSet(lt).gameObject;
-            g.CattalusLowest = ct.P.Min(p => p.y) - 4f; g.LunarLowest = lt.P.Min(p => p.y) - 4f;
-            moonAtmo.SetActive(false); g.LunarSet.SetActive(false);
-            Log($"GRAND CIRCUIT (R20): Cattalus Unlimited {ct.Length:0} m (closing error {ct.CloseError:0.0} m, shortcut {(ct.Branch != null ? ct.Branch.Length.ToString("0") + " m" : "none")}), Lunar Loop {lt.Length:0} m (closing error {lt.CloseError:0.0} m)");
+            // Round 21: the five Stage 2 worlds - each with its own story atmosphere (an instance; the haze thinned for a race across a
+            // kilometre, as the Moon's above)
+            GameObject Atmo(string path, string name, float dist, float maxFog, float ground)
+            {
+                var pf = AssetDatabase.LoadAssetAtPath<GameObject>(path); if (pf == null) { Log("GC ATMOSPHERE (R21): missing " + path); return null; }
+                var go = (GameObject)PrefabUtility.InstantiatePrefab(pf); go.name = name;
+                var a = go.GetComponent<Seven.Atmosphere>(); if (a != null) { a.DistanceDensity *= dist; a.MaxFog = Mathf.Min(a.MaxFog, maxFog); a.GroundDensity *= ground; Log($"GC ATMOSPHERE (R21): {name} distance density {a.DistanceDensity:0.0000}, max fog {a.MaxFog:0.00}, ground density {a.GroundDensity:0.000}"); }
+                return go;
+            }
+            var atmos = new[] { catAtmo, moonAtmo, Atmo(AtmoVenusPath, "Atmosphere_Venus", 0.5f, 0.75f, 0.6f), Atmo(AtmoMarsPath, "Atmosphere_Mars", 0.5f, 0.75f, 0.6f),
+                                Atmo(AtmoEuropaPath, "Atmosphere_Europa", 0.45f, 0.75f, 0.5f), Atmo(AtmoAsteroidPath, "Atmosphere_Asteroid", 0.5f, 0.75f, 0.6f), Atmo(AtmoBiavehPath, "Atmosphere_Biaveh", 0.5f, 0.75f, 0.6f) };
+            var tracks = T.Ids.Select(T.ById).ToArray();
+            var sets = new GameObject[tracks.Length];
+            for (int i = 0; i < tracks.Length; i++)
+            {
+                var tt = tracks[i];
+                switch (tt.Id)
+                {
+                    case "cattalus": sets[i] = BuildGcCattalusSet(tt).gameObject; break;
+                    case "lunar": sets[i] = BuildGcLunarSet(tt).gameObject; break;
+                    case "venus": sets[i] = BuildGcVenusSet(tt).gameObject; break;
+                    case "mars": sets[i] = BuildGcMarsSet(tt).gameObject; break;
+                    case "europa": sets[i] = BuildGcEuropaSet(tt).gameObject; break;
+                    case "asteroid": sets[i] = BuildGcAsteroidSet(tt).gameObject; break;
+                    case "biaveh": sets[i] = BuildGcMothershipSet(tt).gameObject; break;
+                }
+                Log($"GRAND CIRCUIT (R21): {tt.Name} {tt.Length:0} m (closing error {tt.CloseError:0.0} m spread over the flat parts, shortcut {(tt.Branch != null ? tt.Branch.Length.ToString("0") + " m" : "none")}, height {tt.P.Min(p => p.y):0}..{tt.P.Max(p => p.y):0} m)");
+            }
+            g.Sets = sets; g.Atmos = atmos; g.Lowest = tracks.Select(tt => tt.P.Min(p => p.y) - 4f).ToArray();
+            for (int i = 1; i < sets.Length; i++) { if (sets[i] != null) sets[i].SetActive(false); if (atmos[i] != null) atmos[i].SetActive(false); }
 
             // ---------------------------------------------------------------- the vehicle templates
             var tpl = new GameObject("Templates").transform; tpl.SetParent(root.transform, false);
