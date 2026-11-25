@@ -705,6 +705,7 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ A7: heaven
         IEnumerator HeavenQF31()
         {
+            if (Heaven != null && Heaven.Length == 1 && Heaven[0] != null && !DemoBoot.NoVideo) { yield return HeavenOneClip(Heaven[0]); yield break; }
             bool clips = Heaven != null && Heaven.Length == 6 && !DemoBoot.NoVideo;
             if (!clips) { Log("HEAVEN (QF31 A7): Dan's heaven clips are not in yet - the stand-in: the colour master from 17.6 s, the Voice near its end"); yield return ComeBackTo(); yield break; }
             var vols = FindObjectsByType<UnityEngine.Rendering.Volume>(FindObjectsSortMode.None); var was = new float[vols.Length];
@@ -761,6 +762,68 @@ namespace Seven
             Reactions.Suppress = false; DialogueFraming.VoiceOver = null;
             for (int i = 0; i < vols.Length; i++) if (vols[i] != null) vols[i].weight = was[i];
             Log("HEAVEN (QF31 A7): Dan's six colour clips with soft dissolves - his eye opening, hers, the reunion ('Panther?' / 'Hello.'), the run, the tree, the rising wide sunrise with the Voice over it; held, then the credits");
+            Complete("FIN_14");
+        }
+
+        // ------------------------------------------------------------------------------------------ QF33: Dan's one heaven clip
+        /// <summary>QF33: Dan's edited heaven clip (82.2 s, colour), cues at clip times read off the picture frame by frame:
+        /// 0-8 his eye, 8-13 he lies under the tree, 13-18 he rises, 18-28 she kneels head bowed and he lowers his head to hers,
+        /// 28.2 she lifts her head and sees him ("Panther?"), 30.5 her hands take his face ("Hello."), 34-37 foreheads together
+        /// (her soft laugh, his purr rising), 41 she stands, 46-58 they walk off, 58-82 the camera rises wide (the Voice, last words
+        /// landing ~3.5 s before the end). Held, then the credits.</summary>
+        public const float HeavenPanther = 28.2f, HeavenHello = 30.9f, HeavenLaugh = 34.4f, HeavenRestEnd = 78.7f;
+        IEnumerator HeavenOneClip(VideoClip clip)
+        {
+            var vols = FindObjectsByType<UnityEngine.Rendering.Volume>(FindObjectsSortMode.None); var was = new float[vols.Length];
+            for (int i = 0; i < vols.Length; i++) { was[i] = vols[i].weight; vols[i].weight = 0f; }
+            UI.SetFade(1f, 1f);
+            var root = UI.CanvasRoot;
+            var g = new GameObject("HeavenLayer", typeof(RectTransform)); g.transform.SetParent(root, false); var rt0 = (RectTransform)g.transform; rt0.anchorMin = Vector2.zero; rt0.anchorMax = Vector2.one; rt0.offsetMin = rt0.offsetMax = Vector2.zero;
+            var img = g.AddComponent<RawImage>(); img.raycastTarget = false; img.color = Color.white;
+            UI.SetVideo(null, 1f, 0f);   // (keeps the subtitles above the layer)
+            var go = new GameObject("Heaven"); go.transform.SetParent(transform, false); var vp = go.AddComponent<VideoPlayer>(); vp.playOnAwake = false; vp.clip = clip; vp.renderMode = VideoRenderMode.RenderTexture; vp.audioOutputMode = VideoAudioOutputMode.None; vp.timeUpdateMode = VideoTimeUpdateMode.GameTime; vp.isLooping = false;
+            var rt = new RenderTexture((int)clip.width, (int)clip.height, 0); vp.targetTexture = rt; vp.Prepare();
+            for (float w = 0f; w < 8f && !vp.isPrepared; w += Time.unscaledDeltaTime) yield return null;
+            img.texture = rt; Fill(img, clip);
+            MusicSystem.EndSilence(); MusicSystem.Level = 1f; MusicSystem.Play("cattalus_meadow", 3f);
+            var breeze = AudioKit.Loop("cat_meadow_breeze", null, null, 0f, AudioKit.Bus.Ambience); if (breeze != null) StartCoroutine(AudioKit.Fade(breeze, 0.45f, 3f));
+            DialogueFraming.VoiceOver = "FIN_14 (heaven, Dan's clip)"; Reactions.Suppress = true;
+            float len = (float)clip.length;
+            var rest = FinaleDialogue.Ids("FIN_13_04"); float restLen = rest.Count > 0 && rest[0].Clip != null ? rest[0].Clip.length : 14f;
+            float restAt = Mathf.Clamp(HeavenRestEnd - restLen, 56f, len - restLen - 1f);
+            AudioSource purr = null; bool panther = false, hello = false, laugh = false, restSaid = false, audit = false, stand = false;
+            var shots = new (float at, string name)[] { (4f, "f60_heaven_a_his_eye"), (10.5f, "f60_heaven_b_under_the_tree"), (24f, "f60_heaven_c_she_kneels_he_lowers_his_head"), (HeavenPanther + 0.9f, "f60_heaven_d_panther_she_sees_him"), (HeavenHello + 0.5f, "f60_heaven_e_hello_her_hands_on_his_face"), (35.5f, "f60_heaven_f_foreheads_together"), (50f, "f60_heaven_g_they_walk_off"), (restAt + 3f, "f60_heaven_h_the_voice_rising_wide"), (len - 1.5f, "f60_heaven_i_last_frame") };
+            int nextShot = 0;
+            vp.time = 0; vp.Play();
+            StartCoroutine(UI.Fade(0f, 2.4f, 1f));   // out of the white, onto his eye
+            float t0 = Time.time;
+            float t = 0f;
+            while (t < len - 0.15f && Time.time - t0 < len + 10f)
+            {
+                t = vp.isPlaying && vp.time > 0.01 ? (float)vp.time : Mathf.Max(t, Time.time - t0 - 0.5f);   // the cues follow the picture
+                if (!panther && t >= HeavenPanther) { panther = true; StartCoroutine(SayIds("FIN_14_01")); Log($"HEAVEN (QF33): 'Panther?' at {t:0.0} s - she lifts her head and sees him (video {vp.time:0.0} s)"); }
+                if (!hello && t >= HeavenHello) { hello = true; StartCoroutine(SayIds("FIN_14_02")); if (purr == null) purr = Purr.Loop(Seven.transform, 0.45f); Log($"HEAVEN (QF33): 'Hello.' at {t:0.0} s - her hands take his face (video {vp.time:0.0} s)"); }
+                if (!laugh && t >= HeavenLaugh) { laugh = true; PlayReaction("seven", "laugh_soft"); if (purr != null) StartCoroutine(AudioKit.Fade(purr, 0.95f, 2.5f)); }
+                if (!stand && t >= 44.5f) { stand = true; AudioKit.Play("grass_run", null, 0.35f, 0.03f, AudioKit.Bus.Sfx); }
+                if (!restSaid && t >= restAt) { restSaid = true; StartCoroutine(SayIds("FIN_13_04")); Log($"HEAVEN (QF33): the Voice from {t:0.0} s ({restLen:0.0} s, last words at ~{t + restLen:0.0} s of {len:0.0} s) as they grow small in the rising wide shot"); }
+                if (!audit && t > 6f) { audit = true; QF30Watch.AudioAudit("heaven (FIN_14)", EndingSounds); }
+                if (nextShot < shots.Length && t >= shots[nextShot].at) { StartCoroutine(Shot(shots[nextShot].name)); nextShot++; }
+                if (purr != null && t > 60f) purr.volume = Mathf.Lerp(purr.volume, 0.25f, Time.deltaTime * 0.3f);
+                yield return null;
+            }
+            vp.Pause();   // the last frame held: the sunrise, the two tiny in the vast meadow
+            while (Dlg.Busy) yield return null;
+            yield return Shot("f66_heaven_the_final_image_held");
+            yield return Wait(Auto ? 3f : 5f);
+            MusicSystem.Stop(6f);
+            yield return UI.Fade(1f, 3f, 0f);
+            Destroy(g); vp.Stop(); Destroy(go); rt.Release();
+            yield return Wait(2f);
+            if (purr != null) StartCoroutine(AudioKit.Fade(purr, 0f, 2.5f, true));
+            if (breeze != null) StartCoroutine(AudioKit.Fade(breeze, 0f, 2.5f, true));
+            Reactions.Suppress = false; DialogueFraming.VoiceOver = null;
+            for (int i = 0; i < vols.Length; i++) if (vols[i] != null) vols[i].weight = was[i];
+            Log("HEAVEN (QF33): Dan's heaven clip - his eye, the tree, she kneels, 'Panther?' / 'Hello.', foreheads together, they walk off into the sunrise, the Voice over the rising wide shot; held, then the credits");
             Complete("FIN_14");
         }
 

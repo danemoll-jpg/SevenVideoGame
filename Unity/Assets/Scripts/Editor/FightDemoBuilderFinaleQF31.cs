@@ -138,6 +138,16 @@ namespace Seven.EditorTools
         /// <summary>QF31 (A7): Dan's heaven clips (Art/Video/color/heaven_01..06.mp4, colour) dropped in by name; any that exist play.</summary>
         static UnityEngine.Video.VideoClip[] HeavenClips()
         {
+            // QF33: Dan's one edited heaven clip (heaven_color_game.mp4, colour, silent, 1920x1044) - made here from his .mov if only that is in
+            var one = Path.Combine(RepoRoot, "Art", "Video", "color", "heaven_color_game.mp4");
+            var mov = Path.Combine(RepoRoot, "Art", "Video", "color", "heaven_color_game.mov");
+            if (!File.Exists(one) && File.Exists(mov)) { var ff0 = FindFfmpeg(); if (ff0 != null) RunFfmpeg(ff0, $"-y -loglevel error -i \"{mov}\" -an -vf \"scale=1920:-2,crop=1920:1044,format=yuv420p\" -c:v libx264 -preset medium -crf 18 \"{one}\""); }
+            if (File.Exists(one))
+            {
+                File.Copy(one, Path.Combine(ProjectRoot, "Assets/Video/heaven_color_game.mp4"), true); AssetDatabase.ImportAsset("Assets/Video/heaven_color_game.mp4", ImportAssetOptions.ForceSynchronousImport);
+                var c1 = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/heaven_color_game.mp4");
+                if (c1 != null) { Log($"HEAVEN (QF33): Dan's edited heaven clip in ({c1.length:0.0} s, {c1.width}x{c1.height}, colour) - one clip, lines timed to its picture"); return new[] { c1 }; }
+            }
             var list = new List<UnityEngine.Video.VideoClip>(); var missing = new List<string>();
             for (int i = 1; i <= 6; i++)
             {

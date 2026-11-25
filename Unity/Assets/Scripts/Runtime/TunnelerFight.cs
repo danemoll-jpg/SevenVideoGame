@@ -68,12 +68,15 @@ namespace Seven
         protected override Vector3 SidePos(Vector3 mid, Vector3 side, float dist)
         {
             // inside the arena (the chamber + the cavern): the side of the line with more room, pulled in to stay 2 m inside the walls
-            Vector3 best = mid + Vector3.up * 3.2f; float room = -1f;
+            // QF33 (the release gate): from 2 m up, not 3.2 - from higher, a long white attack marker on the floor (the drill strike's
+            // lane) filled a quarter of the side capture
+            const float H = 2.0f;
+            Vector3 best = mid + Vector3.up * H; float room = -1f;
             dist = Mathf.Min(dist, 7f);
             foreach (var sg in new[] { 1f, -1f }) for (float d = dist; d >= 3f; d -= 1f)
             {
                 var p = mid + side * sg * d; if (Flat(L.ClampArena(p, 1.6f, 0f) - p).magnitude > 0.2f) continue;
-                if (d > room) { room = d; best = p + Vector3.up * 3.2f; } break;
+                if (d > room) { room = d; best = p + Vector3.up * H; } break;
             }
             return best;
         }

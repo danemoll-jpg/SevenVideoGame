@@ -74,6 +74,53 @@ still sees it level behind her. Build check HOLES (QF18 13): Chapter 1 1 (CellDo
 3. **FIN_01:** the approach from outside - the Moon's buildings should read as stone, not boxes.
 4. **Chapter 1 from Scene Select (any section):** the camera starts level behind her.
 
+## Quick fix QF33: Dan's heaven video is IN (2026-11-24) — to do (before Round 20)
+`Art/Video/color/heaven_color_game.mp4` (82.2 s, 1920×1044 h264, **colour**, silent; Dan's original `Heaven-color.mov` 3902×2160 he
+may copy beside it, out of git). **One edited clip, not six**, and slightly different from the planned clips. It replaces the
+stand-in (the old meadow master from 0:17) in QF31's heaven step. What it shows (checked frame by frame):
+- **0:00–0:08** extreme close-up of Panther, giant, golden eyes, at sunrise (his eye / face: the opening).
+- **0:08–0:13** he lies beneath the old leaning tree at sunrise, mountains and mist behind.
+- **0:13–0:18** he rises and walks across the meadow.
+- **0:18–0:28** **7 is kneeling in the grass, head bowed (still grieving)**; he walks to her and lowers his head to hers (~0:25).
+- **~0:28–0:29** **she lifts her head and sees him** → **FIN_14_01 "Panther?"** here (a caught breath, through tears).
+- **~0:30–0:33** she reaches up and takes his face in her hands → **FIN_14_02 "Hello."** (Panther, warm) here.
+- **0:34–0:37** her forehead against his, holding him (tears of joy: a soft laugh / breath from her, his purr rising).
+- **~0:41** she stands beside him; **0:46–0:58** they walk off together toward the sunrise.
+- **0:58–1:22** the camera rises wide: the sun over mountains, mist, a river, the two small in the vast meadow.
+- **The Voice (RestVoice)** "Well done, good and faithful servant! You were faithful over a few things; I will put you in charge of
+  many things. Share your master's joy." over **~0:56–1:20** (as they grow small), last words landing before the end; hold, then the
+  credits (QF30 23 / 24).
+- Audio: `cattalus_meadow` (or the end of `moon_transfer`), birdsong, wind in the grass, the purr; nothing from the Moon.
+- The chamber → white → this clip fades in from white at 0:00. The old colour master is no longer used in the ending (keep it).
+Capture key frames with the lines over them; publish **1.0.0-rc6** with it (rc4 and rc5 untouched).
+
+## Quick fix QF33 — status (2026-11-24)
+**Summary (plain words):** your heaven film now plays in the ending, as one clip, out of the white. "Panther?" comes as she lifts her
+head and sees him (28.2 s into the clip), "Hello." as her hands take his face (30.9 s), her soft laugh with their foreheads together
+(34.4 s) while his purr rises, and the Voice speaks over the rising wide shot from 64.5 s, its last words landing at ~78.7 s of the
+82.2 s clip; the last frame holds, then the credits. Checked in a check run from the ending's checkpoint: the lines fired at exactly
+those clip times (they follow the video's own clock), every capture passed the image gate (44 shots, 0 failures, no NaN), the
+ending's sound audit clean, no voice overlaps. Key frames: `Docs/Previews/qf33/` (she kneels / "Panther?" / "Hello." / the wide shot).
+**Release:** see the rc6 line in "Where things stand" (CLAUDE.md) and below.
+
+### QF33 — decisions made (Code; Dan can change any of them)
+- **The file:** the folder held `heaven_color_game.mov` (3902×2160, h264 + audio), not the `.mp4` the note names. I made
+  `Art/Video/color/heaven_color_game.mp4` from it (1920 wide, centre-cropped to 1920×1044 like the other game copies, silent, h264
+  crf 18, 67 MB, in git via LFS); the .mov stays out of git, untouched. The builder makes the .mp4 itself from the .mov if it is ever
+  missing.
+- **Cue times** (read off the picture frame by frame): "Panther?" 28.2 s (her head comes up between 28.0 and 28.5), "Hello." 30.9 s
+  (her hands reach his face at ~30.5), her laugh 34.4 s, a soft grass step as she rises 44.5 s, the Voice from 64.5 s so its last
+  words land at ~78.7 s (the line is 14.1 s - it cannot fill 0:56-1:20, so it sits in the rising wide shot, ending 3.5 s before the
+  clip's end). All constants in `FinaleDirectorQF31.HeavenPanther / HeavenHello / HeavenLaugh / HeavenRestEnd`.
+- The six-clip path (heaven_01..06) and the stand-in are kept as fallbacks; the single clip wins when it is in.
+- Check runs auto-skip long lines after a moment, so the Voice's subtitle is gone in the wide-shot capture; in play it stays up for
+  the whole line.
+
+## For Dan to check (QF33)
+1. **The ending, from the light to the credits** (Scene Select -> the Moon finale's last section, or play through): does "Panther?"
+   land as she lifts her head, "Hello." as her hands take his face, and the Voice over the rising wide shot, finished before the end?
+   Nudge any of the four times in `FinaleDirectorQF31.cs` (`HeavenPanther`, `HeavenHello`, `HeavenLaugh`, `HeavenRestEnd`).
+
 ## Round 20: "Grand Circuit" racing mode, Stage 1 (Dan, 2026-11-24) — to do after QF32
 Commit a checkpoint first. Runs overnight. **Never stop to ask**: make the reasonable call, list it under "Round 20 — decisions made".
 **Spec: `Docs/RACING_MODE.md`** (Dan approved: non-lethal pickups, 2 players to start, monochrome with glowing track lights). Keep
@@ -97,6 +144,58 @@ rc2–rc5 untouched; this ships as **1.1.0-beta1**. The story game must not chan
 **Proof:** the AI completes 3 laps on every vehicle on both tracks, 0 falls-through; a split-screen race (2 players via the bot + AI)
 at 60 fps; captures of both tracks (loops, the jump, the shortcut, the split screen); the image gate; no keyboard glyphs. Publish
 1.1.0-beta1; write the status and "For Dan to check (Round 20)"; commit and push.
+
+### Round 20 — decisions made (Code; Dan can change any of them)
+- **How it's built:** one new scene `GrandCircuit` (`Editor/FightDemoBuilderGrandCircuit.cs`), entered only from the main menu's
+  **Grand Circuit** entry (shown once `GcSave.Unlocked`: after the credits' unlock card, or `-racingunlocked`). The story scenes and
+  saves are untouched; the only story-side changes are the unlock card after Kyle's line (FinaleDirectorEnd), the menu entry
+  (DemoMenu) and the screen-UI overlay leaving this one scene alone (UiOverlay: every player keeps their HUD on their own camera -
+  needed for split screen; the tracks lie within ~500 m of the origin, so the jitter that overlay exists for can't happen there).
+- **Tracks are data** (`Runtime/GcTrack.cs`): turtle pieces (yaw / pitch / roll over a length, width, flags) sampled every metre;
+  the closing position error is spread over the flat pieces (Cattalus 0.3 m, Lunar 0.4 m in plan). The same definition dresses the
+  worlds at build time and builds the glowing ribbon (road, underside, walls with light strips, edge lights, centre dashes, boost
+  chevrons, gates every 1/8 lap) at load.
+  - **Cattalus Grand Circuit (Unlimited), 1.81 km:** the start straight past the stands, the loop (48 m high) threaded between two
+    giant rope-wrapped scratching posts joined by a carpeted beam overhead (a vertical loop can't wind round one column, so "through the
+    column" became between its two posts, under its beam), a banked sweep, the corkscrew (a real heartline roll round an axis 8 m up,
+    cat-tree towers either side), the long right-hander with the **shortcut** across its inside through the cardboard quarter (a box
+    tunnel, narrower, boost chevrons on its straight middle - it saves ~15 m of distance and ~1 s with the boost), the big jump over the
+    toy boulevard (giant balls, yarn, a toy mouse, a road below), the banked hairpins home.
+  - **Lunar Loop, 1.78 km:** a long tunnel out of the dock (ribs, crown lamps), the giant cavern loop (64 m high), the long banked
+    descent past the stepped pyramids and terraces, the jump across the mining pit (a deep shaft ringed by gantries), the terrace
+    switchbacks, the tunnel home; the cavern's dome far overhead in the haze. **Built from the Moon's own materials and kit**, not by
+    loading Chapter 1's city mesh (that city is centred on the prison and cut for views from inside it; a track of its own needed a
+    layout of its own).
+- **The handling** (`Runtime/GcRacer.cs`): each racer lives in track coordinates (s along, x across, heading, speed), so it sticks to
+  the surface whatever "down" is and can never fall through the ribbon; the track's bend turns the road under it (you steer every
+  bend), air-brakes (LB / RB) add a sharp turn and bleed a little speed, walls scrape speed by the impact angle, bumps push across by
+  weight (Tunneler moves least) and trade a little speed, never wreck. Loops / the corkscrew hold at least 26 m/s (the assist). The
+  jumps: the kicker's lip launches the racer ballistically (air gravity 16 m/s², a floaty arcade arc) with a launch-speed assist that
+  always carries it to the far side (faster = lands further down the landing ramp); it lands when it comes down through the landing
+  surface from above (a landing from below would count as a fall-through: must stay 0). Off the edge / missed landing -> back on at
+  the last gate after 1.4 s, a moment of shield.
+- **Numbers** (top speed m/s, acceleration, handling, weight, grip): 7 50 / 15 / 1.0 / 1.0 / 1.0 (balanced); Duchess 53 / 17 / 0.9 /
+  0.7 / 0.82 (fast, light, floaty); Tunneler 52 / 11 / 0.85 / 1.7 / 1.1 (slow to start, heavy, wins bumps). Boost +16 m/s. A lap
+  takes ~33-36 s (about 53 m/s average); a 3-lap race ~1:45.
+- **Controls** (controller first, the keyboard works for player 1 but is never shown): RT or A accelerate, LT or B brake, left stick /
+  d-pad steer, LB / RB air-brakes, X use the pickup, Start pause. Menus: stick / d-pad + A, B back.
+- **Pickups:** three glowing pads across the track at the start of each pickup stretch; a racer with an empty slot gets one, weighted
+  by place (the back gets more Boost / Push, the leader more Shield). Push = a white telekinesis ring flies forward and nudges the
+  nearest racer ahead (within 45 m) off its line and slows it for 1.3 s; Shield = a white bubble for 5 s that blocks a push or a bump;
+  Boost = +8 m/s at once and the boost for 2.2 s. Nothing damages, wrecks or knocks anyone out.
+- **The field:** single race = the players + AI to six racers, two of each vehicle where possible, the players starting at the back of
+  the staggered grid; time trial = alone (+ the ghost of the best run, a translucent white copy). AI skill 0.78-0.92, a mild rubber
+  band on the AI only (up to +5 % top speed when far behind the best player, -4 % when far ahead).
+- **Split screen:** top / bottom by default, side by side as the setting on the Grand Circuit page (left / right on that row; saved);
+  each player has their own chase camera (it rolls with the track) and HUD (place, lap, time + best lap, speed, the held pickup with
+  its button, the countdown, notes). Player 2 joins on the players page by pressing A on a second controller (B leaves).
+- **Voices:** 15 proposed short lines (start / overtaking / pushed / last lap / win) in the story's voices, generated with
+  `Tools/Voice/generate_gc_voices.py` (lines in `Unity/Assets/Resources/GrandCircuit/gc_lines.json`, listed below for Dan); one at a
+  time, at most one every 8 s, subtitled on every player's HUD with the speaker's name.
+- **Music:** `cattalus_race` on both tracks and in the menus.
+- **Saving:** PlayerPrefs `seven_gc_*` (unlock, best race / time trial / lap per track, best per racer, last racer / track / mode /
+  split layout); the ghost in `persistentDataPath/gc_ghost_<track>.bin` (10 samples a second). Check runs use `seven_test_gc_*`.
+- **Version:** 1.1.0-beta1, build 2000 (round 20, fix 0).
 
 ## Polish pass P2: the overnight clean-up (Dan, 2026-11-24, going to bed: "if there is some clean up, now is a good time") — done in part, status + morning summary below
 **Protect the showable builds:** 1.0.0-rc2 and **1.0.0-rc3** stay published and untouched. This goes into **1.0.0-rc4**, published

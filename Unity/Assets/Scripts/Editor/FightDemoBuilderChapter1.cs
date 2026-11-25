@@ -448,6 +448,11 @@ namespace Seven.EditorTools
             Lamp("BayFloorLamp", new Vector3(19.5f, L.Bay + 3.3f, -63.6f), 9f, 3.0f, m.glow, null, new Vector3(0.14f, 0.08f, 0.6f));
             Block("TerraceExitLampPole", new Vector3(17.95f, L.Lower, -45.05f), new Vector3(18.05f, L.Lower + 2.96f, -44.95f), m.metal, null, false);
             Block("BayFloorLampPole", new Vector3(19.45f, L.Bay, -63.65f), new Vector3(19.55f, L.Bay + 3.26f, -63.55f), m.metal, null, false);
+            // QF33 (the release gate): the broken ramp on the bay descent, where she hangs and drops (the "hang" lesson and the control-back
+            // frame there read as one flat dark tone: range 0.33, edges 5.5 %) - a work lamp on a pole beside the landing, clear of her line
+            // (on scaffold 1, which she drops onto: its deck at -7.6, like the scaffold lamp further down)
+            Lamp("BayRampLamp", new Vector3(23.1f, -5.0f, -55.6f), 8f, 2.6f, m.glow, null, new Vector3(0.12f, 0.3f, 0.12f));
+            Block("BayRampLampPole", new Vector3(23.05f, -7.6f, -55.65f), new Vector3(23.15f, -5.15f, -55.55f), m.metal, null, false);
 
             var ui = new GameObject("ChapterUI").AddComponent<Seven.ChapterUI>();
             ui.Cam = cam;
