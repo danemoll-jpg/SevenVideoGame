@@ -176,7 +176,7 @@ Never stop to ask; note decisions in TODO.md. Publish 1.1.0-beta2; status + "For
 4. **Duchess is a little slower at the top** (51.5 instead of 53) - she won nearly every Stage 1 race.
 5. **Music** per world is the story's own track; say if you want racing versions (Suno prompts on request).
 
-## Round 22: "Grand Circuit" Stage 3: more racers on Dan's ShiftStorm jets (Dan, 2026-11-25) — to do after QF36 (Dan, 2026-11-25: go ahead with the proposed roster)
+## Round 22: "Grand Circuit" Stage 3: more racers on Dan's ShiftStorm jets (Dan, 2026-11-25) — done, release 1.1.0-beta4 (build 2006, `game-2006`) PUBLISHED, Latest (status below)
 Dan's ShiftStorm vehicles (his own models, copied into `Art/Source/shiftstorm/<Design>/Plane.fbx` + `Plane_basecolor.jpg`; source
 `C:\Users\danmo\ShiftStorm\Assets\Resources\Vehicles\`; see ShiftStorm's CLAUDE.md "Designs" for its import notes: `yaw`, `cut`,
 `astride`, `riderScale`). Dan: use "the jet version" of the bike:
@@ -190,6 +190,63 @@ Converted to **monochrome** like everything else (grayscale base colour, glowing
 astride pose: hips on the saddle, hands on the grips; the cat seated), their existing voices for a few cheers. The field grows to
 the full roster with still **one of each racer** per race; racer select shows them all. Prove each: AI 3 laps on every track,
 0 falls; ride-pose checks; captures. Publish 1.1.0-beta4.
+
+## Round 22 — decisions made (Code, 2026-11-25; Dan said never stop to ask)
+- **The jets are Dan's ShiftStorm files as they are** (`Art/Source/shiftstorm/Scrambler|Jetstream/Plane.fbx`, already cleaned by ShiftStorm's
+  pipeline: ~2.6 / 4.0 m, the empties `Seat` / `Steering`), imported at build time (`Editor/FightDemoBuilderGrandCircuit3.cs`, into the
+  git-ignored `Assets/Art/World/Generated/ShiftStorm/`). The nose is found from the empties (the rider sits behind the steering / the middle)
+  and turned to +z; the LOD1 copy is dropped (racers are near the camera). GrandPrix / Hotrod are not used (no racer suited them yet).
+- **Monochrome with glowing accents:** Dan's base colour turned to grayscale (lifted a little so the black parts read), and every triangle
+  whose texture is his orange / amber (the accent panels, the fan rims, the engine lights) moved onto a second, glowing white material (glow =
+  white emission, 1.35) - ~8 % of each jet's triangles.
+- **Riders:** Nela, Viper, the Machinist = their story bodies (Dan's Mixamo rigs and materials) on a new `GcRider.controller`. They use 7's
+  riding solver (`GcSevenRider`, now scaled by the rider's size: hips on the saddle, palms on the grips, feet on the wing roots, eyes ahead)
+  with an upright base pose (7's `sitting_idle`) leaning in 18 deg - 7's Blender racing tuck curled their longer spines down behind the tank
+  (the Machinist vanished behind it). **The Scrambler jet is sized to each rider** (its own scale x the rider's height / 7's: Nela 2.8 m,
+  Viper 3.5 m, the Machinist 4.3 m long); **the Machinist is brought down to 0.65 of his size** (2.9 m as built) - a 7 m bike would fill the road.
+  **Juniper** = the Cattalus tabby (Panther's model + the tabby coat) at 3x, crouched in the Jetstream's seat in the cat ride pose
+  (`GcCatRider`, as Duchess in her bed). (At 2.2x only her ears showed over the rim.)
+- **Stats** (`GcStats`): Nela 51.5 top / 16 accel / 1.05 handling / 0.85 weight (quick to turn); Viper 52 / 14 / 0.92 / 1.25 (aggressive);
+  the Machinist 52.5 / 10.5 / 0.8 / 2.0 (heavy: wins every bump, slow off the line, keeps to the main line like Tunneler); Juniper 52.5 /
+  15.5 / 0.88 / 0.75 (fast at the top, floaty). Nela started at 50.5 and finished last on 6 of 7 tracks: raised.
+- **One of each, seven racers per race:** the field is the whole roster (the humans' picks + the AI for the rest). With six AI the skill
+  spread was narrowed (`GcGame.AiSkill`: 0.96 .. 0.86; Round 21's 0.95 .. 0.8 for two AI) - with the old spread the human-like driver
+  averaged 2.0 of 7 (too easy), now 3.4.
+- **Lines** in their story voices (`gc_lines.json`, `Tools/Voice/generate_gc_voices.py`; Nela's saved "Nela" voice, Viper "Viper", the
+  Machinist "Machinist", Juniper "juniper"), five each (start / pass / pushed / last lap / win) - proposed by Code, listed below for Dan:
+  - Nela: "Let's see how the stars move today." / "Forgive me. The way was open." / "Gently, please." / "Once more around." / "Thank you.
+    That was beautiful."
+  - Viper: "Try to keep up, little observer." / "Out of my way." / "You will regret that." / "Last lap. Your last chance." / "The serpent
+    always strikes first."
+  - The Machinist: "Engines engaged. Proceeding." / "Overtaking. Hold your course." / "Impact noted." / "Final lap. Increasing output." /
+    "Course complete. Efficiency confirmed."
+  - Juniper: "I've always wanted to fly one of these!" / "Coming through, whiskers first!" / "Hey! Paws off!" / "Last lap! Don't blink!" /
+    "I did it! Wait till everyone hears!"
+- **Checks:** `GC RIDE POSE (R22) <rider>` per rider (the 5 cm limit scaled by the rider's size); every racer captured close up on the grid
+  during the lights (`gc_racer_<name>_side / _front`, still - the moving ones blurred past the camera); the menu run walks all seven racers.
+
+## Round 22 — status (2026-11-25): done; release 1.1.0-beta4 (build 2006, `game-2006`) PUBLISHED, Latest (rc2-rc9 + beta1-beta3 retained)
+- **Proof (the release build, one run: `-gcmusictest -gcmenu -gcproof -gcsplit -gctrial -gcplayers`, 5 min):** `GC PROOF` **49 / 49 AI runs
+  completed 3 laps** (7 tracks x 7 racers, one of each per race, duplicates 0), **falls-through 0, falls off 0**, slowest on a loop /
+  corkscrew 36.8 m/s; all-AI races finish within 3-6 s of each other. **Ride pose:** 82764 samples, every rider within its limit (worst palm
+  1.5 cm - 7; Nela 0.4-1.0, the Machinist 1.4, Viper 0; hips 0.0). **Split screen** with all seven (2 players + 5 AI) on Venus Gardens: mean
+  5.3 ms (188 fps), 0.7 % of frames over 16.7 ms. **Each racer as the player** (the human-like driver, 2 laps): average place **3.4 of 7**
+  after the AI re-spread (all within ~1-2 s). **Racer select:** all seven shown; the taken-racer rule still holds (player 2 skipped 7 ->
+  Juniper). Captures 104 / 104 pass the image gate, keyboard keys on screen 0, the music test 8 / 8.
+- **Release gate (`Builds/ImageGate/gate_1.1.0-beta4.txt`): IMAGE GATE RELEASE PASS** - every chapter (baseline 31, none new or worse, no NaN;
+  the story unchanged since beta3), the Grand Circuit 78 / 78; in that run (the shipped build) the proof again **49 / 49**, ride pose 81668
+  samples, 0 off. The first gate failed ONE shot that beta3 had passed by luck of the moment: Europa's jump seen from the side - the great
+  chamber's smooth pale ice columns in the fog (edges 5.8 % < 6 %). Fixed for real: fracture bands of darker ice round every column (12.6 %).
+  Built with `BuildScenesFromCommandLine -onlyscenes grandcircuit` on top of beta3's Build everything (every story scene is that build's).
+
+## For Dan to check (Round 22)
+1. **The new racers** (Grand Circuit -> racer select, left / right): Nela, Viper and the Machinist on the Scrambler jet, Juniper in the
+   Jetstream - do they read at speed? The Machinist is the weakest: his 4 m machine body brought to 2.9 m on a bike sized for him, he shows head,
+   shoulders and arms over the tank (his body is mostly legs). Bigger / smaller = `GcVehicles` (the Scrambler's fit) and his template's
+   scale in `FightDemoBuilderGrandCircuit3.cs`.
+2. **Monochrome + glow:** your orange accents and engine lights glow white; the rest is your texture in grayscale.
+3. **Their lines** (above) - in their story voices; change any line in `gc_lines.json` and re-run the voice script.
+4. **The field of seven:** the AI is closer now; too easy / hard = `GcGame.AiSkill`.
 
 ## Quick fix QF34b: FIN_10's hovering hand (Dan, 2026-11-25: "Yes, fix it") — done, release 1.0.0-rc8 (build 2002, `game-2002`)
 **Why rc7's hand still hovered (measured, not guessed - `FIN_10 RIGHT HAND TRACE` once a second in a check run):** two causes.

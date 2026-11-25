@@ -165,7 +165,7 @@ namespace Seven
                     racer = rd.ReadString(); int n = rd.ReadInt32();
                     for (int i = 0; i < n; i++) { float t = rd.ReadSingle(); var p = new Vector3(rd.ReadSingle(), rd.ReadSingle(), rd.ReadSingle()); var r = new Quaternion(rd.ReadSingle(), rd.ReadSingle(), rd.ReadSingle(), rd.ReadSingle()); gh._s.Add((t, p, r)); }
                 }
-                int idx = racer == "Duchess" ? 1 : racer == "Tunneler" ? 2 : 0;
+                int idx = GcStats.IndexOf(racer);   // Round 22: any racer of the roster
                 gh._go = new GameObject("Ghost"); gh._go.transform.SetParent(g.transform, false);
                 GcVehicles.Make(g, idx, gh._go.transform, true);
                 foreach (var r in gh._go.GetComponentsInChildren<Renderer>()) { var mats = r.sharedMaterials; for (int i = 0; i < mats.Length; i++) mats[i] = g.GhostMat; r.sharedMaterials = mats; r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; }

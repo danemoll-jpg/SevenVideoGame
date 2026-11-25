@@ -14,8 +14,9 @@ namespace Seven
         static Bank _bank; static float _next; static AudioSource _src; static readonly Dictionary<GcRacer, int> _place = new Dictionary<GcRacer, int>();
         public static int Played; public static string LastSubtitle; public static float SubtitleUntil;
         static void Load() { if (_bank != null) return; var ta = Resources.Load<TextAsset>("GrandCircuit/gc_lines"); _bank = ta != null ? JsonUtility.FromJson<Bank>(ta.text) : new Bank { lines = new Line[0] }; }
-        static string Key(GcRacer r) => r.Stats == GcStats.Duchess ? "duchess" : r.Stats == GcStats.Tunneler ? "tunneler" : "seven";
-        static string Name(string sp) => sp == "duchess" ? "Duchess" : sp == "tunneler" ? "Tunneler" : "7";
+        // Round 22: every racer of the roster speaks in their own story voice (the speaker key = the racer's name in lower case, 7 = "seven")
+        static string Key(GcRacer r) => r.Stats == GcStats.Seven ? "seven" : r.Stats.Racer.ToLowerInvariant();
+        static string Name(string sp) { foreach (var st in GcStats.All) if ((st == GcStats.Seven ? "seven" : st.Racer.ToLowerInvariant()) == sp) return st.Racer; return "7"; }
         public static void Reset() { _next = 0f; _place.Clear(); Played = 0; }
         public static bool Say(GcRacer r, string ev, bool force = false)
         {

@@ -128,6 +128,7 @@ namespace Seven.EditorTools
             // ---------------------------------------------------------------- the vehicle templates
             var tpl = new GameObject("Templates").transform; tpl.SetParent(root.transform, false);
             g.BikeTpl = GcBikeTemplate(tpl); g.SevenTpl = GcSevenTemplate(tpl, sevenCtl); g.RacerTpl = GcRacerTemplate(tpl); g.DuchessTpl = GcDuchessTemplate(tpl); g.RigTpl = GcRigTemplate(tpl);
+            BuildGcRound22Templates(tpl, sevenCtl, g);   // Round 22: the ShiftStorm jets + Nela, Viper, the Machinist, Juniper
             foreach (Transform c in tpl) c.gameObject.SetActive(false);
 
             EditorSceneManager.SaveScene(scene, GrandCircuitScenePath);

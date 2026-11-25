@@ -195,9 +195,9 @@ namespace Seven
         {
             var res = Game.Results ?? new List<GcRacer>();
             var lines = res.Select(r => $"{r.Place}.   {r.Label}{(r.Human ? "  (Player " + (Game.Humans.IndexOf(r) + 1) + ")" : "")}      {GcGame.Fmt(r.FinishTime)}{(r.Finished ? "" : "*")}      best lap {GcGame.Fmt(r.BestLap)}");
-            var p = Img(_canvas.transform, new Vector2(0, 60), new Vector2(760, 330), new Color(0f, 0f, 0f, 0.55f));
+            var p = Img(_canvas.transform, new Vector2(0, 40), new Vector2(760, 420), new Color(0f, 0f, 0f, 0.55f));   // Round 22: seven rows
             var t = Txt(p.transform, string.Join("\n", lines) + (Game.Track != null ? $"\n\n{Game.Track.Name}   ·   best race {GcGame.Fmt(GcSave.Best(Game.Track.Id, GcGame.NextMode == GcGame.Mode.TimeTrial))}   ·   best lap {GcGame.Fmt(GcSave.BestLap(Game.Track.Id))}" : ""), Vector2.zero, 22, Color.white);
-            ((RectTransform)t.transform).sizeDelta = new Vector2(740, 320);
+            ((RectTransform)t.transform).sizeDelta = new Vector2(740, 410);
         }
         void RecordsPanel()
         {
@@ -206,10 +206,12 @@ namespace Seven
             {
                 var id = GcTrack.Ids[k];
                 sb.AppendLine($"{GcTrack.Names[k].ToUpperInvariant()}   race {GcGame.Fmt(GcSave.Best(id, false))}  ·  time trial {GcGame.Fmt(GcSave.Best(id, true))}  ·  lap {GcGame.Fmt(GcSave.BestLap(id))}");
-                sb.AppendLine(string.Join("   ·   ", GcStats.All.Select(s => $"{s.Racer} {GcGame.Fmt(GcSave.BestBy(id, s.Racer))}")));
+                // Round 22: seven racers - two lines (the first four, then the rest)
+                sb.AppendLine(string.Join("   ·   ", GcStats.All.Take(4).Select(s => $"{s.Racer} {GcGame.Fmt(GcSave.BestBy(id, s.Racer))}")));
+                sb.AppendLine(string.Join("   ·   ", GcStats.All.Skip(4).Select(s => $"{s.Racer} {GcGame.Fmt(GcSave.BestBy(id, s.Racer))}")));
             }
             var p = Img(_canvas.transform, new Vector2(0, 30), new Vector2(1000, 470), new Color(0f, 0f, 0f, 0.55f));
-            var t = Txt(p.transform, sb.ToString(), Vector2.zero, 17, Color.white); ((RectTransform)t.transform).sizeDelta = new Vector2(980, 460);
+            var t = Txt(p.transform, sb.ToString(), Vector2.zero, 16, Color.white); ((RectTransform)t.transform).sizeDelta = new Vector2(980, 460);
         }
 
         Image Img(Transform parent, Vector2 pos, Vector2 size, Color c)

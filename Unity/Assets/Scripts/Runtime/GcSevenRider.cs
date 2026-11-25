@@ -13,15 +13,22 @@ namespace Seven
     {
         public Transform Seat, GripL, GripR, FootL, FootR, Root;
         public float KneeWidth = 0.24f;
+        /// <summary>Round 22: the same riding pose for every humanoid rider (Nela, Viper, the Machinist astride the Scrambler jet): K = the
+        /// rider's size against 7's (every body offset scales with it), Who = the rider's name in the check lines.</summary>
+        public float K = 1f; public string Who = "7";
+        /// <summary>The forward lean of the tuck (7 on her racing bike 42; the Scrambler jet's riders sit taller, 26).</summary>
+        public float Tuck = 42f;
+        /// <summary>The base pose's animator state: "ride" (7's Blender-made racing tuck) or "sitting_idle" (upright, for a big rider).</summary>
+        public string Pose = "ride";
         Animator _an; Vector3 _bodyAdj, _off; float _reachLean; bool _ok;
         public float HipsGap { get; private set; } = 1f;
         public Vector2 PalmGaps { get; private set; }
-        const float TuckLean = 42f, MaxReachLean = 34f, ShoulderRollMax = 25f;
+        const float MaxReachLean = 34f, ShoulderRollMax = 25f;
         void Start()
         {
             _an = GetComponent<Animator>(); if (_an == null) return;
             _an.applyRootMotion = false; _an.cullingMode = AnimatorCullingMode.AlwaysAnimate;
-            string st = Has("ride") ? "ride" : Has("sitting_idle") ? "sitting_idle" : "idle"; _an.Play(st, 0, 0f);
+            string st = Has(Pose) ? Pose : Has("ride") ? "ride" : Has("sitting_idle") ? "sitting_idle" : "idle"; _an.Play(st, 0, 0f);
             _ok = Seat != null;
         }
         bool Has(string s) => _an.HasState(0, Animator.StringToHash(s));
@@ -31,8 +38,8 @@ namespace Seven
         {
             if (!_ok || _an == null) return;
             var up = Seat.up; var fw = Seat.forward; var rt = Seat.right;
-            _an.bodyPosition = Seat.position + Seat.rotation * (_bodyAdj + Vector3.up * 0.11f);
-            _an.bodyRotation = Quaternion.AngleAxis(TuckLean + _reachLean, rt) * _an.bodyRotation;
+            _an.bodyPosition = Seat.position + Seat.rotation * (_bodyAdj + Vector3.up * 0.11f * K);
+            _an.bodyRotation = Quaternion.AngleAxis(Tuck + _reachLean, rt) * _an.bodyRotation;
             foreach (var (goal, hand, mid, grip) in new[] { (AvatarIKGoal.LeftHand, HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal, GripL), (AvatarIKGoal.RightHand, HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal, GripR) })
             {
                 if (grip == null) continue; var h = Bone(hand); var m = Bone(mid);
@@ -42,9 +49,9 @@ namespace Seven
             foreach (var (goal, hint, foot, sgn) in new[] { (AvatarIKGoal.LeftFoot, AvatarIKHint.LeftKnee, FootL, -1f), (AvatarIKGoal.RightFoot, AvatarIKHint.RightKnee, FootR, 1f) })
             {
                 if (foot == null) continue;
-                _an.SetIKPositionWeight(goal, 1f); _an.SetIKPosition(goal, foot.position + up * 0.06f);
+                _an.SetIKPositionWeight(goal, 1f); _an.SetIKPosition(goal, foot.position + up * 0.06f * K);
                 _an.SetIKRotationWeight(goal, 0.6f); _an.SetIKRotation(goal, Quaternion.LookRotation(-fw * 0.6f - up * 0.8f, fw));
-                _an.SetIKHintPositionWeight(hint, 0.8f); _an.SetIKHintPosition(hint, Seat.position + fw * 0.40f + rt * sgn * (KneeWidth + 0.10f) - up * 0.12f);
+                _an.SetIKHintPositionWeight(hint, 0.8f); _an.SetIKHintPosition(hint, Seat.position + (fw * 0.40f + rt * sgn * (KneeWidth + 0.10f) - up * 0.12f) * K);
             }
             _an.SetLookAtWeight(0.75f, 0f, 0.8f, 1f, 0.5f); _an.SetLookAtPosition(Seat.position + fw * 14f + up * 1.3f);
         }
@@ -53,15 +60,15 @@ namespace Seven
         {
             if (!_ok || _an == null) return;
             var hips = Bone(HumanBodyBones.Hips); if (hips == null) return;
-            var want = Seat.position + Seat.up * 0.11f; var err = want - hips.position;
+            var want = Seat.position + Seat.up * 0.11f * K; var err = want - hips.position;
             HipsGap = err.magnitude;
             // the body placement's calibration (the clip's body point vs its hips), learned slowly and bounded
-            _bodyAdj = Vector3.ClampMagnitude(_bodyAdj + Quaternion.Inverse(Seat.rotation) * err * 0.5f, 0.35f);
+            _bodyAdj = Vector3.ClampMagnitude(_bodyAdj + Quaternion.Inverse(Seat.rotation) * err * 0.5f, 0.35f * K);
             // a small error is corrected at once by the root (bounded; a big one never)
-            if (err.magnitude < 0.3f && Root != null)
+            if (err.magnitude < 0.3f * K && Root != null)
             {
-                _off = Vector3.ClampMagnitude(_off + (Root.parent != null ? Root.parent.InverseTransformVector(err) : err), 0.6f);
-                Root.localPosition = _off;
+                _off = Vector3.ClampMagnitude(_off + (Root.parent != null ? Root.parent.InverseTransformVector(err) : err), 0.6f * K);
+                Root.localPosition = _off;   // (Root's parent may be scaled: the offset is in its own space)
             }
             // the shoulders roll forward to put each palm on its grip
             foreach (var (sh, hand, mid, grip) in new[] { (HumanBodyBones.LeftShoulder, HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal, GripL), (HumanBodyBones.RightShoulder, HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal, GripR) })

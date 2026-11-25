@@ -424,7 +424,17 @@ namespace Seven.EditorTools
                 for (int q = 0; q < 24; q++)
                 {
                     float a = q / 24f * Mathf.PI * 2f; var at = gc + new Vector3(Mathf.Cos(a), 0f, Mathf.Sin(a)) * (150f + R() * 30f); if (!GcClear(t, at, 20f)) continue; float y0 = Hc(at.x, at.z);
-                    Append(v, tr, Lathe(new[] { new Vector2(0f, 0f), new Vector2(14f + R() * 10f, 0f), new Vector2(8f, (ceil - y0) * 0.6f), new Vector2(12f, ceil - y0), new Vector2(0f, ceil - y0) }, 0f, 360f, 9, null, new Vector3(at.x, y0, at.z)));
+                    float rb = 14f + R() * 10f, hh = ceil - y0;
+                    Append(v, tr, Lathe(new[] { new Vector2(0f, 0f), new Vector2(rb, 0f), new Vector2(8f, hh * 0.6f), new Vector2(12f, hh), new Vector2(0f, hh) }, 0f, 360f, 9, null, new Vector3(at.x, y0, at.z)));
+                    // Round 22 (the release gate): fracture bands of darker ice round each column every ~7 m - smooth pale columns in the
+                    // fog read as one flat tone from the jump's side camera (edges 5.8 % < 6 %)
+                    var (bv, bt) = k.Of(iceDark);
+                    for (float y = 4f + R() * 3f; y < hh - 4f; y += 6f + R() * 3f)
+                    {
+                        float rr = (y < hh * 0.6f ? Mathf.Lerp(rb, 8f, y / (hh * 0.6f)) : Mathf.Lerp(8f, 12f, (y - hh * 0.6f) / (hh * 0.4f))) + 0.25f, tilt = (R() - 0.5f) * 1.6f;
+                        var band = new List<Vector3>(); for (int sg = 0; sg <= 18; sg++) { float aa = sg / 18f * Mathf.PI * 2f; band.Add(new Vector3(at.x + Mathf.Cos(aa) * rr, y0 + y + Mathf.Sin(aa) * tilt, at.z + Mathf.Sin(aa) * rr)); }
+                        Sweep(bv, bt, band, 0.45f, false, 4);
+                    }
                     var (gv, gt) = k.Of(glowSoft); Sweep(gv, gt, new[] { new Vector3(at.x, y0 + 6f, at.z) + (gc - at).normalized * 9f, new Vector3(at.x, ceil - 20f, at.z) + (gc - at).normalized * 9f }, 0.35f, false, 5);
                 }
                 var (lv, lt) = k.Of(lightIce); var pit = gc; pit.y = Hc(pit.x, pit.z) - 30f; Ellipsoid(lv, lt, pit + Vector3.up * 4f, new Vector3(22f, 3f, 14f), 4, 10);

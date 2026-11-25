@@ -588,9 +588,17 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**Round 22 (2026-11-25): 1.1.0-beta4 (build 2006, `game-2006`) - Grand Circuit Stage 3: Dan's ShiftStorm jets (`Art/Source/shiftstorm/`,
+monochrome + glowing accents: `Editor/FightDemoBuilderGrandCircuit3.cs`) and four new racers - Nela, Viper, the Machinist astride the
+Scrambler jet (`GcSevenRider` scaled per rider: `K`, `Tuck`, `Pose`; `GcRider.controller`), Juniper in the Jetstream's cockpit; seven racers,
+one of each per race; their lines in `gc_lines.json`. Status, decisions and "For Dan to check (Round 22)" in `TODO.md`.** Next: Dan plays beta4.
+**QF36 (2026-11-25): 1.1.0-beta3 (build 2005, `game-2005`) PUBLISHED - the Grand Circuit's racing music: `python Tools/Music/make_gc_loops.py`
+(ShiftStorm's loop finder) -> `Unity/Assets/Audio/Music/<name>_intro.ogg` + `_loop.ogg` (Git LFS; the bank takes *.ogg); `MusicSystem.Play`
+plays a track with a `_loop` clip as intro + a sample-accurately scheduled loop body; `GcTrack.Music` / `MenuMusic` / `Song`; the song starts on
+the first light; `-gcmusictest`. Muted check runs pause the listener (`DemoBoot`): the Grand Circuit's runs unpause it at volume 0.**
 **Round 21 (2026-11-25): 1.1.0-beta2 (build 2004, `game-2004`) - Grand Circuit Stage 2: five more tracks (Venus Gardens, Mars Canyon,
 Europa Under-Ice, Asteroid Foundry, the Mothership), one of each racer per race, the foundry's presses, the AI tuned against a human-like
-driver. Status, decisions and "For Dan to check (Round 21)" in `TODO.md`.** Next: Round 22 (more racers on Dan's ShiftStorm jets).
+driver. Status, decisions and "For Dan to check (Round 21)" in `TODO.md`.** Then QF36 + Round 22 (above).
 **QF35 (2026-11-25): 1.0.0-rc9 (build 2003, `game-2003`) PUBLISHED - the Voice's one line in the chamber (FIN_13_V1, timed in
 `FinaleDirectorQF31.RisenTogether`).** Iteration tools: `BuildScenesFromCommandLine -onlyscenes mars,finale` (only those scenes + the
 player, after a full build of the same version), `Run-ImageGate.ps1 -GameDir <copy of a build>` (gate one release while the next builds).

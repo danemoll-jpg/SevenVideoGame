@@ -14,7 +14,15 @@ namespace Seven
         public static readonly GcStats Seven = new GcStats { Racer = "7", Vehicle = "her hover bike", Top = 50f, Accel = 15f, Handling = 1.0f, Weight = 1.0f, Grip = 1.0f };
         public static readonly GcStats Duchess = new GcStats { Racer = "Duchess", Vehicle = "her racer #8", Top = 51.5f, Accel = 17f, Handling = 0.9f, Weight = 0.7f, Grip = 0.82f };
         public static readonly GcStats Tunneler = new GcStats { Racer = "Tunneler", Vehicle = "his drill rig", Top = 52f, Accel = 11f, Handling = 0.85f, Weight = 1.7f, Grip = 1.1f };
-        public static readonly GcStats[] All = { Seven, Duchess, Tunneler };
+        // Round 22: the new racers on Dan's ShiftStorm jets - Nela, Viper and the Machinist astride the Scrambler jet, Juniper in the
+        // Jetstream's cockpit. Nela light and quick to turn, Viper aggressive, the Machinist heavy (wins every bump, slow off the line),
+        // Juniper the fastest at the top but floaty (like Duchess, a cat in a cockpit).
+        public static readonly GcStats Nela = new GcStats { Racer = "Nela", Vehicle = "the Scrambler jet", Top = 51.5f, Accel = 16f, Handling = 1.05f, Weight = 0.85f, Grip = 1.05f };
+        public static readonly GcStats Viper = new GcStats { Racer = "Viper", Vehicle = "the Scrambler jet", Top = 52f, Accel = 14f, Handling = 0.92f, Weight = 1.25f, Grip = 0.95f };
+        public static readonly GcStats Machinist = new GcStats { Racer = "Machinist", Vehicle = "the Scrambler jet, built up for him", Top = 52.5f, Accel = 10.5f, Handling = 0.8f, Weight = 2.0f, Grip = 1.15f };
+        public static readonly GcStats Juniper = new GcStats { Racer = "Juniper", Vehicle = "the Jetstream jet", Top = 52.5f, Accel = 15.5f, Handling = 0.88f, Weight = 0.75f, Grip = 0.85f };
+        public static readonly GcStats[] All = { Seven, Duchess, Tunneler, Nela, Viper, Machinist, Juniper };
+        public static int IndexOf(string racer) { int i = System.Array.FindIndex(All, s => s.Racer == racer); return i < 0 ? 0 : i; }
         public static GcStats Of(int i) => All[Mathf.Clamp(i, 0, All.Length - 1)];
     }
 

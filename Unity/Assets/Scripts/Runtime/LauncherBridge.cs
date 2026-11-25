@@ -19,9 +19,9 @@ namespace Seven
     public sealed class LauncherBridge : MonoBehaviour
     {
         /// <summary>Release version of this build: 0.&lt;round&gt;.&lt;fix&gt;. Raise it every round before the final build.</summary>
-        public const string Version = "1.1.0-beta3";
+        public const string Version = "1.1.0-beta4";
         /// <summary>Release build number: round * 100 + fix (0.8.0 = 800). Must rise with every published release.</summary>
-        public const int Build = 2005;   // QF36: the Grand Circuit racing music (Round 21 = 2004)
+        public const int Build = 2006;   // Round 22: the ShiftStorm jets + four new racers (QF36 = 2005)
 
         const string ReadyArg = "-sevenLauncherReady", NonceArg = "-sevenLauncherNonce";
 

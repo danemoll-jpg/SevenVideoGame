@@ -42,6 +42,40 @@ namespace Seven
                     }
                     break;
                 }
+                case 3: case 4: case 5:
+                {
+                    // Round 22: Nela, Viper, the Machinist astride the Scrambler jet - the bike sized to its rider (7's bike reach x the
+                    // rider's height against hers), the rider in the same riding pose as 7 (GcSevenRider: hips on the saddle, palms on
+                    // the grips, feet on the wing roots)
+                    var tpl = racer == 3 ? g.NelaTpl : racer == 4 ? g.ViperTpl : g.MachinistTpl;
+                    float h = racer < g.RiderHeight.Length && g.RiderHeight[racer] > 0.5f ? g.RiderHeight[racer] : 1.75f, k = h / SevenHeight;
+                    var bike = Clone(g.ScramblerTpl, "Scrambler"); if (bike != null) bike.transform.localScale = Vector3.one * ScramblerFit * k;
+                    var rider = Clone(tpl, GcStats.Of(racer).Racer);
+                    if (bike != null && rider != null)
+                    {
+                        var an = rider.GetComponentInChildren<Animator>();
+                        if (an != null)
+                        {
+                            var rd = an.gameObject.AddComponent<GcSevenRider>(); rd.K = k; rd.Who = GcStats.Of(racer).Racer; rd.KneeWidth = 0.24f; rd.Tuck = 18f; rd.Pose = "sitting_idle";   // upright on the saddle, leaning in a little (7's racing tuck curled the Machinist's long spine out of sight)
+                            rd.Seat = Deep(bike.transform, "Seat"); rd.GripL = Deep(bike.transform, "GripL"); rd.GripR = Deep(bike.transform, "GripR"); rd.FootL = Deep(bike.transform, "FootL"); rd.FootR = Deep(bike.transform, "FootR");
+                            rd.Root = rider.transform;
+                        }
+                    }
+                    break;
+                }
+                case 6:
+                {
+                    // Round 22: Juniper in the Jetstream's open cockpit, crouched like Duchess in her bed (the cat ride pose)
+                    var jet = Clone(g.JetTpl, "Jetstream");
+                    var j = Clone(g.JuniperTpl, "Juniper");
+                    if (jet != null && j != null)
+                    {
+                        var seat = Deep(jet.transform, "CatSeat");
+                        if (seat != null) { j.transform.SetParent(seat, false); j.transform.localPosition = Vector3.zero; j.transform.localRotation = Quaternion.identity; }
+                        j.AddComponent<GcCatRider>();
+                    }
+                    break;
+                }
                 default:
                 {
                     var rig = Clone(g.RigTpl, "DrillRig");
@@ -60,6 +94,10 @@ namespace Seven
             }
             return root;
         }
+        /// <summary>Round 22: 7's standing height (the riders' sizes are taken against it) and the Scrambler jet's scale for a 7-sized rider
+        /// (the model's own size: a 7-sized rider reaches its grips 0.66 m from the hips sitting a little taller than on her bike;
+        /// 1.2x, 7's bike's reach, made every rider look small, flat on an oversized tank).</summary>
+        public const float SevenHeight = 1.75f, ScramblerFit = 1.0f;
         public static Transform Deep(Transform t, string name) { foreach (var c in t.GetComponentsInChildren<Transform>(true)) if (c.name == name) return c; return null; }
     }
 }

@@ -20,6 +20,10 @@ namespace Seven
         public const string SceneName = "GrandCircuit";
         // ---- set by the builder
         public GameObject BikeTpl, RacerTpl, RigTpl, SevenTpl, DuchessTpl;
+        /// <summary>Round 22: Dan's ShiftStorm jets (monochrome, glowing accents) and their riders; RiderHeight = each racer's standing
+        /// height as built (m, by racer index), which sizes the Scrambler jet to its rider and the riding pose's offsets.</summary>
+        public GameObject ScramblerTpl, JetTpl, NelaTpl, ViperTpl, MachinistTpl, JuniperTpl;
+        public float[] RiderHeight = new float[0];
         public Material Road, Under, Wall, Glow, GlowSoft, Pad, Frame, Trail, Shield, Wave, PickupMat, GhostMat; [System.NonSerialized] public Material HoverMat;
         /// <summary>Round 21: one world set + atmosphere + lowest point per track, in <see cref="GcTrack.Ids"/> order (one shown at a time).</summary>
         public GameObject[] Sets = new GameObject[0], Atmos = new GameObject[0]; public float[] Lowest = new float[0];
@@ -127,7 +131,7 @@ namespace Seven
                 float s = Track.Length - 12f - i * 7f; float x = (i % 2 == 0 ? -1f : 1f) * 2.6f;
                 var r = MakeRacer(racer, i, human);
                 r.Init(Track, s, x); r.Human = human; r.PadIndex = pad;
-                if (!human) { int ai = order.Take(i).Count(p => !p.human); r.AI = new GcAI(1000 + i * 17, AiSkill(ai, order.Count(p => !p.human))); r.AI.ShortcutChance = racer == 2 ? 0.3f : 0.55f; }
+                if (!human) { int ai = order.Take(i).Count(p => !p.human); r.AI = new GcAI(1000 + i * 17, AiSkill(ai, order.Count(p => !p.human))); r.AI.ShortcutChance = GcStats.Of(racer).Weight >= 1.6f ? 0.3f : 0.55f; }   // (the heavy ones - Tunneler, the Machinist - keep to the main line more)
                 r.Event = OnEvent; r.Snap();
                 Racers.Add(r); if (human) Humans.Add(r);
             }
@@ -137,8 +141,10 @@ namespace Seven
             Log($"GC FIELD (R21): {string.Join(", ", Racers.Select(x => x.Label + (x.Human ? " (player)" : $" (AI, skill {x.AI.Skill:0.00}, pace {x.AI.Pace:0.000})")))}{(who.Distinct().Count() != who.Count ? " - DUPLICATE RACER" : " - one of each")}");
         }
         /// <summary>Round 21 (the AI tuned against a human-like driver, TODO.md): the AI drivers' skill by their order - the first AI is
-        /// the quick one, the next a little slower (a human-like driver races them, neither lapping them nor lapped).</summary>
-        public static float AiSkill(int ai, int ais) => ais <= 1 ? 0.9f : Mathf.Lerp(0.95f, 0.8f, ai / (float)Mathf.Max(1, ais - 1));
+        /// the quick one, the next a little slower (a human-like driver races them, neither lapping them nor lapped).
+        /// Round 22: six AI in a full field - the spread narrowed (0.96 .. 0.86; Round 21's 0.95 .. 0.8 for two) so a human-like driver
+        /// lands in the middle of seven, not near the front.</summary>
+        public static float AiSkill(int ai, int ais) => ais <= 1 ? 0.9f : ais <= 2 ? Mathf.Lerp(0.95f, 0.8f, ai) : Mathf.Lerp(0.96f, 0.86f, ai / (float)(ais - 1));
 
         GcRacer MakeRacer(int racer, int slot, bool human)
         {
