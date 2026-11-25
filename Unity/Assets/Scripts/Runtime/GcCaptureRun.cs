@@ -25,8 +25,12 @@ namespace Seven
         IEnumerator Start()
         {
             C = ChapterCapture.Ensure(); GcSave.ResetTest();
+            // QF36: a muted run also PAUSES the listener (DemoBoot), which freezes every source - music timing can't be measured. The
+            // Grand Circuit runs unpause it at volume 0: still silent (the output peak is logged at the end and must stay 0)
+            if (DemoBoot.Muted) { AudioListener.volume = 0f; AudioListener.pause = false; Log("GC TEST (QF36): the listener unpaused at volume 0 (muted: nothing is heard) so the music's timing runs"); }
             Log($"GC TEST (R20): proof {GcBoot.Proof}, split {GcBoot.Split}, menu {GcBoot.MenuShots}, trial {GcBoot.Trial}, players {GcBoot.Players}; test speed {DemoBoot.TestSpeed}; tracks {GcTrack.Ids.Length}");
             yield return null;
+            if (GcBoot.MusicTest) yield return MusicRun();
             if (GcBoot.MenuShots) yield return MenuRun();
             if (GcBoot.Proof) yield return ProofRun();
             if (GcBoot.Split) yield return SplitRun();
@@ -37,6 +41,37 @@ namespace Seven
             C.Finish("GC TEST (R20) done");
         }
         void Log(string s) => GcGame.Log(s);
+
+        /// <summary>QF36: every song - the menu's and each track's - plays its intro, hands over into the loop body on the sample and the body
+        /// wraps to its start with nothing silent in between (seeks to 1.5 s before each seam, so the run takes ~1 min, not 30).</summary>
+        IEnumerator MusicRun()
+        {
+            var songs = new List<(string what, string song)> { ("the menus", GcTrack.MenuSong()) };
+            for (int i = 0; i < GcTrack.Ids.Length; i++) songs.Add((GcTrack.Ids[i], GcTrack.Song(i)));
+            int ok = 0;
+            foreach (var (what, song) in songs)
+            {
+                MusicSystem.Play(song, 0.3f); MusicSystem.ResetCounters();
+                yield return Wait(1.2f);
+                bool looped = MusicSystem.IsLooped, introOn = MusicSystem.IntroTime >= 0f, now = MusicSystem.Current == song;
+                bool seek1 = MusicSystem.SeekIntroEnd(1.5f);
+                yield return Wait(3f);
+                bool handed = MusicSystem.IntroHandovers >= 1 && MusicSystem.BodyTime > 0.5f;
+                bool seek2 = MusicSystem.SeekBodyEnd(1.5f);
+                yield return Wait(3f);
+                bool wrapped = MusicSystem.LoopWraps >= 1 && MusicSystem.BodyTime > 0.5f && MusicSystem.BodyTime < 5f;
+                bool pass = now && looped && introOn && seek1 && handed && seek2 && wrapped && MusicSystem.GapFrames == 0 && MusicSystem.LateStarts == 0 && MusicSystem.OverlapSeconds < 0.12f && MusicSystem.MaxSongsOutsideFades <= 1;
+                if (pass) ok++;
+                Log($"GC MUSIC TEST (QF36) {what}: '{song}' playing {now}, intro + loop {looped}, intro -> loop hand-over {handed}, loop wrap {wrapped}, frames with no song {MusicSystem.GapFrames}, late body starts {MusicSystem.LateStarts}, intro + loop together {MusicSystem.OverlapSeconds * 1000f:0} ms (a seek into a compressed stream lands up to ~0.1 s off), songs at once {MusicSystem.MaxSongsOutsideFades} - {(pass ? "PASS" : "FAIL")}");
+            }
+            // the hand-over as it really happens (no seek): Europa's song has a 3.1 s intro
+            MusicSystem.Play(GcTrack.Song(GcTrack.IndexOf("europa")), 0.3f); MusicSystem.ResetCounters();
+            yield return Wait(5f);
+            bool nat = MusicSystem.IntroHandovers >= 1 && MusicSystem.BodyTime > 1f && MusicSystem.GapFrames == 0 && MusicSystem.LateStarts == 0 && MusicSystem.OverlapSeconds < 0.02f;
+            Log($"GC MUSIC TEST (QF36) natural hand-over (Europa, no seek): hand-overs {MusicSystem.IntroHandovers}, the body at {MusicSystem.BodyTime:0.00} s after 5 s, frames with no song {MusicSystem.GapFrames}, late body starts {MusicSystem.LateStarts}, intro + loop heard together {MusicSystem.OverlapSeconds * 1000f:0} ms - {(nat ? "PASS" : "FAIL")}");
+            Log($"GC MUSIC TEST (QF36): {ok} / {songs.Count} songs pass (seeked to each seam), the natural hand-over {(nat ? "passes" : "FAILS")}");
+            MusicSystem.Stop(0.5f); yield return Wait(0.6f);
+        }
 
         // ------------------------------------------------------------------------------------------ captures
         IEnumerator Shot(string name, Transform subject, string what, params Camera[] cams)

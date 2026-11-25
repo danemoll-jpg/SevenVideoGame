@@ -12,7 +12,7 @@ namespace Seven
     /// Test runs keep their own save keys (never the player's).</summary>
     public static class GcBoot
     {
-        static bool _read; static bool _unlocked, _proof, _split, _menu, _trial, _side, _quick, _players; static float _speed = 1f; static string _only;
+        static bool _read; static bool _unlocked, _proof, _split, _menu, _trial, _side, _quick, _players, _music; static float _speed = 1f; static string _only;
         static void Read()
         {
             if (_read) return; _read = true;
@@ -27,6 +27,7 @@ namespace Seven
                 if (a[i] == "-gcside") _side = true;
                 if (a[i] == "-gcquick") _quick = true;
                 if (a[i] == "-gcplayers") _players = true;
+                if (a[i] == "-gcmusictest") _music = true;
                 if (a[i] == "-gconly" && i + 1 < a.Length) _only = a[i + 1];
                 if (a[i] == "-testspeed" && i + 1 < a.Length) float.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _speed);
             }
@@ -42,7 +43,9 @@ namespace Seven
         public static bool Players { get { Read(); return _players && DemoBoot.CaptureDir != null; } }
         /// <summary>Round 21: -gconly venus,mars = the proof on those tracks only (iteration).</summary>
         public static string[] Only { get { Read(); return string.IsNullOrEmpty(_only) ? null : _only.Split(','); } }
-        public static bool Any => Proof || Split || MenuShots || Trial || Players;
+        /// <summary>QF36: -gcmusictest = every Grand Circuit song: its intro, the hand-over into the loop body and the body's wrap (seeks near each seam).</summary>
+        public static bool MusicTest { get { Read(); return _music && DemoBoot.CaptureDir != null; } }
+        public static bool Any => Proof || Split || MenuShots || Trial || Players || MusicTest;
         public static float Speed => DemoBoot.TestSpeed;
     }
 

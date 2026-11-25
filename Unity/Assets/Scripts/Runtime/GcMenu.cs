@@ -41,7 +41,7 @@ namespace Seven
             GcSave.Load(); Pick[0] = GcSave.LastRacer; _showTrack = GcTrack.Ids[Mathf.Clamp(GcSave.LastTrack, 0, GcTrack.Ids.Length - 1)];
             if (Game.Track == null || Game.Track.Id != _showTrack) Game.BuildTrack(_showTrack);
             MenuCam().gameObject.SetActive(true);
-            MusicSystem.Play("cattalus_race", 1.5f);
+            MusicSystem.Play(GcTrack.MenuSong(), 1.5f);   // QF36: the Grand Circuit menu song on every page
             Show(Page.Title);
         }
 

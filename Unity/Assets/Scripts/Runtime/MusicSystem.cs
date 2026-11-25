@@ -13,6 +13,7 @@ namespace Seven
     {
         static MusicSystem _i;
         AudioSource _a, _b;          // _a = current
+        AudioSource _aT, _bT;        // QF36: each slot's loop body (an intro + loop track: _a plays the intro once, _aT the body, scheduled)
         float _aW, _bW;              // fade weights
         float _duck = 1f;
         public static string Current { get; private set; }
@@ -28,7 +29,7 @@ namespace Seven
                 var go = new GameObject("MusicSystem");
                 DontDestroyOnLoad(go);
                 _i = go.AddComponent<MusicSystem>();
-                _i._a = _i.Src("Music_A"); _i._b = _i.Src("Music_B");
+                _i._a = _i.Src("Music_A"); _i._b = _i.Src("Music_B"); _i._aT = _i.Src("Music_A_loop"); _i._bT = _i.Src("Music_B_loop");
                 return _i;
             }
         }
@@ -103,6 +104,30 @@ namespace Seven
         }
         public static void Report() => ReportScene();
 
+        // ---- QF36: the check numbers (GC MUSIC lines) and a test seek near each seam -------------------------------------
+        string _loopTrack; int _lastBodySample; float _playAt; bool _introStarted;
+        public static int LoopWraps, IntroHandovers, GapFrames, MaxSongsOutsideFades, OverlapFrames, LateStarts; public static float OverlapSeconds; public static bool IntroPlaying;
+        public static void ResetCounters() { LoopWraps = IntroHandovers = GapFrames = MaxSongsOutsideFades = OverlapFrames = LateStarts = 0; OverlapSeconds = 0f; }
+        public static bool IsLooped => _i != null && _i._aT.clip != null;
+        public static float BodyTime => _i != null && _i._aT.clip != null ? _i._aT.time : -1f;
+        public static float IntroTime => _i != null && _i._a.clip != null && _i._a.isPlaying ? _i._a.time : -1f;
+        /// <summary>Test only: jump the intro to <paramref name="before"/> s before its end (the body re-scheduled on the same sample).</summary>
+        public static bool SeekIntroEnd(float before)
+        {
+            var m = _i; if (m == null || m._aT.clip == null || m._a.clip == null || !m._a.isPlaying) return false;
+            int at = Mathf.Max(0, m._a.clip.samples - Mathf.RoundToInt(before * m._a.clip.frequency));
+            m._a.timeSamples = at;
+            m._aT.Stop(); m._aT.timeSamples = 0; m._aT.PlayScheduled(AudioSettings.dspTime + (m._a.clip.samples - at) / (double)m._a.clip.frequency);
+            return true;
+        }
+        /// <summary>Test only: jump the loop body to <paramref name="before"/> s before its end (it then wraps to its start).</summary>
+        public static bool SeekBodyEnd(float before)
+        {
+            var m = _i; if (m == null || m._aT.clip == null || !m._aT.isPlaying) return false;
+            m._aT.timeSamples = Mathf.Max(0, m._aT.clip.samples - Mathf.RoundToInt(before * m._aT.clip.frequency)); m._lastBodySample = m._aT.timeSamples;
+            return true;
+        }
+
         AudioSource Src(string n)
         {
             var go = new GameObject(n); go.transform.SetParent(transform, false);
@@ -116,15 +141,28 @@ namespace Seven
         {
             var m = I;
             if (_suspended != null) { if (track == _suspended) { Resume(fade); return; } _suspended = null; }
-            if (Current == track && (track == null || m._a.isPlaying)) return;
-            var clip = track != null && AudioKit.Music != null ? AudioKit.Music.Get(track) : null;
-            AudioKit.Log?.Invoke($"music -> {track ?? "(none)"}{(track != null && clip == null ? " (missing file: silence)" : "")}");
-            Current = clip != null ? track : null;
+            if (Current == track && (track == null || m._a.isPlaying || m._aT.isPlaying)) return;
+            // QF36: a track made of an intro + a seamless loop body (<name>_intro / <name>_loop, Tools/Music/make_gc_loops.py)
+            var body = track != null && AudioKit.Music != null ? AudioKit.Music.Get(track + "_loop") : null;
+            var clip = body != null ? AudioKit.Music.Get(track + "_intro") : track != null && AudioKit.Music != null ? AudioKit.Music.Get(track) : null;
+            bool has = clip != null || body != null;
+            AudioKit.Log?.Invoke($"music -> {track ?? "(none)"}{(track != null && !has ? " (missing file: silence)" : "")}{(body != null ? $" (intro {(clip != null ? clip.length : 0f):0.0} s, then the loop body {body.length:0.0} s)" : "")}");
+            Current = has ? track : null;
             m.StopAllCoroutines();
             // current becomes the fading-out one
-            (m._a, m._b) = (m._b, m._a); (m._aW, m._bW) = (m._bW, m._aW);
-            if (clip != null) { m._a.clip = clip; m._a.time = 0f; m._a.Play(); m._aW = 0f; }
-            m.StartCoroutine(m.CrossFade(clip != null, fade));
+            (m._a, m._b) = (m._b, m._a); (m._aW, m._bW) = (m._bW, m._aW); (m._aT, m._bT) = (m._bT, m._aT);
+            m._aT.Stop(); m._aT.clip = null;
+            if (body != null)
+            {
+                double t0 = AudioSettings.dspTime + 0.06;
+                m._aT.clip = body; m._aT.loop = true; m._aT.timeSamples = 0;
+                if (clip != null) { m._a.clip = clip; m._a.loop = false; m._a.timeSamples = 0; m._a.PlayScheduled(t0); m._aT.PlayScheduled(t0 + clip.samples / (double)clip.frequency); }
+                else { m._a.clip = null; m._aT.PlayScheduled(t0); }
+                if (clip != null) clip.LoadAudioData(); body.LoadAudioData();
+                m._aW = 0f; m._loopTrack = track; m._lastBodySample = 0; m._playAt = Time.unscaledTime; m._introStarted = clip == null; IntroPlaying = false;
+            }
+            else if (clip != null) { m._a.clip = clip; m._a.loop = true; m._a.time = 0f; m._a.Play(); m._aW = 0f; m._loopTrack = null; m._playAt = Time.unscaledTime; }
+            m.StartCoroutine(m.CrossFade(has, fade));
         }
         public static void Stop(float fade = 2.5f) => Play(null, fade);
 
@@ -146,6 +184,8 @@ namespace Seven
         {
             if (_suspended == null) return;
             var m = I; var track = _suspended; _suspended = null;
+            var lb = AudioKit.Music != null ? AudioKit.Music.Get(track + "_loop") : null;
+            if (lb != null) { m.StopAllCoroutines(); m._b.Stop(); m._bT.Stop(); m._bW = 0f; m._a.Stop(); m._aT.clip = lb; m._aT.loop = true; m._aT.UnPause(); if (!m._aT.isPlaying) m._aT.Play(); Current = track; m.StartCoroutine(m.FadeA(1f, fade, false)); return; }
             var clip = AudioKit.Music != null ? AudioKit.Music.Get(track) : null;
             if (clip == null) return;
             m.StopAllCoroutines();
@@ -160,7 +200,7 @@ namespace Seven
             float from = _aW;
             for (float t = 0f; t < 1f; t += Time.unscaledDeltaTime / Mathf.Max(0.01f, seconds)) { _aW = Mathf.Lerp(from, to, t); _bW = Mathf.MoveTowards(_bW, 0f, Time.unscaledDeltaTime); yield return null; }
             _aW = to;
-            if (stopAtEnd) { _a.Pause(); }
+            if (stopAtEnd) { _a.Pause(); _aT.Pause(); }
         }
 
         IEnumerator CrossFade(bool fadeIn, float seconds)
@@ -173,8 +213,8 @@ namespace Seven
                 yield return null;
             }
             _aW = fadeIn ? 1f : 0f; _bW = 0f;
-            _b.Stop();
-            if (!fadeIn) _a.Stop();
+            _b.Stop(); _bT.Stop();
+            if (!fadeIn) { _a.Stop(); _aT.Stop(); }
         }
 
         void Update()
@@ -196,7 +236,21 @@ namespace Seven
             bool duckNow = DialoguePlayer.AnyBusy || Purr.Playing;   // QF23 (11): the music ducks under his purr too
             _duck = Mathf.MoveTowards(_duck, duckNow ? DuckLevel : 1f, Time.unscaledDeltaTime * (duckNow ? 2.5f : 0.8f));
             float g = AudioKit.Gain(AudioKit.Bus.Music) * _duck * Mathf.Clamp01(Level);
-            _a.volume = _aW * g; _b.volume = _bW * g;
+            _a.volume = _aW * g; _b.volume = _bW * g; _aT.volume = _a.volume; _bT.volume = _b.volume;
+            // QF36: the loop's bookkeeping (wraps of the body, frames with a track set but nothing sounding, songs heard at once)
+            if (_aT.clip != null)
+            {
+                if (_aT.isPlaying) { int ts = _aT.timeSamples; if (ts + _aT.clip.frequency < _lastBodySample) LoopWraps++; _lastBodySample = ts; }
+                if (_a.isPlaying && _a.clip != null && !_a.loop && _a.timeSamples > 0) { IntroPlaying = true; _introStarted = true; }
+                else if (IntroPlaying && !_a.isPlaying) { IntroPlaying = false; if (_aT.isPlaying) IntroHandovers++; }
+                // a safety net: the body's scheduled start missed (never expected; logged) - it starts at once rather than leave silence
+                if (_suspended == null && Current != null && Current == _loopTrack && _introStarted && !_a.isPlaying && !_aT.isPlaying && !AudioListener.pause && Time.unscaledTime > _playAt + 0.5f)
+                { _aT.Play(); LateStarts++; AudioKit.Log?.Invoke($"music (QF36): the loop body of '{Current}' missed its scheduled start - started now"); }
+            }
+            if (Current != null && !_a.isPlaying && !_aT.isPlaying && !AudioListener.pause && Time.unscaledTime > _playAt + 0.2f) GapFrames++;   // (not in the scheduled start's own first moment)
+            int heard = (_aW > 0.01f ? 1 : 0) + (_bW > 0.01f ? 1 : 0);
+            if (_aW > 0.99f || _bW < 0.01f) MaxSongsOutsideFades = Mathf.Max(MaxSongsOutsideFades, heard);
+            if (_a.isPlaying && _aT.isPlaying && _a.clip != null && _a.timeSamples > 0 && _aT.timeSamples > 0) { OverlapFrames++; OverlapSeconds += Time.unscaledDeltaTime; }
         }
     }
 }

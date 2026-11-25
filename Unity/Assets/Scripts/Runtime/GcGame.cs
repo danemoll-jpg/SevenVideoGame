@@ -184,11 +184,12 @@ namespace Seven
             MakeViews(Humans.Count);
             if (trial) { _ghost = GcGhost.Load(this, NextTrack); _rec = new GcGhostRecorder(); }
             Laps = LapsOverride > 0 ? LapsOverride : trial ? GcSave.TrialLaps : 3;
-            MusicSystem.Play(GcTrack.Music[GcTrack.IndexOf(NextTrack)], 1.2f);   // Round 21: each world's own track
             foreach (var r in Racers) r.In = default;
             Moment?.Invoke("grid");
             // the lights: three low tones, one high: GO
-            for (int i = 3; i >= 1; i--) { Countdown = i; AudioKit.Play("race_start_lights", null, 0.8f); yield return new WaitForSeconds(0.9f); }
+            // QF36: the track's own song starts with the first light (a short fade from the menu song), loops for the race
+            string song = GcTrack.Song(GcTrack.IndexOf(NextTrack)); float songT0 = Time.unscaledTime; MusicSystem.ResetCounters();
+            for (int i = 3; i >= 1; i--) { Countdown = i; if (i == 3) MusicSystem.Play(song, 1.0f); AudioKit.Play("race_start_lights", null, 0.8f); yield return new WaitForSeconds(0.9f); }
             Countdown = 0; Running = true; RaceT0 = Time.time; foreach (var r in Racers) r.LapStart = Time.time;
             AudioKit.Play("bike_liftoff", null, 0.7f); Moment?.Invoke("go"); GcVoice.Start(this); _lastReal = 0f; FrameMs.Clear();
             Log($"GC RACE (R20): {(trial ? "time trial" : "single race")} on {Track.Name}, {Laps} laps, {Racers.Count} racers ({string.Join(", ", Racers.Select(r => r.Label + (r.Human ? " [P" + (Humans.IndexOf(r) + 1) + "]" : "")))}), {(Humans.Count > 1 ? (SideBySide ? "split side by side" : "split top / bottom") : "full screen")}");
@@ -238,6 +239,9 @@ namespace Seven
             if (trial && Humans.Count > 0 && _rec != null) { if (GcSave.IsBestTrial(Track.Id, Humans[0].FinishTime)) _rec.Save(Track.Id, Humans[0].Stats.Racer); }
             GcSave.Save();
             Log("GC RESULT (R20): " + string.Join(" | ", standing.Select(r => $"{r.Place}. {r.Label}{(r.Human ? " (P" + (Humans.IndexOf(r) + 1) + ")" : "")} {Fmt(r.FinishTime)}{(r.Finished ? "" : " (est.)")} best lap {Fmt(r.BestLap)}")));
+            Log($"GC MUSIC (QF36): {Track.Name} -> '{song}' (from the first light; {(MusicSystem.IsLooped ? "intro + seamless loop" : "plain loop")}), playing at the finish '{MusicSystem.Current ?? "(none)"}' {(MusicSystem.Current == song ? "OK" : "WRONG")}, " +
+                $"intro -> loop hand-overs {MusicSystem.IntroHandovers}, loop wraps {MusicSystem.LoopWraps}, frames with no song sounding {MusicSystem.GapFrames} (must be 0), late body starts {MusicSystem.LateStarts} (must be 0), intro and loop heard together {MusicSystem.OverlapSeconds * 1000f:0} ms (must be 0), songs heard at once outside a cross-fade {MusicSystem.MaxSongsOutsideFades} (must be 1), {Time.unscaledTime - songT0:0} s");
+            MusicSystem.Play(GcTrack.MenuSong(), 3f);   // QF36: the results fade into the menu song
             Moment?.Invoke("results");
             Results = standing;
         }

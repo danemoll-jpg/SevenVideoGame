@@ -1,5 +1,33 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF36: the Grand Circuit's racing music (Dan, 2026-11-25) — to do
+Dan's racing tracks are IN (`Unity/Assets/Audio/Music/`; `Docs/MUSIC.md` "Grand Circuit"): `gc_menu` (every Grand Circuit page: the
+menu, racer / track select, results), `gc_cattalus` (Cattalus Grand Circuit (Unlimited)), `gc_moon` (Lunar Loop), `gc_venus` (Venus
+Gardens), `gc_mars` (Mars Canyon), `gc_europa` (Europa Under-Ice), `gc_mothership` (the Mothership); **the Asteroid Foundry keeps
+`asteroid_city`**. Each race's song starts with the starting lights (a short fade from the menu song), loops seamlessly for the race,
+fades into `gc_menu` on the results. Time trial uses the track's song. Check: every track plays its own song (log it), no gaps,
+one music source at a time. Publish **1.1.0-beta3** (every earlier release untouched).
+
+## QF36 — decisions made (Code, 2026-11-25; Dan said never stop to ask)
+- **Seamless loops, not the raw songs:** every Suno song ends (a fade / a closing hit), so looping the MP3 as it is would gap or jump
+  once a race outlasts the song. `Tools/Music/make_gc_loops.py` (ShiftStorm's proven `make_loops.py` copied, the search and the seam
+  checks unchanged) finds each song's tempo and bars and a loop on bar lines before its ending, and writes `<name>_intro.ogg` (played
+  once, from the first light) + `<name>_loop.ogg` (the body, its last 100 ms crossfaded into the bar before the loop start) to
+  `Unity/Assets/Audio/Music/`; seams checked on the encoded files (`Tools/Music/gc_loops.json`: every seam's sample step below the song's
+  own p99.9, no spectral jump). Loops: menu 8.8-185.5 s, Cattalus 22.7-195.9, Moon 14.4-202.5, Venus 5.6-218.8, Mars 45.4-208.6,
+  Europa 3.1-224.8, the asteroid 14.9-186.3, the Mothership 8.9-238.9 (2:43-3:50 bodies: no race repeats much).
+- **MusicSystem plays them sample-accurately:** a track with a `<name>_loop` clip in the bank plays its intro once and the body on a
+  second source scheduled on the intro's last sample (`AudioSource.PlayScheduled`), looping; the cross-fades, ducking and the guard work
+  as before (each slot carries its body). Story tracks (plain MP3s) are unchanged. The bank now takes `*.ogg` too (Git LFS).
+- **The Asteroid Foundry keeps `asteroid_city`:** its loop pair is `gc_asteroid_intro / _loop`, cut from `asteroid_city.mp3` itself (the
+  story's MP3 is untouched and still plays in the chapter).
+- **When:** the menu song on opening the Grand Circuit and every page; the track's song on the FIRST light (1 s fade from the menu song;
+  before, it started on the grid before the lights); the results fade back to the menu song (3 s). Time trials use the track's song.
+  A song missing from the bank falls back to the story's track (`GcTrack.Song`), never silence.
+- **Checks:** every race logs `GC MUSIC (QF36)` (its song, intro -> loop hand-overs, loop wraps, frames with no song sounding, intro + loop
+  heard together, songs heard at once outside a cross-fade); `-gcmusictest` plays each of the 8 songs, seeks to 1.5 s before the intro's end
+  and before the body's end and checks the hand-over and the wrap (`GC MUSIC TEST (QF36)`, ~1 min instead of 30).
+
 ## Quick fix QF35: the Voice's line in the chamber (QF34 item 9, not done yet) (Dan, 2026-11-25) — done, release 1.0.0-rc9 (build 2003, `game-2003`) PUBLISHED
 Do QF34 item 9 now: as the light column falls on 7 and Panther (FIN_13), she lifts her head toward it and the Voice (RestVoice, slow and
 warm, the large soft space round it) says **FIN_13_V1:** "Seven. Your watch is over. You kept their story through every age, and now it
@@ -45,9 +73,9 @@ each with at least one loop or corkscrew, a big jump, a shortcut and a set-piece
    the three. No two racers in a race are the same character. Apply to Round 20's two tracks too; update the proofs (no "two of
    each vehicle" runs; test every racer as player and as AI).
 Each track: the AI completes 3 laps on every vehicle, 0 falls-through / falls off; the split screen holds 60 fps; captures of each
-set-piece through the image gate; best times / ghosts per track; the track-select page shows all seven. Music: each world's own
-track (Venus `venus_gardens`, Mars `mars_kingdoms`, Europa `europa_underwater`, the asteroid `asteroid_city`, the mothership
-`biaveh_mothership`) unless Dan adds racing versions. Also tune the AI against a human-like driver (Round 20's note: untuned).
+set-piece through the image gate; best times / ghosts per track; the track-select page shows all seven. Music (Dan's racing tracks, IN 2026-11-25): `gc_menu` (the Grand
+Circuit menus / racer select), `gc_cattalus`, `gc_moon` (Lunar Loop), `gc_venus`, `gc_mars`, `gc_europa`, `gc_mothership`; **the
+Asteroid Foundry uses `asteroid_city`** (no racing version). Switch Round 20's two tracks to their new songs too. Also tune the AI against a human-like driver (Round 20's note: untuned).
 Never stop to ask; note decisions in TODO.md. Publish 1.1.0-beta2; status + "For Dan to check (Round 21)"; commit and push.
 
 ## Round 21 — decisions made (Code, 2026-11-25; Dan said never stop to ask)
@@ -129,7 +157,7 @@ Never stop to ask; note decisions in TODO.md. Publish 1.1.0-beta2; status + "For
 4. **Duchess is a little slower at the top** (51.5 instead of 53) - she won nearly every Stage 1 race.
 5. **Music** per world is the story's own track; say if you want racing versions (Suno prompts on request).
 
-## Round 22: "Grand Circuit" Stage 3: more racers on Dan's ShiftStorm jets (Dan, 2026-11-25) — to do after Round 21 (Dan to confirm the roster)
+## Round 22: "Grand Circuit" Stage 3: more racers on Dan's ShiftStorm jets (Dan, 2026-11-25) — to do after QF36 (Dan, 2026-11-25: go ahead with the proposed roster)
 Dan's ShiftStorm vehicles (his own models, copied into `Art/Source/shiftstorm/<Design>/Plane.fbx` + `Plane_basecolor.jpg`; source
 `C:\Users\danmo\ShiftStorm\Assets\Resources\Vehicles\`; see ShiftStorm's CLAUDE.md "Designs" for its import notes: `yaw`, `cut`,
 `astride`, `riderScale`). Dan: use "the jet version" of the bike:
@@ -142,7 +170,7 @@ Dan's ShiftStorm vehicles (his own models, copied into `Art/Source/shiftstorm/<D
 Converted to **monochrome** like everything else (grayscale base colour, glowing accents), each racer's stats and ride pose (the
 astride pose: hips on the saddle, hands on the grips; the cat seated), their existing voices for a few cheers. The field grows to
 the full roster with still **one of each racer** per race; racer select shows them all. Prove each: AI 3 laps on every track,
-0 falls; ride-pose checks; captures. Publish 1.1.0-beta3.
+0 falls; ride-pose checks; captures. Publish 1.1.0-beta4.
 
 ## Quick fix QF34b: FIN_10's hovering hand (Dan, 2026-11-25: "Yes, fix it") — done, release 1.0.0-rc8 (build 2002, `game-2002`)
 **Why rc7's hand still hovered (measured, not guessed - `FIN_10 RIGHT HAND TRACE` once a second in a check run):** two causes.

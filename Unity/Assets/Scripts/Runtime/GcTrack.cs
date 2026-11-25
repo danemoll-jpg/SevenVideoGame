@@ -472,7 +472,18 @@ namespace Seven
         public static readonly string[] Ids = { "cattalus", "lunar", "venus", "mars", "europa", "asteroid", "biaveh" };
         public static readonly string[] Names = { "Cattalus Grand Circuit (Unlimited)", "Lunar Loop", "Venus Gardens", "Mars Canyon", "Europa Under-Ice", "Asteroid Foundry", "The Mothership" };
         /// <summary>Round 21: each world's own music (Dan may add racing versions later).</summary>
-        public static readonly string[] Music = { "cattalus_race", "cattalus_race", "venus_gardens", "mars_kingdoms", "europa_underwater", "asteroid_city", "biaveh_mothership" };
+        /// <summary>QF36: Dan's racing songs (intro + seamless loop, Tools/Music/make_gc_loops.py); the Asteroid Foundry keeps the story's
+        /// asteroid_city (its loop is gc_asteroid). A song not in the bank falls back to <see cref="StoryMusic"/>.</summary>
+        public static readonly string[] Music = { "gc_cattalus", "gc_moon", "gc_venus", "gc_mars", "gc_europa", "gc_asteroid", "gc_mothership" };
+        public static readonly string[] StoryMusic = { "cattalus_race", "cattalus_race", "venus_gardens", "mars_kingdoms", "europa_underwater", "asteroid_city", "biaveh_mothership" };
+        public const string MenuMusic = "gc_menu";
+        /// <summary>The song to play: the racing one if it is in the bank, else the story's (a missing file is never silence).</summary>
+        public static string Song(int i)
+        {
+            i = Mathf.Clamp(i, 0, Music.Length - 1); var b = AudioKit.Music;
+            return b != null && (b.Get(Music[i] + "_loop") != null || b.Get(Music[i]) != null) ? Music[i] : StoryMusic[i];
+        }
+        public static string MenuSong() { var b = AudioKit.Music; return b != null && (b.Get(MenuMusic + "_loop") != null || b.Get(MenuMusic) != null) ? MenuMusic : "cattalus_race"; }
         /// <summary>Round 21: what each track's set-piece is (the capture names it).</summary>
         public static readonly string[] SetPieces = { "", "", "the spiral round the giant vine trunk", "the shared crossing over the ravine", "the glass tube under the ice, the Cetaceans outside", "the presses and crushers", "the suspended bridge inside the egg" };
         public static int IndexOf(string id) { int i = System.Array.IndexOf(Ids, id); return i < 0 ? 0 : i; }

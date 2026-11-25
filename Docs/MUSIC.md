@@ -110,3 +110,24 @@ New tracks (Dan, Suno, instrumental):
 
 **Status:** all four made by Dan in Suno and saved in `Unity/Assets/Audio/Music/` (2026-11-22), ~3:00 each: "Beneath the Moon City" = `moon_descent.mp3`, "I Was There" = `moon_witness.mp3`, "Tunneler on the Moon" = `moon_tunneler.mp3`, "Seven Ages" = `moon_transfer.mp3`. `moon_transfer` plays once: time FIN_11–FIN_13 so the fade to white lands near its end (fade it out if the scenes run shorter).
 
+
+# Grand Circuit (the racing mode) — racing versions (Dan, Suno; proposed 2026-11-25)
+
+Wipeout-style electronic racing music, one per track, each a **Suno Cover of that world's own theme** (so the melody carries) with the
+style prompt below. ~3:00, seamless loop, instrumental. Save as `Unity/Assets/Audio/Music/<file>`; missing = the world's normal theme.
+
+| File | Track | Cover of | Style prompt |
+| --- | --- | --- | --- |
+| `gc_menu.mp3` | The Grand Circuit menus / racer select | `main_theme.mp3` | sleek futuristic electronic, warm analog synth pads, steady 110 bpm groove, glassy arpeggios, subtle breakbeat, anticipation, cool and stylish, seamless loop |
+| `gc_cattalus.mp3` | Cattalus Grand Circuit (Unlimited) | `cattalus_race.mp3` | high-energy big beat electronica, 140 bpm, punchy breakbeats, funky slap synth bass, bright brass stabs, playful whistled lead, cheeky and fast, festival energy, seamless loop |
+| `gc_moon.mp3` | Lunar Loop | `moon_prison.mp3` | dark driving drum and bass, 174 bpm, rolling reese bass, cold metallic percussion, industrial machinery hits, distant choir pads, tense and relentless, seamless loop |
+| `gc_venus.mp3` | Venus Gardens | `venus_gardens.mp3` | euphoric progressive trance, 138 bpm, shimmering evolving synths, lush reverb pads, soft whispered vocal chops, driving four-on-the-floor kick, luminous and soaring, seamless loop |
+| `gc_mars.mp3` | Mars Canyon | `mars_kingdoms.mp3` | aggressive breakbeat with epic edge, 150 bpm, huge war drums layered with electronic breaks, distorted synth bass, heroic brass riffs, dusty and fierce, seamless loop |
+| `gc_europa.mp3` | Europa Under-Ice | `europa_underwater.mp3` | liquid drum and bass, 172 bpm, fluid rolling breaks, deep sub bass, airy female vocal pads, glassy bell arpeggios, whale-like synth calls, cool and flowing, seamless loop |
+| `gc_asteroid.mp3` | Asteroid Foundry | `asteroid_city.mp3` | hard industrial techno, 135 bpm, pounding kick, clanking metal percussion, mechanical rhythms, gritty acid bass line, pistons and steam textures, relentless, seamless loop |
+| `gc_mothership.mp3` | The Mothership | `biaveh_mothership.mp3` | soaring futuristic synthwave, 128 bpm, wide shimmering pads, gated drums, pulsing arpeggiated bass, ethereal choir, sleek and majestic, seamless loop |
+
+**Status (2026-11-25):** made by Dan and saved in `Unity/Assets/Audio/Music/`: `gc_menu` ("Grand Circuit Menu"), `gc_cattalus`
+("Cattalus Grand Circuit"), `gc_moon` ("Lunar Loop"), `gc_venus` ("Venus Gardens"), `gc_mars` ("Mars Canyon"), `gc_europa`
+("Europa Under-Ice"), `gc_mothership` ("The Mothership"), 3:28–4:18 each. **No `gc_asteroid`** (Dan, out of Suno downloads): the
+Asteroid Foundry track uses `asteroid_city.mp3` ("Asteroid City"), already right for it.

@@ -17,7 +17,7 @@ namespace Seven.EditorTools
             Directory.CreateDirectory(Path.Combine(ProjectRoot, "Assets/Resources/Audio"));
             AssetDatabase.Refresh(ImportAssetOptions.ForceSynchronousImport);
             Bank("Assets/Audio/SFX", "*.wav|*.mp3", "Assets/Resources/Audio/SfxBank.asset", false);
-            Bank("Assets/Audio/Music", "*.mp3", "Assets/Resources/Audio/MusicBank.asset", true);
+            Bank("Assets/Audio/Music", "*.mp3|*.ogg", "Assets/Resources/Audio/MusicBank.asset", true);
         }
 
         static void Bank(string dir, string pattern, string bankPath, bool music)
