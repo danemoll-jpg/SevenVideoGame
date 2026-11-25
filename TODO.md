@@ -101,7 +101,13 @@ head and sees him (28.2 s into the clip), "Hello." as her hands take his face (3
 82.2 s clip; the last frame holds, then the credits. Checked in a check run from the ending's checkpoint: the lines fired at exactly
 those clip times (they follow the video's own clock), every capture passed the image gate (44 shots, 0 failures, no NaN), the
 ending's sound audit clean, no voice overlaps. Key frames: `Docs/Previews/qf33/` (she kneels / "Panther?" / "Hello." / the wide shot).
-**Release:** see the rc6 line in "Where things stand" (CLAUDE.md) and below.
+**Release: 1.0.0-rc6 (build 1905, `game-1905`) PUBLISHED, Latest; rc2-rc5 retained, untouched.** It passed the release gate in every
+chapter (`Builds/ImageGate/gate_1.0.0-rc6.txt`: PASS, NaN 0, no new or worse failure, baseline 31). The first rc6 build failed the gate
+on four shots no QF33 change touched, the same in two runs (so real, not noise): the Moon's hang lesson on the broken ramp + the
+control-back frame there (one flat dark tone: range 0.33, edges 5.5 %) and the Tunneler fight's `drill_strike_active_side` (the white
+attack lane filled 24 % of the frame). Real fixes, no thresholds touched: a work lamp on a pole on scaffold 1 beside her landing
+(`BayRampLamp`, like the scaffold lamp further down) -> range 0.41, edges 6.3 %; the Tunneler fight's second-angle captures from 2 m up
+instead of 3.2 m -> white 6 %. The rc6 that shipped is QF33 + those two fixes only (the Round 20 work was set aside for that build).
 
 ### QF33 — decisions made (Code; Dan can change any of them)
 - **The file:** the folder held `heaven_color_game.mov` (3902×2160, h264 + audio), not the `.mp4` the note names. I made
