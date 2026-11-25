@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF36: the Grand Circuit's racing music (Dan, 2026-11-25) — to do
+## Quick fix QF36: the Grand Circuit's racing music (Dan, 2026-11-25) — done, release 1.1.0-beta3 (build 2005, `game-2005`) PUBLISHED, Latest
 Dan's racing tracks are IN (`Unity/Assets/Audio/Music/`; `Docs/MUSIC.md` "Grand Circuit"): `gc_menu` (every Grand Circuit page: the
 menu, racer / track select, results), `gc_cattalus` (Cattalus Grand Circuit (Unlimited)), `gc_moon` (Lunar Loop), `gc_venus` (Venus
 Gardens), `gc_mars` (Mars Canyon), `gc_europa` (Europa Under-Ice), `gc_mothership` (the Mothership); **the Asteroid Foundry keeps
@@ -27,6 +27,25 @@ one music source at a time. Publish **1.1.0-beta3** (every earlier release untou
 - **Checks:** every race logs `GC MUSIC (QF36)` (its song, intro -> loop hand-overs, loop wraps, frames with no song sounding, intro + loop
   heard together, songs heard at once outside a cross-fade); `-gcmusictest` plays each of the 8 songs, seeks to 1.5 s before the intro's end
   and before the body's end and checks the hand-over and the wrap (`GC MUSIC TEST (QF36)`, ~1 min instead of 30).
+- **Muted check runs paused every sound** (`DemoBoot`: `-mute` = volume 0 AND `AudioListener.pause`), so the first music test "failed"
+  (the intro froze, the scheduled body never came). The Grand Circuit's check runs now unpause the listener at volume 0 - still silent
+  (the run's output peak is logged, 0.000000) - so the music's timing really runs. A safety net was added too: should a scheduled body
+  start ever be missed, it starts at once and is logged (`late body starts`, must be 0 - it was 0).
+
+## QF36 — status (2026-11-25): done; release 1.1.0-beta3 (build 2005, `game-2005`) PUBLISHED, Latest (rc2-rc9 + beta1 / beta2 retained)
+- **The music test on the release build** (`-gcmusictest`): **8 / 8 songs pass** - each plays its own song, the intro hands over to the loop
+  body, the body wraps to its start, no frame without a song, no late start, one song at a time (a test seek into a compressed stream lands
+  within ~20 ms, so intro and body overlapped 0-20 ms in the seeked test); **the natural hand-over** (Europa's 3.1 s intro, no seek): the body
+  started on time, 0 ms of overlap, no gap. Races: `GC MUSIC (QF36)` = the track's song playing at the finish, no gaps, one song at a time.
+- **Release gate (`Builds/ImageGate/gate_1.1.0-beta3.txt`): IMAGE GATE RELEASE PASS** (every chapter, baseline 31, none new or worse, no NaN;
+  the Grand Circuit 64 / 64). Built with Build everything (the new music bank), then the Grand Circuit scene + player again for the check-run
+  fix (`-onlyscenes grandcircuit`).
+
+## For Dan to check (QF36)
+1. **Grand Circuit menu:** your "Grand Circuit Menu" song on every page and after each race (it fades in under the results).
+2. **Each track:** its own song starts with the first light (Cattalus Grand Circuit, Lunar Loop, Venus Gardens, Mars Canyon, Europa
+   Under-Ice, the Mothership; the Asteroid Foundry plays Asteroid City). In a long race (or a time trial left running) listen for the loop
+   point - it should be seamless (where each loops: `Tools/Music/gc_loops.json`; listening copies `Builds/audio_check/<name>_seam.wav`).
 
 ## Quick fix QF35: the Voice's line in the chamber (QF34 item 9, not done yet) (Dan, 2026-11-25) — done, release 1.0.0-rc9 (build 2003, `game-2003`) PUBLISHED
 Do QF34 item 9 now: as the light column falls on 7 and Panther (FIN_13), she lifts her head toward it and the Voice (RestVoice, slow and
