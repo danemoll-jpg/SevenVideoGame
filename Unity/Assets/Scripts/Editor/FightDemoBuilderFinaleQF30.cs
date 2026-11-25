@@ -101,27 +101,28 @@ namespace Seven.EditorTools
         }
 
         // ---------------------------------------------------------------- item 6: the big mining drills boring into the old structure
-        /// <summary>A drill boring in through a wall: the big spiral bit (spins about its local z = the boring direction) on its drive
-        /// housing, broken stone round the hole, a mining work light. Returns the bit (spun at runtime).</summary>
+        /// <summary>QF34 (5): the drilling behind a wall (was a big spiral drill bit sticking out of the wall in mid-air - Dan never understood
+        /// those "hanging things"): a jagged crack in the old masonry, work light glowing through it from the machine boring behind, stones
+        /// spilled at the wall's foot; the dust (runtime) pours out of it while the drilling runs. Returns the crack (its renderers are the
+        /// shot's subject; the runtime no longer spins it).</summary>
         static Transform WallDrill(string name, Vector3 at, Vector3 dir, float scale, MoonMats m, Transform parent)
         {
+            dir = new Vector3(dir.x, 0f, dir.z).normalized;
             var root = new GameObject(name).transform; root.SetParent(parent, false); root.position = at; root.rotation = Quaternion.LookRotation(dir);
-            var k = new AK();
-            { var (v, t) = k.Of(m.metalDark);
-              // the drive housing behind the bit (sticking out of the wall behind / through it), riveted collars
-              Sweep(v, t, new[] { new Vector3(0f, 0f, -3.6f * scale), new Vector3(0f, 0f, -0.4f * scale) }, 0.95f * scale, false, 12);
-              foreach (var z in new[] { -3.2f, -2.2f, -1.2f }) Append(v, t, Lathe(new[] { new Vector2(0.95f * scale, -0.08f * scale), new Vector2(1.08f * scale, 0f), new Vector2(0.95f * scale, 0.08f * scale) }, 0f, 360f, 16, null, Vector3.zero).Rotated(Quaternion.Euler(90f, 0f, 0f), new Vector3(0f, 0f, z * scale))); }
-            { var (v, t) = k.Of(m.rockDark);
-              // broken stone round the hole (the old masonry giving way)
-              var rnd = new System.Random(name.GetHashCode());
-              for (int i = 0; i < 14; i++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, r = (1.25f + (float)rnd.NextDouble() * 0.9f) * scale; Ellipsoid(v, t, new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, -0.3f * scale + (float)rnd.NextDouble() * 0.3f), new Vector3(0.35f, 0.25f, 0.3f) * scale * (0.6f + (float)rnd.NextDouble()), 3, 6); } }
-            foreach (var g in k.Save(name + "Housing", root, false)) g.transform.localPosition = Vector3.zero;
-            var bit = new GameObject("WallDrillBit").transform; bit.SetParent(root, false); bit.localPosition = new Vector3(0f, 0f, -0.45f * scale);
-            var bk = new AK(); SpiralDrill(bk, m.metal, m.metalDark, Vector3.zero, 1.05f * scale, 2.6f * scale, 5);
-            var holder = new GameObject("Bit").transform; holder.SetParent(bit, false); holder.localRotation = Quaternion.Euler(90f, 0f, 0f);
-            foreach (var g in bk.Save(name + "Bit", holder, false)) g.transform.localPosition = Vector3.zero;
-            var lamp = PointLight("MiningLight", at + dir * 1.6f * scale + Vector3.up * 1.4f * scale, 10f * scale, 1.6f, root);
-            return bit;
+            var crack = new GameObject("DrillCrack").transform; crack.SetParent(root, false); crack.localPosition = new Vector3(0f, 0f, 0.32f);
+            var k = new AK(); var rnd = new System.Random(name.GetHashCode());
+            // the crack: a zig-zag of dark broken edges, wider in the middle, with a thin glowing core (the light of the machine behind)
+            var pts = new List<Vector3>(); float h = 2.6f * scale;
+            for (int n = 0; n <= 9; n++) { float u = n / 9f; pts.Add(new Vector3(((n % 2 == 0) ? -1f : 1f) * (0.12f + 0.22f * Mathf.Sin(u * Mathf.PI)) * scale + ((float)rnd.NextDouble() - 0.5f) * 0.1f, (u - 0.5f) * h, 0f)); }
+            { var (v, t) = k.Of(m.rockDark); for (int n = 0; n < pts.Count - 1; n++) { var a = pts[n]; var b = pts[n + 1]; var c = (a + b) * 0.5f; float len = (b - a).magnitude; float w = (0.16f + 0.2f * Mathf.Sin(n / 9f * Mathf.PI)) * scale; Sweep(v, t, new[] { a + Vector3.back * 0.02f, b + Vector3.back * 0.02f }, w * 0.5f, false, 5); }
+              for (int n = 0; n < 10; n++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, r = (0.5f + (float)rnd.NextDouble() * 0.7f) * scale; Ellipsoid(v, t, new Vector3(Mathf.Cos(a) * r * 0.6f, Mathf.Sin(a) * r, -0.05f), new Vector3(0.22f, 0.16f, 0.12f) * scale * (0.6f + (float)rnd.NextDouble() * 0.6f), 3, 6); } }
+            { var (v, t) = k.Of(m.glow); for (int n = 0; n < pts.Count - 1; n++) { var a = pts[n]; var b = pts[n + 1]; Sweep(v, t, new[] { a + Vector3.forward * 0.02f, b + Vector3.forward * 0.02f }, 0.025f * scale, false, 4); } }
+            foreach (var g in k.Save(name + "Crack", crack, false)) g.transform.localPosition = Vector3.zero;
+            // the stones spilled at the wall's foot below it
+            var rk = new AK(); { var (v, t) = rk.Of(m.rockDark); float floorY = F.Y; for (int n = 0; n < 9; n++) { var q = at + dir * (0.5f + (float)rnd.NextDouble() * 1.1f) + Vector3.Cross(Vector3.up, dir) * (((float)rnd.NextDouble() - 0.5f) * 1.6f); q.y = floorY + 0.1f; Ellipsoid(v, t, q, new Vector3(0.28f, 0.16f, 0.24f) * (0.6f + (float)rnd.NextDouble() * 0.7f), 3, 6); } }
+            rk.Save(name + "Spill", parent, false);
+            PointLight("MiningLight", at + dir * 0.7f, 6f * scale, 0.9f, root);   // the work light glowing through the crack
+            return crack;
         }
 
         // ---------------------------------------------------------------- item 11: the archive's controls (the chamber's own style)

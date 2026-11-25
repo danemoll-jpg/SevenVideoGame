@@ -138,7 +138,7 @@ namespace Seven
         void Update()
         {
             // the mining machinery outside the chamber: drilling until the Scree stop it (FIN_07)
-            if (MiningDrills != null) foreach (var d in MiningDrills) if (d != null) { _drillRate = Mathf.MoveTowards(_drillRate, _drillsOn ? 180f : 0f, 40f * Time.deltaTime); d.Rotate(Vector3.up, _drillRate * Time.deltaTime, Space.Self); }
+            if (MiningDrills != null) foreach (var d in MiningDrills) if (d != null) { _drillRate = Mathf.MoveTowards(_drillRate, _drillsOn ? 7f : 0f, 2f * Time.deltaTime);   /* QF34 (5): cranes slewing slowly */ d.Rotate(Vector3.up, _drillRate * Time.deltaTime, Space.Self); }
             TickWallDrills(); TickBeacons(); TickWalls();                                                        // QF31 (9): the screens' loops                                                                       // QF30 (6 / 9)
         }
         float _drillRate = 180f;
@@ -187,8 +187,8 @@ namespace Seven
             var drill = MiningDrills != null && MiningDrills.Length > 0 ? MiningDrills[0] : null;
             if (drill != null)
             {
-                Shoot(drill.position + new Vector3(16f, 92f, 22f), drill.position + Vector3.up * 70f, 52f, 0.01f);
-                ImageGate.Expect(drill.parent, "a mining tower cutting into the city");
+                Shoot(drill.position + new Vector3(26f, 2f, 30f), drill.position + new Vector3(0f, -5f, 8f), 50f, 0.01f);   // QF34 (5): the crane's head, its bucket on the cable
+                ImageGate.Expect(drill, "a mining crane working over the city");
                 yield return Wait(0.6f);
                 yield return Shot("f02_the_mining_cutting_into_the_city");
             }
@@ -586,7 +586,7 @@ namespace Seven
             yield return Wait(Auto ? 3.5f : 5f);
             yield return Shot("f30_the_drilling_slows_and_stops");
             var dr = MiningDrills != null && MiningDrills.Length > 0 ? MiningDrills[0] : null;
-            if (dr != null) { Shoot(dr.position + new Vector3(12f, 76f, 16f), dr.position + Vector3.up * 64f, 50f, 0.01f); ImageGate.Expect(dr.parent, "the drill towers stopped"); yield return Wait(0.6f); yield return Shot("f30b_the_drill_towers_stopped"); }
+            if (dr != null) { Shoot(dr.position + new Vector3(24f, 3f, 28f), dr.position + new Vector3(0f, -5f, 8f), 50f, 0.01f); ImageGate.Expect(dr, "the mining cranes stopped"); yield return Wait(0.6f); yield return Shot("f30b_the_drill_towers_stopped"); }
             Log($"QF30 (6): the drilling stopped - the wall drills spin {_wallRate:0} deg/s, the towers {_drillRate:0} deg/s (both spinning down to 0)");
             // Tunneler over the industrial speakers (his voice heard over the chamber; no worker answers)
             Shoot(L.ChamberC + new Vector3(0f, 3.4f, 9.6f), L.MiningAccess + Vector3.up * 3f, 52f, 0.01f);
@@ -602,8 +602,10 @@ namespace Seven
             yield return Wait(1.2f);
             yield return Shot("f31_a_heavy_impact_beyond_the_chamber");
             if (Worker != null) Worker.gameObject.SetActive(false);   // he is at his station (heard over the network from now on)
+            EuropaScreenReport();
             Complete("FIN_07");
             yield return Cutscene(false);
+            if (DemoBoot.CaptureDir != null) yield return EuropaScreenProof();   // QF34 (3): from the PLAYER's camera, control back
         }
     }
 }

@@ -30,6 +30,33 @@ namespace Seven
             Log($"OBJECTIVE PLACE (QF30 9): '{what}' highlighted - its control pulses, a light column over it, {(cable != null ? "the dead cable leading to it sparks, " : "")}the marker on it");
             return b;
         }
+        // ---- QF34 (3): a light column never stands between the player's camera and a lit vision screen - while one would, it steps back
+        // to almost nothing (the place stays marked by its pulsing control, the guide light and the marker); the moment it is clear, back.
+        public static int ColumnsStepped;
+        void BeaconsClearScreens(Vector3 eye)
+        {
+            if (ProjectionWalls == null) return;
+            foreach (var b in _beacons)
+            {
+                if (b.Column == null) continue; var r = b.Column.GetComponent<Renderer>(); if (r == null) continue;
+                bool inWay = false; var axis = new Vector2(b.Column.transform.position.x, b.Column.transform.position.z); float rad = b.Column.transform.localScale.x * 0.5f + 0.35f;
+                foreach (var w in ProjectionWalls)
+                {
+                    if (w == null || !w.enabled) continue;
+                    foreach (var c in new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), Vector3.zero })
+                    {
+                        var p = w.transform.TransformPoint(c); var a2 = new Vector2(eye.x, eye.z); var b2 = new Vector2(p.x, p.z); var ab = b2 - a2; float L2 = ab.sqrMagnitude; if (L2 < 1e-4f) continue;
+                        float t = Mathf.Clamp01(Vector2.Dot(axis - a2, ab) / L2); if (t <= 0.02f || t >= 0.98f) continue;
+                        if ((a2 + ab * t - axis).magnitude < rad) { inWay = true; break; }
+                    }
+                    if (inWay) break;
+                }
+                var m = r.material; float want = inWay ? 0.02f : 0.32f; float cur = m.HasProperty("_Intensity") ? m.GetFloat("_Intensity") : want;
+                if (inWay && cur > 0.1f) ColumnsStepped++;
+                if (m.HasProperty("_Intensity")) m.SetFloat("_Intensity", inWay ? want : Mathf.MoveTowards(cur, want, Time.deltaTime * 0.6f));   // out at once, back softly
+            }
+        }
+
         void BeaconDone(Beacon b, float doneGlow = 1.3f)
         {
             if (b == null || b.Done) return;
@@ -84,7 +111,7 @@ namespace Seven
             foreach (var w in _wall)
             {
                 if (w.Bit == null) continue;
-                w.Angle += _wallRate * dt; w.Bit.localRotation = Quaternion.AngleAxis(w.Angle % 360f, Vector3.forward);
+                w.Angle += _wallRate * dt; if (w.Bit.name != "DrillCrack") w.Bit.localRotation = Quaternion.AngleAxis(w.Angle % 360f, Vector3.forward);   // QF34 (5): a crack never spins
                 if (w.Dust != null) { var em = w.Dust.emission; em.rateOverTime = 30f * k; }
                 if (w.Rumble != null) { w.Rumble.volume = 0.45f * k * AudioKit.Gain(AudioKit.Bus.Sfx); w.Rumble.pitch = 0.75f + 0.25f * k; }
                 if (k > 0.5f && Random.value < dt * 0.8f) Sparks(w.Bit.position + w.Bit.forward * 0.4f + Random.insideUnitSphere * 0.8f, 16);

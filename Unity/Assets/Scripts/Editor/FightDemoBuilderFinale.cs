@@ -226,7 +226,10 @@ namespace Seven.EditorTools
                 var lv = new List<Vector3>(); var lt = new List<int>(); Append(lv, lt, Lathe(new[] { new Vector2(0.43f, 1.1f), new Vector2(0.47f, 1.1f) }, 0f, 360f, 20, null, Vector3.zero));
                 socketLights.Add(MeshObject("SocketLight" + i, SaveMesh(SmoothFinish(lv, lt), "Fin_SocketLight" + i), new Material(soft) { name = "Fin_socket_light_" + i }, so, false).GetComponent<Renderer>());
                 // the projection wall: a tall panel in the chamber wall behind the socket (the world's image appears on it)
-                var dir = Flat(sp - c0).normalized; var wp = c0 + dir * (F.ChamberR - 0.05f) + Vector3.up * 4.2f;
+                // QF34 (3): Europa's screen (2) stood at 102.9 deg with its north metre inside the mouth of the barrier alcove (open 79-101 deg):
+                // the alcove's frame post and top beam, its glowing BarrierFrameLines, the BarrierField sheet, the ExternalLock, the rig and
+                // the crew parked there all crossed it. It moves round the wall to 114 deg (108-120 deg: solid wall, clear of the alcove).
+                var dir = i == F.EuropaScreen ? Quaternion.Euler(0f, F.EuropaScreenYaw, 0f) * Vector3.forward : Flat(sp - c0).normalized; var wp = c0 + dir * (F.ChamberR - 0.05f) + Vector3.up * 4.2f;
                 var pq = GameObject.CreatePrimitive(PrimitiveType.Quad); Object.DestroyImmediate(pq.GetComponent<Collider>()); pq.name = "ProjectionWall" + i; pq.transform.SetParent(chamber, false); pq.transform.position = wp; pq.transform.rotation = Quaternion.LookRotation(dir); pq.transform.localScale = new Vector3(3.2f, 4.4f, 1f);
                 var pm = new Material(Shader.Find("Seven/GalleryScreen") ?? Shader.Find("Universal Render Pipeline/Unlit")) { name = "Fin_projection_" + i }; pq.GetComponent<Renderer>().sharedMaterial = pm; pq.GetComponent<Renderer>().enabled = false; proj.Add(pq.GetComponent<Renderer>());
             }
@@ -239,8 +242,10 @@ namespace Seven.EditorTools
             var bctl = barrierConsole.root; Renderer barrierLight = barrierConsole.node;
             Renderer barrierFrameLines;
             { var fl = new List<Vector3>(); var ft = new List<int>();
-              foreach (var sz in new[] { -2.8f, 2.8f }) Sweep(fl, ft, new[] { F.BarrierAt + new Vector3(-0.52f, 0.05f, sz), F.BarrierAt + new Vector3(-0.52f, 4.15f, sz) }, 0.03f, false, 4);
-              Sweep(fl, ft, new[] { F.BarrierAt + new Vector3(-0.62f, 4.2f, -2.8f), F.BarrierAt + new Vector3(-0.62f, 4.2f, 2.8f) }, 0.03f, false, 4);
+              // QF34 (3): the south post's strip and the south end of the top strip stood in front of Europa's screen from the room (the
+              // gameplay camera's rays: 664 frames) - the frame's light now runs on the north post and the top's north part only
+              foreach (var sz in new[] { 2.8f }) Sweep(fl, ft, new[] { F.BarrierAt + new Vector3(-0.52f, 0.05f, sz), F.BarrierAt + new Vector3(-0.52f, 4.15f, sz) }, 0.03f, false, 4);
+              Sweep(fl, ft, new[] { F.BarrierAt + new Vector3(-0.62f, 4.2f, -0.6f), F.BarrierAt + new Vector3(-0.62f, 4.2f, 2.8f) }, 0.03f, false, 4);
               barrierFrameLines = MeshObject("BarrierFrameLines", SaveMesh(SmoothFinish(fl, ft), "Fin_BarrierFrameLines"), new Material(soft) { name = "Fin_barrier_frame" }, chamber, false).GetComponent<Renderer>(); }
             // QF30 (9): the dead cables that lead to each power objective (they light when it is done)
             var powerCable = DeadCable("PowerCable", new[] { new Vector3(11.5f, F.Y + 0.02f, -118.6f), new Vector3(9.4f, F.Y + 0.02f, -117.6f), new Vector3(7.2f, F.Y + 0.02f, -115.6f), F.PowerPanel + new Vector3(0.45f, 0.02f, 0f) }, m, soft, district);
@@ -266,15 +271,28 @@ namespace Seven.EditorTools
             var drills = new List<Transform>(); var terminals = new List<Renderer>();
             foreach (var (p, h) in new[] { (new Vector3(-16f, F.Y - 80f, -126f), 104f), (new Vector3(40f, F.Y - 70f, -130f), 96f), (new Vector3(-30f, F.Y - 90f, -60f), 120f), (new Vector3(52f, F.Y - 90f, -70f), 116f) })
             {
+                // QF34 (5): a mining crane (rc6: a bare rod with plates and a drill bit at its foot, rising out of the haze and stopping in
+                // mid-air above the berth - one of the "hanging things" Dan never understood): a lattice mast up out of the workings below, a
+                // slewing jib at its head with a work light, a cable down from the trolley to an ore bucket; the jib slews slowly (runtime)
                 var dr = new GameObject("MiningDrill").transform; dr.SetParent(world, false); dr.position = p;
-                var mk = new AK(); var (v, t) = mk.Of(m.metalDark); Sweep(v, t, new[] { Vector3.zero, Vector3.up * h }, 1.4f, false, 10);
-                for (float y = 6f; y < h; y += 7f) MBox(v, t, Vector3.up * y, new Vector3(5f, 0.6f, 5f), 45f, 0.02f);
-                foreach (var g in mk.Save("DrillTower", dr, false)) g.transform.localPosition = Vector3.zero;
-                var bit = new GameObject("DrillBit").transform; bit.SetParent(dr, false); bit.localPosition = Vector3.zero;
-                var bv = new List<Vector3>(); var bt = new List<int>(); Append(bv, bt, Lathe(new[] { new Vector2(0f, -6f), new Vector2(2.4f, 0f), new Vector2(2.2f, 1.2f), new Vector2(0f, 1.2f) }, 0f, 360f, 12, null, Vector3.zero));
-                for (int i = 0; i < 4; i++) { float a = i * 90f * Mathf.Deg2Rad; Sweep(bv, bt, new[] { new Vector3(Mathf.Sin(a) * 0.4f, -5f, Mathf.Cos(a) * 0.4f), new Vector3(Mathf.Sin(a + 1.2f) * 2.1f, -1f, Mathf.Cos(a + 1.2f) * 2.1f) }, 0.18f, false, 5); }
-                MeshObject("Bit", SaveMesh(SmoothFinish(bv, bt), "Fin_DrillBit" + drills.Count), m.metal, bit, true);
-                PointLight("DrillWork", p + Vector3.down * 4f, 18f, 1.2f, dr);
+                var mk = new AK(); var (v, t) = mk.Of(m.metalDark);
+                foreach (var cx in new[] { -1.2f, 1.2f }) foreach (var cz in new[] { -1.2f, 1.2f }) Sweep(v, t, new[] { new Vector3(cx, 0f, cz), new Vector3(cx, h, cz) }, 0.22f, false, 6);
+                for (float y = 0f; y < h - 5f; y += 5f) { Sweep(v, t, new[] { new Vector3(-1.2f, y, -1.2f), new Vector3(1.2f, y + 5f, -1.2f) }, 0.09f, false, 4); Sweep(v, t, new[] { new Vector3(1.2f, y, 1.2f), new Vector3(-1.2f, y + 5f, 1.2f) }, 0.09f, false, 4); Sweep(v, t, new[] { new Vector3(-1.2f, y, 1.2f), new Vector3(-1.2f, y + 5f, -1.2f) }, 0.09f, false, 4); Sweep(v, t, new[] { new Vector3(1.2f, y, -1.2f), new Vector3(1.2f, y + 5f, 1.2f) }, 0.09f, false, 4); }
+                foreach (var g in mk.Save("CraneMast", dr, false)) g.transform.localPosition = Vector3.zero;
+                var bit = new GameObject("CraneHead").transform; bit.SetParent(dr, false); bit.localPosition = Vector3.up * h;
+                var hk = new AK(); var (hv, ht) = hk.Of(m.metalDark); var (mv, mt) = hk.Of(m.metal); var (gv0, gt0) = hk.Of(m.glow);
+                MBox(hv, ht, new Vector3(0f, 0.6f, 0f), new Vector3(3.2f, 1.2f, 3.2f), 0f, 0.02f);                       // the slewing house
+                MBox(mv, mt, new Vector3(0f, 1.4f, 7.5f), new Vector3(0.9f, 0.9f, 17f), 0f, 0f);                         // the jib
+                MBox(mv, mt, new Vector3(0f, 1.4f, -4f), new Vector3(0.9f, 0.9f, 6f), 0f, 0f);                           // the counter-jib
+                MBox(hv, ht, new Vector3(0f, 0.7f, -6.2f), new Vector3(2.2f, 1.8f, 1.6f), 0f, 0.02f);                    // its counterweight
+                Sweep(mv, mt, new[] { new Vector3(0f, 1.8f, 15.5f), new Vector3(0f, 5.2f, 0f), new Vector3(0f, 1.8f, -6.8f) }, 0.06f, false, 4);   // the stays over the apex
+                MBox(hv, ht, new Vector3(0f, 0.75f, 14.5f), new Vector3(1.3f, 0.5f, 1.3f), 0f, 0f);                     // the trolley
+                Sweep(mv, mt, new[] { new Vector3(0f, 0.5f, 14.5f), new Vector3(0f, -13.5f, 14.5f) }, 0.05f, false, 4);  // the hoist cable
+                Append(hv, ht, Lathe(new[] { new Vector2(0f, -16.8f), new Vector2(1.3f, -16.8f), new Vector2(1.7f, -14.2f), new Vector2(1.75f, -13.9f), new Vector2(0f, -13.9f) }, 0f, 360f, 14, null, new Vector3(0f, 0f, 14.5f)));   // the ore bucket
+                var rnd3 = new System.Random(drills.Count + 5); for (int o = 0; o < 6; o++) Ellipsoid(mv, mt, new Vector3(((float)rnd3.NextDouble() - 0.5f) * 2f, -13.9f, 14.5f + ((float)rnd3.NextDouble() - 0.5f) * 2f), Vector3.one * 0.5f, 3, 6);   // ore heaped in it
+                MBox(gv0, gt0, new Vector3(0f, 0.95f, 15.8f), new Vector3(0.7f, 0.25f, 0.5f), 0f, 0f);                  // the work light at the jib's end
+                foreach (var g in hk.Save("CraneHead", bit, false)) g.transform.localPosition = Vector3.zero;
+                PointLight("DrillWork", p + Vector3.up * (h + 0.4f) + Vector3.forward * 15.8f, 22f, 1.4f, bit);
                 drills.Add(bit);
             }
             foreach (var (p, yaw) in new[] { (new Vector3(3.6f, F.Y, -111f), 90f), (new Vector3(19.4f, F.Y, -116f), -90f), (new Vector3(20.6f, F.Y, -78f), -90f), (new Vector3(2.4f, F.Y, -84f), 90f) })

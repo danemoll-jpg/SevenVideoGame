@@ -1,6 +1,6 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF34: Dan's 1.0.0-rc6 review of the ending (Dan, 2026-11-24) — to do AFTER Round 20 (Dan: "it's ok if it finishes the race stuff first")
+## Quick fix QF34: Dan's 1.0.0-rc6 review of the ending (Dan, 2026-11-24) — items 1-8 done, status below; release 1.0.0-rc7 (item 9 not asked for this round)
 Keep rc2–rc6 untouched; this ships as **1.0.0-rc7**. For every repeat item, say first why the earlier fix didn't hold.
 1. **Her hands spasm while Panther lies dying** (FIN_10, since QF32 "kneel closer"). The fur-contact hands jitter / jump (likely the
    target re-picked every frame on a shrinking, breathing body, or solver fights between the hold and the stroke). Fix: stable,
@@ -15,6 +15,10 @@ Keep rc2–rc6 untouched; this ships as **1.0.0-rc7**. For every repeat item, sa
    "the ship is vibrating" moment, the Cattalus streets together, the race (him at the square watching her), the meadow. Re-stage /
    re-capture in engine where needed with a camera chosen for the two of them (gentle push-ins, soft framing), 3–5 s each, soft
    dissolves, ~45–60 s total, all through the image gate plus a check that Panther's renderer is visible in every frame.
+   **A foggy border marks them as memories (Dan):** every memory shot is framed by a soft, drifting misty vignette (white-gray fog
+   creeping in from the edges, gently moving, the centre clear so both of them read), a slight soft glow / bloom and softened edges
+   (the picture a touch dreamier than live play), fading in as each memory begins and out as it cuts back to her kneeling over him
+   (the live shots of her have no fog border). Keep the faces and Panther clear of the fog (the gate's subject check on the centre).
 3. **The beam in front of Europa's screen: THIRD time** (QF30 / QF31 said it was fixed; it isn't). Find the actual object (name
    it in the status: which light / beam / effect, which script spawns it), and remove or move it so it is **never** between the
    player's camera and the Europa screen at any point while the visions play, from every position she can stand in the chamber.
@@ -43,6 +47,108 @@ Keep rc2–rc6 untouched; this ships as **1.0.0-rc7**. For every repeat item, sa
    the restored control stations' flowing light lines, distant city lights twinkling, the mining lights' haloes in the haze. Keep it
    tasteful: focal points glow, the rest stays dark and misty, the subjects still read (the image gate must still pass, and no glow
    may wash out the frame, QF26). Before / after captures of each area.
+9. **The Voice speaks once in the chamber, as the beam comes down** (Dan: make it clear she didn't die; she ascends because her task is
+   complete after all these ages). Line (Dan approved, 2026-11-24), RestVoice, slow and warm:
+   **FIN_13_V1 Voice:** "Seven. Your watch is over. You kept their story through every age, and now it lives on beyond you. Rise,
+   and come home to rest."
+   Placement: the light column falls on her and Panther (item 4); she lifts her head toward it; the line; she draws Panther close;
+   they rise. Not shown or named on screen. (The heaven line "Well done, good and faithful servant…" stays in the heaven film.)
+
+## Quick fix QF34 — status (2026-11-25): items 1-8 done; release 1.0.0-rc7 (build 2001, `game-2001`) — rc2-rc6 untouched
+### Why the repeats didn't hold (asked first)
+- **(1) FIN_10's hands** (repeat of QF32's "kneel closer"): QF32 fixed *where* the hands went (the fur-surface size bug) but not *how*
+  they were driven. Every frame the hand targets were the **nearest baked-mesh vertex** to a guessed point, re-picked on a body that
+  breathes and shrinks - the pick hopped between vertices (centimetre jumps); then `FurPalm` **re-solved the same arms on top** of
+  `SevenTableIK` (two solvers fighting); and when the stroke ended its target **snapped** from his neck back to his head in one frame.
+  The petting check measured the palm-to-fur gap, never motion, so spasms passed.
+- **(2) The memories** (repeat of QF31): QF31's raw clips recorded **whatever the check run's camera happened to show** when a named
+  capture fired (an energy-point close-up, a hand in a bike grip, the walkway) - nothing asked for Panther to be in them, and no check
+  counted him. The montage also cut back to her between every second clip, so it never flowed.
+- **(3) The Europa screen's beam** (third time; QF30 never touched it, QF31 claimed it): the screen (`ProjectionWall2`, built in
+  `FightDemoBuilderFinale.cs`) stood at 102.9 deg with its north metre **inside the mouth of the barrier alcove** (open 79-101 deg), so
+  the alcove's frame post and top beam, its glowing `BarrierFrameLines`, the `BarrierField` sheet, the `ExternalLock` and later the rig
+  and crew all crossed it, plus three runtime light columns (`BeaconBeam_the_barrier_control` from the breach, `BeaconBeam_the_barrier`
+  from the entrance side, `BeaconBeam_the_archive_surface` from the west - all spawned by `FinaleDirectorQF30.Highlight`). QF31 moved
+  one column 10 deg and its check passed because it matched only six names ("Beam", "Column"...), tested the inner 84 % of the screen,
+  counted geometry as "the chamber's own structure", and ran from fixed points before / after the columns existed.
+- **(4) The light at the end** (QF31 A5/A6 built it): two lights were on at once - `PaleLight` (a 5 m cylinder over the archive table,
+  `FightDemoBuilderFinale.cs`) and `AscentLight_Beam` (`FinaleDirectorQF30Scenes.AscentColumn`), which was **tilted from her toward the
+  oculus** - the diagonal - and the rise drifted with the camera's arc.
+- **(6) FIN_01's approach** (QF30 1 added the Moon in the window): the scene opened on the **close** exterior (the saucer over the real
+  Moon level), then cut inside to a Moon **650 m away**, then back to the close level for the guided approach - close / far / close.
+### What was done (plain words)
+1. **FIN_10's hands** (`FinaleDirectorQF30Scenes.HandsOnHim`, `FurPalm`): each hand is bound ONCE to a point on his fur in his head /
+   neck bones' space and follows those bones (breathing, the shrink) through a 0.3 s smoothing; the stroke eases there and back; the
+   wrist is aimed so the palm centre (not the wrist) lands on the fur; `FurPalm` adds ONE correction a frame whose velocity is eased
+   (SmoothDamp, max 0.35 m/s) - it never re-picks a vertex. New check `HAND MOTION (QF34 1)` in every check run: speed / acceleration of
+   every hand on Panther, every petting / holding moment (spike = over 25 m/s^2). Close-up clip `Docs/Previews/qf34/fin10_hands.mp4`
+   (FIN_10 from the kneel to "Panther, no!", its own camera on the hands). The lap stroke aboard (`Chapter1AboardVenus.Stroke`) got the
+   same smoothing. **Result (shipped build):** FIN_10 hand motion top acceleration 23.2 m/s^2,
+   **spikes 0** (rc6: spasms; first rc7 run 1); the lap strokes 37-39 m/s^2 peaks, 2-5 spikes a chair scene (rc6: 78-82 m/s^2, 52-82
+   spikes - the ear-scratch switch moved the target 14 cm and flipped the fingers in one frame; now eased). **Open:** after he shrinks
+   her RIGHT hand hovers open ~10 cm over his head (palm-to-fur median: shoulder 2.5 cm, head 10.4 cm - the eased correction is
+   slower, so it reaches less; the first rc7 run had 5.2 cm with one spike) - steady, but not on him. Next: bind the head hand to
+   his shrunken head (re-bind on the shrink), keep the eased correction.
+2. **The memories** (`ClipRecorder` two-shot camera + `Tools/Run-MemoryCaptures.ps1` + `Tools/Video/make_memory_montage.py`): the clips
+   are re-recorded with a camera that frames 7 AND Panther (the nearest clear side, horizontal-FOV distance, never inside a wall: else
+   the scene's own camera), each clip writes which frames show both (`both_visible.txt`), the montage takes the window of each clip with
+   both in view in >= 96 % of its frames (else a shorter one, else the clip is dropped), story order, 4.8 s shots, 0.8 s dissolves, the
+   meadow film's sitting-together moment last; **a drifting foggy border + a slight glow** mark them as memories (centre clear). Result
+   `Art/Video/panther_memories_code.mp4`, 12 shots, 47.4 s (played when Dan's own `panther_memories.mp4` is not there - it isn't now:
+   the old QF31 edit was cut from clips without him). Sheet `Docs/Previews/qf34/memories_montage_sheet.png`.
+3. **Europa's screen**: named above (why). The screen (`ProjectionWall2`) moved to 114 deg, fully out of the alcove's mouth
+   (`FinaleLayout.EuropaScreenYaw`); the frame's light strips no longer run on the south post / south top; no beacon column, halo or
+   glow may stand in front of a lit screen (`BeaconsClearScreens` fades a column that would); the check (`EuropaScreenWatch`) casts from
+   the **gameplay camera** every frame of FIN_05-07 to the screen's four corners + centre against every renderer that is a light,
+   beam, field, glow, halo or line (thin ones by their real mesh, not the bounds) and logs the names; `EuropaScreenProof` takes four
+   captures from where she can stand (the placement spot + three) with the player's camera after control returns. **Result (shipped build):** 2791 frames x 5 rays, **frames with a light / beam / field in the
+   way: 0**; 512 frames with solid geometry in the way (her own body, a pedestal - not light); captures
+   `Docs/Previews/qf34/europa_screen/` (placement spot, chamber centre west, entrance, breach side) + `before_after_europa_screen.png`.
+4. **The light at the end** (`FinaleDirectorQF31.RisenTogether`, `AscentColumn`): `PaleLight` (over the table) off; ONE vertical column
+   straight down onto them from above the chamber; they rise straight up in it (her holding him) and the camera follows them up
+   (`f58_they_rise_straight_up_in_the_light`, `f58b_high_in_the_column`), 1.6 s fade to white, **2 s white**, then the heaven film.
+5. **The hanging things** (named): (a) the berth's `MiningDrill` towers (a bare rod with plates and a drill bit at its foot, stopping in
+   mid-air over the haze) -> lattice mining cranes (`CraneHead`: mast, slewing jib, work light, cable, ore bucket; slewing 7 deg/s);
+   (b) the chamber / route walls' `WallDrill` spiral bits sticking out of the masonry -> a crack with light from the boring machine
+   behind, spilled stones, dust (`DrillCrack`); (c) Chapter 1's bay drill floating 8 m over the bay -> hung from a gantry
+   (`HangingDrillGantry`); (d) Chapter 1's vision lights floating under the arches -> carved lamp spheres in stone rings on brackets
+   (`WholeSconces`); (e) Chapter 1's scaffold work lamps floating in the void -> on the scaffolds' top decks. Before / after:
+   `Docs/Previews/qf34/before_after_*.png`.
+6. **FIN_01** (`Chapter1AboardFinale.Approach`): one steady approach - the Moon starts 900 m away (whole in the window) and closes in at
+   a constant rate to 330 m through the talk (the framings change angle, never distance); the close exterior (the saucer flying in over
+   the level) now ENDS the approach at the entrance, as gameplay begins (rc6 opened on it).
+7. **Clicks**: `fin_pedestal_lock_a` / `_b` (alternating, slightly varied pitch, one per pedestal as it is flush) and `fin_table_lock`
+   (heavy clunk + stone rumble) - ElevenLabs sound generation (`Tools/Audio/generate_sfx.py`), played by `SinkArchive`.
+8. **More glow** (`FinaleSparkle`): light motes in the chamber, along the route to the door and at the berth; soft haloes round the
+   working lights (never inside the chamber - in front of the screens); faint crystal veins breathing in the chamber's stone low on the
+   wall; glyphs on the chamber wall that wake as she passes and stay lit. All white, additive, small. Plus: the fight's floor telegraphs
+   tuned to a light band (the drill-charge lane under the camera was pure white over 21.6 % of a frame).
+**Release gate (`Builds/ImageGate/gate_1.0.0-rc7.txt`): PASS** - every chapter as its baseline (31 shots, none new or worse, no
+NaN), finale 202 / 202 and finale_aboard 42 / 42 pass, grandcircuit 16 / 16. The one failure on the way (the Tunneler fight's
+control-back frame, 21.6 % white) was the drill-charge floor lane under the camera: the telegraphs are now a light band (0.28, was 0.42).
+One Mars run in the first full gate crashed natively in the player right after the bike left the hold (UnityPlayer, no script frames);
+the re-run and the second full gate both passed Mars - recorded here, not reproduced. Other logs: `FIN_01 APPROACH (QF34 6)` the
+distance only ever went down (900 m -> 330 m); `SINK CLICKS (QF34 7)` 7 pedestals + the table; `FINALE SPARKLE (QF34 8)` 380 motes,
+20 haloes, 12 veins, 6 glyphs. Before / after sheets `Docs/Previews/qf34/before_after_*.png` (FIN_01, the berth cranes, the chamber and
+arena, Europa's screen, the light, Chapter 1's bay); FIN_10 clip `fin10_hands.mp4` + `fin10_hands_sheet.png`.
+
+### QF34 — decisions made (Code; Dan can change any of them)
+- rc7 is built from `main`, so it **also contains Round 20's Grand Circuit** (unlocked after the credits, as in 1.1.0-beta1). Build 2001 (round 20, fix 1) is above
+  1.1.0-beta1 (2000) - the launcher only installs a build higher than any the player has had, so 1906 would never reach a beta1 player; rc7 is published as Latest.
+- The montage drops **the first meeting** (both in view in only 59 of 90 frames - the bars hide him) and **free-range** (0 of 90: the
+  chicken run's camera never had both) rather than show a shot without him. Re-staging those two is a follow-up if Dan wants them.
+- Item 9 (the Voice's line in the chamber) was not in this round's list (items 1-8) - still to do.
+- Chapter 1's crossing vault ribs (from the reference art) were kept: they are architecture, not hanging things.
+- The fog border is baked into the montage video (not a runtime effect), so Dan's own edit would need it added in his editor - or drop
+  his clip into `Tools/Video/make_memory_montage.py`'s input to get it.
+
+## For Dan to check (QF34)
+- FIN_10: watch `Docs/Previews/qf34/fin10_hands.mp4` - her hands are calm now, but after the shrink her right hand hovers above his head
+  (the open item above).
+- The memories: are the shots warm enough, and is the fog border the right amount? (the two egg-chair shots look alike - one could go.)
+- Europa's screen from anywhere in the chamber while the visions play.
+- The ending's rise and the white hold; FIN_01's approach; the clicks; the cranes / crack / Chapter 1 fixtures; the extra glow.
+
 
 ## Quick fix QF32: P2's open items (Dan, 2026-11-24) — done, rc5 published (status below)
 Keep rc2, rc3 and **rc4** (Dan's current showable build) published and untouched; this goes into **1.0.0-rc5**, published only if it

@@ -163,7 +163,11 @@ namespace Seven.EditorTools
         static UnityEngine.Video.VideoClip MemoriesVideo()
         {
             var src = Path.Combine(RepoRoot, "Art", "Video", "panther_memories.mp4");
+            // QF34 (2): without Dan's own edit, Code's flowing montage (Tools/Video/make_memory_montage.py: 7 and Panther together in every
+            // shot, story order, soft dissolves) plays as one film
+            if (!File.Exists(src)) src = Path.Combine(RepoRoot, "Art", "Video", "panther_memories_code.mp4");
             if (!File.Exists(src)) { Log("MEMORIES (QF31 A3): Art/Video/panther_memories.mp4 not in yet - the montage of Code's in-game clips plays"); return null; }
+            Log($"MEMORIES (QF34 2): the montage {Path.GetFileName(src)}");
             var ff = FindFfmpeg(); var dst = Path.Combine(ProjectRoot, "Assets/Video/panther_memories_gray.mp4");
             if (ff != null) RunFfmpeg(ff, $"-y -loglevel error -i \"{src}\" -an -vf \"format=gray,format=yuv420p\" -c:v libx264 -preset veryfast -crf 20 \"{dst}\""); else File.Copy(src, dst, true);
             AssetDatabase.ImportAsset("Assets/Video/panther_memories_gray.mp4", ImportAssetOptions.ForceSynchronousImport);

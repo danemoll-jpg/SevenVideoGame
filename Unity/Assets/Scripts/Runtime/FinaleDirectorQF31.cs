@@ -66,12 +66,73 @@ namespace Seven
             for (int i = 0; i < 7 && i < ProjectionWalls.Length; i++) if (_wallOn[i] && ProjectionWalls[i] != null && ProjectionWalls[i].enabled) { var m = ProjectionWalls[i].material; if (m.HasProperty("_TexA")) m.SetTexture("_TexA", WallTex(i)); }
         }
 
+        // ---- QF34 (3): the proof, from the GAMEPLAY camera, every frame while the visions play (FIN_05-07): rays to Europa's screen's four
+        // corners and centre; anything of light in the way (a column, a beam, a field, the alcove's light strips, the lock) fails
+        int _ewFrames, _ewByLight, _ewByGeom; string _ewWhat; bool _ewWindow = true;
+        IEnumerator EuropaScreenWatch()
+        {
+            while (ProjectionWalls == null || ProjectionWalls.Length <= L.EuropaScreen || ProjectionWalls[L.EuropaScreen] == null || !ProjectionWalls[L.EuropaScreen].enabled) yield return null;
+            var w = ProjectionWalls[L.EuropaScreen];
+            while (w != null && w.enabled)
+            {
+                var cam = Camera.main; if (cam == null) { yield return null; continue; }
+                var eye = cam.transform.position;
+                BeaconsClearScreens(eye);
+                if (_ewWindow)
+                {
+                    var lights = FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(r => r != null && r.enabled && r.gameObject.activeInHierarchy && r != w && LightLike(r)).ToList();
+                    bool byLight = false, byGeom = false;
+                    foreach (var c in new[] { new Vector3(-0.5f, -0.5f, 0f), new Vector3(0.5f, -0.5f, 0f), new Vector3(-0.5f, 0.5f, 0f), new Vector3(0.5f, 0.5f, 0f), Vector3.zero })
+                    {
+                        var p = w.transform.TransformPoint(c); var d = p - eye; float dist = d.magnitude; var ray = new Ray(eye, d / dist);
+                        foreach (var r in lights) if (r.bounds.IntersectRay(ray, out float hd) && hd > 0.3f && hd < dist - 0.25f && ThinHit(r, eye, p)) { byLight = true; _ewWhat = r.name; break; }
+                        if (!ChapterCamera.ClearLine(eye, p - d / dist * 0.15f)) byGeom = true;
+                    }
+                    _ewFrames++; if (byLight) _ewByLight++; if (byGeom) _ewByGeom++;
+                }
+                yield return null;
+            }
+        }
+        /// <summary>A thin light mesh (tubes, strips): the bounding box says "maybe" - the segment must pass within 8 cm of the mesh itself.
+        /// Sheets and columns (fields, beams) keep the box test.</summary>
+        static bool ThinHit(Renderer r, Vector3 a, Vector3 b)
+        {
+            var n = r.name; if (n.Contains("Beam") || n.Contains("Column") || n.Contains("Field") || n.Contains("PaleLight") || n.StartsWith("Halo_")) return true;
+            var mf = r.GetComponent<MeshFilter>(); if (mf == null || mf.sharedMesh == null || mf.sharedMesh.vertexCount > 20000) return true;
+            var v = mf.sharedMesh.vertices; var tr = r.transform; var ab = b - a; float L2 = ab.sqrMagnitude;
+            foreach (var lv in v) { var w = tr.TransformPoint(lv); float t = Mathf.Clamp01(Vector3.Dot(w - a, ab) / L2); if ((a + ab * t - w).sqrMagnitude < 0.0064f) return true; }
+            return false;
+        }
+        static bool LightLike(Renderer r)
+        {
+            var n = r.name;
+            if (n.StartsWith("BeaconBeam")) { var m = r.sharedMaterial; return m == null || !m.HasProperty("_Intensity") || m.GetFloat("_Intensity") > 0.05f; }
+            return n.StartsWith("Halo_") || n.Contains("Beam") || n.Contains("Column") || n.Contains("PaleLight") || n.Contains("AscentLight") || n.Contains("BarrierField") || n.Contains("BarrierFrame") || n.Contains("ExternalLock") || n.Contains("Light_");
+        }
+        void EuropaScreenReport() { _ewWindow = false; Log($"EUROPA SCREEN (QF34 3): FIN_05-07 from the gameplay camera, {_ewFrames} frames x 5 rays (the four corners + the centre of ProjectionWall{L.EuropaScreen}) - frames with a light / beam / field in the way {_ewByLight} (must be 0){(_ewByLight > 0 ? " - " + _ewWhat : "")}; with solid geometry in the way (her, a pedestal) {_ewByGeom}; light columns stepped back for a screen {FinaleDirector.ColumnsStepped}x"); }
+        /// <summary>QF34 (3): from the player's camera (7 placed, the follow camera snapped behind her) at the Europa placement spot and three more.</summary>
+        IEnumerator EuropaScreenProof()
+        {
+            if (ProjectionWalls == null || ProjectionWalls[L.EuropaScreen] == null) yield break;
+            var scr = ProjectionWalls[L.EuropaScreen].transform.position; var back = P7; var backF = Seven.transform.forward;
+            var spots = new (string, Vector3)[] { ("the_europa_placement_spot", L.Stand(L.EuropaScreen * 360f / 7f)), ("the_chamber_centre_west", L.ChamberC + new Vector3(-4f, 0f, 0.5f)), ("the_entrance", new Vector3(11.5f, L.Y, -152.4f)), ("the_breach_side", L.ChamberC + new Vector3(-1.5f, 0f, -9.5f)) };
+            Seven.Lock(true);
+            foreach (var (name, at0) in spots)
+            {
+                var at = at0; at.y = L.Y; Seven.Place(at, Flat(scr - at).normalized); Cam.SnapBehind(); Cam.Pitch = Cam.MinPitch;   // tilted up to the screen, as the player does
+                for (float t = 0f; t < 0.7f; t += Time.deltaTime) { Cam.Pitch = Cam.MinPitch; BeaconsClearScreens(Cam.transform.position); yield return null; }
+                ImageGate.ExpectPoint(scr + Vector3.down * 1.2f, "Europa's vision screen, nothing of light in front of it");
+                yield return Shot("qf34_3_europa_screen_from_" + name);
+            }
+            Seven.Place(back, backF); Cam.SnapBehind(); Seven.Lock(false);
+        }
+
         /// <summary>QF31 (9) gate check: every lit screen seen from <paramref name="cam"/> - nine points on its face, each with a clear line
         /// (geometry) and no light beam / column / field in the way (renderer bounds).</summary>
         int ScreenViewCheck(string when, Vector3 cam, bool onlyLit = true)
         {
             if (ProjectionWalls == null) return 0;
-            var beams = FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(r => r != null && r.enabled && r.gameObject.activeInHierarchy && (r.name.Contains("Beam") || r.name.Contains("Column") || r.name.Contains("PaleLight") || r.name.Contains("AscentLight") || r.name.Contains("BarrierField") || r.name.Contains("Light_Beam"))).ToList();
+            var beams = FindObjectsByType<Renderer>(FindObjectsSortMode.None).Where(r => r != null && r.enabled && r.gameObject.activeInHierarchy && LightLike(r)).ToList();   // QF34 (3): every light-like thing, not six names
             int blocked = 0, hidden = 0, seen = 0;
             for (int i = 0; i < ProjectionWalls.Length; i++)
             {
@@ -79,7 +140,7 @@ namespace Seven
                 int clear = 0, byBeam = 0, byWall = 0; string by = null;
                 for (int a = -1; a <= 1; a++) for (int b = -1; b <= 1; b++)
                 {
-                    var p = w.transform.TransformPoint(new Vector3(a * 0.42f, b * 0.42f, 0f)); var dir = p - cam; float dist = dir.magnitude; var ray = new Ray(cam, dir / dist);
+                    var p = w.transform.TransformPoint(new Vector3(a * 0.5f, b * 0.5f, 0f)); /* QF34 (3): to the corners (was the inner 84 %) */ var dir = p - cam; float dist = dir.magnitude; var ray = new Ray(cam, dir / dist);
                     if (!ChapterCamera.ClearLine(cam, p - dir.normalized * 0.12f)) { byWall++; continue; }
                     bool beam = false; foreach (var r in beams) { if (r.bounds.IntersectRay(ray, out float hd) && hd < dist - 0.2f && hd > 0.3f) { beam = true; by = r.name; break; } }
                     if (beam) byBeam++; else clear++;
@@ -107,11 +168,20 @@ namespace Seven
             CaptureHomes(); if (_sunk) yield break; _sunk = true;
             if (secs > 0f) { AudioKit.Play("ast_platform_retract", L.PlatformAt + Vector3.up, 1f); AudioKit.Play("slab_lift", L.PlatformAt, 0.7f); CameraShake.Quake(0.12f, secs); }
             var rune0 = _runes.Select(r => r != null ? r.position : Vector3.zero).ToArray();
+            var clicked = new bool[Sockets != null ? Sockets.Length : 0]; bool tableClick = false; int clicks = 0;
             for (float t = 0f; t < 1f; t += Time.deltaTime / Mathf.Max(0.01f, secs))
             {
-                Sink(Mathf.SmoothStep(0f, 1f, t), rune0); if (secs <= 0f) break; yield return null;
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                Sink(u, rune0); if (secs <= 0f) break;
+                // QF34 (7): each pedestal locks home with a deep clunk-click the moment it is flush (in sequence: the stagger in Sink), the
+                // two takes alternating, the pitch a touch different each time; the table a heavier, final clunk with a stone rumble
+                for (int i = 0; i < clicked.Length; i++) if (!clicked[i] && Sockets[i] != null && Mathf.Clamp01(u * 1.25f - i * 0.035f) >= 0.995f)
+                { clicked[i] = true; clicks++; var a = AudioKit.Play(i % 2 == 0 ? "fin_pedestal_lock_a" : "fin_pedestal_lock_b", Sockets[i].position + Vector3.up * 0.3f, 0.9f, 0.06f); if (a != null) a.pitch *= 0.94f + 0.03f * (i % 3); }
+                if (!tableClick && u >= 0.985f) { tableClick = true; AudioKit.Play("fin_table_lock", L.PlatformAt + Vector3.up * 0.5f, 1f); CameraShake.Quake(0.18f, 0.5f); }
+                yield return null;
             }
             Sink(1f, rune0);
+            if (secs > 0f) { for (int i = 0; i < clicked.Length; i++) if (!clicked[i]) { clicks++; AudioKit.Play("fin_pedestal_lock_a", Sockets[i] != null ? Sockets[i].position : L.PlatformAt, 0.9f, 0.06f); } if (!tableClick) AudioKit.Play("fin_table_lock", L.PlatformAt + Vector3.up * 0.5f, 1f); Log($"SINK CLICKS (QF34 7): {clicks} pedestals locked with a clunk-click in sequence, the table with its final clunk + rumble"); }
             Glow(WellRim, 0.7f); Glow(PlatformSurface, 0.11f);   // a soft well (it sits under the fight camera; P2: 0.22 read as a clipped white disc filling a fifth of the fight view)
             Log($"QF31 (8): the rune pedestals sank flush into the floor (the runes set and glowing in their sockets), the archive's table lowered into a shallow light well ({L.WellDepth * 100f:0} cm), the rim lit - the open floor is clear");
         }
@@ -601,7 +671,7 @@ namespace Seven
             Complete("FIN_12");
             Log($"RECEIVED MONTAGE (QF31 4): the in-scene shots - 7 / Panther visible in {_usSeen} of {_usChecked} (must be 0)");
         }
-        int _usSeen, _usChecked;
+        int _usSeen, _usChecked; bool _highShot;
         /// <summary>QF31 (4): 7 or Panther in this camera's view (inside the frustum with a clear line to them) - the montage must show neither.</summary>
         void UsInFrame(string shot)
         {
@@ -645,14 +715,13 @@ namespace Seven
             // the light simply begins to fall on her (no voice in the chamber); she lifts her head toward it
             var colAt = new Vector3(P7.x, L.Y, P7.z);
             var beam = AscentColumn(colAt);
-            if (PaleLight != null) PaleLight.enabled = true;
+            if (PaleLight != null) PaleLight.enabled = false;   // QF34 (4): no light over the table - the one vertical column on them only
             var ik = IK; ik.LookPos = colAt + Vector3.up * 12f; ik.LookW = 0f;
             var fwd = Seven.transform.forward; var side = Vector3.Cross(Vector3.up, fwd);
-            { var toC = Flat(L.ChamberC - P7).normalized; var pp = Vector3.Cross(Vector3.up, toC); Shoot(P7 + pp * 2.9f + toC * 0.5f + Vector3.up * 1.0f, HerHead + Vector3.down * 0.15f, 36f, 0.01f); }   // side-on to the column's lean: her face as she lifts it, little of the light between   // from the chamber's centre side: the column of light (which leans in from the oculus) never behind her
+            { var toC = Flat(L.ChamberC - P7).normalized; var pp = Vector3.Cross(Vector3.up, toC); Shoot(P7 + pp * 2.9f + toC * 0.5f + Vector3.up * 1.0f, HerHead + Vector3.down * 0.15f, 36f, 0.01f); }   // side-on: her face as she lifts it into the column falling straight down on her
             for (float t = 0f; t < 1f; t += Time.deltaTime / 3.2f)
             {
                 beam.SetFloat("_Intensity", t * 0.13f);
-                if (PaleLight != null) { var m = PaleLight.material; if (m.HasProperty("_Intensity")) m.SetFloat("_Intensity", t * 0.16f); }
                 rest.Bow = Mathf.Lerp(24f, -8f, Mathf.SmoothStep(0f, 1f, (t - 0.4f) / 0.6f)); rest.Sob = Mathf.Lerp(0.4f, 0f, t);
                 ik.LookW = Mathf.SmoothStep(0f, 1f, (t - 0.4f) / 0.6f);
                 yield return null;
@@ -678,22 +747,27 @@ namespace Seven
             var rends = Seven.GetComponentsInChildren<Renderer>().Concat(Cat != null ? Cat.GetComponentsInChildren<Renderer>() : new Renderer[0]).ToArray(); var mpb = new MaterialPropertyBlock();
             var y0 = Seven.transform.position.y; bool fadeStarted = false;
             StartCoroutine(StopWorldAudio(6.5f));
-            Shoot(L.ChamberC + new Vector3(-10.4f, 1.0f, 9.0f), colAt + Vector3.up * 2.4f, 58f, 0.01f);   // wide and low: the chamber, the well, the Scree in the doorway
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 8f)
+            // QF34 (4): they rise STRAIGHT UP inside the column (her holding him); the camera stays low beside the column and tilts up after
+            // them all the way, until they are lost in the light high above; then white, held ~2 s; then the heaven film fades in from it
+            var toCen = Flat(L.ChamberC - colAt); if (toCen.sqrMagnitude < 0.01f) toCen = Vector3.forward; toCen.Normalize();
+            var camAt = colAt + toCen * 7.5f + Vector3.Cross(Vector3.up, toCen) * 2.0f + Vector3.up * 0.9f;
+            float riseH = L.ChamberH - 2.2f, x0 = Seven.transform.position.x, z0 = Seven.transform.position.z;
+            Shoot(camAt, colAt + Vector3.up * 1.8f, 52f, 0.01f);
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 9f)
             {
                 float u = Mathf.SmoothStep(0f, 1f, t);
-                var p = Seven.transform.position; p.y = y0 + u * 5.2f; Seven.transform.position = p;
-                beam.SetFloat("_Intensity", 0.13f + u * 0.7f);
-                if (PaleLight != null) { var m = PaleLight.material; if (m.HasProperty("_Intensity")) m.SetFloat("_Intensity", 0.16f + u * 0.45f); }
-                if (t > 0.5f) foreach (var r in rends) { if (r == null) continue; r.GetPropertyBlock(mpb); mpb.SetFloat("_Fade", Mathf.SmoothStep(0f, 1f, (t - 0.5f) / 0.5f)); r.SetPropertyBlock(mpb); }
-                // the camera tilts up after them as they rise; the chamber falls away below
-                if (t > 0.35f) { var camP = L.ChamberC + new Vector3(-10.4f, 1.0f + (t - 0.35f) * 6f, 9.0f); Shoot(camP, new Vector3(colAt.x, p.y + 0.8f, colAt.z), 58f, 0.01f); }
-                if (!_softShot && t > 0.22f) { _softShot = true; ImageGate.Expect(Seven.transform, "they rise together in the light, the chamber below"); StartCoroutine(Shot("f58_they_rise_together_into_the_light")); }
-                if (!fadeStarted && t > 0.6f) { fadeStarted = true; StartCoroutine(UI.Fade(1f, 3.4f, 1f)); }
+                var p = new Vector3(x0, y0 + u * riseH, z0); Seven.transform.position = p;          // straight up: no drift sideways
+                beam.SetFloat("_Intensity", 0.13f + u * 0.8f);
+                if (t > 0.55f) foreach (var r in rends) { if (r == null) continue; r.GetPropertyBlock(mpb); mpb.SetFloat("_Fade", Mathf.SmoothStep(0f, 1f, (t - 0.55f) / 0.4f)); r.SetPropertyBlock(mpb); }   // lost in the light high above
+                Shoot(camAt, new Vector3(colAt.x, p.y + 0.9f, colAt.z), 52f, 0.01f);                 // the camera tilts up after them
+                if (!_softShot && t > 0.25f) { _softShot = true; ImageGate.Expect(Seven.transform, "they rise straight up in the column of light"); StartCoroutine(Shot("f58_they_rise_straight_up_in_the_light")); }
+                if (!_highShot && t > 0.6f) { _highShot = true; ImageGate.ExpectPoint(new Vector3(colAt.x, p.y + 0.9f, colAt.z), "the two of them high in the column, fading into the light"); StartCoroutine(Shot("f58b_high_in_the_column")); }
                 yield return null;
             }
-            yield return Wait(0.8f);
+            Log($"FIN_13 (QF34 4): one vertical column on them (no light over the table, no diagonal); they rose {riseH:0.0} m straight up (no sideways drift) and the camera followed them up until they were lost in the light");
+            yield return UI.Fade(1f, 1.6f, 1f);
             yield return Shot("f59_fade_through_white");
+            yield return Wait(2f);   // white held ~2 s, then the heaven film fades in from white
             MusicSystem.Stop(2f); MusicSystem.Level = 1f;
             HandsOff("they are in the light (FIN_13 -> heaven)");
             StopWalls();

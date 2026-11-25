@@ -54,6 +54,7 @@ namespace Seven
         {
             if (!_stopped && DemoBoot.StopAfter > 0f && Time.time > DemoBoot.StopAfter && !ClipRecorder.Recording) { _stopped = true; Finish($"stopped after {DemoBoot.StopAfter:0} s of game time (-stopafter)"); }
             if (_cam != null) WatchControl();
+            ClipRecorder.Tick();                                                   // QF34 (2): memories at a game time
             AudioListener.GetOutputData(_buf, 0);
             foreach (var v in _buf) _peak = Mathf.Max(_peak, Mathf.Abs(v));
         }
@@ -155,6 +156,7 @@ namespace Seven
             if (MothershipInterior.Shown > 0 || RecordDisplay.Built > 0) Log($"QF24 (2/4): record displays built {RecordDisplay.Built}, the mothership's interior shown {MothershipInterior.Shown}x");
             if (HandHold.Frames > 0) Log(HandHold.Summary());                       // QF28 (5)
             if (FurContact.Any) Log(FurContact.Summary());                         // P2 (8)
+            if (FurPalm.MotionFrames > 0) Log(FurPalm.MotionSummary());            // QF34 (1)
             if (TunnelerBody.Frames > 0 || TunnelerBody.Lines > 0) Log(TunnelerBody.Summary());   // P2 (9)
             if (ScreeRig.CalmFrames > 0) Log(ScreeRig.Summary());                   // P2 (10)
             Log($"RIDE ROOT (P2 1): body placed on the saddle in the IK pass {ChapterSeven.BodyPlaced} frames; frames the hips were still > 0.3 m off the saddle after it {ChapterSeven.RideBigErr} (never folded into her root); root offset clamps {ChapterSeven.RideOffsetClamps}");

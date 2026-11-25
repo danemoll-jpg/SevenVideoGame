@@ -6,7 +6,7 @@ from the list in the script on every run — edit the script, not this file. Eve
 "Quiet, atmospheric, natural and realistic sound. No music, no voices.". Loops: generated with `loop: true`, then a 120 ms equal-power tail→head
 crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids by name — keep them exactly.
 
-186 sounds.
+189 sounds.
 
 | id | prompt | duration s | loop | where used |
 |---|---|---|---|---|
@@ -196,3 +196,6 @@ crossfade, peak -6 dBFS. One-shots: peak -3 dBFS. The game code loads these ids 
 | `seven_breath_shaky` | A young woman's single shaky, tearful breath in and a slow breath out, very quiet, close, no words. | 2.2 |  | QF31 (A3): her breathing between the memories |
 | `cat_cry_low` | A single low, weak, mournful cry of a large wounded panther lying on the ground: a soft pained moan, low in pitch, fading out into a breath. Quiet and close. Not a meow, not a scream, not a roar, not a growl. | 2.6 |  | P2 (11): Panther hurt (FIN_09), once |
 | `drill_impact_heavy` | A heavy blunt impact: a spinning industrial drill slamming into something solid with a deep thud, a short metallic screech and grinding sparks, then the drill stalling. No voice. | 1.6 |  | QF31 (A2): the drill strikes Panther (no gore - a heavy blunt impact) |
+| `fin_pedestal_lock_a` | A heavy ancient stone pedestal locking flush into a stone floor: a deep, crisp mechanical clunk-click, metal bolts snapping home inside stone, clean and satisfying, very short tail. No voice. | 0.9 |  | QF34 (7): a rune pedestal locks flush (in sequence) |
+| `fin_pedestal_lock_b` | A stone block mechanism settling and locking into place: a solid low thunk with a sharp metallic click on top, precise and satisfying, short. No voice. | 0.9 |  | QF34 (7): a rune pedestal locks flush (the alternate take) |
+| `fin_table_lock` | A massive stone table sinking the last centimetres into a floor and locking: a heavy, final deep clunk of stone and metal latches, followed by a soft low stone rumble fading out. Satisfying and clean. No voice. | 2.4 |  | QF34 (7): the archive's table locks into its light well |

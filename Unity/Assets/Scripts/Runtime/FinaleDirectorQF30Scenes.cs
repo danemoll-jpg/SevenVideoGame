@@ -183,9 +183,32 @@ namespace Seven
             return kneel;
         }
         int _cradleLogged;
+        Transform _bindHead, _bindNeck, _bindChest; Vector3 _hLocal, _hNLocal, _sLocal, _sNLocal, _cLocal, _cNLocal, _hSm, _nSm, _hVel, _nVel; bool _rebind, _smoothInit; float _strokeBack, _offFor, _clipNext, _reachCheck; int _clipN, _bindLogs, _reBinds; Vector3 _palmR, _palmL;
+        Vector3 _clipAt, _clipSide; int _clipRuns;
+        /// <summary>QF34 (1): check runs - a close-up clip of her hands on him from the gather to "Panther, no!" (10 fps, frames written to
+        /// &lt;capture dir&gt;/fin10_clip/, stitched by ffmpeg into Docs/Previews/qf34/fin10_hands.mp4) - a side camera of its own.</summary>
+        IEnumerator Fin10Clip()
+        {
+            if (DemoBoot.CaptureDir == null) yield break;
+            var dir = System.IO.Path.Combine(DemoBoot.CaptureDir, _clipRuns++ == 0 ? "fin10_clip" : "fin10_clip_grief"); System.IO.Directory.CreateDirectory(dir);
+            var main = Cam.GetComponent<Camera>(); var go = new GameObject("Fin10ClipCam"); var c = go.AddComponent<Camera>(); c.CopyFrom(main); c.fieldOfView = 38f;
+            var ud = go.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>(); ud.renderPostProcessing = true;
+            var rt = new RenderTexture(960, 540, 24); c.targetTexture = rt; var tex = new Texture2D(960, 540, TextureFormat.RGB24, false); int n = 0; float next = 0f;
+            while (_handsOn && n < 900)
+            {
+                if (_clipAt != Vector3.zero) { var p = _clipAt + _clipSide * 0.95f + Vector3.up * 0.6f; go.transform.SetPositionAndRotation(p, Quaternion.LookRotation(_clipAt - p)); }
+                yield return new WaitForEndOfFrame();
+                if (Time.time < next) continue; next = Time.time + 0.1f;
+                var prev = RenderTexture.active; RenderTexture.active = rt; tex.ReadPixels(new Rect(0, 0, 960, 540), 0, 0); tex.Apply(false); RenderTexture.active = prev;
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(dir, $"f{++n:0000}.jpg"), tex.EncodeToJPG(88));
+            }
+            Destroy(go); rt.Release(); Destroy(tex);
+            Log($"FIN_10 CLIP (QF34 1): {n} frames of her hands on him (10 fps) -> fin10_clip/; hand re-binds to the fur within her reach {_reBinds}");
+        }
         IEnumerator HandsOnHim()
         {
-            _reachBow = 0f; _cradleLogged = 0;
+            StartCoroutine(Fin10Clip());
+            _reachBow = 0f; _cradleLogged = 0; _bindHead = null; _smoothInit = false; _strokeBack = 0f; _offFor = 0f;
             var ik = IK; ik.Ease = 1.4f; ik.Alive = true; ik.Spread = 0.6f;
             while (_handsOn && Cat != null)
             {
@@ -210,18 +233,59 @@ namespace Seven
                     ov.Cradle = Vector3.Lerp(hipsB.position, knees, 0.72f) + Vector3.up * 0.07f;
                     if (_cradleLogged < 2 && ov.CradleLift != 0f && Time.frameCount % 60 == 0) { _cradleLogged++; Log($"FIN_10 CRADLE (QF32 1): his head drawn toward her lap - lifted {ov.CradleLift * 100f:0} cm, head {Vector3.Distance(head.position, ov.Cradle.Value):0.00} m from her lap point"); }
                 }
-                var headP = _stroke ? Vector3.Lerp(head.position, neck.position, _strokeU) : Vector3.Lerp(head.position, neck.position, 0.25f);   // on his head and neck
+                // QF34 (1): the spasms - the targets were the NEAREST BAKED-MESH VERTEX to a guess, re-picked every frame: on a breathing,
+                // shrinking body the pick hopped between vertices (cm-sized jumps), FurPalm then re-solved the same arms on top (two solvers),
+                // and the stroke's target snapped from his neck back to his head in one frame. Now each hand is BOUND once to a point on his
+                // fur in a bone's own space (head / neck for the right hand, the neck->chest for the left): it follows his breathing, the
+                // gather and the shrink by construction; the stroke eases there and back; the result is critically damped; FurPalm only
+                // measures. (Rebound, slowly, only if a bound point ever drifts > 4 cm off his fur for half a second.)
                 var chestB = CatBone("chest") ?? neck;
-                var shoulderP = Vector3.Lerp(neck.position, chestB.position, 0.55f);                   // the other hand on his shoulder / side
-                var hSurf = OnFur(headP, up, out var hN);
-                var toHer = Flat(her - shoulderP).normalized;
-                var nSurf = OnFur(shoulderP, (toHer + Vector3.up * 0.9f).normalized, out var nN);
-                ik.RightPos = hSurf + hN * 0.03f - Flat(Cat.transform.forward).normalized * 0.04f; ik.RightPalmN = hN; ik.RightPalmW = 1f; ik.RightFingerDir = Flat(Cat.transform.forward); ik.RightW = 1f;
-                ik.LeftPos = nSurf + nN * 0.03f; ik.LeftPalmN = nN; ik.LeftPalmW = 0.9f; ik.LeftFingerDir = (-toHer + Vector3.down * 0.5f).normalized; ik.LeftW = 1f;
+                var toHer = Flat(her - Vector3.Lerp(neck.position, chestB.position, 0.55f)).normalized;
+                if (_bindHead == null || _rebind)
+                {
+                    _rebind = false;
+                    var hs0 = OnFur(Vector3.Lerp(head.position, neck.position, 0.25f), up, out var hn0); _bindHead = head; _hLocal = head.InverseTransformPoint(hs0); _hNLocal = head.InverseTransformDirection(hn0);
+                    var ns0 = OnFur(Vector3.Lerp(head.position, neck.position, 1f), up, out var nn0); _bindNeck = neck; _sLocal = neck.InverseTransformPoint(ns0); _sNLocal = neck.InverseTransformDirection(nn0);
+                    var cs0 = OnFur(Vector3.Lerp(neck.position, chestB.position, 0.55f), (toHer + Vector3.up * 0.9f).normalized, out var cn0); _bindChest = neck; _cLocal = neck.InverseTransformPoint(cs0); _cNLocal = neck.InverseTransformDirection(cn0);
+                    if (_bindLogs++ == 0) Log("FIN_10 HANDS (QF34 1): each hand bound to a point on his fur in his head / neck bones' space (no per-frame re-pick); the contact eased on by FurPalm");
+                }
+                float su = _stroke ? _strokeU : Mathf.MoveTowards(_strokeBack, 0f, Time.deltaTime / 1.0f); _strokeBack = su;   // the stroke goes there AND back (eased), never snaps
+                var hSurfW = Vector3.Lerp(_bindHead.TransformPoint(_hLocal), _bindNeck.TransformPoint(_sLocal), su);
+                var hNW = Vector3.Slerp(_bindHead.TransformDirection(_hNLocal), _bindNeck.TransformDirection(_sNLocal), su).normalized;
+                var nSurfW = _bindChest.TransformPoint(_cLocal); var nNW = _bindChest.TransformDirection(_cNLocal).normalized;
+                if (!_smoothInit) { _hSm = hSurfW; _nSm = nSurfW; _smoothInit = true; }
+                _hSm = Vector3.SmoothDamp(_hSm, hSurfW, ref _hVel, 0.3f); _nSm = Vector3.SmoothDamp(_nSm, nSurfW, ref _nVel, 0.3f);
+                // a hand whose bound point stays out of her reach (its palm > 4 cm off his fur for 1.5 s) re-binds to the fur nearest the palm
+                _reachCheck += Time.deltaTime;
+                if (_reachCheck > 1.5f)
+                {
+                    _reachCheck = 0f;
+                    foreach (var (right, hb, mb) in new[] { (true, HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal), (false, HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal) })
+                    {
+                        var hh = Seven.Bone(hb); var mm = Seven.Bone(mb); if (hh == null || mm == null) continue; var palmC = (hh.position + mm.position) * 0.5f;
+                        if (FurContact.Nearest(Cat.transform, palmC, out var sp, out var snn, out var sgn) && sgn > 0.04f)
+                        {
+                            if (right) { _hLocal = _bindHead.InverseTransformPoint(sp); _hNLocal = _bindHead.InverseTransformDirection(snn); _sLocal = _bindNeck.InverseTransformPoint(sp); _sNLocal = _bindNeck.InverseTransformDirection(snn); }
+                            else { _cLocal = _bindChest.InverseTransformPoint(sp); _cNLocal = _bindChest.InverseTransformDirection(snn); }
+                            _reBinds++;
+                        }
+                    }
+                }
+                var hSurf = _hSm; var hN = hNW; var nSurf = _nSm; var nN = nNW;
+                // a bound point that drifted off his fur (it should not: the bones carry it) is re-bound, not chased
+                if (FurContact.Nearest(Cat.transform, hSurfW, out _, out _, out var dOff) && Mathf.Abs(dOff) > 0.08f) { _offFor += Time.deltaTime; if (_offFor > 3f) { _offFor = 0f; _rebind = true; } } else _offFor = 0f;
+                // QF34 (1): the WRIST is aimed so the PALM CENTRE lands on the bound point (the palm's offset from the wrist measured on the
+                // pose, smoothed) - rc6 aimed the wrist 3 cm out with a guessed offset, so the palm stayed 5-11 cm off his fur
+                { var rh = Seven.Bone(HumanBodyBones.RightHand); var rm = Seven.Bone(HumanBodyBones.RightMiddleProximal); var lh = Seven.Bone(HumanBodyBones.LeftHand); var lm = Seven.Bone(HumanBodyBones.LeftMiddleProximal);
+                  if (rh != null && rm != null) _palmR = Vector3.Lerp(_palmR, (rm.position - rh.position) * 0.5f, 1f - Mathf.Exp(-Time.deltaTime * 5f));
+                  if (lh != null && lm != null) _palmL = Vector3.Lerp(_palmL, (lm.position - lh.position) * 0.5f, 1f - Mathf.Exp(-Time.deltaTime * 5f)); }
+                ik.RightPos = hSurf + hN * 0.012f - _palmR; ik.RightPalmN = hN; ik.RightPalmW = 1f; ik.RightFingerDir = Flat(Cat.transform.forward); ik.RightW = 1f;
+                ik.LeftPos = nSurf + nN * 0.012f - _palmL; ik.LeftPalmN = nN; ik.LeftPalmW = 0.9f; ik.LeftFingerDir = (-toHer + Vector3.down * 0.5f).normalized; ik.LeftW = 1f;
                 ik.LeftHint = P7 + Vector3.up * 0.7f - Seven.transform.right * 0.5f; ik.LeftHintW = 0.6f; ik.RightHint = P7 + Vector3.up * 0.8f + Seven.transform.right * 0.5f; ik.RightHintW = 0.6f;
                 ik.LookPos = head.position; ik.LookW = 1f;
+                _clipAt = (hSurf + nSurf) * 0.5f; _clipSide = Vector3.Cross(Vector3.up, Flat(head.position - P7).normalized);
                 // and both palms held on him every frame (measured against his body after every other hand pass, never let go here)
-                var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f, true); fp.Set(false, Cat.transform, "FIN_10 hand on his shoulder", 1f, true);
+                var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f, true); fp.Set(false, Cat.transform, "FIN_10 hand on his shoulder", 1f, true);   // QF34 (1): the damped contact (FurPalm eases onto the fur)
                 // P2 (8) / QF32 (1): she bows toward him as far as EITHER hand needs (kneeling at his head now, the bow is small)
                 var rp = Seven.GetComponent<SevenRestPose>();
                 float Need(HumanBodyBones a, HumanBodyBones b, HumanBodyBones c, Vector3 target)
@@ -290,11 +354,14 @@ namespace Seven
                 yield return null;
             }
         }
+        /// <summary>QF34 (4): ONE straight vertical column of light directly over them, from the dark above straight down onto them (rc6:
+        /// this column was tilted from her toward the chamber's oculus - the "diagonal beam" - and the PaleLight cylinder lit over the
+        /// table at the same time).</summary>
         Material AscentColumn(Vector3 at)
         {
-            var top = L.ChamberC + Vector3.up * (L.ChamberH + 2f); var dir = (top - at).normalized; float len = (top - at).magnitude;
+            var top = new Vector3(at.x, L.Y + L.ChamberH + 0.5f, at.z); var dir = Vector3.up; float len = top.y - at.y;
             var col = GameObject.CreatePrimitive(PrimitiveType.Cylinder); Destroy(col.GetComponent<Collider>()); col.name = "AscentLight_Beam";
-            col.transform.position = at + dir * len * 0.5f; col.transform.rotation = Quaternion.FromToRotation(Vector3.up, dir); col.transform.localScale = new Vector3(2.4f, len * 0.5f, 2.4f);
+            col.transform.position = at + dir * len * 0.5f; col.transform.rotation = Quaternion.identity; col.transform.localScale = new Vector3(2.4f, len * 0.5f, 2.4f);
             var m = Markers.Additive(0f); col.GetComponent<Renderer>().sharedMaterial = m; col.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             var disc = new GameObject("AscentLight_Glow"); disc.transform.position = at + Vector3.up * 0.02f; disc.AddComponent<MeshFilter>().sharedMesh = Markers.DiscMesh(1.3f, 32); disc.AddComponent<MeshRenderer>().sharedMaterial = m;
             return m;

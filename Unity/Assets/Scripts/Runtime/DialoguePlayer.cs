@@ -185,6 +185,7 @@ namespace Seven
             UI?.ShowSubtitle(line.Label ?? (line.IsCat ? "Cat" : "7"), line.Text, line.IsCat, far);
             LinesStarted++;
             LineStarted?.Invoke(line);
+            ClipRecorder.OnLine(line.Id);       // QF34 (2): a memory clip may start on this line
             DialogueFraming.Check(line);          // QF18 (7): the speaker must be visible in a dialogue shot
             float len = line.Clip != null ? line.Clip.length : 1.2f + line.Text.Length * 0.06f;
             if (line.Clip != null) { src.clip = line.Clip; src.Play(); }

@@ -588,7 +588,14 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**Round 20 (2026-11-25): 1.1.0-beta1 (build 2000, `game-2000`) PUBLISHED, Latest - the Grand Circuit racing mode (below). Next: QF34.**
+**QF34 (2026-11-25): 1.0.0-rc7 (build 2001, `game-2001` - above beta1's 2000: the launcher only installs a higher build) PUBLISHED, Latest
+(rc2-rc6 + 1.1.0-beta1 retained). Status, why each repeat didn't hold and "For Dan to check (QF34)" in `TODO.md`.** code: FIN_10's hands bound to his
+bones once + eased (`HandsOnHim`, `FurPalm` SmoothDamp correction; check `HAND MOTION (QF34 1)`), the memory montage
+(`ClipRecorder` two-shot camera + `both_visible.txt`, `Tools/Video/make_memory_montage.py` -> `Art/Video/panther_memories_code.mp4`, fog border),
+Europa's screen at 114 deg + `EuropaScreenWatch` / `EuropaScreenProof` (rays from the gameplay camera), one vertical column at the end,
+the mining cranes / wall cracks / Chapter 1 gantry + sconces, `Chapter1AboardFinale.Approach`, the pedestal / table clicks, `FinaleSparkle`.
+Iteration builds: `BuildFinaleFromCommandLine` / `BuildGrandCircuitFromCommandLine` (one scene + the player). Next: item 9 (the Voice in the chamber).
+**Round 20 (2026-11-25): 1.1.0-beta1 (build 2000, `game-2000`) PUBLISHED, Latest - the Grand Circuit racing mode (below).**
 **QF33 (2026-11-24): 1.0.0-rc6 (build 1905, `game-1905`) PUBLISHED, Latest (rc2-rc5 retained).** Dan's heaven film
 (`Art/Video/color/heaven_color_game.mp4`, made from his .mov) plays in the ending as one clip, the lines cued by the clip's own clock
 (`FinaleDirectorQF31.HeavenOneClip`, `HeavenPanther / HeavenHello / HeavenLaugh / HeavenRestEnd`). Status in `TODO.md`. Then Round 20.

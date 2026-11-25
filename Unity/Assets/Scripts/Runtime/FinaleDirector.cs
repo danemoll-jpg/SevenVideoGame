@@ -69,7 +69,8 @@ namespace Seven
         // ------------------------------------------------------------------------------------------ setup
         void Start()
         {
-            I = this;
+            I = this; StartCoroutine(EuropaScreenWatch());   // QF34 (3)
+            if (Seven != null) FinaleSparkle.Make(Seven.transform);   // QF34 (8)
             if (DemoBoot.CaptureDir != null && !FinaleState.SceneSelectRun && !DemoBoot.Continue && DemoBoot.FinCp >= 0) FinaleState.ResetForTest();
             int startCp = DemoBoot.FinCp >= 0 && DemoBoot.CaptureDir != null ? DemoBoot.FinCp : FinaleState.Checkpoint;
             if (DemoBoot.FinCp >= 0 && DemoBoot.CaptureDir != null && !FinaleState.SceneSelectRun) FinaleState.Fake(startCp, true);

@@ -32,6 +32,8 @@ def main():
             name = os.path.basename(clip); dst = os.path.join(OUT, name + ".mp4")
             subprocess.run([ff, "-y", "-loglevel", "error", "-framerate", "25", "-i", os.path.join(clip, "f%04d.jpg"), "-vf", "format=gray,format=yuv420p",
                             "-c:v", "libx264", "-preset", "slow", "-crf", "17", "-movflags", "+faststart", dst], check=True)
+            bv = os.path.join(clip, "both_visible.txt")
+            if os.path.exists(bv): shutil.copy(bv, os.path.join(OUT, name + ".both.txt"))   # QF34 (2): per frame, 7 AND Panther in view
             print(f"{name}: {len(frames)} frames ({len(frames) / 25:.1f} s) -> {os.path.relpath(dst, ROOT)}")
         rs = os.path.join(d, "recstills")
         if os.path.isdir(rs):

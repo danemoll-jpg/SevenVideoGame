@@ -789,7 +789,16 @@ namespace Seven.EditorTools
             var sym = L.Inscription + new Vector3(0f, 3.2f, 0.1f);
             // Round 9: in the vision the shape's outline glows large above the door (the symbol that later opens it)
             MeshObject("WholeSymbol", ShapeOutline(L.VisionShape, sym, Vector3.right, Vector3.up, Vector3.forward, 1.25f, 0.035f, "Moon_VisionWholeSymbol"), m.glow, whole.transform, false);
-            foreach (var z in colZ) foreach (var x in new[] { 15.2f, 17.8f }) Ellipsoid(gv, gt, new Vector3(x, L.Lower + 4.4f, z), Vector3.one * 0.16f, 6, 10);
+            // QF34 (5): the vision's lights floated in mid-air under the arches - now carved lamp spheres held in stone rings on brackets
+            // from the columns (lunar-era sconces)
+            { var scv = new List<Vector3>(); var sct2 = new List<int>();
+              foreach (var z in colZ) foreach (var (cx2, sg) in new[] { (13.4f, 1f), (19.6f, -1f) })
+              {
+                  var lampAt = new Vector3(cx2 + sg * 1.05f, L.Lower + 4.4f, z); Ellipsoid(gv, gt, lampAt, Vector3.one * 0.2f, 6, 10);
+                  Append(scv, sct2, Lathe(new[] { new Vector2(0.26f, -0.05f), new Vector2(0.31f, 0f), new Vector2(0.26f, 0.05f) }, 0f, 360f, 16, null, Vector3.zero).Rotated(Quaternion.Euler(0f, 0f, 90f), lampAt));
+                  Sweep(scv, sct2, new[] { new Vector3(cx2 + sg * 0.4f, L.Lower + 4.1f, z), new Vector3(cx2 + sg * 0.75f, L.Lower + 4.05f, z), new Vector3(cx2 + sg * 0.76f, L.Lower + 4.4f, z) }, 0.06f, false, 6);
+              }
+              MeshObject("WholeSconces", SaveMesh(SmoothFinish(scv, sct2), "Moon_VisionSconces"), m.ancient, whole.transform, false); }
             MeshObject("WholeGlow", SaveMesh(SmoothFinish(gv, gt), "Moon_VisionGlow"), m.glow, whole.transform, false);
             var fill = PointLight("VisionFill", new Vector3(16.5f, L.Lower + 4.5f, -33.5f), 14f, 2.2f, whole.transform);
             // Ghostly figures: pale, silhouetted, softly glowing, no faces.
@@ -847,6 +856,9 @@ namespace Seven.EditorTools
             Cart("BayCart1", new Vector3(1.22f, L.Bay, -72f), 0f, m, root);
             Drill("BayDrill", new Vector3(5.5f, L.Bay, -72.5f), 3f, m, root);
             Drill("HangingDrill", new Vector3(28f, L.Bay + 14f, -88f), 6f, m, root, true);
+            // QF34 (5): it used to float 8 m over the bay with nothing holding it - now it hangs from a gantry: two legs on the bay floor, a
+            // girder across, the drill's hoist block bolted under it
+            { var gk = new List<Vector3>(); var gtt = new List<int>(); foreach (var gx in new[] { 24.6f, 31.4f }) AddBox(gk, gtt, new Vector3(gx, L.Bay + 7.3f, -88f), new Vector3(0.7f, 14.6f, 0.7f)); AddBox(gk, gtt, new Vector3(28f, L.Bay + 14.6f + 0.35f, -88f), new Vector3(8f, 0.7f, 0.9f)); AddBox(gk, gtt, new Vector3(28f, L.Bay + 14.15f, -88f), new Vector3(1.6f, 0.4f, 1.6f)); foreach (var gx in new[] { 24.6f, 31.4f }) AddBox(gk, gtt, new Vector3(gx, L.Bay + 0.15f, -88f), new Vector3(1.6f, 0.3f, 1.6f)); MeshObject("HangingDrillGantry", SaveMesh(Finish(gk, gtt), "Moon_HangingDrillGantry"), m.metalDark, root); }
             foreach (var (x, z) in new[] { (26.5f, -70.5f), (3f, -88f), (27f, -91f), (8f, -66.5f) })
             {
                 Block($"Pole{x}", new Vector3(x - 0.08f, L.Bay, z - 0.08f), new Vector3(x + 0.08f, L.Bay + 5.5f, z + 0.08f), m.metal, root);
@@ -915,18 +927,20 @@ namespace Seven.EditorTools
             var rnd = new System.Random(77);
             float R() => (float)rnd.NextDouble();
             // Across the void (+Z): mining scaffolds and lamps; huge ancient rings and monoliths half-buried, fading into the haze.
-            var v = new List<Vector3>(); var t = new List<int>();
+            var v = new List<Vector3>(); var t = new List<int>(); var scaffoldTops = new List<Vector3>();
             for (int i = 0; i < 9; i++)
             {
                 var c = new Vector3(Mathf.Lerp(-50f, 70f, R()), -25f, Mathf.Lerp(28f, 70f, R()));
                 float h = Mathf.Lerp(18f, 40f, R());
                 AddBox(v, t, c + Vector3.up * h * 0.5f, new Vector3(1.2f, h, 1.2f));
                 AddBox(v, t, c + new Vector3(3f, h * 0.5f, 0f), new Vector3(1.2f, h, 1.2f));
-                for (float y = 4f; y < h; y += 5f) AddBox(v, t, c + new Vector3(1.5f, y, 0f), new Vector3(4.5f, 0.35f, 1.4f));
+                for (float y = 4f; y < h; y += 5f) { AddBox(v, t, c + new Vector3(1.5f, y, 0f), new Vector3(4.5f, 0.35f, 1.4f)); if (y > h - 10f) scaffoldTops.Add(c + new Vector3(1.5f, y, 0f)); }
             }
             MeshObject("Scaffolds", SaveMesh(Finish(v, t), "Moon_Scaffolds"), m.metalDark, root, false);
             var gv = new List<Vector3>(); var gt = new List<int>();
-            for (int i = 0; i < 16; i++) AddBox(gv, gt, new Vector3(Mathf.Lerp(-50f, 70f, R()), Mathf.Lerp(-12f, 12f, R()), Mathf.Lerp(30f, 72f, R())), new Vector3(1.2f, 0.4f, 0.4f));
+            // QF34 (5): the work lamps sit ON the scaffolds' top decks (they floated at random points in the void); the random draws are kept so
+            // everything placed after them stays where it was
+            for (int i = 0; i < 16; i++) { R(); R(); R(); if (i < scaffoldTops.Count) AddBox(gv, gt, scaffoldTops[i] + new Vector3(((i % 3) - 1) * 1.4f, 0.4f, 0f), new Vector3(1.2f, 0.4f, 0.4f)); }
             MeshObject("ScaffoldLamps", SaveMesh(Finish(gv, gt), "Moon_ScaffoldLamps"), m.glow, root, false);
             var av = new List<Vector3>(); var at = new List<int>();
             foreach (var (c, r, tilt) in new[] { (new Vector3(-30f, -12f, 120f), 38f, 20f), (new Vector3(70f, -30f, 160f), 50f, -35f), (new Vector3(10f, -40f, -170f), 60f, 15f), (new Vector3(-70f, -20f, -120f), 34f, 60f) })

@@ -42,6 +42,25 @@ namespace Seven.EditorTools
             EditorApplication.Exit(code);
         }
 
+        /// <summary>QF34 iteration: only the Moon finale's scene again (+ the player) - e.g. after new memory clips / the montage.</summary>
+        public static void BuildFinaleFromCommandLine()
+        {
+            int code = 1;
+            try
+            {
+                _saucerPrefab = null; SaucerChecks.Clear();
+                var sevenCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/Seven.controller");
+                var atmo = AssetDatabase.LoadAssetAtPath<GameObject>(AtmoPrefabPath);
+                var bank = AssetDatabase.LoadAssetAtPath<Seven.VoiceBank>(VoiceBankPath);
+                BuildRound19(sevenCtl, atmo, bank);
+                EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
+                AssetDatabase.SaveAssets();
+                code = BuildPlayer() ? 0 : 1;
+            }
+            catch (System.Exception e) { Debug.LogError("[FightDemoBuilder] FINALE BUILD FAILED: " + e); }
+            EditorApplication.Exit(code);
+        }
+
         static void BuildRound20(AnimatorController sevenCtl)
         {
             var scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);

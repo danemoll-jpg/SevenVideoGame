@@ -919,7 +919,7 @@ namespace Seven
         {
             if (_root != null) return;
             _root = new GameObject("BossMarkers");
-            _add = Additive(0.6f);
+            _add = Additive(0.4f);   // QF34: softer (a lane marker filled 20 % of a frame in white); still a clear white telegraph on the floor
             var g = new GameObject("Telegraph"); g.transform.SetParent(_root.transform, false);
             _mainF = g.AddComponent<MeshFilter>(); _main = g.AddComponent<MeshRenderer>(); _main.sharedMaterial = _add; _main.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             var c = new GameObject("Cage"); c.transform.SetParent(_root.transform, false);
@@ -999,7 +999,7 @@ namespace Seven
             else if (a.kind == "beam") { t.position = new Vector3(f.From.x, y, f.From.z); t.rotation = Quaternion.Euler(0f, f.BeamFrom, 0f); }
             else { t.position = new Vector3(f.From.x, y, f.From.z); t.rotation = Quaternion.LookRotation(f.AimDir); }
             _main.enabled = true;
-            float k = (locked ? 0.55f + 0.45f * Mathf.Abs(Mathf.Sin(Time.time * 18f)) : 0.15f + 0.4f * u) * 0.42f;   // readable, never a blown-out white slab
+            float k = (locked ? 0.55f + 0.45f * Mathf.Abs(Mathf.Sin(Time.time * 18f)) : 0.15f + 0.4f * u) * 0.28f;   // QF34: a light band on the floor, never pure white (rc7's first gate: the drill-charge lane under the camera = 21.6 % of a frame white)
             _main.material.SetFloat("_Intensity", k);
         }
         public static void Cage(Vector3? at)

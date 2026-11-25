@@ -85,16 +85,6 @@ namespace Seven
             MusicSystem.Play("aboard_saucer", 3f);
             // EXTERIOR - the opening composition reversed: in Chapter 1 the camera pushed in on the Moon and dived through its crust;
             // now the saucer itself flies in toward the hollow interior's lights, the camera following from behind
-            MoonWin(false);
-            var city = bay + (MoonLayout.BasinCenter - MoonLayout.SaucerCentre) * 0.35f;
-            // (QF26 2) the camera high behind the saucer, above the host's broken pieces, looking down its path to the bay's lights
-            var camA = p0 + new Vector3(8f, 46f, -84f);
-            for (float t = 0f; t < 0.2f; t += Time.deltaTime) { Cut(camA, Vector3.Lerp(p0, bay, 0.45f), 54f); yield return null; }
-            yield return UI.Fade(0f, 1.4f);
-            for (float t = 0f; t < 3.6f; t += Time.deltaTime) { if (saucer != null) saucer.position = p0 + Vector3.forward * t * 6f + Vector3.down * t * 1.2f; Cut(camA + Vector3.forward * t * 5f, saucer != null ? Vector3.Lerp(saucer.position, bay, 0.3f) : bay, 50f); yield return null; }
-            if (saucer != null) ImageGate.Expect(saucer, "the saucer coming back to the Moon", 0f, "fa01_");
-            yield return ShotV("fa01_the_familiar_approach_reversed");
-            if (saucer != null) saucer.position = p0;
             // INTERIOR: 7's EGG chair facing the window, Panther in her lap; the hull fades away round them as they talk
             MoonWin(true);
             yield return EnterStaging("CAT_01");
@@ -105,7 +95,9 @@ namespace Seven
             // QF30 (1): outside the vanishing hull, the Moon itself - large ahead, the lunar entrance on its face, Earth beyond, the stars
             if (SaucerOutside.I != null) SaucerOutside.I.Show("space");
             var wfw = Flat(Polar(9f, WindowA, 0f)).normalized;
-            var ma = MoonApproach.Build(PilotHead, wfw, 650f, 220f);
+            var ma = MoonApproach.Build(PilotHead, wfw, ApproachFrom, 220f);
+            StartCoroutine(UI.Fade(0f, 1.4f));                                                // out of the title: the Moon whole, far ahead
+            _approach = true; _approachRun = StartCoroutine(Approach(ma, PilotHead));
             StartCoroutine(HullAway(true, "FIN_01", "fa02h"));
             var moonP = ma.Moon.position;
             { var hd = PilotHead; Cut(hd - wfw * 0.6f + Vector3.Cross(Up, wfw) * 0.35f + Up * 0.22f, moonP, 40f); }    // over her shoulder: she looks at it
@@ -115,7 +107,7 @@ namespace Seven
             yield return DialogueFraming.Over("the Moon ahead, through the open hull (QF24 7)", SayF("FIN_01", 1, 1));   // Looks smaller from out here.
             yield return ShotV("fa03_she_watches_the_moon");
             // cut to the Moon: its face, the entrance they will fly into
-            Cut(PilotHead + wfw * 0.4f + Up * 0.1f, Vector3.Lerp(ma.Moon.position, ma.Entrance.position, 0.35f), 50f);
+            Cut(PilotHead + wfw * 0.4f + Up * 0.1f, Vector3.Lerp(ma.Moon.position, ma.Entrance.position, 0.35f), 24f);   // QF34 (6): a long lens on the far Moon
             ImageGate.Expect(ma.Moon, "the Moon and the lunar entrance", 0f, "fa03b_");
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) yield return null;
             yield return ShotV("fa03b_the_moon_and_the_entrance");
@@ -133,7 +125,20 @@ namespace Seven
             yield return ShotV("fa04_the_hull_gone_the_moon_round_them");
             if (_catPose != null) { _catPose.LookAt = null; _catPose.EarToward = null; }
             yield return HullAway(false, "FIN_01");
+            _approach = false; if (_approachRun != null) yield return _approachRun;               // the approach ends close, at the entrance
             if (MoonApproach.Current != null) Destroy(MoonApproach.Current.gameObject);      // the guided approach shows the real level
+            // QF34 (6): the close exterior - the saucer flying in over the Moon level - now ENDS the approach (rc6 opened on it, then cut to the
+            // whole Moon far away, then back close: the "flip")
+            MoonWin(false);
+            var city = bay + (MoonLayout.BasinCenter - MoonLayout.SaucerCentre) * 0.35f;
+            // (QF26 2) the camera high behind the saucer, above the host's broken pieces, looking down its path to the bay's lights
+            var camA = p0 + new Vector3(8f, 46f, -84f);
+            for (float t = 0f; t < 0.2f; t += Time.deltaTime) { Cut(camA, Vector3.Lerp(p0, bay, 0.45f), 54f); yield return null; }
+            for (float t = 0f; t < 3.6f; t += Time.deltaTime) { if (saucer != null) saucer.position = p0 + Vector3.forward * t * 6f + Vector3.down * t * 1.2f; Cut(camA + Vector3.forward * t * 5f, saucer != null ? Vector3.Lerp(saucer.position, bay, 0.3f) : bay, 50f); yield return null; }
+            if (saucer != null) ImageGate.Expect(saucer, "the saucer coming back to the Moon", 0f, "fa01_");
+            yield return ShotV("fa01_the_familiar_approach_reversed");
+            if (saucer != null) saucer.position = p0;
+            Cap?.Log($"FIN_01 APPROACH (QF34 6): one continuous approach - the Moon from {ApproachFrom:0} m to {ApproachTo:0} m (centre) through the whole talk, never pulled back; then the flight in over the level at the entrance");
             // GAMEPLAY: the completed map shows a maintenance approach below the city - guide the saucer in to the service berth
             yield return GuideToBay(saucer, p0, bay);
             if (mainCam != null && _farF > 0f) mainCam.farClipPlane = _farF;
@@ -144,6 +149,27 @@ namespace Seven
             yield return UI.Fade(1f, 1.2f);
             if (DemoBoot.CaptureDir != null) Cap?.Log("the finale's arrival aboard done -> the Finale scene (the service berth)");
             UnityEngine.SceneManagement.SceneManager.LoadScene("Finale");
+        }
+
+        // QF34 (6): one steady approach - the Moon (and its entrance) close in along the view at a constant rate through the whole talk;
+        // framings per line may change angle, never distance; when the talk ends the rest of the approach completes in a couple of seconds
+        const float ApproachFrom = 900f, ApproachTo = 330f, ApproachTalk = 42f;
+        bool _approach; Coroutine _approachRun;
+        IEnumerator Approach(MoonApproach ma, Vector3 eye)
+        {
+            if (ma == null || ma.Moon == null) yield break;
+            var dir = (ma.Moon.position - eye).normalized; float d0 = (ma.Moon.position - eye).magnitude;
+            var entOff = ma.Entrance != null ? ma.Entrance.position - ma.Moon.position : Vector3.zero;
+            float d = d0, minD = d0;
+            while (ma != null && ma.Moon != null)
+            {
+                float rate = (ApproachFrom - ApproachTo) / ApproachTalk * (_approach ? 1f : 8f);
+                d = Mathf.Max(ApproachTo, d - rate * Time.deltaTime); minD = Mathf.Min(minD, d);
+                var c = eye + dir * d; ma.Moon.position = c; if (ma.Entrance != null) ma.Entrance.position = c + entOff;
+                if (!_approach && d <= ApproachTo + 0.01f) break;
+                yield return null;
+            }
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"FIN_01 APPROACH (QF34 6): distance only ever went down ({d0:0} m -> {minD:0} m)");
         }
 
         /// <summary>The player guides the saucer in to the berth in the bay (as CAT_01's GuideToBerth: the stick steers, the guide ring

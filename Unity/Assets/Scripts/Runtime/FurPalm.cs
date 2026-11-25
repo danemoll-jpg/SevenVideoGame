@@ -24,7 +24,7 @@ namespace Seven
     public class FurPalm : MonoBehaviour
     {
         public const float Skin = 0.004f, Reach = 0.15f;
-        public class Hand { public Transform Cat; public string Moment; public float Weight; public bool LetGo; public float OnFor; public bool Hold; }
+        public class Hand { public Transform Cat; public string Moment; public float Weight; public bool LetGo; public float OnFor; public bool Hold; public bool MeasureOnly; public Vector3 LastP, LastV; public int Frames; public Vector3 Corr, CorrV; }
         public readonly Hand Left = new Hand(), Right = new Hand();
         Animator _an; SevenTableIK _ik;
 
@@ -32,10 +32,23 @@ namespace Seven
         /// <summary>Put a hand on him for a moment (weight 0 = off). The moment's name groups the measures.</summary>
         /// <param name="hold">A held moment (FIN_10: her hands on him as he dies): never let go - the arm is pulled onto him from up to
         /// <see cref="HoldReach"/> away.</param>
-        public void Set(bool right, Transform cat, string moment, float weight, bool hold = false)
+        public void Set(bool right, Transform cat, string moment, float weight, bool hold = false, bool measureOnly = false)
         {
-            var h = right ? Right : Left; h.Cat = cat; h.Moment = moment; h.Weight = Mathf.Clamp01(weight); h.Hold = hold;
+            var h = right ? Right : Left; if (h.Moment != moment) h.Frames = 0; h.Cat = cat; h.Moment = moment; h.Weight = Mathf.Clamp01(weight); h.Hold = hold; h.MeasureOnly = measureOnly;
         }
+        // ---- QF34 (1): hand motion during every petting / holding moment - a hand that jumps (a spasm) shows as an acceleration spike
+        public const float SpikeAccel = 25f;   // m/s^2 (a 2 cm jump in one 50 Hz frame is ~50; a stroke is ~1)
+        public static int MotionFrames, MotionSpikes; public static float MaxSpeed, MaxAccel; public static string WorstAt;
+        static readonly System.Collections.Generic.Dictionary<string, int> _spikesBy = new System.Collections.Generic.Dictionary<string, int>();
+        void Probe(bool right, Hand h)
+        {
+            if (h.Cat == null || h.Weight < 0.5f || _an == null) { h.Frames = 0; return; }
+            var hb = _an.GetBoneTransform(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand); if (hb == null) return;
+            float dt = Mathf.Max(1e-4f, Time.deltaTime); var p = hb.position;
+            if (h.Frames > 0) { var v = (p - h.LastP) / dt; if (h.Frames > 1) { float a = (v - h.LastV).magnitude / dt; MotionFrames++; MaxSpeed = Mathf.Max(MaxSpeed, v.magnitude); if (a > MaxAccel) { MaxAccel = a; WorstAt = h.Moment; } if (a > SpikeAccel && h.Frames > 8) { MotionSpikes++; _spikesBy.TryGetValue(h.Moment ?? "?", out var n); _spikesBy[h.Moment ?? "?"] = n + 1; } } h.LastV = v; }
+            h.LastP = p; h.Frames++;
+        }
+        public static string MotionSummary() => $"HAND MOTION (QF34 1): {MotionFrames} hand-frames on Panther (every petting / holding moment) - top speed {MaxSpeed:0.00} m/s, top acceleration {MaxAccel:0.0} m/s^2 ({WorstAt ?? "-"}), spikes over {SpikeAccel:0} m/s^2: {MotionSpikes} (must be 0){(_spikesBy.Count > 0 ? " - " + string.Join(", ", System.Linq.Enumerable.Select(_spikesBy, kv => kv.Key + " " + kv.Value)) : "")}";
         public const float HoldReach = 0.6f;
         public void Off() { Left.Weight = Right.Weight = 0f; Left.Cat = Right.Cat = null; }
         public static int BadSolves;
@@ -53,33 +66,42 @@ namespace Seven
         {
             if (_an == null || Disabled) return;
             Solve(false, Left); Solve(true, Right);
+            if (DemoBoot.CaptureDir != null) { Probe(false, Left); Probe(true, Right); }
         }
 
         void Solve(bool right, Hand h)
         {
             h.LetGo = false;
-            if (h.Cat == null || !h.Cat.gameObject.activeInHierarchy || h.Weight < 0.05f) return;
-            float ikW = _ik != null ? (right ? _ik.RightW : _ik.LeftW) : 1f;
-            float w = h.Weight * Mathf.Clamp01(ikW * 1.2f);
-            if (w < 0.05f) return;
             var elbowB = _an.GetBoneTransform(right ? HumanBodyBones.RightLowerArm : HumanBodyBones.LeftLowerArm);
             var handB = _an.GetBoneTransform(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
             if (elbowB == null || handB == null) return;
-            float gap = float.MaxValue;
-            for (int pass = 0; pass < 2; pass++)
+            float ikW = _ik != null ? (right ? _ik.RightW : _ik.LeftW) : 1f;
+            float w = h.Weight * Mathf.Clamp01(ikW * 1.2f);
+            if (h.Cat == null || !h.Cat.gameObject.activeInHierarchy || h.Weight < 0.05f || w < 0.05f)
             {
-                if (!HandHold.Palm(_an, right, out var palm, out var pn, out _)) return;
-                if (!FurContact.Nearest(h.Cat, palm, out var surf, out var sn, out var signed)) return;
-                gap = signed - Skin;
-                if (Mathf.Abs(gap) < 0.002f) break;
-                if (signed > (h.Hold ? HoldReach : Reach * 2f)) break;               // far off him: no solve (judged below)
-                var want = surf + sn * Skin;
-                var delta = (want - palm) * w;
-                // never feed the skeleton a bad target (a NaN or a jump of metres would reach the skinning)
-                if (!Finite(delta) || delta.sqrMagnitude > 1f) { BadSolves++; break; }
-                HandHold.ArmTo(_an, right, handB.position + delta, elbowB.position + Vector3.down * 0.05f, 1f);
-                if (!Finite(handB.position)) { BadSolves++; break; }
+                // QF34 (1): the correction never vanishes in one frame (the lap stroke's lift set the weight to 0 and back - the hand jumped):
+                // it fades at the same capped rate, still applied while it lasts
+                h.Corr = Vector3.SmoothDamp(h.Corr, Vector3.zero, ref h.CorrV, 0.25f, 0.35f);   // QF34 (1): eased velocity - no jerk when it starts / stops
+                if (h.Corr.sqrMagnitude > 1e-8f) HandHold.ArmTo(_an, right, handB.position + h.Corr, elbowB.position + Vector3.down * 0.05f, 1f);
+                return;
             }
+            float gap = float.MaxValue;
+            // QF34 (1): ONE damped correction per frame (rc6 applied the full delta twice a frame, re-picked on a breathing body: the hand
+            // jumped - the spasms); the correction itself eases toward what the fur needs (~0.12 s)
+            if (!h.MeasureOnly && HandHold.Palm(_an, right, out var palm, out var pn, out _) && FurContact.Nearest(h.Cat, palm, out var surf, out var sn, out var signed))
+            {
+                gap = signed - Skin;
+                var delta = signed > (h.Hold ? HoldReach : Reach * 2f) ? Vector3.zero : (surf + sn * Skin - palm) * w;
+                if (!Finite(delta) || delta.sqrMagnitude > 1f) { BadSolves++; delta = Vector3.zero; }
+                // (the animator rebuilds the pose every frame, so the palm here is uncorrected: ease the applied offset toward what it needs)
+                // rate-limited, not eased: a hop of the nearest fur vertex (centimetres in one frame) can never become a jump of the hand -
+                // the correction moves at most 0.35 m/s (an acceleration well under the 25 m/s^2 the motion check allows)
+                h.Corr = Vector3.SmoothDamp(h.Corr, delta, ref h.CorrV, 0.25f, 0.35f);
+                h.Corr = Vector3.ClampMagnitude(h.Corr, 0.35f);
+                if (h.Corr.sqrMagnitude > 1e-8f) HandHold.ArmTo(_an, right, handB.position + h.Corr, elbowB.position + Vector3.down * 0.05f, 1f);
+                if (!Finite(handB.position)) BadSolves++;
+            }
+            else h.Corr = Vector3.SmoothDamp(h.Corr, Vector3.zero, ref h.CorrV, 0.25f, 0.35f);
             if (HandHold.Palm(_an, right, out var p2, out _, out _) && FurContact.Nearest(h.Cat, p2, out _, out _, out var s2)) gap = s2 - Skin;
             if (gap > Reach && !h.Hold)
             {

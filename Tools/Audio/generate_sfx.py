@@ -229,7 +229,11 @@ SFX = [
     ("seven_breath_shaky", "A young woman's single shaky, tearful breath in and a slow breath out, very quiet, close, no words.", 2.2, False, "QF31 (A3): her breathing between the memories"),
     # P2 (11): Panther's ONE cry as he lies hurt (FIN_09, once, after he hits the floor) - never a meow, never looped
     ("cat_cry_low", "A single low, weak, mournful cry of a large wounded panther lying on the ground: a soft pained moan, low in pitch, fading out into a breath. Quiet and close. Not a meow, not a scream, not a roar, not a growl.", 2.6, False, "P2 (11): Panther hurt (FIN_09), once"),
-    ("drill_impact_heavy", "A heavy blunt impact: a spinning industrial drill slamming into something solid with a deep thud, a short metallic screech and grinding sparks, then the drill stalling. No voice.", 1.6, False, "QF31 (A2): the drill strikes Panther (no gore - a heavy blunt impact)")
+    ("drill_impact_heavy", "A heavy blunt impact: a spinning industrial drill slamming into something solid with a deep thud, a short metallic screech and grinding sparks, then the drill stalling. No voice.", 1.6, False, "QF31 (A2): the drill strikes Panther (no gore - a heavy blunt impact)"),
+    # QF34 (7): the rune pedestals and the archive's table lowering (FIN_06 / 07) - each locks home with a satisfying mechanism
+    ("fin_pedestal_lock_a", "A heavy ancient stone pedestal locking flush into a stone floor: a deep, crisp mechanical clunk-click, metal bolts snapping home inside stone, clean and satisfying, very short tail. No voice.", 0.9, False, "QF34 (7): a rune pedestal locks flush (in sequence)"),
+    ("fin_pedestal_lock_b", "A stone block mechanism settling and locking into place: a solid low thunk with a sharp metallic click on top, precise and satisfying, short. No voice.", 0.9, False, "QF34 (7): a rune pedestal locks flush (the alternate take)"),
+    ("fin_table_lock", "A massive stone table sinking the last centimetres into a floor and locking: a heavy, final deep clunk of stone and metal latches, followed by a soft low stone rumble fading out. Satisfying and clean. No voice.", 2.4, False, "QF34 (7): the archive's table locks into its light well")
 ]
 
 

@@ -5,14 +5,17 @@
 param([string]$Out = "$env:TEMP\seven_memclips", [string]$Only = "")
 $repo = Resolve-Path "$PSScriptRoot\.."
 $runs = [ordered]@{
-  "ch1"      = '-testspeed 2 -chapter1 -stopafter 110 -memclips s02_energy_point_dark_closeup=mem_01_the_first_meeting_in_the_cell:9';
-  "aboard"   = '-testspeed 2 -ch1aboard -stopafter 330 -memclips s10_01_fridge_cat_on_table=mem_02_free_range_chicken:7;s10_03_eating_two_shot=mem_03_the_galley_meal:6;s10_14_explore_seated_cat_on_lap=mem_04_his_head_in_her_lap:6';
-  "venus"    = '-testspeed 2 -chapter2 -quick -stopafter 240 -memclips v07b_b01_insert_hand_in_the_grip=mem_05_the_venus_naming:9;v13a_b01_points_at_him=mem_06_look_after_the_ship:8';
-  "temple"   = '-testspeed 2 -venusselect C03 -stopafter 200 -recstills v14b_c03_guardian_standing_cape=rec_1_venus';
-  "mars"     = '-testspeed 2 -marscp 6 -stopafter 300 -recstills m40_the_guard_and_the_caretaker_working=rec_2_mars;m30_the_worker_and_the_caretaker=rec_2b_mars;m31_inside_the_temple=rec_2c_mars';
-  "biaveh"   = '-testspeed 2 -biacp 4 -stopafter 300 -memclips b32_relay_three_restored=mem_07_the_quiet_passage_reconnection:14';
-  "race"     = '-testspeed 2 -catcp 3 -stopafter 200 -memclips _race_=mem_08_the_cattalus_race:7';
-  "city"     = '-testspeed 2 -catcp 0 -stopafter 420 -recstills c05_juniper_approaches=rec_6_cattalus;c03_a_cat_waits=rec_6b_cattalus;c16_the_stewards_desk=rec_6c_cattalus;c17_duchess=rec_6d_cattalus -memclips c06_kneeling_with_juniper=mem_09_juniper_street:7';
+  # QF34 (2): the memories - 7 and Panther TOGETHER in every shot (ClipRecorder's two-shot camera; Panther's visibility counted per frame),
+  # in story order. A key is a capture name, a dialogue line id, or "@t<game seconds>".
+  "ch1"      = '-testspeed 2 -chapter1 -stopafter 60 -memclips s01_cell_start=mem_01_the_first_meeting:6';
+  "escape"   = '-testspeed 2 -chapter1 -ch1cp 1 -stopafter 60 -memclips @t7=mem_02_the_escape_side_by_side:6';
+  "aboard"   = '-testspeed 2 -ch1aboard -stopafter 420 -memclips s10_03_eating_two_shot=mem_03_the_galley_meal@scene:6;s10_01_fridge_cat_on_table=mem_04_free_range@scene:6';
+  "venus"    = '-testspeed 2 -chapter2 -quick -stopafter 300 -memclips VEN_B01_06=mem_06_the_naming:6;v08_b01_panther_stretch_grows=mem_07_he_grows:6;v15_b01_he_lies_down_large=mem_08_guarding_the_ship:6';
+  "eggchair" = '-testspeed 2 -biacp 0 -stopafter 120 -memclips ba03_the_window=mem_05_his_head_in_her_lap:6';
+    "purring"  = '-testspeed 2 -biacp 7 -stopafter 200 -memclips BIA_12_01=mem_10_back_together_on_the_floor:4.5;BIA_12_05=mem_11_the_ship_is_vibrating:5';
+  "streets"  = '-testspeed 2 -catcp 0 -stopafter 300 -memclips CAT_01_02=mem_09_the_egg_chair_him_in_her_lap:5;ctl_control_back_Cattalus=mem_12_the_cattalus_streets:6';
+  "race"     = '-testspeed 2 -catcp 3 -stopafter 420 -memclips CAT_08W_01=mem_13_after_the_race:6';
+  # (the "Received" stills are unchanged since QF31 - rerun the old temple / mars / city keys from git history if they are ever needed)
 }
 $sel = if ($Only) { $Only.Split(",") } else { @($runs.Keys) }
 $dirs = @()

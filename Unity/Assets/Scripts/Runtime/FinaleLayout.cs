@@ -35,6 +35,7 @@ namespace Seven
         // FIN_05+ - the chamber
         public static readonly Vector3 ChamberC = new Vector3(11.5f, Y, -162f);
         public const float ChamberR = 14f, ChamberH = 11f;
+        public const int EuropaScreen = 2; public const float EuropaScreenYaw = 114f;   // QF34 (3): its screen off its socket's line, clear of the alcove
         public static readonly Vector3 PlatformAt = ChamberC;                            // the central archive surface
         public const float PlatformR = 2.2f, PlatformH = 0.9f;
         /// <summary>The seven sockets round the chamber (yaw from the entrance, clockwise): the Moon's at the entrance.</summary>

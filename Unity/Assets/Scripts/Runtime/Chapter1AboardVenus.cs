@@ -324,6 +324,7 @@ namespace Seven
         int _lapFrames, _lapInLegs, _lapInBody, _lapInHim; readonly System.Collections.Generic.List<float> _lapGap = new System.Collections.Generic.List<float>();
         /// <summary>QF23 (11): the stroke's strength right now (0..1) - the purr swells with it.</summary>
         public float StrokeNow => _ik != null ? _ik.LeftW * _stroke : 0f;
+        Vector3 _backSm, _backVel, _hipSm, _hipVel, _fingSm; float _backSmT = -9f, _hipSmT = -9f, _alongSm = 0.48f, _alongV;
         IEnumerator Stroke()
         {
             float phaseT = 0f; int phase = 0, strokes = 0; float pause = 1f;     // 0 stroke, 1 lift + return, 2 rest, 3 ear scratch
@@ -342,8 +343,18 @@ namespace Seven
                     case 2: along = Neck; if (phaseT > pause) { phase = 0; phaseT = 0f; } break;
                     case 3: { ear = true; along = 0.62f; if (phaseT > 1.6f) { phase = 0; phaseT = 0f; } break; }
                 }
-                var back = Cat != null ? Cat.BackTop(along, len) : Seven.LapPoint(0.13f);
-                var fingers = ear ? len : -len;                               // along the stroke (toward his tail); at the ear toward his head
+                // QF34 (1): his back's top is read off his drawn body every frame - the nearest vertex hops as he breathes, and the hand hopped
+                // with it (the motion check: 50-80 spikes over 25 m/s^2 per lap stroke); the target is smoothed (critically damped, ~0.1 s)
+                // QF34 (1): the switch to / from the ear scratch moved the point 14 cm along him and flipped the fingers in ONE frame (the
+                // wrist jumped ~10 cm: the 50-80 m/s^2 lap-stroke spikes) - where along him and the fingers' direction are eased too
+                if (_backSmT < Time.time - 0.5f) { _alongSm = along; _alongV = 0f; }
+                _alongSm = Mathf.SmoothDamp(_alongSm, along, ref _alongV, 0.22f); along = _alongSm;
+                var backRaw = Cat != null ? Cat.BackTop(along, len) : Seven.LapPoint(0.13f);
+                if (_backSmT < Time.time - 0.5f) _backSm = backRaw; _backSmT = Time.time;
+                _backSm = Vector3.SmoothDamp(_backSm, backRaw, ref _backVel, 0.1f); var back = _backSm;
+                var fingersRaw = ear ? len : -len;                            // along the stroke (toward his tail); at the ear toward his head
+                if (_fingSm.sqrMagnitude < 0.5f || _backSmT < Time.time - 0.5f) _fingSm = fingersRaw;
+                _fingSm = (Quaternion.AngleAxis(Vector3.SignedAngle(_fingSm, fingersRaw, Up) * (1f - Mathf.Exp(-Time.deltaTime * 5f)), Up) * _fingSm).normalized; var fingers = _fingSm;   // turned about the vertical (never through his body)
                 if (ear) back += Up * 0.02f + (PilotFwd * Mathf.Cos(t * 18f) + len * Mathf.Sin(t * 18f)) * 0.012f;   // a small scratching circle
                 var n = Up;
                 if (Cat != null) { var a2 = Cat.BackTop(along + 0.08f, len); var b2 = Cat.BackTop(along - 0.08f, len); var slope = a2 - b2; var nn = Vector3.Cross(Vector3.Cross(slope, Up), slope).normalized; if (Vector3.Dot(nn, Up) < 0f) nn = -nn; if (nn.sqrMagnitude > 0.01f) n = nn; }
@@ -355,7 +366,9 @@ namespace Seven
                 // the other hand: lightly on his side by his hip, on top of her thigh (NavHand takes it for the console)
                 if (!_navHand)
                 {
-                    var hip = Cat != null ? Cat.BackTop(-0.5f, len) : Seven.LapPoint(0.1f);
+                    var hipRaw = Cat != null ? Cat.BackTop(-0.5f, len) : Seven.LapPoint(0.1f);
+                    if (_hipSmT < Time.time - 0.5f) _hipSm = hipRaw; _hipSmT = Time.time;
+                    _hipSm = Vector3.SmoothDamp(_hipSm, hipRaw, ref _hipVel, 0.1f); var hip = _hipSm;
                     var sn = (Up * 0.8f - PilotFwd * 0.6f).normalized; var side = hip - PilotFwd * 0.05f - Up * 0.02f;
                     _ik.RightPos = side + sn * 0.022f - PilotFwd * 0.04f; _ik.RightPalmN = sn; _ik.RightFingerDir = PilotFwd; _ik.RightPalmW = 1f;
                     _ik.RightHint = PilotHips + PilotRight * 0.30f + Up * 0.16f - PilotFwd * 0.06f; _ik.RightHintW = 1f;
