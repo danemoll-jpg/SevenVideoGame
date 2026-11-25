@@ -6,10 +6,12 @@
 # QF29: scored by Tools/image_gate_score.py - a release is allowed when every failing shot is in the baseline and none got worse.
 # Usage: powershell -File Tools/Run-ImageGate.ps1 [-Out <dir>] [-Only moon,venus,...] [-Reuse] [-WriteReference]
 #   -Reuse: score the capture folders already in -Out (no new runs).  -WriteReference: record the baseline shots' failing measures once (QF29).
-param([string]$Out = "$env:TEMP\seven_imagegate", [string]$Only = "", [switch]$Reuse, [switch]$WriteReference)
+#   -GameDir <dir>: gate a copy of a build (Round 21: one release is gated while the next one builds); default Unity\Builds\Seven.
+param([string]$Out = "$env:TEMP\seven_imagegate", [string]$Only = "", [switch]$Reuse, [switch]$WriteReference, [string]$GameDir = "")
 $repo = Resolve-Path "$PSScriptRoot\.."
-$exe = "$repo\Unity\Builds\Seven\SevenDemo.exe"
-$version = (Get-Content "$repo\Unity\Builds\Seven\version.txt" -ErrorAction SilentlyContinue | Select-Object -First 1)
+if (-not $GameDir) { $GameDir = "$repo\Unity\Builds\Seven" }
+$exe = "$GameDir\SevenDemo.exe"
+$version = (Get-Content "$GameDir\version.txt" -ErrorAction SilentlyContinue | Select-Object -First 1)
 $runs = [ordered]@{
   "fight"    = "-fight -quick";
   "saucer"   = "-saucer -stopafter 90";

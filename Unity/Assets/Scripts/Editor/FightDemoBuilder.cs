@@ -45,6 +45,46 @@ namespace Seven.EditorTools
 
         static void Log(string s) => Debug.Log("[FightDemoBuilder] " + s);
 
+        /// <summary>QF35: rebuild only some scenes (every other scene as the last full build saved it), then the player:
+        /// -onlyscenes mars,finale,grandcircuit (also venus, europa, asteroid, biaveh, cattalus). For a fix to one or two chapters
+        /// after a full build of the same version; the build checks of those scenes run as in a full build.</summary>
+        public static void BuildScenesFromCommandLine()
+        {
+            int code = 1;
+            try
+            {
+                var args = Environment.GetCommandLineArgs(); int ai = Array.IndexOf(args, "-onlyscenes");
+                var only = ai >= 0 && ai + 1 < args.Length ? args[ai + 1].Split(',') : new string[0];
+                _saucerPrefab = null; SaucerChecks.Clear();
+                var sevenCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/Seven.controller");
+                var atmo = AssetDatabase.LoadAssetAtPath<GameObject>(AtmoPrefabPath);
+                var bank = AssetDatabase.LoadAssetAtPath<Seven.VoiceBank>(VoiceBankPath);
+                foreach (var s in only)
+                {
+                    Log("BUILD SCENES: " + s);
+                    switch (s.Trim())
+                    {
+                        case "venus": BuildRound11(sevenCtl, atmo, bank); break;
+                        case "europa": BuildRound14(sevenCtl, atmo, bank); break;
+                        case "mars": BuildRound15(sevenCtl, atmo, bank); break;
+                        case "asteroid": BuildRound16(sevenCtl, atmo, bank); break;
+                        case "biaveh": BuildRound17(sevenCtl, atmo, bank); break;
+                        case "cattalus": BuildRound18(sevenCtl, atmo, bank); break;
+                        case "finale": BuildRound19(sevenCtl, atmo, bank); break;
+                        case "grandcircuit": BuildRound20(sevenCtl); break;
+                        default: throw new Exception("unknown scene " + s);
+                    }
+                }
+                EditorBuildSettings.scenes = AllScenes.Select(p => new EditorBuildSettingsScene(p, true)).ToArray();
+                AssetDatabase.SaveAssets();
+                code = BuildPlayer() ? 0 : 1;
+                if (BuildFailures.Count > 0) { Debug.LogError("[FightDemoBuilder] QF18 BUILD CHECKS FAILED: " + string.Join(" | ", BuildFailures)); if (code == 0) code = 2; }
+                else Log("QF18 build checks: all passed");
+            }
+            catch (Exception e) { Debug.LogError("[FightDemoBuilder] BUILD SCENES FAILED: " + e); }
+            EditorApplication.Exit(code);
+        }
+
         public static void BuildAllFromCommandLine()
         {
             int code = 1;

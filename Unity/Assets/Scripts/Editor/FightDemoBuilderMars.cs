@@ -411,6 +411,10 @@ namespace Seven.EditorTools
                     foreach (var x in new[] { x0, x1 }) MBox(av, at, new Vector3(x, ys - 0.15f, (z0 + z1) * 0.5f), new Vector3(1.6f, 0.5f, z1 - z0 + 2.4f), 0f, 0.02f);
                     MeshObject("ShelterVault", SaveMesh(Finish(av, at), "Mars_ShelterVault"), m.stoneDark, maint);
                     MeshObject("ShelterColumns", SaveMesh(Finish(cv, ct), "Mars_ShelterColumns"), m.stone, maint);
+                    // QF35 (gate): the shafts are built of stone drums - a dark joint every 0.9 m (smooth shafts in the fog gave the
+                    // control-back view under the arcade too few edges: 6.0 %); flush with the shaft, no collider
+                    { var jv = new List<Vector3>(); var jt = new List<int>(); for (float z = z0; z <= z1 + 0.1f; z += 6.5f) foreach (var x in new[] { x0, x1 }) for (float y = 1.0f; y < ys - fy - 0.9f; y += 0.9f) { float rr = Mathf.Lerp(0.6f, 0.54f, Mathf.InverseLerp(3.4f, ys - fy - 0.6f, y)) + 0.012f; Add(jv, jt, Lathe(new[] { new Vector2(rr, y - 0.04f), new Vector2(rr, y + 0.04f) }, 0f, 360f, 16, null, new Vector3(x, fy, z))); }
+                      MeshObject("ShelterColumnJoints", SaveMesh(Finish(jv, jt), "Mars_ShelterColumnJoints"), m.stoneDark, maint, false); }
                 }
                 // QF18 (11): the drawbridge. During the division one kingdom raised the old causeway's span and chained it up
                 // to cut the maintenance route: the span stands hinged on the west abutment; its chain runs from the span's tip

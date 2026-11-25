@@ -172,6 +172,7 @@ Voices: 7 = seven (Eleven v3) · Panther = cat · the Scree worker = screeworker
 | id | speaker | line | direction |
 |---|---|---|---|
 | `FIN_13_04` | (the voice) | Well done, good and faithful servant! You were faithful over a few things; I will put you in charge of many things. Share your master's joy. | Deep, warm, slow and unhurried, loving, with a large soft space round it |
+| `FIN_13_V1` | (the voice) | Seven. Your watch is over. You kept their story through every age, and now it lives on beyond you. Rise, and come home to rest. | Deep, warm, slow and unhurried, loving, with a large soft space round it |
 
 ## FIN_14 — Somewhere to come back to
 

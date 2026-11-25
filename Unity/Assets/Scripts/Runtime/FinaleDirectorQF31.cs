@@ -18,7 +18,7 @@ namespace Seven
     ///      Art/Video/panther_memories.mp4 when it is in, else Code's in-game clips, else the stills) while the archive's light runs out
     ///      along the floor to her and under them both; FIN_12 "Record complete." -> every world receives it, with its voice (no 7 / no
     ///      Panther in any of those shots - checked) -> back to her.
-    /// (A5/A6) no voice in the chamber: the light falls on her, she lifts her head; a column of pale warm light; she draws him close and
+    /// (A5/A6) the light falls on her and the Voice speaks once (QF35): the light falls on her, she lifts her head; a column of pale warm light; she draws him close and
     ///      they rise together, weightless, the chamber falling away -> white.
     /// (A7) heaven: Dan's six colour clips (heaven_01..06) with soft dissolves, "Panther?" / "Hello." over the reunion, the Voice over the
     ///      rising wide shot - or, until they are in, the colour master from 17.6 s with the Voice near its end.
@@ -712,7 +712,7 @@ namespace Seven
             if (Crew != null) for (int i = 0; i < Crew.Length; i++) if (Crew[i] != null && !Crew[i].gameObject.activeSelf) { Crew[i].gameObject.SetActive(true); Crew[i].transform.position = L.CrewAt(i); Crew[i].transform.rotation = Quaternion.LookRotation(Flat(L.BarrierAt - L.CrewAt(i))); }
             if (Worker != null) { Worker.gameObject.SetActive(true); Worker.transform.position = new Vector3(11.5f, L.Y, -150.9f); Worker.transform.rotation = Quaternion.LookRotation(Flat(P7 - Worker.transform.position)); }
             Restrained(true);
-            // the light simply begins to fall on her (no voice in the chamber); she lifts her head toward it
+            // the light simply begins to fall on her (the Voice speaks once, QF35 - below); she lifts her head toward it
             var colAt = new Vector3(P7.x, L.Y, P7.z);
             var beam = AscentColumn(colAt);
             if (PaleLight != null) PaleLight.enabled = false;   // QF34 (4): no light over the table - the one vertical column on them only
@@ -727,14 +727,23 @@ namespace Seven
                 yield return null;
             }
             _sobbing = false;
+            // QF35 (QF34 9): the Voice speaks once in the chamber as the column falls on them (RestVoice, unseen, never named): her watch is
+            // over - she did not die. Her face in the light for the first words, the wide column for the middle, she draws him close on "Rise"
+            var vLine = FinaleDialogue.Ids("FIN_13_V1"); float vLen = vLine.Count > 0 && vLine[0].Clip != null ? vLine[0].Clip.length : 14.5f;
+            const float VoiceRiseCue = 10.4f;   // "Rise, and come home to rest." starts 10.45 s into the take (silencedetect on the mp3)
+            float vT0 = Time.time; bool vDone = false;
+            StartCoroutine(VoiceInTheLight(vLine, () => vDone = true));
             ImageGate.Expect(Seven.transform, "7 lifting her head to the light falling on her");
             yield return Shot("f55_the_light_falls_on_her_she_lifts_her_head");
-            // a column of pale, warm light on them both (wide)
+            while (Time.time - vT0 < 4.6f && !vDone) { beam.SetFloat("_Intensity", 0.13f + 0.03f * Mathf.Clamp01((Time.time - vT0) / 4.6f)); yield return null; }
+            // a column of pale, warm light on them both (wide) - "You kept their story through every age..."
             Shoot(colAt + new Vector3(-4.8f, 1.6f, 6.2f), colAt + Vector3.up * 2.4f, 54f, 0.01f);
             ImageGate.Expect(Seven.transform, "the column of light on them both");
             yield return Wait(0.8f);
             yield return Shot("f56_a_column_of_light_on_them_both");
-            // she draws Panther close in her arms and they rise together, weightless
+            while (Time.time - vT0 < VoiceRiseCue && !vDone) yield return null;
+            float riseCueAt = Time.time - vT0;
+            // "Rise, and come home to rest." - she draws Panther close in her arms and they rise together, weightless
             HandsOff("she draws him into her arms (FIN_13)");
             rest.RiseTime = 1.6f; rest.Rise();
             yield return CarryLift();
@@ -743,6 +752,8 @@ namespace Seven
             ImageGate.Expect(Seven.transform, "she holds him close against her");
             yield return Wait(0.6f);
             yield return Shot("f57_she_holds_him_close");
+            while (!vDone) yield return null;   // the line ends before they leave the floor (one line at a time; nothing cut off)
+            Log($"FIN_13 VOICE (QF35): FIN_13_V1 in the chamber, {vLen:0.0} s, from the moment she lifted her head to the light; the wide column at 4.6 s, she drew him close at {riseCueAt:0.0} s (on \"Rise\"), the rise began at {Time.time - vT0:0.0} s, after the last word{(Dlg.AutoSkipAfter >= 0f ? $" (this check run cuts every line after {Dlg.AutoSkipAfter:0.0} s - in play: the wide column at 4.6 s, she draws him close at {VoiceRiseCue:0.0} s on \"Rise\", the rise after {vLen:0.0} s)" : "")}; voice-over (the speaker is never shown or named)");
             Seven.BeginFloat();
             var rends = Seven.GetComponentsInChildren<Renderer>().Concat(Cat != null ? Cat.GetComponentsInChildren<Renderer>() : new Renderer[0]).ToArray(); var mpb = new MaterialPropertyBlock();
             var y0 = Seven.transform.position.y; bool fadeStarted = false;
@@ -771,9 +782,16 @@ namespace Seven
             MusicSystem.Stop(2f); MusicSystem.Level = 1f;
             HandsOff("they are in the light (FIN_13 -> heaven)");
             StopWalls();
-            Log("FIN_13 (QF31 A5/A6): no voice in the chamber - the light fell on her and she lifted her head; a column of pale warm light on them both; she drew him close in her arms and they rose together, weightless, the chamber, the archive's well and the Scree falling away below, the light filling the frame -> white");
+            Log("FIN_13 (QF31 A5/A6 + QF35): the light fell on her and she lifted her head; the Voice spoke once (her watch is over); a column of pale warm light on them both; she drew him close in her arms and they rose together, weightless, the chamber, the archive's well and the Scree falling away below, the light filling the frame -> white");
             Complete("FIN_13");
             Checkpoint(L.CpEnding);
+        }
+
+        /// <summary>QF35: the Voice's one line in the chamber, as a declared voice-over (the speaker is unseen: the shot is 7 in the light).</summary>
+        IEnumerator VoiceInTheLight(List<VoiceBank.Line> line, System.Action done)
+        {
+            if (line.Count > 0) yield return DialogueFraming.Over("7 in the column of light (the Voice is unseen)", Dlg.PlayLines(line, false));
+            done();
         }
 
         // ------------------------------------------------------------------------------------------ A7: heaven

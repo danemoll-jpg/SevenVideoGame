@@ -37,6 +37,9 @@ head = re.compile(r"^#{2,4}\s+(FIN_\w+?)\s+—\s+(.+?)\s*$")
 EXTRA = [
     # FIN_13: the one spoken line of the pale light (Dan 2026-11-22: used; RestVoice; never named on screen)
     # QF31 (Dan): the Voice moves into heaven - over the rising wide shot (heaven_05-06), as they grow small in the sunrise
+    # QF35 (QF34 9, Dan approved 2026-11-24): the Voice speaks ONCE in the chamber, as the column falls on her and Panther - she did not die,
+    # her watch is over; she lifts her head to it, draws him close, they rise. Not shown or named on screen.
+    ("FIN_13_V1", "Voice", "Seven. Your watch is over. You kept their story through every age, and now it lives on beyond you. Rise, and come home to rest.", "Deep, warm, slow and unhurried; loving, with a large soft space round it"),
     ("FIN_13_04", "Voice", "Well done, good and faithful servant! You were faithful over a few things; I will put you in charge of many things. Share your master's joy.", "Deep, warm, slow and unhurried; loving, with a large soft space round it"),
     # 7's sign-off at the end of the credits (Dan 2026-11-22; closing lines from Kyle's book "7" (2014); his punctuation kept)
     ("FIN_15_01", "7", "Remember who you are!", "Warm and close, tender, a little smile"),
@@ -107,7 +110,7 @@ for lid, who, said, act in rows:
     if who not in SPK: unknown.append(f"{lid} ({who})"); continue
     speaker, label, voice = SPK[who]
     text = said.replace("Tunnler", "Tunneler")
-    lines.append({"id": lid, "scene": sid, "speaker": speaker, "label": label, "text": text, "direction": vocal(act) or (act if lid.startswith(("FIN_13_04", "FIN_15", "FIN_03_P", "FIN_05_P", "FIN_08_P")) or lid[-1].isalpha() else ""),
+    lines.append({"id": lid, "scene": sid, "speaker": speaker, "label": label, "text": text, "direction": vocal(act) or (act if lid.startswith(("FIN_13_04", "FIN_13_V", "FIN_15", "FIN_03_P", "FIN_05_P", "FIN_08_P")) or lid[-1].isalpha() else ""),
                   "tagged": TAGGED.get(lid, ""),
                   "action": act, "voice": voice, "repeat": bool(REPEAT.match(lid)), "proposed": "_P" in lid or lid[-1].isalpha()})
 

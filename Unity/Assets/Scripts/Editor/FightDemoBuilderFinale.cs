@@ -192,6 +192,20 @@ namespace Seven.EditorTools
               Append(v, t, Lathe(new[] { new Vector2(F.ChamberR + 1.2f, F.ChamberH), new Vector2(3.6f, F.ChamberH + 2.2f), new Vector2(3.4f, F.ChamberH + 2.6f), new Vector2(F.ChamberR + 1.2f, F.ChamberH + 0.6f) }, 0f, 360f, 48, null, c0));
               // the floor: one round slab inside the wall (out to the mining access and the alcove)
               { var (flv, flt) = ak.Of(stone); Append(flv, flt, Lathe(new[] { new Vector2(F.WellR, -0.6f), new Vector2(F.WellR, 0f), new Vector2(F.ChamberR + 0.6f, 0f), new Vector2(F.ChamberR + 0.6f, -0.5f), new Vector2(F.WellR + 0.02f, -0.6f) }, 0f, 360f, 48, null, c0)); }   // QF31 (8): an annulus - the archive's table lowers into the hole (the light well)
+              // QF35 (gate): the floor is laid in dressed stone - dark joints in rings and radial courses (one flat pale slab read as a
+              // single tone in the fog: the Tunneler fight's capture lost its range, 0.23); flush, no collider
+              {
+                  var joint = Dissolve("Fin_floor_joint", Gray(0.17f), 0.2f, false); var (jv, jt) = ak.Of(joint);
+                  // (single flat faces only, each set at its own height: the rings at 14 mm, the radial courses at 9 mm - nothing coplanar)
+                  for (float r = F.WellR + 1.4f; r < F.ChamberR - 0.2f; r += 2.3f) Append(jv, jt, Lathe(new[] { new Vector2(r - 0.07f, 0.014f), new Vector2(r + 0.07f, 0.014f) }, 0f, 360f, 64, null, c0));
+                  for (int q = 0; q < 24; q++)
+                  {
+                      float ar = q * 15f * Mathf.Deg2Rad; float r0 = F.WellR + 1.4f + (q % 2) * 2.3f, r1 = F.ChamberR - 0.2f;
+                      var dir = new Vector3(Mathf.Sin(ar), 0f, Mathf.Cos(ar)); var side = new Vector3(dir.z, 0f, -dir.x) * 0.06f; var up = Vector3.up * 0.009f; int b0 = jv.Count;
+                      jv.Add(c0 + dir * r0 - side + up); jv.Add(c0 + dir * r0 + side + up); jv.Add(c0 + dir * r1 + side + up); jv.Add(c0 + dir * r1 - side + up);
+                      jt.AddRange(new[] { b0, b0 + 2, b0 + 1, b0, b0 + 3, b0 + 2 });
+                  }
+              }
               // the rim of the floor and the platform (stepped, the archive surface on top)
               // QF30 (4): the platform's base stays inside PlatformR + 0.3 (the 1.0.0-rc1 skirt out to +1.2 m swallowed her feet, Panther
               // and where she laid him - Ground's obstacle circle stopped them at +0.55, inside the visible skirt)

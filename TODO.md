@@ -1,5 +1,68 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF35: the Voice's line in the chamber (QF34 item 9, not done yet) (Dan, 2026-11-25) — done, release 1.0.0-rc9 (build 2003, `game-2003`)
+Do QF34 item 9 now: as the light column falls on 7 and Panther (FIN_13), she lifts her head toward it and the Voice (RestVoice, slow and
+warm, the large soft space round it) says **FIN_13_V1:** "Seven. Your watch is over. You kept their story through every age, and now it
+lives on beyond you. Rise, and come home to rest." (Dan approved.) Then she draws Panther close and they rise. Not shown or named on
+screen. Voice it, time it, capture it; publish **1.0.0-rc9** (rc2–rc8 and beta1 untouched).
+### QF35 — status
+- **The line:** `FIN_13_V1` added to `Tools/Voice/make_finale_lines.py` (EXTRA, speaker "Voice" -> RestVoice, label empty = never named
+  on screen; `Docs/FINALE-LINES.md` regenerated), voiced with `generate_finale_voices.py --only FIN_13_V1` (multilingual v2, RestVoice's
+  settings: speed 0.82, stability 0.75). **The large soft space:** baked into the take with ffmpeg (a soft multi-tap hall, `aecho`
+  70/140/230/330 ms, then loudness -18 LUFS); the dry take is not kept in the repo. 16.4 s with the tail; the words: "Seven." 0-0.9 s,
+  "Your watch is over." to 3.0 s, "You kept their story ... beyond you." to 10.0 s, "Rise, and come home to rest." from 10.45 s.
+- **The timing (FinaleDirectorQF31.RisenTogether):** the column falls, she lifts her head (as before, 3.2 s) -> the line starts as a
+  declared voice-over (`DialogueFraming.Over`: the shot is her in the light, the speaker is unseen) on her face in the light (f55);
+  at 4.6 s the wide shot of the column on them both (f56); on "Rise" (10.4 s, `VoiceRiseCue`) she draws Panther into her arms (f57);
+  the rise starts only after the last word (one line at a time - nothing cut off), then straight up, white, heaven as before.
+  Check-run line `FIN_13 VOICE (QF35)`. (Check runs auto-skip every line after ~2 s, so there the cue comes early - the log says so.)
+- **Release gate on the first rc9 build: FAIL on two shots that were not touched** (they depend on the moment a capture fires): Mars
+  `ctl_control_back_Mars` under the ravine arcade (edges 6.0 % against the 6 % floor - smooth stone shafts in the haze) and the finale's
+  `boss_tunneler_debris_slam_active` (range 0.23 - the arena's floor one pale slab in the fog). Fixed for real, not re-rolled: the arcade
+  columns are built of stone drums with a dark joint every 0.9 m (`ShelterColumnJoints`), the chamber floor is laid in dressed stone
+  (dark joints in rings every 2.3 m and radial courses every 15 deg, `Fin_floor_joint`). Rebuilt with the new
+  `BuildScenesFromCommandLine -onlyscenes mars,finale` (only those scenes again, then the player - every other scene as the full build
+  saved it), gated again.
+
+## Round 21: "Grand Circuit" Stage 2: five more tracks (Dan, 2026-11-25) — to do after QF35
+Spec: `Docs/RACING_MODE.md` (Stage 2). The story game must not change; ships as **1.1.0-beta2** (beta1 and the rc builds untouched).
+One track per remaining world, each built from that world's look (monochrome, bright glowing track lights / edges / pads / gates),
+each with at least one loop or corkscrew, a big jump, a shortcut and a set-piece:
+1. **Venus Gardens:** through the first garden and the vine canopies, round the temple, a jump over the root chasm, a corkscrew up a
+   giant vine trunk, a shortcut through the burrows.
+2. **Mars Canyon:** down the canyon between the two kingdoms, the shared crossing (a long bridge), **big jumps** over the ravine, a
+   loop in a carved arch, a shortcut through the maintenance route.
+3. **Europa Under-Ice:** a glass tube under the ice, the Cetaceans swimming alongside outside, a corkscrew through the tube, a drop
+   into the great chamber, a shortcut through the settlement; the light filtering through the ice.
+4. **Asteroid Foundry:** through the machine city: conveyors, crushers and presses on a fixed, readable rhythm (non-lethal: they push
+   you back / slow you), a loop round a flywheel, a jump across the furnace hall, a shortcut along a rail carrier.
+5. **The Mothership:** inside the egg: the interior city curving up the shell, **a corkscrew round the shell's curve**, the suspended
+   bridge, a run past the memory structures, a shortcut through the quiet passage.
+**0. No duplicate racers (Dan, 2026-11-25):** each race has **one of each** racer: 7, Duchess and Tunneler (a 3-racer field for now).
+   With two players, each picks a different racer (a racer taken by player 1 is greyed out for player 2); the AI fills the rest of
+   the three. No two racers in a race are the same character. Apply to Round 20's two tracks too; update the proofs (no "two of
+   each vehicle" runs; test every racer as player and as AI).
+Each track: the AI completes 3 laps on every vehicle, 0 falls-through / falls off; the split screen holds 60 fps; captures of each
+set-piece through the image gate; best times / ghosts per track; the track-select page shows all seven. Music: each world's own
+track (Venus `venus_gardens`, Mars `mars_kingdoms`, Europa `europa_underwater`, the asteroid `asteroid_city`, the mothership
+`biaveh_mothership`) unless Dan adds racing versions. Also tune the AI against a human-like driver (Round 20's note: untuned).
+Never stop to ask; note decisions in TODO.md. Publish 1.1.0-beta2; status + "For Dan to check (Round 21)"; commit and push.
+
+## Round 22: "Grand Circuit" Stage 3: more racers on Dan's ShiftStorm jets (Dan, 2026-11-25) — to do after Round 21 (Dan to confirm the roster)
+Dan's ShiftStorm vehicles (his own models, copied into `Art/Source/shiftstorm/<Design>/Plane.fbx` + `Plane_basecolor.jpg`; source
+`C:\Users\danmo\ShiftStorm\Assets\Resources\Vehicles\`; see ShiftStorm's CLAUDE.md "Designs" for its import notes: `yaw`, `cut`,
+`astride`, `riderScale`). Dan: use "the jet version" of the bike:
+- **The Scrambler's jet form** (`Scrambler/Plane.fbx`, concept `Scrambler_Plane.png`): a retro motorbike with wings and fan wheels
+  folded flat, ridden **astride**. Fits humanoid riders: proposed **Nela** (Biavian), **Viper**, **the Machinist** (scaled to the
+  bike, or the bike scaled up for him).
+- **The Jetstream jet** (`Jetstream/Plane.fbx`): a rocket-plane with an open cockpit seat: proposed **Juniper** sitting in it like
+  Duchess in her bed (cats fit cockpits, not bikes).
+- (GrandPrix / Hotrod planes also copied, if another racer suits them.)
+Converted to **monochrome** like everything else (grayscale base colour, glowing accents), each racer's stats and ride pose (the
+astride pose: hips on the saddle, hands on the grips; the cat seated), their existing voices for a few cheers. The field grows to
+the full roster with still **one of each racer** per race; racer select shows them all. Prove each: AI 3 laps on every track,
+0 falls; ride-pose checks; captures. Publish 1.1.0-beta3.
+
 ## Quick fix QF34b: FIN_10's hovering hand (Dan, 2026-11-25: "Yes, fix it") — done, release 1.0.0-rc8 (build 2002, `game-2002`)
 **Why rc7's hand still hovered (measured, not guessed - `FIN_10 RIGHT HAND TRACE` once a second in a check run):** two causes.
 1. **Two solvers again, a third one hidden:** `SevenRestPose` (the kneel, execution order 300) runs AFTER the hand IK and re-aimed BOTH
