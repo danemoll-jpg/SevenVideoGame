@@ -417,6 +417,22 @@ namespace Seven
             MusicSystem.Stop(2.5f);
             yield return Wait(2.5f);
             yield return Shot("f72_black_after_the_credits");
+            // Round 20: the first time the game is finished - "Grand Circuit unlocked" (on black, after Kyle's line), then the menu has it
+            if (!GcSave.Unlocked || (DemoBoot.CaptureDir != null && !GcBoot.Unlocked))
+            {
+                GcSave.Unlock();
+                var ug = new GameObject("GrandCircuitUnlocked", typeof(RectTransform)); ug.transform.SetParent(root, false);
+                var urt = (RectTransform)ug.transform; urt.anchorMin = urt.anchorMax = urt.pivot = new Vector2(0.5f, 0.5f); urt.anchoredPosition = new Vector2(0f, 14f); urt.sizeDelta = new Vector2(1100f, 140f);
+                var utx = ug.AddComponent<Text>(); utx.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf"); utx.fontSize = 34; utx.alignment = TextAnchor.MiddleCenter; utx.raycastTarget = false; utx.lineSpacing = 1.3f;
+                utx.text = "GRAND CIRCUIT UNLOCKED" + System.Environment.NewLine + "<size=22>an anti-grav race through the worlds - on the main menu</size>"; utx.supportRichText = true; utx.color = new Color(1f, 1f, 1f, 0f);
+                AudioKit.Play("cat_gate_chime", null, 0.6f);
+                for (float t = 0f; t < 1.2f; t += Time.deltaTime) { utx.color = new Color(1f, 1f, 1f, t / 1.2f * 0.95f); yield return null; }
+                yield return Shot("f72b_grand_circuit_unlocked_card");
+                yield return Wait(Auto ? 1.5f : 3.2f);
+                for (float t = 0f; t < 1.2f; t += Time.deltaTime) { utx.color = new Color(1f, 1f, 1f, 0.95f * (1f - t / 1.2f)); yield return null; }
+                Destroy(ug);
+                Log("GRAND CIRCUIT (R20): unlocked after the credits and Kyle's line - the card shown, the main menu now lists it");
+            }
             Log($"CREDITS (QF30 23): {_creditsFrames} frames checked (one a second) - frames where the game world could show {_creditsDirty} (must be 0)");
             FinaleState.MarkFinished();
             ChapterDone = true; InCredits = false;

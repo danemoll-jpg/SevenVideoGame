@@ -91,6 +91,9 @@ namespace Seven
 
         void Ensure()
         {
+            // Round 20: the Grand Circuit keeps each player's HUD on that player's own camera (split screen: one HUD per viewport); its
+            // tracks lie within ~500 m of the origin, so the float-precision jitter this overlay exists for cannot happen there
+            if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name == GcGame.SceneName) return;
             var main = Camera.main;
             if (main == null || main == _ui) return;
             var bd = main.GetComponent<UniversalAdditionalCameraData>();

@@ -588,6 +588,7 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**Round 20 (2026-11-25): 1.1.0-beta1 (build 2000, `game-2000`) PUBLISHED, Latest - the Grand Circuit racing mode (below). Next: QF34.**
 **QF33 (2026-11-24): 1.0.0-rc6 (build 1905, `game-1905`) PUBLISHED, Latest (rc2-rc5 retained).** Dan's heaven film
 (`Art/Video/color/heaven_color_game.mp4`, made from his .mov) plays in the ending as one clip, the lines cued by the clip's own clock
 (`FinaleDirectorQF31.HeavenOneClip`, `HeavenPanther / HeavenHello / HeavenLaugh / HeavenRestEnd`). Status in `TODO.md`. Then Round 20.
@@ -1040,7 +1041,7 @@ scene (Round 10).
   `Resources/Finale/credits.txt`; FIN_14's colour game copy `Art/Video/color/cattalus_meadow_color_game.mp4` (the .mov untouched).
   `SevenRestPose.Kind.Kneel`. Switches: `-finale`, `-fincp <n>` (0 = FIN_01 aboard), `-finplay` (player-style run `FinalePlaytest.cs`:
   star map -> credits -> menu), `-finretry` (the confrontation's retry).
-- **Round 20 — the Grand Circuit racing mode, Stage 1 (release 1.1.0-beta1; in progress until its status in `TODO.md` says done)** (spec `Docs/RACING_MODE.md`; status, decisions, "For Dan
+- **Round 20 — the Grand Circuit racing mode, Stage 1 (release 1.1.0-beta1, PUBLISHED `game-2000`)** (spec `Docs/RACING_MODE.md`; status, decisions, "For Dan
   to check" in `TODO.md`): scene `GrandCircuit` (`Editor/FightDemoBuilderGrandCircuit.cs`: both worlds' sets, the vehicle templates;
   `BuildGrandCircuitFromCommandLine` = that scene + the player only, for iteration - releases use Build everything), tracks as data
   `GcTrack` (turtle pieces sampled every metre, the shortcut a Hermite branch; `GcTrack.Cattalus()` / `Lunar()`), racers in track

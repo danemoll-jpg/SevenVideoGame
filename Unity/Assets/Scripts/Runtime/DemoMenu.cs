@@ -32,7 +32,7 @@ namespace Seven
         static bool _finPlayStarted;   // Round 19: the player-style run starts once (the credits come back to this menu)
         const string ContinueCh1 = "@continue", ContinueVenus = "@continuevenus", ContinueEuropa = "@continueeuropa", ContinueMars = "@continuemars", NewKey = "@new",
                      ChapterKey = "@ch:", SettingsKey = "@settings", ControlsKey = "@controls", QuitKey = "@quit", BackKey = "@back",
-                     StartKey = "@start", SectionKey = "@sec:", SettingKey = "@set:";
+                     StartKey = "@start", SectionKey = "@sec:", SettingKey = "@set:", GcKey = "@grandcircuit";
         (string label, string key)[] Items;
         Page _page;
         int _chapter = -1;              // ChapterList.All index of the open chapter page
@@ -92,6 +92,7 @@ namespace Seven
             l.Add((NewGameLabel, NewKey));
             for (int i = 0; i < ChapterList.All.Length; i++)                 // QF14: every unlocked chapter, from the one list
                 if (ChapterList.IsUnlocked(ChapterList.All[i])) l.Add((ChapterList.All[i].Name + (ChapterList.All[i].Id == "finale" && FinaleState.GameFinished ? "   -   the journey is complete" : ""), ChapterKey + i));   // Round 19: the finished mark
+            if (GcSave.Unlocked) l.Add(("Grand Circuit", GcKey));          // Round 20: the racing mode, unlocked after the credits
             l.Add(("Settings", SettingsKey)); l.Add(("Controls", ControlsKey)); l.Add(("Quit", QuitKey));
             return l.ToArray();
         }
@@ -126,6 +127,7 @@ namespace Seven
             if (DemoBoot.MenuPick != null && DemoBoot.CaptureDir != null) { ChapterList.UnlockAllForTest(); Build(); gameObject.AddComponent<MenuPilot>(); return; }   // QF12: a run that starts in the real menu (QF14: every chapter open, test keys)
             if (DemoBoot.PlayerSim && !DemoBoot.Chapter1 && !DemoBoot.VenusPlay && !DemoBoot.VenusPlay2 && !DemoBoot.EuropaPlay && !(DemoBoot.MarsPlay && DemoBoot.MenuPick == null) && !DemoBoot.AstPlay && !DemoBoot.BiaPlay && !DemoBoot.CatPlay && !DemoBoot.FinPlay) { Build(); return; }     // QF6 playtest: the driver uses the menu (QF10: the Venus run goes straight in)
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuPages) { StartCoroutine(Pages()); return; }
+            if (GcBoot.Any) { SceneManager.LoadScene(GcGame.SceneName); return; }                  // Round 20 check runs
             if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot && DemoBoot.MenuVenusConfirm)
             {
                 // the Venus page with "Play from the start" asking to confirm (QF14: was the main menu's "Chapter 2 — Venus")
@@ -133,7 +135,7 @@ namespace Seven
                 OpenChapter(ChapterList.IndexOf(ChapterList.ById("venus")), 0); _confirm = StartKey; Refresh();
                 StartCoroutine(Shot()); return;
             }
-            if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); StartCoroutine(Shot()); return; }
+            if (DemoBoot.CaptureDir != null && DemoBoot.MenuShot) { Build(); if (GcBoot.Unlocked) { _sel = Mathf.Max(0, System.Array.FindIndex(Items, x => x.key == GcKey)); Refresh(); } StartCoroutine(Shot()); return; }   // Round 20: the shot shows the Grand Circuit row
             if (DemoBoot.Gallery) GalleryTV.Preload();      // the gallery check run exercises the preload path
             if (DemoBoot.SoundCheck) { gameObject.AddComponent<TelepathySoundCheck>(); return; }
             if (DemoBoot.Continue) { SaveGame.Continue(); return; }
@@ -317,6 +319,7 @@ namespace Seven
             if (key == BackKey) { Back(); return; }
             if (key.StartsWith(ChapterKey)) { OpenChapter(int.Parse(key.Substring(ChapterKey.Length)), 0); return; }
             if (key == SettingsKey) { OpenPage(Page.Settings); return; }
+            if (key == GcKey) { MusicSystem.Stop(1f); SceneManager.LoadScene(GcGame.SceneName); return; }   // Round 20
             if (key == ControlsKey) { OpenPage(Page.Controls); return; }
             if (key.StartsWith(SettingKey)) { GameSettings.Activate(int.Parse(key.Substring(SettingKey.Length))); Refresh(); return; }
             if (key == QuitKey)

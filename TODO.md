@@ -1,5 +1,49 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF34: Dan's 1.0.0-rc6 review of the ending (Dan, 2026-11-24) — to do AFTER Round 20 (Dan: "it's ok if it finishes the race stuff first")
+Keep rc2–rc6 untouched; this ships as **1.0.0-rc7**. For every repeat item, say first why the earlier fix didn't hold.
+1. **Her hands spasm while Panther lies dying** (FIN_10, since QF32 "kneel closer"). The fur-contact hands jitter / jump (likely the
+   target re-picked every frame on a shrinking, breathing body, or solver fights between the hold and the stroke). Fix: stable,
+   smoothed targets bound to his head / neck / shoulder bones (not re-sampled each frame), damped motion (no frame-to-frame jumps),
+   following his breathing and the shrink smoothly; one solver in charge. Add a check: hand speed / acceleration limits during every
+   petting / holding moment (no spikes). Close-up capture clip of FIN_10 from start to "Panther, no!".
+2. **The memories of Panther must flow and actually show Panther** (Dan: many clips don't include him; he hoped it would flow without
+   digging). Rebuild the montage (and re-export the clips) so **every shot has 7 and Panther together**, both clearly in frame,
+   in story order, chosen for warmth: the first meeting (him through the bars / at her side, not a walkway), the escape side by side,
+   the galley meal (seated, his bowl), "free-range" (both in frame), his head in her lap, the naming on Venus, him growing ("You were
+   saying?"), guarding the ship, her egg chair with him in her lap, the quiet passage reunion ("Panther?" "Here."), the purring /
+   "the ship is vibrating" moment, the Cattalus streets together, the race (him at the square watching her), the meadow. Re-stage /
+   re-capture in engine where needed with a camera chosen for the two of them (gentle push-ins, soft framing), 3–5 s each, soft
+   dissolves, ~45–60 s total, all through the image gate plus a check that Panther's renderer is visible in every frame.
+3. **The beam in front of Europa's screen: THIRD time** (QF30 / QF31 said it was fixed; it isn't). Find the actual object (name
+   it in the status: which light / beam / effect, which script spawns it), and remove or move it so it is **never** between the
+   player's camera and the Europa screen at any point while the visions play, from every position she can stand in the chamber.
+   Prove it from the player's camera in the **shipped build** (not a test camera): captures of the Europa screen from the placement
+   spot and three other spots, plus an automated ray test from the gameplay camera to the screen's corners every frame of FIN_05–07.
+4. **The light at the end: one straight vertical beam.** Remove the beam over the table and the diagonal beam they're lifted into.
+   One column of light directly above them, straight down from the dark above; they rise **straight up** inside it (her holding
+   Panther); the camera **watches them go all the way up** until they're lost in the light high above, then fade to white; **hold
+   white ~2 s**; then the heaven film starts.
+5. **The Moon's landing place and the chamber: replace the hanging things** (Dan never understood them; similar ones hang in the
+   chamber and in Chapter 1). Identify them (name them in the status) and replace them with something that makes sense in the world
+   and looks good: e.g. Tunneler's mining gear (cargo pods / ore buckets on cable runs, winch gantries with work lights, conveyor
+   cradles) in the mining areas; in the ancient places (the chamber, Chapter 1's ruins) lunar-era fixtures (carved lamp spheres in
+   stone rings, crystal light clusters, hanging geometric chimes echoing the runes). Before / after captures of each place.
+6. **FIN_01's view of the Moon: one consistent approach.** It starts close and then flips between close and far. Start far (the Moon
+   whole in the view) and close in steadily for the whole talk (one continuous approach, no cuts back to far); framings per line can
+   change angle but never jump back in distance. The approach ends at the entrance as the gameplay begins.
+7. **A satisfying click when the pedestals and table lower** (FIN_06/07): each pedestal settles with a deep, crisp mechanical
+   clunk-click as it locks flush (in sequence, slightly varied), the table / light well a heavier, final clunk with a soft stone
+   rumble as it sinks. Make the SFX with ElevenLabs Sound Effects (stone and metal mechanism locking into place, satisfying, clean).
+8. **More shiny and glowing things in the finale (Kyle's request, via Dan: "not overdo it, but it needs more than it has").** Kyle's
+   art style (misty monochrome with soft glows) applied with more sparkle across the Moon finale: the service district, the route
+   to the door, the chamber and the arena. Ideas: glowing crystal veins in the old lunar stone (brighter near the chamber), the rune
+   sockets and floor conduits with a soft pulse, light motes / dust catching the light in the shafts, polished metal and carved
+   stone with gentle highlights, glowing glyphs on the door and walls that wake as she passes, the archive's light well shimmering,
+   the restored control stations' flowing light lines, distant city lights twinkling, the mining lights' haloes in the haze. Keep it
+   tasteful: focal points glow, the rest stays dark and misty, the subjects still read (the image gate must still pass, and no glow
+   may wash out the frame, QF26). Before / after captures of each area.
+
 ## Quick fix QF32: P2's open items (Dan, 2026-11-24) — done, rc5 published (status below)
 Keep rc2, rc3 and **rc4** (Dan's current showable build) published and untouched; this goes into **1.0.0-rc5**, published only if it
 passes everything rc4 does.
@@ -127,7 +171,7 @@ instead of 3.2 m -> white 6 %. The rc6 that shipped is QF33 + those two fixes on
    land as she lifts her head, "Hello." as her hands take his face, and the Voice over the rising wide shot, finished before the end?
    Nudge any of the four times in `FinaleDirectorQF31.cs` (`HeavenPanther`, `HeavenHello`, `HeavenLaugh`, `HeavenRestEnd`).
 
-## Round 20: "Grand Circuit" racing mode, Stage 1 (Dan, 2026-11-24) — to do after QF32
+## Round 20: "Grand Circuit" racing mode, Stage 1 (Dan, 2026-11-24) — done, 1.1.0-beta1 published (status below)
 Commit a checkpoint first. Runs overnight. **Never stop to ask**: make the reasonable call, list it under "Round 20 — decisions made".
 **Spec: `Docs/RACING_MODE.md`** (Dan approved: non-lethal pickups, 2 players to start, monochrome with glowing track lights). Keep
 rc2–rc5 untouched; this ships as **1.1.0-beta1**. The story game must not change: the mode is separate, unlocked after the credits.
@@ -202,6 +246,63 @@ at 60 fps; captures of both tracks (loops, the jump, the shortcut, the split scr
 - **Saving:** PlayerPrefs `seven_gc_*` (unlock, best race / time trial / lap per track, best per racer, last racer / track / mode /
   split layout); the ghost in `persistentDataPath/gc_ghost_<track>.bin` (10 samples a second). Check runs use `seven_test_gc_*`.
 - **Version:** 1.1.0-beta1, build 2000 (round 20, fix 0).
+- **Vehicle sizes:** 7's bike 3.0 m as in the story; Duchess's racer #8 is sized to her (1.5 m) - among 3-4 m vehicles on a 16 m road it
+  read as a toy, so in this mode the racer and Duchess are 1.7x (2.55 m); Tunneler's drill rig 0.78x (3.8 m across). His rig's floor
+  dust / exhaust (made for hovering over rock) is off in this mode - at racing speed it trailed a white cloud.
+- **Riders:** 7 is seated exactly as in the story (her body placed on the saddle in the IK pass, the racing tuck, palms on the grips, feet on
+  the panels - `GcSevenRider`, a copy of `ChapterSevenRide`'s method); Duchess crouches in her racer's bed (the story race's ride pose);
+  Tunneler stands on his rig with his drill turning.
+- **The lights:** a soft round pool of white under each vehicle and a thin short light trail; a glowing arch over each jump's landing.
+- **The Moon's haze** for this mode only: the prison's fog thinned with distance (x0.45) and capped at 0.7 - across a 2 km cavern it piled
+  up into a white-out over the pit.
+
+## Round 20 — status (2026-11-24/25)
+**Summary (plain words):** the Grand Circuit is in: after the credits and Kyle's line the game says "GRAND CIRCUIT UNLOCKED", and the
+main menu gets a **Grand Circuit** row. It opens its own pages (single race / time trial / the split-screen layout / best times / back),
+"press A to join" for a second player, racer select on each player's own controller (7, Duchess, Tunneler with their stats), track
+select (Cattalus Grand Circuit (Unlimited), Lunar Loop, best times shown), the race (lights, 3 laps, pickups, places, the finish, the
+results), and a pause page. Two tracks, three racers, anti-grav handling that sticks to loops and the corkscrew, jumps, air-brakes,
+bumps that push, the shortcut, Push / Shield / Boost, AI racers, split screen top / bottom or side by side, time trial with a ghost,
+saved best times.
+**Proof** (check runs on the Round 20 build, `-testspeed 2`):
+- **The AI on every vehicle, both tracks:** `GC PROOF (R20): 12 / 12 AI runs completed 3 laps (2 tracks x 6 racers, two of each vehicle);
+  falls-through 0; falls off 0; slowest racer on a loop / the corkscrew 36.0 m/s` (the assist floor is 26). Every racer took every loop,
+  corkscrew and jump (all landed); the shortcut was taken by the AI 10 times on Cattalus. Laps 29.6-33 s, races 1:32-1:39.
+- **7's riding pose:** 9,484 samples, hips on the saddle point (worst 0.0 cm), palms within 1.5 cm of the grips, 0 frames off.
+- **Split screen:** the real setup pages played with two virtual controllers (player 2 joined by pressing A, each picked on their own pad),
+  then a 2-player race against 4 AI with both players driven by the bot through those pads: `GC SPLIT FRAME TIME (R20): 2462 race frames,
+  mean 5.4 ms (184 fps), p95 7.0 ms, frames over 16.7 ms 0.4 %` (minimized check-run window, 1280x720 - well above 60 fps).
+- **Time trial:** two runs on Cattalus; the first saved the best time and its ghost, the second raced against the ghost and beat it
+  (1:36.80 -> 1:35.40, the new ghost saved).
+- **Captures + the image gate:** 33 racing captures (both tracks: the grid, the pack, loops upside down and from the side, the corkscrew,
+  the shortcut, both jumps from behind and the side, landings; every setup page; the split screen at the start, in the loop, over the
+  jump, with a pickup; the results; the time trial with its ghost): **33 / 33 pass, 0 NaN** (`Docs/Previews/r20/`).
+- **No keyboard glyphs:** 244 on-screen texts checked at the captures, keyboard keys shown 0 (A / B / X / Y and the triggers only).
+- **The unlock:** a check run from the ending's checkpoint shows the card after Kyle's line (`f72b_grand_circuit_unlocked_card`) and
+  logs `GRAND CIRCUIT (R20): unlocked`; the main menu then lists the row (`00_menu.png` with `-racingunlocked`).
+**Release: 1.1.0-beta1 (build 2000, `game-2000`) PUBLISHED, Latest; rc2-rc6 retained, untouched.** Built with Build everything (every build
+check passed, PROMPTS 0); release gate PASS (`Builds/ImageGate/gate_1.1.0-beta1.txt`: every chapter as before, the new `grandcircuit` run
+16 / 16, NaN 0). On that exact build: the racing run 33 / 33 captures, split side by side 8 / 8 (4.0 ms a frame), the unlock card and the
+menu row. Not done / honest notes: frame times are from a minimized check-run window (no real 60 Hz display in the loop); no person has
+played it with real controllers yet; the AI's skill is untuned against a human (it finished 1:32-1:39; the bot playing a "human" slot
+came 5th-6th); Stage 2 / 3 (more tracks, racers, Grand Prix, 4 players) not started.
+
+## For Dan to check (Round 20)
+1. **The unlock:** finish the game (or Scene Select -> the Moon finale's last section) - after Kyle's line, "GRAND CIRCUIT UNLOCKED",
+   then the main menu has a **Grand Circuit** row (on an existing finished save it appears the next time the credits end).
+2. **The handling:** a single race on Cattalus Unlimited as 7 - does the bike stick to the loop and the corkscrew, do the air-brakes
+   (LB / RB) make the long right-handers, does the jump over the toy boulevard feel right (floaty, always makes it), do bumps push
+   rather than wreck? Numbers to nudge are listed in "Round 20 - decisions made".
+3. **The shortcut:** keep right after the corkscrew, into the cardboard quarter's box tunnel - worth it?
+4. **Pickups:** X fires the held one (Push / Shield / Boost). Is Push readable (the white ring, the racer ahead knocked off line)?
+5. **Two players:** plug in a second controller, Single race -> press A on it to join -> each picks a racer on their own pad. Top /
+   bottom by default; "Split screen" on the Grand Circuit page switches to side by side.
+6. **Time trial:** run it twice - the second time a white ghost of your best run races with you.
+7. **The Lunar Loop:** the tunnels, the giant cavern loop, the jump across the mining pit.
+8. **The voices** (proposed, in the story's voices; change or drop any): 7 "Let's fly." / "Excuse me!" / "Hey! That was my line." /
+   "Last lap. Here we go." / "Not bad for a bike."; Duchess "Do try to keep up, darling." / "Pardon my tail." / "How very rude!" /
+   "One more lap. Effortless." / "Naturally."; Tunneler "I dig in straight lines. Stay out of them." / "Make room." / "That tickled." /
+   "Last lap. Steady." / "Steady wins."
 
 ## Polish pass P2: the overnight clean-up (Dan, 2026-11-24, going to bed: "if there is some clean up, now is a good time") — done in part, status + morning summary below
 **Protect the showable builds:** 1.0.0-rc2 and **1.0.0-rc3** stay published and untouched. This goes into **1.0.0-rc4**, published

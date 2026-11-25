@@ -23,13 +23,14 @@ $runs = [ordered]@{
   "cattalus" = "-testspeed 2 -catcp 0 -stopafter 200";
   "finale_aboard" = "-testspeed 2 -fincp 0 -stopafter 150";   # Round 19: FIN_01 aboard (no baseline: every shot must pass)
   "finale"   = "-testspeed 2 -fincp 1";                       # Round 19: the whole Moon finale to the credits
+  "grandcircuit" = "-testspeed 2 -gcproof";                  # Round 20: the racing mode (both tracks, the AI on every vehicle; no baseline)
 }
 $sel = if ($Only) { $Only.Split(",") } else { @($runs.Keys) }
 foreach ($k in $sel) {
   $dir = Join-Path $Out $k
   if (-not $Reuse) {
     if (Test-Path $dir) { Remove-Item -Recurse -Force $dir }
-    powershell -File "$PSScriptRoot\Run-Check.ps1" -Out $dir -Exe $exe -Args $runs[$k] -TimeoutSec $(if ($k -eq "finale") { 1800 } else { 900 }) | Out-Null
+    powershell -File "$PSScriptRoot\Run-Check.ps1" -Out $dir -Exe $exe -Args $runs[$k] -TimeoutSec $(if ($k -eq "finale" -or $k -eq "grandcircuit") { 1800 } else { 900 }) | Out-Null
   }
 }
 $extra = @(); if ($WriteReference) { $extra += "--write-reference" }
