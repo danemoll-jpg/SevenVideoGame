@@ -588,6 +588,8 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**QF34b (2026-11-25): 1.0.0-rc8 (build 2002, `game-2002`) PUBLISHED, Latest - FIN_10's hands on him after the shrink (`SevenTableIK.OwnsArms`: `SevenRestPose` leaves those arms to
+`SevenTableIK.SolveHeldArms`; the gather lifts his head onto her thighs; `InReach`). Status in `TODO.md` (QF34b).**
 **QF34 (2026-11-25): 1.0.0-rc7 (build 2001, `game-2001` - above beta1's 2000: the launcher only installs a higher build) PUBLISHED, Latest
 (rc2-rc6 + 1.1.0-beta1 retained). Status, why each repeat didn't hold and "For Dan to check (QF34)" in `TODO.md`.** code: FIN_10's hands bound to his
 bones once + eased (`HandsOnHim`, `FurPalm` SmoothDamp correction; check `HAND MOTION (QF34 1)`), the memory montage

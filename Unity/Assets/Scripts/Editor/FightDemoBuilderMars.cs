@@ -430,7 +430,15 @@ namespace Seven.EditorTools
                     foreach (var sz in new[] { -1f, 1f }) MBox(sv2, st2, new Vector3(M.DrawLen * 0.5f, -0.25f, sz * (M.DrawWidth * 0.5f + 0.18f)), new Vector3(M.DrawLen, 1.1f, 0.36f), 0f, 0.02f);   // side beams (below the deck top, outside the zone)
                     for (float x = 1.2f; x < M.DrawLen - 0.5f; x += 2.2f) MBox(iv, it2, new Vector3(x, -0.66f, 0f), new Vector3(0.24f, 0.08f, M.DrawWidth + 0.5f), 0f, 0.01f);   // iron bands under it
                     foreach (var sz in new[] { -1.4f, 1.4f }) Sweep(iv, it2, Enumerable.Range(0, 13).Select(i => new Vector3(M.DrawLen - 0.3f, 0.32f + Mathf.Sin(i / 12f * Mathf.PI * 2f) * 0.22f, sz + Mathf.Cos(i / 12f * Mathf.PI * 2f) * 0.22f)).ToList(), 0.05f, true, 6);   // chain eyes at the tip
+                    // QF34b (the release gate): raised, the deck's top was one flat 14.6 x 7 m stone face filling the view from the ravine
+                    // floor (range 0.28) - it is laid in slabs: dark joints across it every 1.2 m, a staggered seam down the middle, and a
+                    // worn kerb along each edge (set 5 mm into the deck: nothing coplanar, too low to trip the bike)
+                    var jv = new List<Vector3>(); var jt = new List<int>();   // (their own mesh, no collider: never a lip for the bike or her feet)
+                    for (float x = 0.9f; x < M.DrawLen - 0.3f; x += 1.2f) MBox(jv, jt, new Vector3(x, 0.055f, 0f), new Vector3(0.07f, 0.022f, M.DrawWidth - 0.1f), 0f, 0f);
+                    for (float x = 0.9f, k = 0; x < M.DrawLen - 1.5f; x += 1.2f, k++) MBox(jv, jt, new Vector3(x + 0.6f, 0.055f, (k % 2 == 0 ? -1f : 1f) * M.DrawWidth * 0.17f), new Vector3(1.2f, 0.022f, 0.06f), 0f, 0f);
+                    foreach (var sz in new[] { -1f, 1f }) MBox(jv, jt, new Vector3(M.DrawLen * 0.5f + 0.05f, 0.07f, sz * (M.DrawWidth * 0.5f - 0.22f)), new Vector3(M.DrawLen - 0.2f, 0.05f, 0.4f), 0f, 0.01f);
                     var sb = MeshObject("DrawBeams", SaveMesh(Finish(sv2, st2), "Mars_DrawBeams"), m.stoneDark, span); sb.transform.localPosition = Vector3.zero;
+                    var dj = MeshObject("DrawDeckJoints", SaveMesh(Finish(jv, jt), "Mars_DrawDeckJoints"), m.stoneDark, span, false); dj.transform.localPosition = Vector3.zero;
                     var ib = MeshObject("DrawIron", SaveMesh(SmoothFinish(iv, it2), "Mars_DrawIron"), m.metalDark, span, false); ib.transform.localPosition = Vector3.zero;
                     // the winding tower (round, battered, a crown), the pulley wheel on a bracket at its top, the drum at its foot
                     var kt = new Kit(); Tower(kt, tw, 1.7f, M.DrawPulleyH - 0.6f, 8, false, rnd, false); kt.Save("DrawTower", maint, m.wall, m.rockDark, m.stoneDark, m.glow, m.cloth);

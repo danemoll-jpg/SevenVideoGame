@@ -65,6 +65,14 @@ namespace Seven
             if (!L.InCavern(q) && q.z > -153.5f) q.z = -153.5f;                                  // never in the doorway's mouth
             return q;
         }
+        // QF34b (the release gate): the arena holds the side camera within 7 m - at a long range (she 9 m from him) a 50 deg lens on the
+        // midpoint left him half off the frame and her a speck. The side shot shows the boss mid-attack: it aims toward him (she stays
+        // in it at the usual ranges) and he is its declared subject.
+        protected override Vector3 SideAim(Vector3 mid, string shot)
+        {
+            ImageGate.ExpectSide(shot, transform, "Tunneler mid-attack (side)");
+            return Vector3.Lerp(mid, transform.position, 0.4f) + Vector3.up * 1.4f;
+        }
         protected override Vector3 SidePos(Vector3 mid, Vector3 side, float dist)
         {
             // inside the arena (the chamber + the cavern): the side of the line with more room, pulled in to stay 2 m inside the walls

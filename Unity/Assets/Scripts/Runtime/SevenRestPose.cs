@@ -113,6 +113,7 @@ namespace Seven
             if (chest != null) Aim(chest, upper != null ? upper : neck, Lean(p.spine.y + _bow * 0.3f - breath * 0.6f + shake));
             if (upper != null) Aim(upper, neck, Lean(p.spine.z + _bow * 0.3f - breath * 1.4f + shake * 1.4f));
             Aim(neck, head, Lean(p.neck + _bow * 0.5f));
+            var ik = GetComponent<SevenTableIK>(); bool held = false;
             foreach (var (side, s) in new[] { ("L", 1f), ("R", -1f) })
             {
                 bool l = side == "L";
@@ -124,8 +125,11 @@ namespace Seven
                 var ua = B(l ? HumanBodyBones.LeftUpperArm : HumanBodyBones.RightUpperArm);
                 var la = B(l ? HumanBodyBones.LeftLowerArm : HumanBodyBones.RightLowerArm);
                 var hd = B(l ? HumanBodyBones.LeftHand : HumanBodyBones.RightHand);
-                Aim(ua, la, Dir(l ? p.upL : p.upR, s)); Aim(la, hd, Dir(l ? p.foreL : p.foreR, s));
+                // QF34 (1): an arm the IK owns is the IK's (re-solved below); the hand-over eases (ArmOwn 0..1), never a snap
+                float own = ik != null ? ik.ArmOwn(!l) : 0f; if (own > 0.001f) held = true;
+                if (own < 0.999f) { float w0 = _w; _w = w0 * (1f - own); Aim(ua, la, Dir(l ? p.upL : p.upR, s)); Aim(la, hd, Dir(l ? p.foreL : p.foreR, s)); _w = w0; }
             }
+            if (held) ik.SolveHeldArms();                                   // after the spine / bow moved her shoulders
         }
     }
 }

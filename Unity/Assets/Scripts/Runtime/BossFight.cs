@@ -871,6 +871,9 @@ namespace Seven
         }
         /// <summary>Where the "_side" capture of a fight moment stands (Round 19: a walled arena keeps it inside).</summary>
         protected virtual Vector3 SidePos(Vector3 mid, Vector3 side, float dist) => mid + side * dist + Vector3.up * 3.2f;
+        /// <summary>Where the "_side" capture looks (default: between them, 1 m up); a boss can aim it toward himself and declare himself
+        /// its subject when its arena keeps the camera too close to fit both.</summary>
+        protected virtual Vector3 SideAim(Vector3 mid, string shot) => mid + Vector3.up * 1f;
         protected IEnumerator Shoot(string name, float delay)
         {
             for (float t = 0f; t < delay; t += Time.deltaTime) yield return null;
@@ -878,7 +881,7 @@ namespace Seven
             // and from the side of the line between them (a second angle of the same moment)
             var mid = (Her + transform.position) * 0.5f; var side = Vector3.Cross(Vector3.up, Flat(transform.position - Her).normalized);
             float span = Flat(transform.position - Her).magnitude;
-            yield return Cap.ShotFrom(name + "_side", SidePos(mid, side, Mathf.Max(6f, span * 1.1f)), mid + Vector3.up * 1f, 50f);
+            yield return Cap.ShotFrom(name + "_side", SidePos(mid, side, Mathf.Max(6f, span * 1.1f)), SideAim(mid, name + "_side"), 50f);
         }
     }
 

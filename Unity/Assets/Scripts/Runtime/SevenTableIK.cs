@@ -34,6 +34,7 @@ namespace Seven
         public static int NetReleases; public static string LastNet;
         public void ReleaseAll(string why)
         {
+            OwnsArms = false;
             bool any = _rightW > 0.01f || _leftW > 0.01f || _lookW > 0.01f || _r > 0.01f || _l > 0.01f;
             _rightW = _leftW = _lookW = 0f; LeftHintW = RightHintW = LeftPalmW = RightPalmW = 0f; Lean = 0f;
             if (any) Debug.Log($"[Seven] hand IK released ({why})");
@@ -136,6 +137,7 @@ namespace Seven
         }
         void LateUpdate()
         {
+            _own = Mathf.MoveTowards(_own, OwnsArms ? 1f : 0f, Time.deltaTime / 0.8f);
             if (_anim != null && _lean > 0.1f && LeanDir.sqrMagnitude > 0.01f)
             {
                 // QF23 (22): the lean, after the animator - the spine and chest bend toward the shape, then the right arm is
@@ -181,6 +183,44 @@ namespace Seven
             yaw += _talk * 1.8f * Mathf.Sin(_t * 2f * Mathf.PI * 0.45f + 0.5f);
             if (_neckB != null) _neckB.rotation = Quaternion.AngleAxis(yaw * 0.4f, up) * Quaternion.AngleAxis(pitch * 0.4f, right) * _neckB.rotation;
             _headB.rotation = Quaternion.AngleAxis(yaw * 0.6f, up) * Quaternion.AngleAxis(pitch * 0.6f, right) * _headB.rotation;
+        }
+
+        /// <summary>QF34 (1): a posed body (SevenRestPose: the kneel, the floor sit) bends her spine AFTER this component's pass, which moved
+        /// the shoulders and - worse - re-aimed both arms to the pose, so a held hand never reached its target (FIN_10: her open hand ~10 cm
+        /// over Panther's head). The pose now leaves a held arm alone and calls this after its spine: each held arm is re-solved
+        /// (two-bone, elbow toward its hint) onto its target and the palm laid on again - one solver in charge of the arm.</summary>
+        public void SolveHeldArms()
+        {
+            if (_anim == null) return;
+            if (ArmOwn(true) > 0.001f) TwoBone(true, RightPos, RightHintW > 0.01f ? RightHint : (Vector3?)null, ArmOwn(true));
+            if (ArmOwn(false) > 0.001f) TwoBone(false, LeftPos, LeftHintW > 0.01f ? LeftHint : (Vector3?)null, ArmOwn(false));
+            PalmTo(false, _pl, LeftPalmN, LeftFingerDir); PalmTo(true, _pr, RightPalmN, RightFingerDir);
+            HeldSolves++;
+        }
+        public static int HeldSolves;
+        /// <summary>True while this hand is held by the IK (the rest pose then leaves that arm alone).</summary>
+        public bool Holds(bool right) => ArmOwn(right) > 0.001f;
+        /// <summary>How much this arm is the IK's (0..1): OwnsArms eased over 0.8 s, times the hand's weight - the hand-over from a pose's
+        /// arms is never a one-frame snap.</summary>
+        public float ArmOwn(bool right) => _own * Mathf.Clamp01(right ? _r : _l);
+        float _own;
+        /// <summary>QF34b: set by a scene whose hands must really land (FIN_10 once he is in her lap); off by default - the posed scenes
+        /// aboard keep their pose's arms (FurPalm lays the palms), and ReleaseAll clears it.</summary>
+        public bool OwnsArms;
+        void TwoBone(bool right, Vector3 target, Vector3? hint, float w)
+        {
+            var u = _anim.GetBoneTransform(right ? HumanBodyBones.RightUpperArm : HumanBodyBones.LeftUpperArm);
+            var lo = _anim.GetBoneTransform(right ? HumanBodyBones.RightLowerArm : HumanBodyBones.LeftLowerArm);
+            var h = _anim.GetBoneTransform(right ? HumanBodyBones.RightHand : HumanBodyBones.LeftHand);
+            if (u == null || lo == null || h == null) return;
+            float la = Vector3.Distance(u.position, lo.position), lb = Vector3.Distance(lo.position, h.position);
+            var toT = target - u.position; float d = Mathf.Clamp(toT.magnitude, 0.01f, (la + lb) * 0.999f); var dir = toT.normalized;
+            var pole = hint ?? lo.position;                                   // no hint: keep the elbow on the side it is on
+            var pn = Vector3.ProjectOnPlane(pole - u.position, dir).normalized; if (pn.sqrMagnitude < 1e-4f) pn = Vector3.down;
+            float cosA = Mathf.Clamp((la * la + d * d - lb * lb) / (2f * la * d), -1f, 1f), A = Mathf.Acos(cosA);
+            var elbow = u.position + dir * Mathf.Cos(A) * la + pn * Mathf.Sin(A) * la;
+            var r1 = Quaternion.FromToRotation(lo.position - u.position, elbow - u.position) * u.rotation; u.rotation = Quaternion.Slerp(u.rotation, r1, w);
+            var r2 = Quaternion.FromToRotation(h.position - lo.position, u.position + dir * d - lo.position) * lo.rotation; lo.rotation = Quaternion.Slerp(lo.rotation, r2, w);
         }
 
         /// <summary>QF30 (3): the weights actually applied now (eased).</summary>

@@ -19,9 +19,9 @@ namespace Seven
     public sealed class LauncherBridge : MonoBehaviour
     {
         /// <summary>Release version of this build: 0.&lt;round&gt;.&lt;fix&gt;. Raise it every round before the final build.</summary>
-        public const string Version = "1.0.0-rc7";
+        public const string Version = "1.0.0-rc8";
         /// <summary>Release build number: round * 100 + fix (0.8.0 = 800). Must rise with every published release.</summary>
-        public const int Build = 2001;   // QF34 after Round 20 (fix 1): must be above 1.1.0-beta1 (2000) or the launcher would never offer rc7
+        public const int Build = 2002;   // QF34b (round 20, fix 2): FIN_10's hands on him after the shrink
 
         const string ReadyArg = "-sevenLauncherReady", NonceArg = "-sevenLauncherNonce";
 

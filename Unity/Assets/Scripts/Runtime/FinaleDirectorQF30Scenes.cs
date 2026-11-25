@@ -122,6 +122,29 @@ namespace Seven
                         Cat.transform.position = c0 + mv;
                         Log($"FIN_10 GATHER (QF32 1): small again, she drew him {mv.magnitude:0.00} m in against her knees (his head into her lap)");
                     }
+                    // QF34 (1): his head on the floor in front of her knees was ~0.55-0.6 m below / out from her shoulders - past her arms
+                    // even bowed (her right hand hovered ~10 cm over him). She lifts his head and chest up onto her thighs: he pivots about
+                    // his hips (hindquarters stay on the floor), eased, his head arriving at her lap point - both hands then rest on him.
+                    var hips = CatBone("pelvis"); var hipsB = Seven.Bone(HumanBodyBones.Hips); hd = CatBone("head");
+                    kL = Seven.Bone(HumanBodyBones.LeftLowerLeg); kR = Seven.Bone(HumanBodyBones.RightLowerLeg);
+                    if (hips != null && hipsB != null && hd != null && kL != null && kR != null)
+                    {
+                        var lap = Vector3.Lerp(hipsB.position, (kL.position + kR.position) * 0.5f, 0.6f) + Vector3.up * 0.06f;
+                        var pivot = hips.position; pivot.y = L.Y;
+                        var from = hd.position - pivot; var to = lap - pivot;
+                        var q = Quaternion.FromToRotation(from.normalized, to.normalized); q.ToAngleAxis(out float ang, out var ax); if (ang > 180f) ang -= 360f;
+                        ang = Mathf.Clamp(ang, -45f, 45f);
+                        var p0 = Cat.transform.position; var r0 = Cat.transform.rotation;
+                        for (float t = 0f; t < 1f; t += Time.deltaTime / 1.4f)
+                        {
+                            var qq = Quaternion.AngleAxis(ang * Mathf.SmoothStep(0f, 1f, t), ax);
+                            Cat.transform.SetPositionAndRotation(pivot + qq * (p0 - pivot), qq * r0); yield return null;
+                        }
+                        var qf = Quaternion.AngleAxis(ang, ax); Cat.transform.SetPositionAndRotation(pivot + qf * (p0 - pivot), qf * r0);
+                        hd = CatBone("head");
+                        _lapHeld = true; IK.OwnsArms = true;   // QF34b: from here the IK owns her arms (eased over 0.8 s)
+                        Log($"FIN_10 INTO HER LAP (QF34 1): she lifted his head and chest onto her thighs ({ang:0} deg about his hips, which stay on the floor) - his head {Vector3.Distance(hd.position, lap) * 100f:0} cm from her lap point, {hd.position.y - L.Y:0.00} m up");
+                    }
                 }
             }
             // one last breath, then stillness: the breathing stops, his head settles into her hand, ears slack, the tail limp; the purr stops
@@ -183,7 +206,7 @@ namespace Seven
             return kneel;
         }
         int _cradleLogged;
-        Transform _bindHead, _bindNeck, _bindChest; Vector3 _hLocal, _hNLocal, _sLocal, _sNLocal, _cLocal, _cNLocal, _hSm, _nSm, _hVel, _nVel; bool _rebind, _smoothInit; float _strokeBack, _offFor, _clipNext, _reachCheck; int _clipN, _bindLogs, _reBinds; Vector3 _palmR, _palmL;
+        Transform _bindHead, _bindNeck, _bindChest; Vector3 _hLocal, _hNLocal, _sLocal, _sNLocal, _cLocal, _cNLocal, _hSm, _nSm, _hVel, _nVel; bool _rebind, _smoothInit; float _strokeBack, _offFor, _clipNext, _reachCheck; int _clipN, _bindLogs, _reBinds; Vector3 _palmR, _palmL; bool _ikSet; readonly System.Collections.Generic.List<float> _wristErrR = new System.Collections.Generic.List<float>(), _wristErrL = new System.Collections.Generic.List<float>();
         Vector3 _clipAt, _clipSide; int _clipRuns;
         /// <summary>QF34 (1): check runs - a close-up clip of her hands on him from the gather to "Panther, no!" (10 fps, frames written to
         /// &lt;capture dir&gt;/fin10_clip/, stitched by ffmpeg into Docs/Previews/qf34/fin10_hands.mp4) - a side camera of its own.</summary>
@@ -205,10 +228,22 @@ namespace Seven
             Destroy(go); rt.Release(); Destroy(tex);
             Log($"FIN_10 CLIP (QF34 1): {n} frames of her hands on him (10 fps) -> fin10_clip/; hand re-binds to the fur within her reach {_reBinds}");
         }
+        int _inReachFrames; bool _lapHeld; Vector3 _hRaw, _nRaw, _hNSm, _nNSm;
+        Vector3 InReach(Vector3 surf, Vector3 n, Vector3 palm, HumanBodyBones upper, HumanBodyBones lower, HumanBodyBones hand, ref Vector3 nOut)
+        {
+            var sh = Seven.Bone(upper); var lo = Seven.Bone(lower); var hd = Seven.Bone(hand);
+            if (sh == null || lo == null || hd == null || Cat == null) return surf;
+            float arm = Vector3.Distance(sh.position, lo.position) + Vector3.Distance(lo.position, hd.position);
+            var wrist = surf + n * 0.012f - palm; var d = wrist - sh.position;
+            if (d.magnitude <= arm * 0.95f) return surf;
+            var p = sh.position + d.normalized * arm * 0.9f + palm;              // where her palm can be, straight toward the point
+            if (!FurContact.Nearest(Cat.transform, p, out var sp, out var sn, out _)) return surf;
+            _inReachFrames++; nOut = sn; return sp;
+        }
         IEnumerator HandsOnHim()
         {
             StartCoroutine(Fin10Clip());
-            _reachBow = 0f; _cradleLogged = 0; _bindHead = null; _smoothInit = false; _strokeBack = 0f; _offFor = 0f;
+            _reachBow = 0f; _cradleLogged = 0; _lapHeld = false; _hNSm = _nNSm = Vector3.zero; _bindHead = null; _smoothInit = false; _strokeBack = 0f; _offFor = 0f;
             var ik = IK; ik.Ease = 1.4f; ik.Alive = true; ik.Spread = 0.6f;
             while (_handsOn && Cat != null)
             {
@@ -239,13 +274,17 @@ namespace Seven
                 // fur in a bone's own space (head / neck for the right hand, the neck->chest for the left): it follows his breathing, the
                 // gather and the shrink by construction; the stroke eases there and back; the result is critically damped; FurPalm only
                 // measures. (Rebound, slowly, only if a bound point ever drifts > 4 cm off his fur for half a second.)
+                // QF34 (1): how close each wrist came to the target it was given last frame (after every pass: IK, the kneel, FurPalm)
+                { var rw = Seven.Bone(HumanBodyBones.RightHand); var lw = Seven.Bone(HumanBodyBones.LeftHand);
+                  if (_ikSet && rw != null && lw != null) { _wristErrR.Add(Vector3.Distance(rw.position, ik.RightPos)); _wristErrL.Add(Vector3.Distance(lw.position, ik.LeftPos)); } }
                 var chestB = CatBone("chest") ?? neck;
                 var toHer = Flat(her - Vector3.Lerp(neck.position, chestB.position, 0.55f)).normalized;
                 if (_bindHead == null || _rebind)
                 {
                     _rebind = false;
-                    var hs0 = OnFur(Vector3.Lerp(head.position, neck.position, 0.25f), up, out var hn0); _bindHead = head; _hLocal = head.InverseTransformPoint(hs0); _hNLocal = head.InverseTransformDirection(hn0);
-                    var ns0 = OnFur(Vector3.Lerp(head.position, neck.position, 1f), up, out var nn0); _bindNeck = neck; _sLocal = neck.InverseTransformPoint(ns0); _sNLocal = neck.InverseTransformDirection(nn0);
+                    var facing = up;   // (QF34b tried the side facing her: once he lies in her lap that side is tucked under her thighs)
+                    var hs0 = OnFur(Vector3.Lerp(head.position, neck.position, 0.25f), facing, out var hn0); _bindHead = head; _hLocal = head.InverseTransformPoint(hs0); _hNLocal = head.InverseTransformDirection(hn0);
+                    var ns0 = OnFur(Vector3.Lerp(head.position, neck.position, 1f), facing, out var nn0); _bindNeck = neck; _sLocal = neck.InverseTransformPoint(ns0); _sNLocal = neck.InverseTransformDirection(nn0);
                     var cs0 = OnFur(Vector3.Lerp(neck.position, chestB.position, 0.55f), (toHer + Vector3.up * 0.9f).normalized, out var cn0); _bindChest = neck; _cLocal = neck.InverseTransformPoint(cs0); _cNLocal = neck.InverseTransformDirection(cn0);
                     if (_bindLogs++ == 0) Log("FIN_10 HANDS (QF34 1): each hand bound to a point on his fur in his head / neck bones' space (no per-frame re-pick); the contact eased on by FurPalm");
                 }
@@ -253,11 +292,17 @@ namespace Seven
                 var hSurfW = Vector3.Lerp(_bindHead.TransformPoint(_hLocal), _bindNeck.TransformPoint(_sLocal), su);
                 var hNW = Vector3.Slerp(_bindHead.TransformDirection(_hNLocal), _bindNeck.TransformDirection(_sNLocal), su).normalized;
                 var nSurfW = _bindChest.TransformPoint(_cLocal); var nNW = _bindChest.TransformDirection(_cNLocal).normalized;
+                // QF34 (1): his head (after the shrink) lies 0.54-0.62 m from her right shoulder - past her 0.49 m arm even bowed: the hand
+                // stopped short in the air. A point out of her reach slides along his fur to the nearest fur she CAN reach (toward her,
+                // between her shoulder and the point) - eased by the smoothing below, so it never jumps
+                _hRaw = hSurfW; _nRaw = nSurfW;   // the bow still leans toward his real head / neck
+                if (_lapHeld) hSurfW = InReach(hSurfW, hNW, _palmR, HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, ref hNW);
+                if (_lapHeld) nSurfW = InReach(nSurfW, nNW, _palmL, HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, ref nNW);
                 if (!_smoothInit) { _hSm = hSurfW; _nSm = nSurfW; _smoothInit = true; }
                 _hSm = Vector3.SmoothDamp(_hSm, hSurfW, ref _hVel, 0.3f); _nSm = Vector3.SmoothDamp(_nSm, nSurfW, ref _nVel, 0.3f);
                 // a hand whose bound point stays out of her reach (its palm > 4 cm off his fur for 1.5 s) re-binds to the fur nearest the palm
                 _reachCheck += Time.deltaTime;
-                if (_reachCheck > 1.5f)
+                if (!_lapHeld && _reachCheck > 1.5f)   // while he is large (rc7's way); in her lap InReach takes over (this re-bind oscillated with her bow)
                 {
                     _reachCheck = 0f;
                     foreach (var (right, hb, mb) in new[] { (true, HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal), (false, HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal) })
@@ -271,7 +316,10 @@ namespace Seven
                         }
                     }
                 }
-                var hSurf = _hSm; var hN = hNW; var nSurf = _nSm; var nN = nNW;
+                // the palms' facing eases too (a switch to another fur point turned the hand in one frame: the last spikes)
+                if (_hNSm.sqrMagnitude < 0.5f) { _hNSm = hNW; _nNSm = nNW; }
+                float kn = 1f - Mathf.Exp(-Time.deltaTime * 5f); _hNSm = Vector3.Slerp(_hNSm, hNW, kn).normalized; _nNSm = Vector3.Slerp(_nNSm, nNW, kn).normalized;
+                var hSurf = _hSm; var hN = _hNSm; var nSurf = _nSm; var nN = _nNSm;
                 // a bound point that drifted off his fur (it should not: the bones carry it) is re-bound, not chased
                 if (FurContact.Nearest(Cat.transform, hSurfW, out _, out _, out var dOff) && Mathf.Abs(dOff) > 0.08f) { _offFor += Time.deltaTime; if (_offFor > 3f) { _offFor = 0f; _rebind = true; } } else _offFor = 0f;
                 // QF34 (1): the WRIST is aimed so the PALM CENTRE lands on the bound point (the palm's offset from the wrist measured on the
@@ -282,7 +330,7 @@ namespace Seven
                 ik.RightPos = hSurf + hN * 0.012f - _palmR; ik.RightPalmN = hN; ik.RightPalmW = 1f; ik.RightFingerDir = Flat(Cat.transform.forward); ik.RightW = 1f;
                 ik.LeftPos = nSurf + nN * 0.012f - _palmL; ik.LeftPalmN = nN; ik.LeftPalmW = 0.9f; ik.LeftFingerDir = (-toHer + Vector3.down * 0.5f).normalized; ik.LeftW = 1f;
                 ik.LeftHint = P7 + Vector3.up * 0.7f - Seven.transform.right * 0.5f; ik.LeftHintW = 0.6f; ik.RightHint = P7 + Vector3.up * 0.8f + Seven.transform.right * 0.5f; ik.RightHintW = 0.6f;
-                ik.LookPos = head.position; ik.LookW = 1f;
+                ik.LookPos = head.position; ik.LookW = 1f; _ikSet = true;
                 _clipAt = (hSurf + nSurf) * 0.5f; _clipSide = Vector3.Cross(Vector3.up, Flat(head.position - P7).normalized);
                 // and both palms held on him every frame (measured against his body after every other hand pass, never let go here)
                 var fp = FurPalm.On(Seven.gameObject); fp.Set(true, Cat.transform, "FIN_10 hand on his head", 1f, true); fp.Set(false, Cat.transform, "FIN_10 hand on his shoulder", 1f, true);   // QF34 (1): the damped contact (FurPalm eases onto the fur)
@@ -297,15 +345,21 @@ namespace Seven
                 }
                 if (rp != null)
                 {
-                    float need = Mathf.Max(Need(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, hSurf),
-                                           Need(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, nSurf));
+                    float need = Mathf.Max(Need(HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, _hRaw),
+                                           Need(HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, _nRaw));
                     _reachBow = Mathf.MoveTowards(_reachBow, Mathf.Clamp(_reachBow + need * 80f, 0f, 85f), Time.deltaTime * 30f);
                     if (rp.Bow < _reachBow) rp.Bow = _reachBow;
                 }
                 yield return null;
             }
-            Seven.GetComponent<FurPalm>()?.Off();
+            Seven.GetComponent<FurPalm>()?.Off(); if (IK != null) IK.OwnsArms = false;
             if (CatOv != null) CatOv.Cradle = null;
+            if (_wristErrR.Count > 10)
+            {
+                float Pct(System.Collections.Generic.List<float> l, float q) { var c = new System.Collections.Generic.List<float>(l); c.Sort(); return c[Mathf.Min(c.Count - 1, (int)(c.Count * q))]; }
+                Log($"FIN_10 WRIST REACH (QF34 1): each wrist vs the target it was given, after every pass (IK, the kneel, FurPalm) - right (head) median {Pct(_wristErrR, 0.5f) * 100f:0.0} cm, p95 {Pct(_wristErrR, 0.95f) * 100f:0.0} cm; left (neck) median {Pct(_wristErrL, 0.5f) * 100f:0.0} cm, p95 {Pct(_wristErrL, 0.95f) * 100f:0.0} cm; held arms re-solved after the kneel {SevenTableIK.HeldSolves} frames; points out of her reach moved to the nearest fur she can reach {_inReachFrames} frames");
+            }
+            _wristErrR.Clear(); _wristErrL.Clear(); _ikSet = false;
         }
         IEnumerator BreathSounds()
         {

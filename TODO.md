@@ -1,5 +1,32 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF34b: FIN_10's hovering hand (Dan, 2026-11-25: "Yes, fix it") — done, release 1.0.0-rc8 (build 2002, `game-2002`)
+**Why rc7's hand still hovered (measured, not guessed - `FIN_10 RIGHT HAND TRACE` once a second in a check run):** two causes.
+1. **Two solvers again, a third one hidden:** `SevenRestPose` (the kneel, execution order 300) runs AFTER the hand IK and re-aimed BOTH
+   arms to the kneel pose's arm directions every frame - the IK's arms were thrown away and only FurPalm's small capped correction
+   pulled the hand toward him. Now a scene can hand the arms to the IK (`SevenTableIK.OwnsArms`, eased in over 0.8 s - `ArmOwn`): the
+   rest pose then leaves those arms alone and, after bending her spine, calls `SevenTableIK.SolveHeldArms()` (two-bone onto the target,
+   elbow toward its hint, the palm laid on again) - one solver per arm. Off by default (the lap / floor poses aboard are unchanged);
+   `ReleaseAll` clears it.
+2. **Out of her reach:** after the shrink his head lay on the floor in front of her knees, 0.54-0.62 m from her right shoulder - her
+   arm is 0.49 m, even bowed to the limit (85). The gather now lifts his head and chest onto her thighs (he pivots ~30 deg about his
+   hips, which stay on the floor; `FIN_10 INTO HER LAP (QF34 1)`); from then on the IK owns her arms, and a hand point still out of reach
+   slides along his fur to the nearest fur she can reach (`InReach`; the bow still leans toward the real point); the palms' facing is
+   eased too. While he is still LARGE (before the shrink) his head is out of her reach wherever the point is - there the hands stay as in
+   rc7 (the kneel's arms + FurPalm onto his face), which the close-ups already showed right. (Tried and dropped: binding the point on the
+   side of his head facing her - once he lies in her lap that side is tucked under her thighs: 24 cm off.)
+**Result (Finale check run from FIN_10, then the release build):** after the lift - head palm 0.5 cm from his fur at the median over
+the whole of FIN_10 (rc7: 10.4), shoulder palm 3.0 cm, wrist to its target 1.1 cm; hand motion spikes 0 (top 16.9 m/s^2); both hands
+rest on him from the lift to "Panther, no!" (clip `Docs/Previews/qf34/fin10_hands.mp4`, sheet `fin10_hands_sheet.png`). **Still open:** for a
+moment mid-shrink one hand is open beside him as he gets smaller.
+**Release gate (`Builds/ImageGate/gate_1.0.0-rc8.txt`): PASS** (every chapter, baseline 31, none new or worse, no NaN; finale 205 / 205).
+In the shipped build: FIN_10 palm-to-fur median 0.2 cm (head and shoulder), p95 5.3 / 3.5 cm; hand motion spikes 0 (top 23.1 m/s^2).
+Two gate failures on the way, fixed for real: (a) the Tunneler fight's `_side` capture - the arena holds that camera within 7 m, so at
+a 9 m range the midpoint framing left him half out and her a speck: it now aims toward him and declares him its subject
+(`TunnelerFight.SideAim`, `BossFight.SideAim`); (b) a Mars control-back facing the raised drawbridge - one flat 14.6 x 7 m stone face
+(range 0.28): the deck is now laid in slabs (joints, a staggered seam, kerbs; `DrawDeckJoints`, no collider) -
+`Docs/Previews/qf34/mars_drawbridge_deck_joints.png`.
+
 ## Quick fix QF34: Dan's 1.0.0-rc6 review of the ending (Dan, 2026-11-24) — items 1-8 done, status below; release 1.0.0-rc7 (item 9 not asked for this round)
 Keep rc2–rc6 untouched; this ships as **1.0.0-rc7**. For every repeat item, say first why the earlier fix didn't hold.
 1. **Her hands spasm while Panther lies dying** (FIN_10, since QF32 "kneel closer"). The fur-contact hands jitter / jump (likely the
