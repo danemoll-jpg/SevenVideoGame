@@ -93,6 +93,7 @@ namespace Seven
         static bool DefaultControl()
         {
             var cam = Camera.main; if (cam == null) return false;
+            if (MoonOpening.Playing) return false;   // P3 (3): the opening film (the Moon, the title, the dive) is not control - 7 is locked behind it
             var cc = cam.GetComponent<ChapterCamera>(); if (cc != null) return cc.isActiveAndEnabled && !cc.InShot;
             var sc = cam.GetComponent<SaucerCamera>(); if (sc != null) return !sc.Hold && (Chapter1Aboard.I == null || !Chapter1Aboard.I.Active || !Chapter1Aboard.I.InGalleyScene);
             return false;

@@ -19,6 +19,9 @@ namespace Seven
         static readonly string[] Moving = { "walk", "run", "jog", "carry", "swim", "fly", "sneak", "strafe", "step", "walk_v2", "jump" };   // Round 18: a cat's hop is a jump
         readonly Dictionary<Animator, (Vector3 p, int samples, int glides)> _seen = new Dictionary<Animator, (Vector3, int, int)>();
         float _next, _report; List<Animator> _anims = new List<Animator>(); float _refind;
+        public static int Knockbacks;   // P3 (3): knockback pushes seen (not glides)
+        /// <summary>P3 (3): people riding a vehicle (declared by the director) - carried, not walking.</summary>
+        public static readonly HashSet<Transform> Riding = new HashSet<Transform>();
         public static int Glides { get; private set; }
 
         void Update()
@@ -40,6 +43,9 @@ namespace Seven
                     var st = a.GetCurrentAnimatorStateInfo(0); var nx = a.GetNextAnimatorStateInfo(0);
                     foreach (var n in Moving) if (st.IsName(n) || (a.IsInTransition(0) && nx.IsName(n))) { walkAnim = true; break; }
                     var mf = a.GetComponentInParent<MarsFolk>(); if (mf != null && mf.State != null) foreach (var n in Moving) if (mf.State.Contains(n)) walkAnim = true;
+                    // P3 (3): a fighter knocked back by a blow (FighterBase.Slide: a short decelerating push under a hit reaction) is not walking
+                    var fb = a.GetComponentInParent<FighterBase>(); if (!walkAnim && fb != null && fb.Sliding) { walkAnim = true; Knockbacks++; }
+                    if (!walkAnim && (Riding.Contains(root) || Riding.Contains(a.transform))) walkAnim = true;   // carried by a vehicle
                 }
                 int g = e.glides + (moving && !walkAnim ? 1 : 0);
                 if (moving && !walkAnim && e.glides == 0) { var ci = a.GetCurrentAnimatorClipInfo(0); Log($"NPC GLIDE (QF23 13d): '{root.name}' moves at {v:0.0} m/s with no walk playing (clip '{(ci.Length > 0 && ci[0].clip != null ? ci[0].clip.name : "?")}') at {p}"); }
@@ -54,7 +60,7 @@ namespace Seven
             int moving = 0, glides = 0; var bad = new List<string>();
             foreach (var kv in _seen) { if (kv.Key == null) continue; moving += kv.Value.samples; glides += kv.Value.glides; if (kv.Value.glides > 0) bad.Add($"{kv.Key.name} {kv.Value.glides}"); }
             if (moving == 0 && glides == 0) return;
-            Log($"NPC GLIDE (QF23 13d) {SceneManager.GetActiveScene().name}: {moving} samples of NPCs moving at a walking pace, {glides} with no walk / run animation playing (must be 0){(bad.Count > 0 ? " - " + string.Join(", ", bad) : "")}");
+            Log($"NPC GLIDE (QF23 13d) {SceneManager.GetActiveScene().name}: {moving} samples of NPCs moving at a walking pace, {glides} with no walk / run animation playing (must be 0){(bad.Count > 0 ? " - " + string.Join(", ", bad) : "")}; knockback pushes (a blow's slide, not walking) {Knockbacks}");
         }
         static void Log(string s) { Debug.Log("[Seven] " + s); ChapterCapture.I?.Log(s); }
     }

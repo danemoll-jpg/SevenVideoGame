@@ -390,7 +390,7 @@ namespace Seven
             yield return Until(() => Flat(P7 - L.RuneView).magnitude < 1.4f || P7.x < L.RuneView.x, "reach the rune", 60f, "The glowing cuboctahedron at the heart of the archive", L.RuneView, () => Seven.Place(L.RuneView, Vector3.left));
             HideGuide();
             yield return Cutscene(true);
-            { var rf = new Vector3(L.RuneAt.x, 0f, L.RuneAt.z); Seven.Place(rf + Vector3.right * 0.95f, Vector3.left); Seven.Lock(true); }
+            { var rf = new Vector3(L.RuneAt.x, 0f, L.RuneAt.z); Seven.Place(rf + Vector3.right * 1.22f, Vector3.left); Seven.Lock(true); }   // P3 (3): clear of the pedestal's 0.9 m base (her boots were inside it at 0.95)
             Shoot(L.RuneView + new Vector3(0.6f, 1.6f, 2.2f), L.RuneAt, 38f, 0.01f);
             yield return Wait(0.5f);
             yield return Shot("a45_she_touches_the_rune");

@@ -53,7 +53,7 @@ Dan: "use the Scree and Ratwing as opposed to the Machinist and Juniper." Replac
 2. **Their lines** (your proposals, all used): Ratwing's "Try to keep your eyes on the road, cat." plays when he overtakes Duchess near you.
 3. **A save that picked the Machinist / Juniper** starts on 7 (once).
 
-## Polish pass P3: the last things before calling it finished (Code's list) — to do after QF37
+## Polish pass P3: the last things before calling it finished (Code's list) — done, release 1.1.0-rc1 (status: "Polish pass P3 — work log" below)
 1. **The image-gate baseline (31 shots):** real fixes (light, framing, detail), no loosened thresholds; capture repeatability.
 2. **Everything still listed** as open / known / weak / "not done" in any status (QF29 → Round 22): fix it or say why not.
 3. **One full start-to-credits run on the latest build** (Dan's OK for the length), both race outcomes, then the Grand Circuit: one
@@ -61,7 +61,11 @@ Dan: "use the Scree and Ratwing as opposed to the Machinist and Juniper." Replac
 4. **A clean final release candidate:** when 1–3 pass, publish **1.1.0-rc1** (story + Grand Circuit) with plain-words notes (no
    mention of Kyle's quote or credit).
 
-## Polish pass P3 — work log (Code, 2026-11-26)
+## Polish pass P3 — work log (Code, 2026-11-26): done; release 1.1.0-rc1 (build 2008, `game-2008`) PUBLISHED, Latest (rc2-rc9 + beta1-beta5 retained)
+**Release gate (`Builds/ImageGate/gate_1.1.0-rc1.txt`): IMAGE GATE RELEASE PASS** - every chapter, no new or worse failure, no NaN; the fight demo,
+the Moon, Venus, Mars, the asteroid, Cattalus, FIN_01, the finale (201 / 201) and the Grand Circuit pass every shot; baseline **31 -> 15**
+(the saucer demo's reveal 2, Ratwing's demo stance 2, Europa 4, the asteroid 1, the mothership 6 - two of the door shots and aa02 passed once on
+rc1). Built with Build everything, then the player again (`-onlyscenes grandcircuit`) for the door frame + the racers' balance.
 ### 1. The image-gate baseline: the real fixes made (no threshold touched, nothing exempted)
 - **The mothership's door (BIA_02):** the hull round the iris was one pearl-white annulus - it read as the fog itself, the door a disc
   floating in a void. It is now a **plated hull** (rings of plates radiating from the door, fine dark seams, each plate its own white,
@@ -89,6 +93,65 @@ Dan: "use the Scree and Ratwing as opposed to the Machinist and Juniper." Replac
   crystal clusters; its end prompt shows controller buttons only.
 - **The boss sweep flash** swells and fades through the cut instead of a flat white wall (a close side camera saw a quarter of the frame
   white in the Tunneler's drill strike - a timing-dependent frame that passed or failed by luck).
+
+### 2. Every open / known / weak item in the statuses (QF29 -> Round 22)
+| item (where it was listed) | now |
+|---|---|
+| FIN_10: for a moment mid-shrink one hand open beside him (QF34b) | **fixed** - while he shrinks, a hand whose bound point slides out of her reach follows his fur within it (`InReach`, as once he lies in her lap). Full run: palm-to-fur median 0.4 cm (head) / 0.6 cm (shoulder) |
+| HOLES build check: Chapter 1 1 (CellDoor), Venus 9 (the bridge) (QF32) | **fixed** - a real gap: the cell doorway had no floor between the cell's and the corridor's (a worn metal sill now); Venus: the check never saw the slab (hidden at build until the quake) - it now lays it as Mars lowers its drawbridge - and a real 10 cm corner beside the slab where the apron started (the aprons now reach 0.6 m under it, 1.5 cm below its top). Both 0 |
+| The image-gate baseline (QF29 3 / P1 / P2: 31 shots) | **31 -> 18**, real fixes only (section 1). Left: the saucer demo's reveal 13c / 13d and Ratwing's demo stance (dev demos off the menu, over a cloud sea / in a dark cave), the fight demo's top view and the Moon's c02 (passed once - kept until twice), Europa e01 / 05e / e07 / e12, the asteroid's aa02, the mothership's door shots (the lit frame is in rc1, not yet gated twice), b04 / b10 / ba03b |
+| Capture repeatability / determinism (QF29 2) | **not done** - check runs still read real-time clocks in places (video, audio DSP, some directors). Handled instead by fixing the frames that flipped: the boss sweep flash (a flat white wall) now swells and fades, so the drill strike's side frame no longer passes or fails by the moment it is taken; the baseline only drops a shot after two passing gate runs in a row |
+| The finale's frame-time spikes in the fight area (P2) | **still open** - full run on beta5: median 4.1 ms, 36 frames over 50 ms, worst 227 ms near (15, -170) during the Tunneler fight. Not traced to a cause yet (first-use effects / lights suspected); the fight itself plays fine |
+| Keyboard text on screen (QF24 17) | **fixed** - two left that the PROMPTS check missed: the pause menu's footer ("W S / arrows / wheel ... Enter / Esc") and the Ratwing demo's end prompt; both controller-only now |
+| Round 22: the Machinist was the weakest rider | **moot** - QF37 replaced him with a Scree |
+| Round 20: frame times are from a minimized window; no person has played the racing mode | can't be closed by a check run - for Dan |
+| The Europa escape (P2) | fixed in QF32 (the guide light leads past each support) - the full run's Europa piece passes |
+
+### 3. The full run (start to credits on 1.1.0-beta5, `Tools/Run-FullGame.ps1`, Dan's OK for the length)
+| piece | result |
+|---|---|
+| the Moon (menu -> galley, quit + Continue twice) | PASS - `PLAYTEST: 1/1, soft-locks 0` |
+| Venus 1 / Venus 2 | PASS / PASS (the Wormmaster contained, the star map up) |
+| Mars | PASS - `1/1, soft-locks 0`, Viper's fight in it |
+| Europa | PASS - `1/1, soft-locks 0` (the test bot took two 2-minute skips on its own slow pathing in the base and the reopened route; the objective and marker were up) |
+| the asteroid / the mothership | PASS / PASS (the Machinist's and Ratwing's fights in them) |
+| Cattalus won / lost | PASS - champion 1:20.8 vs Duchess 1:25.6; runner-up 1:53.5 vs 1:29.7 |
+| the finale (star map -> credits -> menu) | PASS - every rune, the fight, FIN_09-14, the credits (150 frames, the world never shows) |
+**What a player would notice, found by the run and fixed for rc1:** the Mars supply transport's two drivers slid along the ground beside it at
+6 m/s (they now ride standing on its rear deck); 7 stepped into the asteroid rune pedestal's wide base for the vision (her legs 11-73 cm in
+the stone: the shared touch step now stops short of anything solid, she leans the rest, and she starts clear of the base); Panther stood 10 cm
+inside the top of the shaft column on the Moon (its top now meets his paws, a little wider); the "no next step" watcher counted the Moon's
+opening film and the Cattalus race as idle control (the film is not control; the race is declared - its HUD is the objective); the terrace
+Scree "glides" were their knockback slides (counted apart now) and Duchess in her racer is riding. **Seen, not changed:** right after
+Continue into the saucer the control-back frame catches the scene's white fade-in (a check timing, not a stuck frame); the Moon's dark
+player-view frames in the prison (dark by design: the check's look shots, not the gate's); a moment of 149 deg wrist bend somewhere in the
+Moon's 310 held-shape frames (the shape in her hand reads right in the captures; not traced).
+
+### 3b. The Grand Circuit: every racer as player 1 on every track + split screen (rc1, `-gcplayersall -gcsplit -gcmenu`)
+- **49 / 49 races** (7 racers x 7 tracks, the human-like driver through a pad, 2 laps), falls 0; split screen with all seven on Venus Gardens
+  mean 4.1 ms (247 fps), 0.7 % of frames over 16.7 ms; the racer-taken rule holds; captures pass, keyboard keys on screen 0.
+- **Found and fixed:** the field was unbalanced for the player - **Ratwing won 5 of 7** (average place 1.7) and **7 came 6.1th on average**
+  (her 50 top speed was the slowest of seven since the new racers came). Now 7 51.4 top / 15.5 accel, Ratwing 52.3 / 13.8 (still the
+  fastest at the top): re-run, every racer as the player averages **2.7 (Ratwing) - 5.0 (Tunneler, Nela)**, overall 4.2 of 7 (target 2.1-4.6),
+  and the AI proof again 49 / 49, falls 0, ride / seat poses 0 off.
+- Also found in rc1's first build: the mothership door's new lit frame stood edge-on (a flat bright band across the door: a comment had
+  swallowed its rotation) - fixed, the player rebuilt (`-onlyscenes grandcircuit`), the mothership and the Grand Circuit gated again.
+
+### P3 — decisions made (Code, 2026-11-26; Dan said never stop to ask)
+- **The baseline only drops a shot after it passes in two gate runs in a row** (beta5b + beta5c, then beta5c + rc1): 31 -> 15.
+- **Knockbacks and riders are not glides:** the NPC glide probe counts a fighter's knockback slide (a blow's push under a hit reaction) and
+  a person a director declares riding a vehicle (`NpcGlideProbe.Riding`: the Mars drivers, Duchess in her racer) apart from walking.
+- **The race is an activity, not idle control** (`QF30Watch.Free` during the Cattalus race); the Moon's opening film is not control.
+- **rc1's last player rebuild** changed only runtime code (the door frame's rotation, two racers' numbers): the two chapters it touches were
+  gated again and the release scored with the other chapters' runs from the same build's scenes (`Run-ImageGate -Reuse`).
+
+## For Dan to check (P3)
+1. **The mothership's door (BIA_02):** the hull round it is now plated, with a lit frame and a ring of approach lamps - does it read as the
+   egg's hull with a door in it?
+2. **Europa's arrival:** the frosted ice field, the broken-ice ridges and the great spires far off in the haze.
+3. **The Moon:** the shot of Panther watching her on the terrace (now over his shoulder, her whole figure), the bay floor under the scaffold.
+4. **The Grand Circuit balance:** 7 is a little faster (51.4) and Ratwing a little less dominant - every racer should be able to win now.
+5. **Mars:** the two drivers ride on the supply transport's rear deck as it comes through the gate (they used to slide beside it).
 
 ## Quick fix QF36: the Grand Circuit's racing music (Dan, 2026-11-25) — done, release 1.1.0-beta3 (build 2005, `game-2005`) PUBLISHED, Latest
 Dan's racing tracks are IN (`Unity/Assets/Audio/Music/`; `Docs/MUSIC.md` "Grand Circuit"): `gc_menu` (every Grand Circuit page: the

@@ -53,6 +53,8 @@ namespace Seven
         }
 
         /// <summary>Slide the fighter by roughly <paramref name="distance"/> metres along dir over <paramref name="seconds"/>.</summary>
+        /// <summary>P3 (3): a knockback push is under way (a blow's decelerating slide) - not walking (NpcGlideProbe counts it apart).</summary>
+        public bool Sliding => _slideVel.sqrMagnitude > 0.0025f;
         public void Slide(Vector3 dir, float distance, float seconds)
         {
             dir.y = 0f;

@@ -74,6 +74,8 @@ namespace Seven
         /// <summary>The whole race (or the practice lap): the grid, the lights, the lap, the finish.</summary>
         public IEnumerator Run(bool practice, System.Func<string, IEnumerator> say)
         {
+            QF30Watch.Free(practice ? "practice laps on the Grand Circuit" : "the Grand Circuit race (the race HUD is the objective)");   // P3 (3)
+            if (Duchess != null) NpcGlideProbe.Riding.Add(Duchess.transform);   // P3 (3): seated in her racer - carried, not walking
             Practice = practice; Finished = false; HerTime = 0f; DuchessTime = -1f; Penalty = 0f; Crashes = 0; GatesPassed = 0; _lastGate = -1; _nextGate = 1; _dFin = false;
             _max0 = Bike.MaxSpeed; _acc0 = Bike.Accel; Bike.MaxSpeed = RaceTop; Bike.Accel = RaceAccel; Bike.PitchBoost = 0.35f;   // QF28 (1)
             TopSpeedSeen = 0f; Boosts = 0; _boostUntil = 0f; _cleanSince = true; SpeedCues(true);
@@ -127,6 +129,7 @@ namespace Seven
             if (!practice && DuchessTime < 0f) DuchessTime = HerTime + 8f;
             Glow(-2);
             HoverBike.ZoneTest = _zoneWas ?? CattalusLayout.BikeZone; K.Around(-1); Bike.MaxSpeed = _max0; Bike.Accel = _acc0; Bike.PitchBoost = 0f; SpeedCues(false);
+            QF30Watch.EndFree(); if (Duchess != null) NpcGlideProbe.Riding.Remove(Duchess.transform);
             if (!practice) yield return DuchessClimbsOut();
             Cam.RaceMode = false;
             if (StartLights != null) foreach (var r in StartLights) Glowing.Set(r, 0.15f);

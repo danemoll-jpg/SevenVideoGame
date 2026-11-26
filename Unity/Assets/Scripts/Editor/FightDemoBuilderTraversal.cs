@@ -165,7 +165,10 @@ namespace Seven.EditorTools
             slab.GetComponent<MeshRenderer>().sharedMaterial = m.ancient;
             props.slab = slab.transform;
             // a broken column in the shaft (the cat's stepping stone)
-            var stub = Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.26f, 0f), new Vector2(0.24f, T.StubShaft.y + 10.5f - 0.05f), new Vector2(0.18f, T.StubShaft.y + 10.5f), new Vector2(0f, T.StubShaft.y + 10.5f) },
+            // P3 (3): its top 10 cm under the stop - Panther's paws stood 10 cm INSIDE the old top (BODY vs PROPS at the shaft); and a
+            // little wider, so his four paws are all on stone
+            float stubTop = T.StubShaft.y - 0.1f + 10.5f;
+            var stub = Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.26f, 0f), new Vector2(0.24f, stubTop - 0.2f), new Vector2(0.3f, stubTop - 0.05f), new Vector2(0.28f, stubTop), new Vector2(0f, stubTop) },
                 0f, 360f, 14, null, new Vector3(T.StubShaft.x, -10.5f, T.StubShaft.z));
             MeshObject("ShaftColumn", SaveMesh(stub, "Moon_ShaftColumn"), m.ancientDark, root);
             var rv = new List<Vector3>(); var rt = new List<int>();

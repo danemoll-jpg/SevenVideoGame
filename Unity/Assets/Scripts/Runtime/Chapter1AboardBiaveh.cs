@@ -78,7 +78,7 @@ namespace Seven
             seam.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(HoleR - 0.05f, HoleR + 0.12f, 0f); _seamR = seam.AddComponent<MeshRenderer>(); _seamR.sharedMaterial = Markers.Additive(0f);
             // P3 (1): the door's frame lit - a band of soft white approach light round the aperture and a ring of small lamps further out
             // (the space haze flattened the plated hull to one mid-grey: range 0.19-0.23); it also says where the door is
-            var frame = new GameObject("IrisFrameLight"); frame.transform.SetParent(_iris, false); frame.transform.localPosition = new Vector3(0f, 0f, 0.05f);   // (local +z faces out of the hull, as the seam) frame.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            var frame = new GameObject("IrisFrameLight"); frame.transform.SetParent(_iris, false); frame.transform.localPosition = new Vector3(0f, 0f, 0.05f); frame.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);   // (local +z faces out of the hull, as the seam)
             frame.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(HoleR + 0.35f, HoleR + 2.1f, 0f); var fr = frame.AddComponent<MeshRenderer>(); fr.sharedMaterial = Markers.Additive(0.75f); fr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
             for (int li = 0; li < 16; li++)
             {

@@ -367,7 +367,7 @@ namespace Seven.EditorTools
                 foreach (var sx in new[] { -1.06f, 1.06f }) MBox(dv, dt, new Vector3(sx, lift + 1.38f, 1.8f), new Vector3(0.04f, 0.42f, 0.9f), 0f, 0f);
                 foreach (var sx in new[] { -1.15f, 1.15f }) for (float z = -2.6f; z <= 0.9f; z += 0.7f) MBox(v, t, new Vector3(sx, lift + 1.15f, z), new Vector3(0.08f, 0.9f, 0.08f), 0f, 0f);   // rack posts
                 foreach (var sx in new[] { -1.15f, 1.15f }) MBox(v, t, new Vector3(sx, lift + 1.6f, -0.85f), new Vector3(0.08f, 0.08f, 3.6f), 0f, 0f);   // rack rails
-                for (int i = 0; i < 6; i++)
+                for (int i = 2; i < 6; i++)   // P3 (3): the rear row left clear - the two drivers ride standing on the deck there
                 {
                     var c = new Vector3(-0.52f + (i % 2) * 1.04f, lift + 1.1f, -2.2f + (i / 2) * 1.0f);
                     MBox(cv, ct, c, new Vector3(0.88f, 0.78f, 0.88f), 0f, 0.02f);

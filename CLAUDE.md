@@ -588,6 +588,10 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**Polish pass P3 + QF37 (2026-11-26): 1.1.0-rc1 (build 2008, `game-2008`) - the release candidate (story + Grand Circuit); 1.1.0-beta5
+(build 2007) = QF37: a Scree on the Scrambler jet and Ratwing seated in the Jetstream (`GcRatRider`) replace the Machinist and Juniper. P3: the
+gate baseline 31 -> 15 with real fixes, the open items worked through, a full start-to-credits run (10 / 10 pieces) and every racer x every
+track (`-gcplayersall`). Status, decisions and "For Dan to check (P3)" in `TODO.md`.** Next: Dan plays rc1.
 **Round 22 (2026-11-25): 1.1.0-beta4 (build 2006, `game-2006`) - Grand Circuit Stage 3: Dan's ShiftStorm jets (`Art/Source/shiftstorm/`,
 monochrome + glowing accents: `Editor/FightDemoBuilderGrandCircuit3.cs`) and four new racers - Nela, Viper, the Machinist astride the
 Scrambler jet (`GcSevenRider` scaled per rider: `K`, `Tuck`, `Pose`; `GcRider.controller`), Juniper in the Jetstream's cockpit; seven racers,

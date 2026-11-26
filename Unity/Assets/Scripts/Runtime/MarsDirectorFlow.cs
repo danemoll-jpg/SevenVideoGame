@@ -632,7 +632,7 @@ namespace Seven
                 {
                     var p = Vector3.Lerp(a, b, d / len); p.y = Ground.Height(p.x, p.z);
                     Transport.SetPositionAndRotation(p, Quaternion.Slerp(Transport.rotation, Quaternion.LookRotation(Flat(b - a)), Time.deltaTime * 3f));
-                    if (Drivers != null) for (int k = 0; k < Drivers.Length; k++) if (Drivers[k] != null) { Drivers[k].gameObject.SetActive(true); var dp = p - Transport.forward * (2.6f + k * 1.2f) + Transport.right * (k == 0 ? -1.9f : 1.9f); dp.y = Ground.Height(dp.x, dp.z); Drivers[k].transform.SetPositionAndRotation(dp, Transport.rotation); if (!(waved && k == 0)) Drivers[k].Play("walk"); }
+                    if (Drivers != null) for (int k = 0; k < Drivers.Length; k++) if (Drivers[k] != null) { Drivers[k].gameObject.SetActive(true); var dp = Transport.TransformPoint(new Vector3(k == 0 ? -0.45f : 0.45f, 1.25f, -2.3f)); Drivers[k].transform.SetPositionAndRotation(dp, Transport.rotation); NpcGlideProbe.Riding.Add(Drivers[k].transform); }   // P3 (3): they RIDE on the rear deck (they used to slide along the ground beside it at 6 m/s)
                     // as it passes her, the driver raises a hand to her
                     if (!waved && Drivers != null && Drivers.Length > 0 && Drivers[0] != null && Flat(Drivers[0].transform.position - P7).magnitude < 6f) { waved = true; Drivers[0].Face(P7); Drivers[0].Play("wave", 0.2f); StartCoroutine(Shot("m11d_the_driver_raises_a_hand")); }
                     Cam.Shot(camAt, p + Vector3.up * 1.5f, 1.0f, false, 50f);
@@ -640,7 +640,7 @@ namespace Seven
                     yield return null;
                 }
             }
-            if (Drivers != null) foreach (var d in Drivers) if (d != null) d.Play("idle");
+            if (Drivers != null) foreach (var d in Drivers) if (d != null) { d.Play("idle"); NpcGlideProbe.Riding.Remove(d.transform); }
             if (hum != null) StartCoroutine(AudioKit.Fade(hum, 0f, 1.5f, true));
             Log($"the supply transport came up the ramp and through the gate she opened (a driver waved: {waved})");
             Seven.Place(L.EastStop + new Vector3(-1.5f, 0f, -2f), Vector3.right);

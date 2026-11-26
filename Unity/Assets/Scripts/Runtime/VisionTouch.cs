@@ -65,8 +65,20 @@ namespace Seven
                 float d = Flat(touch - shBone.position).magnitude, want = arm * 0.72f;
                 if (d > want)
                 {
-                    var a0 = s.transform.position; var a1 = a0 + fwd * (d - want);
-                    Log($"vision touch (QF23 22) {tag}: she steps {d - want:0.00} m closer - the shape was {d:0.00} m from her shoulder (reach {arm:0.00} m)");
+                    var a0 = s.transform.position; float stepLen = d - want;
+                    // P3 (3): never into the set - the step stops 0.32 m (her boots + a margin) short of anything solid ahead at foot / shin
+                    // height (the asteroid's rune pedestal: she stepped into its wide base, her legs 11-73 cm inside the stone); the lean
+                    // below covers what is left
+                    foreach (float hy in new[] { 0.08f, 0.35f })
+                    {
+                        var o = a0 + Vector3.up * hy; float lim = stepLen + 0.32f;
+                        if (Physics.Raycast(o, fwd, out var ph, lim, ~0, QueryTriggerInteraction.Ignore) && !ph.transform.IsChildOf(s.transform)) stepLen = Mathf.Min(stepLen, ph.distance - 0.32f);
+                        if (CameraOccluders.Ready && CameraOccluders.Raycast(o, fwd, lim, out var oh, CameraOccluders.SolidMask)) stepLen = Mathf.Min(stepLen, oh.distance - 0.32f);
+                    }
+                    if (stepLen < d - want - 0.01f) Log($"vision touch (P3 3) {tag}: the step stops short of the set ({stepLen:0.00} of {d - want:0.00} m)");
+                    stepLen = Mathf.Max(0f, stepLen);
+                    var a1 = a0 + fwd * stepLen;
+                    Log($"vision touch (QF23 22) {tag}: she steps {stepLen:0.00} m closer - the shape was {d:0.00} m from her shoulder (reach {arm:0.00} m)");
                     for (float t = 0f; t < 1f; t += Time.deltaTime / 0.55f) { s.Place(Vector3.Lerp(a0, a1, Mathf.SmoothStep(0f, 1f, t)), fwd); s.Lock(true); yield return null; }
                     s.Place(a1, fwd); s.Lock(true);
                     for (float t = 0f; t < 0.1f; t += Time.deltaTime) yield return null;

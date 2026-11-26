@@ -112,6 +112,8 @@ namespace Seven
             OpenSpaceShot();
             yield return ShotV("aa01b_the_hull_dissolves_round_them", Seven.transform, "7 in the egg chair, the hull dissolving");
             yield return SayA("AST_01", 3, 4);                               // Someone really wanted a workshop. / ...every workshop.
+            OpenSpaceShot(true);                                             // P3 (1): now toward the asteroid itself (its workshops)
+            yield return Wait(0.3f);
             yield return ShotV("aa02_one_section_intact_one_stripped", Seven.transform, "7 in the egg chair, the asteroid beyond");
             _stroke = 0f;                                                    // her hand stops stroking his back
             CutPilot("lap");
@@ -193,7 +195,7 @@ namespace Seven
         }
         public static int ArrivalEmpty;
         /// <summary>The two of them in open space with the asteroid filling the view (wide, from behind and beside the chair).</summary>
-        void OpenSpaceShot()
+        void OpenSpaceShot(bool toWorld = false)
         {
             // beside and a little ahead of the chair, looking back past her profile toward the asteroid (never the chair's back)
             var wf = Flat(Polar(9f, WindowA, 0f)).normalized; var side = Vector3.Cross(Up, wf);
@@ -207,6 +209,9 @@ namespace Seven
             // at the frame's edge, the asteroid ahead past her)
             var cam = PilotHead + side * 1.7f + wf * 0.35f + Up * 0.3f;
             var toAst = Flat(ast - cam); if (toAst.sqrMagnitude < 1f) toAst = wf; toAst.Normalize();   // level: the backdrops are staged far below the deck (the window composition looks out level)
+            // P3 (1): with the hull gone, tilt toward the place itself as the window shows it (SaucerOutside.DestinationPoint - the arrival
+            // view's own subject): "the asteroid beyond" was only stars
+            if (toWorld && SaucerOutside.I != null && SaucerOutside.I.DestinationPoint(out _) is Vector3 dp) { var dd = (dp - cam).normalized; toAst = Vector3.Slerp(toAst, dd, 0.6f).normalized; }
             var look = cam + (toAst * 0.55f + (PilotHead - cam).normalized * 0.45f).normalized * 10f;
             if (!(ChapterCamera.ClearLine(cam, PilotHead) && ChapterCamera.ClearLine(PilotHead, cam)))
             { cam = PilotHead + side * 2.4f + wf * 1.8f + Up * 0.25f; look = PilotHead + wf * 1.4f - side * 0.2f - Up * 0.25f; }   // the QF28 framing
