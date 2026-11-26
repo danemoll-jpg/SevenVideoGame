@@ -44,10 +44,10 @@ namespace Seven
                 }
                 case 3: case 4: case 5:
                 {
-                    // Round 22: Nela, Viper, the Machinist astride the Scrambler jet - the bike sized to its rider (7's bike reach x the
+                    // Round 22 / QF37: Nela, Viper, a Scree astride the Scrambler jet - the bike sized to its rider (7's bike reach x the
                     // rider's height against hers), the rider in the same riding pose as 7 (GcSevenRider: hips on the saddle, palms on
                     // the grips, feet on the wing roots)
-                    var tpl = racer == 3 ? g.NelaTpl : racer == 4 ? g.ViperTpl : g.MachinistTpl;
+                    var tpl = racer == 3 ? g.NelaTpl : racer == 4 ? g.ViperTpl : g.ScreeTpl;   // QF37: slot 5 = a Scree
                     float h = racer < g.RiderHeight.Length && g.RiderHeight[racer] > 0.5f ? g.RiderHeight[racer] : 1.75f, k = h / SevenHeight;
                     var bike = Clone(g.ScramblerTpl, "Scrambler"); if (bike != null) bike.transform.localScale = Vector3.one * ScramblerFit * k;
                     var rider = Clone(tpl, GcStats.Of(racer).Racer);
@@ -59,20 +59,20 @@ namespace Seven
                             var rd = an.gameObject.AddComponent<GcSevenRider>(); rd.K = k; rd.Who = GcStats.Of(racer).Racer; rd.KneeWidth = 0.24f; rd.Tuck = 18f; rd.Pose = "sitting_idle";   // upright on the saddle, leaning in a little (7's racing tuck curled the Machinist's long spine out of sight)
                             rd.Seat = Deep(bike.transform, "Seat"); rd.GripL = Deep(bike.transform, "GripL"); rd.GripR = Deep(bike.transform, "GripR"); rd.FootL = Deep(bike.transform, "FootL"); rd.FootR = Deep(bike.transform, "FootR");
                             rd.Root = rider.transform;
+                            var sr = rider.GetComponentInChildren<ScreeRig>(); if (sr != null) sr.Brace = 1f;   // the Scree's lower arms forward along the tank
                         }
                     }
                     break;
                 }
                 case 6:
                 {
-                    // Round 22: Juniper in the Jetstream's open cockpit, crouched like Duchess in her bed (the cat ride pose)
+                    // QF37: Ratwing in the Jetstream's open cockpit (was Juniper) - seated, wings folded along his sides, claws on the controls
                     var jet = Clone(g.JetTpl, "Jetstream");
-                    var j = Clone(g.JuniperTpl, "Juniper");
-                    if (jet != null && j != null)
+                    var rw = Clone(g.RatwingTpl, "Ratwing");
+                    if (jet != null && rw != null)
                     {
-                        var seat = Deep(jet.transform, "CatSeat");
-                        if (seat != null) { j.transform.SetParent(seat, false); j.transform.localPosition = Vector3.zero; j.transform.localRotation = Quaternion.identity; }
-                        j.AddComponent<GcCatRider>();
+                        var rd = rw.GetComponent<GcRatRider>();
+                        if (rd != null) { rd.Seat = Deep(jet.transform, "CatSeat"); rd.Jet = jet.transform; }
                     }
                     break;
                 }

@@ -961,6 +961,10 @@ namespace Seven
             if (_flash == null) { var g = new GameObject("SweepFlash"); g.transform.SetParent(_root.transform, false); _flashF = g.AddComponent<MeshFilter>(); _flash = g.AddComponent<MeshRenderer>(); _flash.sharedMaterial = Additive(1.4f); _flash.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off; }
             if (_flashA != angle || _flashR != range) { _flashA = angle; _flashR = range; _flashF.sharedMesh = SectorMesh(range, angle, range * 0.55f); }
             _flash.enabled = u > 0.3f && u < 0.85f;
+            // P3 (1): it swells and fades through the cut (0 -> 0.85 -> 0) instead of a flat 1.4 - a camera close beside it saw a
+            // quarter of the frame blown to white (the Tunneler's drill strike, side capture: white 24 %)
+            float fk = 0.85f * Mathf.Sin(Mathf.Clamp01(Mathf.InverseLerp(0.3f, 0.85f, u)) * Mathf.PI);
+            var fm = _flash.sharedMaterial; if (fm.HasProperty("_Intensity")) fm.SetFloat("_Intensity", fk); if (fm.HasProperty("_BaseColor")) fm.SetColor("_BaseColor", Color.white * fk);
             _flash.transform.position = from + Vector3.up * 0.9f;
             _flash.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(0f, -angle * 0.5f, 0f);
         }

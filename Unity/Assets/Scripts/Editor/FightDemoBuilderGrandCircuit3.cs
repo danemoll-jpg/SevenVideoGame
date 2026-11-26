@@ -11,8 +11,8 @@ namespace Seven.EditorTools
     /// Round 22 (Grand Circuit Stage 3): the new racers on Dan's ShiftStorm jets (his own models, Art/Source/shiftstorm/<Design>/Plane.fbx
     /// + Plane_basecolor.jpg, cleaned by ShiftStorm's pipeline: ~4 m, the empties "Seat" / "Steering"):
     ///  - the Scrambler's jet form (a retro motorbike with its wings and fan wheels folded flat), ridden astride by Nela, Viper and the
-    ///    Machinist (Dan's Mixamo bodies, the story's materials) in 7's riding pose (GcSevenRider, scaled to each rider);
-    ///  - the Jetstream jet (a rocket-plane with an open cockpit) with Juniper crouched in the seat like Duchess in her bed.
+    ///    a Scree (QF37; Dan's Mixamo bodies / the Scree model) in 7's riding pose (GcSevenRider, scaled to each rider);
+    ///  - the Jetstream jet (a rocket-plane with an open cockpit) with Ratwing seated in it (QF37; was Juniper).
     /// Monochrome like everything else: the base colour turned to grayscale, and the parts Dan painted orange (the accents, the engine
     /// lights) split onto a glowing white material ("glow = white emission"). The LOD1 copy is dropped (racers are close to the camera).
     /// </summary>
@@ -29,11 +29,11 @@ namespace Seven.EditorTools
             heights[0] = Seven.GcVehicles.SevenHeight;
             g.NelaTpl = GcHumanRider(tpl, "NelaTpl", "biavian", BiavianDir, "Bia_biavian", 1f, riderCtl, out heights[3]);
             g.ViperTpl = GcHumanRider(tpl, "ViperTpl", "viper", ViperDir, "Mars_viper", 1f, riderCtl, out heights[4]);
-            // the Machinist is a 4 m machine: brought down to 2.6 m (the jet is built up 1.5x for him) - a 6 m bike would fill the road
-            g.MachinistTpl = GcHumanRider(tpl, "MachinistTpl", "machinist", MachinistDir, "Ast_machinist", 0.65f, riderCtl, out heights[5]);
-            g.JuniperTpl = GcJuniperTemplate(tpl);
+            // QF37 (Dan): a Scree on the Scrambler jet and Ratwing in the Jetstream's cockpit replace the Machinist and Juniper
+            g.ScreeTpl = GcScreeRider(tpl, riderCtl, out heights[5]);
+            g.RatwingTpl = GcRatwingTemplate(tpl);
             g.RiderHeight = heights;
-            Log($"GC ROSTER (R22): racers {string.Join(", ", Seven.GcStats.All.Select(s => s.Racer))}; templates Scrambler jet {(g.ScramblerTpl != null)}, Jetstream {(g.JetTpl != null)}, Nela {(g.NelaTpl != null)} ({heights[3]:0.00} m), Viper {(g.ViperTpl != null)} ({heights[4]:0.00} m), the Machinist {(g.MachinistTpl != null)} ({heights[5]:0.00} m), Juniper {(g.JuniperTpl != null)}");
+            Log($"GC ROSTER (QF37): racers {string.Join(", ", Seven.GcStats.All.Select(s => s.Racer))}; templates Scrambler jet {(g.ScramblerTpl != null)}, Jetstream {(g.JetTpl != null)}, Nela {(g.NelaTpl != null)} ({heights[3]:0.00} m), Viper {(g.ViperTpl != null)} ({heights[4]:0.00} m), the Scree {(g.ScreeTpl != null)} ({heights[5]:0.00} m), Ratwing {(g.RatwingTpl != null)}");
         }
 
         /// <summary>A ShiftStorm jet as a template: nose to +z, underside at y 0, grayscale body + glowing accents, the rider's points.</summary>
@@ -173,22 +173,46 @@ namespace Seven.EditorTools
             return root;
         }
 
-        /// <summary>Juniper (the Cattalus tabby: Panther's model + the tabby coat, as in the city) at a cockpit size - crouched in the seat
-        /// (GcCatRider: the cat ride pose) her head and shoulders show over the rim.</summary>
-        static GameObject GcJuniperTemplate(Transform parent)
+        /// <summary>QF37: the Scree racer = the Chapter 1 Scree model (Humanoid, its own shell / glow materials as imported) with the
+        /// riders' animator; ScreeRig keeps the lower arms, the tucked abdomen and the antennae alive.</summary>
+        static GameObject GcScreeRider(Transform parent, AnimatorController ctl, out float height)
         {
-            var catCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/Cat.controller");
-            var catFur = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_fur.mat");
-            var whisker = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_whisker.mat");
-            if (catCtl == null || catFur == null) { Log("GC RIDER (R22): the cat's controller / fur missing - Juniper not built"); return null; }
-            var tabby = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Cat_fur_tabby.mat") ?? CatVariant("tabby", catFur);
-            var root = SpawnCat("JuniperTpl", Vector3.zero, Vector3.forward, catCtl, tabby, whisker, out _);
-            root.transform.SetParent(parent, false); root.transform.localPosition = Vector3.zero; root.transform.localRotation = Quaternion.identity;
-            root.transform.localScale = Vector3.one * JuniperScale;
-            root.AddComponent<Seven.CatPoseOverlay>();
-            Log($"GC RIDER (R22): JuniperTpl (Panther's model, the tabby coat), scale {JuniperScale:0.00}");
+            height = 0f;
+            var model = AssetDatabase.LoadAssetAtPath<GameObject>(ScreeFbx);
+            if (model == null) { Log("GC RIDER (QF37): the Scree model is missing (" + ScreeFbx + ") - ScreeTpl not built"); return null; }
+            var root = new GameObject("ScreeTpl"); root.transform.SetParent(parent, false);
+            var go = (GameObject)PrefabUtility.InstantiatePrefab(model); go.name = "scree"; go.transform.SetParent(root.transform, false);
+            foreach (var smr in go.GetComponentsInChildren<SkinnedMeshRenderer>(true)) smr.updateWhenOffscreen = true;
+            var an = go.GetComponent<Animator>() ?? go.AddComponent<Animator>(); an.runtimeAnimatorController = ctl; an.applyRootMotion = false; an.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            go.AddComponent<Seven.ScreeRig>();
+            var rs = go.GetComponentsInChildren<Renderer>(true); if (rs.Length > 0) { var b = rs[0].bounds; foreach (var r in rs) b.Encapsulate(r.bounds); height = b.size.y; }
+            Log($"GC RIDER (QF37): ScreeTpl from {ScreeFbx}, standing height {height:0.00} m, materials {string.Join(", ", go.GetComponentsInChildren<SkinnedMeshRenderer>(true).SelectMany(m => m.sharedMaterials).Where(m => m != null).Select(m => m.name).Distinct())}");
             return root;
         }
-        const float JuniperScale = 3.0f;   // (2.2: only her ears showed over the cockpit rim)
+
+        /// <summary>QF37: Ratwing (the Round 4 model on his rig, the mothership's materials) for the Jetstream's cockpit - wings folded
+        /// along his sides (RatwingRig, perched), seated with his claws on the controls (GcRatRider).</summary>
+        static GameObject GcRatwingTemplate(Transform parent)
+        {
+            var rwModel = AssetDatabase.LoadAssetAtPath<GameObject>(RatwingFbx);
+            var ratCtl = AssetDatabase.LoadAssetAtPath<AnimatorController>(AnimDir + "/Ratwing.controller");
+            if (rwModel == null || ratCtl == null) { ratCtl = SetupRatwing(out _, out _); rwModel = AssetDatabase.LoadAssetAtPath<GameObject>(RatwingFbx); }
+            if (rwModel == null) { Log("GC RIDER (QF37): Ratwing's model is missing - RatwingTpl not built"); return null; }
+            var root = new GameObject("RatwingTpl"); root.transform.SetParent(parent, false);
+            var body = new GameObject("Body").transform; body.SetParent(root.transform, false);
+            var model = (GameObject)PrefabUtility.InstantiatePrefab(rwModel); model.name = "RatwingModel"; model.transform.SetParent(body, false);
+            var tf = model.GetComponentsInChildren<Transform>(); Transform Bn(string n) => tf.FirstOrDefault(x => x.name == n);
+            var head = Bn("head"); var eyesB = Bn("eyes");
+            if (head != null && eyesB != null) { var fwd = root.transform.InverseTransformDirection(eyesB.position - head.position); fwd.y = 0f; float yaw = Vector3.SignedAngle(fwd, Vector3.forward, Vector3.up); model.transform.localRotation = Quaternion.Euler(0f, yaw, 0f) * model.transform.localRotation; }
+            var anim = model.GetComponent<Animator>() ?? model.AddComponent<Animator>(); anim.runtimeAnimatorController = ratCtl; anim.applyRootMotion = false; anim.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            var skin = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Ratwing_skin.mat"); var eyeM = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Ratwing_eyes.mat");
+            foreach (var smr in model.GetComponentsInChildren<SkinnedMeshRenderer>()) { smr.updateWhenOffscreen = true; bool isEyes = smr.sharedMaterials.Any(mm => mm != null && mm.name.ToLower().Contains("eye")) || smr.name.Contains("eyes"); if (skin != null && eyeM != null) smr.sharedMaterials = smr.sharedMaterials.Select(_ => isEyes ? eyeM : skin).ToArray(); }
+            var rr = root.AddComponent<Seven.RatwingRig>(); rr.Anim = anim; rr.Body = null;   // (the seat places his body, not the flight offset)
+            root.AddComponent<Seven.GcRatRider>().Model = body;
+            root.transform.localScale = Vector3.one * RatwingScale;
+            Log($"GC RIDER (QF37): RatwingTpl (the Round 4 model, {(skin != null ? "the mothership's skin" : "imported materials")}), scale {RatwingScale:0.00}");
+            return root;
+        }
+        const float RatwingScale = 0.72f;   // 2.1 m standing -> seated, his head and shoulders over the Jetstream's windscreen
     }
 }

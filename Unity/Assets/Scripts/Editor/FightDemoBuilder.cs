@@ -1023,16 +1023,16 @@ namespace Seven.EditorTools
             // QF32 (3): the sparring ground seen from above was one flat tone (the top-down orbit shot: range 0.09) - old worn
             // flagstones in the grass round the arena, flush with the ground (1.5 cm proud, no colliders), pale weathered stone
             {
-                var flagMat = Lit("World_flagstone", new Color(0.30f, 0.30f, 0.30f), 0.08f);
+                var flagMat = Lit("World_flagstone", new Color(0.74f, 0.74f, 0.74f), 0.08f);   // P3 (1): pale (0.30 read as the grass: range 0.12)
                 var fv = new List<Vector3>(); var ft = new List<int>(); var frnd = new System.Random(32);
                 float F() => (float)frnd.NextDouble();
                 var placed = new List<Vector3>();
-                for (int i = 0; i < 400 && placed.Count < 70; i++)
+                for (int i = 0; i < 3000 && placed.Count < 190; i++)   // P3 (1): a worn paved ring, not scattered stepping stones
                 {
                     float rr = 0.4f + Mathf.Sqrt(F()) * 7.0f, a = F() * Mathf.PI * 2f;
                     var p = new Vector3(ac.x + Mathf.Cos(a) * rr, 0f, ac.z + Mathf.Sin(a) * rr);
                     float s = Mathf.Lerp(0.35f, 0.75f, F());
-                    if (placed.Any(q => Vector3.Distance(q, p) < s * 0.9f + 0.3f)) continue;
+                    if (placed.Any(q => Vector3.Distance(q, p) < s * 0.86f + 0.07f)) continue;
                     placed.Add(p);
                     float yaw = F() * 360f;
                     // an irregular flat stone: a 7-sided slab, its rim a little lower (weathered edges)

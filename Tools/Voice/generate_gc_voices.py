@@ -1,6 +1,6 @@
 """Round 20 (Grand Circuit): voice the racers' short taunts / cheers with ElevenLabs, in their existing saved voices
 ("seven", "Duchess", "Tunneler" - the story's voices). Round 22: Nela (her story voice: a saved "biavianguide" / "nela",
-else the premade Bella the mothership chapter uses), Viper ("Viper"), the Machinist ("Machinist"), Juniper ("juniper").
+else the premade Bella the mothership chapter uses), Viper ("Viper"). QF37: a Scree ("screeworker"), Ratwing ("Ratwing").
 
 Usage (repo root): python Tools/Voice/generate_gc_voices.py [--force] [--only <id> ...] [--list]
 Key: ELEVENLABS_API_KEY environment variable only (never printed or written anywhere).
@@ -19,8 +19,10 @@ V2 = {"duchess": {"stability": 0.6, "similarity_boost": 0.8, "style": 0.25, "use
       # Round 22: the story chapters' own settings for these voices (generate_biaveh / mars / asteroid / cattalus_voices.py)
       "nela": {"stability": 0.7, "similarity_boost": 0.8, "style": 0.1, "use_speaker_boost": True, "speed": 0.9},
       "viper": {"stability": 0.6, "similarity_boost": 0.85, "style": 0.35, "use_speaker_boost": True, "speed": 0.92},
-      "machinist": {"stability": 0.8, "similarity_boost": 0.85, "style": 0.05, "use_speaker_boost": True, "speed": 0.86},
-      "juniper": {"stability": 0.55, "similarity_boost": 0.8, "style": 0.25, "use_speaker_boost": True, "speed": 0.95}}
+      # QF37: a Scree (Dan's saved "screeworker": calm, never gloating) and Ratwing (his saved "Ratwing": sly) replace the
+      # Machinist and Juniper
+      "scree": {"stability": 0.45, "similarity_boost": 0.75, "style": 0.3, "use_speaker_boost": True, "speed": 0.9},
+      "ratwing": {"stability": 0.45, "similarity_boost": 0.85, "style": 0.35, "use_speaker_boost": True, "speed": 1.0}}
 # Round 22: a role's saved names (first found wins), then a premade by name
 FALLBACK = {"nela": (["biavianguide", "nela"], ["bella"])}
 V3 = {"stability": 0.5, "similarity_boost": 0.8, "use_speaker_boost": True}

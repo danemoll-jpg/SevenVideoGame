@@ -273,7 +273,7 @@ namespace Seven
             dim.AddComponent<Image>().color = new Color(0f, 0f, 0f, 0.62f);
             Logo.Add(_canvasGo.transform, new Vector2(0, 262), 210f, new Color(0.9f, 0.9f, 0.9f));     // Round 10: logo header
             _title = MakeText(_canvasGo.transform, "", new Vector2(0, 175), 34, new Color(0.95f, 0.95f, 0.95f));
-            MakeText(_canvasGo.transform, "stick / d-pad + A · B back    ·    W S / arrows / wheel, ← → adjust, Enter · Esc back", new Vector2(0, -290), 15, new Color(0.55f, 0.55f, 0.55f));
+            MakeText(_canvasGo.transform, "stick / d-pad to choose · left / right to adjust · A select · B back", new Vector2(0, -290), 15, new Color(0.55f, 0.55f, 0.55f));
             // QF14: the Scene select pages scroll; the bar sits right of the 540-wide rows, from the first row's top edge
             // (151) to the last visible row's bottom edge (-214) on the 720-high reference canvas
             _scroll = new MenuScroll(ListRows);

@@ -256,7 +256,7 @@ namespace Seven
             var pts = new[] { P7, new Vector3(40f, 0f, 0f), new Vector3(120f, 0f, 0f), L.CabinetAt, new Vector3(200f, 0f, 0f), new Vector3(260f, 0f, 30f), L.Relay2At, new Vector3(230f, 0f, 66f), L.Relay3At };
             var dots = new System.Collections.Generic.List<GameObject>();
             var mat = Markers.Additive(1.6f);
-            Shoot(P7 + new Vector3(-8f, 22f, -20f), new Vector3(120f, 0f, 30f), 58f, 0.01f);
+            Shoot(P7 + new Vector3(-8f, 36f, -20f), new Vector3(130f, 0f, 30f), 58f, 0.01f);   // P3 (1): higher - from 22 m the towers hid the relays (b10 "blocked")
             for (int i = 0; i + 1 < pts.Length; i++)
             {
                 int n = Mathf.CeilToInt(Vector3.Distance(pts[i], pts[i + 1]) / 4f);
@@ -295,6 +295,18 @@ namespace Seven
                 // QF26 (2): the camera stands on the ground there (0.18.2 put it at y 0.9 - under the shell's rising floor: the shot was
                 // fog seen through the underside of the ground) and the haze thins a little for the look up at him
                 var lowCam = new Vector3(L.RatwingPerch.x - 6f, 0f, 7f); lowCam.y = Mathf.Max(Ground.Height(lowCam.x, lowCam.z), L.ShellRise(lowCam.x, lowCam.z)) + 0.9f;
+                // P3 (1): that fixed spot could end up behind a surface (the capture was a grey wall seen from inside) - take the first
+                // low spot round him with a clear line BOTH ways (a ray from inside a one-sided face passes out unseen; the reverse ray
+                // catches it), on the ground, looking up at him
+                var aimAt = L.RatwingPerch + Vector3.down * 1.2f; bool found = ChapterCamera.ClearLine(lowCam, aimAt) && ChapterCamera.ClearLine(aimAt, lowCam);
+                for (int ci = 0; ci < 32 && !found; ci++)
+                {
+                    float ang = (ci % 8) * 45f + 200f, dist = 8f + (ci / 8) * 3.5f;
+                    var c = L.RatwingPerch + Quaternion.Euler(0f, ang, 0f) * Vector3.forward * dist; c.y = Mathf.Max(Ground.Height(c.x, c.z), L.ShellRise(c.x, c.z)) + 1.1f;
+                    if (c.y > L.RatwingPerch.y - 4f) continue;   // a LOW angle
+                    if (ChapterCamera.ClearLine(c, aimAt) && ChapterCamera.ClearLine(aimAt, c)) { lowCam = c; found = true; }
+                }
+                Log($"b11 low angle (P3 1): camera {lowCam} - {(found ? "clear both ways" : "no clear spot, the old one")}");
                 StartCoroutine(FogThin(0.6f, 0.3f));
                 Shoot(lowCam, L.RatwingPerch + Vector3.down * 1.2f, 44f, 0.01f);
                 AudioKit.Play("ratwing_flap", L.RatwingPerch, 0.5f, 0f, AudioKit.Bus.Sfx, 50f);

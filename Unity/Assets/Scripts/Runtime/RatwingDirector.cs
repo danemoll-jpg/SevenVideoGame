@@ -260,7 +260,7 @@ namespace Seven
         void RefreshPrompt()
         {
             bool pad = ForcePromptMode == 1 || (ForcePromptMode == 0 && Gamepad.current != null);
-            _promptText.text = pad ? "A: replay   /   Menu: back" : "Enter: replay   /   Esc: back";
+            _promptText.text = "A: replay   /   Menu: back";   // P3 (2): controller buttons only, game-wide (QF24 17) - the keyboard still works
         }
 
         public void ForcePrompt(int mode) { ForcePromptMode = mode; if (_promptText != null) RefreshPrompt(); }

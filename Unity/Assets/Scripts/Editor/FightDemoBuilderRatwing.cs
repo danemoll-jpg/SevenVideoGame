@@ -415,6 +415,20 @@ namespace Seven.EditorTools
                 nUp++;
             }
             MeshObject("Spikes", SaveMesh(SmoothFinish(sv, st), "Cave_Spikes"), rockDark, world);
+            // P3 (1): clusters of faintly glowing white crystals on the floor round the landing (behind him from the side / back camera) -
+            // his stance read as one dark tone against the fog (range 0.25-0.28, edges ~4 %)
+            {
+                var crys = Dissolve("Cave_crystal", Color.white, 0.6f, false); crys.EnableKeyword("_EMISSION"); crys.SetColor("_EmissionColor", Color.white * 1.1f); EditorUtility.SetDirty(crys);
+                var cryV = new List<Vector3>(); var cryT = new List<int>(); int clusters = 0; var crng = new System.Random(4242); float RC() => (float)crng.NextDouble();   // (its own random: the boulders after keep their places)
+                for (int i = 0; i < 80 && clusters < 14; i++)
+                {
+                    float x = Mathf.Lerp(-7f, 7f, RC()), z = Mathf.Lerp(-8f, 11f, RC()), r = new Vector2(x, z).magnitude;
+                    if (r < 3.2f || r > 9f || (Mathf.Abs(x) < 1.6f && z < -2f)) continue;
+                    clusters++;
+                    for (int k = 0; k < 5; k++) { float len = Mathf.Lerp(0.2f, 0.7f, RC()); Spike(cryV, cryT, new Vector3(x + (RC() - 0.5f) * 0.6f, -0.05f, z + (RC() - 0.5f) * 0.6f), Mathf.Lerp(0.05f, 0.12f, RC()), len, false, crng); }
+                }
+                MeshObject("Crystals", SaveMesh(Finish(cryV, cryT), "Cave_Crystals"), crys, world, false);
+            }
             // Loose boulders along the walls.
             var bv = new List<Vector3>(); var bt = new List<int>();
             for (int i = 0; i < 26; i++)

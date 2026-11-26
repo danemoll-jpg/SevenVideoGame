@@ -22,7 +22,7 @@ namespace Seven
         public GameObject BikeTpl, RacerTpl, RigTpl, SevenTpl, DuchessTpl;
         /// <summary>Round 22: Dan's ShiftStorm jets (monochrome, glowing accents) and their riders; RiderHeight = each racer's standing
         /// height as built (m, by racer index), which sizes the Scrambler jet to its rider and the riding pose's offsets.</summary>
-        public GameObject ScramblerTpl, JetTpl, NelaTpl, ViperTpl, MachinistTpl, JuniperTpl;
+        public GameObject ScramblerTpl, JetTpl, NelaTpl, ViperTpl, ScreeTpl, RatwingTpl;   // QF37: the Scree + Ratwing (were the Machinist + Juniper)
         public float[] RiderHeight = new float[0];
         public Material Road, Under, Wall, Glow, GlowSoft, Pad, Frame, Trail, Shield, Wave, PickupMat, GhostMat; [System.NonSerialized] public Material HoverMat;
         /// <summary>Round 21: one world set + atmosphere + lowest point per track, in <see cref="GcTrack.Ids"/> order (one shown at a time).</summary>
@@ -131,7 +131,7 @@ namespace Seven
                 float s = Track.Length - 12f - i * 7f; float x = (i % 2 == 0 ? -1f : 1f) * 2.6f;
                 var r = MakeRacer(racer, i, human);
                 r.Init(Track, s, x); r.Human = human; r.PadIndex = pad;
-                if (!human) { int ai = order.Take(i).Count(p => !p.human); r.AI = new GcAI(1000 + i * 17, AiSkill(ai, order.Count(p => !p.human))); r.AI.ShortcutChance = GcStats.Of(racer).Weight >= 1.6f ? 0.3f : 0.55f; }   // (the heavy ones - Tunneler, the Machinist - keep to the main line more)
+                if (!human) { int ai = order.Take(i).Count(p => !p.human); r.AI = new GcAI(1000 + i * 17, AiSkill(ai, order.Count(p => !p.human))); r.AI.ShortcutChance = GcStats.Of(racer).Weight >= 1.6f ? 0.3f : 0.55f; }   // (the heavy one - Tunneler - keeps to the main line more)
                 r.Event = OnEvent; r.Snap();
                 Racers.Add(r); if (human) Humans.Add(r);
             }

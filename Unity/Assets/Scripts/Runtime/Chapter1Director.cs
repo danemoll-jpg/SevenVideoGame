@@ -2048,7 +2048,8 @@ namespace Seven
             var mid = (p7 + Cat.transform.position) * 0.5f;
             // QF32 (3): a soft white key on the two of them from the city side (the low two-shots were the chapter's darkest frames)
             var key6b = new GameObject("Reveal6b_Key").AddComponent<Light>(); key6b.type = LightType.Point; key6b.shadows = LightShadows.None;
-            key6b.range = 6f; key6b.intensity = 2.4f; key6b.color = Color.white; key6b.transform.position = mid + cityDir * 2.2f + side * 1.2f + Vector3.up * 1.9f;
+            key6b.range = 9f; key6b.intensity = 6.5f;   // P3 (1): stronger (c02 still range 0.25: the city's light on their faces)
+            key6b.color = Color.white; key6b.transform.position = mid + cityDir * 2.2f + side * 1.2f + Vector3.up * 1.9f;
             Destroy(key6b.gameObject, 40f);
             Cam.Shot(mid + cityDir * 2.9f + side * 0.9f + Vector3.up * 0.35f, mid + Vector3.up * 0.95f, 0.01f, true, 52f);
             var sky = p7 + cityDir * 60f + Vector3.up * 140f;
@@ -2093,8 +2094,16 @@ namespace Seven
             StartCoroutine(CatLooksAt(() => SevenHead, 4f));
             Cut6b();
             var cp = Cat.transform.position;
-            // low in front of him, the city side: he fills the lower frame, looking up at her
-            Cam.Shot(cp + cityDir * 1.9f - side * 0.35f + Vector3.up * 0.45f, cp + Vector3.up * 0.25f + (SevenHead - cp) * 0.18f, 0.01f, true, 52f);
+            // P3 (1): over HIS shoulder up at her face - he in the lower foreground, she looking out at the skyline. (The old camera
+            // stood low in front of him on the city side: she walked into it - a low framing at her hips, the cat a speck, the
+            // terrace Scree's claw across the frame.)
+            var toHer = Flat(SevenHead - cp); if (toHer.sqrMagnitude < 0.01f) toHer = -cityDir; toHer.Normalize();
+            var sideC = Vector3.Cross(Vector3.up, toHer);
+            var camC = cp - toHer * 2.4f + sideC * 0.55f + Vector3.up * 1.0f;   // a wide over-his-shoulder: her whole figure, him in the lower foreground
+            foreach (var (back, sd) in new[] { (2.4f, 0.55f), (2.4f, -0.55f), (1.8f, 0.5f), (1.8f, -0.5f), (1.3f, 0.4f) })
+            { var cc = cp - toHer * back + sideC * sd + Vector3.up * 1.0f; if (ChapterCamera.ClearLine(cc, cp + Vector3.up * 0.25f) && ChapterCamera.ClearLine(cc, SevenHead)) { camC = cc; break; } }
+            Cam.Shot(camC, Vector3.Lerp(cp + Vector3.up * 0.25f, SevenHead, 0.5f), 0.01f, true, 50f);
+            ImageGate.Expect(Cat.transform, "the cat watching her", 0f, "c04_");
             yield return Wait(0.6f);
             yield return Shot("c04_the_cat_watches_her");
             LogCatInFrame("6b the cat watches her");

@@ -50,10 +50,11 @@ No damage, no destruction, no knock-outs.
 | **7** | her hover bike | balanced |
 | **Duchess** | her teardrop racer (#8) | fast, light, floaty |
 | **Tunneler** | his drill rig | slow to start, heavy, wins bumps |
-| *Stage 3:* Ratwing | a winged glider | agile, fragile |
-| *Stage 3:* the Machinist | a heavy factory sled | top speed, poor turning |
-| *Stage 3:* Nela | a smooth Biavian pod | best handling |
-| *Stage 3:* Viper, Juniper, others | to design | — |
+| **Nela** (Round 22) | the Scrambler jet (Dan's ShiftStorm model), astride | light, quick to turn |
+| **Viper** (Round 22) | the Scrambler jet, astride | aggressive |
+| **a Scree** (QF37) | the Scrambler jet, astride | nimble, quick off the line |
+| **Ratwing** (QF37) | the Jetstream jet (Dan's ShiftStorm model), in the open cockpit | fastest at the top, light, loses bumps |
+(QF37: the Machinist and Juniper, Round 22's racers, left the roster at Dan's call. Seven racers, one of each per race.)
 Vehicles for new racers are built in code in their world's style (no new character models needed; riders sit in / on them).
 Ride poses, hands on controls and contact rules from the main game apply.
 

@@ -199,7 +199,18 @@ namespace Seven
             var wf = Flat(Polar(9f, WindowA, 0f)).normalized; var side = Vector3.Cross(Up, wf);
             // QF28 pass (the image gate): 0.18.2's framing looked past her into the dissolving shell - she was out of the frame. Beside
             // and ahead of the chair, aimed between her and the window: her profile in the egg chair, the open space beyond
-            Cut(PilotHead + side * 2.4f + wf * 1.8f + Up * 0.25f, PilotHead + wf * 1.4f - side * 0.2f - Up * 0.25f, 58f);   // QF24 (1): from the egg chair her profile stays in frame against the world
+            // P3 (1): that framing looked sideways past her into empty space (aa01b / aa02: "the asteroid beyond" was out of the frame,
+            // a grey void) - now from behind and beside her, over her shoulder toward the asteroid itself (as the mothership's open-space
+            // shot frames the egg): her profile at the edge, the asteroid ahead
+            var ast = SaucerOutside.I != null && SaucerOutside.I.Asteroid != null ? SaucerOutside.I.Asteroid.transform.position : PilotHead + wf * 400f;
+            // (from BEHIND her the egg chair's shell hides her - so from the chair's open side, a little ahead of her head: her profile
+            // at the frame's edge, the asteroid ahead past her)
+            var cam = PilotHead + side * 1.7f + wf * 0.35f + Up * 0.3f;
+            var toAst = Flat(ast - cam); if (toAst.sqrMagnitude < 1f) toAst = wf; toAst.Normalize();   // level: the backdrops are staged far below the deck (the window composition looks out level)
+            var look = cam + (toAst * 0.55f + (PilotHead - cam).normalized * 0.45f).normalized * 10f;
+            if (!(ChapterCamera.ClearLine(cam, PilotHead) && ChapterCamera.ClearLine(PilotHead, cam)))
+            { cam = PilotHead + side * 2.4f + wf * 1.8f + Up * 0.25f; look = PilotHead + wf * 1.4f - side * 0.2f - Up * 0.25f; }   // the QF28 framing
+            Cut(cam, look, 62f);
         }
         /// <summary>AST_01_07: she gently lifts him off her lap onto the adjoining seat (the co-pilot pod beside the chair).</summary>
         IEnumerator LiftCatToSeat()

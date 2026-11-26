@@ -36,9 +36,18 @@ namespace Seven
             yield return Say("EUR_06", 2, 8);                   // Now they cannot hear us. ... Oh. Him. ... We know the name ...
             // the keeper turns toward a distant industrial structure embedded beneath the ice
             if (Keeper != null) Keeper.GlideTo(Keeper.transform.position + (EuropaLayout.Approach[3] - Keeper.transform.position).normalized * 4f, 1.5f);
-            Shoot(Bike.transform.position + Vector3.up * 2.5f - to * 3f, EuropaLayout.Approach[4], 40f, 1.2f);
+            // P3 (1): the first spot behind / above the bike with a clear line to the structure (from the fixed spot the settlement's
+            // ring stood in front of it: e12 "blocked")
+            var e12Cam = Bike.transform.position + Vector3.up * 2.5f - to * 3f; var e12At = EuropaLayout.Approach[4];
+            var e12Side = Vector3.Cross(Vector3.up, Flat(to).normalized);
+            foreach (var (up, sd, back) in new[] { (2.5f, 0f, 3f), (5f, 0f, 3f), (4f, 3f, 3f), (4f, -3f, 3f), (8f, 0f, 5f), (7f, 5f, 4f), (7f, -5f, 4f) })
+            { var c = Bike.transform.position + Vector3.up * up - to * back + e12Side * sd; if (ChapterCamera.ClearLine(c, e12At) && ChapterCamera.ClearLine(e12At, c)) { e12Cam = c; break; } }
+            Shoot(e12Cam, e12At, 40f, 1.2f);
             yield return Wait(1.0f);
-            ImageGate.ExpectPoint(EuropaLayout.Approach[4], "the distant industrial structure", 0f, "e12_");   // QF26 (2)
+            // P3 (1): the declared point (a route waypoint) lies INSIDE the approach tunnel's tube - never visible by construction; the
+            // subject is the structure itself (the tunnel, its pipes and intakes)
+            var indT = GameObject.Find("IndustrialApproach");
+            if (indT != null) ImageGate.Expect(indT.transform, "the distant industrial structure", 0f, "e12_"); else ImageGate.ExpectPoint(EuropaLayout.Approach[4], "the distant industrial structure", 0f, "e12_");   // QF26 (2)
             yield return Shot("e12_the_distant_industrial_structure");
             yield return Say("EUR_06", 9, 12);                  // Below the old shelf ... The Scree? / Yes. / Show me the way in.
             Complete("EUR_06");
@@ -107,6 +116,11 @@ namespace Seven
             if (Tunneler != null) { Tunneler.gameObject.SetActive(true); }
             if (ScreenCam != null) ScreenCam.enabled = true;
             if (Screen != null) Screen.enabled = true;
+            // P3 (1): while he speaks from the display, the display IS the speaker for the framing check - it used to find his studio
+            // body (far off in the fog) and "reframed" the shot onto it: e16 was a grey void with a floating slab. A stand-in point
+            // whose head is the screen's centre.
+            var standIn = new GameObject("TunnelerOnTheDisplay").transform; standIn.position = EuropaLayout.ScreenAt + Vector3.down * 1.6f;
+            DialogueFraming.Speaker = id => id == "tunneler" && Screen != null && Screen.enabled ? standIn : null;
             Shoot(P7 + Vector3.up * 0.6f - Flat(EuropaLayout.ScreenAt - P7).normalized * 1.4f + Seven.transform.right * 0.7f, EuropaLayout.ScreenAt, 52f, 0.01f);
             yield return Wait(0.6f);
             yield return Say("EUR_08", 1, 1);                   // You.
@@ -123,6 +137,7 @@ namespace Seven
             if (Screen != null) Screen.enabled = false;
             if (ScreenCam != null) ScreenCam.enabled = false;
             if (Tunneler != null) Tunneler.gameObject.SetActive(false);
+            DialogueFraming.Speaker = null; Destroy(standIn.gameObject);
             var alarm = AudioKit.Loop("europa_alarm", null, P7, 0.5f, AudioKit.Bus.Sfx, 4f, 60f);
             if (Barriers != null) foreach (var b in Barriers) if (b != null) StartCoroutine(Drop(b));
             SetZone("Corridor", false);                         // the way back is barred for now (it reopens when the workers are out)

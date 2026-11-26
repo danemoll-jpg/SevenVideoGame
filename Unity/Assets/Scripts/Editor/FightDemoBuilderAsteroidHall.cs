@@ -66,6 +66,14 @@ namespace Seven.EditorTools
             PlateWall(k, m.plate, m.metalDark, new Vector3(-330f, 0f, 69.6f), new Vector3(-326f, 0f, 69.6f), 3.2f, H - 3.2f);
             PlateWall(k, m.plate, m.metalDark, new Vector3(-326f, 0f, 69.6f), new Vector3(-319.6f, 0f, 69.6f), 0f, H);
             k.Save("Hall_Wall", hall);
+            // P3 (1): high clerestory light panels round the hall (white glow, 14-19 m up, every ~8 m) - the hall read as one mid-grey
+            // behind the Machinist's walk (a16b: tonal range 0.25); light from above, as a foundry hall has
+            {
+                var (gv, gt) = k.Of(m.glow);
+                for (float x = -394f; x < -324f; x += 8f) { AddBox(gv, gt, new Vector3(x, 16.5f, 140.15f), new Vector3(3f, 5f, 0.12f)); AddBox(gv, gt, new Vector3(x, 16.5f, 69.85f), new Vector3(3f, 5f, 0.12f)); }
+                for (float z = 76f; z < 136f; z += 8f) { if (z > 98f && z < 112f) continue; AddBox(gv, gt, new Vector3(-400.15f, 16.5f, z), new Vector3(0.12f, 5f, 3f)); AddBox(gv, gt, new Vector3(-319.85f, 16.5f, z), new Vector3(0.12f, 5f, 3f)); }
+                k.Save("Hall_ClerestoryLights", hall);
+            }
             // the roof: trusses and a riveted ceiling, high lamps (production lights) and essential lamps low on the walls
             for (float x = -396f; x < -322f; x += 9f) { var (v, t) = k.Of(m.metalDark); Sweep(v, t, Enumerable.Range(0, 9).Select(i => new Vector3(x, H + Mathf.Sin(i / 8f * Mathf.PI) * 3f, 70f + i / 8f * 70f)).ToList(), 0.35f, false, 6); }
             { var (v, t) = k.Of(m.plate); MBox(v, t, new Vector3(-360f, H + 3.4f, 105f), new Vector3(82f, 0.4f, 72f), 0f, 0f); }

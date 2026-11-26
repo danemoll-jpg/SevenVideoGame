@@ -95,6 +95,31 @@ namespace Seven.EditorTools
             return prefab;
         }
 
+        /// <summary>P3 (1): the ice field's frost - a tileable 512 px grey texture: soft value noise (frost patches), long wind streaks
+        /// across it and fine bright crystal flecks, 0.6-0.9 (monochrome).</summary>
+        static Material EuropaFieldIce()
+        {
+            const int N = 512; var px = new Color[N * N]; var r = new System.Random(2209);
+            float[,] g = new float[17, 17]; for (int a = 0; a < 16; a++) for (int b = 0; b < 16; b++) g[a, b] = (float)r.NextDouble();
+            for (int a = 0; a < 17; a++) { g[a, 16] = g[a % 16, 0]; g[16, a] = g[0, a % 16]; }
+            float Noise(float x, float y) { int ix = (int)x, iy = (int)y; float fx = x - ix, fy = y - iy; fx = fx * fx * (3 - 2 * fx); fy = fy * fy * (3 - 2 * fy); ix %= 16; iy %= 16; return Mathf.Lerp(Mathf.Lerp(g[ix, iy], g[ix + 1, iy], fx), Mathf.Lerp(g[ix, iy + 1], g[ix + 1, iy + 1], fx), fy); }
+            var streak = new float[N]; for (int y = 0; y < N; y++) streak[y] = (float)r.NextDouble();
+            for (int y = 0; y < N; y++) for (int x = 0; x < N; x++)
+            {
+                float u = x / (float)N * 16f, w = y / (float)N * 16f;
+                float n = Noise(u, w) * 0.6f + Noise(u * 2f % 16f, w * 2f % 16f) * 0.3f + Noise(u * 4f % 16f, w * 4f % 16f) * 0.1f;
+                float s2 = streak[(y + (int)(Mathf.Sin(x * 0.02f) * 6f) + N) % N];
+                float gl = 0.5f + n * 0.4f + (s2 > 0.93f ? 0.07f : s2 < 0.05f ? -0.1f : 0f);   // (wider: e01 read 0.27 range at 0.6-0.86)
+                if (r.NextDouble() < 0.004) gl = 0.95f;
+                px[y * N + x] = new Color(gl, gl, gl);
+            }
+            var tex = new Texture2D(N, N, TextureFormat.RGB24, true); tex.SetPixels(px); tex.Apply();
+            var path = GenDir + "/Europa_field_frost.png"; Directory.CreateDirectory(Path.Combine(ProjectRoot, GenDir));
+            File.WriteAllBytes(Path.Combine(ProjectRoot, path), tex.EncodeToPNG()); Object.DestroyImmediate(tex);
+            AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceSynchronousImport);
+            var ti = (TextureImporter)AssetImporter.GetAtPath(path); ti.wrapMode = TextureWrapMode.Repeat; ti.anisoLevel = 8; ti.SaveAndReimport();
+            return TexturedMat("Europa_ice_field", path, 0.55f);
+        }
         struct EuMats { public Material ice, iceDark, rock, metal, metalDark, glow, stone, stoneDark, pod, crack, shaft, glass, screen, water, bubble, panel; }
 
         // tunnels: a swept tube seen from inside (winding flipped so the normals face in)
@@ -134,7 +159,10 @@ namespace Seven.EditorTools
                 var v = new List<Vector3>(); var t = new List<int>();
                 foreach (var (x0, z0, x1, z1) in new[] { (-600f, -600f, 600f, 7f), (-600f, 17f, 600f, 600f), (-600f, 7f, -6f, 17f), (6f, 7f, 600f, 17f) })
                     AddBox(v, t, new Vector3((x0 + x1) / 2f, -1f, (z0 + z1) / 2f), new Vector3(x1 - x0, 2f, z1 - z0));
-                MeshObject("IceField", SaveMesh(Finish(v, t), "Europa_IceField"), m.ice, world);
+                // P3 (1): the field in its own frosted ice (wind-packed streaks and frost patches, a little greyer than the walls' ice) on
+                // planar UVs - the plain ice read as one flat white plane in the arrival shots (e01, the hold: white share / no edges)
+                var fieldMesh = Finish(v, t); var fv = fieldMesh.vertices; var fuv = new Vector2[fv.Length]; for (int i = 0; i < fv.Length; i++) fuv[i] = new Vector2(fv[i].x / 9f, fv[i].z / 9f); fieldMesh.uv = fuv;
+                MeshObject("IceField", SaveMesh(fieldMesh, "Europa_IceField"), EuropaFieldIce(), world);
                 var cv = new List<Vector3>(); var ct = new List<int>();
                 for (int i = 0; i < 46; i++)
                 {
@@ -148,7 +176,35 @@ namespace Seven.EditorTools
                 // the shelf's sheltering ridges
                 var rv = new List<Vector3>(); var rt = new List<int>();
                 for (int i = 0; i < 18; i++) { float a = -60f + i * 7f; var c = new Vector3(Mathf.Sin(a * Mathf.Deg2Rad) * 24f, 0f, -Mathf.Cos(a * Mathf.Deg2Rad) * 24f - 4f); Lump(rv, rt, c, new Vector3(4f, 3f + (float)rnd.NextDouble() * 4f, 3f), 0.4f, rnd.Next(1000)); }
-                MeshObject("ShelfRidges", SaveMesh(SmoothFinish(rv, rt), "Europa_ShelfRidges"), m.ice, world);
+                MeshObject("ShelfRidges", SaveMesh(SmoothFinish(rv, rt), "Europa_ShelfRidges"), m.iceDark, world);   // P3 (1): older, denser ice (darker) - the pale ridges + pale field were one tone (e01 range 0.26)
+                // P3 (1): the field itself - pressure ridges and hummocks of broken ice across it (60-520 m out, clear of the shelf and the
+                // hole), and a few great ice spires far off fading into the haze (Kyle's mood: huge shapes in the mist) - the extreme
+                // wide (e01) was one flat white plain with a saucer over it
+                var hmV = new List<Vector3>(); var hmT = new List<int>(); var sv = new List<Vector3>(); var st2 = new List<int>();
+                var hr = new System.Random(3707);
+                for (int i = 0; i < 150; i++)
+                {
+                    float a = (float)hr.NextDouble() * 360f, dd = 60f + (float)hr.NextDouble() * 460f;
+                    var c = new Vector3(Mathf.Sin(a * Mathf.Deg2Rad) * dd, 0f, Mathf.Cos(a * Mathf.Deg2Rad) * dd);
+                    int blocks = 2 + hr.Next(4); float yaw = (float)hr.NextDouble() * 180f;
+                    for (int b = 0; b < blocks; b++)
+                    {
+                        var o = Quaternion.Euler(0f, yaw, 0f) * new Vector3((b - blocks * 0.5f) * 3.2f, 0f, ((float)hr.NextDouble() - 0.5f) * 2f);
+                        // broken ice slabs (low-poly boxes, tilted as the pressure pushed them up): a Lump each was 1.5 M vertices
+                        float h = 1.2f + (float)hr.NextDouble() * (dd > 250f ? 7f : 3.5f), bw = 2f + (float)hr.NextDouble() * 2.5f, bd = 1.2f + (float)hr.NextDouble() * 1.4f;
+                        int b0 = hmV.Count; AddBox(hmV, hmT, Vector3.zero, new Vector3(bw, h, bd));
+                        var rot = Quaternion.Euler(((float)hr.NextDouble() - 0.5f) * 40f, yaw + ((float)hr.NextDouble() - 0.5f) * 30f, ((float)hr.NextDouble() - 0.5f) * 30f);
+                        for (int q = b0; q < hmV.Count; q++) hmV[q] = c + o + Vector3.up * (h * 0.3f) + rot * hmV[q];
+                    }
+                }
+                MeshObject("IceHummocks", SaveMesh(Finish(hmV, hmT), "Europa_IceHummocks"), m.ice, world, false);
+                for (int i = 0; i < 9; i++)
+                {
+                    float a = i * 40f + (float)hr.NextDouble() * 22f, dd = 330f + (float)hr.NextDouble() * 220f;
+                    var c = new Vector3(Mathf.Sin(a * Mathf.Deg2Rad) * dd, 0f, Mathf.Cos(a * Mathf.Deg2Rad) * dd);
+                    Lump(sv, st2, c, new Vector3(9f + (float)hr.NextDouble() * 8f, 26f + (float)hr.NextDouble() * 30f, 8f + (float)hr.NextDouble() * 6f), 0.12f, hr.Next());   // (gentle noise: a folded Lump has zero normals)
+                }
+                MeshObject("IceSpires", SaveMesh(SmoothFinish(sv, st2), "Europa_IceSpires"), m.iceDark, world, false);
             }
             // ---------------------------------------------------------------- the ice passage (a tube) and its water surface
             {
@@ -199,7 +255,16 @@ namespace Seven.EditorTools
                 MeshObject("AncientLights", SaveMesh(Finish(lv2, lt2), "Europa_AncientLights"), m.glow, chamber, false);
                 // rock spires rising from the floor (silhouettes)
                 var pv = new List<Vector3>(); var pt = new List<int>();
-                for (int i = 0; i < 30; i++) { pv.Clear(); pt.Clear(); var c = new Vector3((float)rnd.NextDouble() * 300f - 160f, -124f, 120f + (float)rnd.NextDouble() * 230f); Lump(pv, pt, c + Vector3.up * 10f, new Vector3(5f, 14f + (float)rnd.NextDouble() * 18f, 5f), 0.5f, rnd.Next(1000)); MeshObject($"ChamberSpire{i}", SaveMesh(SmoothFinish(pv, pt), $"Europa_Spire{i}"), m.rock, chamber, false); }
+                for (int i = 0; i < 30; i++) { pv.Clear(); pt.Clear(); var c = new Vector3((float)rnd.NextDouble() * 300f - 160f, -124f, 120f + (float)rnd.NextDouble() * 230f); float ry = 14f + (float)rnd.NextDouble() * 18f; Lump(pv, pt, c + Vector3.up * 10f, new Vector3(5f, ry, 5f), 0.5f, rnd.Next(1000)); MeshObject($"ChamberSpire{i}", SaveMesh(SmoothFinish(pv, pt), $"Europa_Spire{i}"), m.rock, chamber, false);
+                    // P3 (1): pale mineral bands round each dark spire (e07: the chamber's smooth dark shapes in the fog, edges 5.7 % < 6 %)
+                    var bv2 = new List<Vector3>(); var bt2 = new List<int>();
+                    for (float y = -ry * 0.7f; y < ry * 0.75f; y += 3.2f + (float)rnd.NextDouble() * 2.5f)
+                    {
+                        float rr = 5f * Mathf.Sqrt(Mathf.Max(0.05f, 1f - (y / ry) * (y / ry))) + 0.55f, tilt = ((float)rnd.NextDouble() - 0.5f) * 1.4f;
+                        var band = new List<Vector3>(); for (int sg = 0; sg <= 16; sg++) { float aa = sg / 16f * Mathf.PI * 2f; band.Add(c + new Vector3(Mathf.Cos(aa) * rr, 10f + y + Mathf.Sin(aa) * tilt, Mathf.Sin(aa) * rr)); }
+                        Sweep(bv2, bt2, band, 0.3f, false, 4);
+                    }
+                    if (bv2.Count > 0) MeshObject($"ChamberSpireBands{i}", SaveMesh(Finish(bv2, bt2), $"Europa_SpireBands{i}"), m.stone, chamber, false); }
             }
             // ---------------------------------------------------------------- the settlement + the race course
             var vehicles = new List<Transform>(); var rings = new List<Transform>(); var rivals = new List<Transform>();

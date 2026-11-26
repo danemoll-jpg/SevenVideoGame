@@ -514,7 +514,7 @@ namespace Seven.EditorTools
                     for (int i = 0; i < N; i++)
                     {
                         float z0 = Mathf.Lerp(zFrom, zTo, i / (float)N), z1 = Mathf.Lerp(zFrom, zTo, (i + 1) / (float)N);
-                        float y0 = Mathf.Lerp(V.BridgeTop, 0.01f, i / (float)N), y1 = Mathf.Lerp(V.BridgeTop, 0.01f, (i + 1) / (float)N);
+                        float y0 = Mathf.Lerp(V.BridgeTop - 0.015f, 0.01f, i / (float)N), y1 = Mathf.Lerp(V.BridgeTop - 0.015f, 0.01f, (i + 1) / (float)N);   // (1.5 cm under the slab's top where they overlap: no z-fighting)
                         float g0 = Mathf.Min(0f, Seven.VenusTerrain.Height(V.SlabBridge.x, z0)), g1 = Mathf.Min(0f, Seven.VenusTerrain.Height(V.SlabBridge.x, z1));
                         y0 = Mathf.Max(y0, g0 + 0.01f); y1 = Mathf.Max(y1, g1 + 0.01f);
                         var a = new Vector3(V.SlabBridge.x - halfW, y0, z0); var b = new Vector3(V.SlabBridge.x + halfW, y0, z0);
@@ -524,8 +524,8 @@ namespace Seven.EditorTools
                     }
                     MeshObject(n, SaveMesh(Finish(rv, rt), "Venus_" + n), m.stone, ramps.transform);
                 }
-                Apron("BridgeRampS", sEnd + 0.3f, 112.4f);
-                Apron("BridgeRampN", nEnd - 0.3f, 132.6f);
+                Apron("BridgeRampS", sEnd + 0.6f, 112.4f);   // P3 (2): 0.6 m under the slab (at 0.3 a 10 cm corner beside the slab was open: HOLES CHECK)
+                Apron("BridgeRampN", nEnd - 0.6f, 132.6f);
             }
             ramps.SetActive(false);
             // dust for the landing thud
@@ -782,7 +782,12 @@ namespace Seven.EditorTools
             AddProbe(new Vector3(0f, 3f, 20f), new Vector3(60f, 20f, 60f), Vector3.zero);
             AddProbe(new Vector3(30f, 5f, 250f), new Vector3(30f, 16f, 50f), Vector3.zero);
             ZFightFix("Venus");
-            QF18SceneChecks("Venus", false);   // QF18 (11, 13): report
+            // P3 (2): the bridge zones open only once the slab is laid (at runtime) - the holes check lays it (and shows its aprons) first,
+            // as Mars lowers its drawbridge; its 9 "holes" were the empty gully before the slab
+            Vector3 slabP0 = slab.position; Quaternion slabR0 = slab.rotation; bool rampsOn0 = ramps.activeSelf, slabOn0 = slab.gameObject.activeSelf;
+            QF18SceneChecks("Venus", false,
+                () => { slab.gameObject.SetActive(true); slab.SetPositionAndRotation(new Vector3(V.SlabBridge.x, V.BridgeTop - V.SlabSize.y * 0.5f, V.SlabBridge.z), Quaternion.identity); ramps.SetActive(true); Physics.SyncTransforms(); },
+                () => { slab.SetPositionAndRotation(slabP0, slabR0); slab.gameObject.SetActive(slabOn0); ramps.SetActive(rampsOn0); Physics.SyncTransforms(); });   // QF18 (11, 13): report
             EditorSceneManager.SaveScene(scene, VenusScenePath);
             Log("scene saved " + VenusScenePath);
         }

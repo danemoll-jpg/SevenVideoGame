@@ -126,7 +126,7 @@ namespace Seven
                     _rosterShots = true; var oc = Observer(); var ogc = oc.GetComponent<GcCam>(); ogc.enabled = false;
                     foreach (var rr in Game.Racers.ToList())
                     {
-                        float sz = rr.Stats == GcStats.Machinist ? 1.7f : rr.Stats == GcStats.Viper ? 1.35f : rr.Stats == GcStats.Juniper ? 1.25f : 1f, side = rr.X < 0f ? -1f : 1f;
+                        float sz = rr.Stats == GcStats.Viper ? 1.35f : rr.Stats == GcStats.Ratwing ? 1.25f : rr.Stats == GcStats.Scree ? 1.1f : 1f, side = rr.X < 0f ? -1f : 1f;
                         yield return SideShot($"gc_racer_{rr.Label.ToLowerInvariant()}_side", rr, new Vector3(side * 4.6f * sz, 1.4f * sz, 0.8f * sz), 45f);
                         yield return SideShot($"gc_racer_{rr.Label.ToLowerInvariant()}_front", rr, new Vector3(side * 2.2f * sz, 2.0f * sz, 3.4f * sz), 50f);
                     }
@@ -163,6 +163,8 @@ namespace Seven
                     var cutter = Game.Racers.FirstOrDefault(r => r.OnShortcut && r.S > 20f && r.S < r.On.Length - 30f);
                     if (!cutShot && cutter != null) { cutShot = true; gc.Target = cutter; gc.Snap(); yield return null; yield return null; yield return Shot($"gc_{id}_shortcut", Subj(cutter), "through the shortcut", cam); }
                     if (Time.time - t0 > 3f) foreach (var rd in FindObjectsByType<GcSevenRider>(FindObjectsSortMode.None)) { float pg = Mathf.Max(rd.PalmGaps.x, rd.PalmGaps.y); bool off = rd.HipsGap > 0.05f * rd.K || pg > 0.05f * rd.K; _rideN++; _hipsWorst = Mathf.Max(_hipsWorst, rd.HipsGap); _palmWorst = Mathf.Max(_palmWorst, pg); if (off) _rideOff++; _ride.TryGetValue(rd.Who, out var e); _ride[rd.Who] = (e.n + 1, e.off + (off ? 1 : 0), Mathf.Max(e.hips, rd.HipsGap), Mathf.Max(e.palm, pg), rd.K); }
+                    // QF37: Ratwing in the cockpit - hips on the seat, claw tips on the controls (the same 5 cm x his size)
+                    if (Time.time - t0 > 3f) foreach (var rw in FindObjectsByType<GcRatRider>(FindObjectsSortMode.None)) { float rk = rw.transform.lossyScale.x / 0.72f, pg = Mathf.Max(rw.ClawGaps.x, rw.ClawGaps.y); bool off = rw.HipsGap > 0.05f * rk || pg > 0.05f * rk; _rideN++; _hipsWorst = Mathf.Max(_hipsWorst, rw.HipsGap); _palmWorst = Mathf.Max(_palmWorst, pg); if (off) _rideOff++; _ride.TryGetValue("Ratwing (cockpit, claws)", out var e); _ride["Ratwing (cockpit, claws)"] = (e.n + 1, e.off + (off ? 1 : 0), Mathf.Max(e.hips, rw.HipsGap), Mathf.Max(e.palm, pg), rk); }
                     if (Time.time - t0 > 1200f) break;
                     yield return null;
                 }
@@ -359,10 +361,13 @@ namespace Seven
             var drive = StartCoroutine(DriveHumans());
             var tracks = new[] { "mars", "asteroid", "biaveh" }; int placeSum = 0, n = 0;
             GcGame.LapsOverride = 2;
-            for (int k = 0; k < GcStats.All.Length; k++)
+            // P3 (3): -gcplayersall = every racer on every track (7 x 7), else each racer once on one of three tracks
+            int perRacer = GcBoot.PlayersAll ? GcTrack.Ids.Length : 1; int falls = 0, worst = 0;
+            for (int run = 0; run < GcStats.All.Length * perRacer; run++)
             {
-                _bots[0] = GcAI.Human(300 + k);
-                GcGame.NextMode = GcGame.Mode.Race; GcGame.NextTrack = tracks[k % tracks.Length]; GcGame.NextRacers = new[] { k }; GcGame.NextPads = new[] { 0 };
+                int k = run / perRacer;
+                _bots[0] = GcAI.Human(300 + run);
+                GcGame.NextMode = GcGame.Mode.Race; GcGame.NextTrack = GcBoot.PlayersAll ? GcTrack.Ids[run % perRacer] : tracks[k % tracks.Length]; GcGame.NextRacers = new[] { k }; GcGame.NextPads = new[] { 0 };
                 Game.Results = null;
                 StartCoroutine(Game.RaceRun());
                 while (!Game.Running) yield return null;
@@ -370,11 +375,12 @@ namespace Seven
                 yield return Wait(10f);
                 yield return Shot($"gc_player_{GcStats.Of(k).Racer.ToLowerInvariant()}_{GcGame.NextTrack}", Subj(Game.Humans[0]), GcStats.Of(k).Racer + " as the player", cams);
                 while (Game.Results == null) yield return null;
-                var h = Game.Humans[0]; placeSum += h.Place; n++;
+                var h = Game.Humans[0]; placeSum += h.Place; n++; falls += h.Falls; worst = Mathf.Max(worst, h.Place);
                 Log($"GC PLAYER (R21): {h.Label} as the player (human-like driver, pad 1) on {Game.Track.Name}, {Game.Laps} laps: place {h.Place} / {Game.Racers.Count}, {GcGame.Fmt(h.FinishTime)}, falls {h.Falls}, wall hits {h.WallHits}, presses hit {h.PressHits}; the AI: {string.Join(", ", Game.Racers.Where(r => !r.Human).Select(r => $"{r.Label} {r.Place}. {GcGame.Fmt(r.FinishTime)}"))}");
                 Game.Quit(); yield return null;
             }
             GcGame.LapsOverride = 0;
+            if (GcBoot.PlayersAll) Log($"GC EVERY RACER, EVERY TRACK (P3 3): {n} races as player 1, falls {falls}, worst place {worst}");
             Log($"GC AI TUNING (R22): the human-like driver's average place {placeSum / (float)Mathf.Max(1, n):0.0} of {GcStats.All.Length} over {n} races (target: racing the AI - the middle of the field, {GcStats.All.Length * 0.3f:0.0} to {GcStats.All.Length * 0.65f:0.0})");
             StopCoroutine(drive); _want[0] = default;
         }

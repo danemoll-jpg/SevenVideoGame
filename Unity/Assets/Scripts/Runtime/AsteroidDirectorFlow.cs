@@ -305,7 +305,19 @@ namespace Seven
                 ImageGate.ExpectPoint(look, "the city that still works", 0f, "a10_");   // QF26 (2)
                 yield return Shot("a10_the_city_that_still_works_wide");
                 yield return Say("AST_03", 1, 2);                 // It's all still going. / Yes.
-                Shoot(bp + new Vector3(-3f, 2.2f, 6f), new Vector3(-183f, 1f, 76f), 40f, 0.6f);
+                // P3 (1): the camera by the bike looked at the workstations THROUGH the causeway deck and its piers (a11: "the empty
+                // workstations" blocked) - the first spot near her side with a clear line both ways to them
+                var ws = new Vector3(-183f, 1f, 76f); var wsCam = bp + new Vector3(-3f, 2.2f, 6f);
+                if (!(ChapterCamera.ClearLine(wsCam, ws) && ChapterCamera.ClearLine(ws, wsCam)))
+                    for (int ci = 0; ci < 36; ci++)
+                    {
+                        var dir0 = Flat(bp - ws).normalized; if (dir0.sqrMagnitude < 0.01f) dir0 = Vector3.back;
+                        float ang = ((ci % 9) - 4) * 22f, dist = 9f + (ci / 9) * 4f, hgt = 2.5f + (ci / 9) * 1.5f;
+                        var c = ws + Quaternion.Euler(0f, ang, 0f) * dir0 * dist + Vector3.up * hgt;
+                        if (ChapterCamera.ClearLine(c, ws) && ChapterCamera.ClearLine(ws, c)) { wsCam = c; break; }
+                    }
+                Log($"a11 (P3 1): the workstations' camera {wsCam}");
+                Shoot(wsCam, ws, 40f, 0.6f);
                 yield return Wait(0.5f);
                 ImageGate.ExpectPoint(new Vector3(-183f, 1f, 76f), "the empty workstations", 0f, "a11_");   // QF26 (2)
                 yield return Shot("a11_the_empty_workstations");

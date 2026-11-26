@@ -444,8 +444,12 @@ namespace Seven.EditorTools
             if (ScreeWorkSpots.Length > 0) Lamp("BayWorkLamp", ScreeWorkSpots[0].Item1 + new Vector3(0.8f, 3.0f, 0.6f), 10f, 3.6f, m.glow, null, new Vector3(0.5f, 0.08f, 0.14f));
             // QF32 (3): the terrace exit (where the Scree block the way, and the reveal's low two-shots) and the bay floor under the
             // scaffold were the darkest frames of the chapter (p95 0.23-0.28): a work lamp over each, on a bracket by the wall
-            Lamp("TerraceExitLamp", new Vector3(18.0f, L.Lower + 3.0f, -45.0f), 9f, 3.0f, m.glow, null, new Vector3(0.14f, 0.08f, 0.6f));
-            Lamp("BayFloorLamp", new Vector3(19.5f, L.Bay + 3.3f, -63.6f), 9f, 3.0f, m.glow, null, new Vector3(0.14f, 0.08f, 0.6f));
+            Lamp("TerraceExitLamp", new Vector3(18.0f, L.Lower + 3.0f, -45.0f), 14f, 8.5f, m.glow, null, new Vector3(0.14f, 0.08f, 0.6f));
+            Lamp("BayFloorLamp", new Vector3(19.5f, L.Bay + 3.3f, -63.6f), 13f, 6.5f, m.glow, null, new Vector3(0.14f, 0.08f, 0.6f));   // P3 (1): brighter (tr18 down in the bay: range 0.26)
+            // P3 (1): the bay floor's worn pale loading marks under the scaffold (old paint on the stone: a lit floor reads, a black one doesn't)
+            var paint = Dissolve("Moon_floor_paint", Gray(0.78f), 0.2f, false);
+            foreach (var (x0, z0, x1, z1) in new[] { (18.6f, -66.5f, 24.4f, -66.2f), (18.6f, -66.5f, 18.9f, -61.2f), (24.1f, -66.5f, 24.4f, -61.2f), (20.2f, -64.6f, 22.8f, -64.4f) })
+                Block("BayFloorMark", new Vector3(x0, L.Bay + 0.005f, z0), new Vector3(x1, L.Bay + 0.012f, z1), paint, null, false);
             Block("TerraceExitLampPole", new Vector3(17.95f, L.Lower, -45.05f), new Vector3(18.05f, L.Lower + 2.96f, -44.95f), m.metal, null, false);
             Block("BayFloorLampPole", new Vector3(19.45f, L.Bay, -63.65f), new Vector3(19.55f, L.Bay + 3.26f, -63.55f), m.metal, null, false);
             // QF33 (the release gate): the broken ramp on the bay descent, where she hangs and drops (the "hang" lesson and the control-back
@@ -612,6 +616,9 @@ namespace Seven.EditorTools
             Block("Alcove_Bench", new Vector3(ax1 - 0.42f, 0f, L.AlcoveBackZ), new Vector3(ax1, 0.42f, L.AlcoveBackZ + 0.95f), m.metal, root);
             Lamp("Alcove_Lamp", new Vector3(-3.0f, 2.32f, 1.1f), 2.6f, 0.5f, m.glow, root, new Vector3(0.3f, 0.04f, 0.1f));
             Block("Face_Lintel", new Vector3(-L.DoorHalf, 2.45f, zf0), new Vector3(L.DoorHalf, 7f, zf1), m.rock, root);
+            // P3 (2): the doorway's floor - the cell floor ends at the wall's inner face and the corridor's begins at its outer face, so
+            // the 0.65 m threshold between was open to the fog (HOLES CHECK: CellDoor 1); a worn metal sill, flush
+            Block("Cell_DoorSill", new Vector3(-L.DoorHalf, -0.3f, zf0 - 0.02f), new Vector3(L.DoorHalf, 0f, zf1 + 0.02f), m.metalDark, root, false);
             Block("Face_B", new Vector3(L.DoorHalf, -0.3f, zf0), new Vector3(L.PassageX.x - 0.1f, 7f, zf1), m.rock, root);
             Block("Face_OldTop", new Vector3(L.PassageX.x - 0.1f, 2.6f, zf0), new Vector3(L.PassageX.y + 0.1f, 7f, zf1), m.rock, root);
             Block("Face_C", new Vector3(L.PassageX.y + 0.1f, -0.3f, zf0), new Vector3(34f, 7f, zf1), m.rock, root);

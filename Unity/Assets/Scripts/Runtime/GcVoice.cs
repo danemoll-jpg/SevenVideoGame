@@ -5,7 +5,7 @@ namespace Seven
 {
     /// <summary>Round 20: the racers' short taunts / cheers (Resources/GrandCircuit/gc_lines.json, voiced by
     /// Tools/Voice/generate_gc_voices.py in the story's voices: 7, Duchess, Tunneler). One line at a time, at most one every 8 s;
-    /// subtitled on every player's HUD with the speaker's name. start = at GO (player 1's racer), pass = a racer overtakes a human,
+    /// subtitled on every player's HUD with the speaker's name. pass_duchess (QF37) = Ratwing overtakes Duchess near a player. start = at GO (player 1's racer), pass = a racer overtakes a human,
     /// pushed = a racer near a human is pushed, last = a human starts the final lap, win = the first one home.</summary>
     public static class GcVoice
     {
@@ -48,7 +48,10 @@ namespace Seven
             foreach (var r in g.Racers)
             {
                 _place.TryGetValue(r, out int was); _place[r] = r.Place;
-                if (r.Human || was == 0 || r.Place >= was) continue;
+                if (was == 0 || r.Place >= was) continue;
+                // QF37: Ratwing passing Duchess near a player has a word for her (one of each racer: she is always in the field)
+                if (r.Stats == GcStats.Ratwing && Near(g, r)) { var d = g.Racers.Find(x => x.Stats == GcStats.Duchess); if (d != null && d.Place == r.Place + 1 && Mathf.Abs(d.Distance - r.Distance) < 25f && Say(r, "pass_duchess")) continue; }
+                if (r.Human) continue;
                 foreach (var h in g.Humans) { if (h.Place == r.Place + 1 && Mathf.Abs(h.Distance - r.Distance) < 25f) { Say(r, "pass"); break; } }
             }
         }

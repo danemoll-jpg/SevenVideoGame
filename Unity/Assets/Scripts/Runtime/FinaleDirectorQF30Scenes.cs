@@ -90,6 +90,7 @@ namespace Seven
             Shoot(P7 + fwd * 0.75f + side * 1.9f + Vector3.up * 0.75f, P7 + fwd * 0.5f + Vector3.up * 0.3f, 40f, 0.01f);
             var head0 = CatBone("head"); var anchor = head0 != null ? head0.position : Cat.transform.position;
             float sc0 = Cat.transform.localScale.x; float shrink = Auto ? 5f : 8f;
+            _shrinking = true;   // P3 (2): while he shrinks, a hand whose point slides out of her reach follows his fur within it (InReach)
             for (float t = 0f; t < 1f; t += Time.deltaTime / shrink)
             {
                 float u = Mathf.SmoothStep(0f, 1f, t);
@@ -106,6 +107,7 @@ namespace Seven
                 }
                 yield return null;
             }
+            _shrinking = false;
             Cat.transform.localScale = Vector3.one;
             // QF32 (1): he is small again and has shrunk away from her hands (toward his head) - she draws him in against her knees, his
             // head into her lap (an eased slide; her hands ride on him the whole way)
@@ -174,7 +176,7 @@ namespace Seven
             Log("FIN_10: no HUD, no music; 'Panther, no!' and her tears; the silence");
             Complete("FIN_10");
         }
-        bool _shrinkShot, _breathing, _stroke; float _strokeU;
+        bool _shrinkShot, _breathing, _stroke, _shrinking; float _strokeU;
         Vector3 HandR() { var a = Seven.AnimNow; var h = a != null ? a.GetBoneTransform(HumanBodyBones.RightHand) : null; return h != null ? h.position : P7 + Vector3.up * 0.5f; }
         /// <summary>FIN_10: her hands rest ON his fur (targets on his head and neck surface every frame - they follow his breathing and the
         /// shrink; palms toward him, fingers relaxed); a stroke runs the right hand from his head to his neck once.</summary>
@@ -296,13 +298,13 @@ namespace Seven
                 // stopped short in the air. A point out of her reach slides along his fur to the nearest fur she CAN reach (toward her,
                 // between her shoulder and the point) - eased by the smoothing below, so it never jumps
                 _hRaw = hSurfW; _nRaw = nSurfW;   // the bow still leans toward his real head / neck
-                if (_lapHeld) hSurfW = InReach(hSurfW, hNW, _palmR, HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, ref hNW);
-                if (_lapHeld) nSurfW = InReach(nSurfW, nNW, _palmL, HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, ref nNW);
+                if (_lapHeld || _shrinking) hSurfW = InReach(hSurfW, hNW, _palmR, HumanBodyBones.RightUpperArm, HumanBodyBones.RightLowerArm, HumanBodyBones.RightHand, ref hNW);
+                if (_lapHeld || _shrinking) nSurfW = InReach(nSurfW, nNW, _palmL, HumanBodyBones.LeftUpperArm, HumanBodyBones.LeftLowerArm, HumanBodyBones.LeftHand, ref nNW);
                 if (!_smoothInit) { _hSm = hSurfW; _nSm = nSurfW; _smoothInit = true; }
                 _hSm = Vector3.SmoothDamp(_hSm, hSurfW, ref _hVel, 0.3f); _nSm = Vector3.SmoothDamp(_nSm, nSurfW, ref _nVel, 0.3f);
                 // a hand whose bound point stays out of her reach (its palm > 4 cm off his fur for 1.5 s) re-binds to the fur nearest the palm
                 _reachCheck += Time.deltaTime;
-                if (!_lapHeld && _reachCheck > 1.5f)   // while he is large (rc7's way); in her lap InReach takes over (this re-bind oscillated with her bow)
+                if (!_lapHeld && !_shrinking && _reachCheck > 1.5f)   // while he is large (rc7's way); in her lap InReach takes over (this re-bind oscillated with her bow)
                 {
                     _reachCheck = 0f;
                     foreach (var (right, hb, mb) in new[] { (true, HumanBodyBones.RightHand, HumanBodyBones.RightMiddleProximal), (false, HumanBodyBones.LeftHand, HumanBodyBones.LeftMiddleProximal) })

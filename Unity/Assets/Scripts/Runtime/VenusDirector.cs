@@ -409,7 +409,10 @@ namespace Seven
             {
                 float u = Mathf.SmoothStep(0f, 1f, t);
                 Saucer.position = Vector3.Lerp(top, land, u);
-                Cam.Shot(VenusLayout.SaucerAt + new Vector3(-55f + 25f * u, 22f - 12f * u, -60f + 30f * u), Saucer.position, 0.6f, false, 52f);
+                // P3 (1): from down among the gardens (their dark shapes in the foreground against the bright haze, Kyle's mood), the
+                // saucer framed in the upper third - the old camera at 22 m looked up into the cloud ceiling: one flat tone, a small saucer
+                var cg = VenusLayout.SaucerAt + new Vector3(-42f + 18f * u, 0f, -48f + 22f * u); cg.y = Mathf.Max(Ground.Height(cg.x, cg.z), VenusTerrain.Height(cg.x, cg.z)) + 1.5f;
+                Cam.Shot(cg, Vector3.Lerp(Saucer.position, new Vector3(Saucer.position.x, cg.y + 1f, Saucer.position.z), 0.62f), 0.6f, false, 48f);   // the gardens fill the lower half
                 if (t > 0.45f && t - Time.deltaTime / 7f <= 0.45f) { ImageGate.Expect(Saucer, "the saucer descending under the clouds", 0f, "v01_"); StartCoroutine(Shot("v01_descent_under_the_clouds")); }
                 yield return null;
             }

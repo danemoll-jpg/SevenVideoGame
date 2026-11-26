@@ -1,5 +1,95 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF37: the Grand Circuit roster swap (Dan, 2026-11-26) — done, status below
+Dan: "use the Scree and Ratwing as opposed to the Machinist and Juniper." Replace two of Round 22's racers:
+- **The Machinist → a Scree racer** astride the **Scrambler jet** (the existing Scree model; 7's riding solver scaled to him, hands on
+  the grips; his voice: `ScreeWorker` (or `ScreeWorker2`) for a few cheers, calm, not gloating); stats: nimble, good acceleration.
+- **Juniper → Ratwing** in the **Jetstream's cockpit** (his model; wings folded along his sides, claws on the controls, head up behind the
+  windscreen; his voice `Ratwing` for a few sly taunts); stats: fastest top speed, light, loses bumps.
+- Remove the Machinist and Juniper from the racer select, the AI pool and the saved data (fall back cleanly if a save had picked them).
+- The roster: **7, Duchess, Tunneler, Nela, Viper, a Scree, Ratwing**: one of each per race; re-tune the AI spread.
+- Proposed new lines (Dan to review; use them): Scree "For the lower districts!" / "Keep up." ; Ratwing "Try to keep your eyes on
+  the road, cat." (to Duchess, if she's in the race) / "Shiny trophy… mine." / "Catch me if you can."
+- Prove: AI 3 laps on every track for both new racers, 0 falls; ride / seat pose checks; captures; the image gate. Publish
+  **1.1.0-beta5** (every earlier release untouched).
+
+## QF37 — decisions made (Code, 2026-11-26; Dan said never stop to ask)
+- **Slots kept:** the Scree takes the Machinist's slot (5) and Ratwing Juniper's (6) - the racer select, the AI pool, the field of seven,
+  the lines and the voice all follow `GcStats.All`. **Saves:** a save from beta4 or earlier whose last pick was slot 5 / 6 (the Machinist /
+  Juniper) starts on 7 again, once (`GcSave.Load`, key `roster` = 37); their per-racer best times are deleted (`GcStats.Retired`); a time
+  trial ghost recorded with them replays as 7's bike (the ghost stores the racer's name; an unknown name = 7).
+- **The Scree** = the Chapter 1 Scree model (Humanoid, its own pale shell + glowing eyes / tank lights), 2.08 m standing, on the Scrambler jet
+  sized to it (x1.19), 7's riding solver with the upright seat (as Nela / Viper), its lower arm pair braced forward along the tank
+  (`ScreeRig.Brace`). Stats: 51.6 top / 17.5 accel / 1.06 handling / 0.9 weight / 1.05 grip (nimble, the quickest off the line).
+- **Ratwing** = the Round 4 model on his rig (the mothership's skin + eye glow) at 0.72 of his size, **seated** in the Jetstream's cockpit
+  (`GcRatRider`, new: his rig is generic, so the seat is made on his bones after the animator - hips on the seat, spine up, thighs forward,
+  shins into the footwell, a two-bone reach that puts each claw tip on a control point ahead of the seat, head up behind the windscreen);
+  `RatwingRig` keeps the wings folded along his sides (perched) and his twitchy head / shoulder life and jaw. Stats: 53.2 top (the
+  fastest) / 14.5 accel / 0.88 handling / 0.6 weight (the lightest: loses bumps) / 0.85 grip.
+- **Lines** (Dan's proposals, all used; `gc_lines.json`, voiced with `Tools/Voice/generate_gc_voices.py`): the Scree in Dan's saved
+  "screeworker" voice (the story's Scree settings): "For the lower districts!" (start), "Keep up." (pass). Ratwing in his saved "Ratwing"
+  voice: "Catch me if you can." (start), "Try to keep your eyes on the road, cat." (**new event `pass_duchess`**: he overtakes Duchess near
+  a player - she is always in the field), "Shiny trophy… mine." (win). The Machinist's and Juniper's 10 Grand Circuit lines and their
+  audio were removed (their story lines are untouched).
+- **AI spread:** unchanged (`GcGame.AiSkill` 0.96 .. 0.86) - with the new pair the human-like driver averages 4.0 of 7, inside the
+  target band (2.1-4.6), and all-AI races finish within 1.2-4.7 s with seven different winners' mix (Duchess, Tunneler, Nela, Ratwing).
+
+## QF37 — status (2026-11-26): done; release 1.1.0-beta5 (build 2007, `game-2007`) PUBLISHED, Latest (rc2-rc9 + beta1-beta4 retained)
+- **Proof (the QF37 check build, one run `-gcmusictest -gcmenu -gcproof -gcsplit -gctrial -gcplayers`):** `GC PROOF` **49 / 49 AI runs
+  completed 3 laps** (the Scree 7 / 7, Ratwing 7 / 7), falls 0, falls-through 0; the music test 8 / 8; split screen with all seven on Venus
+  Gardens mean 6.7 ms (150 fps); the racer-taken rule holds (player 2 skipped 7 -> Ratwing); the human-like driver averages **4.0 of 7**
+  (as the Scree 2nd on the Mothership, as Ratwing 2nd on Mars); captures 108 / 108 pass, keyboard keys on screen 0.
+- **Ride / seat pose (the released build, the gate's Grand Circuit run):** the Scree on the Scrambler jet 20342 samples, 0 off (hips 0.0,
+  palms on the grips); **Ratwing in the cockpit 20342 samples, 0 off** - hips on the seat, claw tips on the controls (the first build's arm
+  aim missed by up to 39 cm; a two-bone reach now puts each claw tip on its control point). Captures `gc_racer_scree_*`, `gc_racer_ratwing_*`:
+  the Scree astride, upright, its lower arms forward; Ratwing seated, head up behind the windscreen, wings folded along his sides.
+- **Release gate (`Builds/ImageGate/gate_1.1.0-beta5.txt`): IMAGE GATE RELEASE PASS** - built with Build everything (QF37 + P3's first
+  fixes); every chapter: no new or worse failure, no NaN; the Grand Circuit 78 / 78; the finale 203 / 203. 13 baseline shots passed in two
+  gate runs in a row and left the baseline: **31 -> 18** (P3 below).
+
+## For Dan to check (QF37)
+1. **The Scree and Ratwing** (Grand Circuit -> racer select): the Scree on the Scrambler jet, Ratwing seated in the Jetstream - do they read
+   at speed? Sizes: the Scree's jet = `GcVehicles` (sized to the rider), Ratwing = `RatwingScale` 0.72 in `FightDemoBuilderGrandCircuit3.cs`.
+2. **Their lines** (your proposals, all used): Ratwing's "Try to keep your eyes on the road, cat." plays when he overtakes Duchess near you.
+3. **A save that picked the Machinist / Juniper** starts on 7 (once).
+
+## Polish pass P3: the last things before calling it finished (Code's list) — to do after QF37
+1. **The image-gate baseline (31 shots):** real fixes (light, framing, detail), no loosened thresholds; capture repeatability.
+2. **Everything still listed** as open / known / weak / "not done" in any status (QF29 → Round 22): fix it or say why not.
+3. **One full start-to-credits run on the latest build** (Dan's OK for the length), both race outcomes, then the Grand Circuit: one
+   race on every track with every racer as player 1 and a split-screen race; list anything a player would notice and fix it.
+4. **A clean final release candidate:** when 1–3 pass, publish **1.1.0-rc1** (story + Grand Circuit) with plain-words notes (no
+   mention of Kyle's quote or credit).
+
+## Polish pass P3 — work log (Code, 2026-11-26)
+### 1. The image-gate baseline: the real fixes made (no threshold touched, nothing exempted)
+- **The mothership's door (BIA_02):** the hull round the iris was one pearl-white annulus - it read as the fog itself, the door a disc
+  floating in a void. It is now a **plated hull** (rings of plates radiating from the door, fine dark seams, each plate its own white,
+  rivets, lit edges; `Chapter1AboardBiaveh.PanelledAnnulus` / `HullPanelMat`). The orb crossing the foreground (ba02) is held out of its
+  orbit while it crosses, nearer, and captured mid-frame (it was taken as it left the frame's edge).
+- **Ratwing beneath the bridge (b11):** the low-angle camera stood behind a surface (a grey wall seen from inside) - now the first low spot
+  with a clear line both ways (a reverse ray catches a camera inside a one-sided face). The route-sharing shot (b10) is taken higher.
+- **Europa:** Tunneler's first line from the control-room display (e16) "reframed" the shot onto his studio body far off in the fog (a
+  grey void with a floating slab) - while he speaks from the display, the display is the speaker for the framing check. The ice field got
+  its own frosted ice (wind streaks, frost patches; planar UVs), **pressure ridges of broken ice blocks** across it (60-520 m out, clear of
+  the shelf and the hole; low-poly - a first try with smooth lumps made 1.5 M vertices and broke the camera's occlusion tests) and nine
+  great ice spires far off in the haze; the shelf's ridges are older, darker ice; pale mineral bands round the great chamber's dark spires;
+  the distant-structure shot (e12) takes the first camera with a clear line to it.
+- **The asteroid (AST_01):** the open-space shot looked sideways past her into empty space ("the asteroid beyond" out of frame) - now from
+  the egg chair's open side, level toward the asteroid (the window backdrops are staged far below the deck: aiming at the object itself
+  pointed the camera at the floor); the empty-workstations shot (a11) takes a camera with a clear line (the causeway deck hid them); the
+  foundry hall got high clerestory light panels (a16b: one mid-grey).
+- **The Moon:** the cat watching her (c04) was a low camera at her hip height with Panther a speck - against the presentation rule; now a
+  wide over-his-shoulder shot, her whole figure, him in the lower foreground (the first clear angle). The bay floor (tr18): a brighter
+  lamp and worn pale loading marks; the terrace exit lamp brighter (the Scree blocking the way); a stronger key on the reveal's low
+  two-shot (c02).
+- **Venus's descent (v01):** from down among the gardens, their dark shapes in the foreground, the saucer in the upper third (it looked up
+  into the cloud ceiling: one flat tone).
+- **The test demos (off the menu):** the fight demo's sparring ground is a worn paved ring (pale flagstones); Ratwing's cave has faint white
+  crystal clusters; its end prompt shows controller buttons only.
+- **The boss sweep flash** swells and fades through the cut instead of a flat white wall (a close side camera saw a quarter of the frame
+  white in the Tunneler's drill strike - a timing-dependent frame that passed or failed by luck).
+
 ## Quick fix QF36: the Grand Circuit's racing music (Dan, 2026-11-25) — done, release 1.1.0-beta3 (build 2005, `game-2005`) PUBLISHED, Latest
 Dan's racing tracks are IN (`Unity/Assets/Audio/Music/`; `Docs/MUSIC.md` "Grand Circuit"): `gc_menu` (every Grand Circuit page: the
 menu, racer / track select, results), `gc_cattalus` (Cattalus Grand Circuit (Unlimited)), `gc_moon` (Lunar Loop), `gc_venus` (Venus

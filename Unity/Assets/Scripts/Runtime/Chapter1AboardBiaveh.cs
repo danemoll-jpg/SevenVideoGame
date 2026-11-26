@@ -69,11 +69,23 @@ namespace Seven
             _irisN = -fwd; _irisAt = p0 + fwd * 160f;
             _iris = new GameObject("Iris").transform; _iris.SetParent(_ext, false); _iris.position = _irisAt; _iris.rotation = Quaternion.LookRotation(_irisN);
             var wall = new GameObject("HullSection"); wall.transform.SetParent(_iris, false); wall.transform.localPosition = Vector3.zero; wall.transform.localRotation = Quaternion.identity;
-            wall.AddComponent<MeshFilter>().sharedMesh = IrisAperture.Annulus(HoleR, 700f, 128);
-            var wr = wall.AddComponent<MeshRenderer>(); wr.sharedMaterial = VeyraScene.Pearl(); _hullSection = wall;
+            // P3 (1): the hull round the door in PANELS (rings of plates with fine dark seams, each plate a slightly different white) -
+            // a plain pearl annulus read as the fog itself and the door looked like a disc floating in a void (ba06 / ba07)
+            wall.AddComponent<MeshFilter>().sharedMesh = PanelledAnnulus(HoleR, 700f, 128);
+            var wr = wall.AddComponent<MeshRenderer>(); wr.sharedMaterial = HullPanelMat(); _hullSection = wall;
             // the seam round the door: a hairline, and the spiral of the leaves' edges reads through it as it opens
             var seam = new GameObject("IrisSeam"); seam.transform.SetParent(_iris, false); seam.transform.localPosition = new Vector3(0f, 0f, 0.03f); seam.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
             seam.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(HoleR - 0.05f, HoleR + 0.12f, 0f); _seamR = seam.AddComponent<MeshRenderer>(); _seamR.sharedMaterial = Markers.Additive(0f);
+            // P3 (1): the door's frame lit - a band of soft white approach light round the aperture and a ring of small lamps further out
+            // (the space haze flattened the plated hull to one mid-grey: range 0.19-0.23); it also says where the door is
+            var frame = new GameObject("IrisFrameLight"); frame.transform.SetParent(_iris, false); frame.transform.localPosition = new Vector3(0f, 0f, 0.05f);   // (local +z faces out of the hull, as the seam) frame.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+            frame.AddComponent<MeshFilter>().sharedMesh = Markers.RingMesh(HoleR + 0.35f, HoleR + 2.1f, 0f); var fr = frame.AddComponent<MeshRenderer>(); fr.sharedMaterial = Markers.Additive(0.75f); fr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            for (int li = 0; li < 16; li++)
+            {
+                float la = li * Mathf.PI * 2f / 16f; var lamp = GameObject.CreatePrimitive(PrimitiveType.Sphere); Destroy(lamp.GetComponent<Collider>()); lamp.name = "IrisApproachLamp";
+                lamp.transform.SetParent(_iris, false); lamp.transform.localPosition = new Vector3(Mathf.Cos(la), Mathf.Sin(la), 0f) * (HoleR + 6.5f) + new Vector3(0f, 0f, 0.3f); lamp.transform.localScale = Vector3.one * 0.9f;
+                var lr = lamp.GetComponent<Renderer>(); lr.sharedMaterial = Markers.Additive(1.4f); lr.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
             // the leaves: two soft metal greys, darker than the white hull (in the hull's own pearl, half of them vanished against it)
             Material Leaf(string n2, float g, float e) { var m = new Material(VeyraScene.Pearl()) { name = n2 }; if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", new Color(g, g, g)); if (m.HasProperty("_EmissionColor")) m.SetColor("_EmissionColor", new Color(e, e, e)); if (m.HasProperty("_Smoothness")) m.SetFloat("_Smoothness", 0.85f); return m; }
             var leafA = Leaf("Veyra_iris_leaf_a", 0.62f, 0.10f); var leafB = Leaf("Veyra_iris_leaf_b", 0.50f, 0.07f);
@@ -84,10 +96,57 @@ namespace Seven
             if (DemoBoot.CaptureDir != null) Cap?.Log($"BIA_01 exterior (QF23 1): the mothership WHITE (pearl hull, emission) in Veyra's ring plane; iris (QF23 4): {IrisInfo()}");
         }
         const float HoleR = 8.2f;
+        /// <summary>P3 (1): the annulus with polar UVs - u round it (one plate column per 4 deg), v out along it (one plate ring per
+        /// ~11 m) - so the panel texture lays rings of plates round the door.</summary>
+        static Mesh PanelledAnnulus(float r0, float r1, int seg)
+        {
+            var v = new List<Vector3>(); var n = new List<Vector3>(); var uv = new List<Vector2>(); var t = new List<int>();
+            const int rings = 24;   // radial steps (so the UV's v stays linear in r)
+            for (int side = 0; side < 2; side++)
+            {
+                int b = v.Count;
+                for (int i = 0; i <= seg; i++)
+                {
+                    float a = i * Mathf.PI * 2f / seg; var d = new Vector3(Mathf.Cos(a), Mathf.Sin(a), 0f);
+                    for (int k = 0; k <= rings; k++) { float r = Mathf.Lerp(r0, r1, Mathf.Pow(k / (float)rings, 2f)); v.Add(d * r); n.Add(side == 0 ? Vector3.forward : Vector3.back); uv.Add(new Vector2(i * 90f / seg / 8f, (r - r0) / 11f / 8f)); }
+                }
+                for (int i = 0; i < seg; i++) for (int k = 0; k < rings; k++)
+                {
+                    int a0 = b + i * (rings + 1) + k, a1 = a0 + 1, c0 = a0 + rings + 1, c1 = c0 + 1;
+                    if (side == 0) t.AddRange(new[] { a0, a1, c1, a0, c1, c0 }); else t.AddRange(new[] { a0, c1, a1, a0, c0, c1 });
+                }
+            }
+            var m = new Mesh { name = "HullPanels" }; m.indexFormat = UnityEngine.Rendering.IndexFormat.UInt32; m.SetVertices(v); m.SetNormals(n); m.SetUVs(0, uv); m.SetTriangles(t, 0); m.RecalculateBounds(); return m;
+        }
+        static Material _hullPanels;
+        /// <summary>P3 (1): the pearl hull with a plate texture: 8 x 8 plates per tile, each its own white (0.62-0.97), fine dark seams,
+        /// a bright edge on every other plate's upper side (light catching it) - monochrome; less self-glow so the plates read.</summary>
+        static Material HullPanelMat()
+        {
+            if (_hullPanels != null) return _hullPanels;
+            const int N = 512, P = 64; var tex = new Texture2D(N, N, TextureFormat.RGB24, true) { name = "Veyra_hull_plates", wrapMode = TextureWrapMode.Repeat, filterMode = FilterMode.Trilinear, anisoLevel = 8 };
+            var px = new Color[N * N]; var rnd = new System.Random(1717);
+            var tone = new float[8, 8]; for (int a = 0; a < 8; a++) for (int b = 0; b < 8; b++) tone[a, b] = 0.42f + (float)rnd.NextDouble() * 0.55f;   // (0.62-0.97 read as one tone: range 0.19-0.22)
+            for (int y = 0; y < N; y++) for (int x = 0; x < N; x++)
+            {
+                int cx = x / P, cy = y / P, lx = x % P, ly = y % P; float g = tone[cx, cy];
+                if (lx < 3 || ly < 3) g = 0.16f;                                    // the seam
+                else if (ly > P - 6 && ((cx + cy) & 1) == 0) g = Mathf.Min(1f, g + 0.12f);   // a lit edge
+                else if ((lx - 3) % 21 == 0 && ly % 21 == 0) g *= 0.7f;              // rivet dots
+                px[y * N + x] = new Color(g, g, g);
+            }
+            tex.SetPixels(px); tex.Apply(true);
+            _hullPanels = new Material(VeyraScene.Pearl()) { name = "Veyra_hull_plates" };
+            if (_hullPanels.HasProperty("_BaseMap")) _hullPanels.SetTexture("_BaseMap", tex);
+            if (_hullPanels.HasProperty("_BaseColor")) _hullPanels.SetColor("_BaseColor", Color.white);
+            if (_hullPanels.HasProperty("_EmissionColor")) _hullPanels.SetColor("_EmissionColor", new Color(0.14f, 0.14f, 0.14f));
+            return _hullPanels;
+        }
         string IrisInfo() => _ap != null ? $"10 leaves, open swing {_ap.OpenDeg:0} deg, clear radius {_ap.ClearRadius:0.00} m vs the saucer's 6 m, shut coverage {_ap.Coverage * 100f:0.0}%" : "none";
         Renderer _seamR; GameObject _hullSection; float _far0 = -1f;
         void Approach(bool on) { if (_iris != null) _iris.gameObject.SetActive(on); }
-        void ExteriorTick() { if (_veyra != null) _veyra.Tick(_orbHold ? 0 : -1); }
+        void ExteriorTick() { if (_veyra != null) _veyra.Tick(_orbHold ? 0 : _heldOrb); }
+        int _heldOrb = -1;   // P3 (1): the orb crossing the foreground in ba02 is held out of its orbit while it crosses
         bool _orbHold;
         /// <summary>QF23 (1): the ship's own window view (a small Veyra round the deck) is hidden while the camera is out at the
         /// exterior stage (from up there it showed as a second, small Veyra far below).</summary>
@@ -138,8 +197,11 @@ namespace Seven
             for (float t = 0f; t < 3.2f; t += Time.deltaTime) { ExteriorTick(); if (saucer != null) saucer.position = p0 + toEgg * t * 6f; float u = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01(t / 2.4f)); Cut(camA + toEgg * t * 5f, Vector3.Lerp(lookRings, _veyra.EggPos, u), Mathf.Lerp(58f, 50f, u)); yield return null; }
             yield return ShotV("ba01_extreme_wide_the_white_mothership_in_veyras_rings", _egg, "the white mothership");
             // one orb crosses the foreground: the mothership is still far away
-            if (_orbs != null && _orbs[1] != null) { var o = _orbs[1]; for (float t = 0f; t < 2.4f; t += Time.deltaTime) { ExteriorTick(); o.position = camA + toEgg * 220f + side * Mathf.Lerp(-160f, 160f, t / 2.4f) + n * 10f; Cut(camA + toEgg * 16f, _veyra.EggPos - n * 120f, 50f); yield return null; } }
-            yield return ShotV("ba02_an_orb_crosses_the_foreground", (_orbs != null ? _orbs[1] : _egg), "an orb crossing");
+            // (P3 1: captured as it crosses the middle of the frame, closer - it used to be taken as it left the frame's edge)
+            bool orbShot = false; _heldOrb = 1;
+            if (_orbs != null && _orbs[1] != null) { var o = _orbs[1]; for (float t = 0f; t < 2.4f; t += Time.deltaTime) { ExteriorTick(); o.position = camA + toEgg * 85f + side * Mathf.Lerp(-70f, 70f, t / 2.4f) + n * 4f; Cut(camA + toEgg * 16f, _veyra.EggPos - n * 120f, 50f); if (!orbShot && t > 1.05f) { orbShot = true; yield return ShotV("ba02_an_orb_crosses_the_foreground", o, "an orb crossing"); } yield return null; } }
+            _heldOrb = -1;
+            if (!orbShot) yield return ShotV("ba02_an_orb_crosses_the_foreground", _egg, "an orb crossing");
             if (saucer != null) saucer.position = p0;
             // INTERIOR (QF23 3): the pilot's chair at the front window, Panther in her lap; as they talk the hull fades away
             Win(true);

@@ -12,7 +12,7 @@ namespace Seven
     /// Test runs keep their own save keys (never the player's).</summary>
     public static class GcBoot
     {
-        static bool _read; static bool _unlocked, _proof, _split, _menu, _trial, _side, _quick, _players, _music; static float _speed = 1f; static string _only;
+        static bool _read; static bool _unlocked, _proof, _split, _menu, _trial, _side, _quick, _players, _playersAll, _music; static float _speed = 1f; static string _only;
         static void Read()
         {
             if (_read) return; _read = true;
@@ -27,6 +27,7 @@ namespace Seven
                 if (a[i] == "-gcside") _side = true;
                 if (a[i] == "-gcquick") _quick = true;
                 if (a[i] == "-gcplayers") _players = true;
+                if (a[i] == "-gcplayersall") { _players = true; _playersAll = true; }
                 if (a[i] == "-gcmusictest") _music = true;
                 if (a[i] == "-gconly" && i + 1 < a.Length) _only = a[i + 1];
                 if (a[i] == "-testspeed" && i + 1 < a.Length) float.TryParse(a[i + 1], System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out _speed);
@@ -41,6 +42,8 @@ namespace Seven
         public static bool Quick { get { Read(); return _quick; } }
         /// <summary>Round 21: -gcplayers = each racer once as the player (the human-like bot through a virtual pad) against the AI.</summary>
         public static bool Players { get { Read(); return _players && DemoBoot.CaptureDir != null; } }
+        /// <summary>P3 (3): -gcplayersall = every racer as player 1 on EVERY track (7 x 7 races, 2 laps each).</summary>
+        public static bool PlayersAll { get { Read(); return _playersAll && DemoBoot.CaptureDir != null; } }
         /// <summary>Round 21: -gconly venus,mars = the proof on those tracks only (iteration).</summary>
         public static string[] Only { get { Read(); return string.IsNullOrEmpty(_only) ? null : _only.Split(','); } }
         /// <summary>QF36: -gcmusictest = every Grand Circuit song: its intro, the hand-over into the loop body and the body's wrap (seeks near each seam).</summary>
@@ -60,7 +63,16 @@ namespace Seven
         public static int LastRacer, LastTrack, LastMode; public static bool LastSide;
         public static void Load()
         {
-            LastRacer = PlayerPrefs.GetInt(K("last_racer"), 0); LastTrack = PlayerPrefs.GetInt(K("last_track"), 0); LastMode = PlayerPrefs.GetInt(K("last_mode"), 0); LastSide = PlayerPrefs.GetInt(K("side"), 0) == 1;
+            // QF37: the roster swap - a save from beta4 or earlier whose last pick was the Machinist / Juniper (slots 5 / 6, now the
+            // Scree / Ratwing) starts on 7 again, and their per-racer best times are dropped (a ghost of theirs replays as 7's bike)
+            if (PlayerPrefs.GetInt(K("roster"), 0) < 37)
+            {
+                int was = PlayerPrefs.GetInt(K("last_racer"), 0);
+                if (was >= 5 && PlayerPrefs.HasKey(K("last_racer"))) { PlayerPrefs.SetInt(K("last_racer"), 0); GcGame.Log($"GC SAVE (QF37): the saved racer was slot {was} (the Machinist / Juniper, retired) - back to 7"); }
+                foreach (var t in GcTrack.Ids) foreach (var r in GcStats.Retired) PlayerPrefs.DeleteKey(K($"best_{t}_{r}"));
+                PlayerPrefs.SetInt(K("roster"), 37); PlayerPrefs.Save();
+            }
+            LastRacer = Mathf.Clamp(PlayerPrefs.GetInt(K("last_racer"), 0), 0, GcStats.All.Length - 1); LastTrack = PlayerPrefs.GetInt(K("last_track"), 0); LastMode = PlayerPrefs.GetInt(K("last_mode"), 0); LastSide = PlayerPrefs.GetInt(K("side"), 0) == 1;
             GcGame.SideBySide = LastSide || GcBoot.Side;
         }
         public static void Save()
@@ -87,7 +99,7 @@ namespace Seven
                 foreach (var s in GcStats.All) PlayerPrefs.DeleteKey(K($"best_{t}_{s.Racer}"));
                 try { File.Delete(GhostPath(t)); } catch { }
             }
-            foreach (var k in new[] { "last_racer", "last_track", "last_mode", "side" }) PlayerPrefs.DeleteKey(K(k));
+            foreach (var k in new[] { "last_racer", "last_track", "last_mode", "side", "roster" }) PlayerPrefs.DeleteKey(K(k));
             PlayerPrefs.Save();
         }
     }
