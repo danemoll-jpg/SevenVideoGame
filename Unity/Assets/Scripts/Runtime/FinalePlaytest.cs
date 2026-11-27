@@ -42,7 +42,8 @@ namespace Seven
             uint bits = _held;
             if (_phase >= 1 && _phase <= 3) bits |= 1u << (int)_cur;
             if (_phase > 0) _phase = _phase >= 6 ? 0 : _phase + 1;
-            InputSystem.QueueStateEvent(_pad, new GamepadState { leftStick = _stick, rightTrigger = _rt, leftTrigger = _lt, buttons = bits });
+            float rt = _rt; if (_rtTap > 0) { rt = _rtTap > 2 ? 1f : 0f; _rtTap--; }     // QF39: RT taps in the fight
+            InputSystem.QueueStateEvent(_pad, new GamepadState { leftStick = _stick, rightTrigger = rt, leftTrigger = _lt, buttons = bits });
         }
         void Press(GamepadButton b) { if (_presses.Count < 3) _presses.Enqueue(b); }
         IEnumerator WaitR(float s) { for (float t = 0f; t < s; t += Time.deltaTime) yield return null; }
@@ -114,7 +115,9 @@ namespace Seven
                 _held = 0u; _lt = 0f; _rt = 0f;
                 if (d.AwaitsChoice && _phase == 0 && _presses.Count == 0) { _stick = Vector2.zero; Press(X); _xs++; Log($"X at '{d.Prompt}' (a choice inside the scene)"); yield return WaitR(0.8f); continue; }
                 if (d.InCutscene || d.InCredits) { _stick = Vector2.zero; continue; }
-                if (BossFight.Active != null && !BossFight.Active.Over) { continue; }   // the confrontation: BossPilot plays it as a player would
+                // QF39 (1): the confrontation through the virtual pad (BossPilot's read of what a player sees, as real buttons) - it was
+                // played through 7's script flags, so the finale's switch presses were never proven on the real input path
+                if (BossFight.Active != null && !BossFight.Active.Over) { if (d.Seven.InFight) FightPad(BossFight.Active, d.Seven); else { _stick = Vector2.zero; } continue; }
                 var seven = d.Seven.transform.position;
                 if (!string.IsNullOrEmpty(d.Prompt) && _phase == 0 && _presses.Count == 0)
                 {
@@ -140,6 +143,18 @@ namespace Seven
             }
             yield return WaitR(1f);
             Cap.Finish($"FINALE PLAYTEST: 1/1, soft-locks {_soft}, skips taken {_skips}, X presses {_xs}, telekinesis {_tks}, ({(Time.time - _t0) / 60f:0.0} game-min) - {FinaleState.Summary()}; {WorldFlags.Summary()}");
+        }
+        int _rtTap;
+        void FightPad(BossFight f, ChapterSeven s)
+        {
+            s.ScriptDriven = false;
+            var I = BossPilot.Think(f, s);
+            _stick = BossPilot.Stick(I.Move);
+            _lt = I.Block ? 1f : 0f; _rt = 0f;
+            _held = I.Run ? 1u << (int)GamepadButton.LeftShoulder : 0u;
+            if (I.Tk && _rtTap == 0) _rtTap = 5;
+            GamepadButton? b = I.Dodge ? GamepadButton.East : I.Hop ? GamepadButton.South : (I.Attack || I.Use) ? GamepadButton.West : (I.Takedown || I.Kick) ? GamepadButton.North : I.Skip ? GamepadButton.Select : (GamepadButton?)null;
+            if (b.HasValue && (_phase == 0 || I.Dodge || I.Hop || I.Use)) { _presses.Clear(); _cur = b.Value; _phase = 1; }
         }
         void OnDestroy() { if (_pad != null && _pad.added) InputSystem.RemoveDevice(_pad); }
     }

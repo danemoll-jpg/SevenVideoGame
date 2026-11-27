@@ -169,6 +169,55 @@ namespace Seven
         /// <summary>QF19 proof: X presses on the pad (real input, not a script flag) while an objective prompt was showing,
         /// and how many of them went to a strike instead (must be 0).</summary>
         public int PadUsePresses, PadUseToStrike;
+        // ---- QF39 (1): a switch in reach ALWAYS takes the press - under any attack, whatever she is doing
+        /// <summary>Pad X presses in reach of an objective that started a dodge / jump in the next 0.4 s (an evade instead of the
+        /// switch: must be 0), and the presses that did the objective.</summary>
+        public int PadUseToEvade, PadUseTaken;
+        /// <summary>The prompt shows within <see cref="UseReach"/>; a press counts within <see cref="UseReachPress"/> (a hit's
+        /// knockback or a dodge must never carry her past the prompt's edge between seeing it and pressing - QF39's cause: the
+        /// switch counted only inside 3 m, the knockback pushed her out, and X became a strike whose lunge read as an evade).</summary>
+        public const float UseReach = 3.0f, UseReachPress = 4.2f, UseNear = 6.5f;
+        protected bool _pressEval;
+        /// <summary>QF39: the one reach test of every X objective (prompt: 3 m; the press itself: 4.2 m).</summary>
+        protected bool NearUse(Vector3 spot) => Flat(spot - Her).magnitude < (_pressEval ? UseReachPress : UseReach);
+        /// <summary>QF39 (2): how many of this phase's objectives are done (the counter "Pylons n / 3" comes from
+        /// <see cref="BossObjectives"/>, the count from the fight's own table).</summary>
+        public virtual int ObjectivesDone(int phase) => 0;
+        /// <summary>QF39 (1) proof (-usefiretest): dry presses - the real input path decides (the objective is taken), the
+        /// objective stays armed until every attack of the phase has been met at its telegraph and its active moment; then
+        /// the next press is the real one.</summary>
+        public static bool UseFireTest;
+        public readonly HashSet<string> UnderFireCovered = new HashSet<string>();
+        public readonly List<string> UnderFireLog = new List<string>();
+        public int UnderFireTaken, UnderFireDry;
+        public bool UnderFireFinal;
+        string UnderFireKey()
+        {
+            string her = Seven.IsDodging ? "dodging" : Seven.IsAirborne ? "airborne" : Seven.Act == ChapterSeven.FightAct.Flinch ? "flinch" : Seven.Act == ChapterSeven.FightAct.Attack ? "striking" : Seven.Act == ChapterSeven.FightAct.Block ? "blocking" : null;
+            string atk = Cur != null && (State == St.Telegraph || State == St.Active || State == St.Recover) ? $"{Cur.id} {State}" : "no attack";
+            return her != null ? $"{atk} / her {her}" : atk;
+        }
+        void PressUse()
+        {
+            _pressEval = true;
+            try
+            {
+                string key = UnderFireKey(); var po = PilotObjective(); float d = po.HasValue ? Flat(po.Value.at - Her).magnitude : 0f;
+                if (UseFireTest && !UnderFireFinal)
+                {
+                    UnderFireDry++; UnderFireTaken++; UnderFireCovered.Add(key);
+                    UnderFireLog.Add($"{key} at {d:0.0} m -> OBJECTIVE TAKEN");
+                    Log($"boss {Def.id}: USE UNDER FIRE (QF39 1) X pressed during '{key}', {d:0.0} m from '{ObjectiveUseLabel()}' -> the objective took the press (dry: it stays armed for the next attack type)");
+                    return;
+                }
+                if (UseFireTest) { UnderFireTaken++; UnderFireCovered.Add(key); UnderFireLog.Add($"{key} at {d:0.0} m -> OBJECTIVE TAKEN (real)"); Log($"boss {Def.id}: USE UNDER FIRE (QF39 1) the real press during '{key}', {d:0.0} m"); }
+                ObjectiveUse();
+                if (UseFireTest) UnderFireFinal = false;     // the next switch is tested again (attacks already met stay met)
+            }
+            finally { _pressEval = false; }
+        }
+        string PressLabel() { if (Paused) return null; _pressEval = true; try { return ObjectiveUseLabel(); } finally { _pressEval = false; } }
+        bool UseIsNear() { if (Paused) return false; var o = PilotObjective(); return o.HasValue && o.Value.how == "use" && Flat(o.Value.at - Her).magnitude < UseNear; }
         /// <summary>QF19 (2): the camera eases a little toward a thing she just shut down (and a small shake).</summary>
         protected void NudgeCamera(Vector3 at) { StartCoroutine(Nudge(at)); }
         IEnumerator Nudge(Vector3 at)
@@ -243,7 +292,8 @@ namespace Seven
             Seven.MaxFightHits = Def.sevenHits; Seven.FightMoveScale = Def.sevenMoveScale; Seven.FightHop = true;
             Seven.FightTarget = () => this; Seven.FightTargets = () => new IFightTarget[] { this };
             Seven.TkAim = TkAim; Seven.TkFire = TkFire;
-            Seven.FightUseLabel = () => Paused ? null : ObjectiveUseLabel(); Seven.FightUse = ObjectiveUse;
+            Seven.FightUseLabel = () => Paused ? null : ObjectiveUseLabel(); Seven.FightUse = PressUse;
+            Seven.FightUsePressLabel = PressLabel; Seven.FightUseNear = UseIsNear;      // QF39 (1)
             Seven.FightEvent -= OnSeven; Seven.FightEvent += OnSeven;
         }
         int _herDodges, _herHops, _herBlocks, _herTk;
@@ -270,7 +320,7 @@ namespace Seven
                    $"DAMAGE (QF18): dealt by her strikes {DamageByStrikes * 100f:0}%, by throws {DamageByThrows * 100f:0}% of a full bar - melee {(DamageByStrikes + DamageByThrows > 0f ? DamageByStrikes / (DamageByStrikes + DamageByThrows) * 100f : 0f):0}% of the damage; energy left {Energy * 100f:0}%; " +
                    $"MELEE (QF20): punches {PunchesLanded} landed = {DamageByPunches * 100f:0}%, kicks {KicksLanded} landed = {DamageByKicks * 100f:0}%{(BladeHits > 0 ? $", arc blades {BladeHits} = {DamageByBlades * 100f:0}%" : "")}; " +
                    $"RETRY (QF20): {(RetryEnergy.Count == 0 ? "she never went down" : string.Join(", ", RetryEnergy))}; phases: {string.Join(" | ", PhaseLog)}; " +
-                   $"lock-on toggles (R3 / Tab) {LockToggles}; X OBJECTIVES (QF19): the pilot pressed X {BossPilot.UsePresses}x at objectives, second presses {BossPilot.UseRepeats} (must be 0); X presses on the pad while an objective prompt showed {PadUsePresses}, went to a strike {PadUseToStrike} (must be 0)";
+                   $"lock-on toggles (R3 / Tab) {LockToggles}; X OBJECTIVES (QF19): the pilot pressed X {BossPilot.UsePresses}x at objectives, second presses {BossPilot.UseRepeats} (must be 0); X presses on the pad while an objective prompt showed {PadUsePresses}, went to a strike {PadUseToStrike} (must be 0); X OBJECTIVES (QF39 1): pad X presses in reach {PadUsePresses}, took the objective {PadUseTaken}, became an evade {PadUseToEvade} (must be 0)" + (UseFireTest ? $"; UNDER FIRE (QF39 1): {UnderFireTaken} presses during {UnderFireCovered.Count} attack / her-state cases, all took the objective: {string.Join("; ", UnderFireLog)}" : "");
         }
 
         // ---------------------------------------------------------------- the brain
@@ -792,12 +842,14 @@ namespace Seven
         /// per phase, and - fairness - after three knockdowns in one phase a skip of that phase (Y / Enter).</summary>
         public IEnumerator Run(System.Action<string> objective)
         {
-            int shown = -1; bool dazedShown = false, offered = false; int phaseOfDowns = 0;
+            int shown = -1, shownDone = -1; bool dazedShown = false, offered = false; int phaseOfDowns = 0;
 
             while (!Over)
             {
                 if (AutoPilot && !Paused) { var it = BossPilot.Think(this, Seven); BossPilot.ApplyAuto(it, Seven); AutoSkip = it.Skip; }
-                if (Phase != shown && !Paused) { shown = Phase; objective?.Invoke(PhaseObjective?.Invoke(Phase)); }
+                // QF39 (2): the text + its counter from the one table (BossObjectives), shown again whenever the count changes
+                // (the count also while a phase beat holds the fight: the last pylon's "3 / 3" shows as the platform sinks)
+                if ((Phase != shown && !Paused || Phase == shown && ObjectivesDone(Phase) != shownDone) && State != St.Dazed) { shown = Phase; shownDone = ObjectivesDone(Phase); objective?.Invoke(PhaseObjective != null ? PhaseObjective(Phase) : BossObjectives.Text(Def.id, Phase, shownDone)); }
                 if (State == St.Dazed && !dazedShown) { dazedShown = true; objective?.Invoke("He is dazed - take him down"); Raise("dazed"); }   // QF24 (17): no general-control tip
                 // QF23 (19): the bar never stalls silently - the mark it is waiting at pulses and the director is told
                 bool waiting = WaitingOnObjective && !Paused;

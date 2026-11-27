@@ -92,7 +92,7 @@ namespace Seven
             foreach (var p in _breachRubble) if (p != null) _fight.AddThrowable(p);           // QF31 (8): the torn wall's stone, along the breach
             _fight.PlaceStart();
             if (FinaleState.StepDone("barrier")) _fight.ForceBarrierOpen();
-            _fight.UI = UI; _fight.AutoPilot = DemoBoot.CaptureDir != null;
+            _fight.UI = UI; _fight.AutoPilot = DemoBoot.CaptureDir != null && !DemoBoot.FinPlay;    // QF39: the player-style run plays it on the pad
             _fight.Beat = PhaseBeatShot;
             _fight.StunBeat = b => { if (_stunShots.Add(b) && Shots) StartCoroutine(Shot(b == "drop" ? "f37b_stunned_the_rig_settles_flush" : b == "deck" ? "f37c_she_steps_onto_its_edge" : b == "strike" ? "f37d_her_blows_land_on_him" : "f37e_he_recovers_the_rig_rises")); };
             _fight.OnObjective = what =>
@@ -101,9 +101,7 @@ namespace Seven
                 if (what == "conduit") { FinaleState.DoStep("conduit"); }
             };
             if (Shots) StartCoroutine(ControlsBefore());
-            _fight.PhaseObjective = ph => ph == 0 ? "Keep him away from the archive"
-                                       : ph == 1 ? "Open the old maintenance barrier - its control by the east alcove"
-                                       : "Restore the connection he cut - the junction box on the west wall";
+            _fight.PhaseObjective = null;                 // QF39 (2): the text + its counter from BossObjectives (one table, build-checked)
             yield return Cutscene(false);
             FollowCamera();
             SetZone("DoorZ", false);   // the doorway closes behind the fight (she can't be driven out of the chamber). QF31 (10): ChamberN stays ON - rc2 switched the whole north band off for her while his arena still reached into it: stunned up there, he was out of her reach

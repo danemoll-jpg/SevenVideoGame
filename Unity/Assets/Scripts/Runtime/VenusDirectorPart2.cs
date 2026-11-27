@@ -308,9 +308,7 @@ namespace Seven
             _wmFight.CrystalOut = CrystalOutInFight;
             _wmFight.Beat = WormmasterComesDown;
             _wmFight.UI = UI; _wmFight.AutoPilot = Auto;
-            _wmFight.PhaseObjective = ph => ph == 0 ? "He fights from his dais - shut the north device (X) and the ledge device (RT from below) down under attack"
-                                         : ph == 1 ? "He comes down - wear him down and pull the signal crystal (RT)"     // QF24 (17): only the place's own actions
-                                         : "His signal fails - wear him down";
+            _wmFight.PhaseObjective = null;                 // QF39 (2): the text + its counter from BossObjectives (one table, build-checked)
             _encounterOn = true;
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _wmFight.Begin(BossFight.Load("wormmaster"), Seven, Cam);

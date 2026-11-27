@@ -95,11 +95,14 @@ namespace Seven
         Vector3 ObjSpot => Phase == 1 ? L.BarrierControl : L.ConduitAt;
         protected override string ObjectiveUseLabel()
         {
-            if (Phase == 1 && !BarrierOpen && Flat(L.BarrierControl - Her).magnitude < 3f) return "Open the barrier";
-            if (Phase == 2 && ConduitCut && !ConduitRestored && Flat(L.ConduitAt - Her).magnitude < 3f) return "Restore the connection";
+            if (Phase == 1 && !BarrierOpen && NearUse(L.BarrierControl)) return "Open the barrier";
+            if (Phase == 2 && ConduitCut && !ConduitRestored && NearUse(L.ConduitAt)) return "Restore the connection";
             return null;
         }
         public System.Action<string> OnObjective;
+        /// <summary>QF39 (2): phase 1 = keep him away (no switch), 2 = the barrier, 3 = the conduit.</summary>
+        public static readonly int[] ObjectivesPerPhase = { 0, 1, 1 };
+        public override int ObjectivesDone(int phase) => phase == 1 && BarrierOpen ? 1 : phase == 2 && ConduitRestored ? 1 : 0;
         protected override void ObjectiveUse()
         {
             if (Phase == 1 && !BarrierOpen) { BarrierOpen = true; StationLit(false); Log($"boss {Def.id}: the old maintenance barrier opened by X at its control (objective 2 of 3)"); OnObjective?.Invoke("barrier"); ObjectiveProgress(); }

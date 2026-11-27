@@ -36,6 +36,7 @@ namespace Seven.EditorTools
             MusicRulesCheck();
             PostFxCheck();
             QF26GlobalChecks();            // QF26 (1 / 2)
+            BossObjectivesCheck();         // QF39 (1 / 2)
         }
 
         static void Report(string file, string head, StringBuilder sb, bool fail)

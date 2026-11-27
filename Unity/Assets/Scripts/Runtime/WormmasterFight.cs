@@ -70,7 +70,10 @@ namespace Seven
             return null;
         }
         // QF19: one press of X in reach (3 m), instant - no hold, nothing interrupts it
-        protected override string ObjectiveUseLabel() => Phase == 0 && !Off(0) && Flat(V.DeviceUse[0] - Her).magnitude < 3.0f ? "Shut down device" : null;
+        protected override string ObjectiveUseLabel() => Phase == 0 && !Off(0) && NearUse(V.DeviceUse[0]) ? "Shut down device" : null;
+        /// <summary>QF39 (2): phase 1 = the north device (X) + the ledge device (RT): "Devices n / 2"; phase 2 = the crystal.</summary>
+        public static readonly int[] ObjectivesPerPhase = { 2, 1, 0 };
+        public override int ObjectivesDone(int phase) => phase == 0 ? (Off(0) ? 1 : 0) + (Off(1) ? 1 : 0) : phase == 1 ? (Off(2) ? 1 : 0) : 0;
         protected override void ObjectiveUse()
         {
             if (ObjectiveUseLabel() == null) return;

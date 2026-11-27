@@ -1,5 +1,97 @@
 # Active Development Plan — 7: The Observer
 
+## QF39 — in plain words (Code, 2026-11-27): 1.1.0-rc3 (build 2010, `game-2010`) PUBLISHED, Latest (every earlier release kept)
+Both fixed, in every boss fight.
+- **Why the switch press turned into an evade:** a switch only counted inside 3 m. When his attack hit her or she dodged, the
+  knockback pushed her just past 3 m. Her X then became a punch, and the punch's little lunge toward him looked like an evade. The
+  old test never caught it: its pilot walked up and pressed only while he was NOT attacking.
+- **Now:**
+  - The prompt still shows at 3 m, but the press itself counts up to 4.2 m.
+  - A press is kept for a third of a second, so it still lands if she steps into reach.
+  - Near a switch, X never punches or lunges (unless he is right in front of her).
+  - The switch works at once from any state: mid-dodge, mid-jump, reeling from a hit, blocking, mid-punch.
+  - Pressing it makes her safe for 0.6 s, so his attack passes instead of interrupting it.
+  - Every fight uses this one shared rule, and a build check fails if a fight measures its own distance.
+- **Viper has three pylons again**, all three required: "Shut down his three pylons (X)", **Pylons 0 / 3 → 3 / 3**. Each has the
+  single-press shutdown with its bang and sparks. When the third goes down, the counter shows 3 / 3 and the platform sinks → phase 2.
+- **Every boss objective's text and counter now comes from one table.** A build check compares each text's number and counter
+  with the fight's real number of objectives. The Wormmaster's first phase now shows **"Devices 0 / 2"**: it had two objectives
+  and no counter.
+- **Proof** (player-style runs through a virtual gamepad, during each attack):
+  - **219 X presses at switches across the four fights: all 219 took the switch, 0 became an evade, 0 a strike.**
+  - The presses came during every attack type's wind-up and its hit, and mid-dodge, mid-jump, while reeling, and from just
+    past the prompt's edge.
+  - One gap: the Wormmaster's lash never came while she was at his north device (he lashes only near his dais).
+- The Machinist's fight has no switches (his couplings are struck), so nothing changed there.
+**For Dan to check (QF39)** at the end of the QF39 status section below.
+
+## Quick fix QF39: boss-fight switches + Viper's three pylons (Dan, 2026-11-27) — done (status below)
+Keep every earlier release untouched; publish **1.1.0-rc3**.
+1. **Pressing a switch during a boss's attack turns into an evade move instead.** In every boss fight (Venus's devices, Viper's
+   pylons, the Machinist's, Ratwing's partitions and barrier, Tunneler's controls and barrier): **when she's in reach of an objective,
+   its button always does the objective**, even while the boss is attacking or a dodge window / telegraph is showing; never a dodge,
+   evade, strike or auto-counter. The press is accepted at once (no wind-up), and the short interaction (~0.5 s) makes her briefly
+   safe (attacks pass / she flinches but isn't interrupted), so pressing it under fire always works. Find what remapped it (an
+   input buffer, auto-dodge near telegraphs, a shared button?). Prove it in every fight with the virtual gamepad pressing the
+   objective **during** each attack type: 100 % objective, 0 evades.
+2. **Viper: three pylons, all three shut down.** QF19 removed the third pylon to fix a "0 / 3" counter that should have said 2 (the
+   chat's QF19 note said to drop the optional third; Dan wanted the count fixed, not a pylon removed). Restore it: **three pylons,
+   all required**: the objective "Shut down his three pylons", the counter **0 / 3 → 3 / 3**, each with the QF19 single-press shutdown
+   and its big effect; when all three are down the platform sinks → phase 2. Check every boss objective's text matches its counter
+   and its real number of objectives (a build check over every fight).
+Prove both with player-style runs and captures; plain-words summary at the top; commit and push.
+
+## QF39 — status (Code, 2026-11-27): done; release 1.1.0-rc3 (build 2010, `game-2010`)
+### Why QF19's fix and proof didn't hold
+QF19 made X "always the objective in reach", but the reach was a hard 3 m (each fight had its own `< 3f`). Being hit or dodging
+moves her 0.4–1.2 m, so a player who saw the prompt at ~2.8 m was often just outside it when the press arrived. X then went to a
+strike, and the strike's soft-lock lunge (up to 1.2 m toward him) read as an evade. QF19's proof could not see this:
+`BossPilot` answered every attack first and only pressed X when he was **not** attacking, always at the prompt's edge (2.8 m).
+### What changed
+- `BossFight.NearUse`: one reach for every switch. The prompt shows at `UseReach` 3 m; the press counts to `UseReachPress` 4.2 m
+  (`FightUsePressLabel`).
+- `ChapterSevenFight`:
+  - The X press is kept `UseBuffer` 0.35 s.
+  - Within `UseNear` 6.5 m of an un-done switch, X never strikes or lunges, unless he is in reach in front of her.
+  - The press is taken from any state (dodge / jump / flinch / block / strike) with no wind-up.
+  - It gives `UseSafe` 0.6 s of safety. A dodge or jump in the air finishes its motion.
+  - `PadUseToEvade` counts a dodge / jump that followed a pad X at a switch without its own button (must be 0).
+- `ViperFight.Required` = 3 (`ObjectivesPerPhase`). The "third emitter dies with the platform" code is gone, and the energy sweep
+  still runs only while he is on the platform.
+- `BossObjectives` (one table: text, counter, count). `BossFight.Run` shows the text and refreshes the counter whenever the count
+  changes, also during a phase beat. The directors no longer set `PhaseObjective`. The Wormmaster's phase 1 gets "Devices n / 2".
+- Build check `BOSS OBJECTIVES (QF39 2)` + `SWITCH REACH (QF39 1)` (`FightDemoBuilderQF39Checks.cs`,
+  `Docs/Previews/qf39/boss_objectives.txt`):
+  - text number = counter = the fight's real objectives = boss_tuning.json phases;
+  - Viper's pylons in MarsLayout = required;
+  - no director-made objective text;
+  - every switch on `NearUse`.
+  Final build: problems 0, own distances 0.
+- `-usefiretest` (`BossPilot.UnderFire`): at each switch the pad pilot presses X during every attack of the phase, at its
+  telegraph and at its active moment, plus once mid-dodge and once mid-jump. It presses from inside the prompt and from just past
+  its edge (3.3–4.1 m). Those presses are "dry": the real input path decides, and the switch stays armed. The real press comes
+  once coverage is complete or after 90 s. Log lines: `USE UNDER FIRE (QF39 1)`; summary `X OBJECTIVES (QF39 1)` / `UNDER FIRE`.
+- The finale's player-style run now plays the confrontation through the virtual pad (`FinalePlaytest.FightPad`). Before this,
+  BossPilot drove it through script flags, so the finale's switches had never been pressed on the real input path.
+### Proof (player-style, virtual gamepad, `-testspeed 2 -usefiretest`; `Builds/QF39/<fight>/capture_log.txt`)
+| Fight | X presses at switches | took the switch | evade / strike | attacks met while pressing | result |
+|---|---|---|---|---|---|
+| Viper `-marsplay -marscp 5 -bosscheck` (final build: `viper_final`) | 15 | 15 | 0 / 0 | spit, machine_sweep, cage, each at telegraph + active; mid-dodge; mid-jump | Pylons 1 / 3 → 2 / 3 → 3 / 3, platform sinks, phase 2 → 3 → pinned |
+| Wormmaster `-venusplay2 -bosscheck` | 70 | 70 | 0 / 0 | worm_lunge, slam_wave (telegraph + active); mid-dodge; mid-jump; reeling | "Devices 0 / 2" → device 1 by X, ledge by RT → phases 2, 3 → contained. **The lash never came while she was at the device** (he lashes near his dais): that case timed out after 90 s |
+| Ratwing `-biaplay -biacp 5 -bosscheck` | 97 | 97 | 0 / 0 | swoop, claw_pass (phase 1); + wing_gust (phase 2); mid-dodge; mid-jump | both partitions by X → stage three → contained |
+| Tunneler `-finplay -fincp 5` | 37 | 37 | 0 / 0 | drill_strike, drill_charge, debris_slam (telegraph + active); mid-dodge | barrier by X, conduit by X (pressed mid-dodge during drill_strike) → FIN_09 |
+Total **219 pad presses, 219 took the switch, 0 evades, 0 strikes**. The Wormmaster, Ratwing and Tunneler runs were on the build
+before the last one; the only later change was the counter refresh during a phase beat. Viper was re-run on the final build (15/15).
+The test pilot stands still under fire on purpose, so she was knocked down 1x in three of the runs; the retry kept his energy.
+Captures: `Builds/QF39/viper_final/27_boss_viper_pylon3_shutdown.png` (the third pylon's bang),
+`29_m27_his_platform_sinks_he_comes_down.png` (objective "Pylons 3 / 3" as the platform sinks; all three pylons dark).
+### For Dan to check (QF39)
+- Any boss: stand by a lit switch while he winds up or swings and press X. The switch should go every time, including right after
+  you were hit or mid-dodge.
+- Viper: three pylons now (the third stands on the plaza beside his platform). "Pylons 0 / 3 → 3 / 3", then the platform
+  sinks.
+- The Wormmaster's first phase now shows "Devices 0 / 2".
+
 ## QF38 — in plain words (Code, 2026-11-26): 1.1.0-rc2 (build 2009, `game-2009`) PUBLISHED, Latest (every earlier release kept)
 All eight of your blockers are fixed. For the first time the game was played start to credits as a player in ONE run from a new
 save, in both orders, and both reached the credits with no soft-lock. What was wrong:

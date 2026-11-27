@@ -289,9 +289,7 @@ namespace Seven
             if (Flat(P7 - L.HerFightStart).magnitude > 2f) Seven.Place(L.HerFightStart, Vector3.forward);
             _fight.UI = UI; _fight.AutoPilot = Auto;
             _fight.Beat = FightBeat;
-            _fight.PhaseObjective = ph => ph == 0 ? "He wants to restrain you - wear him down, the glowing couplings are his weak point"     // QF24 (17): no general controls
-                                       : ph == 1 ? "The other arm's couplings - and watch the lane surges"
-                                       : "The override - wear him down until he stops";
+            _fight.PhaseObjective = null;                 // QF39 (2): the text + its counter from BossObjectives (one table, build-checked)
             yield return Cutscene(false);
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _fight.Begin(BossFight.Load("machinist"), Seven, Cam);

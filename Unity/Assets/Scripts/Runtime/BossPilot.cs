@@ -45,6 +45,10 @@ namespace Seven
             var toB = Flat(boss - her); float d = toB.magnitude; var toBn = d > 0.01f ? toB / d : Vector3.forward;
             d = Mathf.Max(0f, d - f.ReachPad);                                       // QF31 (10): distances to a big body's edge, as a player judges them
 
+            // 0) QF39 (1) proof (-usefiretest): at a switch, press X DURING his attacks - each attack at its telegraph and at its
+            // active moment, and once mid-dodge and once mid-jump - at distances from close to past the prompt's edge (a knockback
+            // carried her out); the press must go to the switch every time (BossFight logs each, PadUseToEvade must stay 0)
+            if (BossFight.UseFireTest && !f.UnderFireFinal) { var t = UnderFire(f, s, her, ref I); if (t) return I; }
             // 1) an attack coming: read it once per attack (a player's read), then answer at the right moment
             if ((f.State == BossFight.St.Telegraph || f.State == BossFight.St.Active) && f.Cur != null)
             {
@@ -161,6 +165,48 @@ namespace Seven
             }
             return I;
         }
+
+        // ---- QF39 (1): the under-fire switch test
+        static Vector3 _ufObj = new Vector3(1e6f, 0f, 0f); static float _ufSince, _ufLast, _ufStep; static int _ufN; static string _ufPend;
+        static readonly float[] UfDist = { 2f, 2f, 3.7f };
+        static bool UnderFire(BossFight f, ChapterSeven s, Vector3 her, ref Intent I)
+        {
+            var obj = f.PilotObjective();
+            if (!obj.HasValue || obj.Value.how != "use") return false;
+            var at = obj.Value.at;
+            if (Flat(at - _ufObj).magnitude > 0.5f) { _ufObj = at; _ufSince = Time.time; _ufN = 0; _ufPend = null; }
+            // every attack of this phase met at its telegraph and its active moment, plus mid-dodge and mid-jump - or 75 s here
+            bool all = true;
+            foreach (var id in f.P.attacks) if (!f.UnderFireCovered.Contains($"{id} Telegraph") || !f.UnderFireCovered.Contains($"{id} Active")) all = false;
+            bool states = Has(f, "/ her dodging") && Has(f, "/ her airborne");
+            if (all && states || Time.time - _ufSince > 90f)
+            {
+                f.UnderFireFinal = true;
+                ChapterCapture.I?.Log($"boss {f.Def.id}: UNDER FIRE (QF39 1) coverage at this switch {(all && states ? "complete" : "timed out (90 s) - attacks he never aimed here are listed as not met")}: {string.Join(", ", f.UnderFireCovered)} - next press is the real one");
+                return false;
+            }
+            var to = Flat(at - her); float od = to.magnitude; float want = UfDist[_ufN % UfDist.Length];
+            I.Why = $"under fire: at the switch ({od:0.0} m, wants {want:0.0} m)";
+            // a two-step case in progress: X a moment after the dodge / jump began
+            if (_ufPend != null)
+            {
+                if (Time.time - _ufStep >= (_ufPend == "dodge" ? 0.1f : 0.22f)) { I.Use = true; _ufPend = null; _ufLast = Time.time; _ufN++; I.Why = "under fire: X mid-" + (s.IsAirborne ? "jump" : "dodge"); }
+                return true;
+            }
+            bool danger = (f.State == BossFight.St.Telegraph || f.State == BossFight.St.Active) && f.Danger(her);
+            // two places to press from: inside the prompt (< 3 m, as close as the switch lets her) and just past its edge (3.3 - 4.1 m:
+            // where a knockback leaves her after she saw the prompt)
+            bool edge = want > 3f, placed = edge ? od > 3.3f && od < 4.1f : od < 2.9f;
+            if (!placed) { if (danger && od > 4.4f) return false; I.Move = od > (edge ? 3.7f : 2.0f) ? to.normalized : -to.normalized; I.Run = od > 6f; return true; }
+            if (Time.time - _ufLast < 0.7f) return true;
+            string key = f.Cur != null && (f.State == BossFight.St.Telegraph || f.State == BossFight.St.Active) ? $"{f.Cur.id} {f.State}" : null;
+            if (key != null && !f.UnderFireCovered.Contains(key)) { I.Use = true; _ufLast = Time.time; _ufN++; I.Why = $"under fire: X during '{key}'"; return true; }
+            // she is safe and he is winding up something already covered: the her-state cases
+            if (key != null && !Has(f, "/ her dodging")) { I.Dodge = true; _ufPend = "dodge"; _ufStep = Time.time; return true; }
+            if (key != null && !Has(f, "/ her airborne")) { I.Hop = true; _ufPend = "hop"; _ufStep = Time.time; return true; }
+            return false;      // nothing uncovered right now: play on (answer him) and come back
+        }
+        static bool Has(BossFight f, string part) { foreach (var k in f.UnderFireCovered) if (k.Contains(part)) return true; return false; }
 
         /// <summary>Check runs: the intent through 7's script flags.</summary>
         /// <summary>QF31 (10): the way to <paramref name="to"/>, steering round any ground obstacle (the light well, a prop) that the straight line

@@ -9,9 +9,11 @@ namespace Seven
     /// Resources/Bosses/boss_tuning.json.
     ///  - Phase 1 "from his platform": he stands on his raised platform in front of the temple steps and works his
     ///    machinery - venom spit (arcing dark globs that leave burning puddles), the rotating energy sweep from the platform
-    ///    (jump it), barriers that slam up round her (then a spit into the cage). She shuts his two pylons down under
+    ///    (jump it), barriers that slam up round her (then a spit into the cage). She shuts his three pylons down under
     ///    fire - QF19: ONE press of X in reach (3 m) each, instant (bang, sparks, its power beam to the platform dies, the
-    ///    panels blow open); "Pylons n / 2". Both down: the platform sinks (its own third emitter dies with it), he drops.
+    ///    panels blow open). QF39 (2, Dan): all THREE pylons, all required - "Pylons 0 / 3" -> "3 / 3" (QF19 had dropped the
+    ///    third to make the counter right; Dan wanted the counter fixed, not a pylon removed). All three down: the platform
+    ///    sinks, he drops.
     ///  - Phase 2 "he hunts her": he comes down and hunts her - the snake strike (coils, hood flares, a hiss, then a 7 m
     ///    lunge: dodge sideways or block), the tail / arm sweep when she is close (jump or block), spit (QF19: no machine
     ///    sweep any more - that machinery went down with the platform). A wasted attack leaves him open: a telekinetic throw of debris (or three strikes)
@@ -28,10 +30,13 @@ namespace Seven
         public Transform Dais;                 // his raised platform (sinks at the end of phase 1)
         public Renderer[] PylonGlow;
         public MarsPylon[] PylonObjs;           // QF18 (19b): the pylons' done state (light dies, panels fall open)
-        public System.Action<int> PylonCount;   // QF19: the on-screen counter "Pylons n / 2" (only what is required)
-        public bool[] PylonOff = new bool[3];
-        public const int Required = 2;          // QF19: pylons 0 and 1; pylon 2 belongs to the platform (it dies when it sinks)
-        public const float Reach = 3.0f;        // QF19: generous - "beside it" is in reach
+        public System.Action<int> PylonCount;   // the counter "Pylons n / 3" changed (a hint; the objective text comes from BossObjectives)
+        public bool[] PylonOff = new bool[Required];
+        /// <summary>QF39 (2): all three pylons (MarsLayout.Pylons), all required - build check BOSS OBJECTIVES (QF39 2).</summary>
+        public const int Required = 3;
+        /// <summary>QF39 (2): the real number of objectives in each phase (the build check compares the text and counter with it).</summary>
+        public static readonly int[] ObjectivesPerPhase = { Required, 0, 0 };
+        public override int ObjectivesDone(int phase) => phase == 0 ? PylonsDown : 0;
         public int PylonsDown { get { int n = 0; for (int i = 0; i < Required; i++) if (PylonOff[i]) n++; return n; } }
         public System.Func<IEnumerator> Beat;  // the director's camera beat between phases (optional)
         public const float DaisTop = 3.2f;
@@ -74,7 +79,7 @@ namespace Seven
         // ---------------------------------------------------------------- phases + objectives
         protected override bool CanMove => !_onDais;
         protected override bool Reachable => !_onDais;
-        protected override bool ObjectiveDone => Phase != 0 || PylonOff[0] && PylonOff[1];
+        protected override bool ObjectiveDone => Phase != 0 || PylonsDown >= Required;
         public override (Vector3 at, string how)? PilotObjective()
         {
             if (Phase != 0) return null;
@@ -84,8 +89,8 @@ namespace Seven
         int InReach()
         {
             if (Phase != 0) return -1;
-            int best = -1; float bd = Reach;
-            for (int i = 0; i < Required; i++) { if (PylonOff[i]) continue; float d = Flat(L.Pylons[i] - Her).magnitude; if (d < bd) { bd = d; best = i; } }
+            int best = -1; float bd = 1e9f;
+            for (int i = 0; i < Required; i++) { if (PylonOff[i] || !NearUse(L.Pylons[i])) continue; float d = Flat(L.Pylons[i] - Her).magnitude; if (d < bd) { bd = d; best = i; } }
             return best;
         }
         protected override string ObjectiveUseLabel() => InReach() >= 0 ? "Shut down pylon" : null;
@@ -98,7 +103,7 @@ namespace Seven
             float dist = Flat(L.Pylons[i] - Her).magnitude;
             if (PylonObjs != null && i < PylonObjs.Length && PylonObjs[i] != null) PylonObjs[i].Collapse();
             else if (PylonGlow != null && i < PylonGlow.Length && PylonGlow[i] != null) { var m = PylonGlow[i].material; m.SetColor("_EmissionColor", Color.black); }
-            if (i < Required) PylonCount?.Invoke(PylonsDown);
+            PylonCount?.Invoke(PylonsDown);
             if (byHer) NudgeCamera(L.Pylons[i] + Vector3.up * 1.6f);
             Log($"boss viper: PYLON (QF19) {i + 1} shut down {(byHer ? "by her X" : "(skip)")} - X presses on the pad at a pylon so far {PadUsePresses} (went to a strike instead {PadUseToStrike}); she is {dist:0.0} m from it; his attack now: {(Cur != null && State != St.Idle ? Cur.id + " " + State : "none")}; bang + sparks, the light and its power beam die, the panels blow open, the prompt is gone; Pylons {PylonsDown} / {Required}");
             if (byHer && DemoBoot.CaptureDir != null && Cap != null) { StartCoroutine(Shoot($"boss_viper_pylon{i + 1}_shutdown", 0.15f)); StartCoroutine(Shoot($"boss_viper_pylon{i + 1}_after", 1.4f)); }
@@ -106,7 +111,7 @@ namespace Seven
             ObjectiveProgress();
         }
         protected override void SkipObjectives() { for (int i = 0; i < Required; i++) if (!PylonOff[i]) PylonDown(i, false); }
-        /// <summary>QF19: the energy sweep is the platform's machinery - only while he is up there.</summary>
+        /// <summary>QF19: the energy sweep is the platform's machinery - only while he is up there (the pylons feed it).</summary>
         protected override bool Allowed(AttackDef a) => !(a.id == "machine_sweep" && !_onDais);
 
         protected override IEnumerator PhaseBeat(int ended)
@@ -116,8 +121,6 @@ namespace Seven
                 // his machinery fails: the platform sinks, he drops down onto the plaza and roars
                 AudioKit.Play("mars_platform_rise", Dais != null ? Dais.position : DaisAt, 1f, 0f, AudioKit.Bus.Sfx, 80f);
                 if (Beat != null) StartCoroutine(Beat());
-                // QF19: the third emitter is part of the platform - it dies as the platform goes down
-                if (!PylonOff[2]) { PylonOff[2] = true; if (PylonObjs != null && PylonObjs.Length > 2 && PylonObjs[2] != null) PylonObjs[2].Collapse(); }
                 var top = transform.position;
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
                 {

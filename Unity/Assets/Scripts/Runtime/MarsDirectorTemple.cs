@@ -93,15 +93,13 @@ namespace Seven
             var rockMat = deck != null && deck.GetComponent<Renderer>() != null ? deck.GetComponent<Renderer>().sharedMaterial : Markers.DarkGloss();
             _viperFight.Setup(Viper, Dais, Pylons, rockMat);
             _viperFight.PylonObjs = PylonObjs;
-            _viperFight.PylonCount = n => { if (_viperFight.Phase == 0) Objective($"Shut down his two pylons (X)\nPylons {n} / {ViperFight.Required}"); UI.Hint($"Pylons {n} / {ViperFight.Required}", 2.5f); };
+            _viperFight.PylonCount = n => UI.Hint($"Pylons {n} / {ViperFight.Required}", 2.5f);   // QF39 (2): the objective's counter updates itself (BossFight.Run)
             _viperFight.PlaceStart();
             // QF19: she starts in the middle of the plaza - each pylon is a run of ~12 m under his fire, never a step away
             if (Flat(P7 - ViperFight.HerStart).magnitude > 2f) Seven.Place(ViperFight.HerStart, Flat(ViperFight.DaisAt - ViperFight.HerStart));
             _viperFight.UI = UI; _viperFight.AutoPilot = Auto;
             _viperFight.Beat = ViperComesDown;
-            _viperFight.PhaseObjective = ph => ph == 0 ? $"Shut down his two pylons (X)\nPylons {_viperFight.PylonsDown} / {ViperFight.Required}"
-                                            : ph == 1 ? "He hunts you - wear him down"                                       // QF24 (17): no general controls
-                                            : "Enraged - wear him down until he falls";
+            _viperFight.PhaseObjective = null;                 // QF39 (2): the text + its counter from BossObjectives (one table, build-checked)
             yield return Cutscene(false);
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _viperFight.Begin(BossFight.Load("viper"), Seven, Cam);

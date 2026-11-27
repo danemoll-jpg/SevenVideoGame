@@ -304,6 +304,7 @@ namespace Seven
                 if (args[i] == "-recstills" && i + 1 < args.Length) RecStills = args[i + 1];
                 if (args[i] == "-bosscheck") BossCheck = true;
                 if (args[i] == "-bossnovice") BossNovice = true;
+                if (args[i] == "-usefiretest") BossFight.UseFireTest = true;      // QF39 (1): switch presses during every attack type
                 if (args[i] == "-bossdownonce") BossDownOnce = true;
                 if (args[i] == "-holdcheck") HoldCheck = true;
                 if (args[i] == "-rampcheck") RampCheck = true;

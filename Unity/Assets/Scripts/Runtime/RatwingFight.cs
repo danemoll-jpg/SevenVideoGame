@@ -54,7 +54,10 @@ namespace Seven
         // ---------------------------------------------------------------- the partition stations (X while he attacks)
         protected override bool ObjectiveDone => Phase >= 2 || Closed[Phase];
         Vector3 Station => L.PartitionStations[Mathf.Clamp(Phase, 0, 1)];
-        protected override string ObjectiveUseLabel() => Phase < 2 && !Closed[Phase] && Flat(Station - Her).magnitude < 3f ? "Close the partition" : null;
+        protected override string ObjectiveUseLabel() => Phase < 2 && !Closed[Phase] && NearUse(Station) ? "Close the partition" : null;
+        /// <summary>QF39 (2): one partition per phase, then none (stage three's seal is the director's, after the fight).</summary>
+        public static readonly int[] ObjectivesPerPhase = { 1, 1, 0 };
+        public override int ObjectivesDone(int phase) => phase < 2 && Closed[phase] ? 1 : 0;
         protected override void ObjectiveUse()
         {
             if (Phase >= 2 || Closed[Phase]) return;

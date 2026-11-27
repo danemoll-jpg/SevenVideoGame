@@ -64,9 +64,7 @@ namespace Seven
             _fight.Beat = PhaseBeatShot;
             // QF24 (17): no general controls - the one button prompt is "Close the partition (X)" at a station in reach;
             // Nela's lines and the lit station say where to go
-            _fight.PhaseObjective = ph => ph == 0 ? "Close the first partition - the lit station"
-                                       : ph == 1 ? "His space is smaller - the second partition, the lit station"
-                                       : "Wear him out";
+            _fight.PhaseObjective = null;                 // QF39 (2): the text + its counter from BossObjectives (one table, build-checked)
             // QF23 (17): the controls box at the start of the fight is gone - small prompts at the moment instead (BossFight.Tip)
             _fight.Begin(BossFight.Load("ratwing"), Seven, Cam);
             if (Auto && Seven.BladesOwned) Seven.DrawBlades(true);

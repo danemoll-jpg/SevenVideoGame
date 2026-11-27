@@ -259,6 +259,10 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   MMA kick / roundhouse alternating, mixing them chains one combo; the finisher — her real strikes do the real damage) → he recovers and fights back, she backs off, dodges / blocks and sets
   up the next stun. The last phase ends with the finisher → her takedown (Y / E) pins him. Never by flipping switches
   while he waits. Proof logs damage by strikes vs throws: **melee does most of the damage.**
+- **A switch in reach always takes the press (QF39, Dan):** during any of his attacks and whatever she is doing, X at a fight
+  objective does the objective at once (one shared reach, `BossFight.NearUse`; never a dodge, jump, strike or lunge) and keeps her
+  safe for a moment; every objective's text, counter and count come from `BossObjectives` (build check). Prove it under fire
+  (`-usefiretest`): every attack type, 0 evades.
 - **Energy bars:** the boss's bar on screen during the fight (top centre, his name, drains with her hits, a notch /
   shake on each stun, phase marks), and **her own state** (a small bar + her forehead energy point dims with each hit,
   a white flash when hit).
@@ -588,7 +592,19 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
-**QF38 (2026-11-26): 1.1.0-rc2 (build 2009, `game-2009`) PUBLISHED, Latest - Dan's full-playthrough blockers (status, the branch table, "For Dan to check
+**QF39 (2026-11-27): 1.1.0-rc3 (build 2010, `game-2010`) - boss switches + Viper's three pylons (status + "For Dan to check (QF39)" in
+`TODO.md`).**
+- **A switch in reach ALWAYS takes the press, in every boss fight:**
+  - one reach for every switch, `BossFight.NearUse`: the prompt at 3 m, the press counted to 4.2 m;
+  - X is kept 0.35 s, and near an un-done switch it never strikes or lunges;
+  - the switch is taken from any state (dodge / jump / flinch / block / strike) and gives 0.6 s of safety.
+  The cause was QF19's hard 3 m reach plus the knockback: X became a strike whose lunge read as an evade.
+- Proof switch `-usefiretest` (`BossPilot.UnderFire`): pad presses during every attack's telegraph / active moment, mid-dodge,
+  mid-jump; summary `X OBJECTIVES (QF39 1)` (became an evade must be 0).
+- **Boss objective texts + counters come from ONE table, `BossObjectives`** (directors leave `PhaseObjective` null). Build check
+  `BOSS OBJECTIVES (QF39 2)` + `SWITCH REACH (QF39 1)` (`FightDemoBuilderQF39Checks.cs`). Viper = 3 pylons, all required.
+- The finale's player-style run plays the confrontation on the virtual pad (`FinalePlaytest.FightPad`).
+**QF38 (2026-11-26): 1.1.0-rc2 (build 2009, `game-2009`) PUBLISHED - Dan's full-playthrough blockers (status, the branch table, "For Dan to check
 (QF38)" in `TODO.md`).**
 - **The proof is now ONE whole-game run per order from a new save:**
   `powershell -File Tools/Run-WholeGame.ps1` (`-wholegame mars,asteroid` / `europa,biaveh -catlose`, `WholeGameRun.cs`). The chapter

@@ -48,6 +48,12 @@ namespace Seven
         /// <summary>X / E near a fight objective (a pylon, a device): its label (null = none) and the action - takes the
         /// press instead of a strike.</summary>
         public System.Func<string> FightUseLabel; public System.Action FightUse;
+        /// <summary>QF39 (1): the objective a press reaches (a little further than the prompt shows: a knockback / dodge never
+        /// carries her out between seeing it and pressing) and whether an un-done X objective is near at all (then X never
+        /// strikes or lunges unless he is right in front of her - the press waits <see cref="UseBuffer"/> s for her to be in reach).</summary>
+        public System.Func<string> FightUsePressLabel; public System.Func<bool> FightUseNear;
+        public const float UseBuffer = 0.35f, UseSafe = 0.6f;
+        float _usePressAt = -9f, _padUseAt = -9f; bool _usePad;
         [System.NonSerialized] public bool AutoHop, AutoTk, AutoUse;
         public bool IsBlocking => Act == FightAct.Block;
         public bool IsDodging => Act == FightAct.Dodge && Time.time - _dodgeStart < DodgeInvuln;
@@ -127,7 +133,7 @@ namespace Seven
             if (Current != Mode.Fight) return;
             Freeze(false);
             Current = Mode.Free; Act = FightAct.Idle; _hopY = 0f;
-            MaxFightHits = 3; FightMoveScale = 1f; FightHop = false; TkAim = null; TkFire = null; FightUseLabel = null; FightUse = null;
+            MaxFightHits = 3; FightMoveScale = 1f; FightHop = false; TkAim = null; TkFire = null; FightUseLabel = null; FightUse = null; FightUsePressLabel = null; FightUseNear = null;
             Play("idle", 0.4f);
         }
         /// <summary>Back on her feet at the start of the fight (after being knocked down).</summary>
@@ -179,12 +185,31 @@ namespace Seven
             if (takedown && BossKit && !(_target != null && _target.Dazed && Dist(_target) < 2.4f)) { takedown = false; kick = true; }
             // QF17: X next to a fight objective uses it instead of striking. QF19: in reach, X ALWAYS uses it - whatever she is
             // doing (mid-strike, blocking, dodging, reeling from a hit) - never a strike; a strike only with no objective in reach.
+            // QF39 (1): ... and under ANY attack - his telegraph showing, mid-dodge, mid-jump, reeling, blocking: the press goes to the
+            // switch at once (no wind-up), never a dodge, a jump, a strike or a lunge. The press reaches a little further than the
+            // prompt (BossFight.UseReachPress) and is kept UseBuffer s; near an un-done switch X never strikes unless he is right
+            // in front of her. The switch makes her briefly safe (UseSafe s): his attacks pass, nothing interrupts it.
             string useLabel = FightUseLabel?.Invoke();
-            bool padX = atk && !autoAtk;
-            if ((atk || AutoUse) && useLabel != null && Act != FightAct.Down) { atk = false; use = true; }
-            if (padX && useLabel != null) { var bf = BossFight.Active; if (bf != null) { bf.PadUsePresses++; if (!use) bf.PadUseToStrike++; } }
+            bool padX = atk && !autoAtk, xPress = atk || AutoUse;
+            if (xPress) { _usePressAt = Time.time; _usePad = padX; }
+            bool wantUse = Time.time - _usePressAt <= UseBuffer && Act != FightAct.Down;
+            string pressLabel = wantUse ? (FightUsePressLabel != null ? FightUsePressLabel() : useLabel) : null;
+            bool nearUse = FightUseNear != null && FightUseNear();
+            if (wantUse && pressLabel != null) { atk = false; use = true; }
+            else if (xPress && nearUse && Act != FightAct.Down && !(_target != null && !_target.IsOut && Dist(_target) < 1.9f)) atk = false;   // held for the switch
+            else if (xPress) _usePressAt = -9f;
+            if (padX && (pressLabel != null || useLabel != null)) { var bf = BossFight.Active; if (bf != null) { bf.PadUsePresses++; if (!use) bf.PadUseToStrike++; } }
             AutoUse = false;
-            if (use) { Freeze(false); ToFightIdle(); FightUse?.Invoke(); FightEvent?.Invoke("use"); return; }
+            if (use)
+            {
+                bool viaPad = _usePad; _usePressAt = -9f;
+                if (viaPad) { _padUseAt = Time.time; var bf = BossFight.Active; if (bf != null) bf.PadUseTaken++; }
+                _invulnUntil = Mathf.Max(_invulnUntil, Time.time + UseSafe);
+                _bufAtk = null; _dodgePressedAt = -9f;
+                // a strike / block / throw stops for the switch; a dodge or jump in the air finishes its motion (no snap to the floor)
+                if (Act == FightAct.Attack || Act == FightAct.Block || Act == FightAct.Throw || Act == FightAct.Idle) { Freeze(false); ToFightIdle(); }
+                FightUse?.Invoke(); FightEvent?.Invoke("use"); return;
+            }
             if (atk) { _atkPressedAt = Time.time; _bufAtk = "attack"; }
             if (takedown) { _atkPressedAt = Time.time; _bufAtk = "takedown"; }
             if (kick) { _atkPressedAt = Time.time; _bufAtk = "kick"; }
@@ -280,9 +305,12 @@ namespace Seven
             }
         }
 
+        /// <summary>QF39 (1): a dodge / jump right after an X press at a switch that its own button (B / A) did not ask for = X
+        /// turned into an evade (counted; must stay 0).</summary>
+        void EvadeAfterUse(bool ownPress) { if (Time.time - _padUseAt < 0.4f && !ownPress) { var bf = BossFight.Active; if (bf != null) bf.PadUseToEvade++; } }
         void StartHop()
         {
-            Freeze(false); Act = FightAct.Hop; _hopStart = Time.time; _hopY = 0f;
+            EvadeAfterUse(true); Freeze(false); Act = FightAct.Hop; _hopStart = Time.time; _hopY = 0f;
             if (HasState("jump")) Play("jump", 0.05f, 1.5f, true, 0.18f); else Play("fight_idle", 0.05f);
             FightEvent?.Invoke("hop");
         }
@@ -349,7 +377,7 @@ namespace Seven
 
         void StartDodge()
         {
-            Freeze(false);
+            EvadeAfterUse(Time.time - _dodgePressedAt <= Buffer); Freeze(false);
             Act = FightAct.Dodge; Play("dodge", 0.05f, 1.6f); Dodges++; FightEvent?.Invoke("dodge");
             _dodgeStart = Time.time; _dodgePressedAt = -9f;
             // away from the attacker, or along the stick (sidestep) - short and fast

@@ -28,6 +28,8 @@ namespace Seven
         public MachinistRig Rig;
         public AstClamp[] StationClamps;
         public Transform Terminal;
+        /// <summary>QF39 (2): no switches in his fight (his couplings are struck, the stations are phase beats).</summary>
+        public static readonly int[] ObjectivesPerPhase = { 0, 0, 0 };
         public System.Func<int, IEnumerator> Beat;     // the director's camera beat between phases (Panther's lines)
         Transform _spine, _chest, _armR, _armL;
         Animator _an;
