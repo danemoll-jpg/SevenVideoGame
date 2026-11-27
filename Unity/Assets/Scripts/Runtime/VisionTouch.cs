@@ -45,6 +45,7 @@ namespace Seven
             // track to keep, nothing resumed, and the chapter stayed silent to its end.
             if (!MusicSystem.IsSuspended) MusicSystem.Suspend(1.2f);
             _musicTag = tag;
+            Open = tag; Opened++;                                                       // QF38 (2): closed by Finish (Back calls it)
             var fwd = Flat(shape - s.transform.position).normalized; if (fwd.sqrMagnitude < 0.01f) fwd = s.transform.forward;
             var side = Vector3.Cross(Vector3.up, fwd);
             var tik = reach ? (s.GetComponent<SevenTableIK>() ?? s.gameObject.AddComponent<SevenTableIK>()) : null;
@@ -222,6 +223,24 @@ namespace Seven
             if (tik != null) { tik.RightPos = touch - fwd * 0.25f + Vector3.down * 0.12f; for (float t = 0f; t < 0.5f; t += Time.deltaTime) yield return null; yield return Shot($"vision_{tag}_5_her_hand_leaves_it"); tik.ReleaseAll("the vision touch ends"); }
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) yield return null;
             Log($"vision touch (QF18 20) {tag}: back - her hand on the shape as the white clears, the glow settling, the insert of her hand leaving it");
+            Finish(tag, s);
+        }
+
+        /// <summary>QF38 (2): the touch -> vision -> return sequence is open from Into until this; the tag of the open one.</summary>
+        public static string Open; public static int Opened, Finished;
+        /// <summary>QF38 (2): the ONE end of every touch -> vision -> return (Back calls it; a chapter with its own return - Venus's
+        /// match cut - calls it when its return is over): every hand / gaze / lean the touch set is released (eased), her head life
+        /// is back on, the touch's pose state (touch_wall / gesture) goes back to idle. Logs what was still on.</summary>
+        public static void Finish(string tag, ChapterSeven s)
+        {
+            if (s == null) { Open = null; return; }
+            var tik = s.GetComponent<SevenTableIK>();
+            string left = tik != null ? $"right {tik.RightW:0.00} / left {tik.LeftW:0.00} / look {tik.LookW:0.00}, lean {Mathf.Max(tik.Lean, tik.LeanNow):0} deg, head life {(tik.Alive ? "on" : "OFF")}" : "no hand IK";
+            if (tik != null) tik.ReleaseAll($"the {tag} vision touch ends (QF38 2)");
+            var hp = s.GetComponent<HoldPose>(); if (hp != null) hp.Release($"the {tag} vision touch ends (QF38 2)");
+            if (s.Current == ChapterSeven.Mode.Touch || s.Current == ChapterSeven.Mode.Gesture) { s.Release(); s.Lock(true); }   // back to idle, still in the scene (its Cutscene(false) frees her)
+            Finished++; Open = null;
+            Log($"VISION RELEASE (QF38 2) {tag}: the touch's hands released at its end (before: {left}); her mode now {s.Current}, state '{s.State}'");
         }
 
         // ---- QF24 (20): the rune's real surface ----------------------------------------------------------------------------

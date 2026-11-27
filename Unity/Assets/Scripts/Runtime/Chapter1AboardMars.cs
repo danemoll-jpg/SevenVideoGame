@@ -153,9 +153,11 @@ namespace Seven
             MarsDebriefDone = false;
             yield return SwitchStaging("MAR_13");                               // QF16 (3): the route display - the chair, Panther on the console
             if (DemoBoot.CaptureDir != null) Cap?.Log($"MAR_13: {WorldFlags.Summary()} -> {(WorldFlags.CombinedDue ? "MAR_13C (Europa complete: the combined records)" : !WorldFlags.EuropaDone ? "MAR_13U (Europa unfinished)" : "MAR_13B only (the combined records already played)")}");
-            if (WorldFlags.CombinedDue) { yield return CombinedRecords("the Mars debrief"); yield break; }
+            var marsTalk = WorldFlags.MarsDepartureTalk;                         // QF38 (8): the one selector (BranchAudit)
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BRANCH (QF38 8) MAR_13: {marsTalk} ({WorldFlags.Summary()})");
+            if (marsTalk == "MAR_13C") { yield return CombinedRecords("the Mars debrief"); yield break; }
             var con = ShipConsole.I;
-            if (!WorldFlags.EuropaDone)
+            if (marsTalk == "MAR_13U")
             {
                 // MAR_13U - Europa unfinished: Europa is the next destination; Biaveh and the asteroid stay unavailable
                 NavHand(true);

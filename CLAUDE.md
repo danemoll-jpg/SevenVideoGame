@@ -588,6 +588,24 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**QF38 (2026-11-26): 1.1.0-rc2 (build 2009, `game-2009`) PUBLISHED, Latest - Dan's full-playthrough blockers (status, the branch table, "For Dan to check
+(QF38)" in `TODO.md`).**
+- **The proof is now ONE whole-game run per order from a new save:**
+  `powershell -File Tools/Run-WholeGame.ps1` (`-wholegame mars,asteroid` / `europa,biaveh -catlose`, `WholeGameRun.cs`). The chapter
+  bots are chained on the real save, and a pilot plays the aboard part between them. It ends `WHOLE GAME (QF38): PASS`.
+  The per-chapter `Run-FullGame.ps1` pieces fake their start state - investigation only.
+- **New checks:**
+  - `-branchaudit` (`BranchAudit.cs`: every completion order through the one set of branch selectors in `WorldFlags` / `ShipConsole`);
+  - `HAND AUDIT (QF38 1)` (`HandAudit.cs`);
+  - `WINDOW VIEW (QF38 7)`;
+  - `TEMPLE ENTRANCE (QF38 3)` (build + run);
+  - `ESCAPE AUTODRIVE (QF38 4)`.
+- **Rules learned:**
+  - `SaveGame.NewGame` clears EVERY chapter's save (the finale included) and the saucer's place.
+  - A Scene Select session ends at the next story journey (`WorldFlags.UseOwnSaves`).
+  - Every touch → vision → return ends in `VisionTouch.Finish`.
+  - The blades sheathe when anything else takes her arms.
+  - No "coming soon" card for a chapter that exists: the talk's destination is picked on the star map and the saucer sets off.
 **Polish pass P3 + QF37 (2026-11-26): 1.1.0-rc1 (build 2008, `game-2008`) - the release candidate (story + Grand Circuit); 1.1.0-beta5
 (build 2007) = QF37: a Scree on the Scrambler jet and Ratwing seated in the Jetstream (`GcRatRider`) replace the Machinist and Juniper. P3: the
 gate baseline 31 -> 15 with real fixes, the open items worked through, a full start-to-credits run (10 / 10 pieces) and every racer x every

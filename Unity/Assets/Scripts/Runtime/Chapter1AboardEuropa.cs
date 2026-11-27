@@ -164,7 +164,9 @@ namespace Seven
             EuropaDebriefDone = true;
             if (DemoBoot.CaptureDir != null) Cap?.Log($"EUROPA CHAPTER DONE: {EuropaState.Summary()}; {WorldFlags.Summary()}");
             // Round 15 (Dan's revised MAR_13): Europa finished second - the combined-record discovery plays here, once
-            if (WorldFlags.CombinedDue) { yield return CombinedRecords("the end of Europa (Europa finished second)"); yield break; }
+            var eurTalk = WorldFlags.EuropaEndTalk;                               // QF38 (8): the one selector (BranchAudit)
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BRANCH (QF38 8) the end of Europa: {eurTalk} ({WorldFlags.Summary()})");
+            if (eurTalk == "MAR_13C") { yield return CombinedRecords("the end of Europa (Europa finished second)"); yield break; }
             // QF13 (15): the petting moment ends here - its stroke loop owned her left hand for as long as it ran (it was never
             // stopped, so after standing up her arm kept reaching for the cat wherever she walked)
             _stroke = 0f; yield return Wait(0.4f);

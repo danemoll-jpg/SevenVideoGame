@@ -83,6 +83,13 @@ namespace Seven
         public static readonly Vector3 OpenWaterStop = new Vector3(-232f, -84f, 226f);
         public static readonly Vector3[] ToTemple = { new Vector3(-226f, -88f, 206f), new Vector3(-214f, -94f, 186f), new Vector3(-204f, -98f, 170f) };
         public static readonly Vector3 TempleCentre = new Vector3(-196f, -104f, 150f);
+        /// <summary>QF38 (3): the temple's entrance - an open gap in the hall's wall (Lathe angle, deg: x = cos, z = sin) facing the
+        /// route in from the open water. Round 14 built the hall as a closed dome; since QF15 the bike collides with every visual
+        /// mesh under water, so the dome wall shut the route (the bots got through only by the 2-minute skip).</summary>
+        public const float TempleDoorDeg = 118.125f, TempleDoorHalf = 16.875f, TempleDoorTop = 30f;   // the wall faces with a mid angle within the half-width and a mid height below the top (rel. TempleCentre) are left out
+        public static Vector3 TempleDoor => TempleCentre + new Vector3(Mathf.Cos(TempleDoorDeg * Mathf.Deg2Rad) * 48.5f, 12f, Mathf.Sin(TempleDoorDeg * Mathf.Deg2Rad) * 48.5f);
+        /// <summary>QF38 (3): the swim path the build check and the runtime check follow: open water -> the route -> the rune.</summary>
+        public static Vector3[] TemplePath => new[] { OpenWaterStop, ToTemple[0], TempleDoor, ToTemple[1], ToTemple[2], RuneView };
         public static readonly Vector3 RuneAt = new Vector3(-196f, -100.6f, 142f);        // Europa's record: the icosahedron
         public static readonly Vector3 RuneView = new Vector3(-196f, -100.4f, 149f);       // she stops here (the vision as she reaches it)
         public static readonly Vector3[] Home = { new Vector3(-150f, -80f, 170f), new Vector3(-60f, -50f, 140f), new Vector3(0f, -38f, 120f) };

@@ -1,6 +1,34 @@
 %YAML 1.1
 %TAG !u! tag:unity3d.com,2011:
---- !u!114 &-3400503590600031003
+--- !u!114 &-8913150202603550454
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 899c54efeace73346a0a16faa3afe726, type: 3}
+  m_Name: Vignette
+  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Vignette
+  active: 1
+  color:
+    m_OverrideState: 1
+    m_Value: {r: 0, g: 0, b: 0, a: 1}
+  center:
+    m_OverrideState: 1
+    m_Value: {x: 0.5, y: 0.5}
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0.22
+  smoothness:
+    m_OverrideState: 1
+    m_Value: 0.5
+  rounded:
+    m_OverrideState: 1
+    m_Value: 0
+--- !u!114 &-5147114382343524003
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -50,7 +78,7 @@ MonoBehaviour:
   dirtIntensity:
     m_OverrideState: 1
     m_Value: 0
---- !u!114 &-2856663101377167568
+--- !u!114 &-3393484520323090451
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -78,52 +106,7 @@ MonoBehaviour:
   saturation:
     m_OverrideState: 1
     m_Value: -100
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
-  m_Name: Profile_Europa
-  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.VolumeProfile
-  components:
-  - {fileID: -3400503590600031003}
-  - {fileID: -2856663101377167568}
-  - {fileID: 5980893929252223183}
-  - {fileID: 165174742873714141}
---- !u!114 &165174742873714141
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 899c54efeace73346a0a16faa3afe726, type: 3}
-  m_Name: Vignette
-  m_EditorClassIdentifier: Unity.RenderPipelines.Universal.Runtime::UnityEngine.Rendering.Universal.Vignette
-  active: 1
-  color:
-    m_OverrideState: 1
-    m_Value: {r: 0, g: 0, b: 0, a: 1}
-  center:
-    m_OverrideState: 1
-    m_Value: {x: 0.5, y: 0.5}
-  intensity:
-    m_OverrideState: 1
-    m_Value: 0.22
-  smoothness:
-    m_OverrideState: 1
-    m_Value: 0.5
-  rounded:
-    m_OverrideState: 1
-    m_Value: 0
---- !u!114 &5980893929252223183
+--- !u!114 &-1850958466582141827
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -163,3 +146,20 @@ MonoBehaviour:
   maxNits:
     m_OverrideState: 1
     m_Value: 1000
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d7fd9488000d3734a9e00ee676215985, type: 3}
+  m_Name: Profile_Europa
+  m_EditorClassIdentifier: Unity.RenderPipelines.Core.Runtime::UnityEngine.Rendering.VolumeProfile
+  components:
+  - {fileID: -5147114382343524003}
+  - {fileID: -3393484520323090451}
+  - {fileID: -1850958466582141827}
+  - {fileID: -8913150202603550454}

@@ -105,6 +105,7 @@ namespace Seven
                     bool ok = v.Emphasis(cam, out var info); QF25Emphasis.Count(ok);
                     Cap.Log($"EMPHASIS (QF25 1) {name} ({(v.Scale < 0.5f ? "window view" : "exterior")}): {info} -> {(ok ? "on the mothership" : "MAINLY THE PLANET")}");
                 }
+            SaucerOutside.AuditShot(name);                          // QF38 (7): the world in view = where the saucer is
             yield return Cap.Shot(name);
         }
 
@@ -222,7 +223,7 @@ namespace Seven
             MusicSystem.Play("aboard_saucer", 3f);
             yield return UI.Fade(0f, 1.4f);
             StartCoroutine(SetCourseWatch());
-            Objective("Set course");
+            Objective(ShipConsole.I != null ? "Set course at the console" : "Set course");   // QF38: says where (the galley seat only hints at the console)
             if (DemoBoot.CaptureDir != null) Cap?.Log($"aboard after Venus: free exploration; 'Set course' at her galley seat opens the destination screen ({VenusState.CurrentId})");
             yield return Wait(6f);
             Objective(null);

@@ -902,7 +902,7 @@ namespace Seven
             ik.LookPos = P7 + fw * 0.9f + Vector3.up * 0.5f; ik.RightW = 0f;          // eye close-up, gaze lowered
             yield return Wait(1.0f);
             yield return Shot("c09_04_eye_close_up_gaze_lowered");
-            ik.RightW = 0f;
+            ik.RightW = 0f; ik.Lean = 0f; ik.Alive = true;   // QF38 (2): the touch is over - she straightens (the lean eases out), her head lives again
             _coverage = true; _lastSpeaker = null;
             var probe = Shots ? BodyProbe.Begin(Seven.gameObject, "Venus, after the second vision (C09 1-5)") : null;
             yield return Say("VEN_C09", 1, 4);
@@ -950,7 +950,10 @@ namespace Seven
                 _carry.Set(CarriedShape.Where.Pocket, 0.3f);
                 RecordCopy.gameObject.SetActive(false);
             }
-            ik.RightW = 0f; ik.LookW = 0f;
+            // QF38 (2): the end of the shared touch -> vision -> return (Venus returns through its own match cut, so Back never ran):
+            // release everything the touch set - the lean toward the cube (it stayed on: she stood bent forward for the rest of Venus),
+            // her head life (switched off for the touch), the palm / elbow targets
+            VisionTouch.Finish("venus", Seven);
             Log($"C10: the record copy awarded {(first ? "now (first time)" : "ALREADY (no second award)")} - awards {VenusState.RecordAwards} (must be 1); the original cube still in its protected structure: {(Cube != null && Cube.gameObject.activeInHierarchy ? "yes" : "NO")}");
             Complete("VEN_C10", VenusState.Stage.RecordReceived);
             Objective(VenusState.Objectives[(int)VenusState.Stage.RecordReceived]);

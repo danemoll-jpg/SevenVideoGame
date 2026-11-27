@@ -121,16 +121,33 @@ namespace Seven
     /// "seven_test_routes"), so they hold whichever chapter set them; a new game clears them.</summary>
     public static class WorldFlags
     {
-        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen, mothershipKnown, gameFinished; }
+        [System.Serializable] class R { public bool combined, asteroidFound, biavehDone, asteroidDone, combinedSeen, cattalusSeen, mothershipKnown, gameFinished; public string lastDone; }
         static string Key => DemoBoot.CaptureDir != null ? "seven_test_routes" : "seven_routes";
         static R Get() { var j = PlayerPrefs.GetString(Key, ""); return string.IsNullOrEmpty(j) ? new R() : JsonUtility.FromJson<R>(j) ?? new R(); }
         /// <summary>QF23 (24): a Scene Select session never writes the player's real route flags (it could unlock or consume
         /// real story beats - e.g. mark Cattalus seen from a replayed BIA_13).</summary>
         static bool SelectRun => VenusState.SceneSelectRun || EuropaState.SceneSelectRun || MarsState.SceneSelectRun || AsteroidState.SceneSelectRun || BiavehState.SceneSelectRun || CattalusState.SceneSelectRun;
-        static void Put(R r) { if (SelectRun && DemoBoot.CaptureDir == null) { Debug.Log("[Seven] world flags: not written during a Scene Select session (QF23 24)"); return; } PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
+        static void Put(R r) { if (SelectRun && DemoBoot.CaptureDir == null) { DroppedWrites++; Debug.Log("[Seven] world flags: not written during a Scene Select session (QF23 24)"); return; } PlayerPrefs.SetString(Key, JsonUtility.ToJson(r)); PlayerPrefs.Save(); }
         public static void Clear() { PlayerPrefs.DeleteKey(Key); PlayerPrefs.Save(); }
         /// <summary>Check runs (-routes): "europa" = Europa already complete (the Mars debrief plays MAR_13C);
         /// "mars" = Mars already complete (the end of Europa plays it); "none" = neither; always on the test keys.</summary>
+        /// <summary>QF38 (5 / 8): back on the player's own saves for every chapter. A Scene Select start left its chapter's
+        /// SceneSelectRun on for the rest of the session (Dan skipped Europa's temple step through Scene Select, then played on);
+        /// while ANY was on, Put dropped every world-flag write - the asteroid's / the mothership's completion and "the Cattalus
+        /// lead seen" were never saved, so the lead stayed due and the console replayed the asteroid's version (AST_11B) and its
+        /// card. Called when the story travels on to another world (TravelPassage): the Scene Select session is over once she sets
+        /// course.</summary>
+        public static void UseOwnSaves(string why)
+        {
+            var was = new List<string>();
+            if (VenusState.SceneSelectRun) was.Add("Venus"); if (EuropaState.SceneSelectRun) was.Add("Europa"); if (MarsState.SceneSelectRun) was.Add("Mars");
+            if (AsteroidState.SceneSelectRun) was.Add("the asteroid"); if (BiavehState.SceneSelectRun) was.Add("the mothership"); if (CattalusState.SceneSelectRun) was.Add("Cattalus"); if (FinaleState.SceneSelectRun) was.Add("the finale");
+            if (was.Count == 0) return;
+            VenusState.UseOwnSave(); EuropaState.UseOwnSave(); MarsState.UseOwnSave(); AsteroidState.UseOwnSave(); BiavehState.UseOwnSave(); CattalusState.UseOwnSave(); FinaleState.UseOwnSave();
+            var msg = $"SAVE SLOTS (QF38 8): {why} - the Scene Select session for {string.Join(", ", was)} ends; the player's own saves from here (world flags are written again)";
+            Debug.Log("[Seven] " + msg); if (DemoBoot.CaptureDir != null) ChapterCapture.I?.Log(msg);
+        }
+        public static int DroppedWrites { get; private set; }
         public static void FakeForTest(string what)
         {
             if (DemoBoot.CaptureDir == null) return;
@@ -224,9 +241,9 @@ namespace Seven
         public static bool AsteroidFound => Get().asteroidFound;
         public static void MarkAsteroid() { var r = Get(); r.asteroidFound = true; Put(r); }
         public static bool AsteroidDone => Get().asteroidDone || AsteroidState.OwnComplete;   // Round 16: the chapter's own save
-        public static void MarkAsteroidDone() { var r = Get(); r.asteroidDone = true; Put(r); }
+        public static void MarkAsteroidDone() { var r = Get(); r.asteroidDone = true; r.lastDone = "asteroid"; Put(r); }
         public static bool BiavehDone => Get().biavehDone || BiavehState.OwnComplete;   // Round 17: the chapter's own save
-        public static void MarkBiavehDone() { var r = Get(); r.biavehDone = true; r.mothershipKnown = true; Put(r); }
+        public static void MarkBiavehDone() { var r = Get(); r.biavehDone = true; r.mothershipKnown = true; r.lastDone = "biaveh"; Put(r); }
         /// <summary>QF22: the Biavian contact is the MOTHERSHIP among the rings of Veyra (not the Biavian homeworld). The
         /// internal id stays "biaveh" (saves); what the player reads is <see cref="ContactName"/>: "Biavian contact — Veyra"
         /// until the mothership chapter identifies it, then "Biavian Mothership".</summary>
@@ -243,6 +260,20 @@ namespace Seven
         public static string NextTalk(string finished, bool asteroidDone, bool biavehDone) =>
             asteroidDone && biavehDone ? (finished == "asteroid" ? "AST_11B" : "BIA_13B") : (finished == "asteroid" ? "AST_11A" : "BIA_13A");
         public static string NextTalk(string finished) => NextTalk(finished, AsteroidDone || finished == "asteroid", BiavehDone || finished == "biaveh");
+        // ---- QF38 (8): every branched conversation's choice in ONE place (the scenes call these; BranchAudit walks every order)
+        /// <summary>Which of the asteroid / the mothership was finished last (null = neither yet).</summary>
+        public static string LastOfPair => Get().lastDone;
+        /// <summary>The Cattalus lead's version: the talk of the chapter that was finished LAST (the mothership last = BIA_13B,
+        /// "This completes the record from the asteroid"; the asteroid last = AST_11B). rc1 always played AST_11B at the console.</summary>
+        public static string CattalusLeadTalk => LastOfPair == "biaveh" ? "BIA_13B" : "AST_11B";
+        /// <summary>MAR_13 (the Mars debrief's routing).</summary>
+        public static string MarsDepartureTalk => CombinedDue ? "MAR_13C" : !EuropaDone ? "MAR_13U" : "MAR_13B";
+        /// <summary>The end of Europa (EUR_17): Europa finished second = the combined records here.</summary>
+        public static string EuropaEndTalk => CombinedDue ? "MAR_13C" : "EUR_17";
+        /// <summary>X at the console while a progression beat is due (QF20): the beat, else null = the console.</summary>
+        public static string ConsoleDue => CombinedDue ? "MAR_13C" : CattalusDue ? CattalusLeadTalk : null;
+        /// <summary>True while a Scene Select session would drop world-flag writes (outside check runs).</summary>
+        public static bool WritesBlocked => SelectRun;
         public static void MarkCattalusSeen() { var r = Get(); r.cattalusSeen = true; Put(r); }
         public static bool CattalusUnlocked => VenusDone && MarsDone && EuropaDone && AsteroidDone && BiavehDone;
         /// <summary>Round 18: Cattalus finished (CAT_12 played) - the star map then offers only the Moon.</summary>

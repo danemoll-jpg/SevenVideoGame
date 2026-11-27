@@ -26,7 +26,7 @@ namespace Seven
         public void PinHere() { _pin = transform.position; _pinR = transform.rotation; _pinned = true; }
         /// <summary>Get up: the pose eases out over RiseTime, the root stays pinned until she is up.</summary>
         public void Rise() { _rising = true; }
-        bool _rising;
+        bool _rising; float _freeFor;
         public bool Posed => Pose != Kind.None && Weight > 0.01f;
         /// <summary>QF30: ease into the pose over 0.8 s (the finale's kneel); the older aboard poses stay as they were (set at once).</summary>
         public bool EaseIn;
@@ -78,7 +78,9 @@ namespace Seven
         void LateUpdate()
         {
             if (Pose != _last) { if (Pose != Kind.None) { Weight = _last == Kind.None && EaseIn ? 0f : 1f; _rising = false; } _last = Pose; }
-            if (Pose == Kind.None || _a == null) { Weight = 0f; _pinned = false; return; }
+            if (Pose == Kind.None || _a == null) { Weight = 0f; _pinned = false; _freeFor = 0f; return; }
+            // QF38 (1): a pose never survives control coming back (a scene that ended without Rise): she gets up, eased
+            { var gik = GetComponent<SevenTableIK>(); if (!_rising && gik != null && gik.PlayerFree()) { _freeFor += Time.deltaTime; if (_freeFor > 1.2f) { SevenTableIK.AutoReleases++; Rise(); if (DemoBoot.CaptureDir != null && ChapterCapture.I != null) ChapterCapture.I.Log($"HAND AUDIT (QF38 1): control-back release - the {Pose} pose was still on; she gets up"); } } else _freeFor = 0f; }
             Weight = _rising ? Mathf.MoveTowards(Weight, 0f, Time.deltaTime / Mathf.Max(0.1f, RiseTime)) : Mathf.MoveTowards(Weight, 1f, Time.deltaTime / 0.8f);
             if (_pinned)
             {

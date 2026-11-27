@@ -538,11 +538,22 @@ namespace Seven.EditorTools
                 // the temple: built for its inhabitants - broad passages, enormous spaces
                 var tem = new GameObject("CetaceanTemple").transform; tem.SetParent(world, false);
                 var tv = new List<Vector3>(); var tt = new List<int>();
-                var hall = Lathe(new[] { new Vector2(46f, -20f), new Vector2(50f, 10f), new Vector2(36f, 34f), new Vector2(0f, 42f) }, 0f, 360f, 32, null, E.TempleCentre);
+                // QF38 (3): the hall has an ENTRANCE - the wall faces facing the route in from the open water are left out (a ~28 m wide,
+                // ~50 m high opening; the roof stays). Round 14's closed dome was only passable while nothing collided under water
+                // (QF15 made every visual mesh solid for the bike: the route ended at the wall and a player had to skip the step).
+                var hall = Lathe(new[] { new Vector2(46f, -20f), new Vector2(50f, 10f), new Vector2(36f, 34f), new Vector2(0f, 42f) }, 0f, 360f, 32,
+                    (am, my) => Mathf.Abs(Mathf.DeltaAngle(am, E.TempleDoorDeg)) < E.TempleDoorHalf && my < E.TempleDoorTop, E.TempleCentre);
                 { int b = tv.Count; tv.AddRange(hall.vertices); tt.AddRange(hall.triangles.Select(k => k + b)); }
+                // its frame: two posts up the wall's profile at the gap's edges, the lintel along the roof's rim, approach lamps
+                foreach (float ea in new[] { E.TempleDoorDeg - E.TempleDoorHalf, E.TempleDoorDeg + E.TempleDoorHalf })
+                    Sweep(tv, tt, new[] { E.TempleCentre + Polar(46f, ea, -20f), E.TempleCentre + Polar(50f, ea, 10f), E.TempleCentre + Polar(36f, ea, 34f) }, 1.4f, false, 10);
+                { var lin = new List<Vector3>(); for (int k = 0; k <= 8; k++) lin.Add(E.TempleCentre + Polar(36f, E.TempleDoorDeg - E.TempleDoorHalf + k * E.TempleDoorHalf * 2f / 8f, 34f)); Sweep(tv, tt, lin, 1.4f, false, 10); }
                 for (int i = 0; i < 8; i++) { float a = i * 45f; var c0 = E.TempleCentre + Quaternion.Euler(0f, a, 0f) * Vector3.forward * 30f; var ap = new List<Vector3>(); for (int k = 0; k <= 10; k++) { float u = k / 10f * Mathf.PI; ap.Add(c0 + Quaternion.Euler(0f, a, 0f) * new Vector3(-Mathf.Cos(u) * 12f, -18f + Mathf.Sin(u) * 30f, 0f)); } Sweep(tv, tt, ap, 1.6f, false, 10); }
                 var temple = MeshObject("TempleHall", SaveMesh(SmoothFinish(tv, tt), "Europa_TempleHall"), m.stone, tem);
                 Block("TempleFloor", E.TempleCentre + new Vector3(-46f, -21f, -46f), E.TempleCentre + new Vector3(46f, -19.6f, 46f), m.stoneDark, tem, false);
+                // QF38 (3): the entrance lit - lamps down both posts and two inside the threshold (it reads as the way in from the open water)
+                for (int i = 0; i < 6; i++) { float ea = E.TempleDoorDeg + (i % 2 == 0 ? -1f : 1f) * (E.TempleDoorHalf - 2.5f); float y = -12f + (i / 2) * 14f; Lamp($"TempleDoorLamp{i}", E.TempleCentre + Polar(47f, ea, y), 22f, 1.3f, m.glow, tem, new Vector3(0.7f, 0.7f, 0.7f)); }
+                for (int i = 0; i < 2; i++) Lamp($"TempleThresholdLamp{i}", E.TempleCentre + Polar(38f, E.TempleDoorDeg + (i == 0 ? -9f : 9f), 2f), 20f, 1.1f, m.glow, tem, new Vector3(0.5f, 0.5f, 0.5f));
                 for (int i = 0; i < 16; i++) { float a = i * 22.5f; Lamp($"TempleLight{i}", E.TempleCentre + Quaternion.Euler(0f, a, 0f) * Vector3.forward * 40f + Vector3.up * (i % 2 == 0 ? 4f : 16f), 18f, 1.1f, m.glow, tem, new Vector3(0.5f, 0.5f, 0.5f)); }
                 // the rune: a large icosahedron on its pedestal, its edges faintly lit; the small copy she receives
                 var em2 = ElarimMaterials(false);
@@ -658,6 +669,7 @@ namespace Seven.EditorTools
             AddProbe(new Vector3(0f, -60f, 220f), new Vector3(300f, 100f, 240f), Vector3.zero);
             AddProbe(new Vector3(-186f, E.BaseY + 1.8f, 476f), new Vector3(80f, 6f, 64f), Vector3.zero);
             PlaceAboardCut(new GameObject("Europa").transform, new Vector3(0f, -1500f, 0f));   // QF23 (10, 15a): Panther's cutaways = the real saucer interior
+            TempleEntranceCheck();              // QF38 (3): the way into the temple is open for the bike (fails the build)
             QF18SceneChecks("Europa", false);   // QF18 (11, 13): report
             EditorSceneManager.SaveScene(scene, EuropaScenePath);
             Log("scene saved " + EuropaScenePath);

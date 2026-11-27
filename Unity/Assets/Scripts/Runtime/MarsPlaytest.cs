@@ -77,7 +77,7 @@ namespace Seven
             _t0 = Time.time;
             Log($"virtual gamepad on the real input actions; muted={DemoBoot.Muted} listenerVolume={AudioListener.volume}; started {(DemoBoot.MenuPick != null ? "from the main menu: " + DemoBoot.MenuPick : "directly")}");
             float stuckSince = Time.time; string sig = null;
-            string want = DemoBoot.MarsPick ?? "asteroid";
+            string want = WholeGameRun.Active ? WholeGameRun.PairFirst : DemoBoot.MarsPick ?? "asteroid";
             while (true)
             {
                 yield return null;

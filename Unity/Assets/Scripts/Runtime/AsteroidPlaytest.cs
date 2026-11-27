@@ -92,6 +92,7 @@ namespace Seven
                 {
                     _stick = Vector2.zero; _rt = 0f; _held = 0u;
                     if (con.Choosing) want = "asteroid";
+                    want = WholeGameRun.MapWant(con, want);   // QF38: a chained run picks what the story offers
                     if (con.Map.Selected != want) { if (_phase == 0 && _presses.Count == 0) { Press(con.Map.IsGateway(con.Map.Selected) && !con.Choosing && want == "biaveh" && con.Map.View == StarMap.Sol ? A : GamepadButton.DpadRight); yield return WaitR(0.6f); } }
                     else { Log($"star map: {want} highlighted - A, A"); Press(A); yield return WaitR(0.6f); Press(A); yield return WaitR(1.6f); consoleDone = true; }
                     continue;

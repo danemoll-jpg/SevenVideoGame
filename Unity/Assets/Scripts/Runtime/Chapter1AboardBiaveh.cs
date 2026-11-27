@@ -427,6 +427,7 @@ namespace Seven
             WorldFlags.MarkBiavehDone();
             var con = ShipConsole.I;
             var nextTalk = WorldFlags.NextTalk("biaveh");                          // QF24 (22): both done = the Cattalus talk, whatever was seen before
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BRANCH (QF38 8) the end of the mothership: {nextTalk} ({WorldFlags.Summary()})");
             if (DemoBoot.CaptureDir != null) Cap?.Log($"NEXT TALK (QF24 22): the mothership finished, asteroid done {WorldFlags.AsteroidDone}, mothership done {WorldFlags.BiavehDone} -> {nextTalk}");
             if (nextTalk == "BIA_13B")
             {
@@ -438,7 +439,7 @@ namespace Seven
                 yield return SayB("BIA_13B", 3, 7);
                 yield return SayB("BIA_13B", 8, 11);
                 WorldFlags.MarkCattalusSeen();
-                if (con != null) yield return con.ComingSoonCard("Cattalus (coming soon)");
+                yield return PickNext("cattalus", "Set course for Cattalus", p => _goNext = p);   // QF38 (5)
             }
             else
             {
@@ -449,6 +450,7 @@ namespace Seven
                 CutPilot("lap");
                 yield return SayB("BIA_13A", 3, 5);              // You make it sound inviting. / I'm reserving judgment... / Somewhere memorable.
                 yield return ShotV("ba14_the_asteroid_selected");
+                yield return PickNext("asteroid", "Investigate the asteroid", p => _goNext = p);   // QF38 (5): selecting it goes there
             }
             if (DemoBoot.CaptureDir != null) Cap?.Log($"MOTHERSHIP CHAPTER DONE: {BiavehState.Summary()}; {WorldFlags.Summary()}");
             _stroke = 0f; if (_strokeRoutine != null) { StopCoroutine(_strokeRoutine); _strokeRoutine = null; }
@@ -457,6 +459,7 @@ namespace Seven
             ShipConsole.StoryLock = false;
             BiavehHomeDone = true;
             if (Auto) { Cap.Finish($"MOTHERSHIP CHECK RUN DONE: {BiavehState.Summary()}; {WorldFlags.Summary()}"); yield break; }
+            if (_goNext != null) { yield return SetOffNow("the mothership's departure"); yield break; }
             yield return ExploreVenus(false);
         }
         static Vector3 Down() => Vector3.down;

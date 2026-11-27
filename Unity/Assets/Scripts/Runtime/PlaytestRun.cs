@@ -136,7 +136,7 @@ namespace Seven
             }
             int pass = _results.FindAll(r => r.Contains(": PASS")).Count;
             int soft = _results.FindAll(r => r.Contains("SOFT-LOCK")).Count;
-            SaveGame.ClearTestSave();
+            if (!WholeGameRun.Active) SaveGame.ClearTestSave();   // QF38: the whole-game run keeps the one save
             Cap.Finish($"PLAYTEST: {pass}/{n - Mathf.Clamp(DemoBoot.PlaytestFrom, 0, n - 1)}, soft-locks {soft}, story watchdog fallbacks {Chapter1State.StoryWatchdogs} (QF6 fix {(Chapter1Director.QF6Fix ? "on" : "OFF - repro")})");
         }
 

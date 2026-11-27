@@ -964,6 +964,11 @@ namespace Seven
             // P3 (1): it swells and fades through the cut (0 -> 0.85 -> 0) instead of a flat 1.4 - a camera close beside it saw a
             // quarter of the frame blown to white (the Tunneler's drill strike, side capture: white 24 %)
             float fk = 0.85f * Mathf.Sin(Mathf.Clamp01(Mathf.InverseLerp(0.3f, 0.85f, u)) * Mathf.PI);
+            // QF38: a follow camera INSIDE the arc's reach (behind her, close to him) had the bright slab pass right under the lens -
+            // the drill strike's player-view frame 22.5 % white (rc2 gate). Seen from inside its radius the cut is dimmed to a quarter
+            // (the ground marker still shows where it lands); from outside (the side shots, the arena wides) it is unchanged.
+            var cm = Camera.main;
+            if (cm != null) { var hp = cm.transform.position - from; float hd = new Vector2(hp.x, hp.z).magnitude; fk *= Mathf.Lerp(0.25f, 1f, Mathf.Clamp01((hd - range) / 1.5f)); }
             var fm = _flash.sharedMaterial; if (fm.HasProperty("_Intensity")) fm.SetFloat("_Intensity", fk); if (fm.HasProperty("_BaseColor")) fm.SetColor("_BaseColor", Color.white * fk);
             _flash.transform.position = from + Vector3.up * 0.9f;
             _flash.transform.rotation = Quaternion.LookRotation(dir) * Quaternion.Euler(0f, -angle * 0.5f, 0f);

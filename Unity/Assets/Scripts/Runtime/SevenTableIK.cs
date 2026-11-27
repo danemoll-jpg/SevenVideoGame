@@ -32,12 +32,18 @@ namespace Seven
         public float LookW { get => _lookW; set { _lookW = value; } }
         /// <summary>Check runs: how often the safety net let a hand go (stale / unreachable / walking away), and the last reason.</summary>
         public static int NetReleases; public static string LastNet;
+        /// <summary>QF38 (1): releases made by the control-back guarantee (a scene that ended without releasing), and the last one.</summary>
+        public static int AutoReleases; public static string LastAuto, LastRelease;
         public void ReleaseAll(string why)
         {
             OwnsArms = false;
             bool any = _rightW > 0.01f || _leftW > 0.01f || _lookW > 0.01f || _r > 0.01f || _l > 0.01f;
-            _rightW = _leftW = _lookW = 0f; LeftHintW = RightHintW = LeftPalmW = RightPalmW = 0f; Lean = 0f;
+            any |= _lean > 0.5f || Lean > 0.5f || !Alive;
+            _rightW = _leftW = _lookW = 0f; LeftHintW = RightHintW = LeftPalmW = RightPalmW = 0f; Lean = 0f; _leanAnchored = false;
+            Alive = true;                               // QF38 (2): Venus's touch switched her head life off and never back on
+            _freeFor = 0f;
             if (any) Debug.Log($"[Seven] hand IK released ({why})");
+            LastRelease = why;
         }
         [Tooltip("How fast the weights ease (per second).")]
         public float Ease = 3f;
@@ -54,16 +60,23 @@ namespace Seven
 
         void Awake() { _anim = GetComponent<Animator>(); _rightW = _leftW = _lookW = 0f; }
         void OnDisable() { _r = _l = 0f; }
+        /// <summary>QF38 (2): a scene that ends its touch by removing the IK (the Moon's pocket beat) has ended the touch too.</summary>
+        void OnDestroy() { if (VisionTouch.Open != null) { VisionTouch.Open = null; VisionTouch.Finished++; } }
 
         float _armLen = -1f; Vector3 _lastMe, _lastL, _lastR; float _walkT; float _netL = 1f, _netR = 1f;
         /// <summary>QF13 (15) safety net: 1 = this hand may follow its target, 0 = let go (blends over ~0.25 s).</summary>
         float Net(ref float k, HumanBodyBones upper, Vector3 target, Vector3 last, float want, string hand)
         {
             bool ok = true; string why = null;
+            // held arms (OwnsArms) have their own reach rule (SolveHeldArms / InReach, QF34b): the restored out-of-reach net half-let-go
+            // of FIN_10's hand on his shoulder (palm 4.7 cm off his fur vs rc1's 0.2 cm, same -fincp 6 run)
+            if (OwnsArms) { k = 1f; return k; }
             if (want > 0.01f)
             {
                 var sh = _anim.GetBoneTransform(upper);
-                if (sh != null && _armLen > 0f && (target - sh.position).magnitude > _armLen * (Lean > 0.1f ? 1.5f : 1.15f))   // QF23 (22): leaning in brings the shoulder closer { ok = false; why = $"target {(target - sh.position).magnitude:0.00} m from the shoulder (reach {_armLen:0.00})"; }
+                // QF38 (1): this check's body had been swallowed into a comment since QF23 (22) - the out-of-reach net never let go
+                if (sh != null && _armLen > 0f && (target - sh.position).magnitude > _armLen * (Lean > 0.1f ? 1.5f : 1.15f))   // QF23 (22): leaning in brings the shoulder closer
+                { ok = false; why = $"target {(target - sh.position).magnitude:0.00} m from the shoulder (reach {_armLen:0.00})"; }
                 if (ok && _walkT > 0.3f)
                 {
                     float dt = Mathf.Max(1e-4f, Time.deltaTime);
@@ -93,19 +106,81 @@ namespace Seven
             _r = Mathf.MoveTowards(_r, RightW * nr, dt * Mathf.Max(Ease, nr < 1f ? 4f : 0f));
             _l = Mathf.MoveTowards(_l, LeftW * nl, dt * Mathf.Max(Ease, nl < 1f ? 4f : 0f));
             _look = Mathf.MoveTowards(_look, LookW, dt * Ease);
-            _lean = Mathf.MoveTowards(_lean, Lean, dt * 40f);
+            // QF38 (1): the hands follow their targets with a speed / acceleration limit (a scene that moved a target in one frame
+            // snapped the hand there: the jitter Dan saw); smoothed in her own frame so a cut that re-places her never drags them
+            SmoothTarget(ref _rpL, ref _rpV, RightPos, _r, dt); SmoothTarget(ref _lpL, ref _lpV, LeftPos, _l, dt);
             _anim.SetIKPositionWeight(AvatarIKGoal.RightHand, _r);
             _anim.SetIKRotationWeight(AvatarIKGoal.RightHand, 0f);
-            _anim.SetIKPosition(AvatarIKGoal.RightHand, RightPos);
+            _anim.SetIKPosition(AvatarIKGoal.RightHand, RightNowPos);
             _anim.SetIKRotation(AvatarIKGoal.RightHand, RightRot);
             _anim.SetIKPositionWeight(AvatarIKGoal.LeftHand, _l);
             _anim.SetIKRotationWeight(AvatarIKGoal.LeftHand, 0f);
-            _anim.SetIKPosition(AvatarIKGoal.LeftHand, LeftPos);
+            _anim.SetIKPosition(AvatarIKGoal.LeftHand, LeftNowPos);
             _anim.SetIKRotation(AvatarIKGoal.LeftHand, LeftRot);
             _anim.SetIKHintPositionWeight(AvatarIKHint.LeftElbow, LeftHintW * _l); _anim.SetIKHintPosition(AvatarIKHint.LeftElbow, LeftHint);
             _anim.SetIKHintPositionWeight(AvatarIKHint.RightElbow, RightHintW * _r); _anim.SetIKHintPosition(AvatarIKHint.RightElbow, RightHint);
             _anim.SetLookAtWeight(_look, 0.15f, 0.7f, 1f, 0.6f);
             _anim.SetLookAtPosition(LookPos + (Alive ? _gaze : Vector3.zero));
+        }
+
+        // ---- QF38 (1): target smoothing (speed + acceleration limited), in her root's frame
+        Vector3 _rpL, _rpV, _lpL, _lpV;
+        public const float MaxHandSpeed = 2.2f, HandSmooth = 0.07f;
+        /// <summary>Times a target jumped further than a hand can move in one frame (it was eased there instead).</summary>
+        public static int TargetJumps;
+        void SmoothTarget(ref Vector3 cur, ref Vector3 vel, Vector3 world, float w, float dt)
+        {
+            var want = transform.InverseTransformPoint(world);
+            if (w < 0.01f || dt <= 0f) { cur = want; vel = Vector3.zero; return; }   // weight ~0: nothing to see - follow exactly
+            // FurPalm / HandsOnHim (OwnsArms: FIN_10, petting) already ease the palms onto the fur and correct the gap from the drawn
+            // hand - a second lag in series made that correction overshoot (the whole-game run's FIN_10 hand reversing 3-8x in 0.6 s)
+            if (OwnsArms) { cur = want; vel = Vector3.zero; return; }
+            if ((want - cur).magnitude > MaxHandSpeed * Mathf.Max(dt, 0.02f) * 1.5f) TargetJumps++;
+            cur = Vector3.SmoothDamp(cur, want, ref vel, HandSmooth, MaxHandSpeed, dt);
+        }
+        /// <summary>The (smoothed) IK targets applied now.</summary>
+        public Vector3 RightNowPos => transform.TransformPoint(_rpL);
+        public Vector3 LeftNowPos => transform.TransformPoint(_lpL);
+        // ---- QF38 (2): the lean belongs to the reach it was made for
+        bool _leanAnchored; Vector3 _leanAnchor;
+        /// <summary>The lean applied now (degrees).</summary>
+        public float LeanNow => _lean;
+        float LeanTarget()
+        {
+            if (Lean <= 0.01f) { _leanAnchored = false; return 0f; }
+            // arms held on a body (OwnsArms: FIN_10's hands on Panther as he is gathered / shrinks) - her targets move with him, so the
+            // 'the hand moved on' rule below straightened her and the palms fell 3-5 cm short of his fur (rc2's first whole-game runs)
+            if (OwnsArms) return Lean;
+            if (RightW < 0.01f && LeftW < 0.01f) return 0f;                             // no hand on a target: no reason to lean
+            var local = transform.InverseTransformPoint(RightPos);
+            if (!_leanAnchored) { if (_r > 0.5f) { _leanAnchored = true; _leanAnchor = local; } return Lean; }
+            return (local - _leanAnchor).magnitude > 0.3f ? 0f : Lean;                  // the hand moved on (held up, palm up, to a pocket): she straightens
+        }
+        // ---- QF38 (1): the guarantee - nothing of a scene's hands survives control coming back
+        float _freeFor;
+        ChapterSeven _cs; SaucerSeven _ss;
+        /// <summary>The player has her (control, on foot / in a fight, not locked, not frozen aboard).</summary>
+        public bool PlayerFree()
+        {
+            bool control = false; try { control = MusicSystem.HasControl != null && MusicSystem.HasControl(); } catch { }
+            if (!control || QF30Watch.HoldAllowed) return false;
+            if (_cs == null) _cs = GetComponent<ChapterSeven>();
+            if (_cs != null) return _cs.Current == ChapterSeven.Mode.Free || _cs.Current == ChapterSeven.Mode.Fight;
+            if (_ss == null) _ss = GetComponent<SaucerSeven>();
+            if (_ss != null) return _ss.Current == SaucerSeven.Mode.Free && !_ss.Frozen && !_ss.Cutscene;
+            return false;
+        }
+        bool AnythingHeld => _rightW > 0.01f || _leftW > 0.01f || _lookW > 0.01f || Lean > 0.01f || _lean > 0.5f || !Alive || OwnsArms;
+        void ControlGuard()
+        {
+            if (PlayerFree() && AnythingHeld) _freeFor += Time.deltaTime; else _freeFor = 0f;
+            if (_freeFor > 1.0f)
+            {
+                string what = $"weights R {_rightW:0.00} L {_leftW:0.00} look {_lookW:0.00}, lean {Mathf.Max(Lean, _lean):0} deg{(!Alive ? ", head life off" : "")}";
+                AutoReleases++; LastAuto = $"{UnityEngine.SceneManagement.SceneManager.GetActiveScene().name}: {what} (last release before it: {LastRelease ?? "-"})";
+                ReleaseAll($"control came back with the hands still held (QF38 1): {what}");
+                if (DemoBoot.CaptureDir != null && ChapterCapture.I != null) ChapterCapture.I.Log($"HAND AUDIT (QF38 1): control-back release - {LastAuto}");
+            }
         }
 
         float _pl, _pr;
@@ -138,6 +213,8 @@ namespace Seven
         void LateUpdate()
         {
             _own = Mathf.MoveTowards(_own, OwnsArms ? 1f : 0f, Time.deltaTime / 0.8f);
+            ControlGuard();
+            _lean = Mathf.MoveTowards(_lean, LeanTarget(), Time.deltaTime * 30f);   // QF38 (2): eased here (it ran only in the IK pass), and only while its reach holds
             if (_anim != null && _lean > 0.1f && LeanDir.sqrMagnitude > 0.01f)
             {
                 // QF23 (22): the lean, after the animator - the spine and chest bend toward the shape, then the right arm is
@@ -149,7 +226,7 @@ namespace Seven
                 if (u != null && lo != null && h != null && _r > 0.01f)
                 {
                     float la = Vector3.Distance(u.position, lo.position), lb = Vector3.Distance(lo.position, h.position);
-                    var toT = RightPos - u.position; float d = Mathf.Clamp(toT.magnitude, 0.01f, (la + lb) * 0.999f); var dir = toT.normalized;
+                    var toT = RightNowPos - u.position; float d = Mathf.Clamp(toT.magnitude, 0.01f, (la + lb) * 0.999f); var dir = toT.normalized;
                     var pole = RightHintW > 0.01f ? RightHint : u.position - Vector3.up * 0.3f;
                     var pn = Vector3.ProjectOnPlane(pole - u.position, dir).normalized; if (pn.sqrMagnitude < 1e-4f) pn = Vector3.down;
                     float cosA = Mathf.Clamp((la * la + d * d - lb * lb) / (2f * la * d), -1f, 1f), A = Mathf.Acos(cosA);
@@ -192,8 +269,10 @@ namespace Seven
         public void SolveHeldArms()
         {
             if (_anim == null) return;
-            if (ArmOwn(true) > 0.001f) TwoBone(true, RightPos, RightHintW > 0.01f ? RightHint : (Vector3?)null, ArmOwn(true));
-            if (ArmOwn(false) > 0.001f) TwoBone(false, LeftPos, LeftHintW > 0.01f ? LeftHint : (Vector3?)null, ArmOwn(false));
+            // held arms (FurPalm's points on his fur, written this frame) aim at the CURRENT target, as in rc1 - the smoothed one is from
+            // the last IK pass (a frame behind the fur): FIN_10's palms sat 3-5 cm off him with it
+            if (ArmOwn(true) > 0.001f) TwoBone(true, OwnsArms ? RightPos : RightNowPos, RightHintW > 0.01f ? RightHint : (Vector3?)null, ArmOwn(true));
+            if (ArmOwn(false) > 0.001f) TwoBone(false, OwnsArms ? LeftPos : LeftNowPos, LeftHintW > 0.01f ? LeftHint : (Vector3?)null, ArmOwn(false));
             PalmTo(false, _pl, LeftPalmN, LeftFingerDir); PalmTo(true, _pr, RightPalmN, RightFingerDir);
             HeldSolves++;
         }

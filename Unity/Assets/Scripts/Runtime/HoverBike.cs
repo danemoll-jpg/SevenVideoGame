@@ -151,8 +151,22 @@ namespace Seven
         public void Shove(Vector3 v, float spinDeg) { _shove = v; _spin = spinDeg; }
         Vector3 _shove; float _spin;
 
+        /// <summary>QF38 (4): on rails - a director moves the bike itself (the auto-driven Europa escape); the bike only keeps its
+        /// speed / pitch / lean and effects in step (no input, no collision sweep: the rail is clear by construction).</summary>
+        [System.NonSerialized] public bool Rails; [System.NonSerialized] public float RailSpeed, RailPitch, RailLean;
         void SwimUpdate(float dt)
         {
+            if (Rails)
+            {
+                Speed = RailSpeed; _vy = 0f; _shove = Vector3.zero;
+                _swimPitch = Mathf.MoveTowards(_swimPitch, RailPitch, 60f * dt);
+                _lean = Mathf.Lerp(_lean, RailLean, dt * 3f);
+                Odometer += Speed * dt;
+                if (Time.time > _safeT) { _safeT = Time.time + 1.5f; LastSafe = transform.position; }
+                if (Bubbles != null) { var e = Bubbles.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 8f + 70f * Mathf.Clamp01(Speed / SwimMax) : 0f; }
+                if (Streaks != null) { var e = Streaks.emission; e.rateOverTime = transform.position.y < EuropaLayout.WaterY ? 160f * Mathf.Clamp01((Speed - 6f) / (SwimMax - 6f)) : 0f; Streaks.transform.position = transform.position + transform.forward * 9f + Vector3.up * 0.8f; Streaks.transform.rotation = transform.rotation; }
+                return;
+            }
             float steer, throttle, pitchIn;
             if (ScriptDriven) { steer = ScriptSteer; throttle = ScriptThrottle; pitchIn = ScriptRise; }
             else

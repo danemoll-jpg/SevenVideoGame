@@ -71,7 +71,7 @@ namespace Seven
                 if (con != null && con.Map != null && (con.Choosing || con.Current == ShipConsole.State.Using && con.CurrentPage == ShipConsole.Page.Map))
                 {
                     _stick = Vector2.zero; _rt = 0f; _held = 0u;
-                    if (con.Map.Selected != "moon")
+                    if (con.Map.Selected != WholeGameRun.MapWant(con, "moon"))
                     {
                         if (_phase == 0 && _presses.Count == 0)
                         {

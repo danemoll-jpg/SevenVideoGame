@@ -117,7 +117,10 @@ namespace Seven
             if (DiscEuropa != null) DiscEuropa.SetActive(w == "europa");
             if (DiscMars != null) DiscMars.SetActive(w == "mars");
             ShowLevel(w);                                                   // QF18 (3): the real level under the ship
-            ShowBiavehSpace(w == "biaveh" || w == "space" && SaucerLocation.System == StarMap.Bia);   // Round 17: at the mothership too   // QF18 (22) (round the asteroid: the asteroid fills the window)
+            // QF38 (7): Veyra + the mothership ONLY while the saucer is AT the mothership. QF18 (22) also showed them for every
+            // "space" (travelling) inside Veyra's system - so every journey from the asteroid / Cattalus / to the Moon had the
+            // mothership outside the window. Between worlds the window shows deep space (stars) only.
+            ShowBiavehSpace(w == "biaveh");
             if (Atmo != null)
             {
                 if (!_savedSet) { _saved = Read(Atmo); _savedSet = true; }
@@ -151,6 +154,38 @@ namespace Seven
             if (Moon != null && Moon.activeInHierarchy) { what = "the Moon's surface"; var r = Moon.GetComponentInChildren<Renderer>(); return r != null ? r.bounds.center : Moon.transform.position; }
             return null;
         }
+        /// <summary>QF38 (7): which world the window really shows, read from what is switched on (not from <see cref="Showing"/>):
+        /// the mothership's Veyra view wins (it is the one that leaked), then the level / world groups, then open space.</summary>
+        public string InView()
+        {
+            if (_bia != null && _bia.activeInHierarchy) return "biaveh";
+            if (_levelGo != null && _levelGo.activeInHierarchy && !string.IsNullOrEmpty(_levelW)) return _levelW;
+            if (Asteroid != null && Asteroid.activeInHierarchy) return "asteroid";
+            if (Mars != null && Mars.activeInHierarchy) return "mars";
+            if (Europa != null && Europa.activeInHierarchy) return "europa";
+            if (Venus != null && Venus.activeInHierarchy) return "venus";
+            if ((Moon != null && Moon.activeInHierarchy) || (City != null && City.activeInHierarchy)) return "moon";
+            if (Space != null && Space.activeInHierarchy) return "space";
+            return "nothing";
+        }
+        /// <summary>QF38 (7): every aboard capture says which world is in view and whether it matches the saucer's place
+        /// (FIN_01's MoonApproach and a hull-away's own exterior count as the place's view).</summary>
+        public static void AuditShot(string shot)
+        {
+            if (DemoBoot.CaptureDir == null || I == null) return;
+            string at = SaucerLocation.Current, seen = I.InView();
+            bool veyraAny = false; foreach (var v in VeyraScene.All) if (v != null && v.Root != null && v.Root.gameObject.activeInHierarchy) veyraAny = true;
+            // an arrival's own exterior set (the mothership's VeyraScene + its interior after the iris; FIN_01's Moon exterior / its
+            // service berth) stands in for the window while those shots play - it IS the place the saucer is
+            var ab = Chapter1Aboard.I;
+            bool ownExterior = (at == "biaveh" && (veyraAny || seen == "space")) || (at == "moon" && (MoonApproach.Current != null || ab != null && ab.FinaleMode));
+            bool ok = seen == at || ownExterior;
+            if (veyraAny && at != "biaveh") ok = false;                 // the mothership in any view while the saucer is elsewhere
+            Audits++; if (!ok) { Mismatches++; if (_bad.Count < 24) _bad.Add($"{shot}: {seen}{(veyraAny ? " + Veyra" : "")} vs at {at}"); }
+            ChapterCapture.I?.Log($"WINDOW VIEW (QF38 7) {shot}: in view '{seen}'{(veyraAny ? " (Veyra / the mothership visible)" : "")}, the saucer at '{at}' ({SaucerLocation.System}) - {(ok ? "match" : "MISMATCH")}");
+        }
+        public static int Audits, Mismatches; static readonly List<string> _bad = new List<string>();
+        public static string AuditSummary() => $"WINDOW VIEW (QF38 7) SUMMARY: {Audits} aboard shots, mismatches {Mismatches} (must be 0){(_bad.Count > 0 ? ": " + string.Join("; ", _bad) : "")}";
         void ShowLevel(string w)
         {
             if (_levelGo != null && _levelW != w) { Destroy(_levelGo); _levelGo = null; }

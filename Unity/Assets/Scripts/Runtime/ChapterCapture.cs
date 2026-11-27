@@ -136,6 +136,7 @@ namespace Seven
 
         public void Finish(string summary)
         {
+            if (WholeGameRun.Intercept(summary)) return;      // QF38: a chained whole-game run goes on to the next piece
             FrameProbe.Final();                         // P1 (4): real frame time in the last scene
             Log(ChapterCat.SpeedReport());              // QF11: never the walk cycle on the spot
             if (ChapterCamera.RideFrames > 0) Log(ChapterCamera.RideSummary());   // QF15 (1)
@@ -144,6 +145,7 @@ namespace Seven
             if (FeetProbe.Frames > 0) Log(FeetProbe.Summary());                   // QF18 (16)
             Log($"collision on foot (QF18 10): she slid along walls / props {ChapterSeven.FootSlides} times");
             Log(DialogueFraming.Summary());                                        // QF18 (7)
+            if (SaucerOutside.Audits > 0) Log(SaucerOutside.AuditSummary());       // QF38 (7)
             Log(ChapterCamera.ShotSummary());                                      // QF21 (6)
             if (MachinistRig.Steps > 0 || MachinistRig.Servos > 0) Log($"MACHINIST STEPS (QF21 5): {MachinistRig.Steps} heavy footfalls (four takes, never twice in a row), servo whirs {MachinistRig.Servos}");
             if (AsteroidDirector.FramedLines > 0) Log($"MACHINIST FRAMING (QF21 7): {AsteroidDirector.FramedLines} lines framed - wide two-shots {AsteroidDirector.FramedWide}, low angles on him {AsteroidDirector.FramedHim}, her from his side {AsteroidDirector.FramedHer}; tracking shots {AsteroidDirector.Tracks}; worst armour share with her hidden {AsteroidDirector.ArmourWorst * 100f:0} % (must be 0)");
@@ -157,6 +159,7 @@ namespace Seven
             if (HandHold.Frames > 0) Log(HandHold.Summary());                       // QF28 (5)
             if (FurContact.Any) Log(FurContact.Summary());                         // P2 (8)
             if (FurPalm.MotionFrames > 0) Log(FurPalm.MotionSummary());            // QF34 (1)
+            Log(HandAudit.Summary());                                              // QF38 (1)
             if (TunnelerBody.Frames > 0 || TunnelerBody.Lines > 0) Log(TunnelerBody.Summary());   // P2 (9)
             if (ScreeRig.CalmFrames > 0) Log(ScreeRig.Summary());                   // P2 (10)
             Log($"RIDE ROOT (P2 1): body placed on the saddle in the IK pass {ChapterSeven.BodyPlaced} frames; frames the hips were still > 0.3 m off the saddle after it {ChapterSeven.RideBigErr} (never folded into her root); root offset clamps {ChapterSeven.RideOffsetClamps}");

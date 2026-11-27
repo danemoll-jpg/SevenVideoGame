@@ -1,5 +1,218 @@
 # Active Development Plan — 7: The Observer
 
+## QF38 — in plain words (Code, 2026-11-26): 1.1.0-rc2 (build 2009, `game-2009`) PUBLISHED, Latest (every earlier release kept)
+All eight of your blockers are fixed. For the first time the game was played start to credits as a player in ONE run from a new
+save, in both orders, and both reached the credits with no soft-lock. What was wrong:
+- **The Moon after Cattalus said "visited":** "new game" never cleared the finale's save. A finale finished in an earlier playthrough
+  stayed "done", so the Moon went to the revisit card instead of the finale. New game now clears it (and the saucer's place).
+- **"Coming soon" for the mothership / Cattalus:** leftover cards from before those chapters existed. They are gone: after the
+  talk you pick the destination on the star map and the saucer sets off straight away.
+- **The wrong order's dialogue + having to pick again (you skipped Europa's temple through Scene Select):** that left a "Scene Select"
+  switch on for the rest of the session. While it was on, every story flag the game wrote (asteroid done, mothership done, "the Cattalus
+  lead seen") was silently thrown away, so the asteroid's version of the Cattalus talk kept coming back at the console. The switch now
+  ends when you travel on, and if the lead is ever due at the console it plays the version of the chapter you finished last.
+- **No way into Europa's temple:** the temple was a closed dome. It only "worked" while the bike passed through walls, which QF15's
+  real collision ended. It now has a wide, lit doorway on the route, and a build check fails if anything blocks it.
+- **Leaving Europa's base:** the bike drives itself through the blast while the camera shows it, then hands control back facing
+  forward, the way ahead clear.
+- **The mothership outside the window:** every journey inside Veyra's system showed it. It now shows only while you are at the
+  mothership; between worlds it is stars.
+- **Her hands / Venus's stuck pose:** Venus's rune touch left her leaning forward (the lean was only ever undone by a different
+  ending path Venus didn't use). Every touch → vision → return now ends in one place that releases everything. A hand audit watched
+  every frame of both runs; what it still flags is listed below.
+**For Dan to check (QF38)** at the bottom of this section.
+
+## Quick fix QF38: Dan's full playthrough of 1.1.0-rc1, the urgent ones (Dan, 2026-11-26) — to do FIRST
+Dan played the whole game start to finish; a longer list is coming. These first. Keep every earlier release untouched; publish
+**1.1.0-rc2**. For every repeat item, say first why the earlier fix didn't hold. **Prove each as a player, from a NEW save, in story
+order** (not from a checkpoint switch): several of these only happen on a real playthrough.
+1. **7's hands are still often awkward or jittery, or she gets stuck in an animation** (repeat: QF28 5, QF30 3 / 13, QF34 1, QF34b, P2 8).
+   A systemic audit, not another spot fix: list every place her hands / arms are driven (holds, touches, petting, the bike, the egg
+   chair, the console, carrying, kneeling, the fight) and who owns them (animator, IK solvers, overlays). One owner at a time, clean
+   hand-offs with blends, always released afterwards; no jitter (hand speed / acceleration limits), no stuck pose (any non-locomotion
+   pose held > its scene's length fails). Run the check through the whole-game run and list every place it flagged.
+2. **Venus: after returning to touch the rune, she's stuck in an awkward pose the whole time.** Find the stuck pose (which clip /
+   IK), release it at the end of the touch → vision → return sequence (the shared one: check it in every chapter), prove it.
+3. **Europa: there is no entrance into the temple** (Dan had to skip the step). A soft-lock: the temple must have a clear, open
+   entrance the player can ride / swim through, lit and marked by the objective; find what closed it (a regression?), fix it, and
+   prove it with the player-style bot AND a capture from the player's camera at the entrance. Add it to the soft-lock checks.
+4. **Leaving Europa's base: you can't see where you're going.** Show the explosion, but **auto-drive** that stretch: control is taken
+   while the camera shows the blast, the bike / ship drives itself on the right line, then control returns facing forward with the
+   way ahead clear. No player steering while the camera looks backwards.
+5. **The mothership and Cattalus say "coming soon" first, then you have to go back to the console and pick them again.** The star map
+   must never show "coming soon" for a chapter that exists; selecting a destination goes there the first time. Find the stale flag /
+   order (unlock written after the map reads it?), fix it, and check every destination in every progression state.
+6. **Heading back to the Moon: it can't be selected; it says "memory already archived" (or similar).** A blocker: the finale can't be
+   reached on a real playthrough. The Moon after Cattalus must go to the finale (CAT_12's route), not to Chapter 1's completed-chapter
+   check. Fix the destination logic so the Moon is "the finale" once Cattalus is done; check every world's star-map state before and
+   after completion (done worlds: revisit or "already archived" as intended; the Moon: Chapter 1 done ≠ finale done).
+7. **The mothership keeps appearing outside the saucer on the last missions** (wrong world in the window / hull-away views). Review
+   **every** aboard scene in every chapter and progression state: the outside view always shows where the saucer actually is (the
+   world being approached, orbited or left; deep space between); never a leftover world. Add a check: every aboard capture names the
+   world in view and it matches the saucer's location.
+8. **Branched dialogue is wrong** (doing the asteroid first, then the mothership, the dialogue acts as if you just finished the
+   asteroid). Audit **every** branched conversation (Mars / Europa order; asteroid / mothership order; arrivals, debriefs, departures,
+   destination choices; Cattalus's unlock talk) against the save's real completion state; build a table of every branch and the
+   state it requires; a check that walks every completion order (all of them) and asserts the right lines play.
+**Proof:** a whole-game player-style run from a new save in BOTH orders (asteroid-first and mothership-first; Mars-first and
+Europa-first), reaching the finale and credits; 0 soft-locks; captures of each fixed place; publish 1.1.0-rc2; status with a plain-words
+summary at the top; commit and push.
+
+## QF38 — status (Code, 2026-11-26): done; release 1.1.0-rc2 (build 2009, `game-2009`) PUBLISHED, Latest
+### Why the earlier fixes / checks didn't catch these
+P2 / P3's "full run" was ten separate runs. Each started from a state its switch FAKED (`WorldFlags.FakeForTest`, `-routes`, `-catcp`,
+`-menupick`), always on the test keys, where the Scene Select write-guard is off. So nothing that depends on a real save carried from
+chapter to chapter could show: a finale save left from an earlier playthrough, a Scene Select switch left on, the "coming soon" cards
+(each run ended at its card), the window during real journeys. The Europa bot took the 2-minute "skip" at the closed temple, and
+skips were not counted as failures.
+**New: `-wholegame <mars|europa>,<asteroid|biaveh>`** (`WholeGameRun.cs`, `Tools/Run-WholeGame.ps1`). It runs the branch audit, then a
+real "new game" on the test keys. The chapter bots are chained on that ONE save; each starts when its chapter's arrival really loads,
+and its done line hands on instead of quitting. Between chapters a pilot plays the aboard part on a virtual pad: VEN_C13's choice, the
+walk to the console (it side-steps when blocked), the star map, TRV_AST. Nothing is faked or teleported. One `WHOLE GAME (QF38)` line
+per run. (`-wholegamefrom n` is a debug start on a checkpoint save, never a proof.)
+
+### The eight items
+1. **Hands (repeat).** Why it didn't hold: QF30 3's check measured only the hand weights of the chapter-level 7; never the lean, the
+   head life, the saucer's 7, or two drivers at once. Each repeat fixed one moment.
+   - **Audit:** who drives her arms, and what releases them:
+     - rune touches: `SevenTableIK`, released by `VisionTouch.Finish`;
+     - holds, petting, chairs, console, FIN_10: `SevenTableIK` + `FurPalm` + `SevenRestPose`, released by the director's
+       `ReleaseAll` / `Rise`;
+     - cupped holds: `HoldPose`, released by `Release`;
+     - kneel / sit / lie: `SevenRestPose`, released by `Rise`;
+     - the bike: `ChapterSevenRide`, released on dismount;
+     - ledges: traversal IK, released on landing;
+     - the blades: `ChapterSevenBlades`, released on sheathe;
+     - fight, walking, gestures: the animator.
+   - **Changes:**
+     - Starting a hold takes that hand from the table IK.
+     - IK targets are speed- and acceleration-limited (`SmoothDamp`, max 2.2 m/s, in her own frame).
+     - A safety net releases anything still held 1 s after control is back (logged). Its out-of-reach check had been commented
+       out since QF23 22.
+     - The blades sheathe themselves the frame a ledge, a climb, the bike or a scripted hand takes her arms.
+     - VEN_C03 gives her head life back.
+   - **The whole-game probe `HandAudit.cs`** logs `HAND AUDIT (QF38 1)` per scene + summary. What it still flags, final runs:
+     final runs: **conflicts 3 / 2, jitter 9 / 8, stuck 1 / 1** (A / B), control-back releases 0, 7 touches opened / 7 finished. What
+     is left, one by one:
+     - The single-frame hand-speed spikes (4-7 m/s) are a part-weighted IK (0.32) while she is turned or placed in a cutscene: Venus
+       B01 / C10, two aboard, one in Cattalus, one in the finale. Each is one frame and not a visible flicker; left.
+     - One sit_idle reversal aboard (A only).
+     - The arc blades on the frame she grabs the asteroid's ledge (and, A only, a mothership gesture): they sheathe that same frame.
+     - FIN_10 -> FIN_13's kneel, held 90 s: a scripted scene (see decisions).
+   - **FIN_10 (found by this run, fixed):** the restored safety net half-let-go of her hand on his shoulder. Same `-fincp 6` run,
+     palm-to-fur median: rc1 0.2 / 1.9 cm, rc2's first build 4.7 / 2.1 cm, now 0.1 / 0.6 cm. The lean flipping on and off as he
+     moved made the hand flicker 3-8 times in 0.6 s; gone. Whole-game runs: A 0.8 / 0.2 cm, B 2.0 / 2.4 cm.
+   - Held arms now:
+     - aim at FurPalm's current point (not the smoothed one);
+     - keep their lean;
+     - skip the reach net (`SevenTableIK.OwnsArms`).
+2. **Venus's stuck pose.** At the cube, `VisionTouch.Into` leans her up to 38° forward. Only `VisionTouch.Back` reset that lean, and
+   Venus returns through its own match cut, so she stayed bent for the rest of Venus.
+   - `VisionTouch.Finish` is now the one end of every touch → vision → return (`VISION RELEASE (QF38 2)`).
+   - The lean belongs to its reach and eases out.
+   - Runs: 7 touches opened / 7 finished. The control-back capture after C10 shows her upright, arms down.
+3. **Europa's temple: no entrance (regression since QF15).** The Round 14 dome never had a door. QF15 made every visual mesh solid
+   under water, and from then on the route stopped at its wall.
+   - Now a 28 m × 50 m doorway faces the route, with posts, a lintel and lamps; a route stop in the doorway carries the guide marker.
+   - Build check `TEMPLE ENTRANCE (QF38 3)`: a bike capsule along open water → door → rune. Result: 0 meshes block it, nearest 2.8 m.
+   - Runtime check: `passed at t=… s` / `SOFT-LOCK` if a skip placed her. Both runs: ridden through (0.1° from its centre).
+   - Capture: `qf38_europa_temple_entrance_player_view`.
+4. **Escape auto-drive.** Control is taken at the detonation. The bike rides a smooth rail through QF32's guide line, 14 m ahead of
+   the blast, with every shot / line / burst kept. Control comes back after EUR_13: both runs log `ESCAPE AUTODRIVE (QF38 4)` with
+   0° off the route, the camera 0° off behind her, and 25 m clear.
+5. **"Coming soon" for the mothership / Cattalus.** Leftover cards (Round 16 / 17) after AST_11A / AST_11B / BIA_13B. Now
+   `PickNext`: the star map with the destination the talk named, and the saucer sets off at once (`NEXT DESTINATION (QF38 5)`).
+   BIA_13A (the asteroid next) does the same. Every destination in every state: the branch audit's star-map rows.
+6. **The Moon after Cattalus.** `SaveGame.NewGame` cleared every chapter but the finale. A finale finished in an earlier playthrough
+   stayed `OwnComplete`, so the Moon went to the "visited (its record is aboard)" revisit. NewGame now clears the finale + the saucer's
+   place / system. `ShipConsole.MoonOutcome` (one selector, audited): Chapter 1 done = revisit; after CAT_12 = THE FINALE; after the
+   finale = revisit. Both runs reached the finale from CAT_12 through the console.
+7. **The wrong world outside.**
+   - `ShowBiavehSpace` also ran for every "space" (travelling) inside Veyra's system, so every journey from the asteroid / Cattalus /
+     to the Moon had the mothership in the window. Now it shows only AT the mothership.
+   - TRV_AST's "travelling" flag outlived its scene, so BIA_01 reached first showed space. Each aboard part now clears it.
+   - **Check:** every aboard capture logs `WINDOW VIEW (QF38 7) <shot>: in view '<world>' … the saucer at '<place>'` + summary. A
+     chapter's own arrival exterior counts as its place. Final runs: **A 88 aboard shots, B 86, mismatches 0 / 0**.
+8. **Branched dialogue.** Cause: Dan skipped Europa's temple through Scene Select. Its `SceneSelectRun` stayed on for the session,
+   and `WorldFlags.Put` drops every write while any chapter's is on. "Asteroid done", "mothership done" and "Cattalus lead seen" were
+   never saved, so the lead stayed due and the console replayed AST_11B ("…the Biavian record", the asteroid's version) and its card.
+   - Fixes:
+     - A Scene Select session ends when the story travels on (`WorldFlags.UseOwnSaves`, `SAVE SLOTS (QF38 8)`).
+     - The world flags remember which of the pair was finished last (`lastDone`), so the lead at the console plays that chapter's
+       version (BIA_13B or AST_11B).
+     - Every branch is chosen in one place, which the scenes call: `WorldFlags.MarsDepartureTalk / EuropaEndTalk / NextTalk /
+       ConsoleDue / CattalusLeadTalk`, `ShipConsole.Reachable / MoonOutcome`.
+   - **`BranchAudit.cs`** (`-branchaudit`, first thing in every whole-game run): 8 completion orders (Mars/Europa × asteroid/mothership ×
+     a quit during the lead) × 140 branch moments, wrong 0. The table:
+
+| moment | state | plays |
+|---|---|---|
+| Mars debrief (MAR_13) | Europa not done | MAR_13U → Europa at once |
+| Mars debrief | Europa done, combined not seen | MAR_13C (the combined records) → TRV_AST |
+| end of Europa | Mars not done | EUR_17 → free aboard, "Set course at the console" |
+| end of Europa | Mars done, combined not seen | MAR_13C → TRV_AST |
+| end of the asteroid / mothership | the other not done | AST_11A → the mothership / BIA_13A → the asteroid (set off at once) |
+| end of the asteroid / mothership | the other done | AST_11B / BIA_13B (the Cattalus lead) → Cattalus at once |
+| X at the console | combined due | MAR_13C in the pilot's chair |
+| X at the console | the lead due (quit before it ended) | the version of the chapter finished LAST |
+| the Moon on the star map | before CAT_12 / after CAT_12 / after the finale | revisit / THE FINALE / revisit |
+
+### Proof (final build, `Tools/Run-WholeGame.ps1`, `Builds/WholeGame/`)
+| | A: Mars -> Europa, asteroid -> mothership, race won | B: Europa -> Mars, mothership -> asteroid, race lost |
+|---|---|---|
+| `WHOLE GAME (QF38)` | **PASS**, 9 / 9 pieces, soft-locks 0, 114.3 game-min | **PASS**, 9 / 9 pieces, soft-locks 0, 114.7 game-min |
+| branch audit | 8 orders, 140 moments, wrong 0 | same |
+| branches played | MAR_13U -> Europa at once; end of Europa MAR_13C; AST_11A -> the mothership at once; BIA_13B -> Cattalus at once | EUR_17 -> the console -> Mars; MAR_13C; BIA_13A -> the asteroid at once; AST_11B -> Cattalus at once |
+| "coming soon" cards | 0 | 0 |
+| the Moon after CAT_12 | the finale (FIN_01 -> credits) | the finale (FIN_01 -> credits) |
+| Europa temple | ridden through, 0.1 deg from the doorway's centre, no skip | ridden through, 0.1 deg |
+| escape hand-back | 0 deg off the route, camera 0 deg, 25 m clear | same |
+| window view | 88 shots, mismatches 0 | 86 shots, mismatches 0 |
+| race | champion | runner-up 2:00.8 vs Duchess 1:30.4 |
+| bot skips (2-min offers) | 5 (Venus 1 + 1, Mars relay crystal, Europa back to the bike, the mothership's districts) | 4 (same places) |
+
+The runs before these (on the intermediate builds) found and fixed:
+- the pilot standing against a table (it now steps round);
+- the pilot ignoring an open console;
+- Chapter 1's seat path turned off for the whole-game run;
+- Mars's bot not handing over when the mothership loaded straight from TRV_AST;
+- BIA_01's stale "travelling" window;
+- the FIN_10 regression.
+
+Captures (looked at):
+- `qf38_europa_temple_entrance_player_view`: the bike in open water, the lit doorway lower right, its marker "23 m below".
+- After Venus C10 (`ctl_control_back_Venus`): she stands upright, arms down.
+- FIN_01's berth shots show the Moon's service berth (the arrival exterior).
+
+**Release gate (`Builds/ImageGate/gate_1.1.0-rc2.txt`): IMAGE GATE RELEASE PASS.**
+- Every chapter passes: no new or worse failure, no NaN.
+- The first gate run found one new failure: the Tunneler's drill strike, player view, 22.5 % white. The sweep's bright slab passed
+  under a follow camera standing inside its reach. Fixed: the sweep is dimmed to a quarter seen from inside its radius
+  (`BossFight.Flash`); the frame is now 0.6 % white.
+- aa02, ba06b and ba07 passed both gate runs, so they leave the baseline: **15 -> 12**.
+- Build order:
+  - the whole-game runs A and B ran on the build just before the sweep change (a visual-only change in `BossFight.Flash`);
+  - the gate ran on the released build.
+
+### QF38 — decisions made (Code; Dan said never stop to ask)
+- A Scene Select session ends at the next story journey. The chapter played from Scene Select does NOT count on the player's own save
+  (QF23's rule kept); the next travel goes back to the player's real save.
+- After Europa (first), the free-aboard objective says "Set course at the console". The galley seat only hints at the console (the
+  bots' old seat path is kept for Chapter 1's run only).
+- The finale's 90 s kneel (FIN_10 → FIN_13, holding Panther until the light lifts them) is a scripted scene, not a stuck pose. The audit
+  lists it; left as designed.
+- The bots' 2-minute skips are counted and listed. They are where the bots' slow pathing stalls (Mars's relay crystal, the walk back to
+  the bike in Europa's base, the mothership's restored districts); the objective and marker were up each time. The Europa temple is
+  no longer one of them.
+
+## For Dan to check (QF38)
+1. **A new game, any order:** after the asteroid / mothership talk the saucer sets off straight away (no "coming soon"); after CAT_12
+   the Moon on the star map goes to the finale.
+2. **Europa:** the temple's new lit doorway, and the escape driving itself while you watch the blast.
+3. **Venus:** after the cube vision she stands normally.
+4. **The window** on every journey: stars between worlds, the mothership only at the mothership.
+5. **Her hands** anywhere you saw them awkward before. Tell me where if it still happens: the hand audit names the scene.
+
 ## Quick fix QF37: the Grand Circuit roster swap (Dan, 2026-11-26) — done, status below
 Dan: "use the Scree and Ratwing as opposed to the Machinist and Juniper." Replace two of Round 22's racers:
 - **The Machinist → a Scree racer** astride the **Scrambler jet** (the existing Scree model; 7's riding solver scaled to him, hands on

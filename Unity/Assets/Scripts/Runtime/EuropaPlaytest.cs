@@ -129,6 +129,9 @@ namespace Seven
                 Cap.Finish($"BASE WALK: 1/1, bounces {ChapterCamera.CutawayBounces}, jitter {ChapterCamera.CutawayJitter}, soft-locks {_soft} ({(Time.time - _t0) / 60f:0.0} game-min)");
                 yield break;
             }
+            // QF38 (3): the temple's entrance is a soft-lock check - the bot must RIDE through it (a skip there = a soft-lock)
+            if (dd != null && dd.TempleRouteSkipped) _soft++;
+            if (dd != null && EuropaState.SceneDone("EUR_14")) Log($"TEMPLE ENTRANCE (QF38 3): {(dd.TemplePassed ? "ridden through" : "NOT ridden through")}{(dd.TempleRouteSkipped ? " - the route needed a skip (SOFT-LOCK)" : "")}");
             Cap.Finish($"EUROPA PLAYTEST: 1/1, soft-locks {_soft}, crashes {(dd != null ? dd.Crashes : -1)}, hints {(dd != null ? dd.Hints : -1)}, skips taken {_skipsTaken} ({(Time.time - _t0) / 60f:0.0} game-min) - {EuropaState.Summary()}");
         }
         IEnumerator WaitR(float s) { for (float t = 0f; t < s; t += Time.deltaTime) yield return null; }

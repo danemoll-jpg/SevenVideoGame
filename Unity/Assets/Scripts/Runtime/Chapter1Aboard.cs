@@ -66,6 +66,7 @@ namespace Seven
         void Start()
         {
             // QF16 (1): the saucer is where this aboard part happens (the windows show that world)
+            SaucerLocation.Travelling = false;   // QF38 (7): TRV_AST's journey flag outlived its scene - BIA_01 (the mothership first) showed open space
             SaucerLocation.Set(FinaleState.ArrivalAboard ? "moon" : CattalusState.ArrivalAboard || CattalusState.HomeAboard ? "cattalus" : BiavehState.ArrivalAboard || BiavehState.HomeAboard ? "biaveh" : AsteroidState.ArrivalAboard || AsteroidState.HomeAboard ? "asteroid" : EuropaState.ArrivalAboard || EuropaState.HomeAboard ? "europa" : MarsState.ArrivalAboard || MarsState.HomeAboard ? "mars" : VenusState.VenusAboardStart ? "venus" : Chapter1State.Aboard ? "moon" : SaucerLocation.Saved);
             if (FinaleState.ArrivalAboard) { StartFinale(); return; }                                // Round 19: the Moon finale's FIN_01 aboard
             if (CattalusState.ArrivalAboard || CattalusState.HomeAboard) { StartCattalus(); return; }   // Round 18: Cattalus's aboard scenes
@@ -1033,7 +1034,7 @@ namespace Seven
             bool wasNear = false;
             while (true)
             {
-                bool legacy = ShipConsole.I == null || DemoBoot.PlayerSim;
+                bool legacy = ShipConsole.I == null || DemoBoot.PlayerSim && !(WholeGameRun.Active && VenusMode);   // QF38: the whole-game run plays it as a player does (the console)
                 bool near = Seven.Current == SaucerSeven.Mode.Free && !_settingCourse && Flat(Seven.transform.position - SeatStand).magnitude < 1.1f
                             && (Director.Reveal == null || Director.Reveal.Progress <= 0f) && !PauseMenu.IsOpen
                             && (ShipConsole.I == null || !ShipConsole.I.Busy);

@@ -397,11 +397,11 @@ namespace Seven
                 if (_alarm != null) StartCoroutine(AudioKit.Fade(_alarm, 0f, 1f, true));
                 if (_drill != null) { StartCoroutine(AudioKit.Fade(_drill, 0f, 1.5f, true)); _drill = null; }
                 yield return Detonation();
-                yield return Cutscene(false);
-                yield return EscapeRide();
+                yield return EscapeRide();                        // QF38 (4): still in the cutscene - auto-driven; control back after EUR_13
                 Complete("EUR_12");
             }
             if (!EuropaState.SceneDone("EUR_13")) yield return AfterTheNoise();
+            else if (_cut) yield return EscapeHandBack();
         }
         IEnumerator Flash(Light l, float delay)
         {
@@ -479,103 +479,108 @@ namespace Seven
         /// the destruction or a crash into a support = a white flash and the ride restarts from its beginning.</summary>
         IEnumerator EscapeRide()
         {
+            // QF38 (4): the chase is AUTO-DRIVEN. Dan (rc1): "leaving Europa's base you can't see where you're going" - the chase
+            // framings look back at her (the front camera, the side tracking shot) while she had to steer past three falling
+            // supports. Now control is taken for the stretch: the camera shows the blast racing behind her, the bike drives
+            // itself on the guide line (the tunnel's centre, past each support on its open side - QF32's SafeLine) on rails, no
+            // crash / retry; control comes back in the open water, facing the way on, the camera behind her (AfterTheNoise).
             Objective("Get out!");
-            int tries = 0;
-            while (true)
+            int tries = 1;
+            _cut = true;                                        // control taken (no hints / skips; the player-style bot waits)
+            Bike.Place(EuropaLayout.Escape[0], 200f);
+            if (!Bike.Riding) Bike.Mount();
+            StopAutoSwim(); Bike.ScriptDriven = true; Bike.ScriptSteer = 0f; Bike.ScriptThrottle = 0f; Bike.ScriptRise = 0f;
+            FollowCamera(); Cam.SnapBehind();
+            float front = -34f;                                 // the blast front's distance along the path (behind her start)
+            var pts = EuropaLayout.Escape;
+            float total = 0f; var seg = new float[pts.Length]; for (int i = 1; i < pts.Length; i++) { seg[i] = Vector3.Distance(pts[i - 1], pts[i]); total += seg[i]; }
+            Vector3 OnPath(float s) { if (s <= 0f) return pts[0] + (pts[0] - pts[1]).normalized * -s; for (int i = 1; i < pts.Length; i++) { if (s <= seg[i]) return Vector3.Lerp(pts[i - 1], pts[i], s / seg[i]); s -= seg[i]; } return pts[pts.Length - 1]; }
+            float Along(Vector3 p) { float best = float.MaxValue, acc0 = 0f, at = 0f; for (int i = 1; i < pts.Length; i++) { var ab = pts[i] - pts[i - 1]; float u = Mathf.Clamp01(Vector3.Dot(p - pts[i - 1], ab) / ab.sqrMagnitude); float d = (pts[i - 1] + ab * u - p).sqrMagnitude; if (d < best) { best = d; at = acc0 + u * seg[i]; } acc0 += seg[i]; } return at; }
+            var safe = SafeLine();
+            LogEscapeLine(safe);
+            // the rail: the bay's exit, the guide line, the mouth and a little beyond - a Catmull-Rom curve sampled every 0.5 m
+            var ctrl = new List<Vector3> { EuropaLayout.Escape[0] };
+            foreach (var q in safe) if ((q - ctrl[ctrl.Count - 1]).magnitude > 2f && q.z < ctrl[ctrl.Count - 1].z + 0.5f && q.z > EuropaLayout.EscapeMouth.z) ctrl.Add(q);
+            ctrl.Add(EuropaLayout.EscapeMouth); ctrl.Add(EuropaLayout.EscapeMouth + (EuropaLayout.OpenWaterStop - EuropaLayout.EscapeMouth).normalized * 8f);
+            var rail = new List<Vector3>();
+            for (int i = 0; i < ctrl.Count - 1; i++)
             {
-                tries++;
-                Bike.Place(EuropaLayout.Escape[0], 200f);
-                if (!Bike.Riding) Bike.Mount();
-                FollowCamera(); Cam.SnapBehind();
-                bool crashed = false; string why = null;
-                float front = -34f;                             // the blast front's distance along the path (behind her start)
-                var pts = EuropaLayout.Escape;
-                float total = 0f; var seg = new float[pts.Length]; for (int i = 1; i < pts.Length; i++) { seg[i] = Vector3.Distance(pts[i - 1], pts[i]); total += seg[i]; }
-                Vector3 OnPath(float s) { if (s <= 0f) return pts[0] + (pts[0] - pts[1]).normalized * -s; for (int i = 1; i < pts.Length; i++) { if (s <= seg[i]) return Vector3.Lerp(pts[i - 1], pts[i], s / seg[i]); s -= seg[i]; } return pts[pts.Length - 1]; }
-                float Along(Vector3 p) { float best = float.MaxValue, acc = 0f, at = 0f; for (int i = 1; i < pts.Length; i++) { var ab = pts[i] - pts[i - 1]; float u = Mathf.Clamp01(Vector3.Dot(p - pts[i - 1], ab) / ab.sqrMagnitude); float d = (pts[i - 1] + ab * u - p).sqrMagnitude; if (d < best) { best = d; at = acc + u * seg[i]; } acc += seg[i]; } return at; }
-                var safe = SafeLine();
-                if (tries == 1) LogEscapeLine(safe);
-                if (Auto) StartCoroutine(AutoSwim(safe, 3.5f));
-                bool saidJunction = false, saidNext = false, saidNarrow = false, saidKeep = false, lowShot = false;
-                float lastRupture = 0f, lastDebris = 0f; float t0 = Time.time;
-                // QF13 (14): the blast front - a white-hot wall filling the tunnel, always racing up behind her (it starts 34 m
-                // back and runs a little under the bike's top speed, faster if she dawdles); the supports ahead fall in as she
-                // nears them, lit by its glow; real chase framing she can steer in: a low camera in front looking back at her
-                // with the blast behind (the start), the chase camera, a side tracking shot (mid-tunnel), the chase camera
-                var bl = EscapeBlast; Light bLight = bl != null ? bl.GetComponentInChildren<Light>(true) : null;
-                if (bl != null) { bl.gameObject.SetActive(true); bl.localScale = Vector3.one; }
-                var fell = new bool[EscapeSupports != null ? EscapeSupports.Length : 0];
-                if (EscapeSupports != null) foreach (var s in EscapeSupports) if (s != null) s.gameObject.SetActive(false);   // they fall in during the ride
-                string frame = "";
-                float minGap = 999f, maxGap = 0f; int inFrame = 0, frames = 0;
-                while (Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeMouth) > 6f && Time.time - t0 < 120f)
-                {
-                    float me = Along(Bike.transform.position);
-                    foreach (var q in safe) if (q.z < Bike.transform.position.z - 3f) { ShowGuide(q); break; }
-                    float gap0 = me - front;
-                    float fs = Mathf.Lerp(17f, 22.5f, Mathf.Clamp01(me / total)) + Mathf.Clamp(gap0 - 22f, 0f, 24f) * 0.5f;   // closes in if she is far ahead; never faster than she can ride
-                    front += fs * Time.deltaTime;
-                    var fp = OnPath(front); var fdir = (OnPath(front + 2f) - fp).normalized;
-                    if (bl != null) { bl.position = fp; bl.rotation = Quaternion.LookRotation(fp - Cam.transform.position); }
-                    if (bLight != null) bLight.intensity = 9f + 3f * Mathf.PerlinNoise(Time.time * 6f, 0f);
-                    if (Time.time - lastRupture > 0.18f && Ruptures != null) { lastRupture = Time.time; Ruptures.transform.position = fp + fdir * 2f; Ruptures.Emit(45); }
-                    if (Time.time - lastDebris > 0.5f) { lastDebris = Time.time; ThrowDebris(fp + fdir * 3f + Vector3.up * 3f, 9f, 2); AudioKit.Play("europa_rupture", fp, 0.85f, 0.1f, AudioKit.Bus.Sfx, 80f); }
-                    float gap = me - front; minGap = Mathf.Min(minGap, gap); maxGap = Mathf.Max(maxGap, gap);
-                    if (front > me - 2.5f) { crashed = true; why = "caught by the blast"; break; }
-                    // the supports fall in ahead of her, lit by the blast (readable obstacles)
-                    for (int i = 0; EscapeSupports != null && i < EscapeSupports.Length; i++)
-                        if (!fell[i] && EscapeSupports[i] != null && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeSupports[i]) < 48f) { fell[i] = true; StartCoroutine(SupportFalls(EscapeSupports[i])); }
-                    foreach (var s in EuropaLayout.EscapeSupports) if (Vector3.Distance(Bike.transform.position, s) < 1.7f) { crashed = true; why = "hit a falling support"; }
-                    if (crashed) break;
-                    // the chase framing by where she is along the tunnel (short cuts, never confusing about where she goes)
-                    string want = me < 30f || (me > total * 0.72f && me < total * 0.8f) ? "front" : me > total * 0.42f && me < total * 0.56f ? "side" : "chase";
-                    {
-                        // every framing is kept inside the tunnel (the swim volume) - a follow camera behind her slid
-                        // through the tunnel's walls at the bends and showed nothing (Dan: "you couldn't even tell what happened")
-                        var b = Bike.transform; Vector3 cp, lk; float fov;
-                        if (want == "front") { cp = b.position + b.forward * 6f + Vector3.up * 0.8f + b.right * 1.0f; lk = b.position + Vector3.up * 0.8f - b.forward * 8f; fov = 60f; }
-                        else if (want == "side")
-                        {
-                            // the side with room (the tunnel wall must not push the camera into her); too tight = the chase framing
-                            var r1 = EuropaLayout.SwimClamp(b.position + b.right * 2.8f + Vector3.up * 1.0f - b.forward * 1.5f, 1.3f);
-                            var r2 = EuropaLayout.SwimClamp(b.position - b.right * 2.8f + Vector3.up * 1.0f - b.forward * 1.5f, 1.3f);
-                            cp = (r1 - b.position).magnitude >= (r2 - b.position).magnitude ? r1 : r2; lk = b.position + b.forward * 3f + Vector3.up * 0.5f; fov = 62f;
-                            if ((cp - b.position).magnitude < 2.2f) { cp = b.position - b.forward * 6.5f + Vector3.up * 1.8f; lk = b.position + b.forward * 6f + Vector3.up * 0.5f; fov = 60f; }
-                        }
-                        else { cp = b.position - b.forward * 6.5f + Vector3.up * 1.8f; lk = b.position + b.forward * 6f + Vector3.up * 0.5f; fov = 60f; }
-                        cp = EuropaLayout.SwimClamp(cp, 1.3f);
-                        Cam.Shot(cp, lk, frame != want ? 0.01f : 0.12f, frame != want, fov);
-                    }
-                    if (frame != want) { Log($"escape (QF13 14): cut to the {want} framing at {me:0} m (blast {gap:0} m behind her)"); StartCoroutine(Shot($"qf13_14d_chase_{want}_{me:000}m")); }
-                    frame = want;
-                    if (Shots && Time.time > _seqAt) { _seqAt = Time.time + 0.4f; StartCoroutine(Shot($"qf13_14s_{_seqN++:00}_chase_{want}")); }
-                    frames++; if (bl != null) { var vp = Cam.GetComponent<Camera>().WorldToViewportPoint(bl.position); if (vp.z > 0f && vp.x > -0.2f && vp.x < 1.2f && vp.y > -0.2f && vp.y < 1.2f) inFrame++; }
-                    if (!saidJunction && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeJunction) < 22f) { saidJunction = true; StartCoroutine(Say("EUR_12", 5, 6)); }   // Left at the junction / I see it.
-                    if (!saidNext && me > total * 0.45f) { saidNext = true; StartCoroutine(Say("EUR_12", 7, 8)); }                                                         // The next opening— / I see it!
-                    if (!saidNarrow && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeNarrow) < 14f) { saidNarrow = true; if (EscapeCollapse != null) StartCoroutine(Narrowing()); }
-                    if (!lowShot && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeNarrow) < 4f)
-                    {
-                        // low tracking shot - the bike forks clear the obstruction; straight back to the riding camera
-                        lowShot = true;
-                        Shoot(Bike.transform.position + Bike.transform.forward * 2.2f + Vector3.down * 0.4f + Bike.transform.right * 0.6f, Bike.transform.position + Bike.transform.forward * 0.8f, 44f, 0.01f);
-                        yield return Wait(0.35f); StartCoroutine(Shot("e25_low_tracking_bike_forks")); yield return Wait(0.35f);
-                        FollowCamera();
-                    }
-                    if (!saidKeep && me > total * 0.8f) { saidKeep = true; StartCoroutine(Say("EUR_12", 9, 9)); }                                                         // Keep going.
-                    if (Shots && !_escShot && me > total * 0.25f) { _escShot = true; StartCoroutine(Shot("e25b_escape_ruptures_behind_her")); }
-                    yield return null;
-                }
-                StopAutoSwim(); HideGuide();
-                Log($"escape (QF13 14): try {tries}: blast {minGap:0}..{maxGap:0} m behind her; the blast (or its light) in the frame in {inFrame} of {frames} frames; {(crashed ? why : "out")}");
-                if (!crashed) break;
-                if (bl != null) bl.gameObject.SetActive(false);
-                Crashes++;
-                Log($"escape ride: {why} at {Bike.transform.position} - white flash, retry from the start (try {tries + 1})");
-                yield return UI.Fade(1f, 0.25f, 1f);
-                yield return Wait(0.4f);
-                yield return UI.Fade(0f, 0.6f, 1f);
-                if (tries >= 6 && Auto) { Log("escape ride: autopilot could not finish - placed at the mouth (check run only)"); Bike.Place(EuropaLayout.EscapeMouth, 200f); break; }
+                var p0 = ctrl[Mathf.Max(0, i - 1)]; var p1 = ctrl[i]; var p2 = ctrl[i + 1]; var p3 = ctrl[Mathf.Min(ctrl.Count - 1, i + 2)];
+                int n = Mathf.Max(2, Mathf.CeilToInt(Vector3.Distance(p1, p2) / 0.5f));
+                for (int k = 0; k < n; k++) { float u = k / (float)n, u2 = u * u, u3 = u2 * u; rail.Add(EuropaLayout.SwimClamp(0.5f * (2f * p1 + (p2 - p0) * u + (2f * p0 - 5f * p1 + 4f * p2 - p3) * u2 + (3f * p1 - p0 - 3f * p2 + p3) * u3), 1.3f)); }
             }
+            rail.Add(ctrl[ctrl.Count - 1]);
+            var racc = new float[rail.Count]; for (int i = 1; i < rail.Count; i++) racc[i] = racc[i - 1] + Vector3.Distance(rail[i - 1], rail[i]);
+            float railLen = racc[rail.Count - 1];
+            Vector3 RailAt(float s, out Vector3 dir) { int i = 1; while (i < rail.Count - 1 && racc[i] < s) i++; float u = Mathf.InverseLerp(racc[i - 1], racc[i], s); dir = (rail[i] - rail[i - 1]).normalized; return Vector3.Lerp(rail[i - 1], rail[i], u); }
+            float worstSupport = float.MaxValue; foreach (var rp0 in rail) foreach (var sp in EuropaLayout.EscapeSupports) worstSupport = Mathf.Min(worstSupport, Vector3.Distance(rp0, sp));
+            Log($"ESCAPE AUTODRIVE (QF38 4): control taken for the chase - the bike drives itself on the guide line ({rail.Count} rail points, {railLen:0} m, nearest support centre {worstSupport:0.0} m); the camera shows the blast behind her");
+            Bike.Rails = true;
+            float railS = 0f, railSpeed = Mathf.Max(8f, Bike.Speed);
+            var chaseBl = EscapeBlast; Light chaseLight = chaseBl != null ? chaseBl.GetComponentInChildren<Light>(true) : null;
+            if (chaseBl != null) { chaseBl.gameObject.SetActive(true); chaseBl.localScale = Vector3.one; }
+            var fell = new bool[EscapeSupports != null ? EscapeSupports.Length : 0];
+            if (EscapeSupports != null) foreach (var s in EscapeSupports) if (s != null) s.gameObject.SetActive(false);   // they fall in during the ride
+            bool saidJunction = false, saidNext = false, saidNarrow = false, saidKeep = false, lowShot = false;
+            float lastRupture = 0f, lastDebris = 0f; float t0 = Time.time;
+            string frame = "";
+            float minGap = 999f, maxGap = 0f; int inFrame = 0, frames = 0;
+            while (railS < railLen - 0.5f && Time.time - t0 < 60f)
+            {
+                float me = Along(Bike.transform.position);
+                float gap0 = me - front;
+                float fs = Mathf.Lerp(17f, 22.5f, Mathf.Clamp01(me / total)) + Mathf.Clamp(gap0 - 22f, 0f, 24f) * 0.5f;
+                front += fs * Time.deltaTime;
+                // the bike keeps a dramatic but safe lead of ~14 m ahead of the front
+                railSpeed = Mathf.MoveTowards(railSpeed, Mathf.Clamp(fs + (14f - gap0) * 0.6f, 12f, 25f), 14f * Time.deltaTime);
+                railS += railSpeed * Time.deltaTime;
+                var rp = RailAt(railS, out var rdir);
+                Bike.RailSpeed = railSpeed;
+                Bike.RailPitch = Mathf.Clamp(Mathf.Asin(Mathf.Clamp(rdir.y, -1f, 1f)) * Mathf.Rad2Deg, -HoverBike.MaxPitchDeg, HoverBike.MaxPitchDeg);
+                var fl = Flat(rdir);
+                float yawNow = Bike.transform.eulerAngles.y, yawWant = fl.sqrMagnitude > 1e-4f ? Quaternion.LookRotation(fl).eulerAngles.y : yawNow;
+                Bike.RailLean = Mathf.Clamp(-Mathf.DeltaAngle(yawNow, yawWant) * 6f, -18f, 18f);
+                Bike.transform.SetPositionAndRotation(rp, Quaternion.Euler(0f, Mathf.MoveTowardsAngle(yawNow, yawWant, 160f * Time.deltaTime), 0f));
+                var fp = OnPath(front); var fdir = (OnPath(front + 2f) - fp).normalized;
+                if (chaseBl != null) { chaseBl.position = fp; chaseBl.rotation = Quaternion.LookRotation(fp - Cam.transform.position); }
+                if (chaseLight != null) chaseLight.intensity = 9f + 3f * Mathf.PerlinNoise(Time.time * 6f, 0f);
+                if (Time.time - lastRupture > 0.18f && Ruptures != null) { lastRupture = Time.time; Ruptures.transform.position = fp + fdir * 2f; Ruptures.Emit(45); }
+                if (Time.time - lastDebris > 0.5f) { lastDebris = Time.time; ThrowDebris(fp + fdir * 3f + Vector3.up * 3f, 9f, 2); AudioKit.Play("europa_rupture", fp, 0.85f, 0.1f, AudioKit.Bus.Sfx, 80f); }
+                float gap = me - front; minGap = Mathf.Min(minGap, gap); maxGap = Mathf.Max(maxGap, gap);
+                // the supports fall in ahead of her, lit by the blast (she weaves past each one on its open side)
+                for (int i = 0; EscapeSupports != null && i < EscapeSupports.Length; i++)
+                    if (!fell[i] && EscapeSupports[i] != null && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeSupports[i]) < 48f) { fell[i] = true; StartCoroutine(SupportFalls(EscapeSupports[i])); }
+                // the chase framing by where she is along the tunnel (short cuts; the blast behind her is the show - she is not steering)
+                string want = me < 30f || (me > total * 0.72f && me < total * 0.8f) ? "front" : me > total * 0.42f && me < total * 0.56f ? "side" : "chase";
+                {
+                    var b = Bike.transform; Vector3 cp, lk; float fov;
+                    if (want == "front") { cp = b.position + b.forward * 6f + Vector3.up * 0.8f + b.right * 1.0f; lk = b.position + Vector3.up * 0.8f - b.forward * 8f; fov = 60f; }
+                    else if (want == "side")
+                    {
+                        var r1 = EuropaLayout.SwimClamp(b.position + b.right * 2.8f + Vector3.up * 1.0f - b.forward * 1.5f, 1.3f);
+                        var r2 = EuropaLayout.SwimClamp(b.position - b.right * 2.8f + Vector3.up * 1.0f - b.forward * 1.5f, 1.3f);
+                        cp = (r1 - b.position).magnitude >= (r2 - b.position).magnitude ? r1 : r2; lk = b.position + b.forward * 3f + Vector3.up * 0.5f; fov = 62f;
+                        if ((cp - b.position).magnitude < 2.2f) { cp = b.position - b.forward * 6.5f + Vector3.up * 1.8f; lk = b.position + b.forward * 6f + Vector3.up * 0.5f; fov = 60f; }
+                    }
+                    else { cp = b.position - b.forward * 6.5f + Vector3.up * 1.8f; lk = b.position + b.forward * 6f + Vector3.up * 0.5f; fov = 60f; }
+                    cp = EuropaLayout.SwimClamp(cp, 1.3f);
+                    Cam.Shot(cp, lk, frame != want ? 0.01f : 0.12f, frame != want, fov);
+                }
+                if (frame != want) { Log($"escape (QF13 14): cut to the {want} framing at {me:0} m (blast {gap:0} m behind her; auto-driven)"); StartCoroutine(Shot($"qf13_14d_chase_{want}_{me:000}m")); }
+                frame = want;
+                if (Shots && Time.time > _seqAt) { _seqAt = Time.time + 0.4f; StartCoroutine(Shot($"qf13_14s_{_seqN++:00}_chase_{want}")); }
+                frames++; if (chaseBl != null) { var vp = Cam.GetComponent<Camera>().WorldToViewportPoint(chaseBl.position); if (vp.z > 0f && vp.x > -0.2f && vp.x < 1.2f && vp.y > -0.2f && vp.y < 1.2f) inFrame++; }
+                if (!saidJunction && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeJunction) < 22f) { saidJunction = true; StartCoroutine(Say("EUR_12", 5, 6)); }   // Left at the junction / I see it.
+                if (!saidNext && me > total * 0.45f) { saidNext = true; StartCoroutine(Say("EUR_12", 7, 8)); }                                                         // The next opening- / I see it!
+                if (!saidNarrow && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeNarrow) < 14f) { saidNarrow = true; if (EscapeCollapse != null) StartCoroutine(Narrowing()); }
+                if (!lowShot && Vector3.Distance(Bike.transform.position, EuropaLayout.EscapeNarrow) < 4f) { lowShot = true; StartCoroutine(Shot("e25_low_tracking_bike_forks")); }
+                if (!saidKeep && me > total * 0.8f) { saidKeep = true; StartCoroutine(Say("EUR_12", 9, 9)); }                                                         // Keep going.
+                if (Shots && !_escShot && me > total * 0.25f) { _escShot = true; StartCoroutine(Shot("e25b_escape_ruptures_behind_her")); }
+                yield return null;
+            }
+            Bike.Rails = false;
+            HideGuide();
+            Log($"escape (QF13 14): try {tries}, auto-driven: blast {minGap:0}..{maxGap:0} m behind her; the blast (or its light) in the frame in {inFrame} of {frames} frames; out at {Bike.transform.position} in {Time.time - t0:0.0} s");
             // QF13 (14): the money shot - she bursts out of the tunnel mouth a split second ahead of the blast; the fireball
             // erupts out of the opening behind her (slow motion for a moment), the pressure wave catches and spins the bike,
             // she wrestles it back under control - the player sees her recover; then the entrance collapses and it goes quiet
@@ -704,16 +709,75 @@ namespace Seven
             yield return Wait(3.0f);                             // hold the moment
             MusicSystem.Play("europa_underwater", 4f);
             Complete("EUR_13");
+            yield return EscapeHandBack();
+        }
+        /// <summary>QF38 (4): control comes back after the auto-driven escape - the bike turned (eased) to face the way on (the route
+        /// to the temple), the riding camera snapped behind her looking forward, the way ahead checked clear; logged.</summary>
+        IEnumerator EscapeHandBack()
+        {
+            var on = EuropaLayout.ToTemple[0]; var to = Flat(on - Bike.transform.position);
+            if (to.sqrMagnitude > 1f)
+            {
+                float y0 = Bike.transform.eulerAngles.y, y1 = Quaternion.LookRotation(to).eulerAngles.y;
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.7f) { Bike.transform.rotation = Quaternion.Euler(0f, Mathf.LerpAngle(y0, y1, Mathf.SmoothStep(0f, 1f, t)), 0f); yield return null; }
+                Bike.transform.rotation = Quaternion.Euler(0f, y1, 0f);
+            }
+            StopAutoSwim(); Bike.Rails = false; Bike.ScriptDriven = Auto;
             yield return Cutscene(false);
+            Cam.SnapBehind();
+            yield return null;
+            var c = Bike.transform.position + Vector3.up * 0.6f; var f = Bike.transform.forward;
+            bool blocked = RideProbe.Cast(c, HoverBike.BodyRadius, f, 25f, HoverBike.IgnoreRoots, null, out float free);
+            float heading = Vector3.Angle(Flat(f), Flat(on - Bike.transform.position)), camOff = Vector3.Angle(Flat(Cam.transform.forward), Flat(f));
+            Log($"ESCAPE AUTODRIVE (QF38 4): control back at {Bike.transform.position} - facing the way on {heading:0} deg off the route's heading (must be < 15), the camera {camOff:0} deg off her heading (behind her, looking forward; must be < 25), the way ahead {(blocked ? $"blocked at {free:0.0} m" : "clear for 25 m")}");
         }
         IEnumerator AutoSwimOnce(Vector3 p) { yield return AutoSwim(new[] { p }, 4f); }
+
+        /// <summary>QF38 (3): she rode through the temple's entrance (not placed there by a skip).</summary>
+        public bool TemplePassed { get; private set; }
+        public bool TempleRouteSkipped { get; private set; }
+        /// <summary>QF38 (3): watch the bike cross the temple's wall ring inside the entrance's gap (logged with the time), and take a
+        /// gated frame from the player's own camera as she reaches the entrance (the doorway as its subject).</summary>
+        IEnumerator TempleEntranceWatch()
+        {
+            float t0 = Time.time; bool shot = false; Vector3 last = Bike.transform.position;
+            float WallR(Vector3 p) => Flat(p - EuropaLayout.TempleCentre).magnitude;
+            while (!TemplePassed)
+            {
+                var p = Bike.transform.position;
+                if (!shot && !_cut && Vector3.Distance(p, EuropaLayout.TempleDoor) < 22f && WallR(p) > 50f)
+                {
+                    shot = true;
+                    ImageGate.ExpectPoint(EuropaLayout.TempleDoor, "the temple's lit entrance ahead", 0f, "qf38_europa_temple");
+                    if (Cap != null && DemoBoot.CaptureDir != null) StartCoroutine(Cap.Shot("qf38_europa_temple_entrance_player_view"));
+                    Log($"TEMPLE ENTRANCE (QF38 3): the player's view at the entrance - camera at {Cam.transform.position}, looking {Cam.transform.forward}, the doorway {Vector3.Distance(Cam.transform.position, EuropaLayout.TempleDoor):0} m ahead ({(Vector3.Angle(Cam.transform.forward, EuropaLayout.TempleDoor - Cam.transform.position)):0} deg off the view's centre)");
+                }
+                if (WallR(last) > 48.5f && WallR(p) <= 48.5f)
+                {
+                    float ang = Mathf.Atan2(p.z - EuropaLayout.TempleCentre.z, p.x - EuropaLayout.TempleCentre.x) * Mathf.Rad2Deg;
+                    bool inGap = Mathf.Abs(Mathf.DeltaAngle(ang, EuropaLayout.TempleDoorDeg)) < EuropaLayout.TempleDoorHalf;
+                    bool jumped = (p - last).magnitude > 6f;        // a skip's placement, not a ride
+                    if (inGap && !jumped) { TemplePassed = true; Log($"TEMPLE ENTRANCE (QF38 3): passed at t={Time.time - t0:0.0} s after the route began - riding through the entrance at {p} ({Mathf.DeltaAngle(ang, EuropaLayout.TempleDoorDeg):0.0} deg from its centre)"); }
+                    else Log($"TEMPLE ENTRANCE (QF38 3): crossed the wall ring {(jumped ? "by a placement (skip)" : $"outside the entrance ({Mathf.DeltaAngle(ang, EuropaLayout.TempleDoorDeg):0} deg off)")} at {p}");
+                }
+                last = p;
+                yield return null;
+            }
+        }
 
         // ------------------------------------------------------------------------------------------ 14-15: the temple, the vision
         IEnumerator Temple()
         {
             Objective("Follow the keeper");
             if (Keeper != null) { Keeper.transform.position = EuropaLayout.OpenWaterStop + new Vector3(8f, 3f, -14f); Keeper.GlideTo(EuropaLayout.ToTemple[2] + new Vector3(6f, 6f, 0f), 5f); }
-            yield return RideRoute(EuropaLayout.ToTemple, "the reopened route to the temple", 8f);
+            // QF38 (3): the route goes through the temple's open entrance (the guide light waits in the doorway); watched + captured
+            var templeWatch = StartCoroutine(TempleEntranceWatch());
+            var route = new[] { EuropaLayout.ToTemple[0], EuropaLayout.TempleDoor, EuropaLayout.ToTemple[1], EuropaLayout.ToTemple[2] };
+            int skips0 = Skips;
+            yield return RideRoute(route, "the reopened route to the temple", 8f);
+            if (Skips > skips0) { TempleRouteSkipped = true; Log($"TEMPLE ENTRANCE (QF38 3): SOFT-LOCK - the route into the temple needed a skip ({Skips - skips0}); she was at {Bike.transform.position}"); if (DemoBoot.CaptureDir != null && Cap != null) Cap.Soft++; }
+            if (!TemplePassed) Log($"TEMPLE ENTRANCE (QF38 3): NOT passed riding (route ended at {Bike.transform.position}, skipped {TempleRouteSkipped})");
+            if (templeWatch != null) StopCoroutine(templeWatch);
             yield return StopBike();
             yield return Cutscene(true);
             // the temple is built for its inhabitants: broad passages, enormous spaces

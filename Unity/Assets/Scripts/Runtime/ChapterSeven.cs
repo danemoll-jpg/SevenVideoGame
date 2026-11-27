@@ -97,8 +97,16 @@ namespace Seven
         protected override bool UseRootMotion => Current == Mode.Free || Current == Mode.Fight || Current == Mode.Locked || Current == Mode.Touch || Current == Mode.Gesture || Current == Mode.Look;
         float _floatT;
 
+        SevenTableIK _bladeIk;
         void LateUpdate()
         {
+            // QF38 (1): one owner per arm, the same frame - a ledge / climb / the bike, or a scripted hand (the table IK in a
+            // cutscene) takes her hands: the arc blades are sheathed first (quietly for a script)
+            if (BladesDrawn)
+            {
+                if (Current == Mode.Ride || Current == Mode.Hang || Current == Mode.Climb) DrawBlades(false);
+                else { if (_bladeIk == null) _bladeIk = GetComponent<SevenTableIK>(); if (_bladeIk != null && _bladeIk.isActiveAndEnabled && Mathf.Max(_bladeIk.RightNow, _bladeIk.LeftNow) > 0.02f) DrawBlades(false, true); }
+            }
             TraversalLateUpdate();
             if (_dotLevel != _dotTarget) { _dotLevel = Mathf.MoveTowards(_dotLevel, _dotTarget, _dotRate * Time.deltaTime); }
             ApplyDot();
@@ -167,6 +175,9 @@ namespace Seven
         {
             UndoWallPush();                               // QF8: last frame's rendered wall push is not gameplay
             Ground.BlockLow = !Crouched;
+            // QF38 (1): one owner per arm - the arc blades sheathe themselves when her hands are needed elsewhere (a ledge, a climb,
+            // the bike's grips); the whole-game run's hand audit caught her climbing and riding with them out (two drivers at once)
+            if (BladesDrawn && (Current == Mode.Ride || Current == Mode.Hang || Current == Mode.Climb)) DrawBlades(false);
             base.Update();
             switch (Current)
             {

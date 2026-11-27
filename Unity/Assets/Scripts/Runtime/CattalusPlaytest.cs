@@ -89,7 +89,7 @@ namespace Seven
                 if (con != null && con.Map != null && (con.Choosing || con.Current == ShipConsole.State.Using && con.CurrentPage == ShipConsole.Page.Map))
                 {
                     _stick = Vector2.zero; _rt = 0f; _held = 0u;
-                    if (con.Map.Selected != "cattalus") { if (_phase == 0 && _presses.Count == 0) { Press(con.Map.View == StarMap.Sol && con.Map.IsGateway(con.Map.Selected) ? A : GamepadButton.DpadRight); yield return WaitR(0.6f); } }
+                    if (con.Map.Selected != WholeGameRun.MapWant(con, "cattalus")) { if (_phase == 0 && _presses.Count == 0) { Press(con.Map.View == StarMap.Sol && con.Map.IsGateway(con.Map.Selected) ? A : GamepadButton.DpadRight); yield return WaitR(0.6f); } }
                     else { Log("star map: Cattalus highlighted - A, A"); Press(A); yield return WaitR(0.6f); Press(A); yield return WaitR(1.6f); consoleDone = true; }
                     continue;
                 }

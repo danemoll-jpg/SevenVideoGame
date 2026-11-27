@@ -42,6 +42,7 @@ namespace Seven
         /// <paramref name="holdOpen"/> the rings stay open (the caller plays a scene inside the passage, then <see cref="Close"/>).</summary>
         public static IEnumerator Run(string to, bool holdOpen = false)
         {
+            WorldFlags.UseOwnSaves($"setting course for {to}");      // QF38 (8): a Scene Select session ends when the story travels on
             var go = new GameObject("TravelPassage"); var tp = go.AddComponent<TravelPassage>();
             yield return tp.Play(to, holdOpen);
             if (!holdOpen) Destroy(go);

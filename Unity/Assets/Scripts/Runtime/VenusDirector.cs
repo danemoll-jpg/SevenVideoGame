@@ -1489,7 +1489,7 @@ namespace Seven
             yield return Shot("v17_c03_most_of_a_life");
             // she keeps it (never taken); the guardian rises and leads toward the cube chamber
             if (_carry != null) { ik.RightPos = _carry.HipPoint; yield return Wait(0.5f); _carry.Set(CarriedShape.Where.Pocket, 0.3f); }
-            ik.RightW = 0f; ik.LookW = 0f;
+            ik.RightW = 0f; ik.LookW = 0f; ik.Alive = true;   // QF38 (1): her head life back (it stayed off after C03 - the hand audit's one 'stuck')
             // Round 13 (0e): he turns toward the temple doors and tells her to follow, then walks ahead to the cube chamber
             // (waiting for her if she falls behind)
             if (Guardian != null) { Guardian.Play("idle"); Guardian.Face(new Vector3(30f, 0f, 240f)); }

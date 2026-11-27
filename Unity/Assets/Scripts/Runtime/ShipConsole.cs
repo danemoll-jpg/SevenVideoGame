@@ -157,6 +157,13 @@ namespace Seven
             if (WorldFlags.CattalusUnlocked || CattalusState.OwnReached) l.Add("cattalus");   // Round 18: after the asteroid AND the mothership
             return l;
         }
+        /// <summary>QF38 (6): what "The Moon" on the star map does in the save's state - the same order as SetCourseTo.</summary>
+        public static string MoonOutcome()
+        {
+            if (!CattalusState.OwnComplete) return "revisit (Chapter 1 is done; the finale is not open yet)";
+            if (!FinaleState.Released) return "to be continued";
+            return FinaleState.OwnComplete ? "revisit (the finale is done)" : "THE FINALE";
+        }
         /// <summary>Where the saucer is now: at Venus in the Venus aboard mode, otherwise at the Moon (Chapter 1).</summary>
         public static string Here()
         {
@@ -414,14 +421,15 @@ namespace Seven
             if (Current != State.Off || Seven == null) return;
             // QF20 (1): the combined-records discovery can never be missed - due = she goes to the pilot's chair instead
             var ab = Chapter1Aboard.I;
-            if (WorldFlags.CombinedDue && ab != null && ab.Active && ab.Explored && !ab.InGalleyScene)
+            var due = WorldFlags.ConsoleDue;                                    // QF38 (8): the one selector (BranchAudit)
+            if (due == "MAR_13C" && ab != null && ab.Active && ab.Explored && !ab.InGalleyScene)
             {
                 CapLog("used while the combined-records discovery is due -> MAR_13C in the pilot's chair");
                 _busy++; StartCoroutine(DueDiscovery(ab)); return;
             }
-            if (WorldFlags.CattalusDue && ab != null && ab.Active && ab.Explored && !ab.InGalleyScene)
+            if (due != null && due != "MAR_13C" && ab != null && ab.Active && ab.Explored && !ab.InGalleyScene)
             {
-                CapLog("used while the Cattalus lead is due -> AST_11B in the pilot's chair");
+                CapLog($"used while the Cattalus lead is due -> {due} in the pilot's chair (the chapter finished last: {WorldFlags.LastOfPair ?? "unknown"})");
                 _busy++; StartCoroutine(DueCattalus(ab)); return;
             }
             Current = State.Entering;

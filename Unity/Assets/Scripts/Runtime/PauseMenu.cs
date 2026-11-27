@@ -454,6 +454,11 @@ namespace Seven
         {
             PlayerPrefs.DeleteKey(Key); PlayerPrefs.DeleteKey(OldKey); PlayerPrefs.DeleteKey(FurthestKey);
             VenusState.ClearOwnSave(); EuropaState.ClearOwnSave(); MarsState.ClearOwnSave(); AsteroidState.ClearOwnSave(); BiavehState.ClearOwnSave(); CattalusState.ClearOwnSave(); WorldFlags.Clear();   // QF23 (24): the mothership's save too
+            // QF38 (6): the finale's save too - a finale finished in an earlier playthrough stayed "complete", so on the next new game
+            // the Moon after CAT_12 went to the "visited (its record is aboard)" revisit instead of the finale. And the saucer's place
+            // / star system (a new game starts at the Moon, in our solar system - never the last game's Veyra)
+            FinaleState.ClearOwnSave();
+            SaucerLocation.System = "sol"; SaucerLocation.Set("moon");
             PlayerPrefs.Save();
             Debug.Log("[Seven] new game: Chapter 1 checkpoint, Venus save and console progress reset");
         }

@@ -280,7 +280,7 @@ namespace Seven
             yield return ExitStaging("CAT_12 ends");
             ShipConsole.StoryLock = false;
             CattalusHomeDone = true;
-            if (DemoBoot.CatPlay) yield break;                  // the player-style run writes its own summary
+            if (DemoBoot.CatPlay && !WholeGameRun.Active) yield break;                  // the player-style run writes its own summary
             if (Auto) { Cap?.Finish($"CATTALUS CHECK RUN DONE: {CattalusState.Summary()}; {WorldFlags.Summary()}"); yield break; }
             yield return ExploreVenus(false);
         }

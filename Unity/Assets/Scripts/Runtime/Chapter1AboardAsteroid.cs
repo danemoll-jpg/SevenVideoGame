@@ -313,7 +313,21 @@ namespace Seven
         IEnumerator NextDestination(string where)
         {
             var con = ShipConsole.I;
-            var talk = where.StartsWith("the console") ? "AST_11B" : WorldFlags.NextTalk("asteroid");     // QF24 (22): from the save's completion flags
+            var talk = where.StartsWith("the console") ? WorldFlags.CattalusLeadTalk : WorldFlags.NextTalk("asteroid");     // QF24 (22) / QF38 (8): the console plays the version of the chapter finished last
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"BRANCH (QF38 8) {where}: {talk} ({WorldFlags.Summary()}, finished last {WorldFlags.LastOfPair ?? "-"})");
+            if (talk == "BIA_13B")
+            {
+                // the mothership was finished last (the lead was due at the console, e.g. a quit during BIA_13B): its own version
+                NavHand(true); CutPilot("ots");
+                if (con != null) con.ShowMap(null, "The Biavian record  ·  the asteroid record");
+                yield return SayB("BIA_13B", 1, 2);
+                Cat.LapNudge(-12f); CutPilot("lap");
+                yield return SayB("BIA_13B", 3, 7);
+                yield return SayB("BIA_13B", 8, 11);
+                WorldFlags.MarkCattalusSeen();
+                yield return PickNext("cattalus", "Set course for Cattalus", p => _goNext = p);
+            }
+            else
             if (DemoBoot.CaptureDir != null) Cap?.Log($"NEXT TALK (QF24 22): the asteroid finished, asteroid done {WorldFlags.AsteroidDone}, mothership done {WorldFlags.BiavehDone} -> {talk}");
             if (talk == "AST_11B")
             {
@@ -325,7 +339,7 @@ namespace Seven
                 yield return SayA("AST_11B", 3, 7);                           // You recognize it? / Yes. / Panther? / Cattalus. / Your home?
                 yield return SayA("AST_11B", 8, 13);                          // ...entrusted to us. / ... show me around. / There will be rules. / ... / I'll knock.
                 WorldFlags.MarkCattalusSeen();
-                if (con != null) yield return con.ComingSoonCard("Cattalus (coming soon)");
+                yield return PickNext("cattalus", "Set course for Cattalus", p => _goNext = p);   // QF38 (5): it exists - no "coming soon" card
             }
             else
             {
@@ -338,7 +352,7 @@ namespace Seven
                 if (con != null) con.ShowMap("biaveh", WorldFlags.ContactName + "  ·  beyond this solar system");
                 yield return SayA("AST_11A", 6, 7);                           // Biaveh. And something to eat on the way. / Now that is a plan.
                 yield return ShotV("aa15_biaveh_selected");
-                if (con != null) yield return con.ComingSoonCard("The Biavian Mothership (coming soon)");
+                yield return PickNext("biaveh", "Continue to the Biavian mothership", p => _goNext = p);   // QF38 (5)
             }
             AsteroidHomeDone = true;
             if (DemoBoot.CaptureDir != null) Cap?.Log($"ASTEROID CHAPTER DONE: {AsteroidState.Summary()}; {WorldFlags.Summary()}");
@@ -347,7 +361,26 @@ namespace Seven
             yield return ExitStaging("the asteroid's departure routing ends");
             ShipConsole.StoryLock = false;
             if (Auto) { Cap.Finish($"ASTEROID CHECK RUN DONE: {AsteroidState.Summary()}; {WorldFlags.Summary()}"); yield break; }
+            if (_goNext != null) { yield return SetOffNow("the asteroid's departure"); yield break; }
             yield return ExploreVenus(false);
+        }
+        /// <summary>QF38 (5): the departure talk's destination is picked on the star map and the saucer sets off at once (the
+        /// mothership / Cattalus chapters exist: the old "coming soon" cards made the player go back to the console and pick it
+        /// again). The one choice is the destination the talk just named.</summary>
+        string _goNext;
+        IEnumerator PickNext(string id, string label, System.Action<string> picked)
+        {
+            var con = ShipConsole.I; string pick = null;
+            if (con != null) { if (Auto) con.ScriptPick = id; yield return con.ChooseOnStarMap(new[] { id }, new[] { label }, p => pick = p); }
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"NEXT DESTINATION (QF38 5): picked {pick ?? "(no console)"} on the star map - sets off now (no coming-soon card)");
+            picked?.Invoke(pick);
+        }
+        IEnumerator SetOffNow(string why)
+        {
+            var id = _goNext; _goNext = null; var con = ShipConsole.I;
+            if (DemoBoot.CaptureDir != null) Cap?.Log($"NEXT DESTINATION (QF38 5): {why} - setting course for {ShipConsole.WorldName(id)} ({id}) straight away");
+            if (con == null) { yield return ExploreVenus(false); yield break; }
+            yield return con.TravelForCheck(id);
         }
         /// <summary>The Cattalus lead is due at the console (the QF20 lesson): she takes the pilot's chair, AST_11B.</summary>
         public IEnumerator CattalusAtConsole()
