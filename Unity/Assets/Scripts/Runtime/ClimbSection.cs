@@ -114,7 +114,9 @@ namespace Seven
                     if (!GroundOk(o)) { rejGround++; continue; }
                     if (!Clear(o, rends)) { rejMesh++; continue; }
                     var mid = o + new Vector3(1.6f, 0f, 1.3f);
-                    bool near = avoid.Any(p => Flat(p - mid).magnitude < 7f && Mathf.Abs(p.y - o.y) < 12f) || segs.Any(sg => SegDist(mid, sg.Item1, sg.Item2) < 6f);
+                    // QF41: 10 m from the block's centre (its half-length is 3.2 m: the old 6-7 m left a straight bike line from Mars's west rim
+                    // to the saucer 2.8 m from its corner - the bot rode into it and needed a skip)
+                    bool near = avoid.Any(p => Flat(p - mid).magnitude < 10f && Mathf.Abs(p.y - o.y) < 12f) || segs.Any(sg => SegDist(mid, sg.Item1, sg.Item2) < 10f);
                     if (near) { rejRoute++; continue; }
                     float sc = Flat(o - S.Seed).magnitude;
                     if (sc < best) { best = sc; pick = o; }

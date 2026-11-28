@@ -116,6 +116,6 @@ namespace Seven
             if (Physics.Linecast(a, b, out _, ~0, QueryTriggerInteraction.Ignore)) return false;
             return ChapterCamera.ClearLine(a, b);
         }
-        public static string Summary() => $"GUIDE LIGHT (QF40 6): one shared guide light - {Shown} objectives / waypoints shown, lead point blocked by a wall {Blocked}x (it waited at the objective instead)";
+        public static string Summary() => $"GUIDE LIGHT (QF40 6): one shared guide light - {Shown} objectives / waypoints shown, frames its lead point was behind a wall {Blocked} (it waited at the objective instead)";
     }
 }

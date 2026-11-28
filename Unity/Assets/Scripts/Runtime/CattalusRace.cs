@@ -133,7 +133,7 @@ namespace Seven
             if (!practice) yield return DuchessClimbsOut();
             Cam.RaceMode = false;
             if (StartLights != null) foreach (var r in StartLights) Glowing.Set(r, 0.15f);
-            if (Screen != null) Screen.Show(CatatronScreen.Mode.Trophy);
+            if (Screen != null) Screen.Show(CatatronScreen.Mode.Ads);           // QF41: back to the commercials after the race
         }
         void Finish()
         {

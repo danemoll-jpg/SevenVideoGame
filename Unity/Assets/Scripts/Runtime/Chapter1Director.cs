@@ -464,7 +464,7 @@ namespace Seven
             bool near = PromptNear;
             // Round 9: one quiet context prompt - the scripted action here, else what a traversal button would do
             if (near) Legend.Context(_promptTk ? ControlsLegend.Btn.Tk : ControlsLegend.Btn.Interact, _promptLabel);
-            else if (Seven.Context != null && !Dlg.Busy && !_resettingFall)
+            else if (Seven.Context != null && !Dlg.Busy && !_resettingFall && !_cut)       // QF40: never a button prompt over a cutscene
             {
                 int c = Seven.Context.IndexOf(':');
                 Legend.Context(BtnOf(Seven.Context.Substring(0, c)), Seven.Context.Substring(c + 1));
@@ -688,10 +688,12 @@ namespace Seven
             var standIn = new GameObject("TunnelerOnTheScreen").transform; standIn.position = scr + Vector3.down * 1.6f;
             DialogueFraming.Speaker = id => id == "tunneler" ? standIn : null;
             var hd = Seven.Bone(HumanBodyBones.Head); var hp = hd != null ? hd.position : Seven.transform.position + Vector3.up * 1.6f;
-            var to = Flat(scr - hp).normalized; var rt = Vector3.Cross(Vector3.up, to);
-            Vector3 camP = hp - to * 1.7f + rt * 0.55f + Vector3.up * 0.15f;
-            foreach (var sd in new[] { 0.55f, -0.55f, 0.9f, -0.9f }) { var c = hp - to * 1.7f + rt * sd + Vector3.up * 0.15f; if (ChapterCamera.ClearLine(c, scr) && ChapterCamera.ClearLine(c, hp)) { camP = c; break; } }
-            Cam.Shot(camP, Vector3.Lerp(hp, scr, 0.75f), 0.01f, true, 46f);
+            // from the open corridor (z 3.6-4.6, between the bulkhead and the gate), the screen large, her in the near side of frame;
+            // the first candidate with a clear line to the screen and to her, never from inside the bulkhead
+            Vector3 camP = new Vector3(17.6f, 1.6f, 4.5f);
+            foreach (var c in new[] { new Vector3(17.6f, 1.6f, 4.5f), new Vector3(18.4f, 1.5f, 4.55f), new Vector3(16.8f, 1.9f, 4.4f), new Vector3(20.6f, 1.6f, 4.5f) })
+                if (ChapterCamera.ClearLine(c, scr) && ChapterCamera.ClearLine(c, hp)) { camP = c; break; }
+            Cam.Shot(camP, Vector3.Lerp(hp, scr, 0.7f), 0.01f, true, 58f);
             yield return Wait(0.7f);
             if (TunScreen != null) ImageGate.Expect(TunScreen.transform, "Tunneler on the prison screen", 0f, "s04t_");
             var talk = StartCoroutine(TunnelerTalks());
@@ -735,7 +737,8 @@ namespace Seven
             yield return Dlg.PlayScene(1, 1, 2);              // Hey. You shouldn't be here. / Go on. Before somebody sees you.
             var convPos = Cam.ShotPos; var convLook = Cam.ShotLook; float convFov = Cam.Fov;
             yield return CatCloseUp();
-            yield return Dlg.PlayScene(1, 3, 3);              // That would make rescuing you considerably harder.
+            // declared as a voice-over shot: his voice over his own still face (the telepathy rule would otherwise cut to 7)
+            yield return DialogueFraming.Over("the cat close up, mouth still, his voice in her head", Dlg.PlayScene(1, 3, 3));   // That would make rescuing you considerably harder.
             Cam.Shot(convPos, convLook, 0.01f, true, convFov);
             var search = StartCoroutine(SearchCorridor());
             yield return Dlg.PlayScene(1, 4, 4);              // Who said that?
@@ -2279,7 +2282,7 @@ namespace Seven
             Talk();
             // QF40 (9): the camera finds the saucer clamped in the impound dock below, and they talk it through - each line framed
             // on what it is about (the saucer, her face, the ore skips trundling past, her laugh, the clamps).
-            var eyeS = SevenHead + sideS * 0.45f + Vector3.up * 0.12f;
+            var eyeS = SevenHead + toS * 1.4f + sideS * 0.3f + Vector3.up * 0.3f;   // out past the terrace rail (its post stood in the middle of the shot)
             Cam.Shot(eyeS, MoonLayout.SaucerCentre + Vector3.up * 1.4f, 0.01f, true, 15f);
             yield return Wait(1.1f);
             if (Saucer != null) ImageGate.Expect(Saucer, "the saucer clamped in the impound dock", 0f, "c07a_");
@@ -2345,15 +2348,16 @@ namespace Seven
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(lv - Seven.transform.position)), 300f * Time.deltaTime); yield return null; }
             var to = Flat(lv - Seven.transform.position).normalized; var sd = Vector3.Cross(Vector3.up, to);
             Cat.GoTo(Seven.transform.position + sd * 0.8f + to * 0.2f, Cat.TrotSpeed, lv);
-            Talk();
+            Cam.Subjects.Clear();                                     // the shot is on the lever: no subject reframing onto them
             Vector3 cam = Seven.transform.position - to * 2.4f + sd * 0.9f + Vector3.up * 1.0f;
             foreach (var s2 in new[] { 0.9f, -0.9f, 1.4f, -1.4f }) { var c = Seven.transform.position - to * 2.4f + sd * s2 + Vector3.up * 1.0f; if (ChapterCamera.ClearLine(c, lv) && ChapterCamera.ClearLine(c, SevenHead)) { cam = c; break; } }
-            Cam.Shot(cam, Vector3.Lerp(SevenHead, lv, 0.7f), 0.9f, false, 50f);
+            Cam.Shot(cam + Vector3.down * 0.5f - to * 1.6f, Vector3.Lerp(SevenHead, lv, 0.72f), 0.01f, true, 66f);   // low and back: the lever high on its gantry and her below it
             yield return ReadyToTalk();
-            if (Lever != null) ImageGate.Expect(Lever, "the release lever up on the gantry, out of reach", 0f, "s07L_");
-            StartCoroutine(ShotLater("s07L_release_lever_out_of_reach", 0.5f));
+            yield return Wait(0.3f);
+            ImageGate.ExpectPoint(MoonLayout.Lever + Vector3.up * 1.2f, "the release lever up on the gantry, out of reach", 0f, "s07L_");
+            yield return Shot("s07L_release_lever_out_of_reach");
             if (Auto || DemoBoot.PlayerSim) Cap?.Log($"CLAMP RELEASE (QF40 10): the lever {lv.y - MoonLayout.Bay:0.0} m above the bay floor on its gantry (7's reach ~2.2 m, the cat's ~1 m): telekinesis is the only way; cables run from it to the four clamps");
-            yield return Dlg.PlayIds("s07_L1_cat");                    // There's the release. Up on the gantry. Neither of us can reach that.
+            yield return DialogueFraming.Over("the release lever up on its gantry", Dlg.PlayIds("s07_L1_cat"));   // There's the release. Up on the gantry. Neither of us can reach that.
             FaceCam(36f);
             yield return Wait(0.25f);
             yield return Dlg.PlayIds("s07_L2_7");                      // I don't need to.

@@ -592,6 +592,11 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**QF41 (2026-11-28): 1.1.0-rc5 (build 2012, `game-2012`) PUBLISHED: the Cat-a-tron commercials. Status in `TODO.md`.**
+- `Tools/Audio/make_catatron_ads.py` makes each ad's sound: its own voice (Voice Design; blocked until the key has
+  voice_generation, so premade stand-ins for now), the timed lines, effects, a music bed and the mix.
+- In the game: `CatatronScreen` `Mode.Ads` (a shuffled rotation, ducked under lines) and `ChannelChange` (the glitch into the race ad).
+- Wiring: `FightDemoBuilderQF41.CatatronAds`.
 **QF40 (2026-11-27): 1.1.0-rc4 (build 2011, `game-2011`): Dan's playthrough list, part 1. Status, decisions and "For Dan to check
 (QF40)" in `TODO.md`.**
 - **Lines:**

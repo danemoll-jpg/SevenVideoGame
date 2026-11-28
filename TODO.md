@@ -1,6 +1,30 @@
 # Active Development Plan — 7: The Observer
 
-## Quick fix QF41: Dan's playthrough list, part 2 (Dan, 2026-11-27) — to do after QF40 (Dan may add items)
+## QF41 — in plain words (Code, 2026-11-28): 1.1.0-rc5 (build 2012, `game-2012`) PUBLISHED, Latest (every earlier release kept)
+- **The Cat-a-tron plays Dan's six commercials**, each with sound: Midnight Zoomies, The Empty Bowl Crisis, Eau de Tuna, The Gravity
+  Testing Championship, The Bird Channel and Box Deluxe.
+  - Each ad's track has the scripted voice lines at their times, the effects Dan listed, and a short music bed that ducks under
+    the voice. The track is exactly 12 seconds and is heard from the screen.
+  - The ads play in a shuffled order. No ad repeats until all six have played, and never the same one twice in a row.
+  - Whenever anyone in the square speaks, the ads drop to a murmur.
+- **As 7 reaches the square, the running ad is cut**: a quick channel change (static rolling over the screen, with its sound).
+  Then the race ad plays: the announcer, the trophy with the sphere, the mark, the Deluxe Retreat. **No race footage.**
+  - After the talk, and after the race, the ads go back to their rotation.
+- **One thing could not be done: the six NEW voices.** The ElevenLabs key is missing the "voice_generation" permission, so the
+  Voice Design API refused.
+  - Until it is enabled, each ad uses a premade library voice that no story character uses: Harry, Alice, Laura (with a French
+    accent), George, Roger and Brian.
+  - **Dan:** enable Voice Generation for the key, then run `python Tools/Audio/make_catatron_ads.py --force`. It designs and saves
+    Ad_Zoomies … Ad_Box from your descriptions, re-voices the lines and remixes everything; one rebuild brings them in.
+- Captures: every ad on the screen, an ad as she arrives, the channel-change glitch, then the race ad.
+- **Also in rc5** (follow-ups to rc4):
+  - The climbing blocks keep 10 m from every story place and route. Mars's block had stood beside the ride back to the saucer.
+  - The "Panther with her" check ignores the time she is riding away on purpose.
+  - Chapter 1 framing fixes from looking at rc4's captures: the cat close-up, Tunneler's screen, the saucer in the dock (seen
+    past the rail), the lever up on its gantry. No button prompts over a cutscene.
+**For Dan to check (QF41)** at the end of the QF41 status below.
+
+## Quick fix QF41: Dan's playthrough list, part 2 (Dan, 2026-11-27) — done (status below)
 
 1. **Six commercials on the Cat-a-tron (Dan's videos), no race footage.** In `Art/Video/catatron/` (12 s each, 736×384, grayscale,
    **sound removed**): `ad_midnight_zoomies`, `ad_empty_bowl_crisis`, `ad_eau_de_tuna`, `ad_gravity_championship`, `ad_bird_channel`,
@@ -38,6 +62,61 @@
    boring). After CAT_04, the ads resume in rotation (never during a conversation; ducked under any line). Make the VO / SFX / music
    with the API (the race ad keeps the Announcer = the Tee'd Off Barker voice; the six ads use the six new voices), save each ad's mixed audio beside its video, list them in `Docs/VOICES.md`.
    Captures of each ad on the screen and the switch to the race ad.
+
+## QF41 — status (Code, 2026-11-28): done except the designed voices (key permission); release 1.1.0-rc5 (build 2012, `game-2012`)
+### What was made
+- `Tools/Audio/make_catatron_ads.py` makes all six ads (`--only zoomies,…`, `--force`, `--mixonly`). Per ad:
+  1. its voice: designed and saved as `Ad_<Name>` (falls back to a premade voice while the key cannot design);
+  2. the lines: Eleven v3 with delivery tags;
+  3. a fit pass: any line longer than its slot is re-taken (v3 faster-paced, v2 at speed 1.15) and the shortest kept;
+  4. the effects (Sound Effects API) and the 12 s bed (Music API);
+  5. the mix (ffmpeg): the lines placed at Dan's times, each trimmed of silence, starting at its time or just after the line
+     before. Only the Gravity ad needed a speed-up, x1.12. The bed is side-chain ducked, -16 LUFS, exactly 12.000 s.
+- Output:
+  - mixes: `Art/Video/catatron/ad_*.ogg` (beside each video) and `Unity/Assets/Resources/Catatron/` (the game's copies);
+  - parts: `Art/Video/catatron/audio/<ad>/`;
+  - the glitch: `channel_glitch.ogg` (Sound Effects API).
+- Line starts (s; Dan's time in brackets where it moved): Zoomies 0, 3.19 (3), 5, 8, 10. Bowl 0, 4.07 (4), 6, 8.78 (9). Tuna 0, 2,
+  6, 10.07 (10). Gravity 0, 3, 6, 8, 10.82 (11). Birds 0, 2, 5, 8.12 (8), 10.02. Box 0, 3, 7, 9.
+- Game:
+  - `CatatronScreen`: `Mode.Ads`, a VideoPlayer into its own render texture, a 3D AudioSource at the screen (30–260 m), ducking to
+    15 % while any line plays, the shuffled bag, `ChannelChange` (rolling static + the glitch sound), `PlayAdNow` (check runs).
+  - Builder `FightDemoBuilderQF41.cs` (`CatatronAds`): the videos into `Assets/Video/catatron/`, their tracks and names.
+  - `CattalusDirectorFlow.Catatron`: the ads → the glitch → the race ad. The old race-highlights opening is gone. After CAT_04 and
+    after the race (`CattalusRace`) the ads resume.
+- `Docs/VOICES.md` lists the six ad voices, their descriptions, the stand-ins and how to switch to the designed ones.
+### Decisions (Code)
+- **Voice Design blocked** (HTTP 401 "missing the permission voice_generation"): the stand-ins above. Every other part of the ads
+  is final. Running the script once the key has the permission swaps in the designed voices.
+- Each ad's sound is a single mixed track, not separate voice / effects / music sources in the game. The ducking under
+  conversations applies to the whole track.
+- The race ad keeps its existing shots (announcer / trophy / mark / Retreat) and the Barker's CAT_04 lines. The jingle plays after
+  the glitch.
+### Proof
+- Build: `CAT-A-TRON ADS (QF41): 6 / 6 commercials on the screen, glitch sound in`.
+- Check run `-catcp 2` (`Builds/Checks/qf41_catatron`): each ad captured on the screen (c10_ad_* 6 / 6, gate PASS). Then an ad as
+  she arrives (c11a), the channel-change glitch (c11b), the race ad (announcer, trophy + sphere, mark: gate PASS).
+  - `CAT-A-TRON (QF41): the running ad was cut by a channel change`.
+  - The rotation's first ads came out in a shuffled order (box_deluxe, eau_de_tuna, midnight_zoomies, …).
+- Two "SOFT-LOCK?" notes turned out to be OLD: the same runs on rc3's build (unpacked from its release) show them too.
+  - The Chapter 1 autopilot gets wedged between a chamber rib and the wall beside the lunar door's mechanism.
+  - The Cattalus autopilot waits for "to the bike at the start".
+  - Both are autopilot-only: players and the player-style bots pass (the whole-game runs).
+- **rc5 whole-game run A** (Mars / asteroid / win, from a new save): `WHOLE GAME (QF38): PASS`, 9 / 9 pieces, 0 soft-locks,
+  115.1 game-min.
+  - Skips 5: the same as QF38's run. The Mars "back to the saucer" skip from rc4 is gone.
+  - `PANTHER WITH HER`: far 0, away 0.
+  - The ads, the glitch and the race ad played in the Cattalus piece.
+  - Run B (Europa / mothership) was not repeated for rc5: nothing in rc5 is order-dependent.
+- **Release gate** `gate_1.1.0-rc5.txt`: **PASS** (no new or worse failure, NaN 0, baseline 12).
+  - The new lever shot first failed (the frame had no subject). It is now framed with her below the gantry.
+- **Published: 1.1.0-rc5, `game-2012`, Latest; every earlier release kept.**
+
+**For Dan to check (QF41)**
+1. The square before CAT_04: do the ads play in a varied order with their sound from the screen, and drop under people's lines?
+2. Walking up: does the channel change cut the ad cleanly into the race ad?
+3. The six ads' timing against your pictures. The stand-in voices are temporary: enable Voice Generation on the key and run the
+   script with `--force`.
 
 ## QF40 — in plain words (Code, 2026-11-27): 1.1.0-rc4 (build 2011, `game-2011`) PUBLISHED, Latest (every earlier release kept)
 All eleven items are in. One exception: the finale has no climbing section (no free spot for one; see item 3).

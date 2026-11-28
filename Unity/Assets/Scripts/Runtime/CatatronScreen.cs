@@ -1,4 +1,5 @@
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Seven
@@ -10,14 +11,20 @@ namespace Seven
     /// display (the sphere in its cradle, the mark on the setting); the runner-up ad = the real Deluxe Retreat; the announcer
     /// at his desk (a small studio set far below the city). One camera renders into the screen's texture at 15 fps, only while
     /// the screen is in view. Grayscale like everything else.
+    /// QF41 (Dan): before CAT_04 and after it the screen plays Dan's six commercials (Art/Video/catatron, 12 s each) in a shuffled
+    /// rotation (no ad repeats until all six have played), each with its own mixed track (voice / effects / music bed:
+    /// Tools/Audio/make_catatron_ads.py) from the screen's position, ducked under any line. When she reaches the square (CAT_04) the
+    /// running ad is cut by a channel-change glitch (static on the screen + its sound) and the RACE AD plays: the announcer, the
+    /// trophy with the sphere, the mark, the Deluxe Retreat. Never race highlights in an ad (Dan: boring).
     /// </summary>
     public class CatatronScreen : MonoBehaviour
     {
-        public enum Mode { Idle, Highlights, Trophy, Mark, Retreat, Announcer, Race }
+        public enum Mode { Idle, Highlights, Trophy, Mark, Retreat, Announcer, Race, Ads }
+        public UnityEngine.Video.VideoClip[] Ads; public AudioClip[] AdAudio; public string[] AdNames; public AudioClip Glitch;
         public Camera ScreenCam;
         public Renderer Face;
         public Transform Trophy, MarkPoint, Retreat, AnnouncerDesk, GhostRacer;
-        public Mode Now { get; private set; } = Mode.Highlights;
+        public Mode Now { get; private set; } = Mode.Ads;
         public int Frames { get; private set; }
         RenderTexture _rt; float _next, _t, _ghostS; bool _talking; Transform _raceFollow;
 
@@ -26,12 +33,100 @@ namespace Seven
             if (ScreenCam == null || Face == null) return;
             _rt = new RenderTexture(512, 288, 16) { name = "Catatron_RT" };
             ScreenCam.targetTexture = _rt; ScreenCam.enabled = false;
-            var m = Face.material;
-            if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", _rt);
-            if (m.HasProperty("_EmissionMap")) { m.SetTexture("_EmissionMap", _rt); m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.white * 0.9f); }
-            if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", _rt);
+            _vrt = new RenderTexture(736, 384, 0) { name = "Catatron_Ads" };
+            _noise = new Texture2D(184, 96, TextureFormat.RGBA32, false) { filterMode = FilterMode.Point, name = "Catatron_Static" };
+            _vp = gameObject.AddComponent<UnityEngine.Video.VideoPlayer>();
+            _vp.playOnAwake = false; _vp.isLooping = false; _vp.renderMode = UnityEngine.Video.VideoRenderMode.RenderTexture; _vp.targetTexture = _vrt;
+            _vp.audioOutputMode = UnityEngine.Video.VideoAudioOutputMode.None; _vp.skipOnDrop = true;
+            _src = gameObject.AddComponent<AudioSource>();
+            _src.playOnAwake = false; _src.spatialBlend = 1f; _src.rolloffMode = AudioRolloffMode.Linear; _src.minDistance = 30f; _src.maxDistance = 260f; _src.dopplerLevel = 0f;
+            SetFace(Now == Mode.Ads ? (Texture)_vrt : _rt);
+            if (Now == Mode.Ads) StartCoroutine(NextAd());
         }
-        public void Show(Mode m) { if (m != Now) { Now = m; _t = 0f; } }
+        void SetFace(Texture tex)
+        {
+            var m = Face.material;
+            if (m.HasProperty("_BaseMap")) m.SetTexture("_BaseMap", tex);
+            if (m.HasProperty("_EmissionMap")) { m.SetTexture("_EmissionMap", tex); m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.white * 0.9f); }
+            if (m.HasProperty("_MainTex")) m.SetTexture("_MainTex", tex);
+        }
+        public void Show(Mode m)
+        {
+            if (m == Now) return;
+            var was = Now; Now = m; _t = 0f;
+            if (_vp == null) return;
+            if (was == Mode.Ads) { StopAllCoroutines(); _vp.Stop(); _src.Stop(); _adOn = false; }
+            SetFace(m == Mode.Ads ? (Texture)_vrt : _rt);
+            if (m == Mode.Ads) StartCoroutine(NextAd());
+        }
+
+        // ---- QF41: the commercials
+        UnityEngine.Video.VideoPlayer _vp; RenderTexture _vrt; Texture2D _noise; AudioSource _src;
+        readonly List<int> _bag = new List<int>(); int _last = -1; bool _adOn; float _duck = 1f;
+        public string CurrentAd => _adOn && _last >= 0 && AdNames != null && _last < AdNames.Length ? AdNames[_last] : null;
+        public static readonly List<string> Played = new List<string>();
+        public static int Glitches;
+        /// <summary>The next ad from a shuffled bag: every ad once before any repeats (and never the same one twice in a row).</summary>
+        int Draw()
+        {
+            if (_bag.Count == 0)
+            {
+                for (int i = 0; i < Ads.Length; i++) _bag.Add(i);
+                for (int i = _bag.Count - 1; i > 0; i--) { int j = Random.Range(0, i + 1); (_bag[i], _bag[j]) = (_bag[j], _bag[i]); }
+                if (_bag.Count > 1 && _bag[0] == _last) (_bag[0], _bag[_bag.Count - 1]) = (_bag[_bag.Count - 1], _bag[0]);
+            }
+            int k = _bag[0]; _bag.RemoveAt(0); return k;
+        }
+        IEnumerator NextAd(int force = -1)
+        {
+            if (Ads == null || Ads.Length == 0) yield break;
+            while (Now == Mode.Ads)
+            {
+                int i = force >= 0 ? force : Draw(); force = -1; _last = i;
+                _vp.clip = Ads[i]; _vp.Prepare();
+                for (float t = 0f; !_vp.isPrepared && t < 3f; t += Time.unscaledDeltaTime) yield return null;
+                _vp.Play();
+                if (AdAudio != null && i < AdAudio.Length && AdAudio[i] != null) { _src.clip = AdAudio[i]; _src.time = 0f; _src.Play(); }
+                _adOn = true;
+                var n = AdNames != null && i < AdNames.Length ? AdNames[i] : Ads[i].name; Played.Add(n);
+                Debug.Log($"[Seven] CAT-A-TRON (QF41): ad '{n}' ({Played.Count} played)");
+                float len = (float)Ads[i].length;
+                for (float t = 0f; t < len && Now == Mode.Ads; t += Time.deltaTime) yield return null;
+                _adOn = false;
+            }
+        }
+        /// <summary>Check runs: play this ad now (the capture of every ad on the screen).</summary>
+        public void PlayAdNow(int i) { if (Now != Mode.Ads) Show(Mode.Ads); StopAllCoroutines(); _vp.Stop(); _src.Stop(); StartCoroutine(NextAd(i)); }
+        /// <summary>QF41: cut whatever is on with a channel-change glitch (static + its sound), then show the new mode.</summary>
+        public IEnumerator ChannelChange(Mode to, float seconds = 0.45f)
+        {
+            Glitches++;
+            if (_vp != null) { StopAllCoroutines(); _vp.Stop(); _src.Stop(); _adOn = false; }
+            if (Glitch != null && _src != null) _src.PlayOneShot(Glitch, 1f);
+            if (_noise != null) SetFace(_noise);
+            var px = new Color32[_noise != null ? _noise.width * _noise.height : 0];
+            for (float t = 0f; t < seconds; t += Time.deltaTime)
+            {
+                if (_noise != null)
+                {
+                    int band = Random.Range(0, _noise.height);
+                    for (int k = 0; k < px.Length; k++) { int y = k / _noise.width; byte g = (byte)(Mathf.Abs(y - band) < 6 ? 255 : Random.Range(0, 230)); px[k] = new Color32(g, g, g, 255); }
+                    _noise.SetPixels32(px); _noise.Apply(false);
+                }
+                yield return null;
+            }
+            Now = Mode.Idle;               // so Show(to) re-sets the face
+            Show(to); if (to != Mode.Ads) SetFace(_rt);
+            Debug.Log($"[Seven] CAT-A-TRON (QF41): channel change -> {to}");
+        }
+        void Update()
+        {
+            if (_src == null) return;
+            // ducked under any line (never competing with a conversation), back up after it
+            float want = DialoguePlayer.AnyBusy ? 0.15f : 1f;
+            _duck = Mathf.MoveTowards(_duck, want, Time.deltaTime * 2.5f);
+            _src.volume = 0.85f * _duck * AudioKit.Gain(AudioKit.Bus.Sfx);
+        }
         public void Talking(bool on) { _talking = on; }
         /// <summary>CAT_07: the live race on the screen, following a racer.</summary>
         public void FollowRace(Transform racer) { _raceFollow = racer; Show(Mode.Race); }
@@ -46,6 +141,7 @@ namespace Seven
                 var p = CattalusCourse.AtDist(_ghostS); var q = CattalusCourse.AtDist(_ghostS + 4f);
                 GhostRacer.position = p + Vector3.up * 0.9f; var f = q - p; f.y = 0f; if (f.sqrMagnitude > 1e-4f) GhostRacer.rotation = Quaternion.LookRotation(f);
             }
+            if (Now == Mode.Ads || Now == Mode.Idle) return;          // QF41: the video plays itself; no level camera
             if (Time.unscaledTime < _next) return;
             _next = Time.unscaledTime + 1f / 15f;
             // only while it can be seen (the main camera near the square)

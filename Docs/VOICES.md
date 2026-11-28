@@ -207,3 +207,22 @@ Voice"), the Machinist, Nela (the "Biavian Guide").
   to a tired child. Rich low tones, no accent, studio-quality recording, no background noise." Preview text: "You can rest now.
   You have done well. Come home." In Unity: a large, soft, warm space around it (a long gentle reverb, a subtle low swell), never
   harsh or echoing like a PA; it should feel like it surrounds her. Never shown or named on screen.
+
+## The Cat-a-tron commercials (QF41) — voice names `Ad_Zoomies`, `Ad_Bowl`, `Ad_Tuna`, `Ad_Gravity`, `Ad_Birds`, `Ad_Box`
+One NEW voice per ad, never a story voice. All of them are made by `Tools/Audio/make_catatron_ads.py`: the Voice Design API, the
+lines, the effects, the music bed and the mix.
+**Status (2026-11-27): NOT designed yet.** The API key is missing the `voice_generation` permission (ElevenLabs → the key's
+permissions → Voice Generation). Until it is enabled, each ad uses a premade library voice that no story character uses (below).
+After enabling it, run `python Tools/Audio/make_catatron_ads.py --force`: it designs and saves each `Ad_` voice, re-voices
+the lines and remixes everything. Then rebuild.
+
+| Ad | Voice name | Description (the Voice Design prompt) | Stand-in until designed |
+|---|---|---|---|
+| Midnight Zoomies | `Ad_Zoomies` | A hyped-up male sports-promo announcer, booming, gravelly, over-the-top monster-truck energy. | Harry (premade) |
+| The Empty Bowl Crisis | `Ad_Bowl` | A gentle, sorrowful middle-aged British woman, soft charity-appeal delivery, earnest and slightly over-sentimental. | Alice (premade) |
+| Eau de Tuna | `Ad_Tuna` | A sultry, breathy French-accented woman, slow luxury perfume-ad whisper, elegant and seductive, a little absurd. | Laura (premade) + v3 `[French accent]` |
+| The Gravity Testing Championship | `Ad_Gravity` | An older refined British male golf commentator, hushed reverent whisper that can explode into a delighted shout. | George (premade) |
+| The Bird Channel | `Ad_Birds` | A calm, soothing male nature-documentary narrator, warm and slow, gently amused. | Roger (premade) |
+| Box Deluxe | `Ad_Box` | A deep, smooth, velvety male luxury-car-commercial voice, slow and confident, every word savoured. | Brian (premade) |
+
+The race ad (CAT_04) keeps the announcer: `TeedOff Barker`.

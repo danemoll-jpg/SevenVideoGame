@@ -563,6 +563,7 @@ namespace Seven.EditorTools
 
             // ---------------------------------------------------------------- the screen, the race, the guide light, UI, dialogue, the director
             var screen = face.AddComponent<Seven.CatatronScreen>(); screen.ScreenCam = scam; screen.Face = face.GetComponent<Renderer>(); screen.Trophy = trophy; screen.MarkPoint = markGo.transform; screen.Retreat = retreat; screen.AnnouncerDesk = desk; screen.GhostRacer = ghost;
+            CatatronAds(screen);                                                                                   // QF41: Dan's six commercials
             var raceGo = new GameObject("GrandCircuitRace"); raceGo.transform.SetParent(world, false);
             var race = raceGo.AddComponent<Seven.CattalusRace>();
             race.Bike = hb; race.Seven = s7; race.Cam = ccam; race.DuchessRacer = racer; race.Duchess = duchess; race.Gates = gates.ToArray(); race.GateIdx = gidx.ToArray();

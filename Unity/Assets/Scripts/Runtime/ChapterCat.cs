@@ -536,14 +536,16 @@ namespace Seven
         // perch), count episodes where he is > 6 m from her for > 3 s, or walks AWAY from her (his ground velocity pointing away
         // from her while > 3 m out) for > 1.5 s. Both must be 0.
         public static int WithFrames, FarEpisodes, AwayEpisodes; public static float WorstFar;
-        float _farT, _awayT; bool _farCounted, _awayCounted; Vector3 _probeLast; bool _probeHave; Vector3 _sevenLast;
+        ChapterSeven _s7c; float _farT, _awayT; bool _farCounted, _awayCounted; Vector3 _probeLast; bool _probeHave; Vector3 _sevenLast;
         void ProbeWithHer(float dt)
         {
             if (DemoBoot.CaptureDir == null || Seven == null || !isActiveAndEnabled) return;
             var p = transform.position; var s7 = Seven.position;
             if (!_probeHave) { _probeLast = p; _sevenLast = s7; _probeHave = true; return; }
             var v = Flat(p - _probeLast) / dt; var v7 = Flat(s7 - _sevenLast) / dt; _probeLast = p; _sevenLast = s7;
-            bool with = Current == Mode.Follow || Current == Mode.Route || Current == Mode.Lead || Current == Mode.GoTo;
+            if (_s7c == null) _s7c = Seven.GetComponent<ChapterSeven>();
+            // (she rides away on the bike while he stays with the ship by design - Venus B01 - not a wander)
+            bool with = (Current == Mode.Follow || Current == Mode.Route || Current == Mode.Lead || Current == Mode.GoTo) && !(_s7c != null && _s7c.Current == ChapterSeven.Mode.Ride);
             if (!with || Fade < 0.5f || v7.magnitude > 30f || v.magnitude > 30f) { _farT = _awayT = 0f; _farCounted = _awayCounted = false; return; }   // teleports / blinks are not walks
             WithFrames++;
             float d = Flat(s7 - p).magnitude; bool sheMoves = v7.magnitude > 0.5f && Vector3.Dot(v7.normalized, Flat(p - s7).normalized) < 0.5f;   // moving, and not on her way to him (a route stop ahead is him leading)
