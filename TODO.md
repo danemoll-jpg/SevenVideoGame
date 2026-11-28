@@ -39,7 +39,7 @@
    with the API (the race ad keeps the Announcer = the Tee'd Off Barker voice; the six ads use the six new voices), save each ad's mixed audio beside its video, list them in `Docs/VOICES.md`.
    Captures of each ad on the screen and the switch to the race ad.
 
-## QF40 — in plain words (Code, 2026-11-27): 1.1.0-rc4 (build 2011, `game-2011`)
+## QF40 — in plain words (Code, 2026-11-27): 1.1.0-rc4 (build 2011, `game-2011`) PUBLISHED, Latest (every earlier release kept)
 All eleven items are in. One exception: the finale has no climbing section (no free spot for one; see item 3).
 - **"Go on!… Before somebody sees you!"**: four new takes.
   - The one in the game has a real beat after "Go on!" (0.57 s) and no pause inside "Before somebody sees you" (0.05 s and 0.10 s).
@@ -320,7 +320,19 @@ All eleven items are in. One exception: the finale has no climbing section (no f
   - Retries 0, stuck hangs 0, falls 0.
   - 7 hidden from the player's camera: 0 frames, measured every frame as rendered.
   - Captures `Builds/Checks/qf40_climb_<world>/` (gate PASS).
-- Whole game from a new save: see "Whole-game runs (QF40)" below.
+- **Whole game from a new save** (`Tools/Run-WholeGame.ps1`, both orders, on the rc4 build):
+  - **A** (Mars / asteroid / win): `WHOLE GAME (QF38): PASS`, 9 / 9 pieces, 0 soft-locks, 115.4 game-min.
+  - **B** (Europa / mothership / lose): `WHOLE GAME (QF38): PASS`, 9 / 9 pieces, 0 soft-locks, 116.2 game-min.
+  - Both: branch audit wrong 0, voice overlap 0 in every scene, `TELEPATHY SHOWN`, `TUNNELER ESTABLISHED`, `CLAMP RELEASE`, the climb
+    sections placed + the cat's line.
+  - Skips taken: A 6 (QF38's run: 5), B 4. The extra one is Mars "back to the saucer (1/4)": the Mars climbing block stood 6 m
+    from the straight ride from the west rim to the saucer, and the bot (which rides straight at the marker) bumped into it.
+    A person steers round it, but the rule is "never near the story's path". **Fixed for rc5**: 10 m from every story point and
+    route segment.
+  - `PANTHER WITH HER (QF40 7)`: far 0, walking away 1 per run. Both were Venus B01, where she rides off and he stays to lie
+    by the saucer, by design. The check now ignores the time she is riding (rc5).
+- **Release gate** `gate_1.1.0-rc4.txt`: **IMAGE GATE RELEASE (QF26 2): PASS** (no new or worse failure, NaN 0, baseline 12).
+- **Published: 1.1.0-rc4, `game-2011`, Latest; every earlier release kept.**
 
 **For Dan to check (QF40)**
 1. Chapter 1's opening: does the close-up on the cat make the telepathy obvious? Pick the "Go on!" take you like
