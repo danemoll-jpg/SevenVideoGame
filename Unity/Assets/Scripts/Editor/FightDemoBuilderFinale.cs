@@ -153,21 +153,17 @@ namespace Seven.EditorTools
               MBox(v, t, new Vector3(6.2f, F.Y + 3f, -141.2f), new Vector3(2.4f, 6f, 0.8f), 0f, 0.06f); MBox(v, t, new Vector3(16.8f, F.Y + 3f, -141.2f), new Vector3(2.4f, 6f, 0.8f), 0f, 0.06f); }
             { var (iv, it) = ck.Of(m.inscription); for (int i = 0; i < 11; i++) { var c = new Vector3(8.2f + i * 0.66f, F.Y + 6.3f, -141.15f); Ellipsoid(iv, it, c, new Vector3(0.12f, 0.12f, 0.02f), 3, 8); } }
             ck.Save("Crossing", district, false);
-            Transform leafL, leafR; Renderer doorMarks;
-            { var lm = new List<Renderer>();
-              Transform Leaf(string n, float sx)
-              {
-                  var lf = new GameObject(n).transform; lf.SetParent(district, false); lf.position = new Vector3(11.5f + sx * 1.15f, F.Y, -142f);
-                  var k = new AK(); var (v, t) = k.Of(m.ancient); MBox(v, t, new Vector3(0f, 2.6f, 0f), new Vector3(2.26f, 5.2f, 0.5f), 0f, 0.02f);
-                  var (iv, it) = k.Of(m.inscription);
-                  // the marks: concentric arcs and a five-sided figure (the dodecahedron's face) split between the two leaves
-                  for (int r = 0; r < 3; r++) { var arc = new List<Vector3>(); for (int i = 0; i <= 16; i++) { float a = Mathf.Lerp(-80f, 80f, i / 16f) * Mathf.Deg2Rad; arc.Add(new Vector3(-sx * 1.13f + sx * Mathf.Cos(a) * (0.5f + r * 0.32f), 3.0f + Mathf.Sin(a) * (0.5f + r * 0.32f), 0.27f)); } Sweep(iv, it, arc, 0.018f, false, 4); }
-                  var pent = new List<Vector3>(); for (int i = 0; i <= 5; i++) { float a = (90f + i * 72f) * Mathf.Deg2Rad; var p = new Vector3(-sx * 1.13f + Mathf.Cos(a) * 0.32f, 3.0f + Mathf.Sin(a) * 0.32f, 0.28f); if (Mathf.Sign(p.x + sx * 1.13f) == sx || Mathf.Abs(p.x + sx * 1.13f) < 0.01f) pent.Add(p); }
-                  if (pent.Count > 1) Sweep(iv, it, pent, 0.02f, false, 4);
-                  foreach (var g in k.Save(n, lf, false)) { g.transform.localPosition = Vector3.zero; if (g.name.Contains("inscription")) lm.Add(g.GetComponent<Renderer>()); }
-                  return lf;
-              }
-              leafL = Leaf("DoorLeafL", -1f); leafR = Leaf("DoorLeafR", 1f); doorMarks = lm.FirstOrDefault(); }
+            Transform leafL, leafR; Renderer doorMarks; Renderer[] doorEngr; Renderer doorSym;
+            // QF40 (4): the twin of Chapter 1's lunar door - the SAME door code (BuildLunarDoorCore), 1.5x, set in this portal
+            {
+                leafL = new GameObject("DoorLeafL").transform; leafL.SetParent(district, false); leafL.position = Vector3.zero;
+                leafR = new GameObject("DoorLeafR").transform; leafR.SetParent(district, false); leafR.position = Vector3.zero;
+                _doorO = new Vector3(F.DoorAt.x, F.Y, F.DoorFaceZ); _doorS = F.DoorScale; _doorTag = "Fin_";
+                BuildLunarDoorCore(district, m.ancientDark, leafL, leafR, F.DoorMark, out doorEngr, out doorSym);
+                _doorO = new Vector3(16.5f, Seven.MoonLayout.Lower, DoorZ); _doorS = 1f; _doorTag = "Moon_";
+                doorMarks = doorEngr[0];
+                Log("QF40 (4): the finale's door = the twin of Chapter 1's lunar door (same leaves, S-seam, engravings, mechanism), x" + F.DoorScale);
+            }
             FinLamp(new Vector3(5.6f, F.Y, -134f), m, district); FinLamp(new Vector3(17.4f, F.Y, -134f), m, district);
 
             // ---------------------------------------------------------------- the archive chamber (FIN_05+)
@@ -303,7 +299,7 @@ namespace Seven.EditorTools
                 MBox(hv, ht, new Vector3(0f, 0.75f, 14.5f), new Vector3(1.3f, 0.5f, 1.3f), 0f, 0f);                     // the trolley
                 Sweep(mv, mt, new[] { new Vector3(0f, 0.5f, 14.5f), new Vector3(0f, -13.5f, 14.5f) }, 0.05f, false, 4);  // the hoist cable
                 Append(hv, ht, Lathe(new[] { new Vector2(0f, -16.8f), new Vector2(1.3f, -16.8f), new Vector2(1.7f, -14.2f), new Vector2(1.75f, -13.9f), new Vector2(0f, -13.9f) }, 0f, 360f, 14, null, new Vector3(0f, 0f, 14.5f)));   // the ore bucket
-                var rnd3 = new System.Random(drills.Count + 5); for (int o = 0; o < 6; o++) Ellipsoid(mv, mt, new Vector3(((float)rnd3.NextDouble() - 0.5f) * 2f, -13.9f, 14.5f + ((float)rnd3.NextDouble() - 0.5f) * 2f), Vector3.one * 0.5f, 3, 6);   // ore heaped in it
+                var rnd3 = new System.Random(drills.Count + 5); for (int o = 0; o < 7; o++) MBox(mv, mt, new Vector3(((float)rnd3.NextDouble() - 0.5f) * 1.8f, -13.75f, 14.5f + ((float)rnd3.NextDouble() - 0.5f) * 1.8f), new Vector3(0.7f, 0.45f, 0.55f), (float)rnd3.NextDouble() * 90f, 0.2f);   // QF40 (8): broken ore heaped in it (angular, not blobs)
                 MBox(gv0, gt0, new Vector3(0f, 0.95f, 15.8f), new Vector3(0.7f, 0.25f, 0.5f), 0f, 0f);                  // the work light at the jib's end
                 foreach (var g in hk.Save("CraneHead", bit, false)) g.transform.localPosition = Vector3.zero;
                 PointLight("DrillWork", p + Vector3.up * (h + 0.4f) + Vector3.forward * 15.8f, 22f, 1.4f, bit);
@@ -385,7 +381,7 @@ namespace Seven.EditorTools
             d.Atmo = atmo.GetComponent<Seven.Atmosphere>(); d.GuideLight = guideLight.transform; d.Cat = cat;
             d.Worker = worker; d.Elder = elder; d.Workers = others.ToArray(); d.Tunneler = tunneler; d.TunnelerDrill = drill; d.TunnelerCraft = craft;
             d.PowerPanelLamp = panelLamp; d.PowerLever = lever; d.GateLockT = gateLock; d.GateLeaf = gateLeaf; d.TerminalScreen = term.GetComponentsInChildren<Renderer>().FirstOrDefault(r => r.sharedMaterial == screen);
-            d.DoorLeafL = leafL; d.DoorLeafR = leafR; d.DoorMarkings = doorMarks;
+            d.DoorLeafL = leafL; d.DoorLeafR = leafR; d.DoorMarkings = doorMarks; d.DoorEngrave = doorEngr; d.DoorSymbol = doorSym;   // QF40 (4)
             d.Sockets = sockets.ToArray(); d.SocketLights = socketLights.ToArray(); d.PlatformSurface = surface.GetComponent<Renderer>(); d.ConduitGlow = conduit.GetComponent<Renderer>(); d.ConduitBreak = conduitBreak.GetComponent<Renderer>();
             d.ProjectionWalls = proj.ToArray(); d.BarrierField = barrier.transform; d.BarrierControlT = bctl; d.Lock = lockT; d.BarrierLight = barrierLight; d.PaleLight = pale.GetComponent<Renderer>();
             d.MiningDrills = drills.ToArray(); d.CityTerminals = terminals.ToArray(); d.Dodecahedron = dodeca;

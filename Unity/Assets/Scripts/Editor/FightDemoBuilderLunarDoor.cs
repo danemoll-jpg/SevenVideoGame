@@ -70,7 +70,10 @@ namespace Seven.EditorTools
             }
         }
 
-        static Vector3 DoorP(float x, float y, float dz = 0f) => new Vector3(L.SealedDoor.x + x, L.Lower + y, DoorZ + dz);
+        // QF40 (4): the door can be built anywhere at any scale (the finale's twin): DoorP maps door space (x from the centre, y above
+        // the floor, dz out of the wall) through this origin + scale; Chapter 1 = the Moon's numbers.
+        static Vector3 _doorO = new Vector3(16.5f, L.Lower, DoorZ); static float _doorS = 1f; static string _doorTag = "Moon_";
+        static Vector3 DoorP(float x, float y, float dz = 0f) => _doorO + new Vector3(x, y, dz) * _doorS;
 
         /// <summary>Half-width of the pointed arch at height y.</summary>
         static float ArchW(float y)
@@ -145,66 +148,84 @@ namespace Seven.EditorTools
 
         static void BuildLunarDoor(Transform root, MoonMats m, Props props, Transform leftLeaf, Transform rightLeaf)
         {
+            _doorO = new Vector3(L.SealedDoor.x, L.Lower, DoorZ); _doorS = 1f; _doorTag = "Moon_";
+            BuildLunarDoorCore(root, m.ancientDark, leftLeaf, rightLeaf, L.DoorSymbol, out var engr, out var sym);
+            props.doorEngrave = engr; props.doorRight = rightLeaf; props.doorSymbol = sym;
+            BuildLunarDoorChamber(root, m, props);
+        }
+
+        /// <summary>QF40 (4): the lunar door itself - the two leaves split by the S-seam with their orbit engravings, the seam glow, the
+        /// frame fill and pale rim, and the round three-spoke emblem (the mechanism) - at <see cref="_doorO"/> / <see cref="_doorS"/>.
+        /// Chapter 1's chamber and the finale's twin both use it, so they are the same door.</summary>
+        static void BuildLunarDoorCore(Transform root, Material ancientDark, Transform leftLeaf, Transform rightLeaf, Vector3 emblemAt, out Renderer[] engraveOut, out Renderer symbolOut)
+        {
             var rib = Dissolve("Moon_rib", Gray(0.6f), 0.35f, false);
             var engrave = Dissolve("Moon_engrave", Gray(0.24f), 0.2f, false);
             engrave.EnableKeyword("_EMISSION"); engrave.SetColor("_EmissionColor", Color.black);
             var leaf = Dissolve("Moon_doorleaf", Gray(0.66f), 0.3f, false);
-            float y0 = L.Lower;
+            string T = _doorTag; float S = _doorS;
 
             // ---- the door: two leaves (each with its engravings), the S-seam line (lights up), the arch frame
-            MeshObject("LeafL", LeafMesh(true, "Moon_DoorLeafL"), leaf, leftLeaf);
-            MeshObject("LeafR", LeafMesh(false, "Moon_DoorLeafR"), leaf, rightLeaf);
+            MeshObject("LeafL", LeafMesh(true, T + "DoorLeafL"), leaf, leftLeaf);
+            MeshObject("LeafR", LeafMesh(false, T + "DoorLeafR"), leaf, rightLeaf);
             var er = new List<Renderer>();
             foreach (var (lf, tr) in new[] { (true, leftLeaf), (false, rightLeaf) })
             {
                 var v = new List<Vector3>(); var t = new List<int>();
                 LeafEngravings(v, t, lf);
-                er.Add(MeshObject(lf ? "EngraveL" : "EngraveR", SaveMesh(SmoothFinish(v, t), lf ? "Moon_DoorEngraveL" : "Moon_DoorEngraveR"), engrave, tr, false).GetComponent<Renderer>());
+                er.Add(MeshObject(lf ? "EngraveL" : "EngraveR", SaveMesh(SmoothFinish(v, t), lf ? T + "DoorEngraveL" : T + "DoorEngraveR"), engrave, tr, false).GetComponent<Renderer>());
             }
             {
                 var v = new List<Vector3>(); var t = new List<int>();
                 var seam = new List<Vector3>();
                 for (float y = 0.02f; y <= ArchH - 0.02f; y += 0.04f) seam.Add(DoorP(SeamX(y), y, 0.007f));
-                Sweep(v, t, seam, 0.013f, false, 5);
+                Sweep(v, t, seam, 0.013f * S, false, 5);
                 // the seam glow belongs to the left leaf's edge (it parts with it)
-                er.Insert(0, MeshObject("SeamGlow", SaveMesh(SmoothFinish(v, t), "Moon_DoorSeam"), engrave, leftLeaf, false).GetComponent<Renderer>());
+                er.Insert(0, MeshObject("SeamGlow", SaveMesh(SmoothFinish(v, t), T + "DoorSeam"), engrave, leftLeaf, false).GetComponent<Renderer>());
             }
-            props.doorEngrave = er.ToArray();
-            props.doorRight = rightLeaf;
+            engraveOut = er.ToArray();
             {
                 // frame: the wall opening is a rectangle; fill everything outside the arch (exact edges), and a raised pale rim
                 var v = new List<Vector3>(); var t = new List<int>();
                 Strips(v, t, y => -1.3f, y => -ArchW(y), 0f, 3.75f, 0.02f, false);
                 Strips(v, t, y => ArchW(y), y => 1.3f, 0f, 3.75f, 0.02f, false);
-                MeshObject("DoorFrameFill", SaveMesh(Finish(v, t), "Moon_DoorFrameFill"), rib, root);
+                MeshObject("DoorFrameFill", SaveMesh(Finish(v, t), T + "DoorFrameFill"), rib, root);
                 var rv = new List<Vector3>(); var rt = new List<int>();
                 var rim = new List<Vector3>();
                 for (float y = 0f; y <= ArchSpring; y += 0.2f) rim.Add(DoorP(-ArchHalf - 0.04f, y, 0.06f));
                 for (int i = 0; i <= 24; i++) { float y = Mathf.Lerp(ArchSpring, ArchH, i / 24f); float x = ArchCx - Mathf.Sqrt(Mathf.Max(0f, (ArchCx + ArchHalf) * (ArchCx + ArchHalf) - (y - ArchSpring) * (y - ArchSpring))); rim.Add(DoorP(x - 0.04f, y + 0.02f, 0.06f)); }
                 for (int i = 24; i >= 0; i--) { float y = Mathf.Lerp(ArchSpring, ArchH, i / 24f); float x = -(ArchCx - Mathf.Sqrt(Mathf.Max(0f, (ArchCx + ArchHalf) * (ArchCx + ArchHalf) - (y - ArchSpring) * (y - ArchSpring)))); rim.Add(DoorP(x + 0.04f, y + 0.02f, 0.06f)); }
                 for (float y = ArchSpring; y >= 0f; y -= 0.2f) rim.Add(DoorP(ArchHalf + 0.04f, y, 0.06f));
-                Sweep(rv, rt, rim, 0.05f, false, 8);
-                MeshObject("DoorRim", SaveMesh(SmoothFinish(rv, rt), "Moon_DoorRim"), rib, root);
+                Sweep(rv, rt, rim, 0.05f * S, false, 8);
+                MeshObject("DoorRim", SaveMesh(SmoothFinish(rv, rt), T + "DoorRim"), rib, root);
             }
 
             // ---- the round three-spoke emblem beside the door (the shape's outline glows in it after the vision)
             {
-                var c = L.DoorSymbol; var v = new List<Vector3>(); var t = new List<int>();
-                List<Vector3> Ring(float r, float z) { var l = new List<Vector3>(); for (int i = 0; i <= 48; i++) { float a = i / 48f * Mathf.PI * 2f; l.Add(c + new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, z)); } return l; }
-                Sweep(v, t, Ring(0.47f, 0.02f), 0.05f, true, 8);
-                Sweep(v, t, Ring(0.33f, 0.015f), 0.025f, true, 6);
-                Sweep(v, t, Ring(0.08f, 0.015f), 0.02f, true, 6);
-                foreach (var a in new[] { 90f, 210f, 330f }) { var d = new Vector3(Mathf.Cos(a * Mathf.Deg2Rad), Mathf.Sin(a * Mathf.Deg2Rad), 0f); Sweep(v, t, new[] { c + d * 0.08f + Vector3.forward * 0.015f, c + d * 0.33f + Vector3.forward * 0.015f }, 0.02f, false, 6); }
-                MeshObject("Emblem", SaveMesh(SmoothFinish(v, t), "Moon_Emblem"), rib, root);
+                var c = emblemAt; var v = new List<Vector3>(); var t = new List<int>();
+                List<Vector3> Ring(float r, float z) { var l = new List<Vector3>(); for (int i = 0; i <= 48; i++) { float a = i / 48f * Mathf.PI * 2f; l.Add(c + new Vector3(Mathf.Cos(a) * r, Mathf.Sin(a) * r, z) * S); } return l; }
+                Sweep(v, t, Ring(0.47f, 0.02f), 0.05f * S, true, 8);
+                Sweep(v, t, Ring(0.33f, 0.015f), 0.025f * S, true, 6);
+                Sweep(v, t, Ring(0.08f, 0.015f), 0.02f * S, true, 6);
+                foreach (var a in new[] { 90f, 210f, 330f }) { var d = new Vector3(Mathf.Cos(a * Mathf.Deg2Rad), Mathf.Sin(a * Mathf.Deg2Rad), 0f); Sweep(v, t, new[] { c + (d * 0.08f + Vector3.forward * 0.015f) * S, c + (d * 0.33f + Vector3.forward * 0.015f) * S }, 0.02f * S, false, 6); }
+                MeshObject("Emblem", SaveMesh(SmoothFinish(v, t), T + "Emblem"), rib, root);
                 // the mechanism's inner ring + hub light up when 7 touches it (as the figure does in the vision)
                 var gv = new List<Vector3>(); var gt = new List<int>();
-                Sweep(gv, gt, Ring(0.255f, 0.03f), 0.012f, true, 5);
-                Sweep(gv, gt, Ring(0.045f, 0.03f), 0.012f, true, 5);
-                props.doorSymbol = MeshObject("MechanismGlow", SaveMesh(SmoothFinish(gv, gt), "Moon_MechanismGlow"), engrave, root, false).GetComponent<Renderer>();
+                Sweep(gv, gt, Ring(0.255f, 0.03f), 0.012f * S, true, 5);
+                Sweep(gv, gt, Ring(0.045f, 0.03f), 0.012f * S, true, 5);
+                symbolOut = MeshObject("MechanismGlow", SaveMesh(SmoothFinish(gv, gt), T + "MechanismGlow"), engrave, root, false).GetComponent<Renderer>();
                 var dv = new List<Vector3>(); var dt = new List<int>();
-                Ellipsoid(dv, dt, c + Vector3.back * 0.005f, new Vector3(0.5f, 0.5f, 0.03f), 6, 24);
-                MeshObject("EmblemRecess", SaveMesh(SmoothFinish(dv, dt), "Moon_EmblemRecess"), m.ancientDark, root, false);
+                Ellipsoid(dv, dt, c + Vector3.back * 0.005f * S, new Vector3(0.5f, 0.5f, 0.03f) * S, 6, 24);
+                MeshObject("EmblemRecess", SaveMesh(SmoothFinish(dv, dt), T + "EmblemRecess"), ancientDark, root, false);
             }
+        }
+
+        /// <summary>Chapter 1's chamber round the door (the buried lock, the floor engraving, the ribs, the fallen chunks).</summary>
+        static void BuildLunarDoorChamber(Transform root, MoonMats m, Props props)
+        {
+            var rib = Dissolve("Moon_rib", Gray(0.6f), 0.35f, false);
+            var engrave = Dissolve("Moon_engrave", Gray(0.24f), 0.2f, false);
+            float y0 = L.Lower;
 
             // ---- QF7: in the present the lock is buried behind a collapse - a broken rib leaning across the wall and stone
             // chunks piled against it, the emblem hidden behind them. The vision shows it intact; afterwards 7 clears the

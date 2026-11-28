@@ -71,6 +71,8 @@ namespace Seven
         /// <summary>QF4: frames in which a step would have ended inside a no-cat area (pushed out; for the checks).</summary>
         public int NoCatPushes { get; private set; }
         /// <summary>Where the current command ends (GoTo target, last lead point, hop target).</summary>
+        /// <summary>QF40 (6): the route stop he is heading to / waiting at (the guide light rides above it); null off a route.</summary>
+        public Vector3? RouteStopAt => Current == Mode.Route && _route != null && _ri < _route.Count ? _route[_ri].P : (Vector3?)null;
         public Vector3 Destination => Current == Mode.Lead && _lead != null && _lead.Count > 0 ? _lead[_lead.Count - 1]
             : Current == Mode.Hop || Current == Mode.Perched ? _hopTo : _target;
 
@@ -117,7 +119,7 @@ namespace Seven
         public void Follow() { Current = Mode.Follow; _perchY = float.NaN; Arrived = false; _routePaused = false; CancelLeash(); }
         public void GoTo(Vector3 p, float speed = -1f, Vector3? lookAt = null, string holdClip = "sit")
         {
-            _target = p; _speed = speed > 0f ? speed : TrotSpeed; _look = lookAt ?? Seven.position; _holdClip = holdClip; _stuckT = 0f;
+            _target = p; _speed = speed > 0f ? speed : TrotSpeed; _look = lookAt ?? Seven.position; _holdClip = holdClip; _stuckT = 0f; _gotoBest = float.MaxValue; _gotoBestT = Time.time;
             Current = Mode.GoTo; Arrived = false; _perchY = float.NaN; _routePaused = false; CancelLeash();
         }
         public void Lead(List<Vector3> path, float waitFor7 = 4.5f)
@@ -248,6 +250,7 @@ namespace Seven
             var p = transform.position;
             if (_havePos) _measured = Mathf.Lerp(_measured, Flat(p - _lastPos).magnitude / dt, 1f - Mathf.Exp(-10f * dt));
             _lastPos = p; _havePos = true;
+            ProbeWithHer(dt);                       // QF40 (7)
             if (_clip == "walk" && Time.timeScale > 0f)
             {
                 WalkFrames++;
@@ -284,6 +287,14 @@ namespace Seven
                     break;
                 }
                 case Mode.GoTo:
+                {
+                    // QF40 (7): GoTo walks a straight line; a wall in the way made him slide along it (the detour bias sticks), away
+                    // from the opening and off down the far wall (Dan's 0.x screenshot at the hall's ribbed arch). He must get closer:
+                    // no 0.2 m of progress for 1.2 s while still > 1 m out = the wrong way -> he slips out of sight and is at his mark.
+                    float dg = Flat(_target - transform.position).magnitude;
+                    if (dg < _gotoBest - 0.2f) { _gotoBest = dg; _gotoBestT = Time.time; }
+                    else if (dg > 1f && Time.time - _gotoBestT > 1.2f && !_blinking) { GoToWrongWay++; Debug.Log($"[Seven] cat (QF40 7): GoTo making no progress {dg:0.0} m from his mark - straight to it"); StartCoroutine(BlinkTo(_target)); _gotoBestT = Time.time; break; }
+                }
                     // QF11: blocked short of the mark (a hull, a rail) for 1.5 s -> he stops there and holds, never treads on the spot
                     if (MoveTo(_target, _speed) || _stuckT > 1.5f) { if (_stuckT > 1.5f) Debug.Log($"[Seven] cat: blocked {Flat(_target - transform.position).magnitude:0.00} m short of his mark - holds there"); _stuckT = 0f; Arrived = true; Current = Mode.Hold; }
                     break;
@@ -502,6 +513,47 @@ namespace Seven
             if (Current == Mode.Follow) Arrived = false;
             Debug.Log($"[Seven] cat leash done ({why}) after {Time.time - _chaseT0:0.0}s: now {Current}{(Current == Mode.Route ? " stop " + (_ri + 1) : "")}, {DistanceTo7:0.0} m from 7");
         }
+
+        float _gotoBest, _gotoBestT;
+        public static int GoToWrongWay;
+        /// <summary>QF40 (7): out (faded if seen), in at the mark (faded if seen), then he holds there.</summary>
+        IEnumerator BlinkTo(Vector3 to)
+        {
+            _blinking = true;
+            bool seen = Cam != null && Seen(transform.position);
+            if (seen) for (float t = 0f; t < 0.3f; t += Time.deltaTime) { SetFade(1f - t / 0.3f); yield return null; }
+            SetFade(0f);
+            Place(to, Flat(_look - to).sqrMagnitude > 1e-4f ? Flat(_look - to) : transform.forward);
+            bool seen2 = Cam != null && Seen(transform.position);
+            if (seen2) for (float t = 0f; t < 0.3f; t += Time.deltaTime) { SetFade(t / 0.3f); yield return null; }
+            SetFade(1f);
+            _blinking = false;
+            if (Current == Mode.GoTo) { Arrived = true; Current = Mode.Hold; }
+        }
+
+        // ---- QF40 (7) standing check: PANTHER WITH HER. Every check run, every chapter where he walks with her (Chapter 1, Cattalus,
+        // the finale): while she moves and he is meant to be with her (Follow / Route / Lead / GoTo - not a scripted hold, hop or
+        // perch), count episodes where he is > 6 m from her for > 3 s, or walks AWAY from her (his ground velocity pointing away
+        // from her while > 3 m out) for > 1.5 s. Both must be 0.
+        public static int WithFrames, FarEpisodes, AwayEpisodes; public static float WorstFar;
+        float _farT, _awayT; bool _farCounted, _awayCounted; Vector3 _probeLast; bool _probeHave; Vector3 _sevenLast;
+        void ProbeWithHer(float dt)
+        {
+            if (DemoBoot.CaptureDir == null || Seven == null || !isActiveAndEnabled) return;
+            var p = transform.position; var s7 = Seven.position;
+            if (!_probeHave) { _probeLast = p; _sevenLast = s7; _probeHave = true; return; }
+            var v = Flat(p - _probeLast) / dt; var v7 = Flat(s7 - _sevenLast) / dt; _probeLast = p; _sevenLast = s7;
+            bool with = Current == Mode.Follow || Current == Mode.Route || Current == Mode.Lead || Current == Mode.GoTo;
+            if (!with || Fade < 0.5f || v7.magnitude > 30f || v.magnitude > 30f) { _farT = _awayT = 0f; _farCounted = _awayCounted = false; return; }   // teleports / blinks are not walks
+            WithFrames++;
+            float d = Flat(s7 - p).magnitude; bool sheMoves = v7.magnitude > 0.5f && Vector3.Dot(v7.normalized, Flat(p - s7).normalized) < 0.5f;   // moving, and not on her way to him (a route stop ahead is him leading)
+            if (d > 6f && sheMoves) { _farT += dt; WorstFar = Mathf.Max(WorstFar, d); if (_farT > 3f && !_farCounted) { _farCounted = true; FarEpisodes++; Debug.Log($"[Seven] PANTHER WITH HER (QF40 7): {d:0.0} m from her for 3 s while she moves ({Current}) at {p}"); } }
+            else if (d < 4.5f) { _farT = 0f; _farCounted = false; }
+            bool away = d > 3f && v.magnitude > 0.4f && Vector3.Dot(v.normalized, Flat(s7 - p).normalized) < -0.3f;
+            if (away) { _awayT += dt; if (_awayT > 1.5f && !_awayCounted) { _awayCounted = true; AwayEpisodes++; Debug.Log($"[Seven] PANTHER WITH HER (QF40 7): walking AWAY from her for 1.5 s ({Current}, {d:0.0} m) at {p}"); } }
+            else { _awayT = 0f; _awayCounted = false; }
+        }
+        public static string WithHerSummary() => $"PANTHER WITH HER (QF40 7): {WithFrames} frames with him walking with her - more than 6 m away for over 3 s while she moved {FarEpisodes}x (worst {WorstFar:0.0} m), walking away from her {AwayEpisodes}x (both must be 0); scripted walks that made no progress and went straight to the mark {GoToWrongWay}x";
 
         /// <summary>Fade out (only if the camera can see him), reappear a step behind her where the camera cannot see,
         /// fade in only if the new spot is in view anyway (no hidden spot found).</summary>

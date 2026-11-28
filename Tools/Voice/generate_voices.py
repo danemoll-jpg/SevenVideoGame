@@ -33,8 +33,13 @@ SETTINGS = {
     ("seven", "v2"): {"stability": 0.32, "similarity_boost": 0.8, "style": 0.45, "use_speaker_boost": True, "speed": 0.95},
     ("cat", "v2"): {"stability": 0.62, "similarity_boost": 0.8, "style": 0.2, "use_speaker_boost": True, "speed": 0.92},
     ("cat", "v3"): {"stability": 1.0, "similarity_boost": 0.8, "use_speaker_boost": True},
+    # QF40 5: Tunneler over the prison speakers (his Europa settings)
+    ("tunneler", "v2"): {"stability": 0.55, "similarity_boost": 0.8, "style": 0.3, "use_speaker_boost": True},
 }
-DEFAULT_MODEL = {"seven": "v3", "cat": "v2"}
+DEFAULT_MODEL = {"seven": "v3", "cat": "v2", "tunneler": "v2"}
+# QF40 1: what is SPOKEN may differ from the subtitle (punctuation for the delivery); id -> text sent to ElevenLabs
+SPEAK = os.path.join(ROOT, "Tools", "Voice", "speak_text.json")
+speak = json.load(open(SPEAK, encoding="utf-8")) if os.path.exists(SPEAK) else {}
 
 
 def req(path, body=None, accept="application/json"):
@@ -51,7 +56,7 @@ def find_voices():
     for v in voices:
         by.setdefault(v["name"].strip().lower(), v["voice_id"])
     ids = {}
-    for spk, name in (("seven", "seven"), ("cat", "cat")):
+    for spk, name in (("seven", "seven"), ("cat", "cat"), ("tunneler", "tunneler")):
         if name not in by:
             sys.exit(f'Voice "{name.title()}" not found in the ElevenLabs library (have: {sorted(by)}) - stopping.')
         ids[spk] = by[name]
@@ -73,7 +78,7 @@ def main():
     only = set(sys.argv[sys.argv.index("--only") + 1:]) if "--only" in sys.argv else None
     speaker = arg("--speaker")
     model_flag = arg("--model")
-    if speaker not in (None, "seven", "cat") or model_flag not in (None, "v3", "v2"):
+    if speaker not in (None, "seven", "cat", "tunneler") or model_flag not in (None, "v3", "v2"):
         sys.exit("usage: generate_voices.py [--speaker seven|cat] [--model v3|v2] [--force] [--only <id>...]")
     lines = json.load(open(os.path.join(ROOT, "Unity/Assets/Audio/Voice/voice_lines.json"), encoding="utf-8"))["lines"]
     try:
@@ -93,10 +98,11 @@ def main():
         os.makedirs(os.path.dirname(out), exist_ok=True)
         mk = model_flag or DEFAULT_MODEL[l["speaker"]]
         body = {"model_id": MODELS[mk], "voice_settings": SETTINGS[(l["speaker"], mk)]}
+        said = speak.get(l["id"], l["text"])
         if mk == "v3":
-            body["text"] = tags(l.get("delivery")) + l["text"]
+            body["text"] = tags(l.get("delivery")) + said
         else:
-            body["text"] = l["text"]
+            body["text"] = said
             same = [x for x in lines if x["scene"] == l["scene"]]
             k = same.index(l)
             if k > 0:

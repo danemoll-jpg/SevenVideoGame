@@ -57,11 +57,11 @@ Burrowers that live beneath the Venus gardens. They never attacked the people. T
 He drove the burrowing creatures with machines from a chamber under the gardens, to force the Elarim to give up their temple. He told me I don’t know what I’m interfering with. He is contained now, not hurt.
 
 ## Tunneler (before the name: "Whoever runs the prison")
-`tunneler` · unlock `ch1>=6` · portrait `tunneler` · name from `europa>=3`
+`tunneler` · unlock `ch1>=2` · portrait `tunneler` · name from `ch1>=2` (QF40 5: named and seen in Chapter 1)
 
 **Before the name:** Someone runs the prison I was held in on the Moon, and the mining that is cutting into the city inside it. The Scree do the work. I never saw who.
 
-**After:** He calls himself Tunneler. He ran the Moon prison I was held in, and the mining that is cutting into the city inside the Moon; the Scree did the work.
+**After:** He calls himself Tunneler (the cat told me, in the prison). He ran the Moon prison I was held in, and the mining that is cutting into the city inside the Moon; the Scree did the work. I saw him once, on a screen in the prison corridor, ordering them to find me.
 
 *From `europa>=4`:* On Europa he spoke to me from a screen in his underwater base: ring-segmented, with a spiral drill for a head that turns when he speaks. His machinery silenced the Cetaceans’ calls, and he worked Scree who could not leave. He promised to take only what nobody would miss.
 

@@ -304,8 +304,8 @@ namespace Seven
         // QF13 (9): the guide is always findable - the light itself (bigger, brighter, a halo that cuts through the fog and
         // keeps its size on screen however far away it is) AND the on-screen marker (ChapterUI.SetMarker: a diamond on it, or
         // an arrow at the screen's edge with the distance and an up / down cue when it is off screen or behind her)
-        void ShowGuide(Vector3 at) { NextMarker = at; UI.SetMarker(at); if (GuideLight != null) { GuideLight.gameObject.SetActive(true); GuideLight.position = at; } }
-        void HideGuide() { NextMarker = null; UI.SetMarker(null); if (GuideLight != null) GuideLight.gameObject.SetActive(false); }
+        void ShowGuide(Vector3 at) { NextMarker = at; UI.SetMarker(at); if (GuideLight != null) { GuideLight.gameObject.SetActive(true); } }
+        void HideGuide() { NextMarker = null; UI.SetMarker(null); }   // QF40 (6): GuideOrb fades it out
         // ---- QF13 (7): inside the base the walls never stand between the camera and her - any wall / door / barrier whose
         // box the line camera -> her head crosses is cut away (not drawn) while it is in the way; the camera stays close
         Renderer[] _baseWalls; int _cutFrames, _baseFrames, _blockedFrames;
@@ -411,18 +411,8 @@ namespace Seven
             BaseCutaway();
             if (Bike != null && Bike.Riding && Shots && Time.frameCount % 300 == 0) Log($"bike (QF13 10/13): at {Bike.transform.position:0.0}, speed {Bike.Speed:0.0} m/s, pitch {Bike.SwimPitch:0} deg, wall slides so far {Bike.WallSlides} (last along '{Bike.LastSlide}', depenetrations {Bike.Depenetrations}), camera speed push {Cam.SpeedKick:0.00}");
             // hidden during cutscenes (marker too); inside the base's small rooms the light stays small (no halo filling the room)
-            if (GuideLight != null && Cam != null)
-            {
-                bool show = NextMarker.HasValue && !_cut;
-                if (GuideLight.gameObject.activeSelf != show) GuideLight.gameObject.SetActive(show);
-                UI.SetMarker(show ? NextMarker : null);
-                if (show)
-                {
-                    float d = Vector3.Distance(Cam.transform.position, GuideLight.position);
-                    GuideLight.localScale = Vector3.one * (InBase(GuideLight.position) ? 0.22f : Mathf.Max(1f, d * 0.035f));   // never a dot in the distance
-                    GuideLight.rotation = Quaternion.LookRotation(GuideLight.position - Cam.transform.position);
-                }
-            }
+            // QF40 (6): the one shared guide light (GuideOrb) - eased lead ahead of her, never through a wall, fades near / in cutscenes
+            if (GuideLight != null && Cam != null) GuideOrb.Drive(GuideLight, NextMarker, _cut, Cam.GetComponent<Camera>() ?? Camera.main, Seven.transform, UI, 0f, InBase(GuideLight.position) ? 0.22f : 1f, InBase(GuideLight.position) ? 0f : 0.035f);
         }
         /// <summary>QF13 (9): which way the light is, in words, from where she is facing.</summary>
         string WhichWay(Vector3 at)

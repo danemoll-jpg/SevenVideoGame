@@ -592,6 +592,27 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**QF40 (2026-11-27): 1.1.0-rc4 (build 2011, `game-2011`): Dan's playthrough list, part 1. Status, decisions and "For Dan to check
+(QF40)" in `TODO.md`.**
+- **Lines:**
+  - Inserted lines get explicit ids in `Docs/DIALOGUE.md` (`**CAT [s01_07b]:**`), so the rest keep their numbers.
+  - The TUNNELER speaker is supported.
+  - `Tools/Voice/speak_text.json` = what is spoken when it differs from the subtitle.
+  - `Tools/Voice/make_takes.py <id>` = several takes, word gaps / laugh length / energy measured, the best installed, the rest left
+    in `Docs/Previews/qf40/<id>_takes/` for Dan.
+- **Shared code:**
+  - `GuideOrb` (THE guide light, every chapter; directors call `GuideOrb.Drive` from LateUpdate).
+  - `ClimbSection` (the climbing section in Venus / Mars / the asteroid / the mothership; placed at load clear of every story place;
+    `-climbtest` = two bots, logs `CLIMB TEST (QF40 3)`).
+  - `BuildLunarDoorCore` (Chapter 1's door; the finale's twin).
+  - `Strata` (layered rock, never `Lump` blobs for scenery).
+- **Rules learned:**
+  - The ground is one height per spot, and the first zone in `Ground.Zones` wins. A raised walkable zone over the floor must be
+    inserted first and match its footprint exactly.
+  - A wall climb goes all the way onto the top; a hang needs a grab or a hang-down.
+  - Mars never installed its own traversal set (`MoonTraversal.IsMoonSet`).
+  - The cat's scripted `GoTo` goes straight to its mark when it stops getting closer.
+  - Check runs log `PANTHER WITH HER (QF40 7)`.
 **QF39 (2026-11-27): 1.1.0-rc3 (build 2010, `game-2010`) - boss switches + Viper's three pylons (status + "For Dan to check (QF39)" in
 `TODO.md`).**
 - **A switch in reach ALWAYS takes the press, in every boss fight:**

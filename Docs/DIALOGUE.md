@@ -16,6 +16,10 @@ The cat watches her.
 
 **7:** Go on. Before somebody sees you.
 
+(QF40 1: delivered "Go on! … Before somebody sees you!" — urgent, hushed, a real beat after "Go on!".)
+
+CLOSE-UP — THE CAT: his mouth closed, perfectly still, while his voice is heard (QF40 2: the telepathy shown).
+
 **CAT:** That would make rescuing you considerably harder.
 
 7 looks toward the corridor, searching for the speaker.
@@ -29,6 +33,12 @@ She looks back at him.
 **7:** You’re in my head.
 
 **CAT:** Only conversationally.
+
+She studies him: more intrigued than shocked. Mind to mind is how she speaks with everyone; a cat doing it is the surprise. (QF40 2, proposed, Dan to confirm.)
+
+**7 [s01_07a]:** I’ve spoken mind to mind with a lot of people. Never a cat.
+
+**CAT [s01_07b]:** We don’t usually have much to say.
 
 A short pause lets the player take in the discovery.
 
@@ -88,6 +98,14 @@ The cat looks toward the small opening he used.
 
 This preserves the mystery without deciding how much 7 remembers.
 
+(QF40 5, proposed, Dan to confirm: the name, before the screen in the corridor.)
+
+**7 [s03_11]:** Who runs this place?
+
+**CAT [s03_12]:** He calls himself Tunneler. He mines the Moon. The Scree do the digging.
+
+**7 [s03_13]:** Tunneler.
+
 ## 4  Finding an escape route
 
 **Situation:** The obvious route is guarded. 7 notices an older passage.
@@ -101,6 +119,14 @@ This preserves the mystery without deciding how much 7 remembers.
 **CAT:** Convenient. I’d prefer a way out that wasn’t designed by the people keeping you in.
 
 **7:** Let’s see where it goes.
+
+(QF40 5: further along the prison corridor, before the Scree guard, a wall screen lights up with Tunneler — lit from below, his drill head turning with his voice. 7 and the cat stop in cover and watch.)
+
+**TUNNELER [s04_T1]:** The prisoner is not to leave the lower level. Find her.
+
+(QF40 6: the guide light appears ahead.)
+
+**CAT [s04_G1]:** Follow the light. I’ll show you the way.
 
 ## 5  Encountering the Scree
 
@@ -198,11 +224,7 @@ across the enormous space.
 
 **7:** There are people living all the way up there.
 
-Cat watches her rather than the skyline.
-
-**CAT:** Come on. Let’s find your ship.
-
-She starts after him, then looks back once more.
+(QF40 9: "Come on. Let’s find your ship." is cut.)
 
 **HER VIEW — THE CITY’S LOWER DISTRICTS**
 
@@ -211,38 +233,60 @@ Vast machinery disappears beneath inhabited terraces.
 
 The beauty and the damage occupy the same frame.
 
+(QF40 5: after the wonder has had its moment, as the camera finds the mining cutting into the city.)
+
+**CAT [s06b_T1]:** All of that is his.
+
 Return control to the player.
 
 The opening order: first meeting → cell rescue → escape through the ruins and first vision → the exit and the Scree
 fight → the city reveal → saucer recovery and boarding → the galley.
 
-## 7  Seeing the saucer
+## 7  Seeing the saucer — rewritten (QF40 9 + 10, Dan, 2026-11-27; proposed, Dan to confirm)
 
-**Situation:** From the terrace at the end of the city reveal (6b), she spots — or the cat points out — the impound area holding her saucer. (Earlier placement: a separate viewpoint over the impound area.)
+**Situation:** at the city reveal, after "All of that is his.", the camera finds the saucer clamped in Tunneler's impound dock below.
 
-**7:** There. That’s my ship.
+THE SAUCER IN THE DOCK
 
-**CAT:** The saucer?
+**CAT:** That saucer down there… is that your ship?
 
-**7:** Yes.
+**7:** That’s her.
 
-**CAT:** Good. I was beginning to worry you meant one of the mining carts.
+CARTS TRUNDLING PAST ON THE RAIL
 
-**7:** We need to get down there and release it.
+**CAT:** Good. For a moment I thought you were going to point at one of the mining carts.
+
+HER FACE: a real laugh, surprised out of her, then, still smiling:
+
+**7:** No.
+
+THE CLAMPS ROUND THE SAUCER
+
+**CAT:** They’ve locked it down. Clamps on every side.
+
+**7:** Then we’ll have to find a way to free it.
 
 **CAT:** Then we have a destination.
 
-## 8  Boarding and escaping
+**At the bay** (QF40 10): the clamp release lever high on the impound gantry above the saucer, lit, its cables running to the clamps.
 
-**Situation:** They release the saucer and reach its entrance.
+**CAT [s07_L1]:** There’s the release. Up on the gantry. Neither of us can reach that.
 
-**7:** Get aboard.
+**7 [s07_L2]:** I don’t need to.
 
-**CAT:** After you.
+## 8  Boarding and escaping — rewritten (QF40 11, Dan chose A, 2026-11-27)
 
-**7:** You don’t know how to fly it.
+**Situation:** the saucer is free and hovering; they board by its underside beam. The guards are coming: urgent pace.
 
-**CAT:** An excellent reason for you to go first.
+**7:** Get aboard!
+
+**CAT:** Into the glowing beam.
+
+**7:** It’s a tractor beam. It’s perfectly safe.
+
+**CAT:** That’s what they all say right before an abduction.
+
+**7:** Get in!
 
 Once both are safely inside, let the sound and pace settle. Their relief needs space before more exposition.
 

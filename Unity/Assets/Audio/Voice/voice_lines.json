@@ -16,7 +16,7 @@
    "speaker": "seven",
    "text": "Go on. Before somebody sees you.",
    "pauseAfter": 0.45,
-   "delivery": "softly, shooing"
+   "delivery": "urgent, hushed, emphatic"
   },
   {
    "id": "s01_03_cat",
@@ -58,6 +58,23 @@
    "dir": "s01_first_contact",
    "speaker": "cat",
    "text": "Only conversationally.",
+   "pauseAfter": 0.45
+  },
+  {
+   "id": "s01_07a_7",
+   "scene": 1,
+   "dir": "s01_first_contact",
+   "speaker": "seven",
+   "text": "I've spoken mind to mind with a lot of people. Never a cat.",
+   "pauseAfter": 0.45,
+   "delivery": "intrigued, studying him"
+  },
+  {
+   "id": "s01_07b_cat",
+   "scene": 1,
+   "dir": "s01_first_contact",
+   "speaker": "cat",
+   "text": "We don't usually have much to say.",
    "pauseAfter": 2.0
   },
   {
@@ -231,6 +248,32 @@
    "pauseAfter": 0.45
   },
   {
+   "id": "s03_11_7",
+   "scene": 3,
+   "dir": "s03_what_he_knows",
+   "speaker": "seven",
+   "text": "Who runs this place?",
+   "pauseAfter": 0.45,
+   "delivery": "curious"
+  },
+  {
+   "id": "s03_12_cat",
+   "scene": 3,
+   "dir": "s03_what_he_knows",
+   "speaker": "cat",
+   "text": "He calls himself Tunneler. He mines the Moon. The Scree do the digging.",
+   "pauseAfter": 0.45
+  },
+  {
+   "id": "s03_13_7",
+   "scene": 3,
+   "dir": "s03_what_he_knows",
+   "speaker": "seven",
+   "text": "Tunneler.",
+   "pauseAfter": 0.45,
+   "delivery": "quietly"
+  },
+  {
    "id": "s04_01_7",
    "scene": 4,
    "dir": "s04_escape_route",
@@ -272,6 +315,22 @@
    "text": "Let's see where it goes.",
    "pauseAfter": 0.45,
    "delivery": "curious"
+  },
+  {
+   "id": "s04_T1_tunneler",
+   "scene": 4,
+   "dir": "s04_escape_route",
+   "speaker": "tunneler",
+   "text": "The prisoner is not to leave the lower level. Find her.",
+   "pauseAfter": 0.45
+  },
+  {
+   "id": "s04_G1_cat",
+   "scene": 4,
+   "dir": "s04_escape_route",
+   "speaker": "cat",
+   "text": "Follow the light. I'll show you the way.",
+   "pauseAfter": 0.45
   },
   {
    "id": "s05_01_cat",
@@ -444,58 +503,66 @@
    "delivery": "quiet wonder, almost to herself"
   },
   {
-   "id": "s06b_06_cat",
+   "id": "s06b_T1_cat",
    "scene": 65,
    "dir": "s06b_city_reveal",
    "speaker": "cat",
-   "text": "Come on. Let's find your ship.",
+   "text": "All of that is his.",
    "pauseAfter": 0.45
   },
   {
-   "id": "s07_01_7",
+   "id": "s07_01_cat",
+   "scene": 7,
+   "dir": "s07_saucer",
+   "speaker": "cat",
+   "text": "That saucer down there… is that your ship?",
+   "pauseAfter": 0.45
+  },
+  {
+   "id": "s07_02_7",
    "scene": 7,
    "dir": "s07_saucer",
    "speaker": "seven",
-   "text": "There. That's my ship.",
+   "text": "That's her.",
    "pauseAfter": 0.45,
    "delivery": "relieved"
   },
   {
-   "id": "s07_02_cat",
+   "id": "s07_03_cat",
    "scene": 7,
    "dir": "s07_saucer",
    "speaker": "cat",
-   "text": "The saucer?",
+   "text": "Good. For a moment I thought you were going to point at one of the mining carts.",
    "pauseAfter": 0.45
   },
   {
-   "id": "s07_03_7",
+   "id": "s07_04_7",
    "scene": 7,
    "dir": "s07_saucer",
    "speaker": "seven",
-   "text": "Yes.",
+   "text": "No.",
    "pauseAfter": 0.45,
-   "delivery": "wry"
+   "delivery": "laughs"
   },
   {
-   "id": "s07_04_cat",
+   "id": "s07_05_cat",
    "scene": 7,
    "dir": "s07_saucer",
    "speaker": "cat",
-   "text": "Good. I was beginning to worry you meant one of the mining carts.",
+   "text": "They've locked it down. Clamps on every side.",
    "pauseAfter": 0.45
   },
   {
-   "id": "s07_05_7",
+   "id": "s07_06_7",
    "scene": 7,
    "dir": "s07_saucer",
    "speaker": "seven",
-   "text": "We need to get down there and release it.",
+   "text": "Then we'll have to find a way to free it.",
    "pauseAfter": 0.45,
    "delivery": "determined"
   },
   {
-   "id": "s07_06_cat",
+   "id": "s07_07_cat",
    "scene": 7,
    "dir": "s07_saucer",
    "speaker": "cat",
@@ -503,20 +570,37 @@
    "pauseAfter": 0.45
   },
   {
+   "id": "s07_L1_cat",
+   "scene": 7,
+   "dir": "s07_saucer",
+   "speaker": "cat",
+   "text": "There's the release. Up on the gantry. Neither of us can reach that.",
+   "pauseAfter": 0.45
+  },
+  {
+   "id": "s07_L2_7",
+   "scene": 7,
+   "dir": "s07_saucer",
+   "speaker": "seven",
+   "text": "I don't need to.",
+   "pauseAfter": 0.45,
+   "delivery": "small smile"
+  },
+  {
    "id": "s08_01_7",
    "scene": 8,
    "dir": "s08_boarding",
    "speaker": "seven",
-   "text": "Get aboard.",
+   "text": "Get aboard!",
    "pauseAfter": 0.45,
-   "delivery": "urgent"
+   "delivery": "urgent, shouting"
   },
   {
    "id": "s08_02_cat",
    "scene": 8,
    "dir": "s08_boarding",
    "speaker": "cat",
-   "text": "After you.",
+   "text": "Into the glowing beam.",
    "pauseAfter": 0.45
   },
   {
@@ -524,17 +608,26 @@
    "scene": 8,
    "dir": "s08_boarding",
    "speaker": "seven",
-   "text": "You don't know how to fly it.",
+   "text": "It's a tractor beam. It's perfectly safe.",
    "pauseAfter": 0.45,
-   "delivery": "wry"
+   "delivery": "reassuring, hurried"
   },
   {
    "id": "s08_04_cat",
    "scene": 8,
    "dir": "s08_boarding",
    "speaker": "cat",
-   "text": "An excellent reason for you to go first.",
+   "text": "That's what they all say right before an abduction.",
    "pauseAfter": 0.45
+  },
+  {
+   "id": "s08_05_7",
+   "scene": 8,
+   "dir": "s08_boarding",
+   "speaker": "seven",
+   "text": "Get in!",
+   "pauseAfter": 0.45,
+   "delivery": "laughs"
   },
   {
    "id": "s09_01_cat",

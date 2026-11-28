@@ -178,3 +178,17 @@ or past their place (route points ahead count).
 
 Every asteroid wait is `AsteroidDirector.Until` (hint 45 s / 25 s riding, skip 2 min / 60 s riding); riding / walking
 steps fire at or past their place (route points ahead count); the junction levers work from the bike too.
+
+## QF40 (3): the climbing sections (Venus, Mars, the asteroid, the mothership, the finale)
+
+One shared section (`Runtime/ClimbSection.cs`), placed at load on flat walkable ground near each chapter's seed, at least 6 m
+from every place the chapter's story, NPCs and bots use (all its Layout points and route segments). It is OPTIONAL (a view the
+cat points out), never on the story's path.
+
+| # | Place | One-way? | Verdict |
+|---|---|---|---|
+| C1 | The face → the cornice (wall climb, a hang) | let go = she drops back to the foot of the block | ok |
+| C2 | The cornice → the low tier (shimmy, climb up) | the low tier's front: climb down into a hang anywhere along it, let go (a 2.8 m hang drop) | ok |
+| C3 | The low tier → the top (the step, a mantle) | from the top: jump back down the step anywhere along it, or climb down the back edge | ok |
+| C4 | The top → the ground behind (climb down the back edge into a hang, let go) | the ground round the block is the chapter's own walkable ground | ok |
+| C5 | A fall from any tier | lands on the ground at the block's foot (the start of the section) | ok |

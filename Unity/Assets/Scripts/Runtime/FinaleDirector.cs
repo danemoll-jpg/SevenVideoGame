@@ -32,6 +32,7 @@ namespace Seven
         [Header("FIN_03 / FIN_04")]
         public Renderer PowerPanelLamp, TerminalScreen; public Transform PowerLever, GateLockT, GateLeaf;
         public Transform DoorLeafL, DoorLeafR; public Renderer DoorMarkings;
+        public Renderer[] DoorEngrave; public Renderer DoorSymbol;   // QF40 (4): the twin of Chapter 1's door (seam + engravings, the mechanism)
         [Header("The chamber")]
         public Transform[] Sockets; public Renderer[] SocketLights; public Renderer PlatformSurface, ConduitGlow, ConduitBreak;
         public Renderer[] ProjectionWalls; public Transform BarrierField, BarrierControlT, Lock; public Renderer BarrierLight, PaleLight;
@@ -132,18 +133,8 @@ namespace Seven
         void LateUpdate()
         {
             if (DemoBoot.CaptureDir != null && Seven != null && Seven.gameObject.activeInHierarchy) FeetProbe.Sample(Seven, "Finale " + L.ZoneAt(P7));
-            if (GuideLight != null && Cam != null)
-            {
-                bool show = NextMarker.HasValue && !_cut;
-                if (GuideLight.gameObject.activeSelf != show) GuideLight.gameObject.SetActive(show);
-                UI.SetMarker(show ? NextMarker : null);
-                if (show)
-                {
-                    float d = Vector3.Distance(Cam.transform.position, GuideLight.position);
-                    GuideLight.localScale = Vector3.one * Mathf.Max(0.6f, d * 0.03f);
-                    GuideLight.rotation = Quaternion.LookRotation(GuideLight.position - Cam.transform.position);
-                }
-            }
+            // QF40 (6): the one shared guide light (GuideOrb) - eased lead ahead of her, never through a wall, fades near / in cutscenes
+            if (GuideLight != null && Cam != null) GuideOrb.Drive(GuideLight, NextMarker, _cut, Cam.GetComponent<Camera>() ?? Camera.main, Seven.transform, UI, 1.2f, 0.6f, 0.03f);
             // Tunneler's drill (QF30 5: the shared DrillHead - about the cone's own axis, never reversing) and his rig at rest
             TickRig();
             Ground.Obstacles.Clear();
@@ -222,8 +213,8 @@ namespace Seven
         void SetPrompt(string label, ControlsLegend.Btn btn = ControlsLegend.Btn.Interact) { Prompt = label; PromptBtn = btn; Legend.Context(btn, label); }
         void SetZone(string name, bool on) { var z = Ground.FindZone(name); if (z != null) z.Enabled = on; }
         static void Glow(Renderer r, float v) { if (r != null) Glowing.Set(r, v); }
-        void ShowGuide(Vector3 at) { NextMarker = at; if (GuideLight != null) { GuideLight.gameObject.SetActive(true); GuideLight.position = at + Vector3.up * 1.2f; } }
-        void HideGuide() { NextMarker = null; UI.SetMarker(null); if (GuideLight != null) GuideLight.gameObject.SetActive(false); }
+        void ShowGuide(Vector3 at) { NextMarker = at; if (GuideLight != null) { GuideLight.gameObject.SetActive(true); } }
+        void HideGuide() { NextMarker = null; UI.SetMarker(null); }   // QF40 (6): GuideOrb fades it out
 
         /// <summary>Wait for a story condition: check runs log a soft-lock after autoTimeout; a player without progress gets the hint
         /// after HintAfter s (the guide light) and a skip after SkipAfter s (Y / Enter).</summary>

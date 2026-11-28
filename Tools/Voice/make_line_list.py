@@ -22,7 +22,7 @@ PAUSE_WORDS = [("short pause", 2.0), ("quiet beat", 2.5), ("she pauses", 1.6), (
                # Round 10 galley (scene 10): real silences, only the ship's hum and eating sounds
                ("she almost smiles", 1.4), ("neither speaks", 6.0), ("a pause.", 3.0), ("searches for the answer", 1.8),
                ("hum fills the silence", 4.0), ("watches him for a moment", 2.2)]
-LINE_RE = r"\*\*(7|CAT):\*\*\s*(.+)"
+LINE_RE = r"\*\*(7|CAT|TUNNELER)(?: \[([A-Za-z0-9_]+)\])?:\*\*\s*(.+)"   # QF40: "**CAT [s01_07b]:**" = an explicit id (inserted lines keep the numbering of the rest)
 DELIVERY = os.path.join(ROOT, "Tools", "Voice", "seven_delivery.json")
 delivery = json.load(open(DELIVERY, encoding="utf-8")) if os.path.exists(DELIVERY) else {}
 
@@ -33,10 +33,13 @@ def clean(t):
     return t.replace("’", "'").replace("‘", "'").strip()
 
 
-def add_line(sc, num, who, text, prefix=""):
-    spk = "seven" if who == "7" else "cat"
+SHORT = {"seven": "7", "cat": "cat", "tunneler": "tunneler"}
+
+
+def add_line(sc, num, who, text, prefix="", given=None):
+    spk = {"7": "seven", "CAT": "cat", "TUNNELER": "tunneler"}[who]
     tag = SCENE_TAGS.get(sc, f"{sc:02d}")
-    lid = f"s{tag}_{prefix}{num:02d}_{'7' if spk == 'seven' else 'cat'}"
+    lid = f"{given}_{SHORT[spk]}" if given else f"s{tag}_{prefix}{num:02d}_{SHORT[spk]}"
     l = {"id": lid, "scene": sc, "dir": SCENE_DIRS[sc], "speaker": spk, "text": clean(text), "pauseAfter": 0.45}
     if spk == "seven" and lid in delivery:
         l["delivery"] = delivery[lid]
@@ -70,14 +73,17 @@ for raw in open(SRC, encoding="utf-8"):
             m = re.match("^" + LINE_RE + "$", part)
             if m:
                 k += 1
-                add_line(66, k, m.group(1), m.group(2), "a")
+                add_line(66, k, m.group(1), m.group(3), "a")
             else:
                 apply_pause(part, 66)
         continue
     m = re.match("^" + LINE_RE + "$", s)
     if m:
-        n += 1
-        add_line(scene, n, m.group(1), m.group(2))
+        if m.group(2):
+            add_line(scene, 0, m.group(1), m.group(3), given=m.group(2))
+        else:
+            n += 1
+            add_line(scene, n, m.group(1), m.group(3))
         continue
     apply_pause(s, scene)
 
@@ -100,7 +106,7 @@ md = ["# Voice lines — Chapter 1 \"The Moon Prison\"", "",
       "never shown in subtitles); cat lines have none.",
       "", f"{len(lines)} lines.", "", "| id | scene | speaker | text | delivery | pause |", "|---|---|---|---|---|---|"]
 for l in lines:
-    md.append(f"| `{l['id']}` | {l['scene']} | {'7' if l['speaker'] == 'seven' else 'CAT'} | {l['text']} | "
+    md.append(f"| `{l['id']}` | {l['scene']} | {SHORT[l['speaker']].upper()} | {l['text']} | "
               f"{l.get('delivery', '')} | {l['pauseAfter']} |")
 with open(os.path.join(ROOT, "Docs", "VOICE-LINES.md"), "w", encoding="utf-8", newline="\n") as f:
     f.write("\n".join(md) + "\n")

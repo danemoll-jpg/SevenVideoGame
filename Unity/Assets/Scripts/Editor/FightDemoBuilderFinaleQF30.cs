@@ -119,7 +119,7 @@ namespace Seven.EditorTools
             { var (v, t) = k.Of(m.glow); for (int n = 0; n < pts.Count - 1; n++) { var a = pts[n]; var b = pts[n + 1]; Sweep(v, t, new[] { a + Vector3.forward * 0.02f, b + Vector3.forward * 0.02f }, 0.025f * scale, false, 4); } }
             foreach (var g in k.Save(name + "Crack", crack, false)) g.transform.localPosition = Vector3.zero;
             // the stones spilled at the wall's foot below it
-            var rk = new AK(); { var (v, t) = rk.Of(m.rockDark); float floorY = F.Y; for (int n = 0; n < 9; n++) { var q = at + dir * (0.5f + (float)rnd.NextDouble() * 1.1f) + Vector3.Cross(Vector3.up, dir) * (((float)rnd.NextDouble() - 0.5f) * 1.6f); q.y = floorY + 0.1f; Ellipsoid(v, t, q, new Vector3(0.28f, 0.16f, 0.24f) * (0.6f + (float)rnd.NextDouble() * 0.7f), 3, 6); } }
+            var rk = new AK(); { var (v, t) = rk.Of(m.rockDark); float floorY = F.Y; for (int n = 0; n < 9; n++) { var q = at + dir * (0.5f + (float)rnd.NextDouble() * 1.1f) + Vector3.Cross(Vector3.up, dir) * (((float)rnd.NextDouble() - 0.5f) * 1.6f); q.y = floorY + 0.1f; float sc = 0.6f + (float)rnd.NextDouble() * 0.7f; q.y = floorY + 0.08f * sc; MBox(v, t, q, new Vector3(0.5f, 0.24f, 0.42f) * sc, (float)rnd.NextDouble() * 90f, 0.2f); } }   // QF40 (8): broken stone, not blobs
             rk.Save(name + "Spill", parent, false);
             PointLight("MiningLight", at + dir * 0.7f, 6f * scale, 0.9f, root);   // the work light glowing through the crack
             return crack;

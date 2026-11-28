@@ -210,8 +210,8 @@ namespace Seven
         void SetZone(string name, bool on) { var z = Ground.FindZone(name); if (z != null) z.Enabled = on; }
         static void Glow(Renderer r, float v) { if (r == null) return; var m = r.material; m.EnableKeyword("_EMISSION"); m.SetColor("_EmissionColor", Color.white * v); }
 
-        void ShowGuide(Vector3 at) { NextMarker = at; if (GuideLight != null) { GuideLight.gameObject.SetActive(true); GuideLight.position = at + Vector3.up * 1.2f; } }
-        void HideGuide() { NextMarker = null; UI.SetMarker(null); if (GuideLight != null) GuideLight.gameObject.SetActive(false); }
+        void ShowGuide(Vector3 at) { NextMarker = at; if (GuideLight != null) { GuideLight.gameObject.SetActive(true); } }
+        void HideGuide() { NextMarker = null; UI.SetMarker(null); }   // QF40 (6): GuideOrb fades it out
 
         /// <summary>Wait for a story condition (Venus's rule): check runs log a soft-lock after autoTimeout; a player without
         /// progress gets the hint after HintAfter s (the guide light pulses) and a skip after SkipAfter s (Y / Enter).</summary>
@@ -423,18 +423,8 @@ namespace Seven
         void LateUpdate()
         {
             if (DemoBoot.CaptureDir != null && !Riding && Seven != null && Seven.gameObject.activeInHierarchy) FeetProbe.Sample(Seven, "mars " + MarsLayout.ZoneAt(P7));   // QF18 (16)
-            if (GuideLight != null && Cam != null)
-            {
-                bool show = NextMarker.HasValue && !_cut;
-                if (GuideLight.gameObject.activeSelf != show) GuideLight.gameObject.SetActive(show);
-                UI.SetMarker(show ? NextMarker : null);
-                if (show)
-                {
-                    float d = Vector3.Distance(Cam.transform.position, GuideLight.position);
-                    GuideLight.localScale = Vector3.one * Mathf.Max(0.6f, d * 0.03f);
-                    GuideLight.rotation = Quaternion.LookRotation(GuideLight.position - Cam.transform.position);
-                }
-            }
+            // QF40 (6): the one shared guide light (GuideOrb) - eased lead ahead of her, never through a wall, fades near / in cutscenes
+            if (GuideLight != null && Cam != null) GuideOrb.Drive(GuideLight, NextMarker, _cut, Cam.GetComponent<Camera>() ?? Camera.main, Seven.transform, UI, 1.2f, 0.6f, 0.03f);
             // the bike gives way to the people in the streets (hard circles round them)
             Ground.Obstacles.Clear();
             foreach (var f in AllFolk()) if (f.gameObject.activeInHierarchy) Ground.Obstacles.Add(new Ground.Circle { C = new Vector2(f.transform.position.x, f.transform.position.z), R = 0.45f });

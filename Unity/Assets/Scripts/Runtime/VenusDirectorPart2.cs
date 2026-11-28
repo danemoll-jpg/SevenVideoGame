@@ -35,7 +35,13 @@ namespace Seven
         bool _reloading;
         /// <summary>For the player-style run's last line (the Venus scene is gone by then): knockdowns, hints, skips.</summary>
         public static int LastKnockdowns, LastHints, LastSkips;
-        void LateUpdate() { LastKnockdowns = Knockdowns; LastHints = Hints; LastSkips = Skips; }
+        void LateUpdate()
+        {
+            LastKnockdowns = Knockdowns; LastHints = Hints; LastSkips = Skips;
+            // QF40 (6): Venus gets the one shared guide light (on foot and on the bike)
+            if (_guide == null && Cam != null) _guide = GuideOrb.Make("Venus", Additive);
+            if (_guide != null && Seven != null) GuideOrb.Drive(_guide, GuideAt, _cut, Cam.GetComponent<Camera>(), Seven.transform, UI, 1.25f, 0.6f, 0.03f, true);
+        }
         public int Knockdowns { get; private set; }
         public bool DestinationReached;
         AudioSource _machineHum, _ambUnder;

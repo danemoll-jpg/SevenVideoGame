@@ -67,6 +67,25 @@ namespace Seven
         [Tooltip("8b addition: the door's right leaf (SealedDoorSlab = left leaf) and its engravings (0 = the S-seam line).")]
         public Transform DoorRight;
         public Renderer[] DoorEngrave;
+        // QF40 (5): Tunneler on the prison corridor's wall screen (FightDemoBuilderQF40)
+        public Renderer TunScreen; public Camera TunScreenCam; public Transform TunModel, TunDrill;
+        // QF40 (6): the one shared guide light (GuideOrb), introduced by the cat in the old passage ("Follow the light."); it rides
+        // above the active prompt, a place the flow names (_guideHint), the cat's next route stop or the story step's spot.
+        Transform _guide; bool _guideOn; Vector3? _guideHint;
+        Vector3? GuideTarget()
+        {
+            if (!_guideOn) return null;
+            if (_promptLabel != null) return _promptAt;
+            if (_guideHint.HasValue) return _guideHint;
+            var rs = Cat != null ? Cat.RouteStopAt : null; if (rs.HasValue) return rs;
+            if (Cat != null && Cat.Current == ChapterCat.Mode.Lead) return Cat.Destination;
+            return _step != null ? _stepSpot : (Vector3?)null;
+        }
+        void LateUpdate()
+        {
+            if (_guide == null && Cam != null) _guide = GuideOrb.Make("Chapter1", Additive);
+            if (_guide != null && Seven != null) GuideOrb.Drive(_guide, GuideTarget(), _cut || _resetting || _resettingFall, Cam.GetComponent<Camera>(), Seven.transform, UI);
+        }
         [Tooltip("The first vision (Art/Video/vision_01_door.mp4, copied to Assets/Video): full-screen, sides cropped.")]
         public UnityEngine.Video.VideoClip VisionVideo;
         UnityEngine.Video.VideoPlayer _vp;
@@ -465,6 +484,7 @@ namespace Seven
             if (Auto || DemoBoot.PlayerSim) Cap?.Log($"flow starts at checkpoint {cp} ({Chapter1State.CpName(cp)})");
             if (cp <= Chapter1State.CpCell) yield return Scene1And2();
             if (cp <= Chapter1State.CpBlock) yield return Scene3And4();
+            _guideOn = cp > Chapter1State.CpPassage;                 // QF40 (6): introduced at the start of the old passage
             if (cp <= Chapter1State.CpPassage) yield return Scene5Ruins();
             if (cp <= Chapter1State.CpHall) yield return Scene5Hall();
             if (cp <= Chapter1State.CpVision) yield return Scene6Vision();
@@ -502,7 +522,7 @@ namespace Seven
         /// the watchdog re-arms the objective if the player is ever further along than that (see <see cref="StoryWatchdog"/>).</summary>
         void Step(string name, int area, Vector3 spot, bool rearm = true)
         {
-            _step = name; _stepArea = area; _stepSpot = spot; _stepRearm = rearm;
+            _step = name; _stepArea = area; _stepSpot = spot; _stepRearm = rearm; _guideHint = null;
             if (Auto || DemoBoot.PlayerSim) Cap?.Log($"story step: {name} (fires in area {area} '{AreaNames[Mathf.Clamp(area, 0, 7)]}' or later)");
         }
 
@@ -618,12 +638,109 @@ namespace Seven
         }
         string OpeningTrigger;
 
+        /// <summary>QF40 (2): a three-quarter close-up of the cat, still, mouth closed, while his first line is heard.</summary>
+        IEnumerator CatCloseUp()
+        {
+            Transform head = null;
+            foreach (var t in Cat.GetComponentsInChildren<Transform>()) if (t.name == "head") { head = t; break; }
+            var hp = head != null ? head.position : Cat.transform.position + Vector3.up * 0.3f;
+            Cat.Hold(SevenHead, "sit");
+            var f = Flat(Cat.transform.forward).normalized; if (f.sqrMagnitude < 0.5f) f = Vector3.back;
+            var r = Vector3.Cross(Vector3.up, f);
+            Vector3 cam = hp + f * 0.9f + Vector3.up * 0.06f; bool found = false;
+            foreach (var (fw, sd) in new[] { (0.55f, 0.6f), (0.55f, -0.6f), (0.3f, 0.8f), (0.3f, -0.8f), (0.8f, 0.3f), (0.8f, -0.3f) })
+            {
+                var c = hp + f * fw + r * sd + Vector3.up * 0.06f;
+                if (Flat(Ground.ClampToArena(c, 0.1f) - c).magnitude > 0.05f) continue;      // on her side of the beams / inside a wall
+                if (ChapterCamera.ClearLine(c, hp)) { cam = c; found = true; break; }
+            }
+            Cam.Shot(cam, hp + Vector3.down * 0.03f, 0.01f, true, 30f);
+            ImageGate.Expect(Cat.transform, "the cat close up, mouth closed, while his voice is heard", 0f, "s01c_");
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"TELEPATHY SHOWN (QF40 2): the cat's close-up for his first line ({(found ? "clear framing" : "fallback framing")}); his mouth never moves (the cat has no jaw animation)");
+            yield return Wait(0.35f);
+            StartCoroutine(ShotLater("s01c_cat_closeup_mouth_still", 0.9f));
+        }
+
+        /// <summary>QF40 (2): she looks along the corridor for the speaker, then back at the cat.</summary>
+        IEnumerator SearchCorridor()
+        {
+            var f0 = Flat(Cat.transform.position - Seven.transform.position).normalized; if (f0.sqrMagnitude < 0.5f) f0 = Vector3.forward;
+            foreach (var dir in new[] { (f0 + Vector3.right * 1.3f).normalized, (f0 + Vector3.left * 1.3f).normalized, f0 })
+                for (float t = 0f; t < 0.55f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(dir), 220f * Time.deltaTime); yield return null; }
+        }
+
+        /// <summary>QF40 (5): in the prison corridor a wall screen lights up with Tunneler (lit from below, his drill turning with his
+        /// voice, as on Europa's display) giving an order over the speakers; 7 and the cat stop and watch. The guarded gate ahead is
+        /// then the reason to find another way out.</summary>
+        IEnumerator TunnelerOnScreen()
+        {
+            yield return Cutscene(true);
+            Objective(null);
+            Seven.Lock(true);
+            var scr = TunScreen != null ? TunScreen.transform.position : new Vector3(19.4f, 1.75f, 2.05f);
+            if (TunScreen != null) scr = TunScreen.bounds.center;
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(scr - Seven.transform.position)), 300f * Time.deltaTime); yield return null; }
+            if (Cat.Current != ChapterCat.Mode.Hop) Cat.Hold(scr, "sit");
+            AudioKit.Play("release_click", scr, 0.7f, 0f, AudioKit.Bus.Sfx, 20f);
+            if (TunModel != null) TunModel.gameObject.SetActive(true);
+            if (TunScreenCam != null) TunScreenCam.enabled = true;
+            if (TunScreen != null) TunScreen.enabled = true;
+            var standIn = new GameObject("TunnelerOnTheScreen").transform; standIn.position = scr + Vector3.down * 1.6f;
+            DialogueFraming.Speaker = id => id == "tunneler" ? standIn : null;
+            var hd = Seven.Bone(HumanBodyBones.Head); var hp = hd != null ? hd.position : Seven.transform.position + Vector3.up * 1.6f;
+            var to = Flat(scr - hp).normalized; var rt = Vector3.Cross(Vector3.up, to);
+            Vector3 camP = hp - to * 1.7f + rt * 0.55f + Vector3.up * 0.15f;
+            foreach (var sd in new[] { 0.55f, -0.55f, 0.9f, -0.9f }) { var c = hp - to * 1.7f + rt * sd + Vector3.up * 0.15f; if (ChapterCamera.ClearLine(c, scr) && ChapterCamera.ClearLine(c, hp)) { camP = c; break; } }
+            Cam.Shot(camP, Vector3.Lerp(hp, scr, 0.75f), 0.01f, true, 46f);
+            yield return Wait(0.7f);
+            if (TunScreen != null) ImageGate.Expect(TunScreen.transform, "Tunneler on the prison screen", 0f, "s04t_");
+            var talk = StartCoroutine(TunnelerTalks());
+            StartCoroutine(ShotLater("s04t_tunneler_on_the_prison_screen", 1.4f));
+            yield return Dlg.PlayIds("s04_T1_tunneler");       // The prisoner is not to leave the lower level. Find her.
+            StopCoroutine(talk); var dh = TunDrill != null ? TunDrill.GetComponent<DrillHead>() : null; if (dh != null) dh.Talk = 0f;
+            yield return Wait(0.6f);
+            if (TunScreen != null) TunScreen.enabled = false;
+            if (TunScreenCam != null) TunScreenCam.enabled = false;
+            if (TunModel != null) TunModel.gameObject.SetActive(false);
+            DialogueFraming.Speaker = null; Destroy(standIn.gameObject);
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log("TUNNELER ESTABLISHED (QF40 5): named in the walk-and-talk (s03_11-13), then seen and heard on the corridor's screen (s04_T1)");
+            // the guarded gate ahead: the order is why the way out is watched
+            Cam.Shot(hp + Vector3.up * 0.4f - Vector3.right * 1.2f + Vector3.forward * 1.2f, new Vector3(27f, 1.4f, 3.4f), 0.9f, false, 44f);
+            yield return Wait(1.4f);
+            yield return Cutscene(false);
+        }
+        IEnumerator TunnelerTalks()
+        {
+            var dh = TunDrill != null ? (TunDrill.GetComponent<DrillHead>() ?? DrillHead.On(TunDrill, TunModel)) : null;
+            if (dh == null) yield break;
+            AudioSource src = null; var go = GameObject.Find("Voice_7"); if (go != null) src = go.GetComponent<AudioSource>();
+            var buf = new float[256]; float t0 = Time.time;
+            while (true)
+            {
+                float lvl = 0f;
+                if (src != null && src.isPlaying) { src.GetOutputData(buf, 0); foreach (var v in buf) lvl = Mathf.Max(lvl, Mathf.Abs(v)); }
+                if (lvl <= 0.0001f) lvl = 0.25f + 0.2f * Mathf.Abs(Mathf.Sin((Time.time - t0) * 7.3f)) * Mathf.Abs(Mathf.Sin((Time.time - t0) * 2.1f));   // muted runs: a syllable rhythm
+                dh.Talk = Dlg.Busy ? Mathf.Clamp01(lvl * 2.2f) + 0.001f : 0f;
+                yield return null;
+            }
+        }
+
         IEnumerator Scene1And2()
         {
             Step("first contact + the cat opens the door (cell)", 1, MoonLayout.DoorApproach, false);   // the laser door holds her in the cell
             yield return Opening();
             if (Auto && DemoBoot.Quick) { Cap.Finish("quick chapter check (first shots only)"); yield break; }
-            yield return Dlg.PlayScene(1);
+            // QF40 (2): the telepathy is SHOWN. "Go on!..." then, as he first speaks, a close-up of the cat: his mouth closed and still
+            // while his voice is heard; then 7 searching the corridor for the speaker ("Who said that?").
+            yield return Dlg.PlayScene(1, 1, 2);              // Hey. You shouldn't be here. / Go on. Before somebody sees you.
+            var convPos = Cam.ShotPos; var convLook = Cam.ShotLook; float convFov = Cam.Fov;
+            yield return CatCloseUp();
+            yield return Dlg.PlayScene(1, 3, 3);              // That would make rescuing you considerably harder.
+            Cam.Shot(convPos, convLook, 0.01f, true, convFov);
+            var search = StartCoroutine(SearchCorridor());
+            yield return Dlg.PlayScene(1, 4, 4);              // Who said that?
+            yield return search;
+            yield return Dlg.PlayScene(1, 5, 999);            // The cat. ... Only conversationally. / I've spoken mind to mind... / We don't usually... / (beat) / You came to rescue me? / Yes.
             Checkpoint(0);
 
             // Scene 2: the cat goes out of sight to a hidden release; she only hears it.
@@ -782,7 +899,7 @@ namespace Seven
             yield return Dlg.PlayScene(3);
             _scene3 = false;
             yield return Until(() => Seven.transform.position.x > 14.0f && Seven.transform.position.y > 2.0f || Seven.transform.position.x > 15.3f, "on top of the bulkhead (the gate in view)", 120f);
-            UI.Hint("Guards at the gate ahead.", 3.5f);
+            yield return TunnelerOnScreen();                    // QF40 (5): seen and heard (replaces the "Guards at the gate ahead." hint)
             yield return Shot("s04_guarded_route");
             Objective("Find another way out");
             Prompt("Look closer", MoonLayout.OldWallSpot, 1.5f);
@@ -813,6 +930,9 @@ namespace Seven
         IEnumerator Scene5Ruins()
         {
             Step("ancient hall entrance", 3, MoonLayout.HallEntry);
+            // QF40 (6): the guide light's first appearance - it is his: he leads her, as he does all game
+            _guideOn = true;
+            yield return Dlg.PlayIds("s04_G1_cat");                 // Follow the light. I'll show you the way.
             Objective("Follow the old passage");
             // Round 9: up the cracked wall, along the shaft lip over the dark drop, down into the ruins, across the broken
             // terraces, telekinesis on the fallen slab, down the stair to the hall door. The cat shows the way.
@@ -902,9 +1022,17 @@ namespace Seven
             yield return Cutscene(true);
             var fwd5 = Flat(Seven.transform.forward).sqrMagnitude > 0.01f ? Flat(Seven.transform.forward).normalized : Vector3.back;
             var side5 = Vector3.Cross(Vector3.up, fwd5);
-            Cat.GoTo(Seven.transform.position + side5 * 0.7f + fwd5 * 0.2f, Cat.TrotSpeed, Seven.transform.position + fwd5 * 3f);
+            // QF40 (7): he comes WITH her through the arch. GoTo walked a straight line from wherever he was in the hall: the hall's
+            // south wall stood between him and her spot, he slid along it (the sticky detour) and trotted off down the far wall. Now
+            // he is led through the opening (the arch's own line, x 16.5) to her side, and the line waits for him.
+            var herSide = Seven.transform.position + side5 * 0.7f + fwd5 * 0.2f;
+            if (Cat.transform.position.z > MoonLayout.HallExitZ + 0.3f)
+                Cat.Lead(new List<Vector3> { new Vector3(16.5f, MoonLayout.Lower, MoonLayout.HallExitZ + 0.9f), new Vector3(16.5f, MoonLayout.Lower, MoonLayout.HallExitZ - 0.5f), herSide }, 99f);
+            else Cat.GoTo(herSide, Cat.TrotSpeed, Seven.transform.position + fwd5 * 3f);
             Talk();
             Cam.Shot(Seven.transform.position + fwd5 * 3.0f + side5 * 1.2f + Vector3.up * 1.6f, Seven.transform.position + Vector3.up * 0.9f, 0.9f);
+            yield return UntilOr(() => Cat.Arrived || Flat(Cat.transform.position - herSide).magnitude < 0.6f, "the cat at her side in the arch (QF40 7)", 5f, () => Cat.ForceArrive());
+            Cat.Hold(Seven.transform.position + fwd5 * 3f, "idle");
             yield return ReadyToTalk();
             yield return Dlg.PlayScene(5, 4, 4);
             yield return Cutscene(false);
@@ -928,6 +1056,7 @@ namespace Seven
                     {
                         TkStream(MoonLayout.StoneRest);
                         yield return FallStone();
+                        _guideHint = new Vector3(16.5f, MoonLayout.Lower, MoonLayout.HallExitZ - 0.8f);   // QF40 (6): then the light leads to the arch
                     }
                     Seven.SetEnergyPoint(1f, 1.2f);
                 }
@@ -2107,8 +2236,8 @@ namespace Seven
             yield return Wait(0.6f);
             yield return Shot("c04_the_cat_watches_her");
             LogCatInFrame("6b the cat watches her");
-            yield return Dlg.PlayScene(65, 6, 6);            // Come on. Let's find your ship.
-            // she starts after him, then looks back once more
+            // QF40 (9): "Come on. Let's find your ship." is cut (the saucer was already in frame, and he could not know which ship is
+            // hers). She turns from the skyline and looks out over the lower districts.
             Cat.GoTo(p7 + side * 2.6f + Vector3.forward * -0.5f, Cat.StrollSpeed, MoonLayout.SaucerCentre);
             ik.LookW = 0f;
             Seven.Lock(false); Seven.ScriptDriven = true;
@@ -2128,7 +2257,9 @@ namespace Seven
             yield return Wait(2.6f);
             ImageGate.ExpectPoint(MoonLayout.BasinCenter + new Vector3(-25f, -10f, 30f), "the lower districts", 0f, "c06_");   // a point on the pan (the city's own bounds sit round its host)
             yield return Shot("c06_her_view_the_lower_districts");
-            yield return Wait(1.0f);
+            // QF40 (5): after the wonder has had its moment, over the mining cutting into the city
+            yield return DialogueFraming.Over("the mining cutting into the city", Dlg.PlayIds("s06b_T1_cat"));   // All of that is his.
+            yield return Wait(0.6f);
             Cut6b();
             if (Auto && DemoBoot.Quick)
             {
@@ -2146,11 +2277,40 @@ namespace Seven
             var sideS = Vector3.Cross(Vector3.up, toS);
             Cat.GoTo(Seven.transform.position + sideS * 0.8f + toS * 0.3f, Cat.StrollSpeed, MoonLayout.SaucerCentre);
             Talk();
-            Cam.Shot(Seven.transform.position - toS * 2.7f - sideS * 0.6f + Vector3.up * 2.1f, Seven.transform.position + toS * 7f + Vector3.down * 1.2f, 1.2f, false, 50f);
-            yield return Wait(1.4f);
-            yield return ReadyToTalk();
+            // QF40 (9): the camera finds the saucer clamped in the impound dock below, and they talk it through - each line framed
+            // on what it is about (the saucer, her face, the ore skips trundling past, her laugh, the clamps).
+            var eyeS = SevenHead + sideS * 0.45f + Vector3.up * 0.12f;
+            Cam.Shot(eyeS, MoonLayout.SaucerCentre + Vector3.up * 1.4f, 0.01f, true, 15f);
+            yield return Wait(1.1f);
+            if (Saucer != null) ImageGate.Expect(Saucer, "the saucer clamped in the impound dock", 0f, "c07a_");
+            yield return Shot("c07a_the_saucer_in_the_dock");
+            yield return DialogueFraming.Over("the saucer clamped in the dock", Dlg.PlayIds("s07_01_cat"));   // That saucer down there... is that your ship?
+            FaceCam(34f);
+            yield return Wait(0.3f);
+            yield return Dlg.PlayIds("s07_02_7");                                                              // That's her.
+            var rail = new Vector3(15f, MoonLayout.Bay + 11.4f, -63.3f);
+            Cam.Shot(SevenHead + Vector3.up * 0.2f - sideS * 0.3f, rail, 0.01f, true, 48f);
+            ImageGate.ExpectPoint(rail, "the ore skips trundling along the rail", 0f, "c07b_");
+            yield return Wait(0.5f);
+            StartCoroutine(ShotLater("c07b_the_ore_skips_trundle_past", 0.8f));
+            yield return DialogueFraming.Over("the ore skips trundling past", Dlg.PlayIds("s07_03_cat"));    // Good. For a moment I thought you were going to point at one of the mining carts.
+            FaceCam(30f);
+            ImageGate.Expect(Seven.transform, "her face as she laughs", 0f, "c07c_");
+            StartCoroutine(ShotLater("c07c_her_laugh", 0.6f));
+            yield return Dlg.PlayIds("s07_04_7");                                                              // (a real laugh) No.
+            var clamp = Clamps != null && Clamps.Length > 0 ? Clamps[0] : null;
+            if (clamp != null)
+            {
+                float best = 1e9f; foreach (var c in Clamps) { float dc = Flat(c.position - Seven.transform.position).magnitude; if (dc < best) { best = dc; clamp = c; } }
+                Cam.Shot(eyeS, clamp.position + Vector3.up * 1.5f, 0.01f, true, 9f);
+                ImageGate.Expect(clamp, "a clamp locking the saucer down", 0f, "c07d_");
+                StartCoroutine(ShotLater("c07d_the_clamps", 0.7f));
+            }
+            yield return DialogueFraming.Over("the clamps round the saucer", Dlg.PlayIds("s07_05_cat"));   // They've locked it down. Clamps on every side.
+            Cam.Shot(Seven.transform.position - toS * 2.7f - sideS * 0.6f + Vector3.up * 2.1f, Seven.transform.position + toS * 7f + Vector3.down * 1.2f, 0.01f, true, 50f);
+            yield return Wait(0.4f);
             yield return Shot("c06_saucer_spotted");
-            yield return Dlg.PlayScene(7);
+            yield return Dlg.PlayIds("s07_06_7", "s07_07_cat");                                               // Then we'll have to find a way to free it. / Then we have a destination.
             Seven.Release();
             if (resume.HasValue && resume.Value.z < -48.6f)
             {
@@ -2163,6 +2323,43 @@ namespace Seven
             }
             yield return Cutscene(false);
             Checkpoint(Chapter1State.CpBay);
+        }
+
+        /// <summary>QF40 (9/10): a medium close-up of her face from in front (the first clear side of two).</summary>
+        void FaceCam(float fov)
+        {
+            var hp = SevenHead; var f = Flat(Seven.transform.forward).normalized; if (f.sqrMagnitude < 0.5f) f = Vector3.forward;
+            var r = Vector3.Cross(Vector3.up, f); var cam = hp + f * 1.15f + r * 0.35f - Vector3.up * 0.04f;
+            foreach (var sd in new[] { 0.35f, -0.35f, 0.6f, -0.6f, 0f }) { var c = hp + f * 1.15f + r * sd - Vector3.up * 0.04f; if (ChapterCamera.ClearLine(c, hp)) { cam = c; break; } }
+            Cam.Shot(cam, hp - Vector3.up * 0.05f, 0.01f, true, fov);
+        }
+
+        /// <summary>QF40 (10): as they reach the bay, the release lever up on its gantry - out of reach of both of them - and why
+        /// telekinesis: "There's the release. Up on the gantry. Neither of us can reach that." / "I don't need to."</summary>
+        IEnumerator LeverLines()
+        {
+            yield return Cutscene(true);
+            Objective(null);
+            Seven.Lock(true);
+            var lv = MoonLayout.Lever + Vector3.up * 1.2f;
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(lv - Seven.transform.position)), 300f * Time.deltaTime); yield return null; }
+            var to = Flat(lv - Seven.transform.position).normalized; var sd = Vector3.Cross(Vector3.up, to);
+            Cat.GoTo(Seven.transform.position + sd * 0.8f + to * 0.2f, Cat.TrotSpeed, lv);
+            Talk();
+            Vector3 cam = Seven.transform.position - to * 2.4f + sd * 0.9f + Vector3.up * 1.0f;
+            foreach (var s2 in new[] { 0.9f, -0.9f, 1.4f, -1.4f }) { var c = Seven.transform.position - to * 2.4f + sd * s2 + Vector3.up * 1.0f; if (ChapterCamera.ClearLine(c, lv) && ChapterCamera.ClearLine(c, SevenHead)) { cam = c; break; } }
+            Cam.Shot(cam, Vector3.Lerp(SevenHead, lv, 0.7f), 0.9f, false, 50f);
+            yield return ReadyToTalk();
+            if (Lever != null) ImageGate.Expect(Lever, "the release lever up on the gantry, out of reach", 0f, "s07L_");
+            StartCoroutine(ShotLater("s07L_release_lever_out_of_reach", 0.5f));
+            if (Auto || DemoBoot.PlayerSim) Cap?.Log($"CLAMP RELEASE (QF40 10): the lever {lv.y - MoonLayout.Bay:0.0} m above the bay floor on its gantry (7's reach ~2.2 m, the cat's ~1 m): telekinesis is the only way; cables run from it to the four clamps");
+            yield return Dlg.PlayIds("s07_L1_cat");                    // There's the release. Up on the gantry. Neither of us can reach that.
+            FaceCam(36f);
+            yield return Wait(0.25f);
+            yield return Dlg.PlayIds("s07_L2_7");                      // I don't need to.
+            yield return Cutscene(false);
+            Cat.Follow();
+            Objective("Release the saucer");
         }
 
         /// <summary>2e: the cat's head follows a point (after the animation each frame).</summary>
@@ -2219,7 +2416,6 @@ namespace Seven
                 HopTo(new Vector3(20.1f, MoonLayout.Bay, -63.4f), () => OnZone("Scaffold2"), 0.3f),
                 Walk(new Vector3(21f, MoonLayout.Bay, -72.4f), () => Seven.transform.position.y < MoonLayout.Bay + 0.5f),
             });
-            Prompt("Telekinesis: clamp release lever", MoonLayout.Lever, 8.5f, true);
             if (Auto) yield return AutoBay();
             yield return Until(() => Seven.transform.position.y < MoonLayout.Bay + 0.5f, "down in the bay", 300f);
             if (Auto && Workers != null)
@@ -2243,16 +2439,27 @@ namespace Seven
                 Cap.Log($"silver saucer: reflection probe riding with it {(sp != null ? $"renders so far {sp.Renders}" : "MISSING")}");
                 if (!w) Cam.Follow();
             }
+            yield return LeverLines();                                  // QF40 (10)
+            // the prompt only once she is in range AND looking at it (her body or the camera turned toward the lever)
+            Prompt("Telekinesis: clamp release lever", MoonLayout.Lever, 9f, true, () =>
+            {
+                var p = Seven.transform.position; var to = MoonLayout.Lever + Vector3.up * 1.2f - p;
+                if (Flat(to).magnitude > 8.5f) return false;
+                var camF = Cam.transform.forward; var toC = (MoonLayout.Lever + Vector3.up * 1.2f - Cam.transform.position).normalized;
+                return Vector3.Angle(Flat(Seven.transform.forward), Flat(to)) < 70f || Vector3.Angle(camF, toC) < 32f;
+            });
             yield return WaitPrompt("pull the release lever");
-            Seven.Gesture(MoonLayout.Lever + Vector3.up * 1f); TkAudit.Watch(this, "the Moon: the lever", MoonLayout.Lever + Vector3.up * 1f, null);   // QF24 (14)
+            Seven.Gesture(MoonLayout.Lever + Vector3.up * 1.6f); TkAudit.Watch(this, "the Moon: the lever", MoonLayout.Lever + Vector3.up * 1.6f, null);   // QF24 (14)
             while (!Seven.GesturePeak) yield return null;
-            TkStream(MoonLayout.Lever + Vector3.up * 1.1f);
+            TkStream(MoonLayout.Lever + Vector3.up * 1.6f);
             Seven.Lock(true);
-            Cam.Shot(MoonLayout.Lever + new Vector3(1.2f, 3.2f, 4.5f), MoonLayout.SaucerCentre + new Vector3(2f, 1.2f, 0f), 1.0f, false, 40f);
+            // the lever drops, then the clamps open one after another (the cables lead from the gantry to each)
+            Cam.Shot(MoonLayout.Lever + new Vector3(-3.5f, 1.0f, 7.5f), Vector3.Lerp(MoonLayout.Lever + Vector3.up * 1.2f, MoonLayout.SaucerCentre + Vector3.up * 1.2f, 0.55f), 1.0f, false, 52f);
             yield return ReleaseSaucer();
             yield return Cutscene(false);
             Cat.Follow();
             Objective("Board the saucer");
+            _guideHint = MoonLayout.BeamEdge;                       // QF40 (6)
             if (Auto) yield return AutoWalk(MoonLayout.BeamApproach, MoonLayout.BeamEdge);
 
             yield return Until(() => Dist7(MoonLayout.BeamCentre) < 3.9f, "at the edge of the light", 60f);
@@ -2277,14 +2484,18 @@ namespace Seven
             AudioKit.Play("clamps_release", MoonLayout.SaucerCentre + Vector3.up, 1f, 0f, AudioKit.Bus.Sfx, 45f);
             var starts = new List<Vector3>();
             foreach (var c in Clamps) starts.Add(c.position);
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 2.2f)
+            // QF40 (10): one after another (0.55 s apart), each with its own clank
+            float total = 1.6f + 0.55f * Mathf.Max(0, Clamps.Length - 1); var clanked = new bool[Clamps.Length];
+            for (float tt = 0f; tt < total; tt += Time.deltaTime)
             {
                 for (int i = 0; i < Clamps.Length; i++)
                 {
+                    float t = Mathf.Clamp01((tt - i * 0.55f) / 1.6f);
+                    if (t > 0f && !clanked[i]) { clanked[i] = true; AudioKit.Play("release_click", starts[i] + Vector3.up, 0.9f, 0.05f, AudioKit.Bus.Sfx, 30f); }
                     var outDir = Flat(starts[i] - MoonLayout.SaucerCentre).normalized;
                     Clamps[i].position = starts[i] + outDir * Mathf.SmoothStep(0f, 1.6f, t) + Vector3.down * Mathf.SmoothStep(0f, 0.9f, Mathf.InverseLerp(0.4f, 1f, t));
                 }
-                foreach (var r in RimGlow) Glow(r, Mathf.Lerp(0.9f, 3.2f, t));
+                foreach (var r in RimGlow) Glow(r, Mathf.Lerp(0.9f, 3.2f, tt / total));
                 yield return null;
             }
             if (SaucerUnderLight != null) SaucerUnderLight.intensity = 3f;

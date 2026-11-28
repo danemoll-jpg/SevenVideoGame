@@ -771,6 +771,7 @@ namespace Seven.EditorTools
             var dlg = dirGo.AddComponent<Seven.DialoguePlayer>(); dlg.Bank = bank; dlg.UI = ui;
             var legend = new GameObject("ControlsLegend").AddComponent<Seven.ControlsLegend>(); legend.Cam = cam; legend.Set = Seven.ControlsLegend.Layout.Chapter; legend.HidePanels = true;
             var d = dirGo.AddComponent<Seven.VenusDirector>();
+            d.Additive = AssetDatabase.LoadAssetAtPath<Material>(MatDir + "/Fx_additive.mat");   // QF40 (6): the guide light's halo
             d.Seven = s7; d.Cat = cat; d.Cam = ccam; d.Input = input; d.Dlg = dlg; d.UI = ui; d.Legend = legend; d.Bike = hb;
             d.Saucer = saucer; d.Hatch = hatch; d.SaucerBeam = beamC; d.Vessel = vessel; d.VesselWater = water; d.Cube = cube; d.CubeCage = cage.transform;
             d.Guardian = guardian; d.Attendant = attendant; d.Workers = workers.ToArray(); d.Worms = worms.ToArray(); d.CeilingDust = cdust;

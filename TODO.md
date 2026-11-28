@@ -1,5 +1,341 @@
 # Active Development Plan — 7: The Observer
 
+## Quick fix QF41: Dan's playthrough list, part 2 (Dan, 2026-11-27) — to do after QF40 (Dan may add items)
+
+1. **Six commercials on the Cat-a-tron (Dan's videos), no race footage.** In `Art/Video/catatron/` (12 s each, 736×384, grayscale,
+   **sound removed**): `ad_midnight_zoomies`, `ad_empty_bowl_crisis`, `ad_eau_de_tuna`, `ad_gravity_championship`, `ad_bird_channel`,
+   `ad_box_deluxe`. Add **voice-overs with NEW voices** (Dan: different from the game's voices: design each with the ElevenLabs Voice Design API from the descriptions below, save them as `Ad_<name>`; never reuse a story voice), **sound effects** (ElevenLabs Sound
+   Effects) and a short **music bed** (ElevenLabs Music, from the prompts below), mixed under the VO, all timed to each 12 s picture.
+   Scripts (Dan approved the approach; times are where each line starts):
+   - **Midnight Zoomies** (new voice `Ad_Zoomies`: "a hyped-up male sports-promo announcer, booming, gravelly, over-the-top monster-truck energy"): 0:00 "Three A.M. The house is asleep." · 0:03 "One cat… is
+     not." · 0:05 "MIDNIGHT ZOOMIES!" · 0:08 "Zero reason. Maximum speed." · 0:10 "Every night, in a hallway near you."
+     SFX: a clock ticking, thundering paws down the hall, a skid and a thud, a lamp wobble. Music: "punchy sports promo sting, driving
+     drums, brass hits, comedic tension, 12 seconds".
+   - **The Empty Bowl Crisis** (new voice `Ad_Bowl`: "a gentle, sorrowful middle-aged British woman, soft charity-appeal delivery, earnest and slightly over-sentimental"): 0:00 "Every day, cats like Whiskers face a terrible truth." ·
+     0:04 "Their bowl… is half empty." · 0:06 "The bottom… is showing." · 0:09 "No cat should see the bottom. Please. Give today."
+     SFX: one small sad meow, a soft sigh. Music: "melancholy charity-appeal solo piano, slow, overly sentimental, 12 seconds".
+   - **Eau de Tuna** (new voice `Ad_Tuna`: "a sultry, breathy French-accented woman, slow luxury perfume-ad whisper, elegant and seductive, a little absurd"): 0:00 "Eau de Tuna." · 0:02 "For the cat who has everything… except tuna." ·
+     0:06 "A whisper of the sea. A hint of the can opener." · 0:10 "Eau de Tuna. Irresistible."
+     SFX: a perfume spritz (on the spray ~0:08), a chorus of swooning purrs at the end. Music: "dreamy luxury perfume commercial,
+     harp glissando, soft strings, breathy and elegant, 12 seconds".
+   - **The Gravity Testing Championship** (new voice `Ad_Gravity`: "an older refined British male golf commentator, hushed reverent whisper that can explode into a delighted shout"): 0:00 (hushed) "The Gravity Testing
+     Championship." · 0:03 "The challenger approaches the glass… a gentle nudge…" · 0:06 "closer…" · 0:08 (shouting) "AND IT'S OVER
+     THE EDGE! Gravity confirmed!" · 0:11 "Tonight, on the Cat-a-tron."
+     SFX: glass sliding on wood, a hushed crowd, the glass shattering, a stadium roar. Music: "hushed suspense strings building to a
+     triumphant sports fanfare, 12 seconds".
+   - **The Bird Channel** (new voice `Ad_Birds`: "a calm, soothing male nature-documentary narrator, warm and slow, gently amused"): 0:00 "The Bird Channel." · 0:02 "Birds. On a branch. Doing… bird things." ·
+     0:05 "No plot. No ending. Just bird." · 0:08 "Now with squirrel!" · 0:10 "Please don't touch the screen."
+     SFX: birdsong chirps throughout, a squirrel's chatter at the squirrel (~0:08), a thump against glass as the cat leaps (~0:10).
+     Music: "gentle nature-documentary flute and pizzicato, calm and pastoral, 12 seconds".
+   - **Box Deluxe** (new voice `Ad_Box`: "a deep, smooth, velvety male luxury-car-commercial voice, slow and confident, every word savoured"): 0:00 "Introducing… the Box Deluxe." · 0:03 "Four walls. One floor.
+     Absolutely nothing else." · 0:07 "Engineered for sitting." · 0:09 "The Box Deluxe. If it fits… you sit."
+     SFX: cardboard creak as the cat climbs in, a deep contented purr. Music: "sleek luxury car commercial, smooth piano and soft
+     synth pads, sophisticated, 12 seconds".
+   **Playback on the Cat-a-tron:** before CAT_04, the screen plays the six ads **in random order** (shuffled, no repeat until all six
+   have played), sound from the screen's position (the square's PA echo). **When the player gets close to the screen** (the CAT_04
+   trigger), the current ad ends at once (a short channel-change glitch / static) and **the race ad** starts (CAT_04's announcer lines,
+   Barker): the trophy turning with the sphere in its cradle, the mark on its setting, the Deluxe Retreat; **no race highlights** (Dan:
+   boring). After CAT_04, the ads resume in rotation (never during a conversation; ducked under any line). Make the VO / SFX / music
+   with the API (the race ad keeps the Announcer = the Tee'd Off Barker voice; the six ads use the six new voices), save each ad's mixed audio beside its video, list them in `Docs/VOICES.md`.
+   Captures of each ad on the screen and the switch to the race ad.
+
+## QF40 — in plain words (Code, 2026-11-27): 1.1.0-rc4 (build 2011, `game-2011`)
+All eleven items are in. One exception: the finale has no climbing section (no free spot for one; see item 3).
+- **"Go on!… Before somebody sees you!"**: four new takes.
+  - The one in the game has a real beat after "Go on!" (0.57 s) and no pause inside "Before somebody sees you" (0.05 s and 0.10 s).
+  - Listen to all four in `Docs/Previews/qf40/s01_02_7_takes/` and pick one; `takes.txt` beside them has the numbers.
+- **The telepathy is shown**: when the cat first speaks, the camera cuts to a close-up of him, mouth closed and still, while his
+  voice is heard. Then she searches the corridor ("Who said that?"). New lines: "I've spoken mind to mind with a lot of
+  people. Never a cat." / "We don't usually have much to say."
+- **Climbing outside Chapter 1**: Venus, Mars, the asteroid and the mothership each have a climbing section.
+  - It is a ruin / machine block in that world's own material. The cat points it out ("…you'll see the whole temple from the top").
+  - The climb: jump up to a cornice, shimmy along it, climb up, step up to the top for the view ("Nice reach."), then climb down
+    the back.
+  - White chalk-glow strips mark every lip she can use.
+  - Two bots climbed each one: a precise bot and one with human-like timing mistakes. **8 / 8 runs passed every step**, with no
+    stuck hangs, no falls and **0 frames where a wall hid her from the camera**.
+  - The finale has none: the only open floor there is the saucer's berth.
+- **The finale's door is Chapter 1's door's twin**: the same code builds the same arch, S-seam leaves, engravings and round
+  mechanism. It opens the same way: she touches the mechanism, the dodecahedron answers, the seam and engravings light, and the
+  leaves part with Chapter 1's door sound. New lines: "It's just like the door from my first vision." / "The one we escaped
+  through?" / "Its twin. The same hands made both."
+- **Tunneler is established on the Moon**:
+  - The cat names him in the first safe pause ("He calls himself Tunneler. He mines the Moon. The Scree do the digging.").
+  - Then a wall screen in the prison corridor shows him, lit from below, his drill turning with his voice: "The prisoner is not to
+    leave the lower level. Find her." That order is why the gate is guarded and she looks for another way.
+  - At the city reveal, over the mining: "All of that is his."
+  - The Field Guide entry now unlocks in Chapter 1.
+- **The guide light is one shared component, in every chapter.** Chapter 1 and Venus have it now; Mars, Europa, the asteroid, the
+  mothership, Cattalus and the finale were switched to the same one.
+  - The light now waits a few metres ahead of her (further ahead on the bike) and eases along.
+  - It never leads through a wall: if the way is blocked it waits at the objective, and the marker shows where.
+  - It fades when she is close and during cutscenes.
+  - In Chapter 1 the cat introduces it: "Follow the light. I'll show you the way."
+- **Panther comes through the arch with her**: he is led through the opening, and the line waits for him.
+  - Any scripted walk of his that stops getting closer for 1.2 s now goes straight to its mark.
+  - New standing check in every check run, `PANTHER WITH HER (QF40 7)`: more than 6 m away for over 3 s while she moves, or walking
+    away from her (both must be 0).
+- **The dark blobs are gone**:
+  - Chapter 1: they were smooth noisy rock ellipsoids, a row along the bay cliff and the prison's crown. They are now layered rock
+    strata (beds, joints, cracks, fallen pieces at the foot).
+  - Ore skips (riveted steel buckets with rock in them) now ride an overhead rail across the bay, lit by its lamps.
+  - The finale: its spoil heaps are now steel ore bins with broken rock inside; the crane buckets and the spill at the wall drills
+    are broken stone.
+- **The saucer conversation is rewritten**, each line framed on what it is about. In order:
+  - the saucer in the dock: "is that your ship?";
+  - her face: "That's her.";
+  - the ore skips on the rail: "…one of the mining carts.";
+  - **her real laugh** and "No.";
+  - the clamps: "locked it down";
+  - the two of them.
+  - Laugh options: `Docs/Previews/qf40/s07_04_7_takes/`.
+- **The clamp release**:
+  - The lever is now on a gantry 6.6 m above the bay floor, out of reach of both of them, in a lit housing.
+  - Its handle is a bright white bar, with a banded warning plate, and its cables run down the leg and along the floor to all four
+    clamps.
+  - The cat: "There's the release. Up on the gantry. Neither of us can reach that." She: "I don't need to."
+  - The telekinesis prompt shows only when she is in range and looking at the lever.
+  - The clamps open one after another, each with its own clank.
+- **The boarding banter is Dan's choice A**: "Get aboard!" … "That's what they all say right before an abduction." Then her real
+  laugh and "Get in!". Laugh options: `Docs/Previews/qf40/s08_05_7_takes/`.
+**For Dan to check (QF40)** at the end of the QF40 status section below.
+
+## Quick fix QF40: Dan's playthrough list, part 1 (Dan, 2026-11-27) — done (status below; more of Dan's list will follow as QF41)
+
+1. **"Go on. Before somebody sees you." (`s01_02_7`) still sounds flat** (repeat: the earlier fix removed the pause, the opposite of
+   what it needed). Dan: "It should be more like 'Go on!… Before somebody sees you!'" Re-voice with energy: urgent and lively, a
+   hushed-but-emphatic push (she's shooing him out of danger, not sleepy): "Go on!" punchy and rising, **a real beat** (~0.4–0.6 s)
+   for the "…", then "Before somebody sees you!" quicker, pressing, with an urgent lift on "sees you". Change the delivery note
+   (`seven_delivery.json`: from "softly, shooing" to e.g. "urgent, hushed, emphatic") and use Eleven v3 audio tags / the text's
+   punctuation ("Go on! … Before somebody sees you!"). The pause goes **between "Go on!" and "Before"**, never inside "Before somebody sees you" (the old problem was a pause after "Before": keep that one out; measure both gaps in each take). Make **3–4 takes**, save
+   them to `Docs/Previews/qf40/s01_02_takes/` for Dan to choose, and use the most energetic (measure loudness / pitch movement)
+   until he picks. The subtitle text stays "Go on. Before somebody sees you." (or Dan's punctuation if he prefers).
+2. **Make the telepathy explicit in the first meeting** (Dan: he and Kyle always knew the cats speak mind to mind, but a new player
+   could think the missing mouth movement is lazy animation). In Chapter 1's first contact (`s01`), the moment he first speaks
+   (`s01_03_cat`) the camera goes to **a close-up of the cat: his mouth closed, perfectly still, while his voice is heard**; then 7
+   searching the corridor ("Who said that?"). After "You're in my head." / "Only conversationally." add (proposed, Dan to confirm;
+   use them unless he changes them; voiced with Seven / Cat):
+   - **s01_07a 7** (studying him, more intrigued than shocked; to her, mind-speech is ordinary, a cat using it isn't): "I've spoken
+     mind to mind with a lot of people. Never a cat."
+   - **s01_07b Cat:** "We don't usually have much to say."
+   (Dan: 7 is used to telepathy, it's how she communicates with everyone; the surprise is that it's a cat. Proposed, Dan to confirm.)
+   then "You came to rescue me?" as before (keep the 2 s beat before it). Update `Docs/DIALOGUE.md` and the line list. The same idea
+   is already true for Nela / the Biavians, the Cetaceans and Cattalus's cats; no extra lines needed there.
+3. **Use the climbing / ledge moves beyond Chapter 1** (Dan: the tutorial teaches the "Lara Crofting" moves (ledges, hanging,
+   shimmying, assisted jumps, wall climbs, mantles, climbing down: `MoonTraversal` / `ChapterSevenTraversal`), then the game hardly
+   uses them). Add short traversal sections where they make sense, each with a story reason (a broken path, the only way up, a
+   shortcut, reaching a view or the rune: no filler, objectives from the story), on foot, 1–3 minutes each, the bike parked first:
+   - **Venus:** climbing the overgrown temple ruins (vine-covered ledges, a shimmy along a carved frieze, a gap over the root
+     chasm) to reach the upper terrace / the cube's chamber, or a collapsed garden wall to climb past.
+   - **Mars:** a crumbled section of the fortress / ravine wall (handholds in fallen stonework, a ledge traverse above the drop, a
+     mantle onto the bridge pier), e.g. reaching the maintenance route or the temple approach when the way round is blocked.
+   - **The asteroid:** service ladders and gantry ledges in the foundry (a hang along a pipe run, climbing a stalled machine).
+   - **The mothership:** the quiet passage or a relay district: ledges in the curving architecture to reach a relay above.
+   - **The Moon finale:** a climb in the service district / down to the old route (fits FIN_03's maintenance section).
+   Not Europa (underwater) or Cattalus. Panther comments once or twice where he's with her (or aboard, telepathically: "Nice
+   reach."). Reuse the existing moves, sounds and hand-on-ledge IK (the hand rules apply); every ledge in `Docs/TRIGGER-AUDIT.md`;
+   no one-way soft-locks (a fall puts her back at the start of the section). Prove each with the player-style bot and captures from
+   the player's camera; the 20-minute rule still holds per chapter.
+   **Dan: they must work, and walls must never block her view.** For every climbing section: the camera stays outside the rock
+   (`CameraBodyGuard` + collision), pulls back / swings to the open side when she's against a wall, hanging or shimmying (a side
+   view of the ledge run, never the camera behind the wall she's on), and fades any occluder between camera and 7. The next
+   handhold / ledge is always in frame and readable (subtle edge highlights, chalk / glow marks in Kyle's style), the guide light
+   (item 6) shows where the route goes. Checks per section: 7 visible in every frame (the gate's subject test, 0 frames hidden),
+   every jump / grab succeeds for the bot **and** for a second bot with human-like timing errors; no stuck hangs. A short capture
+   clip of each section from the player's camera.
+4. **FIN_04: the finale's door must match Chapter 1's door, and her lines must say so** (Dan: the door in her first vision is the one
+   she already went through in Chapter 1, so "I know this door / from the first vision" is wrong). Build the finale's door with **the
+   same design and the same opening mechanism as Chapter 1's lunar door** (reuse `Editor/FightDemoBuilderLunarDoor.cs`'s door and its touch-to-open sequence; reuse `Editor/FightDemoBuilderLunarDoor.cs`'s door and its touch-to-open sequence; `Art/Reference/ref_lunar_door.png`, the Chapter 1 door
+   and its opening sequence, as in `vision_01_door.mp4`): same shape, markings, materials and the same way it opens (the dodecahedron
+   answering), its twin deeper down. Replace FIN_04_01–03 (proposed, Dan to confirm; use them unless he changes them):
+   - **FIN_04_01 7:** "It's just like the door from my first vision."
+   - **FIN_04_02 Panther:** "The one we escaped through?"
+   - **FIN_04_03 7:** "Its twin. The same hands made both."
+   then FIN_04_05 "They weren't surprised to see me." / "No." / "I think I belonged here." as before (drop the FIN_04_04 memory
+   sound, or use the Chapter 1 door's own opening sound). Update `Docs/CHAPTER_FINALE.md`. A capture beside Chapter 1's door shot.
+5. **Tunneler is never named or seen in Chapter 1, so Europa's "We know the name" / "You remember me" don't land** (Dan). Establish
+   him on the Moon (proposed, Dan to confirm; use them unless he changes them):
+   - **In the prison escape: he's seen and heard.** As they move through the prison (section 4, before the Scree guard), a wall screen
+     in the corridor lights up with **Tunneler** (his model, lit from below, his drill head spinning with his voice, as on Europa's
+     screen) giving an order over the speakers; 7 and Panther stop in cover and watch:
+     **s04_T1 Tunneler** (over the speakers, cold): "The prisoner is not to leave the lower level. Find her."
+   - **In the first safe pause (section 3, after "I was hoping you could explain that part."):**
+     **s03_11 7:** "Who runs this place?"
+     **s03_12 Cat:** "He calls himself Tunneler. He mines the Moon. The Scree do the digging."
+     **s03_13 7** (quietly, filing the name away): "Tunneler."
+     (If the screen moment comes first in the level's order, move these after it so the name follows the sight.)
+   - **At the city reveal** (Dan: include it), as the camera finds the mining cutting into the city: **s06_T1 Cat** (quietly):
+     "All of that is his." Placed after the reveal has had its moment of wonder (not over the first swell).
+   Then Europa's "He calls himself Tunneler." / "Oh. Him." / "We know the name." and "You. / You remember me." all pay off. Update
+   `Docs/DIALOGUE.md`, the line list, the Log / Field Guide (Tunneler's entry from Chapter 1). Voice with Seven / Cat / Tunneler.
+6. **The guide light from the start of the game** (Dan: from Europa on, a glowing orb leads her to the next place; Chapter 1, Venus and
+   Mars never got it). Make it **one shared component** (from `EuropaDirector.NextMarker` + `ChapterUI.SetMarker` and the other
+   chapters' versions: same look, motion, distance and behaviour everywhere: it waits ahead at a comfortable distance, drifts toward
+   the next objective, pauses at turns, fades when she's close or in a cutscene, never inside walls, never leading through
+   obstacles (QF32's Europa fix: it routes past hazards)) and use it in **every chapter**: **Chapter 1** (the prison escape, the
+   ruins, the route to the saucer), **Venus** (both parts, on foot and on the bike), **Mars**; the other chapters switched to the
+   shared one. Its first appearance in Chapter 1 is introduced (proposed, Dan to confirm): **s04_G1 Cat** (as the light appears ahead):
+   "Follow the light. I'll show you the way." (it's his: he leads her, as he does all game). Prove it with each chapter's player-style
+   bot following the light only, start to end, and captures of it in each world.
+7. **Panther wanders off along the wall instead of going with 7 (a regression: it was fixed once, it's back)**: Chapter 1, the Scree
+   guard section ("Get past the Scree guard without hurting anyone", 7 at the ribbed arch saying "Come on. Before they find another
+   way around."), screenshot `Docs/Previews/qf40/dan_panther_wanders.png`: 7 heads into the arch while the cat trots away down the
+   far wall. Say why the earlier fix didn't hold (find the old fix in the history). When 7 says "Come on" / moves on, he comes **with
+   her**: at her side or a step ahead along her route, through the same opening, never off to a far waypoint. Make it a standing
+   check: in every chapter where Panther is on foot with her (Chapter 1, Cattalus, the finale), log his distance from her and his
+   heading; fail if he heads away from her route or is > ~6 m from her for more than ~3 s while she's moving (outside scripted moments).
+   While there: that area's huge blank wall breaks "no plain boxes": dress it (rock strata, mining scars, braces, a lamp).
+8. **The dark blobs are still there in the first and last levels (repeat: QF34 5 replaced other "hanging things" but missed these).**
+   Screenshot `Docs/Previews/qf40/dan_blobs_again.png` (a high view over the prison / service bay: rows of big, dark, rounded rock-like
+   lumps hanging from / sitting along the overhead pipes and rails, more in a chain along the floor and beside the ramp). Dan doesn't
+   know what they are and they look terrible. **Find them by looking from that camera** (raycast / list every renderer in that frame
+   and name the generator that makes them: an ore-conveyor load? rock props? "boulder" fill? fog cards?), in **Chapter 1 and the
+   finale**, and make them something that reads instantly:
+   - If they're the mining conveyor's ore: real **ore skips / buckets** (steel, riveted, with rock visible inside) hanging from
+     trolleys on the overhead rail by hooks and chains, moving along it, lit by the rail's lamps; on the floor, ore in proper **bins /
+     carts**, not loose blobs.
+   - If they're scenery rock: proper **rock formations** (strata, cracks, broken faces, rubble at the base) fixed to the cavern walls /
+     ceiling, never floating or hanging from pipes; or remove them.
+   Before / after captures from that exact camera and from the player's camera, in both chapters. Add them to the "no plain / unreadable
+   shapes" check (a list of approved prop kinds per area).
+9. **Seeing the saucer: rewrite the exchange (Dan).** "Come on. Let's find your ship." (`s06b_06_cat`) plays with the saucer already in
+   frame, and Panther wouldn't know which ship is hers. Cut `s06b_06_cat`; at the city reveal, once the wonder has had its moment
+   (after "All of that is his."), the camera finds the saucer clamped in Tunneler's impound dock and they talk it through (replaces
+   section 7's `s07_01`–`s07_06`; proposed, Dan to confirm; use them unless he changes them):
+   - **Cat** (spotting it): "That saucer down there… is that your ship?"
+   - **7** (relieved): "That's her."
+   - **Cat:** "Good. For a moment I thought you were going to point at one of the mining carts."
+   - **7: a real laugh** (short, genuine, surprised out of her: Eleven v3 `[laughs]`, a proper laugh, not a breath; voiced as its own
+     take, 2–3 options for Dan), then, still smiling: "No."
+   - **Cat** (studying the dock): "They've locked it down. Clamps on every side."
+   - **7** (determined): "Then we'll have to find a way to free it."
+   - **Cat:** "Then we have a destination."
+   Frame each line on what it's about (the saucer in the dock on "is that your ship", the carts trundling past on the joke, her face
+   on the laugh, the clamps on "locked it down"). Re-voice with Seven / Cat; update `Docs/DIALOGUE.md` / the line list. Check other
+   "find" / "where is" lines in every chapter against what's on screen at that moment.
+10. **The saucer's clamp release: explain why telekinesis and make it obvious it's the release** (Dan: nothing says why she can't
+    just pull it by hand, or how a player would know it's the release lever; the script never said they can't reach it: these lines
+    are new). `MoonLayout.Lever` sits at bay-floor height (25.2, Bay, -74.2), 2.6 m from
+    `LeverSpot`. Move it **out of reach of both of them**: high on the impound gantry above the saucer (~6–8 m up), or behind the
+    locked mesh fence across the clamp pit, clearly visible and lit, with no way to climb to it; telekinesis (RT) is the only way.
+    The lines (proposed, Dan to confirm; use them unless he changes them), as they reach the bay, framed on the lever up high:
+    - **Cat:** "There's the release. Up on the gantry. Neither of us can reach that."
+    - **7** (a small smile, raising her hand): "I don't need to."
+    Make it read as the release on sight: a big lever in a lit housing with a red-band (monochrome: bright white) handle, the clamp
+    cables / hydraulic lines visibly running from it to the clamps round the saucer, a warning plate; Panther's line names it.
+    Then the telekinesis pull: the lever drops, the clamps open one after another, the saucer lifts free. The prompt "Telekinesis:
+    clamp release lever" only once she's looking at it in range. Replace whatever line plays there now (find it). Prove it with the
+    player-style bot and captures (the lever out of reach in the frame, the pull, the clamps opening).
+11. **Replace the boarding banter (s08): "You don't know how to fly it." is a non-sequitur** (Dan and Kyle). Replace `s08_01`–`s08_04`
+    (they board by the saucer's underside beam). **Dan chose A** (2026-11-27); B is dropped:
+    - **A (the beam):** **7:** "Get aboard!" · **Cat** (eyeing the column of light): "Into the glowing beam." · **7:** "It's a tractor
+      beam. It's perfectly safe." · **Cat:** "That's what they all say right before an abduction." · **7** (a laugh): "Get in!"
+    - **B (manners):** **7:** "Get aboard." · **Cat:** "After you." · **7:** "Since when are you a gentleman?" · **Cat:** "Since the
+      guards started running this way."
+    Urgent pace (the guards coming); her laugh a real one (A). Re-voice; update `Docs/DIALOGUE.md` / the line list.
+
+## QF40 — status (Code, 2026-11-27): done; release 1.1.0-rc4 (build 2011, `game-2011`)
+### Why each repeat didn't hold
+- **Item 1, "Go on…" (`s01_02_7`)**: QF8's `retake_no_pause.py` was written to remove a pause *after "Before"*. It chose the take
+  with the shortest gaps, using a calm tag, and the line's delivery note was "softly, shooing". It optimised away every pause,
+  including the one Dan wanted. Now:
+  - the note is "urgent, hushed, emphatic";
+  - what is spoken differs from the subtitle: "Go on! ... Before somebody sees you!" (new `Tools/Voice/speak_text.json`), while the
+    subtitle stays "Go on. Before somebody sees you.";
+  - the new `Tools/Voice/make_takes.py` measures every word gap. The gap after "Go on!" must be 350–800 ms; the gaps after "Before"
+    and "somebody" must be ≤ 150 ms.
+- **Item 7, Panther wandering off**: the earlier fix (QF8, `d68d04bd`) covered a different moment: Follow mode in the vision
+  chamber. At the arch the cat is in a scripted `GoTo` inside a cutscene, where the leash is off.
+  - `GoTo` walks a straight line. The hall's south wall stood between him and her spot, so he slid along it (the sticky detour)
+    and off down the far wall.
+  - The line waited at most 3 s, then played anyway.
+  - Nothing in the code had changed since QF4. It was a gap the QF8 check (`_catChamberMax`, the chamber only) could not see.
+  - Now he is led through the arch's own line and the line waits for him. A `GoTo` that stops getting closer goes to its mark. The
+    standing check covers every chapter where he walks with her.
+- **Item 8, the dark blobs**: QF34 5 replaced the drills, sconces and lamps it found as "hanging things". The blobs were neither:
+  - they were scenery-rock fill, `Lump` ellipsoids in `BayCliff` (a row along the cliff below the impound ledge, and two rows above
+    and beside it) and `CliffAbove` (the prison's crown);
+  - seen from high up they hung behind the bay's overhead pipes.
+  - The finale never ran that code. Its own round dark shapes were the spoil heaps, crane ore and wall-drill spill, all smooth
+    `Ellipsoid`s.
+- **Item 6, the guide light**: it was never shared. Europa's director had one, and later chapters copied it into their own
+  directors. Chapter 1 and Venus were built before it existed and never got one.
+  - It is now `Runtime/GuideOrb.cs`. Each director calls `GuideOrb.Drive(...)` from LateUpdate with its NextMarker.
+  - The six copied LateUpdate blocks are gone, and the teleport in `ShowGuide` is gone.
+### What changed (code)
+- Lines:
+  - `Docs/DIALOGUE.md` allows explicit ids for inserted lines (`**CAT [s01_07b]:**`), so the numbering of the rest never moves.
+  - `make_line_list.py` takes a TUNNELER speaker; `generate_voices.py` uses his saved voice and `speak_text.json`.
+  - New / re-voiced lines: s01_07a/b, s03_11–13, s04_T1 (Tunneler), s04_G1, s06b_T1, s07_01–07, s07_L1/L2, s08_01–05.
+  - Cut: s06b_06 and the old s07/s08 takes (files deleted).
+  - Laugh takes are chosen by `make_takes.py`: at least 0.6 s of voiced laugh before the first word.
+- Chapter 1 (`Chapter1Director`): `CatCloseUp`, `SearchCorridor`, `TunnelerOnScreen` + `TunnelerTalks` (the shared DrillHead),
+  the arch lead, the 6b/7 reframing (`FaceCam`, `DialogueFraming.Over` for the voice-overs), `LeverLines`, the release prompt's
+  look test, the clamps one after another, the guide light (`GuideTarget`).
+- Builders:
+  - `FightDemoBuilderQF40.cs`: the prison screen + studio; `Strata` (layered rock); `BuildBayQF40` (strata walls, the release
+    gantry + cables + lever, the ore rail + skips on a `CityMotion` conveyor); `PrisonCrownStrata`.
+  - `MoonLayout.Lever` moved to the gantry.
+  - `FightDemoBuilderLunarDoor.cs`: `BuildLunarDoorCore` (origin / scale / mesh-name prefix), used by Chapter 1 and the finale.
+  - The finale's ore bins, crane ore and spill.
+- `ChapterCat`: the `GoTo` no-progress rule (`BlinkTo`), `RouteStopAt`, `PANTHER WITH HER (QF40 7)` (`ProbeWithHer`,
+  `WithHerSummary`, logged by `ChapterCapture.Finish`).
+- `Runtime/ClimbSection.cs`: the shared climbing section.
+  - Built at scene load, so the camera's occluder copies and her foot collision include it.
+  - It finds its own spot: flat walkable ground, clear of every mesh, ≥ 6–7 m from every Layout point and route segment, so it
+    never sits on the story's path.
+  - Its two tier zones are inserted FIRST in the ground's zone list. The ground's rule is one height per spot, first zone wins.
+  - It adds its moves to the chapter's own set. Mars had never installed a set and was running with the Moon's ledges active; it
+    now gets its own.
+  - The cat's lines: `Tools/Voice/generate_climb_voices.py` → `Resources/ClimbVoice/`.
+  - `-climbtest` (with a chapter start switch) runs the two bots.
+### Decisions (Code; Dan to confirm)
+- **The climbing sections are optional detours**: a view the cat points out, with the payoff of the view and his line. They are not
+  required story steps.
+  - Making them required would mean rerouting four chapters' flows and every chapter bot.
+  - The whole-game proof would then rest on new, untested bot code.
+- **The finale has no climbing section.**
+  - The search looked within 120 m of the service district and found no free flat spot.
+  - Most in the way: the saucer's hull at the berth, the berth's own metal and the bay seams.
+  - Dan's suggested place (FIN_03's maintenance section) is narrow walkways.
+  - It would need a purpose-built section in the finale's builder: QF41 if Dan wants it.
+- **Where the light first appears in Chapter 1**: at the start of the old passage (after the older wall sinks). The cat says
+  "Follow the light." there.
+  - The prison corridor before it stays the cat's own lead (the route stops), as before.
+  - From then on the light rides above the active prompt, a place the flow names, the cat's next route stop, or the story step.
+- **Tunneler's order** replaces the old "Guards at the gate ahead." hint (a caption). The screen is on the corridor wall between the
+  bulkhead and the guarded gate.
+- **The take in the game** is the most energetic one that keeps every rule (loudness range + pitch movement, measured): s01_02
+  take 3, the laughs s07_04 take 2 and s08_05 take 1. To use another, copy it over the game's file and rebuild.
+- **"Find" / "where is" lines in other chapters** (item 9's last ask): only "Where is he?" (EUR_06_08) and "Heh. There it is."
+  (BIA_12_22) match, and neither points at something on screen that is missing.
+### Proof
+- Build: every build check passes, including:
+  - `DRILL AXIS` on the prison screen's Tunneler;
+  - `HOLES`, `HOLD CORRIDOR`, `SAUCER CLEARANCE`, `NORMALS` in every scene;
+  - voice bank 113 / 113 lines with audio.
+- Climbing (`-climbtest`), each world run twice (precise + human-timed): **Venus 2/2, Mars 2/2, the asteroid 2/2, the mothership
+  2/2.**
+  - Every step passed: jump to the cornice, shimmy, climb up, the step, climb down into a hang, let go.
+  - Retries 0, stuck hangs 0, falls 0.
+  - 7 hidden from the player's camera: 0 frames, measured every frame as rendered.
+  - Captures `Builds/Checks/qf40_climb_<world>/` (gate PASS).
+- Whole game from a new save: see "Whole-game runs (QF40)" below.
+
+**For Dan to check (QF40)**
+1. Chapter 1's opening: does the close-up on the cat make the telepathy obvious? Pick the "Go on!" take you like
+   (`Docs/Previews/qf40/s01_02_7_takes/`).
+2. The prison corridor: Tunneler on the screen. The city reveal: "All of that is his.", then the saucer talk and her laugh (pick a
+   take in `s07_04_7_takes/`).
+3. The bay: the lever up on the gantry, the cat's line, the pull, the clamps opening one after another. The ore skips on the rail.
+   No blobs from any camera.
+4. The beam: the new banter and her laugh (`s08_05_7_takes/`).
+5. The arch after the Scree guard: does Panther come through with her?
+6. The guide light in Chapter 1 (from the old passage on) and in Venus (on foot and on the bike). Does it feel the same as Europa's?
+7. The climbing blocks: Venus by the temple court, Mars near the bridge-head checkpoint, the asteroid by the hall plaza, the
+   mothership near the junction. Are they worth having, and should any be required?
+8. The finale door: is it clearly Chapter 1's door's twin?
+
 ## QF39 — in plain words (Code, 2026-11-27): 1.1.0-rc3 (build 2010, `game-2010`) PUBLISHED, Latest (every earlier release kept)
 Both fixed, in every boss fight.
 - **Why the switch press turned into an evade:** a switch only counted inside 3 m. When his attack hit her or she dodged, the

@@ -131,8 +131,10 @@ namespace Seven
         }
         void OpenDoorNow()
         {
-            if (DoorLeafL != null) DoorLeafL.position = new Vector3(11.5f - 1.15f - 2.2f, L.Y, -142f);
-            if (DoorLeafR != null) DoorLeafR.position = new Vector3(11.5f + 1.15f + 2.2f, L.Y, -142f);
+            if (DoorLeafL != null) DoorLeafL.localPosition = new Vector3(-L.DoorLeafOpen, 0f, 0f);   // QF40 (4): as Chapter 1's door, from its home
+            if (DoorLeafR != null) DoorLeafR.localPosition = new Vector3(L.DoorLeafOpen, 0f, 0f);
+            if (DoorEngrave != null) foreach (var r in DoorEngrave) Glow(r, 0.6f);
+            Glow(DoorSymbol, 0.7f);
         }
 
         void Update()
@@ -316,33 +318,45 @@ namespace Seven
             yield return Wait(0.8f);
             yield return Shot("f11_the_door_from_the_memory_vision_framing");
             HerFaceCloseUp();
-            yield return Say("FIN_04", 1, 3);                       // I know this door. / From the first vision? / Yes.
-            // FIN_04_04: the door vision's own shimmer (no line)
-            var sh = AudioKit.Loop("vision_shimmer", null, null, 0f, AudioKit.Bus.Sfx); if (sh != null) { StartCoroutine(AudioKit.Fade(sh, 0.35f, 0.8f)); }
-            Glow(DoorMarkings, 1.2f);
-            yield return Wait(1.6f);
-            if (sh != null) StartCoroutine(AudioKit.Fade(sh, 0f, 1.2f, true));
+            yield return Say("FIN_04", 1, 3);                       // It's just like the door from my first vision. / The one we escaped through? / Its twin. The same hands made both.
             yield return Say("FIN_04", 5, 6);                       // They weren't surprised to see me. / No.
             yield return Cutscene(false);
-            // the player touches the door (never opens by itself)
-            Objective("Touch the door");
-            yield return Interact(L.DoorAt + new Vector3(0f, 0f, 1.0f), "Touch the door", "the ancient door", "The door ahead - touch it", new[] { L.DoorAt + new Vector3(0f, 0f, 1.3f) }, null, 2.4f);
+            // QF40 (4): it opens as Chapter 1's door did - the player touches the round mechanism beside it (never by itself)
+            Objective("Touch the mechanism beside the door");
+            yield return Interact(L.DoorMarkSpot, "Touch the mechanism", "the door's mechanism", "The round mechanism beside the door - touch it", new[] { L.DoorMarkSpot }, null, 2.4f);
             yield return Cutscene(true);
-            Seven.Place(L.DoorAt + new Vector3(0.4f, 0f, 0.95f), Vector3.back);
+            Seven.Place(L.DoorMarkSpot, Vector3.back);
             Seven.Touch(L.DoorMark);
-            Shoot(L.DoorAt + new Vector3(2.6f, 1.6f, 2.2f), L.DoorMark, 40f, 0.01f);
+            Shoot(L.DoorMarkSpot + new Vector3(2.4f, 1.5f, 2.0f), L.DoorMark, 40f, 0.01f);
+            Glow(DoorSymbol, 0.9f);
             yield return Say("FIN_04", 7, 7);                       // I think I belonged here.
-            yield return Wait(0.5f);
+            yield return Wait(0.4f);
             yield return Shot("f12_her_hand_on_the_door");
-            // the dodecahedron answers from her pocket: it rises in her glow, the marks light, the leaves part
+            // the dodecahedron answers from her pocket: it rises in her glow; the mechanism, the seam and the engravings light; the
+            // leaves part along the S-seam (Chapter 1's door sequence and sound)
             if (Dodecahedron != null) { Dodecahedron.gameObject.SetActive(true); Dodecahedron.position = P7 + Vector3.up * 1.05f + Seven.transform.forward * 0.25f; }
             AudioKit.Play("tk_gather", P7 + Vector3.up, 0.8f);
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.2f) { if (Dodecahedron != null) { Dodecahedron.position += Vector3.up * Time.deltaTime * 0.35f; Dodecahedron.Rotate(0f, 60f * Time.deltaTime, 0f); } Glow(DoorMarkings, 1.2f + t * 1.6f); yield return null; }
+            AudioKit.Play("energy_point", L.DoorMark, 0.8f);
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.2f) { if (Dodecahedron != null) { Dodecahedron.position += Vector3.up * Time.deltaTime * 0.35f; Dodecahedron.Rotate(0f, 60f * Time.deltaTime, 0f); } Glow(DoorSymbol, Mathf.Lerp(0.9f, 3f, t)); yield return null; }
             Shoot(L.DoorView + new Vector3(0.5f, 1.2f, 1.6f), L.DoorAt + Vector3.up * 2.6f, 50f, 0.01f);
-            AudioKit.Play("ast_door_manual", L.DoorAt + Vector3.up * 2f, 1f);
-            var la = DoorLeafL.position; var ra = DoorLeafR.position;
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f) { float u = Mathf.SmoothStep(0f, 1f, t); DoorLeafL.position = la + Vector3.left * 2.2f * u; DoorLeafR.position = ra + Vector3.right * 2.2f * u; if (t > 0.5f && Dodecahedron != null) Dodecahedron.gameObject.SetActive(false); yield return null; }
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.6f)
+            {
+                if (DoorEngrave != null) for (int i = 0; i < DoorEngrave.Length; i++) Glow(DoorEngrave[i], (i == 0 ? 3.5f : 1.8f) * t);
+                yield return null;
+            }
+            ImageGate.Expect(DoorLeafL, "the door's seam and engravings lit");
+            yield return Shot("f12b_the_engravings_light");
+            AudioKit.Play("stone_door", L.DoorAt + Vector3.up * 2f, 1f, 0f, AudioKit.Bus.Sfx, 30f);
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 3f)
+            {
+                float u = Mathf.SmoothStep(0f, 1f, t);
+                DoorLeafL.localPosition = new Vector3(-L.DoorLeafOpen * u, 0f, 0f); DoorLeafR.localPosition = new Vector3(L.DoorLeafOpen * u, 0f, 0f);
+                if (t > 0.5f && Dodecahedron != null) Dodecahedron.gameObject.SetActive(false);
+                yield return null;
+            }
             if (Dodecahedron != null) Dodecahedron.gameObject.SetActive(false);
+            if (DoorEngrave != null) foreach (var r in DoorEngrave) Glow(r, 0.6f);
+            Glow(DoorSymbol, 0.7f);
             ImageGate.ExpectPoint(L.DoorAt + Vector3.up * 2.4f, "the open doorway");
             yield return Shot("f13_the_door_opens");
             SetZone("DoorZ", true);

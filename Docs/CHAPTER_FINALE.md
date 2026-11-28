@@ -134,7 +134,10 @@ This gives the Scree an active role before the finale rather than making them sp
 
 The service route reaches an ancient door.
 
-Its shape and markings echo the door seen in 7’s first lunar vision.
+QF40 (4, Dan): it is the TWIN of Chapter 1's lunar door - the door of her first vision, which she already went through on the
+way out of the prison: the same pointed arch, the two leaves parting along the S-seam, the orbit engravings, the round
+three-spoke mechanism beside it, and it opens the same way (she touches the mechanism, the dodecahedron answers, the seam and
+the engravings light, the leaves part with the Chapter 1 door's own sound). Built by the same code (`BuildLunarDoorCore`).
 
 **Camera:** reproduce the original vision framing as closely as possible.
 
@@ -142,10 +145,10 @@ Its shape and markings echo the door seen in 7’s first lunar vision.
 
 | ID | Speaker | Dialogue | Performance / camera |
 |---|---|---|---|
-| FIN_04_01 | 7 | I know this door. | Quiet recognition. |
-| FIN_04_02 | Panther | From the first vision? | Looks up. |
-| FIN_04_03 | 7 | Yes. | Steps closer. |
-| FIN_04_04 | — | — | A brief memory sound: the already-established “There you are,” if used in Chapter 1. |
+| FIN_04_01 | 7 | It's just like the door from my first vision. | Quiet recognition. (QF40 4, proposed, Dan to confirm) |
+| FIN_04_02 | Panther | The one we escaped through? | Looks up. (QF40 4, proposed) |
+| FIN_04_03 | 7 | Its twin. The same hands made both. | Steps closer. (QF40 4, proposed) |
+| FIN_04_04 | — | — | (QF40 4: the memory sound is dropped; the door parts with Chapter 1's own door sound.) |
 | FIN_04_05 | 7 | They weren’t surprised to see me. | Her hand hovers beside the marking. |
 | FIN_04_06 | Panther | No. | Patient. |
 | FIN_04_07 | 7 | I think I belonged here. | Touches the door. |

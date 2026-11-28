@@ -110,7 +110,9 @@ namespace Seven
         public static readonly Vector2 BayMin = new Vector2(-2f, -94f), BayMax = new Vector2(32f, -69.5f);
         public static readonly Vector3 SaucerCentre = new Vector3(11.5f, Bay, -80f);
         public const float SaucerRadius = 6f, SaucerBaseY = 1.15f;     // hull underside above the floor while clamped
-        public static readonly Vector3 Lever = new Vector3(25.2f, Bay, -74.2f);
+        // QF40 (10): the clamp release sits on a gantry 6.6 m above the bay floor (out of reach: telekinesis is the only way); this is
+        // its housing's base (the lever arm 1 m above). LeverSpot stays where she stands to pull it.
+        public static readonly Vector3 Lever = new Vector3(24.6f, Bay + 6.6f, -75.6f);
         public static readonly Vector3 LeverSpot = new Vector3(22.6f, Bay, -73.4f);
         public static readonly Vector3 RampFoot = new Vector3(SaucerCentre.x + SaucerRadius + 2.3f, Bay, SaucerCentre.z);   // (pre-Round 7 ramp)
         // Round 7: tractor beam instead of a ramp. The saucer lifts HoverLift and shines a cone down from its belly hatch.

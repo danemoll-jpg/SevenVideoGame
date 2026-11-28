@@ -59,6 +59,8 @@ namespace Seven
         ChapterCapture Cap => ChapterCapture.I;
         string _objective, _hintLine;
         bool _cut; public bool InCutscene => _cut;
+        /// <summary>QF40 (6): where the shared guide light leads right now (the step the flow waits for; null = none).</summary>
+        public Vector3? GuideAt; public Material Additive; Transform _guide;
         CarriedShape _carry;
         bool _firstFrameCovered;
         static readonly HashSet<string> _taught = new HashSet<string>();
@@ -164,6 +166,7 @@ namespace Seven
         {
             float t0 = Time.time, since = Time.time, best = at.HasValue ? Dist7(at.Value) : 0f;
             bool hinted = false;
+            if (at.HasValue) GuideAt = at;            // QF40 (6): the shared guide light leads to the step
             WaitingFor = what; SkipOffered = false; _skipPressed = false;
             while (!cond())
             {
@@ -201,7 +204,7 @@ namespace Seven
                 }
                 yield return null;
             }
-            WaitingFor = null; SkipOffered = false; _hintLine = null;
+            WaitingFor = null; SkipOffered = false; _hintLine = null; GuideAt = null;
             if (_objective != null) UI.SetObjective(_objective);
             if (Auto || DemoBoot.CaptureDir != null) Cap?.Log($"ok: {what} ({Time.time - t0:0.0}s)");
         }

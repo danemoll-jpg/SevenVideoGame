@@ -19,9 +19,9 @@ namespace Seven
     public sealed class LauncherBridge : MonoBehaviour
     {
         /// <summary>Release version of this build: 0.&lt;round&gt;.&lt;fix&gt;. Raise it every round before the final build.</summary>
-        public const string Version = "1.1.0-rc3";
+        public const string Version = "1.1.0-rc4";
         /// <summary>Release build number: round * 100 + fix (0.8.0 = 800). Must rise with every published release.</summary>
-        public const int Build = 2010;   // QF39: boss switches always take the press, Viper's three pylons (QF38 = 2009): Dan's full playthrough fixes (P3 = 2008) (QF37 = 2007, Round 22 = 2006)
+        public const int Build = 2011;   // QF40: Dan's playthrough list part 1 (QF39 = 2010): boss switches always take the press, Viper's three pylons (QF38 = 2009): Dan's full playthrough fixes (P3 = 2008) (QF37 = 2007, Round 22 = 2006)
 
         const string ReadyArg = "-sevenLauncherReady", NonceArg = "-sevenLauncherNonce";
 

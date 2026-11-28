@@ -53,8 +53,20 @@ MonoBehaviour:
     Speaker: cat
     Text: Only conversationally.
     Scene: 1
-    PauseAfter: 2
+    PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: 8ad39d813ab0a884c8f2b979d501d616, type: 3}
+  - Id: s01_07a_7
+    Speaker: seven
+    Text: I've spoken mind to mind with a lot of people. Never a cat.
+    Scene: 1
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: f6f5be712877a4442a4a6afbfa3180c3, type: 3}
+  - Id: s01_07b_cat
+    Speaker: cat
+    Text: We don't usually have much to say.
+    Scene: 1
+    PauseAfter: 2
+    Clip: {fileID: 8300000, guid: 4c7f254ebcdcf9d4895b098ccbc0e901, type: 3}
   - Id: s01_08_7
     Speaker: seven
     Text: You came to rescue me?
@@ -175,6 +187,24 @@ MonoBehaviour:
     Scene: 3
     PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: bef5686940add284baf8aa9d9c526e03, type: 3}
+  - Id: s03_11_7
+    Speaker: seven
+    Text: Who runs this place?
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 3ec860a150f82fd4791040b247fca6db, type: 3}
+  - Id: s03_12_cat
+    Speaker: cat
+    Text: He calls himself Tunneler. He mines the Moon. The Scree do the digging.
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 9a77a937970f9094fa42a9ec3ab29d2f, type: 3}
+  - Id: s03_13_7
+    Speaker: seven
+    Text: Tunneler.
+    Scene: 3
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 58687fa6bfa7cf64888f4c03c3a8ab39, type: 3}
   - Id: s04_01_7
     Speaker: seven
     Text: This wall is different.
@@ -205,6 +235,18 @@ MonoBehaviour:
     Scene: 4
     PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: 50815b742a9fb9246b5b49e9be3facf6, type: 3}
+  - Id: s04_T1_tunneler
+    Speaker: tunneler
+    Text: The prisoner is not to leave the lower level. Find her.
+    Scene: 4
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 1867a50239c3be3439d79a1e0d8593bd, type: 3}
+  - Id: s04_G1_cat
+    Speaker: cat
+    Text: Follow the light. I'll show you the way.
+    Scene: 4
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 82ab42538e1e0fe499bba52788e84efb, type: 3}
   - Id: s05_01_cat
     Speaker: cat
     Text: Can we get past?
@@ -325,72 +367,96 @@ MonoBehaviour:
     Scene: 65
     PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: bd1d4f1cd0123df4b90c7d56edd47bf8, type: 3}
-  - Id: s06b_06_cat
+  - Id: s06b_T1_cat
     Speaker: cat
-    Text: Come on. Let's find your ship.
+    Text: All of that is his.
     Scene: 65
     PauseAfter: 0.45
-    Clip: {fileID: 8300000, guid: db6ec44ca368d7f4d957f19961603620, type: 3}
-  - Id: s07_01_7
-    Speaker: seven
-    Text: There. That's my ship.
-    Scene: 7
-    PauseAfter: 0.45
-    Clip: {fileID: 8300000, guid: 358b52ed055f6fc4cb1c91b7f03b8fe1, type: 3}
-  - Id: s07_02_cat
+    Clip: {fileID: 8300000, guid: 83d22270a3fb7814eb129018fe6b0184, type: 3}
+  - Id: s07_01_cat
     Speaker: cat
-    Text: The saucer?
+    Text: "That saucer down there\u2026 is that your ship?"
     Scene: 7
     PauseAfter: 0.45
-    Clip: {fileID: 8300000, guid: c47a66b9ba51b234a9b30cd515c9e938, type: 3}
-  - Id: s07_03_7
+    Clip: {fileID: 8300000, guid: 89ecc0709d0469949b879a82ff6e4ae7, type: 3}
+  - Id: s07_02_7
     Speaker: seven
-    Text: Yes.
+    Text: That's her.
     Scene: 7
     PauseAfter: 0.45
-    Clip: {fileID: 8300000, guid: 0a4d1a4f7e0791141958835b701c5f1a, type: 3}
-  - Id: s07_04_cat
+    Clip: {fileID: 8300000, guid: 89566896a28042a45acc6cf052244174, type: 3}
+  - Id: s07_03_cat
     Speaker: cat
-    Text: Good. I was beginning to worry you meant one of the mining carts.
+    Text: Good. For a moment I thought you were going to point at one of the mining carts.
     Scene: 7
     PauseAfter: 0.45
-    Clip: {fileID: 8300000, guid: bed64d384a61ffa4aa4ed1b2c3846bc8, type: 3}
-  - Id: s07_05_7
+    Clip: {fileID: 8300000, guid: 4fb79818027a213499f5889482f3a303, type: 3}
+  - Id: s07_04_7
     Speaker: seven
-    Text: We need to get down there and release it.
+    Text: No.
     Scene: 7
     PauseAfter: 0.45
-    Clip: {fileID: 8300000, guid: fe1e74fea4a1e1b45b2f0bc996647d8c, type: 3}
-  - Id: s07_06_cat
+    Clip: {fileID: 8300000, guid: 796a3f910cbc89649897d16a98009b5d, type: 3}
+  - Id: s07_05_cat
+    Speaker: cat
+    Text: They've locked it down. Clamps on every side.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 55ddab1d32a1c9040bd55d5d913d0f8d, type: 3}
+  - Id: s07_06_7
+    Speaker: seven
+    Text: Then we'll have to find a way to free it.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 1ed39343da1c58a47929e641eb23f8ac, type: 3}
+  - Id: s07_07_cat
     Speaker: cat
     Text: Then we have a destination.
     Scene: 7
     PauseAfter: 0.45
-    Clip: {fileID: 8300000, guid: 427b100864792b746aa8401993638ac0, type: 3}
+    Clip: {fileID: 8300000, guid: 082ea66c19958cf4cb0ec3660dd5ad16, type: 3}
+  - Id: s07_L1_cat
+    Speaker: cat
+    Text: There's the release. Up on the gantry. Neither of us can reach that.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 3786955926de1ff4591dab8d7db22b5a, type: 3}
+  - Id: s07_L2_7
+    Speaker: seven
+    Text: I don't need to.
+    Scene: 7
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: f01c89510897e9d4db6d20ea7b57a7ab, type: 3}
   - Id: s08_01_7
     Speaker: seven
-    Text: Get aboard.
+    Text: Get aboard!
     Scene: 8
     PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: 55b61a70d0e91b347bd093bffe49dc6c, type: 3}
   - Id: s08_02_cat
     Speaker: cat
-    Text: After you.
+    Text: Into the glowing beam.
     Scene: 8
     PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: 228fb2dd3f8e028479d041949894179c, type: 3}
   - Id: s08_03_7
     Speaker: seven
-    Text: You don't know how to fly it.
+    Text: It's a tractor beam. It's perfectly safe.
     Scene: 8
     PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: db946237bdbda964593df218a8ae6658, type: 3}
   - Id: s08_04_cat
     Speaker: cat
-    Text: An excellent reason for you to go first.
+    Text: That's what they all say right before an abduction.
     Scene: 8
     PauseAfter: 0.45
     Clip: {fileID: 8300000, guid: fd13a67e9a04d154ea9dfca6d56aa999, type: 3}
+  - Id: s08_05_7
+    Speaker: seven
+    Text: Get in!
+    Scene: 8
+    PauseAfter: 0.45
+    Clip: {fileID: 8300000, guid: 526c73c600a78924ebe094f4755bf59e, type: 3}
   - Id: s09_01_cat
     Speaker: cat
     Text: This is considerably more ship than I was expecting.

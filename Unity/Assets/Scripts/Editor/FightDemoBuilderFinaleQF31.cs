@@ -76,8 +76,24 @@ namespace Seven.EditorTools
               MBox(v, t, new Vector3(11.5f, y + 13.6f + (h - 13.6f) * 0.5f, z1 + 0.6f), new Vector3(24f, h - 13.6f + 0.6f, 2.0f), 0f, 0.1f);   // above the chamber's ceiling ring
               // the roof: slabs with a ragged underside
               for (float x = x0; x < x1; x += 6f) for (float z = z0; z < z1 + 4f; z += 6f) MBox(v, t, new Vector3(x + 3f, y + h + 0.6f + (float)rnd.NextDouble() * 0.9f, z + 3f), new Vector3(6.6f, 1.6f, 6.6f), (float)rnd.NextDouble() * 20f, 0.2f);
-              // spoil heaps along the walls (rock rubble piled where the drills left it)
-              foreach (var o in F.CavernProps.Take(6)) for (int i = 0; i < 9; i++) { var c = new Vector3(o.x + ((float)rnd.NextDouble() - 0.5f) * o.z, y + 0.2f + i * 0.08f, o.y + ((float)rnd.NextDouble() - 0.5f) * o.z); Ellipsoid(v, t, c, new Vector3(o.z * (0.55f - i * 0.04f), 0.7f + o.z * 0.35f - i * 0.05f, o.z * (0.5f - i * 0.035f)), 4, 10); }
+              // QF40 (8): the spoil is in ORE BINS (riveted steel, rock heaped inside), never loose dark blobs: broken angular chunks
+              // fill each bin and a few have spilled at its foot
+              foreach (var o in F.CavernProps.Take(6))
+              {
+                  var bc = new Vector3(o.x, y, o.y); float bw = Mathf.Clamp(o.z * 1.1f, 1.6f, 3.2f);
+                  for (int i = 0; i < 14; i++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, r = (float)rnd.NextDouble() * bw * 0.36f, s = 0.3f + (float)rnd.NextDouble() * 0.35f; MBox(v, t, bc + new Vector3(Mathf.Cos(a) * r, 1.05f + (1f - r / (bw * 0.36f)) * 0.35f, Mathf.Sin(a) * r), new Vector3(s * 1.3f, s, s), (float)rnd.NextDouble() * 90f, 0.18f); }
+                  for (int i = 0; i < 3; i++) { float a = (float)rnd.NextDouble() * Mathf.PI * 2f, s = 0.22f + (float)rnd.NextDouble() * 0.2f; MBox(v, t, bc + new Vector3(Mathf.Cos(a) * bw * 0.75f, s * 0.5f, Mathf.Sin(a) * bw * 0.75f), new Vector3(s * 1.4f, s, s), (float)rnd.NextDouble() * 90f, 0.18f); }
+              }
+            }
+            { var (bv, bt) = k.Of(m.metalDark);
+              foreach (var o in F.CavernProps.Take(6))
+              {
+                  var bc = new Vector3(o.x, y, o.y); float bw = Mathf.Clamp(o.z * 1.1f, 1.6f, 3.2f);
+                  MBox(bv, bt, bc + Vector3.up * 0.08f, new Vector3(bw, 0.16f, bw * 0.8f), 0f, 0f);                                                   // floor plate
+                  foreach (var sz in new[] { -1f, 1f }) MBox(bv, bt, bc + new Vector3(0f, 0.65f, sz * bw * 0.4f), new Vector3(bw, 1.3f, 0.1f), 0f, 0f);   // the sides
+                  foreach (var sx in new[] { -1f, 1f }) MBox(bv, bt, bc + new Vector3(sx * bw * 0.5f, 0.65f, 0f), new Vector3(0.1f, 1.3f, bw * 0.8f), 0f, 0f);
+                  for (int r = 0; r < 2; r++) foreach (var sz in new[] { -1f, 1f }) MBox(bv, bt, bc + new Vector3(0f, 0.35f + r * 0.6f, sz * (bw * 0.4f + 0.06f)), new Vector3(bw + 0.06f, 0.07f, 0.04f), 0f, 0f);   // riveted bands
+              }
             }
             { var (v, t) = k.Of(dust); var rnd = new System.Random(77); for (int i = 0; i < 46; i++) Ellipsoid(v, t, new Vector3(Mathf.Lerp(x0 + 2f, x1 - 2f, (float)rnd.NextDouble()), y, Mathf.Lerp(z0 + 2f, z1 - 1.5f, (float)rnd.NextDouble())), new Vector3(0.6f + (float)rnd.NextDouble() * 1.4f, 0.03f, 0.5f + (float)rnd.NextDouble() * 1.2f), 3, 12); }
             k.Save("CavernWall", root, false);

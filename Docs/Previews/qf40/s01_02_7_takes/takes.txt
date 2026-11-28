@@ -1,0 +1,27 @@
+# Takes for s01_02_7: "Go on. Before somebody sees you." (subtitle unchanged)
+
+## take_1.mp3 - urgent hushed, ellipsis
+- sent: `[urgent] [whispers] Go on! ... Before somebody sees you!`
+- length 2.72 s; words: Go 0.15-0.16, on! 0.35-1.04, Before 1.39-1.60, somebody 1.64-2.00, sees 2.08-2.40, you! 2.44-2.72
+- gap after 'on!' 354 ms (ok: 350-800); gap after 'Before' 44 ms (ok: 0-150); gap after 'somebody' 80 ms (ok: 0-150)
+- loudness -15.1 LUFS, LRA 0.0 LU; pitch range 10.1 st, std 2.94 st; energy score 3.36
+
+## take_2.mp3 - urgent emphatic, ellipsis
+- sent: `[urgent] [emphatic] Go on! ... Before somebody sees you!`
+- length 3.20 s; words: Go 0.15-0.16, on! 0.32-1.16, Before 1.73-2.00, somebody 2.04-2.40, sees 2.48-2.80, you! 2.86-3.20
+- gap after 'on!' 566 ms (ok: 350-800); gap after 'Before' 44 ms (ok: 0-150); gap after 'somebody' 80 ms (ok: 0-150)
+- loudness -15.6 LUFS, LRA 20.1 LU; pitch range 12.8 st, std 3.58 st; energy score 9.14
+
+## take_3.mp3 - hushed shooing, dash
+- sent: `[hushed] [urgently] Go on! [short pause] Before somebody sees you!`
+- length 3.20 s; words: Go 0.15-0.16, on! 0.37-1.24, Before 1.81-1.84, somebody 1.89-2.32, sees 2.42-2.80, you! 2.88-3.20
+- gap after 'on!' 566 ms (ok: 350-800); gap after 'Before' 53 ms (ok: 0-150); gap after 'somebody' 96 ms (ok: 0-150)
+- loudness -18.8 LUFS, LRA 20.1 LU; pitch range 13.2 st, std 4.09 st; energy score 9.67
+
+## take_4.mp3 - urgent, natural
+- sent: `[urgent] [hushed] Go on! ... Before somebody sees you!`
+- length 2.64 s; words: Go 0.15-0.16, on! 0.29-0.96, Before 1.39-1.60, somebody 1.64-1.92, sees 2.00-2.32, you! 2.38-2.64
+- gap after 'on!' 434 ms (ok: 350-800); gap after 'Before' 36 ms (ok: 0-150); gap after 'somebody' 80 ms (ok: 0-150)
+- loudness -19.5 LUFS, LRA 0.0 LU; pitch range 9.7 st, std 3.12 st; energy score 3.53
+
+**In the game now: take_3** (the most energetic take that keeps every rule). To use another: copy it over `Unity\Assets\Audio\Voice\s01_first_contact\s01_02_7.mp3` and rebuild.

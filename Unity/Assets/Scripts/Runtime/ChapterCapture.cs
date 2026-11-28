@@ -139,6 +139,8 @@ namespace Seven
             if (WholeGameRun.Intercept(summary)) return;      // QF38: a chained whole-game run goes on to the next piece
             FrameProbe.Final();                         // P1 (4): real frame time in the last scene
             Log(ChapterCat.SpeedReport());              // QF11: never the walk cycle on the spot
+            if (ChapterCat.WithFrames > 0) Log(ChapterCat.WithHerSummary());   // QF40 (7)
+            if (GuideOrb.Drives > 0) Log(GuideOrb.Summary());                    // QF40 (6)
             if (ChapterCamera.RideFrames > 0) Log(ChapterCamera.RideSummary());   // QF15 (1)
             if (HoverBike.SwimFrames > 0) Log(HoverBike.InsideSummary());         // QF15 (2)
             if (HoverBike.LandFrames > 0) Log(HoverBike.LandSummary());           // QF18 (10)

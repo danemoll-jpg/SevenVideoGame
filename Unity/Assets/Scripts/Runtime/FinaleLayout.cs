@@ -31,7 +31,9 @@ namespace Seven
         public const float CrossX0 = 10.5f, CrossX1 = 12.5f, CrossZ0 = -133f, CrossZ1 = -121f;
         public static readonly Vector3 DoorAt = new Vector3(11.5f, Y, -142f);            // the ancient door (faces +z, toward her)
         public static readonly Vector3 DoorView = new Vector3(11.5f, Y, -137.4f);        // where she stops (FIN_04_01)
-        public static readonly Vector3 DoorMark = new Vector3(12.6f, Y + 1.5f, -141.6f); // the marking beside which her hand hovers
+        public static readonly Vector3 DoorMark = new Vector3(8.4f, Y + 2.3f, -141.19f); // QF40 (4): the twin's round mechanism (as Chapter 1's), on the right post
+        public static readonly Vector3 DoorMarkSpot = new Vector3(8.6f, Y, -140.2f);      // where she stands to touch it
+        public const float DoorScale = 1.5f, DoorFaceZ = -141.5f, DoorLeafOpen = 2.0f * DoorScale;   // Chapter 1's door x 1.5 (fills this portal)
         // FIN_05+ - the chamber
         public static readonly Vector3 ChamberC = new Vector3(11.5f, Y, -162f);
         public const float ChamberR = 14f, ChamberH = 11f;

@@ -183,6 +183,8 @@ namespace Seven
         /// <summary>The traversal moves in use (7 reads these arrays). The Moon's set is the default; Venus installs its
         /// own with <see cref="Use"/> and the Moon restores its own with <see cref="UseMoon"/>.</summary>
         static Ledge[] _mL; static JumpLink[] _mJ; static JumpGrab[] _mG; static WallClimb[] _mC; static Mantle[] _mM; static HangDown[] _mH;
+        /// <summary>QF40 (3): true while the Moon's own set is the active one (a chapter that never installed its own still runs on it).</summary>
+        public static bool IsMoonSet => _mL == null || ReferenceEquals(Ledges, _mL);
         public static void UseMoon()
         {
             if (_mL == null) return;

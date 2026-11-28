@@ -8,17 +8,19 @@ alternative, ids `s06b_aNN_*`); both live in `s06b_city_reveal/` and sit between
 Delivery = performance note for 7's lines from `Tools/Voice/seven_delivery.json` (sent to Eleven v3 as audio tags,
 never shown in subtitles); cat lines have none.
 
-102 lines.
+113 lines.
 
 | id | scene | speaker | text | delivery | pause |
 |---|---|---|---|---|---|
 | `s01_01_7` | 1 | 7 | Hey. You shouldn't be here. | gentle, surprised | 0.45 |
-| `s01_02_7` | 1 | 7 | Go on. Before somebody sees you. | softly, shooing | 0.45 |
+| `s01_02_7` | 1 | 7 | Go on. Before somebody sees you. | urgent, hushed, emphatic | 0.45 |
 | `s01_03_cat` | 1 | CAT | That would make rescuing you considerably harder. |  | 0.45 |
 | `s01_04_7` | 1 | 7 | Who said that? | startled | 0.45 |
 | `s01_05_cat` | 1 | CAT | The cat. |  | 0.45 |
 | `s01_06_7` | 1 | 7 | You're in my head. | wary, curious | 0.45 |
-| `s01_07_cat` | 1 | CAT | Only conversationally. |  | 2.0 |
+| `s01_07_cat` | 1 | CAT | Only conversationally. |  | 0.45 |
+| `s01_07a_7` | 1 | 7 | I've spoken mind to mind with a lot of people. Never a cat. | intrigued, studying him | 0.45 |
+| `s01_07b_cat` | 1 | CAT | We don't usually have much to say. |  | 2.0 |
 | `s01_08_7` | 1 | 7 | You came to rescue me? | curious | 0.45 |
 | `s01_09_cat` | 1 | CAT | Yes. We should probably do that first. |  | 0.45 |
 | `s02_01_cat` | 2 | CAT | Stand back from the door. |  | 0.45 |
@@ -39,11 +41,16 @@ never shown in subtitles); cat lines have none.
 | `s03_08_cat` | 3 | CAT | You were in a prison. That seemed reason enough. |  | 0.45 |
 | `s03_09_7` | 3 | 7 | Do you know why they're holding me? | thoughtful | 0.45 |
 | `s03_10_cat` | 3 | CAT | No. I was hoping you could explain that part. |  | 0.45 |
+| `s03_11_7` | 3 | 7 | Who runs this place? | curious | 0.45 |
+| `s03_12_cat` | 3 | CAT | He calls himself Tunneler. He mines the Moon. The Scree do the digging. |  | 0.45 |
+| `s03_13_7` | 3 | 7 | Tunneler. | quietly | 0.45 |
 | `s04_01_7` | 4 | 7 | This wall is different. | observant | 0.45 |
 | `s04_02_cat` | 4 | CAT | Older. |  | 0.45 |
 | `s04_03_7` | 4 | 7 | The prison was built around it. | thoughtful | 0.45 |
 | `s04_04_cat` | 4 | CAT | Convenient. I'd prefer a way out that wasn't designed by the people keeping you in. |  | 0.45 |
 | `s04_05_7` | 4 | 7 | Let's see where it goes. | curious | 0.45 |
+| `s04_T1_tunneler` | 4 | TUNNELER | The prisoner is not to leave the lower level. Find her. |  | 0.45 |
+| `s04_G1_cat` | 4 | CAT | Follow the light. I'll show you the way. |  | 0.45 |
 | `s05_01_cat` | 5 | CAT | Can we get past? |  | 0.45 |
 | `s05_02_7` | 5 | 7 | Yes. Without hurting them. | calm, firm | 0.45 |
 | `s05_03_cat` | 5 | CAT | I was rather hoping you'd say that. |  | 0.45 |
@@ -64,17 +71,21 @@ never shown in subtitles); cat lines have none.
 | `s06b_03_7` | 65 | 7 | Are those cars? | wonder, a little amused | 0.45 |
 | `s06b_04_cat` | 65 | CAT | Apparently we escaped just in time for traffic. |  | 0.45 |
 | `s06b_05_7` | 65 | 7 | There are people living all the way up there. | quiet wonder, almost to herself | 0.45 |
-| `s06b_06_cat` | 65 | CAT | Come on. Let's find your ship. |  | 0.45 |
-| `s07_01_7` | 7 | 7 | There. That's my ship. | relieved | 0.45 |
-| `s07_02_cat` | 7 | CAT | The saucer? |  | 0.45 |
-| `s07_03_7` | 7 | 7 | Yes. | wry | 0.45 |
-| `s07_04_cat` | 7 | CAT | Good. I was beginning to worry you meant one of the mining carts. |  | 0.45 |
-| `s07_05_7` | 7 | 7 | We need to get down there and release it. | determined | 0.45 |
-| `s07_06_cat` | 7 | CAT | Then we have a destination. |  | 0.45 |
-| `s08_01_7` | 8 | 7 | Get aboard. | urgent | 0.45 |
-| `s08_02_cat` | 8 | CAT | After you. |  | 0.45 |
-| `s08_03_7` | 8 | 7 | You don't know how to fly it. | wry | 0.45 |
-| `s08_04_cat` | 8 | CAT | An excellent reason for you to go first. |  | 0.45 |
+| `s06b_T1_cat` | 65 | CAT | All of that is his. |  | 0.45 |
+| `s07_01_cat` | 7 | CAT | That saucer down there… is that your ship? |  | 0.45 |
+| `s07_02_7` | 7 | 7 | That's her. | relieved | 0.45 |
+| `s07_03_cat` | 7 | CAT | Good. For a moment I thought you were going to point at one of the mining carts. |  | 0.45 |
+| `s07_04_7` | 7 | 7 | No. | laughs | 0.45 |
+| `s07_05_cat` | 7 | CAT | They've locked it down. Clamps on every side. |  | 0.45 |
+| `s07_06_7` | 7 | 7 | Then we'll have to find a way to free it. | determined | 0.45 |
+| `s07_07_cat` | 7 | CAT | Then we have a destination. |  | 0.45 |
+| `s07_L1_cat` | 7 | CAT | There's the release. Up on the gantry. Neither of us can reach that. |  | 0.45 |
+| `s07_L2_7` | 7 | 7 | I don't need to. | small smile | 0.45 |
+| `s08_01_7` | 8 | 7 | Get aboard! | urgent, shouting | 0.45 |
+| `s08_02_cat` | 8 | CAT | Into the glowing beam. |  | 0.45 |
+| `s08_03_7` | 8 | 7 | It's a tractor beam. It's perfectly safe. | reassuring, hurried | 0.45 |
+| `s08_04_cat` | 8 | CAT | That's what they all say right before an abduction. |  | 0.45 |
+| `s08_05_7` | 8 | 7 | Get in! | laughs | 0.45 |
 | `s09_01_cat` | 9 | CAT | This is considerably more ship than I was expecting. |  | 0.45 |
 | `s09_02_7` | 9 | 7 | Is that a complaint? | amused | 0.45 |
 | `s09_03_cat` | 9 | CAT | I'm reserving judgment until I find the kitchen. |  | 0.45 |

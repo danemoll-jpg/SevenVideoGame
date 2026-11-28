@@ -387,7 +387,7 @@ namespace Seven.EditorTools
             for (int i = 0; i < 6; i++) { var pp = L.SaucerCentre + Polar(3.5f, i * 60f + 30f, 0f); obstacles.Add(new Vector3(pp.x, pp.z, 0.3f)); }   // cradle posts
             foreach (var p in L.Pillars) obstacles.Add(new Vector3(p.x, p.z, L.PillarR));
             obstacles.Add(new Vector3(L.StonePillar.x, L.StonePillar.z, 0.6f));
-            obstacles.Add(new Vector3(L.Lever.x, L.Lever.z, 0.7f));
+            // QF40 (10): the lever is up on its gantry; the gantry legs are obstacles (BuildBayQF40)
             obstacles.AddRange(props.extraObstacles);
             foreach (var (wp, _) in ScreeWorkSpots) obstacles.Add(new Vector3(wp.x, wp.z, 0.45f));   // QF4: Scree workers
             wg.ZoneObstacles = obstacles.ToArray();
@@ -476,6 +476,7 @@ namespace Seven.EditorTools
             d.Clamps = props.clamps.ToArray(); d.RimGlow = props.rimGlow.ToArray(); d.SaucerUnderLight = props.underLight;
             d.Slab = props.slab; d.Shape = props.shape; d.ShapeLight = props.shapeLight; d.DoorSymbol = props.doorSymbol; d.DoorRight = props.doorRight; d.DoorEngrave = props.doorEngrave;   // Round 9
             d.LockRubble = props.lockRubble;                                                                                                    // QF7
+            BuildCh1TunnelerScreen(d, m.metalDark);                                                                                          // QF40 (5)
             d.VisionVideo = AssetDatabase.LoadAssetAtPath<UnityEngine.Video.VideoClip>("Assets/Video/vision_01_door.mp4");   // the first vision (Dan, 2026-11-17)
             if (d.VisionVideo == null) Log("WARNING: vision video missing (Assets/Video/vision_01_door.mp4) - the in-engine vision is the fallback");
 
@@ -690,15 +691,7 @@ namespace Seven.EditorTools
             Block("Gate_PostB", new Vector3(26.8f, 0f, 4.4f), new Vector3(27.2f, 3.6f, 4.8f), m.metal, root);
             Block("Gate_Beam", new Vector3(26.8f, 3.3f, 1.95f), new Vector3(27.2f, 3.6f, 4.8f), m.metal, root);
             Lamp("GateLamp", new Vector3(27f, 3.2f, 3.4f), 9f, 2.4f, m.glow, root, new Vector3(0.2f, 0.1f, 2.2f));
-            // Rock above and around the wall face (organic silhouette against the haze).
-            var rv = new List<Vector3>(); var rt = new List<int>();
-            var rnd = new System.Random(11);
-            for (float x = -10f; x < 36f; x += 3.2f)
-            {
-                float s = 2.2f + (float)rnd.NextDouble() * 2.2f;
-                Lump(rv, rt, new Vector3(x, 7.5f + (float)rnd.NextDouble() * 3f, zf0 - 0.8f), new Vector3(s, s * 1.4f, 2.2f), 0.35f, (int)(x * 10) + 50);
-            }
-            MeshObject("CliffAbove", SaveMesh(SmoothFinish(rv, rt), "Moon_CliffAbove"), m.rock, root);
+            PrisonCrownStrata(root, m, zf1);              // QF40 (8): strata (was ellipsoid lumps against the haze)
         }
 
         // ------------------------------------------------------------------------------------ ancient structures
@@ -841,18 +834,7 @@ namespace Seven.EditorTools
 
             BuildBayDescent(root, m);                     // Round 9: broken ramp, two scaffolds, drops down to the bay
             Lamp("LedgeLamp", new Vector3(16.5f, L.Lower + 2.7f, L.LedgeMax.y - 0.15f), 7f, 1.0f, m.glow, root);
-            // Cliff below the ledge down to the bay floor.
-            var cv = new List<Vector3>(); var ct = new List<int>();
-            var rnd = new System.Random(21);
-            for (float x = -4f; x < 34f; x += 3f)
-            {
-                if (x > 19f && x < 24f) continue;
-                Lump(cv, ct, new Vector3(x, L.Bay + 2.2f, L.LedgeMin.y + 1.0f), new Vector3(2.2f, 4.6f, 2.4f), 0.3f, (int)x + 300);
-            }
-            // rock wall high above the ledge (above the ancient rooms' ceilings) and to both sides of it
-            for (float x = -14f; x < 40f; x += 5f) Lump(cv, ct, new Vector3(x, 12f + (float)rnd.NextDouble() * 3f, L.LedgeMax.y + 2.5f), new Vector3(3.6f, 6f, 3f), 0.3f, (int)x + 400);
-            for (float x = -14f; x < 40f; x += 5f) if (x < 8f || x > 26f) Lump(cv, ct, new Vector3(x, L.Lower, L.LedgeMax.y + 1.5f), new Vector3(3.2f, 8f, 3f), 0.3f, (int)x + 500);
-            MeshObject("BayCliff", SaveMesh(SmoothFinish(cv, ct), "Moon_BayCliff"), m.rock, root);
+            BuildBayQF40(root, m, props);                 // QF40 (8/10): strata walls (no blobs), the release gantry, the ore skips
             // Bay floor, rails, carts, drills, lamps on poles, crates.
             Block("Bay_Floor", new Vector3(-12f, L.Bay - 0.5f, -110f), new Vector3(44f, L.Bay, L.LedgeMin.y + 0.5f), m.rockDark, root);
             var tv = new List<Vector3>(); var tt = new List<int>();
@@ -878,18 +860,7 @@ namespace Seven.EditorTools
             }
             props.extraObstacles.Add(new Vector3(1.22f, -71f, 1.3f));
             props.extraObstacles.Add(new Vector3(5.5f, -72.5f, 1.0f));
-            // Release console with the clamp lever.
-            Block("Console", L.Lever + new Vector3(-0.5f, 0f, -0.35f), L.Lever + new Vector3(0.5f, 1.0f, 0.35f), m.metalDark, root);
-            Block("ConsoleScreen", L.Lever + new Vector3(-0.35f, 1.0f, -0.36f), L.Lever + new Vector3(0.35f, 1.02f, -0.1f), m.glow, root, false);
-            var lever = new GameObject("Lever").transform; lever.SetParent(root, false);
-            lever.position = L.Lever + new Vector3(0f, 1.0f, 0.15f);
-            lever.rotation = Quaternion.Euler(-35f, 0f, 0f);
-            var lgv = new List<Vector3>(); var lgt = new List<int>();
-            Sweep(lgv, lgt, new[] { Vector3.zero, Vector3.up * 0.55f }, 0.03f, false, 8);
-            Ellipsoid(lgv, lgt, Vector3.up * 0.58f, Vector3.one * 0.06f, 6, 10);
-            var lgo = MeshObject("LeverHandle", SaveMesh(SmoothFinish(lgv, lgt), "Moon_Lever"), m.metal, lever);
-            props.lever = lever;
-            PointLight("ConsoleLight", L.Lever + new Vector3(0f, 1.6f, -0.8f), 3f, 0.8f, root);
+            // QF40 (10): the release lever is on its gantry (BuildBayQF40), out of reach of both of them.
 
             // 7's saucer: wide flat disc, glowing rim, polished silver hull (Round 10; was dark glossy); on a cradle, held by four clamps.
             // QF13 (16): the ONE saucer prefab (exterior, beam, bike hold), unchanged. Clamped on its cradle its underside is at

@@ -19,7 +19,7 @@ foreach ($k in $runs.Keys) {
   $log = Join-Path $dir "capture_log.txt"
   Add-Content $sum ("== {0}: {1:0.0} real min; {2}" -f $k, $mins, ($r -join " / "))
   if (Test-Path $log) {
-    $pat = "WHOLE GAME \(QF38\)|BRANCH AUDIT|HAND AUDIT \(QF38 1\) SUMMARY|WINDOW VIEW \(QF38 7\) SUMMARY|TEMPLE ENTRANCE \(QF38 3\)|ESCAPE AUTODRIVE|NEXT DESTINATION|BRANCH \(QF38 8\)|SAVE SLOTS|VISION RELEASE|SOFT-LOCK|IMAGE GATE \(QF26 2\)|REVISIT|card '"
+    $pat = "WHOLE GAME \(QF38\)|BRANCH AUDIT|HAND AUDIT \(QF38 1\) SUMMARY|WINDOW VIEW \(QF38 7\) SUMMARY|TEMPLE ENTRANCE \(QF38 3\)|ESCAPE AUTODRIVE|NEXT DESTINATION|BRANCH \(QF38 8\)|SAVE SLOTS|VISION RELEASE|SOFT-LOCK|IMAGE GATE \(QF26 2\)|REVISIT|PANTHER WITH HER|GUIDE LIGHT|TELEPATHY SHOWN|TUNNELER ESTABLISHED|CLAMP RELEASE|CLIMB SECTION|VOICE OVERLAP|DIALOGUE FRAMING|card '"
     Get-Content $log | Select-String -Pattern $pat | ForEach-Object { Add-Content $sum ("   " + $_.Line) }
   }
   Write-Output "$k done in $([math]::Round($mins,1)) min"
