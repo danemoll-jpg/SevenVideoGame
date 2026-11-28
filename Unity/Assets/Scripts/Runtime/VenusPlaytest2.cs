@@ -130,11 +130,22 @@ namespace Seven
                 _held = 0u; _lt = 0f;
                 if (D.Dlg.Busy) { _stick = Vector2.zero; if (Idle && D.UI.SubtitleVisible) Press(Y); yield return WaitR(0.35f); continue; }
                 var s7 = D.Seven; var bike = D.Bike;
+                // QF43 (14): the descent round the jammed gate is driven by the director's own human-timed bot (its moves: hang,
+                // shimmy, let go, the jump between pulses, the slab, the release) - the pad stays still meanwhile
+                if (D.DescentBotActive) { _stick = Vector2.zero; yield return null; continue; }
                 switch (true)
                 {
                     case true when Obj.StartsWith("Find the source of the signal"):
                         foreach (var p in new[] { new Vector3(69f, -6f, 137.5f), new Vector3(69f, -6f, 132f), new Vector3(69f, -14f, 117f), new Vector3(69f, -18f, 106f), new Vector3(69f, -22f, 95f), new Vector3(71f, -22f, 89f), new Vector3(81f, -22f, 89f), new Vector3(97f, -27f, 89f), new Vector3(106f, -30f, 89f) })
-                            { yield return WalkTo(p, 0.9f); if (!Obj.StartsWith("Find")) break; }
+                            { if (P.y < -10f && p.y > -10f) continue; yield return WalkTo(p, 0.9f); if (!Obj.StartsWith("Find")) break; }
+                        break;
+                    case true when Obj.StartsWith("Lift him into the holding cell"):
+                        yield return WalkTo(D.Wormmaster.transform.position + (P - D.Wormmaster.transform.position).normalized * 5f, 1.0f);
+                        if (D.Legend.ContextText != null && D.Legend.ContextText.Contains("lift him")) { Press(GamepadButton.RightTrigger); yield return WaitR(2f); }
+                        break;
+                    case true when Obj.StartsWith("Touch the cube"):
+                        yield return WalkTo(VenusLayout.CubeAt + new Vector3(0f, -VenusLayout.CubeAt.y, -2.0f), 0.4f);
+                        if (D.Legend.ContextText != null && D.Legend.ContextText.Contains("Touch")) { Press(X); yield return WaitR(1.0f); }
                         break;
                     case true when Obj.StartsWith("Disable the control devices"):
                         _stick = Vector2.zero; break;          // QF17: the boss fight starts here - the fight pilot (FightPad) plays it

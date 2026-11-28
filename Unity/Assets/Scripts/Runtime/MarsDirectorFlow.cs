@@ -432,9 +432,27 @@ namespace Seven
             ImageGate.ExpectPoint(L.DrawTower + new Vector3(2.0f, 2.2f, 1.6f), "the lock and the order plaque", 0f, "m10b_");   // QF26 (2)
             yield return Shot("m10b_the_lock_and_the_order_plaque");
             yield return Cutscene(false);
-            Objective("One kingdom raised and chained the span - break the lock on its winding drum (get off, RT)");
-            yield return Telekinesis(L.DrawLock, L.SlabTkRange, "break the drawbridge lock (telekinesis)", "Get off the bike (X), look at the heavy lock on the drum at the tower's foot and use telekinesis (RT)", CausewayEdges, new[] { L.CausewayStop + new Vector3(-1f, 0f, -3f) });
-            yield return LowerBridge();
+            // QF43 (15): the climb with a purpose - the span is chained up from the old fortress wall; its winch lever is on top. She parks,
+            // climbs the crumbled wall (the carved ledge, a shimmy above the drop, up, the step), pulls the lever: the drawbridge lowers.
+            var cs = ClimbSection.Current;
+            if (cs != null && cs.Placed && cs.S.Lever && cs.gameObject.scene == gameObject.scene)
+            {
+                Objective("The span is chained up from the old wall - climb it and pull the winch lever");
+                cs.Arm();
+                if (Auto || DemoBoot.PlayerSim) StartCoroutine(cs.RunBot(DemoBoot.PlayerSim));
+                yield return Until(() => cs.LeverPulled, "climb the fortress wall and pull the winch lever", 150f,
+                    "The old wall south of the span: jump up to its carved ledge (A), shimmy along, climb up, up the step - the lever is on top (X)", cs.LeverAt, () => cs.StartCoroutine(cs.Pull()));
+                while (ClimbSection.BotActive) yield return null;
+                if (L.DrawLock != Vector3.zero) AudioKit.Play("chain_rattle", L.DrawLock, 0.9f, 0.05f, AudioKit.Bus.Sfx, 60f);
+                yield return LowerBridge();
+                StartCoroutine(cs.SayDone());
+            }
+            else
+            {
+                Objective("One kingdom raised and chained the span - break the lock on its winding drum (get off, RT)");
+                yield return Telekinesis(L.DrawLock, L.SlabTkRange, "break the drawbridge lock (telekinesis)", "Get off the bike (X), look at the heavy lock on the drum at the tower's foot and use telekinesis (RT)", CausewayEdges, new[] { L.CausewayStop + new Vector3(-1f, 0f, -3f) });
+                yield return LowerBridge();
+            }
             SetZone("Causeway", true);
             Objective("Ride across and on along the ravine floor");
             if (!Riding) { ShowGuide(Bike.transform.position); if (Auto) { yield return WalkSeven(Bike.transform.position - Bike.transform.right * 1.1f, 10f); PlaceRiding(Bike.transform.position); } yield return Until(() => Riding, "back on the bike", 40f, "Walk to the bike and press X", Bike.transform.position, () => PlaceRiding(Bike.transform.position)); HideGuide(); }
@@ -526,7 +544,7 @@ namespace Seven
             {
                 float u = t * t * (1.6f - 0.6f * t);                                       // slow to start, heavy at the end
                 db?.Set(Mathf.Clamp01(u));
-                if (!s && t > 0.55f) { s = true; StartCoroutine(Shot("m10c_the_span_comes_down")); }
+                if (!s && t > 0.55f) { s = true; if (Drawbridge != null) ImageGate.Expect(Drawbridge.transform, "the drawbridge coming down", 0f, "m10c_"); StartCoroutine(Shot("m10c_the_span_comes_down")); }   // QF43: she is up on the wall now - the span is the subject
                 yield return null;
             }
             if (rattle != null) StartCoroutine(AudioKit.Fade(rattle, 0f, 0.3f, true));
@@ -545,6 +563,7 @@ namespace Seven
             db?.Set(1f);
             CameraOccluders.SyncAll();
             yield return Wait(0.8f);
+            ImageGate.ExpectPoint(L.DrawHinge + new Vector3(7f, 0.5f, 0f), "the span across the channel", 0f, "m10d_");
             yield return Shot("m10d_the_span_across_the_channel");
             Log("the drawbridge is down across the channel (Causeway zone open) - the lock broken, nobody hurt");
             ZFightProbe.Report("the lowered drawbridge", db != null ? db.Span.gameObject : null);

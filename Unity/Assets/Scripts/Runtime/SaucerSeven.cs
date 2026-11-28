@@ -16,7 +16,7 @@ namespace Seven
         public Transform CameraTransform;
         public Transform ChairPivot;        // seated 7 is parented here (the chair tilts during the reveal)
         public Transform SeatPoint;         // where her hips go when seated (child of ChairPivot)
-        public float WalkSpeed = 1.6f;
+        public float WalkSpeed = 1.9f;              // QF43 (23): +18 % (was 1.6), the clip played faster to match
         public float SitReach = 1.6f;       // prompt / A works within this distance of the spot in front of the chair
         /// <summary>Stand To Sit moves the hips this far back (m, measured from the clip: 0.473).</summary>
         public float SitBackOffset = 0.47f;
@@ -131,7 +131,7 @@ namespace Seven
                 var v = fwd * m.y + right * m.x;
                 if (v.sqrMagnitude > 1f) v.Normalize();
                 transform.position += v * WalkSpeed * Time.deltaTime;
-                if (State != "walk") Play("walk", 0.15f, 1f, false);
+                if (State != "walk") Play("walk", 0.15f, WalkSpeed / 1.6f, false);
                 FaceTowards(transform.position + v, 540f);
             }
             else if (State != "idle") Play("idle", 0.2f, 1f, false);

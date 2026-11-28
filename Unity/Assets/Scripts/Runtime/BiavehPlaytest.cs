@@ -127,6 +127,8 @@ namespace Seven
                 if (BossFight.Active != null && !BossFight.Active.Over && d.Seven.InFight) { FightPad(BossFight.Active, d.Seven); continue; }
                 _held = 0u;
                 if (d.InCutscene) { _stick = Vector2.zero; _rt = 0f; continue; }
+                // QF43 (15): the climb to the control is driven by ClimbSection's human-timed bot - the pad stays still meanwhile
+                if (ClimbSection.BotActive) { _stick = Vector2.zero; _rt = 0f; continue; }
                 var seven = d.Seven.transform.position;
                 // stage three (BIA_09): X at the barrier only once Panther has said "Now." (he is inside the compartment)
                 if (d.Prompt == "Seal the compartment") { _stick = Vector2.zero; if (d.SaidNow && _phase == 0) { Press(X); _xs++; Log("X - sealed after Panther's 'Now.'"); yield return WaitR(1f); } continue; }

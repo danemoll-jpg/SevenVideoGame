@@ -109,7 +109,7 @@ namespace Seven
             StartCoroutine(Flow());
             StartCoroutine(Watchdog());
             StartCoroutine(UndergroundLook());                         // Round 12: below ground - the underground music, cave light
-            if (VenusState.AtLeast(VenusState.Stage.ControlDiscovered) && !VenusState.AtLeast(VenusState.Stage.ThreatStopped)) StartCoroutine(AmbientPulses());
+            if (VenusState.AtLeast(VenusState.Stage.HelpAccepted) && !VenusState.AtLeast(VenusState.Stage.ThreatStopped)) StartCoroutine(AmbientPulses());   // QF43 (13): from C04 on
         }
 
         /// <summary>QF12 (9): the first frames of the chapter - black, 7 not there (captured, logged).</summary>
@@ -300,6 +300,8 @@ namespace Seven
                 case "brief eye close-up": { var hd = Head(SevenAnim) ?? h; Shoot(hd + f * 0.9f + r * 0.25f + Vector3.up * 0.02f, hd + Vector3.up * 0.04f, 30f, 0.01f); break; }
                 case "falling dust insert": Shoot(VenusLayout.CubeAt + new Vector3(-3f, 2.5f, -4f), VenusLayout.CubeAt + Vector3.up * 3f, 50f, 0.01f); break;
                 case "wide - saucer and landscape": Shoot(VenusLayout.SaucerAt + new Vector3(9f, 4f, 12f), VenusLayout.SaucerAt + new Vector3(0f, 1.5f, 3f), 55f); break;
+                // QF43 (6): "The temple's all the way over there. That's a long walk." - over her shoulder, the temple far across the gardens in shot
+                case "over her shoulder to the distant temple": { var tp = TempleFar; var d = Flat(tp - P7).normalized; var rr = Vector3.Cross(Vector3.up, d); Shoot(h - d * 2.1f + rr * 0.85f + Vector3.up * 0.25f, h + (tp - h).normalized * 30f, 44f, 0.01f); break; }
                 case "low three-quarter on the bike": Shoot(Bike.transform.position + Bike.transform.forward * 3.4f + Bike.transform.right * 2.0f + Vector3.up * 0.5f, Bike.transform.position + Vector3.up * 0.7f, 44f); break;
                 case "side medium - 7 mounting": Shoot(Bike.transform.position + Bike.transform.right * 4.0f + Vector3.up * 1.3f, Bike.transform.position + Vector3.up * 0.9f, 46f); break;
                 default: throw new Exception("unknown cue");
@@ -392,7 +394,8 @@ namespace Seven
 
         void SetZone(string name, bool on) { var z = Ground.FindZone(name); if (z != null) z.Enabled = on; }
         /// <summary>Round 13 (0d): the slab bridge, its two ramped ends (zones + the stone aprons) together.</summary>
-        void SetBridge(bool on) { SetZone("Bridge", on); SetZone("BridgeRampS", on); SetZone("BridgeRampN", on); if (BridgeRamps != null) BridgeRamps.SetActive(on); }
+        /// QF43 (10): the ramped abutments are part of the banks from the start (zones + meshes always there): only the span appears.
+        void SetBridge(bool on) { SetZone("Bridge", on); SetZone("BridgeRampS", true); SetZone("BridgeRampN", true); if (BridgeRamps != null) BridgeRamps.SetActive(true); }
 
         // ------------------------------------------------------------------------------------------ the descent + C01
         IEnumerator Arrival()
@@ -430,11 +433,13 @@ namespace Seven
             yield return Shot("v02_down_the_ramp");
             yield return Say("VEN_C01", 1, 2);
             yield return Shot("v03_c01_two_shot");
-            yield return Wait(0.8f);                                          // "After the Moon..."
-            yield return Say("VEN_C01", 3, 4);
+            yield return Wait(0.8f);                                          // QF43 (6): "After all that dust and machinery... I'd forgotten a place could look like this."
+            yield return Say("VEN_C01", 3, 3);
+            Cue("landscape insert");                                          // the pause on the view
+            yield return Wait(1.6f);
             yield return Shot("v04_c01_landscape_insert");
-            StartCoroutine(CatTracksFlyers(8f));
-            yield return Say("VEN_C01", 5, 7);
+            StartCoroutine(CatTracksFlyers(10f));
+            yield return Say("VEN_C01", 5, 8);                                // Hm. / Don't even think about it. / I was admiring the wildlife. / Mm-hmm.
             yield return Shot("v05_c01_cat_tracks_flyers");
             Log("after C01: " + ChapterCat.SpeedReport());
             Complete("VEN_C01", VenusState.Stage.Landed);
@@ -528,13 +533,22 @@ namespace Seven
         static readonly Vector3 PantherStand = new Vector3(3.2f, 0f, 6.6f);        // Round 13: 3.3 m from the bike (was 9 m: the two-shots were far too wide), room to grow
         bool _measurePanther;
 
+        /// <summary>QF43 (6): the temple far across the gardens (its great doorway, high).</summary>
+        static Vector3 TempleFar => new Vector3(30f, 9f, VenusLayout.DoorZ + 6f);
         IEnumerator B01()
         {
             yield return Cutscene(true);
             Seven.Lock(true);
             var ik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
             ik.enabled = true; ik.Alive = true; ik.Ease = 2.5f; ik.LeftW = 0f; ik.RightW = 0f; ik.LookW = 0f;
-            yield return Say("VEN_B01", 1, 2);                             // "That's a walk." / "You have a vehicle."
+            // QF43 (6): down the beam she looks out to the temple far across the gardens (it is in the shot of her line)
+            for (float t = 0f; t < 0.6f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(TempleFar - P7)), 300f * Time.deltaTime); yield return null; }
+            ik.LookPos = TempleFar; ik.LookW = 0.7f;
+            ImageGate.Expect(Seven.transform, "7 looking out to the temple far across the gardens", 0f, "qf43_06");
+            yield return Say("VEN_B01", 1, 1);                             // "The temple's all the way over there. That's a long walk."
+            yield return Shot("qf43_06_b01_the_temple_far_away");
+            ik.LookW = 0f;
+            yield return Say("VEN_B01", 2, 2);                             // "You have a vehicle."
             // she looks back toward the ship
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(VenusLayout.SaucerAt - P7)), 300f * Time.deltaTime); yield return null; }
             yield return Say("VEN_B01", 3, 4);
@@ -561,7 +575,7 @@ namespace Seven
             // Round 13 (0l): Dan's rewritten name reveal (VEN_B01_06-20, delivery directions voiced into the takes)
             Transform catT = Cat != null ? Cat.transform : null;
             Vector3 CatAt(float up) => catT != null ? catT.position + Vector3.up * up * catT.localScale.y : P7 + Vector3.forward;
-            yield return Say("VEN_B01", 6, 6, false);                      // "What should I call you?" - casually
+            yield return Say("VEN_B01", 6, 6, false);                      // QF43 (6): "By the way, what should I call you?" - a light aside
             yield return Say("VEN_B01", 7, 7, false);                      // "Panther."
             // she looks him up and down
             if (catT != null) { ik.LookPos = CatAt(0.3f); ik.LookW = 0.8f; yield return Wait(0.5f); ik.LookPos = CatAt(0f); yield return Wait(0.5f); ik.LookPos = CatAt(0.3f); }
@@ -583,10 +597,15 @@ namespace Seven
                 back = Ground.ClampToArena(back, 0.3f);
                 var a0 = P7;
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 0.45f) { Seven.transform.position = Vector3.Lerp(a0, back, Mathf.SmoothStep(0f, 1f, t)); ik.LookPos = CatAt(0.4f); yield return null; }
-                ik.LeftPos = Bike.Fairing.position; ik.LeftW = 1f;
+                // QF43 (7): Dan's screenshot - her left arm stayed raised and bent for seconds as he grew. Cause: this beat set a
+                // hand target on the bike's fairing ("catching the fairing") and held it at full weight until after "Apparently."
+                // (three lines later) - the fairing was out of reach after her step back, so the arm hung reaching for it. Now she
+                // only reacts: a small step back, looking up as he grows, both arms relaxed (no hand target at all).
+                ik.LeftW = 0f; ik.RightW = 0f;
                 yield return Shot("v08_b01_panther_stretch_grows");
                 for (float t = 0f; t < 1.5f; t += Time.deltaTime) { ik.LookPos = CatAt(0.6f); yield return null; }
                 yield return Shot("v08b_b01_panther_grown");
+                Log($"QF43 (7) B01 as Panther grows: hand targets left {ik.LeftW:0.00} / right {ik.RightW:0.00} (both must be 0 - arms relaxed), she stepped back and looks up at him");
             }
             FrameAll(1.0f, 40f, 0.01f, catT);
             yield return Wait(0.6f);
@@ -736,6 +755,8 @@ namespace Seven
             Shoot(b.center + dir * dist, b.center, fov, ease);
         }
 
+        IEnumerator ShotLaterV(string n, float s) { yield return Wait(s); yield return Shot(n); }
+        bool InFrame(Vector3 p) { var v = Cam.GetComponent<Camera>().WorldToViewportPoint(p); return v.z > 0f && v.x > 0.03f && v.x < 0.97f && v.y > 0.03f && v.y < 0.97f; }
         static Bounds BoundsOf(Transform t)
         {
             var rs = t.GetComponentsInChildren<Renderer>();
@@ -1008,7 +1029,7 @@ namespace Seven
                 // approach line); here the flow only waits for it to be over
                 yield return Until(() => _collapseDone, "the damaged route (B03)", 120f,
                     "Follow the road on round the bend", new Vector3(30f, 0f, VenusLayout.TremorZ), () => PlaceRiding(new Vector3(30f, 0f, VenusLayout.TremorZ + 1f), 0f));
-                yield return SayInGameplay("VEN_C02", 1, 2);
+                if (!_c02Said) yield return SayInGameplay("VEN_C02", 1, 2);   // (QF43 9: said inside the collapse cutscene)
                 Complete("VEN_C02"); Complete("VEN_B03");
             }
             // QF10 (VEN_B03 changed by Dan): the collapse - stop, get off, lay the fallen slab across with telekinesis, ride over
@@ -1061,12 +1082,12 @@ namespace Seven
 
         IEnumerator Bridge()
         {
-            Objective("Stop before the collapse");
+            Objective("The walkway is gone - get off and find a way across");   // QF43 (9): from what she just saw fall
             if (Auto) { yield return Until(() => P7.z > 102f || !Bike.Riding, "near the collapse", 30f); yield return AutoGetOff(); }
             yield return Until(() => !Bike.Riding, "off the bike at the collapse", 90f,
                 "Brake (LT) in the open area before the hole, then get off (X)", VenusLayout.StopSpot, () => { if (Bike.Riding) { Bike.Place(VenusLayout.StopSpot, 0f); Bike.Dismount(true); FollowCamera(); } });
             yield return Shot("v13_b03_collapsed_walkway_slab_beside_it");
-            Objective("Lay something across the gap");
+            Objective("Lift the fallen slab back across the gap (telekinesis)");
             _slabReady = true; _slabHit = false;
             // the telekinesis highlight: the slab's edges glow softly when she looks at it
             bool pulsing = true;
@@ -1117,7 +1138,7 @@ namespace Seven
             if (!skipped)
             {
                 yield return Cutscene(true);
-                Seven.Gesture(SlabLookAt); TkAudit.Watch(this, "Venus: the slab bridge", SlabLookAt, null);   // QF24 (14)
+                Seven.Gesture(SlabLookAt); TkAudit.Watch(this, "Venus: the slab bridge", SlabLookAt, Slab);   // QF24 (14)
                 Seven.SetEnergyPoint(1.9f, 0.25f);
                 // the beat from the side: her, the slab and the hole in one frame
                 Shoot(new Vector3(25.2f, 3.4f, 104.2f), new Vector3(31f, 0.6f, 119f), 52f, 0.8f);
@@ -1248,18 +1269,31 @@ namespace Seven
             _collapseDone = true;
         }
 
+        bool _c02Said;
+        /// <summary>QF43 (9): Dan did not see the walkway fall, so the broken way made no sense. Now a short cutscene the moment
+        /// she rides up: control is taken and the bike eases to a stop by itself (never into the gap); the tremor - the shake,
+        /// the rumble, water shaking in the vessel, a worker steadying it; a cut to a wide of the walkway ahead: cracks race
+        /// across it (dust bursting along them), the middle spans buckle and fall in stages (the slab among them), a heavy crash
+        /// echoing below; the shot holds on the gap; back to her braking at the edge for "Something's wrong here." / "I felt that
+        /// from here."; control comes back facing the broken walkway. The same every time (fixed seeds, no physics).</summary>
         IEnumerator TremorAndCollapse()
         {
             // QF13 (2): she brakes at once (the bike stops well short of the edge), then watches it fall
             bool sd = Bike.ScriptDriven; float thr = Bike.ScriptThrottle;
-            if (Bike.Riding) { Bike.ScriptDriven = true; Bike.ScriptThrottle = -1f; Bike.ScriptSteer = 0f; }
+            if (Bike.Riding) { Bike.ScriptDriven = true; Bike.ScriptThrottle = -0.6f; Bike.ScriptSteer = 0f; }
+            yield return Cutscene(true);
             StartCoroutine(Tremor(5.0f, 1.1f));
+            // 1. the tremor: the vessel shaking, the worker steadying it
+            Shoot(VenusLayout.VesselAt + new Vector3(2.6f, 0.9f, -2.4f), VenusLayout.VesselAt + Vector3.up * 0.2f, 44f, 0.01f);
+            ImageGate.ExpectPoint(VenusLayout.VesselAt, "the water vessel shaking, a worker steadying it", 0f, "v12_");
             yield return Wait(0.9f);
             yield return Shot("v12_c02_tremor_vessel");
-            yield return Cutscene(true);
-            // the cut: from beside the road, the walkway ahead and her braking toward it
-            Shoot(new Vector3(37.5f, 3.4f, 106f), new Vector3(30f, -0.4f, 121f), 52f, 0.01f);
+            yield return Wait(0.6f);
+            // 2. the wide of the walkway ahead: it cracks and falls in stages; hold on the gap
+            Shoot(new Vector3(37.2f, 4.4f, 106.5f), new Vector3(30f, -0.6f, 121.5f), 54f, 0.01f);
+            ImageGate.ExpectPoint(new Vector3(30f, 0f, 123f), "the walkway collapsing into the gully", 0f, "v12b_");
             yield return Collapse();
+            // 3. back to her, braking at the edge (never in it)
             if (Bike.Riding) { for (float t = 0f; t < 2f && Bike.Speed > 0.3f; t += Time.deltaTime) yield return null; }
             // never left on or at the broken edge: if she ended within 6 m of it (or on it), she glides back to a safe stop
             {
@@ -1275,8 +1309,18 @@ namespace Seven
                 var e = Bike.Riding ? Bike.transform.position : P7;
                 Log($"collapse (QF13 2): she stopped {VenusLayout.CollapseZ0 - e.z:0.0} m short of the broken edge (must be > 5)");
             }
+            {
+                var e = Bike.Riding ? Bike.transform.position : P7; var hd = Head7;
+                Shoot(hd + new Vector3(2.2f, 0.1f, 2.6f), hd - Vector3.up * 0.25f, 42f, 0.01f);
+                _c02Said = true;
+                yield return Say("VEN_C02", 1, 1, false);              // "Something's wrong here."
+                Shoot(hd - Vector3.forward * 2.4f + Vector3.right * 0.8f + Vector3.up * 0.3f, new Vector3(30f, -0.5f, 123f), 48f, 0.01f);   // her, the gap beyond
+                yield return Say("VEN_C02", 2, 2, false);              // "I felt that from here." (Panther, from the ship: her in the shot)
+                yield return Shot("qf43_09_c02_back_to_her_at_the_edge");
+            }
             Bike.ScriptThrottle = thr; Bike.ScriptDriven = sd;
-            FollowCamera();
+            // 4. control back facing the broken walkway
+            FollowCamera(); Cam.SnapBehind();
             yield return Cutscene(false);
         }
 
@@ -1323,7 +1367,16 @@ namespace Seven
                 float centre = 1f - Mathf.Abs(zN - 0.5f) * 2f;                 // the middle goes first
                 pieces.Add((c, c.position, c.rotation, (1f - centre) * 0.9f + (float)rnd.NextDouble() * 0.3f, new Vector3((float)rnd.NextDouble() - 0.5f, (float)rnd.NextDouble() - 0.5f, (float)rnd.NextDouble() - 0.5f) * 140f));
             }
-            // it cracks: a shudder first
+            // QF43 (9): it cracks - the cracks race across it from both ends toward the middle (dust bursting out of each as it
+            // opens, the crack sound), then the shudder, then the fall in stages
+            if (SlabDust != null)
+                for (int k = 0; k < 6; k++)
+                {
+                    float z = k % 2 == 0 ? Mathf.Lerp(VenusLayout.CollapseZ0, 123f, k / 6f) : Mathf.Lerp(VenusLayout.CollapseZ1, 123f, k / 6f);
+                    SlabDust.transform.position = new Vector3(30f + (k % 3 - 1) * 1.4f, 0.1f, z); SlabDust.Emit(14);
+                    if (k % 2 == 0) AudioKit.Play("stone_crack", new Vector3(30f, 0f, z), 0.7f, 0.08f, AudioKit.Bus.Sfx, 80f);
+                    for (float t = 0f; t < 0.17f; t += Time.deltaTime) { foreach (var x in pieces) x.t.position = x.p + new Vector3(0f, Mathf.Sin(t * 60f + x.p.x) * 0.02f, 0f); yield return null; }
+                }
             for (float t = 0f; t < 0.6f; t += Time.deltaTime) { foreach (var x in pieces) x.t.position = x.p + new Vector3(0f, Mathf.Sin(t * 60f + x.p.x) * 0.03f, 0f); if (slabFalls) Slab.position = sp0 + new Vector3(0f, Mathf.Sin(t * 55f) * 0.03f, 0f); yield return null; }
             if (slabFalls) StartCoroutine(SlabFalls(sp0));
             if (SlabDust != null) { SlabDust.transform.position = VenusLayout.SlabBridge + Vector3.up * 0.2f; SlabDust.Play(); }
@@ -1340,10 +1393,12 @@ namespace Seven
                 if (!shot && t > 0.45f) { shot = true; StartCoroutine(Shot("v12b_b03_the_walkway_collapses")); }
                 yield return null;
             }
+            AudioKit.Play("stone_fall", new Vector3(30f, -6f, 123f), 1f, 0.03f, AudioKit.Bus.Sfx, 120f);   // the heavy crash echoing below
             WalkwayIntact.gameObject.SetActive(false);
             foreach (var x in pieces) x.t.SetPositionAndRotation(x.p, x.r);       // a reload shows the gully (it stays hidden)
             yield return Wait(0.6f);
             yield return Shot("v12c_b03_the_gap");
+            yield return Wait(2.0f);                                              // QF43 (9): hold on the gap (2-3 s with the crash)
             Log("collapse (0k): the walkway cracked and fell into the gully in front of her");
         }
 
@@ -1466,16 +1521,34 @@ namespace Seven
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) { if (Guardian != null) Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(Guardian.transform.position - P7)), 400f * Time.deltaTime); yield return null; }
             yield return Shot("v14b_c03_guardian_standing_cape");
             if (Shots) StartCoroutine(GuardSeq("1_standing_talking", 4, 0.7f));
-            yield return Say("VEN_C03", 1, 2);
+            yield return Say("VEN_C03", 1, 1);                            // "What brings you here?"
             yield return Shot("v15_c03_wide_two_shot");
-            // she takes the dodecahedron out and holds it out; the guardian kneels to her level and looks - without taking it
+            // QF43 (11): BEFORE "I found this on the Moon." she takes the dodecahedron out of her pocket and holds it up in her open
+            // hand toward him - the shape between them, in the shot over her shoulder - then says the line (it used to stay in her
+            // pocket until after the line, so "this" pointed at nothing). The palm grip (CarriedShape) holds it on her palm.
             var ik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
             ik.enabled = true;
             var f = Flat(Seven.transform.forward).normalized;
             ik.RightPos = _carry != null ? _carry.HipPoint : P7 + Vector3.up; ik.RightW = 1f; ik.Ease = 3f; ik.Alive = false;
             yield return Wait(0.6f);
             if (_carry != null) _carry.Set(CarriedShape.Where.Hand, 0.25f);
-            ik.RightPos = P7 + Vector3.up * 1.15f + f * 0.42f; ik.LookPos = ik.RightPos; ik.LookW = 0.7f;
+            ik.RightPos = P7 + Vector3.up * 1.22f + f * 0.48f; ik.LookPos = Guardian != null ? HeadOf(Guardian) : ik.RightPos; ik.LookW = 0.6f;
+            yield return Wait(0.7f);
+            if (Guardian != null)
+            {
+                // over her shoulder: her raised hand with the shape in the foreground, him beyond
+                var d = Dir7To(Guardian); var r = Vector3.Cross(Vector3.up, d);
+                var held = _carry != null ? _carry.Palm : ik.RightPos;
+                Shoot(Head7 - d * 1.35f + r * 0.55f - Vector3.up * 0.15f, Vector3.Lerp(held, HeadOf(Guardian), 0.45f), 48f, 0.01f);
+            }
+            _coverage = false;
+            if (Shape != null) ImageGate.Expect(Shape.transform, "the dodecahedron held up in her hand", 0f, "qf43_11");
+            yield return Wait(0.25f);
+            yield return Shot("qf43_11_c03_holds_up_the_dodecahedron");
+            if (_carry != null) Log($"QF43 (11) C03: the dodecahedron is {_carry.At} as she says 'I found this on the Moon.' ({(InFrame(_carry.Palm) ? "IN the frame" : "OUT OF FRAME")})");
+            yield return Say("VEN_C03", 2, 2, false);                     // "I found this on the Moon. Someone recognized your marking."
+            _coverage = true;
+            ik.LookPos = ik.RightPos; ik.LookW = 0.7f;
             if (Guardian != null) Guardian.Play("kneel");
             yield return Say("VEN_C03", 3, 3);
             yield return Wait(0.8f);
@@ -1602,7 +1675,20 @@ namespace Seven
             yield return Say("VEN_C04", 7, 12);
             // she puts the dodecahedron away (it is in her pocket since C03)
             yield return Say("VEN_C04", 13, 13);
-            yield return Say("VEN_C04", 14, 16);
+            // QF43 (12): "Then I'll find him." - she turns from the guardian toward the gardens (south, past the doorway) on the line;
+            // her face framed from in front, a quiet resolve (the line's take: determined, quietly fierce)
+            {
+                var toGardens = Vector3.back;
+                for (float t = 0f; t < 0.6f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(toGardens), 240f * Time.deltaTime); yield return null; }
+                var hd = Head7; var rr = Vector3.Cross(Vector3.up, toGardens);
+                Shoot(hd + toGardens * 1.25f + rr * 0.35f - Vector3.up * 0.05f, hd - Vector3.up * 0.05f, 36f, 0.01f);
+                bool cov = _coverage; _coverage = false;
+                StartCoroutine(ShotLaterV("qf43_12_c04_then_ill_find_him_her_face", 0.7f));
+                yield return Say("VEN_C04", 14, 14, false);
+                _coverage = cov;
+                for (float t = 0f; t < 0.5f; t += Time.deltaTime) { if (Guardian != null) Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(Guardian.transform.position - P7)), 240f * Time.deltaTime); yield return null; }
+            }
+            yield return Say("VEN_C04", 15, 16);
             yield return Shot("v21_c04_ill_find_him");
             Complete("VEN_C04", VenusState.Stage.HelpAccepted);
             // B05's opening lines with the guardian, then the route to the lower gardens opens
@@ -1613,6 +1699,7 @@ namespace Seven
             if (MaintGate != null) MaintGate.SetActive(false);
             Complete("VEN_B05_lines");
             Objective("Ride to the lower gardens");
+            StartCoroutine(AmbientPulses());                                   // QF43 (13): the pulse is what has been shaking the gardens
             yield return Cutscene(false);
         }
 
@@ -1637,24 +1724,42 @@ namespace Seven
             Shoot(VenusLayout.ObsSpot + new Vector3(-2.5f, 2.2f, 3.5f), VenusLayout.BasinCentre + Vector3.up * 2f, 55f, 1.2f);
             yield return Wait(1.0f);
             yield return Shot("v22_c05_observation_area");
-            // C05 in gameplay: the camera keeps her in frame with the basin beyond (she speaks; Panther is at the ship)
+            // QF43 (13): the player hears and feels a full pulse at the overlook BEFORE any line about it (the creatures below surge)
             _coverage = true; _lastSpeaker = null;
             Cam.Follow();
-            yield return SayInGameplay("VEN_C05", 1, 3);
-            // the signal pulse: the creatures visibly change direction (toward the temple foundations)
-            AudioKit.Play("signal_pulse", VenusLayout.BasinCentre, 1f, 0f, AudioKit.Bus.Sfx, 200f);
+            _nextPulseAt = Mathf.Min(_nextPulseAt < 0f ? 1e9f : _nextPulseAt, Time.time + 1.2f);
+            if (!_pulseLoop) StartCoroutine(AmbientPulses());
+            yield return UntilPulse(12f);
+            yield return Wait(2.6f);                                         // the whole pulse, then the lines
+            yield return SayInGameplay("VEN_C05", 0, 0);                    // Hear that? / Felt it.
+            yield return SayInGameplay("VEN_C05", 1, 2);                    // They aren't attacking the people. / What are they doing?
+            // the next pulse comes as she watches: the creatures visibly surge (toward the temple foundations)
             var before = new List<Vector3>();
-            if (Worms != null) { foreach (var w in Worms) { before.Add(w.Heading); w.Drive(VenusLayout.Foundations, 14f); } }
-            // aim at the nearest creature (the turn must be seen), from just above her at the rail - her in the frame
+            if (Worms != null) foreach (var w in Worms) before.Add(w.Heading);
             var nearW = Worms != null && Worms.Length > 0 ? Worms[0].transform.position : VenusLayout.BasinCentre;
             if (Worms != null) foreach (var w in Worms) if (Flat(w.transform.position - P7).magnitude < Flat(nearW - P7).magnitude) nearW = w.transform.position;
             Shoot(P7 + Vector3.up * 2.6f + Flat(nearW - P7).normalized * -2.4f + Vector3.Cross(Vector3.up, Flat(nearW - P7).normalized) * 0.8f, (nearW + P7 + Vector3.up * 1.4f) * 0.5f, 56f, 1.0f);
-            yield return Wait(3.0f);
-            float turn = 0f; if (Worms != null) for (int i = 0; i < Worms.Length; i++) turn = Mathf.Max(turn, Vector3.Angle(before[i], Worms[i].Heading));
-            Log($"C05 signal pulse: {Worms?.Length ?? 0} creatures turned toward the temple foundations (largest turn {turn:0} deg in 3 s)");
+            _nextPulseAt = Time.time + 0.6f;
+            yield return UntilPulse(4f);
+            yield return Wait(0.4f);
+            yield return SayInGameplay("VEN_C05", 3, 3);                    // Following something. Every time that pulse comes, they move.
+            float turn = 0f; if (Worms != null) for (int i = 0; i < Worms.Length && i < before.Count; i++) turn = Mathf.Max(turn, Vector3.Angle(before[i], Worms[i].Heading));
+            Log($"C05 pulse (QF43 13): {_pulsesFired} pulses heard so far, the first before any line; {Worms?.Length ?? 0} creatures surged toward the temple foundations (largest turn {turn:0} deg)");
             yield return Shot("v23_c05_creatures_change_direction");
+            // "There." - the source: the root gate below the lookout, glowing with the pulse (QF24 7: the line shows the thing)
+            {
+                var g = VenusLayout.RootGateIn + Vector3.up * 1.6f; var d = Flat(g - P7).normalized; var rr = Vector3.Cross(Vector3.up, d);
+                for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(d), 300f * Time.deltaTime); yield return null; }
+                Shoot(new Vector3(73.6f, -2.6f, 141.0f), g + Vector3.down * 0.6f, 48f, 0.01f);   // from the lookout above the trees: her at the rail, the gate below
+                StartCoroutine(PulseLight(VenusLayout.RootGateIn + new Vector3(0f, 1.5f, -1.5f), 1f));
+                ImageGate.ExpectPoint(g, "the root gate glowing with the pulse", 0f, "qf43_13");
+                bool cov = _coverage; _coverage = false;
+                yield return SayInGameplay("VEN_C05", 4, 4);                // There.
+                yield return Shot("qf43_13_c05_there_the_root_gate");
+                _coverage = cov;
+            }
             Cam.Follow();
-            yield return SayInGameplay("VEN_C05", 4, 5);
+            yield return SayInGameplay("VEN_C05", 5, 5);
             _coverage = false;
             Complete("VEN_C05", VenusState.Stage.ControlDiscovered);
             Objective(VenusState.Objectives[(int)VenusState.Stage.ControlDiscovered]);

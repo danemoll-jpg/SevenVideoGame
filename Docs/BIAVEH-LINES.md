@@ -98,7 +98,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | id | speaker | line | direction |
 |---|---|---|---|
 | `BIA_06_N1` | Nela | That relay also held our bridge in line. Without it the span drifted apart, and our people are stranded on the far side. | Concerned |
-| `BIA_06_N2` | Nela | The bridge's service controls are at the chasm's edge. Bring the segments back together. | Precise |
+| `BIA_06_N2` | Nela | The bridge's service controls are up on the relay housing, above the junction. Bring the segments back together. | Precise |
 | `BIA_06_01` | Resident | Thank you. We thought we might be here all day. |  |
 | `BIA_06_02` | 7 | What are you carrying? |  |
 | `BIA_06_02a` | Resident | Seedlings for the upper gardens. Every district grows a few for the others. |  |

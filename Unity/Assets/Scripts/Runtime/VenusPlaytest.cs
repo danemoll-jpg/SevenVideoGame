@@ -82,11 +82,11 @@ namespace Seven
                         if (!bike.Riding) { yield return WalkTo(bike.transform.position - bike.transform.right * 1.35f, 1.2f); if (D.Legend.ContextText != null && D.Legend.ContextText.Contains("Ride")) { Press(X); yield return WaitR(0.6f); } }
                         else RideToward(196f);
                         break;
-                    case true when Obj.StartsWith("Stop before the collapse"):
+                    case true when Obj.StartsWith("The walkway is gone"):
                         if (bike.Riding && P.z < 104f) RideToward(110f);
                         else if (bike.Riding) { _stick = new Vector2(0f, -1f); if (bike.Speed < 1.0f && Idle) { _stick = Vector2.zero; Press(X); yield return WaitR(0.8f); } }
                         break;
-                    case true when Obj.StartsWith("Lay something across the gap"):
+                    case true when Obj.StartsWith("Lift the fallen slab"):
                         if (!waitedHint) { _stick = Vector2.zero; if (D.Hints == 0) { yield return null; continue; } waitedHint = true; Log("the hint showed - now doing it"); }
                         if (!_climbed)
                         {

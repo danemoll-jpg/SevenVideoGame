@@ -98,6 +98,8 @@ namespace Seven
                 if (d == null) { _stick = Vector2.zero; _rt = 0f; _lt = 0f; _holdRT = false; continue; }
                 if (d.SkipOffered) { _skipsTaken++; Log($"skip offered on '{d.WaitingFor}' - taken"); Press(Y); yield return WaitR(1.5f); continue; }
                 if (d.InCutscene) { _stick = Vector2.zero; _rt = 0f; _holdRT = false; continue; }
+                // QF43 (15): the climb to the control is driven by ClimbSection's human-timed bot - the pad stays still meanwhile
+                if (ClimbSection.BotActive) { _stick = Vector2.zero; _rt = 0f; _holdRT = false; continue; }
                 // QF17: in a boss fight the pilot reads the fight (telegraphs, markers, open / staggered / dazed)
                 if (BossFight.Active != null && !BossFight.Active.Over && d.Seven.InFight) { FightPad(BossFight.Active, d.Seven); continue; }
                 _held = 0u;

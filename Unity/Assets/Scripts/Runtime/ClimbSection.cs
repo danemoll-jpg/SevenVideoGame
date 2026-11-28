@@ -32,17 +32,28 @@ namespace Seven
         {
             public string Scene, Layout, Theme, LineA, LineB, IdA, IdB, Speaker = "cat";
             public Vector3 Seed, View; public float Radius = 30f;
+            /// <summary>QF43 (15): a climb with a purpose - the control on its top tier (a lever) that the story needs; the
+            /// chapter's director arms it at its beat (<see cref="Armed"/>), waits for <see cref="LeverPulled"/> and plays the
+            /// payoff. Placed near the beat (Avoid = the clearance kept from the layout's story points; FrontMargin = the open
+            /// ground in front of the face).</summary>
+            public bool Lever; public string LeverLabel = "Pull the lever"; public float Avoid = 10f, FrontMargin = 3.5f;
         }
+        // QF43 (15): Dan - "every climbing section must have a purpose". QF40's optional view-climbs (Venus by the temple court, Mars by the
+        // bridge-head, the asteroid by the hall plaza, the mothership by the junction) are gone; each bike world's climb is now ON the
+        // route and opens the way for the bike: Mars - the drawbridge's winch lever on the old fortress wall; the asteroid - the jammed
+        // second rail junction's control cab on the stalled gantry; the mothership - the bridge-alignment controls on the relay housing.
+        // Venus's is the way down to the Wormmaster (VenusDirectorDescent). The finale's (the old route's retaining wall) stays.
         public static readonly Spec[] Specs =
         {
-            new Spec { Scene = "Venus", Layout = "Seven.VenusLayout", Theme = "the overgrown temple ruin", Seed = new Vector3(46f, 0f, 208f), View = new Vector3(30f, 6f, 236f), Radius = 34f,
-                IdA = "CLB_VEN_A", LineA = "That old ruin by the court still has its carvings. Climb it - you'll see the whole temple from the top.", IdB = "CLB_VEN_B", LineB = "Nice reach. The temple looks closer from up there." },
-            new Spec { Scene = "Mars", Layout = "Seven.MarsLayout", Theme = "the fallen fortress stones", Seed = new Vector3(-84f, 0f, 16f), View = new Vector3(0f, 6f, -40f), Radius = 34f,
-                IdA = "CLB_MAR_A", LineA = "Those fallen fortress stones make a stair, if you don't mind using your hands. You'd see the ravine from the top.", IdB = "CLB_MAR_B", LineB = "Nice reach. You can see both kingdoms from there." },
-            new Spec { Scene = "Asteroid", Layout = "Seven.AsteroidLayout", Theme = "the stalled machine housing", Seed = new Vector3(-298f, 0f, 122f), View = new Vector3(-319f, 13.5f, 104f), Radius = 34f,
-                IdA = "CLB_AST_A", LineA = "That stalled machine housing has handholds all the way up. The view of the hall should be worth it.", IdB = "CLB_AST_B", LineB = "Nice reach. The whole foundry, laid out like clockwork." },
-            new Spec { Scene = "Biaveh", Layout = "Seven.BiavehLayout", Theme = "the curving relay plinth", Seed = new Vector3(-6f, 0f, 18f), View = new Vector3(-60f, 30f, 0f), Radius = 60f,
-                IdA = "CLB_BIA_A", LineA = "The architecture by the berth curves up like it wants to be climbed. You'd see the city rise from the top.", IdB = "CLB_BIA_B", LineB = "Nice reach. Even the Biavians don't go up there." },
+            new Spec { Scene = "Mars", Layout = "Seven.MarsLayout", Theme = "the crumbled fortress wall", Seed = new Vector3(-24f, -22f, -86f), View = new Vector3(0f, -10f, -67f), Radius = 8f,
+                Lever = true, LeverLabel = "Pull the winch lever", Avoid = 3.5f, FrontMargin = 2.4f,
+                IdA = "CLB_MAR_A", LineA = "The drawbridge is up - chained from that old wall. Its winch lever is on top. You'll have to climb.", IdB = "CLB_MAR_B", LineB = "There it comes. Ride across." },
+            new Spec { Scene = "Asteroid", Layout = "Seven.AsteroidLayout", Theme = "the stalled service gantry", Seed = new Vector3(-183.5f, 0f, 75.5f), View = new Vector3(-176f, 0f, 52f), Radius = 6f,
+                Lever = true, LeverLabel = "Throw the junction lever", Avoid = 5f, FrontMargin = 2.0f,
+                IdA = "CLB_AST_A", LineA = "That junction's lever is jammed. Its control cab is up on the stalled gantry - you'll have to climb to it.", IdB = "CLB_AST_B", LineB = "It's turning. Back on the bike." },
+            new Spec { Scene = "Biaveh", Layout = "Seven.BiavehLayout", Theme = "the relay housing", Seed = new Vector3(138f, 0f, -9f), View = new Vector3(170f, 0f, 0f), Radius = 8f,
+                Lever = true, LeverLabel = "Swing the segments into line", Avoid = 2.5f, FrontMargin = 2.0f,
+                IdA = "CLB_BIA_A", LineA = "The alignment controls are up on the relay housing. Climb up - Nela's people can't reach them now.", IdB = "CLB_BIA_B", LineB = "The span's coming together. Nicely done." },
             new Spec { Scene = "Finale", Layout = "Seven.FinaleLayout", Theme = "the old route's retaining wall", Seed = new Vector3(4f, -10f, -100f), View = new Vector3(16f, -150f, -700f), Radius = 40f,
                 IdA = "CLB_FIN_A", LineA = "The old route is above that wall. After you.", IdB = "CLB_FIN_B", LineB = "Nice reach." },
         };
@@ -116,7 +127,7 @@ namespace Seven
                     var mid = o + new Vector3(1.6f, 0f, 1.3f);
                     // QF41: 10 m from the block's centre (its half-length is 3.2 m: the old 6-7 m left a straight bike line from Mars's west rim
                     // to the saucer 2.8 m from its corner - the bot rode into it and needed a skip)
-                    bool near = avoid.Any(p => Flat(p - mid).magnitude < 10f && Mathf.Abs(p.y - o.y) < 12f) || segs.Any(sg => SegDist(mid, sg.Item1, sg.Item2) < 10f);
+                    bool near = avoid.Any(p => Flat(p - mid).magnitude < S.Avoid && Mathf.Abs(p.y - o.y) < 12f) || segs.Any(sg => SegDist(mid, sg.Item1, sg.Item2) < S.Avoid);
                     if (near) { rejRoute++; continue; }
                     float sc = Flat(o - S.Seed).magnitude;
                     if (sc < best) { best = sc; pick = o; }
@@ -140,7 +151,7 @@ namespace Seven
         bool GroundOk(Vector3 o)
         {
             for (float x = AX0 - 1.2f; x <= BX1 + 1.2f; x += 0.6f)
-                for (float z = -3.5f; z <= D + 2.4f; z += 0.6f)
+                for (float z = -S.FrontMargin; z <= D + 2.4f; z += 0.6f)
                 {
                     float h = Ground.Height(o.x + x, o.z + z);
                     if (float.IsNaN(h) || Mathf.Abs(h - o.y) > 0.25f) return false;
@@ -213,6 +224,85 @@ namespace Seven
             TopLow = new Ground.Zone { Name = "ClimbLow", Min = new Vector2(O.x + AX1, O.z), Max = new Vector2(O.x + BX1, O.z + D), Y0 = O.y + HB, Y1 = O.y + HB };
             TopHigh = new Ground.Zone { Name = "ClimbTop", Min = new Vector2(O.x + AX0, O.z), Max = new Vector2(O.x + AX1, O.z + D), Y0 = O.y + HA, Y1 = O.y + HA };
             Ground.Zones.Insert(0, TopHigh); Ground.Zones.Insert(0, TopLow);
+            if (S.Lever) BuildLever(mat);
+        }
+
+        // ------------------------------------------------------------------------------------------ QF43 (15): the control on top
+        public bool Armed, LeverPulled; public static bool BotActive; public System.Action OnLever;
+        Transform _handle; Light _leverLight;
+        public Vector3 LeverAt => P(-0.9f, HA, D * 0.55f);
+        void BuildLever(Material mat)
+        {
+            var v = new List<Vector3>(); var t = new List<int>();
+            Box(v, t, new Vector3(-0.9f, HA + 0.45f, D * 0.55f), new Vector3(0.22f, 0.9f, 0.22f));          // the housing post
+            Box(v, t, new Vector3(-0.9f, HA + 0.92f, D * 0.55f), new Vector3(0.36f, 0.1f, 0.36f));
+            MeshGo("ClimbLeverPost", v, t, mat, true);
+            var hv = new List<Vector3>(); var ht = new List<int>();
+            Box(hv, ht, new Vector3(0f, 0.28f, 0f), new Vector3(0.06f, 0.56f, 0.06f));
+            Box(hv, ht, new Vector3(0f, 0.58f, 0f), new Vector3(0.16f, 0.08f, 0.08f));
+            var mesh = new Mesh { name = "QF43_LeverHandle_" + S.Scene }; var vv = new List<Vector3>(); var tt = new List<int>();
+            for (int i = 0; i < ht.Count; i++) { vv.Add(hv[ht[i]]); tt.Add(i); }
+            mesh.SetVertices(vv); mesh.SetTriangles(tt, 0); mesh.RecalculateNormals();
+            var hg = new GameObject("ClimbLeverHandle"); hg.transform.SetParent(transform, false); hg.transform.position = P(-0.9f, HA + 0.95f, D * 0.55f) - Vector3.forward * 0.05f;
+            hg.transform.rotation = Quaternion.Euler(-35f, 0f, 0f);
+            hg.AddComponent<MeshFilter>().sharedMesh = mesh;
+            var chalk = new Material(Shader.Find("Universal Render Pipeline/Unlit")); chalk.SetColor("_BaseColor", new Color(0.92f, 0.92f, 0.92f));
+            hg.AddComponent<MeshRenderer>().sharedMaterial = chalk;
+            _handle = hg.transform;
+            _leverLight = new GameObject("ClimbLeverLight").AddComponent<Light>(); _leverLight.transform.SetParent(transform, false);
+            _leverLight.transform.position = P(-0.9f, HA + 1.6f, D * 0.55f); _leverLight.type = LightType.Point; _leverLight.color = Color.white; _leverLight.range = 4f; _leverLight.intensity = 0f; _leverLight.shadows = LightShadows.None;
+            Ground.Obstacles.Add(new Ground.Circle(new Vector2(LeverAt.x, LeverAt.z), 0.3f));
+        }
+        bool NearLever() => _seven != null && _seven.Current == ChapterSeven.Mode.Free && TopHigh != null && TopHigh.Contains(_seven.transform.position.x, _seven.transform.position.z) && Mathf.Abs(_seven.transform.position.y - TopHigh.Y0) < 0.3f && Flat(_seven.transform.position - LeverAt).magnitude < 1.8f;
+        ControlsLegend _legend; ChapterInput _input;
+        void LateUpdate()
+        {
+            if (!S.Lever || !Placed || LeverPulled) { if (_leverLight != null) _leverLight.intensity = 0f; return; }
+            if (_leverLight != null) _leverLight.intensity = Armed ? 1.2f + 0.6f * Mathf.Sin(Time.time * 3f) : 0f;   // the control glows while it is the step
+            if (!Armed) return;
+            if (_seven == null) _seven = FindAnyObjectByType<ChapterSeven>();
+            if (_legend == null) _legend = FindAnyObjectByType<ControlsLegend>();
+            if (_input == null) _input = FindAnyObjectByType<ChapterInput>();
+            if (!NearLever()) return;
+            if (_legend != null) _legend.Context(ControlsLegend.Btn.Interact, S.LeverLabel);
+            if (_input != null && _input.Interact != null && _input.Interact.WasPressedThisFrame()) StartCoroutine(Pull());
+        }
+        bool _pulling;
+        public IEnumerator Pull()
+        {
+            if (_pulling || LeverPulled) yield break;
+            _pulling = true;
+            if (_seven == null) _seven = FindAnyObjectByType<ChapterSeven>();
+            if (_seven != null) _seven.Touch(_handle.position + Vector3.up * 0.4f);
+            for (float t = 0f; t < 1.2f && _seven != null && _seven.Current == ChapterSeven.Mode.Touch && _seven.Tn < 0.5f; t += Time.deltaTime) yield return null;
+            AudioKit.Play("lever_pull", _handle.position, 0.9f, 0.05f, AudioKit.Bus.Sfx, 30f);
+            var q0 = _handle.rotation; var q1 = Quaternion.Euler(40f, 0f, 0f);
+            for (float t = 0f; t < 1f; t += Time.deltaTime / 0.45f) { _handle.rotation = Quaternion.Slerp(q0, q1, t); yield return null; }
+            if (_seven != null) _seven.Release();
+            LeverPulled = true; Pulled++;
+            L($"CLIMB SECTION (QF43 15) {S.Scene}: the lever on {S.Theme} pulled - the way opens for the bike");
+            OnLever?.Invoke();
+        }
+        public static int Pulled;
+        /// <summary>QF43 (15): the director arms the climb at its beat (the lever glows, the cat names it) and the bots climb it.</summary>
+        public void Arm() { Armed = true; if (!_saidA) { _saidA = true; StartCoroutine(Say(S.IdA, S.LineA)); } }
+        public IEnumerator SayDone() { if (!_saidB) { _saidB = true; yield return Say(S.IdB, S.LineB); } }
+        /// <summary>The climb + the lever, driven (check runs: precise; player-style runs: human timing). Logs CLIMB TEST lines.</summary>
+        public IEnumerator RunBot(bool human)
+        {
+            BotActive = true;
+            if (_seven == null) _seven = FindAnyObjectByType<ChapterSeven>();
+            var bike = FindAnyObjectByType<HoverBike>(); if (bike != null && bike.Riding) bike.DismountTo(Climb.From - Vector3.forward * 1.2f, Vector3.forward);
+            // the follow camera on her (a director's own dismount does this; the bot's direct dismount left it on the parked bike)
+            var fc = FindAnyObjectByType<ChapterCamera>();
+            if (fc != null) { fc.Target = _seven.transform; fc.Distance = 3.8f; fc.LookHeight = 1.45f; fc.Follow(true); fc.SnapBehind(); }
+            var cap = FindAnyObjectByType<ChapterCapture>();
+            var r = new BotRun { Human = human, PullLever = true };
+            yield return Bot(r, cap);
+            L($"CLIMB TEST (QF43 15) {S.Scene} [{(human ? "human-timed bot" : "precise bot")}, in the story]: {(r.Ok ? "PASS" : "FAIL at " + r.FailedAt)} in {r.Seconds:0.0} s - steps {string.Join(", ", r.Steps)}; retries {r.Retries}; stuck hangs {r.Stuck}; 7 hidden from the player's camera {r.Hidden} of {r.Frames} frames; falls {r.Falls}; lever {(LeverPulled ? "pulled" : "NOT pulled")}");
+            if (!LeverPulled) yield return Pull();
+            _seven.ScriptDriven = DemoBoot.CaptureDir != null && !DemoBoot.PlayerSim;
+            BotActive = false;
         }
         /// <summary>A dressed stone: a box whose four vertical edges and top edges are chamfered (never a plain box).</summary>
         static void Stone(List<Vector3> v, List<int> t, Vector3 c, Vector3 s, float ch)
@@ -264,7 +354,7 @@ namespace Seven
             Installed++;
             L($"CLIMB SECTION (QF40 3) {S.Scene}: moves installed ({(moon ? "the Moon's set was still active here - replaced" : "added to the chapter's own")})");
             if (System.Environment.GetCommandLineArgs().Contains("-climbtest")) { StartCoroutine(Test()); yield break; }
-            StartCoroutine(Story());
+            if (!S.Lever) StartCoroutine(Story());                       // QF43 (15): lever climbs speak from their beat (Arm / SayDone)
         }
         static TT[] Add<TT>(TT[] a, params TT[] more) => (a ?? new TT[0]).Concat(more.Where(x => x != null)).ToArray();
         void OnDestroy() { if (Current == this) Current = null; T.UseMoon(); }
@@ -327,7 +417,7 @@ namespace Seven
             }
             cap?.Finish($"CLIMB TEST (QF40 3) {S.Scene}: {pass}/2 runs pass");
         }
-        class BotRun { public bool Human, Ok; public string FailedAt; public float Seconds; public int Retries, Stuck, Hidden, Frames, Falls; public List<string> Steps = new List<string>(), HiddenAt = new List<string>(); }
+        class BotRun { public bool Human, Ok, PullLever; public string FailedAt; public float Seconds; public int Retries, Stuck, Hidden, Frames, Falls; public List<string> Steps = new List<string>(), HiddenAt = new List<string>(); }
 
         IEnumerator Bot(BotRun r, ChapterCapture cap)
         {
@@ -358,7 +448,17 @@ namespace Seven
             }
             bool Hang(T.Ledge l) => s7.Current == ChapterSeven.Mode.Hang && s7.HangLedge == l;
             bool On(Ground.Zone z) => s7.Current == ChapterSeven.Mode.Free && z.Contains(s7.transform.position.x, s7.transform.position.z) && Mathf.Abs(s7.transform.position.y - z.Y0) < 0.25f;
-            // 1. up the face onto the cornice
+            // 1. up the face onto the cornice (QF43: from behind or beside the block, round its end to the front first - a
+            // straight line went into the block: the mothership's faces away from the road)
+            {
+                var lp = s7.transform.position - O;
+                if (lp.z > -0.6f)
+                {
+                    float sx = lp.x > (AX0 + BX1) * 0.5f ? BX1 + 1.0f : AX0 - 1.0f;
+                    if (lp.z > D - 0.2f) yield return WalkTo(P(sx, 0f, D + 1.0f), 0.4f, 10f);
+                    yield return WalkTo(P(sx, 0f, -1.2f), 0.4f, 10f);
+                }
+            }
             yield return WalkTo(Climb.From, 0.3f, 8f);
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) { s7.transform.rotation = Quaternion.RotateTowards(s7.transform.rotation, Quaternion.LookRotation(Vector3.forward), 400f * Time.deltaTime); yield return null; }
             yield return Press("jump to the cornice", () => s7.ScriptJump = true, () => Hang(Cornice), 3.5f);
@@ -383,8 +483,18 @@ namespace Seven
             yield return Press("the step (mantle)", () => s7.ScriptJump = true, () => On(TopHigh), 3.5f);
             if (!On(TopHigh)) { r.FailedAt = "the step up to the top"; goto done; }
             yield return new WaitForSeconds(1.2f);
-            ImageGate.ExpectPoint(S.View, "the view from the top of the climb");
-            if (cap != null) yield return cap.Shot($"climb_{S.Scene.ToLower()}_{(r.Human ? "h" : "p")}_3_at_the_top");
+            ImageGate.ExpectPoint(S.Lever ? LeverAt : S.View, S.Lever ? "the control on top of the climb" : "the view from the top of the climb");
+            if (cap != null && !S.Lever) yield return cap.Shot($"climb_{S.Scene.ToLower()}_{(r.Human ? "h" : "p")}_3_at_the_top");
+            if (cap != null && S.Lever) { ImageGate.Expect(s7.transform, "7 on top of the climb, by its control"); yield return cap.ShotFrom($"climb_{S.Scene.ToLower()}_{(r.Human ? "h" : "p")}_3_at_the_top", P(BX1 + 2.0f, HA + 1.0f, -2.2f), s7.transform.position + Vector3.up * 0.8f, 48f); }
+            if (r.PullLever && S.Lever)
+            {
+                yield return WalkTo(LeverAt + Vector3.right * 0.9f, 0.25f, 6f);
+                for (float t = 0f; t < 0.4f; t += Time.deltaTime) { s7.transform.rotation = Quaternion.RotateTowards(s7.transform.rotation, Quaternion.LookRotation(Vector3.left), 400f * Time.deltaTime); yield return null; }
+                if (r.Human) yield return new WaitForSeconds(0.3f + (float)rnd.NextDouble() * 0.4f);
+                yield return Pull();
+                r.Steps.Add("the lever");
+                if (cap != null) { ImageGate.Expect(s7.transform, "7 at the control she pulled"); yield return cap.ShotFrom($"climb_{S.Scene.ToLower()}_{(r.Human ? "h" : "p")}_4_the_lever_pulled", P(BX1 + 2.0f, HA + 1.0f, -2.2f), s7.transform.position + Vector3.up * 0.8f, 48f); }
+            }
             // 5. down: over the back edge into a hang, then let go
             yield return WalkTo(DownBack.Spot, 0.25f, 6f);
             for (float t = 0f; t < 0.4f; t += Time.deltaTime) { s7.transform.rotation = Quaternion.RotateTowards(s7.transform.rotation, Quaternion.LookRotation(Vector3.forward), 400f * Time.deltaTime); yield return null; }

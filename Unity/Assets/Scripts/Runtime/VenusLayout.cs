@@ -85,6 +85,31 @@ namespace Seven
         public static bool InRootPit(float x, float z) => x >= 66.5f && x <= 71.5f && z >= RootPitBotZ && z <= RootPitTopZ;
         public static float RootPitHeight(float z) => z >= RootLandZ + 0.6f ? RootPitTopY : Mathf.Lerp(RootPitBotY, RootPitTopY, Mathf.InverseLerp(RootPitBotZ, RootLandZ + 0.6f, z));
         public static bool Underground(Vector3 p) => p.y < -11f && p.x > 59f && p.x < 142f && p.z < 120f && p.z > 60f;
+        // ---- QF43 (14): the root gate stays shut (jammed from below). The way down is the ROOT WALL beside it - a second slot cut
+        // east of the pit (x 73.1-77.5): from the gap in the lookout's railing she climbs down into a hang on the edge and shimmies
+        // to the shelf below (-8.4); jumps the root chasm between pulses to the lower ledge (-10.6); hangs and drops into the burrow
+        // floor (-14); lifts a fallen slab into place with telekinesis to make a step up onto the sill into the pit; pulls the
+        // gate's inner release (the stairs up are open from then on: the short way back), and goes on into the tunnels.
+        public const float CutX0 = 73.1f, CutX1 = 77.5f, CutZ0 = 117.0f, CutZ1 = 133.9f;
+        public const float ShelfY = -8.4f, ShelfX1 = 75.2f, ShelfZ0 = 129.4f, ChasmZ0 = 127.2f, CutLedgeY = -10.6f, LedgeZ0 = 121.3f, CutBotY = -14f;
+        public static bool InRootCut(float x, float z) => x >= CutX0 && x <= CutX1 && z >= CutZ0 && z <= CutZ1;
+        public static float RootCutHeight(float x, float z)
+        {
+            if (z >= ShelfZ0) return x <= ShelfX1 ? ShelfY : -18f;
+            if (z >= ChasmZ0) return -18f;
+            if (z >= LedgeZ0) return CutLedgeY;
+            return CutBotY;
+        }
+        public static float PitY(float z) => Mathf.Lerp(RootPitBotY, RootPitTopY, Mathf.InverseLerp(RootPitBotZ, RootLandZ + 0.6f, z));
+        public static readonly MoonTraversal.Ledge CutLip = new MoonTraversal.Ledge { Name = "the root wall's edge", A = new Vector3(73.7f, RootPitTopY, 133.95f), B = new Vector3(76.4f, RootPitTopY, 133.95f), Fwd = Vector3.forward };
+        public static readonly MoonTraversal.HangDown CutLipDown = new MoonTraversal.HangDown { Name = "the gap in the railing", Spot = new Vector3(76.0f, RootPitTopY, 134.45f), Radius = 0.7f, Ledge = CutLip };
+        public static readonly MoonTraversal.JumpLink ChasmJump = new MoonTraversal.JumpLink { Name = "the root chasm", From = new Vector3(74.2f, ShelfY, 129.9f), To = new Vector3(74.2f, CutLedgeY, 126.6f), Radius = 0.9f, KeepLateral = true, LateralClamp = new Vector2(73.5f, 76.9f) };   // (the lateral clamp defaults to 0..0: she jumped toward x 0)
+        public static readonly MoonTraversal.Ledge CutLedgeLip = new MoonTraversal.Ledge { Name = "the lower ledge's edge", A = new Vector3(73.6f, CutLedgeY, LedgeZ0), B = new Vector3(77.0f, CutLedgeY, LedgeZ0), Fwd = Vector3.forward };
+        public static readonly MoonTraversal.HangDown CutLedgeDown = new MoonTraversal.HangDown { Name = "the drop into the burrows", Spot = new Vector3(75.3f, CutLedgeY, 121.75f), Radius = 0.8f, Ledge = CutLedgeLip };
+        public const float SillY = -12.9f;
+        public static readonly Vector3 CutSlabRest = new Vector3(76.3f, CutBotY + 0.32f, 118.6f), CutSlabAt = new Vector3(73.8f, SillY - 0.5f, 119.0f);
+        public static readonly MoonTraversal.Mantle CutSlabStep = new MoonTraversal.Mantle { Name = "the slab step", From = new Vector3(75.15f, CutBotY, 119.0f), Radius = 0.9f, FaceAt = 74.6f, Fwd = Vector3.left, TopY = SillY, Along0 = 118.3f, Along1 = 119.7f };
+        public static readonly Vector3 GateRelease = new Vector3(67.25f, 0f, 118.7f);
         public static readonly Vector3 RootChamberAt = new Vector3(70f, ChamberY, 90f);
         // ---- VEN_05: the control chamber (floor y -30). Wormmaster above his machinery on the east dais; three control
         // devices; three creature troughs (each driven by one device); the containment console in front of the dais.
@@ -94,6 +119,11 @@ namespace Seven
         public const float DaisRadius = 4.2f, DaisHeight = 4.2f, BarrierRadius = 5.6f;
         public static Vector3 WormmasterAt => DaisAt + Vector3.up * DaisHeight;
         public static readonly Vector3 ConsoleAt = new Vector3(127.2f, ControlY, 88f);     // close the containment barrier (X)
+        /// <summary>QF43 (17): the old Elarim holding cell - a sunken ring in the chamber floor with six old pylons round it
+        /// (they used it for the creatures). She lifts the beaten Wormmaster into it with telekinesis; the pylons raise a wall of
+        /// light that arcs over into a closed dome.</summary>
+        public static readonly Vector3 CellAt = new Vector3(114.5f, ControlY, 88f);
+        public const float CellRadius = 3.4f, CellPylonR = 3.95f, CellWallH = 2.2f;
         public static readonly string[] DeviceIds = { "dev_north", "dev_ledge", "dev_crystal" };
         /// <summary>The devices: north (X, at the north walkway), the ledge (climb up to it, X), the crystal (RT: pull its
         /// signal crystal out from the safe walkway - it stands in the south trough).</summary>
@@ -119,8 +149,8 @@ namespace Seven
             // Round 13 (0d): the slab bridge is wider (4.6 m) and has ramped ends meeting the ground on both sides (no lip);
             // the wide ramps funnel any reasonable approach angle onto it
             R("Bridge", 27.7f, 116.2f, 32.3f, 129.8f, BridgeTop, true, float.NaN, 1, false),   // QF10: the slab laid across the gully (opens when it is down)
-            R("BridgeRampS", 26.2f, 112.4f, 33.8f, 117.6f, 0f, true, BridgeTop, 1, false),          // overlaps the bridge 1.4 m (>= 0.6 m rule)
-            R("BridgeRampN", 26.2f, 128.4f, 33.8f, 132.6f, BridgeTop, true, 0f, 1, false),
+            R("BridgeRampS", 26.2f, 112.4f, 33.8f, 117.6f, 0f, true, BridgeTop, 1, true),     // QF43 (10): always there (the banks)          // overlaps the bridge 1.4 m (>= 0.6 m rule)
+            R("BridgeRampN", 26.2f, 128.4f, 33.8f, 132.6f, BridgeTop, true, 0f, 1, true),
             R("Court", 14f, 190f, 46f, 214f, 0f),
             R("TempleWalk", 25f, 212f, 35f, 237f, 0f, false),
             R("TempleHall", 22f, 236f, 38f, 262.6f, 0f, false),
@@ -130,7 +160,14 @@ namespace Seven
             R("ObsArea", 64f, 134f, 88f, 152f, -6f, true, float.NaN, 1, false),
             // Round 12: the way down (on foot, opens after C05) and VEN_05 - listed before "Valley", they win where they lie
             R("RootLanding", 66.5f, RootLandZ, 71.5f, RootPitTopZ, RootPitTopY, false, float.NaN, 1, false),
-            R("RootPit", 66.5f, RootPitBotZ, 71.5f, RootLandZ + 0.6f, RootPitBotY, false, RootPitTopY, 1, false),
+            // QF43 (14): the pit's stairs open only with the gate's inner release; its bottom, the root wall's slot and the sill after C05
+            R("RootPit", 66.5f, 120.4f, 71.5f, RootLandZ + 0.6f, -12.137f, false, RootPitTopY, 1, false),
+            R("CutShelf", CutX0, ShelfZ0, ShelfX1, CutZ1, ShelfY, false, float.NaN, 1, false),
+            R("CutLedge", CutX0, LedgeZ0, CutX1, ChasmZ0, CutLedgeY, false, float.NaN, 1, false),
+            R("CutSlab", 73.0f, 118.3f, 74.6f, 119.7f, SillY, false, float.NaN, 1, false),
+            R("CutBottom", CutX0, CutZ0 + 0.2f, CutX1, LedgeZ0, CutBotY, false, float.NaN, 1, false),
+            R("RootSill", 71.0f, 117.8f, 73.6f, 120.2f, SillY, false, float.NaN, 1, false),     // flat: the slab step meets it level (QF43: a 15 cm lip stopped her)
+            R("RootPitLow", 66.5f, RootPitBotZ, 71.5f, 121.0f, RootPitBotY, false, -11.808f, 1, false),
             R("RootTunnel", 66.5f, TunnelBotZ, 71.5f, RootPitBotZ + 0.6f, ChamberY, false, RootPitBotY, 1),
             R("RootChamber", 60f, 84f, 80f, TunnelBotZ + 0.6f, ChamberY, false),
             R("DeepTunnel", 79.4f, 86f, 104f, 92f, ChamberY, false, ControlY, 0),

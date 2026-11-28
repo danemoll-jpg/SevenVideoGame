@@ -2180,7 +2180,7 @@ namespace Seven
             var mid = (p7 + Cat.transform.position) * 0.5f;
             // QF32 (3): a soft white key on the two of them from the city side (the low two-shots were the chapter's darkest frames)
             var key6b = new GameObject("Reveal6b_Key").AddComponent<Light>(); key6b.type = LightType.Point; key6b.shadows = LightShadows.None;
-            key6b.range = 9f; key6b.intensity = 6.5f;   // P3 (1): stronger (c02 still range 0.25: the city's light on their faces)
+            key6b.range = 9f; key6b.intensity = 7.6f;   // QF43: 6.5 left c02 at range 0.2996 (the faster pace moved them a little)   // P3 (1): stronger (c02 still range 0.25: the city's light on their faces)
             key6b.color = Color.white; key6b.transform.position = mid + cityDir * 2.2f + side * 1.2f + Vector3.up * 1.9f;
             Destroy(key6b.gameObject, 40f);
             Cam.Shot(mid + cityDir * 2.9f + side * 0.9f + Vector3.up * 0.35f, mid + Vector3.up * 0.95f, 0.01f, true, 52f);

@@ -165,8 +165,8 @@ Camera:
 - Insert — her hand settling into one of the recessed grips molded into the fairing.
 - Side medium — 7 mounting.
 
-VEN_B01_01 | 7  
-“That’s a walk.”
+VEN_B01_01 | 7 — down the beam, looking out to the temple far across the gardens  
+“The temple’s all the way over there. That’s a long walk.”
 
 VEN_B01_02 | Cat, telepathic  
 “You have a vehicle.”
@@ -193,8 +193,8 @@ VEN_B01_05 | Cat, telepathic
 7 starts to mount the hover bike, then pauses. **(Rewritten by Dan, 2026-11-19 — delivery directions are part of the
 script: use them for the voice takes, e.g. ElevenLabs v3 tags, and the reactions.)**
 
-VEN_B01_06 | 7 — casually  
-“What should I call you?”
+VEN_B01_06 | 7 — a light, curious aside as she turns back to him from the bike  
+“By the way, what should I call you?”
 
 VEN_B01_07 | Panther, telepathic  
 “Panther.”
@@ -405,22 +405,22 @@ VEN_C01_01 | 7
 VEN_C01_02 | Cat, telepathic  
 “You sound surprised.”
 
-VEN_C01_03 | 7  
-“After the Moon…”
+VEN_C01_03 | 7 — quietly, the view taking her in  
+“After all that dust and machinery… I’d forgotten a place could look like this.”
 
-Pause on the view.
+Pause on the view. *(QF43 6: “It’s beautiful.” cut; “Land somewhere with a roof.” / “Why?” / “Experience.” replaced.)*
 
-VEN_C01_04 | 7  
-“It’s beautiful.”
-
-VEN_C01_05 | Cat, telepathic  
-“Land somewhere with a roof.”
+VEN_C01_05 | Cat, telepathic — his head tracking the flying creatures, tail twitching  
+“Hm.”
 
 VEN_C01_06 | 7  
-“Why?”
+“Don’t even think about it.”
 
 VEN_C01_07 | Cat, telepathic  
-“Experience.”
+“I was admiring the wildlife.”
+
+VEN_C01_08 | 7 — amused  
+“Mm-hmm.”
 
 Return control at the landing platform.
 
@@ -468,7 +468,7 @@ VEN_C03_05 | 7
 “Beneath the city. In the old passages.”
 
 VEN_C03_06 | 7  
-“When I touched it, I saw people. A place as it used to be.”
+“When I touched it, I saw others. A place as it used to be.”
 
 VEN_C03_07 | Guardian  
 “What did they show you?”
@@ -546,7 +546,9 @@ VEN_C04_13 | Guardian
 
 7 puts the dodecahedron away.
 
-VEN_C04_14 | 7  
+*(QF43 12: she turns from the Guardian toward the gardens on the line; her face framed.)*
+
+VEN_C04_14 | 7 — determined, resolute, quietly fierce  
 “Then I’ll find him.”
 
 VEN_C04_15 | Guardian  
@@ -562,16 +564,27 @@ SCENE VEN_C05 — DISCOVER THE SIGNAL
 Trigger: Reach the creature observation area.  
 Delivery: In gameplay.
 
+*(QF43 13: the control devices pulse every ~9 s - a deep throbbing boom, a small tremor, a ripple of light from the device, the
+creatures surging the same way. At least one full pulse plays as she reaches the overlook, before the first line.)*
+
+VEN_C05_00 | 7  
+“Hear that?”
+
+VEN_C05_00b | Cat, telepathic  
+“Felt it.”
+
 VEN_C05_01 | 7  
 “They aren’t attacking the people.”
 
 VEN_C05_02 | Cat, telepathic  
 “What are they doing?”
 
-VEN_C05_03 | 7  
-“Following something. Every time that sound starts, they move.”
+On the next pulse, as the creatures surge:
 
-Play a signal pulse and visibly change the creatures’ direction.
+VEN_C05_03 | 7  
+“Following something. Every time that pulse comes, they move.”
+
+*(Framed on the nearest device glowing with the pulse.)*
 
 VEN_C05_04 | 7  
 “There.”
@@ -580,6 +593,26 @@ VEN_C05_05 | Cat, telepathic
 “Then find what’s calling them.”
 
 Result: Set VEN_S04_CONTROL_DISCOVERED.
+
+*(QF43 14: the way down. The root gate below the lookout stays shut - jammed from below. She goes round it down the root wall beside
+it: a hang off the edge and a shimmy, the shelf, the root chasm jumped between pulses, a hang-and-drop into the burrows, a fallen slab
+lifted into place with telekinesis as a step, then the gate's inner release in the pit - the gate opens behind her.)*
+
+VEN_C05_P1 | Cat, telepathic  
+“That’s not opening from this side.”
+
+VEN_C05_P2 | 7  
+“The root wall beside it goes down. I’ll go around.”
+
+On the shelf, the hanging roots over the chasm thrashing with the pulse:
+
+VEN_C05_P3 | Cat, telepathic  
+“Wait for the next one… now.”
+
+The gate sinks open at the top of the pit:
+
+VEN_C05_P4 | Cat, telepathic  
+“Good. Now you have a way back.”
 
 SCENE VEN_C06 — WORMMASTER INTRODUCTION
 
@@ -591,6 +624,17 @@ Camera:
 - Underlighting in grayscale.
 - Over his shoulder toward 7.
 - Level medium shot for 7’s replies.
+
+*(QF43 17: as she enters, before Wormmaster speaks, the camera finds the sunken ring in the floor with the old Elarim pylons.)*
+
+VEN_C06_00a | Cat, telepathic  
+“That ring in the floor. It looks like an old holding cell. The Elarim must have used it for the creatures.”
+
+VEN_C06_00b | 7  
+“Big enough for him.”
+
+VEN_C06_00c | Cat, telepathic  
+“Keep that in mind.”
 
 VEN_C06_01 | Wormmaster  
 “They sent someone down at last.”
@@ -616,6 +660,15 @@ VEN_C06_07 | Wormmaster
 “Come and do it yourself.”
 
 Return control.
+
+*(QF43 16/17: he stays up on his perch defending the three devices, any order; only when the third is off does his platform sink and he
+comes down. When he is beaten and stunned:)*
+
+VEN_C06_P1 | Cat, telepathic  
+“The holding cell. Get him into it.”
+
+*(Prompt "Lift him into the cell" (RT): she lifts him with telekinesis, carries him through the air and sets him in the ring; the pylons
+light and a field of light rises on every side and closes into a dome over him.)*
 
 SCENE VEN_C07 — THREAT STOPPED
 
@@ -695,29 +748,24 @@ SCENE VEN_C10 — RECEIVE THE RECORD
 Trigger: Immediately after VEN_C09.
 Result: Award Venus record once; set VEN_S07_RECORD_RECEIVED.
 
-The guardian offers a small cube. The original remains visible in its protected structure.
+*(QF43 20: like every other rune, she takes the cube she touched: after the vision the cage opens and she lifts the cube out. On
+revisits the cage stands empty and open, a soft glow where the cube sat.)*
 
 VEN_C10_01 | Guardian
-“Take this record with you.”
+“Take it with you.”
 
 VEN_C10_02 | 7
-“You still have it here?”
-
-VEN_C10_03 | Guardian
-“Yes.”
-
-VEN_C10_04 | 7
-“Then why give me another?”
+“It belongs to your temple.”
 
 Guardian looks toward the gardens.
 
-VEN_C10_05 | Guardian
+VEN_C10_03 | Guardian
 “You saw how close he came.”
 
-VEN_C10_06 | Guardian
-“If this place were lost, I would want someone to know we had been here.”
+VEN_C10_04 | Guardian
+“If this place were lost, I would want someone to carry it. And to know we had been here.”
 
-Insert: 7 secures the small cube beside the dodecahedron.
+Insert: 7 secures the cube beside the dodecahedron.
 
 Return control.
 
@@ -737,7 +785,7 @@ VEN_C12_02 | Guardian
 VEN_C12_03 | 7  
 “Do you know where any of the others are?”
 
-The guardian approaches an ancient display. Two locations appear.
+The guardian raises a hand; the temple's record projects two glowing places in the air above the empty cage (QF43 21): a red-grey planet with a canyon, an icy moon, each lighting as it is named.
 
 VEN_C12_04 | Guardian  
 “Two locations survive in our records. Mars—and Europa.”
@@ -832,7 +880,7 @@ VEN_C11_02 | 7
 “The Moon’s record. Venus has its own.”
 
 VEN_C11_03 | Cat, telepathic
-“And the people you saw?”
+“And the others you saw?”
 
 VEN_C11_04 | 7
 “They’re less certain about that.”

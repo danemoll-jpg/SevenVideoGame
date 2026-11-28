@@ -78,6 +78,11 @@ SFX = [
     ("vessel_slosh", "Water sloshing inside a large stone vessel that is being shaken, a few splashes.", 1.5, False, "C02: water shakes in a vessel"),
     ("dust_fall", "Fine dust and small grit trickling down from a stone ceiling in a large hall.", 2.5, False, "C04: falling dust"),
     ("signal_pulse", "A distinct, slightly unsettling low pulsing tone with a faint metallic ring, rising then fading, synthetic, not loud.", 2.5, False, "C05: the signal pulse"),
+    ("stone_crack", "A sharp crack racing through a stone slab, splitting with a gritty snap and a short trickle of grit.", 1.2, False, "QF43 9: the walkway cracking before it falls"),
+    ("lever_pull", "A heavy old lever pulled down hard: a stiff metal-and-stone clunk, a ratchet catching, then a deep mechanism engaging somewhere below.", 1.6, False, "QF43 14/15: the gate's inner release, the climbs' levers"),
+    ("barrier_hum", "A soft, steady humming energy field, a gentle electric drone with a faint shimmer, calm and continuous.", 6, True, "QF43 17: the holding cell's closed dome (loop)"),
+    ("stone_scrape", "Hard claws scraping and dragging across a humming energy barrier, a few slow grinding scrapes with a crackle where they touch.", 2.5, False, "QF43 17: Wormmaster's claws against the closed dome"),
+    ("venus_pulse", "A deep, throbbing subterranean pulse: a low booming hum that swells up from below and fades away, felt more than heard, with a faint rumble of earth and a soft resonant throb, like a giant heartbeat under the ground.", 3.5, False, "QF43 13: the control devices' pulse every ~9 s (C05 -> C07), with a small tremor"),
     ("worm_surface", "A large creature breaking through soft earth and sliding back under, deep earth crumble and slide.", 2.5, False, "burrowing creatures surfacing / diving"),
     ("climb_scuff", "Boots scuffing and scraping on a rough stone wall while someone climbs, two or three soft scrapes.", 1.2, False, "wall climb / climbing up a ledge"),
     # Round 12 (2e): the city's distant hum for Dan's rewritten 6b (replaces the prison sounds; the terrace after)

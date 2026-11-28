@@ -7,12 +7,12 @@ Trigger: After VEN_C01, before 7 enters the outer gardens.
 Result: Bike available; objective "Ride to the Elarim temple." (VEN_S01_LANDED's objective, reworded).  
 Camera: Wide — saucer and landscape: 7 comes down in the beam (no ramp) and looks toward the distant temple.; Low three-quarter on the bike: its broad front forks frame the rounded nose; the pointed tail extends behind the
 
-- `VEN_B01_01` **7** (spoken): That’s a walk. — *cue: wide - saucer and landscape*
+- `VEN_B01_01` **7** (spoken): The temple’s all the way over there. That’s a long walk. — *cue: over her shoulder to the distant temple*
 - `VEN_B01_02` **Cat** (telepathic): You have a vehicle.
 - `VEN_B01_03` **7** (spoken): I know.
 - `VEN_B01_04` **Cat** (telepathic): I’m establishing that my advice is useful.
 - `VEN_B01_05` **Cat** (telepathic): I’ll watch the ship. — *cue: low three-quarter on the bike*
-- `VEN_B01_06` **7** (spoken): What should I call you?
+- `VEN_B01_06` **7** (spoken): By the way, what should I call you?
 - `VEN_B01_07` **Panther** (telepathic): Panther.
 - `VEN_B01_08` **7** (spoken): Panther?
 - `VEN_B01_09` **Panther** (telepathic): Ahem. You could say it without looking down at me.
@@ -72,11 +72,11 @@ Camera: Extreme wide of saucer emerging beneath clouds.; Over 7’s shoulder tow
 
 - `VEN_C01_01` **7** (spoken): Someone still lives here. — *cue: over 7's shoulder toward the gardens*
 - `VEN_C01_02` **Cat** (telepathic): You sound surprised. — *cue: medium two-shot of 7 and Cat*
-- `VEN_C01_03` **7** (spoken): After the Moon…
-- `VEN_C01_04` **7** (spoken): It’s beautiful. — *cue: landscape insert*
-- `VEN_C01_05` **Cat** (telepathic): Land somewhere with a roof. — *cue: cat head tracking flying creatures*
-- `VEN_C01_06` **7** (spoken): Why?
-- `VEN_C01_07` **Cat** (telepathic): Experience.
+- `VEN_C01_03` **7** (spoken): After all that dust and machinery… I’d forgotten a place could look like this.
+- `VEN_C01_05` **Cat** (telepathic): Hm. — *cue: cat head tracking flying creatures*
+- `VEN_C01_06` **7** (spoken): Don’t even think about it.
+- `VEN_C01_07` **Cat** (telepathic): I was admiring the wildlife.
+- `VEN_C01_08` **7** (spoken): Mm-hmm.
 
 ## VEN_C02 — GARDEN TREMOR (R11, in-gameplay)
 Trigger: First approach to the damaged outer walkway — **now during the ride, see VEN_B03**.  
@@ -94,7 +94,7 @@ Camera: Wide two-shot at temple entrance.; Insert of dodecahedron.; Over 7’s s
 - `VEN_C03_03` **Guardian** (spoken): May I see it? — *cue: insert of dodecahedron*
 - `VEN_C03_04` **Guardian** (spoken): Where on the Moon? — *cue: over 7's shoulder toward guardian*
 - `VEN_C03_05` **7** (spoken): Beneath the city. In the old passages.
-- `VEN_C03_06` **7** (spoken): When I touched it, I saw people. A place as it used to be.
+- `VEN_C03_06` **7** (spoken): When I touched it, I saw others. A place as it used to be.
 - `VEN_C03_07` **Guardian** (spoken): What did they show you?
 - `VEN_C03_08` **7** (spoken): A door opening.
 - `VEN_C03_09` **7** (spoken): It sounds small when I say it.
@@ -127,17 +127,26 @@ Camera: Wide chamber.; Over 7’s shoulder toward cube.; Matching inserts of rel
 Trigger: Reach the creature observation area.  
 Result: Set VEN_S04_CONTROL_DISCOVERED.  
 
+- `VEN_C05_00` **7** (in-gameplay): Hear that?
+- `VEN_C05_00b` **Panther** (telepathic): Felt it.
 - `VEN_C05_01` **7** (in-gameplay): They aren’t attacking the people.
 - `VEN_C05_02` **Panther** (telepathic): What are they doing?
-- `VEN_C05_03` **7** (in-gameplay): Following something. Every time that sound starts, they move.
+- `VEN_C05_03` **7** (in-gameplay): Following something. Every time that pulse comes, they move.
 - `VEN_C05_04` **7** (in-gameplay): There.
 - `VEN_C05_05` **Panther** (telepathic): Then find what’s calling them.
+- `VEN_C05_P1` **Panther** (telepathic): That’s not opening from this side.
+- `VEN_C05_P2` **7** (in-gameplay): The root wall beside it goes down. I’ll go around.
+- `VEN_C05_P3` **Panther** (telepathic): Wait for the next one… now.
+- `VEN_C05_P4` **Panther** (telepathic): Good. Now you have a way back.
 
 ## VEN_C06 — WORMMASTER INTRODUCTION (R12, cutscene)
 Trigger: Enter control chamber.  
 Result: Set VEN_S05_ENCOUNTER_ACTIVE.  
 Camera: Low-angle view of Wormmaster above machinery.; Underlighting in grayscale.; Over his shoulder toward 7.; Level medium shot for 7’s replies.
 
+- `VEN_C06_00a` **Panther** (telepathic): That ring in the floor. It looks like an old holding cell. The Elarim must have used it for the creatures.
+- `VEN_C06_00b` **7** (spoken): Big enough for him.
+- `VEN_C06_00c` **Panther** (telepathic): Keep that in mind.
 - `VEN_C06_01` **Wormmaster** (spoken): They sent someone down at last.
 - `VEN_C06_02` **7** (spoken): You’re bringing their gardens down.
 - `VEN_C06_03` **Wormmaster** (spoken): They can leave.
@@ -145,6 +154,7 @@ Camera: Low-angle view of Wormmaster above machinery.; Underlighting in grayscal
 - `VEN_C06_05` **Wormmaster** (spoken): Then they should have been more willing to negotiate.
 - `VEN_C06_06` **7** (spoken): Turn it off.
 - `VEN_C06_07` **Wormmaster** (spoken): Come and do it yourself.
+- `VEN_C06_P1` **Panther** (telepathic): The holding cell. Get him into it.
 
 ## VEN_C07 — THREAT STOPPED (R12, cutscene)
 Trigger: All control devices disabled and Wormmaster contained.  
@@ -175,12 +185,10 @@ Camera: Over shoulder toward cube.; Hand approaches and touches.; Full-screen vi
 Trigger: Immediately after VEN_C09.  
 Result: Award Venus record once; set VEN_S07_RECORD_RECEIVED.  
 
-- `VEN_C10_01` **Guardian** (spoken): Take this record with you.
-- `VEN_C10_02` **7** (spoken): You still have it here?
-- `VEN_C10_03` **Guardian** (spoken): Yes.
-- `VEN_C10_04` **7** (spoken): Then why give me another?
-- `VEN_C10_05` **Guardian** (spoken): You saw how close he came.
-- `VEN_C10_06` **Guardian** (spoken): If this place were lost, I would want someone to know we had been here.
+- `VEN_C10_01` **Guardian** (spoken): Take it with you.
+- `VEN_C10_02` **7** (spoken): It belongs to your temple.
+- `VEN_C10_03` **Guardian** (spoken): You saw how close he came.
+- `VEN_C10_04` **Guardian** (spoken): If this place were lost, I would want someone to carry it. And to know we had been here.
 
 ## VEN_C12 — TWO LOCATIONS (Dan, 2026-11-19) (R12, cutscene)
 Result: **Mars and Europa become available in the saucer's navigation** (the star map).  
@@ -212,7 +220,7 @@ Result: Set VEN_S08_COMPLETE; enable normal destination selection.
 
 - `VEN_C11_01` **Panther** (telepathic): Did they know what it was?
 - `VEN_C11_02` **7** (spoken): The Moon’s record. Venus has its own.
-- `VEN_C11_03` **Panther** (telepathic): And the people you saw?
+- `VEN_C11_03` **Panther** (telepathic): And the others you saw?
 - `VEN_C11_04` **7** (spoken): They’re less certain about that.
 - `VEN_C11_05` **7** (spoken): There was something else. Something the guardian said wasn’t in their record.
 - `VEN_C11_06` **Panther** (telepathic): What did you see?

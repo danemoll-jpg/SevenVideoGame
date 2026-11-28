@@ -109,6 +109,21 @@ namespace Seven.EditorTools
                 foreach (var rr in new[] { 2.4f, 4.9f }) Ring(rr, UpperY(rr) + 0.006f, 0.008f);
                 MeshObject("Hull_Seams", SaveMesh(SmoothFinish(sv, st), "Saucer_Ext_Seams" + ExtSfx), metalDark, saucer, false);
             }
+            // QF43 (5): ONE glass design, inside and out: the cabin has a window band (52-128 deg, facing +z) and a glass floor ring in
+            // front of it; the ceiling is solid. The exterior now shows the same: a smoked-glass band on the upper hull just above the
+            // rim over the window's arc, and a glass panel in the underside below the glass floor (before, the hull had no glass at all)
+            {
+                var glass = Lit("Saucer_ext_glass", Gray(0.06f), 0.96f);
+                bool Out(float a, float y) { a = Mathf.Repeat(a, 360f); return a < 52f || a > 128f || InSector(a); }
+                var wb = new List<Vector2>(); for (float r = 5.15f; r <= 5.9f; r += 0.05f) wb.Add(new Vector2(r, UpperY(r) + 0.012f));
+                wb.Reverse();
+                MeshObject("Hull_WindowBand", SaveMesh(Lathe(wb, 52f, 128f, 40), "Saucer_Ext_WindowBand" + ExtSfx), glass, saucer, false);
+                var fb = new List<Vector2>(); for (float r = 3.6f; r <= 4.55f; r += 0.05f) fb.Add(new Vector2(r, UnderY(r) - 0.012f));
+                MeshObject("Hull_GlassFloor", SaveMesh(Lathe(fb, 52f, 128f, 40), "Saucer_Ext_GlassFloor" + ExtSfx), glass, saucer, false);
+                var fv2 = new List<Vector3>(); var ft2 = new List<int>();
+                foreach (var a in new[] { 52f, 71f, 90f, 109f, 128f }) Sweep(fv2, ft2, Enumerable.Range(0, 9).Select(i => { float r = Mathf.Lerp(5.15f, 5.9f, i / 8f); return Polar(r, a, UpperY(r) + 0.02f); }).ToList(), 0.018f, false, 5);
+                MeshObject("Hull_WindowMullions", SaveMesh(SmoothFinish(fv2, ft2), "Saucer_Ext_WindowMullions" + ExtSfx), metalDark, saucer, false);
+            }
             var gv = new List<Vector3>(); var gt = new List<int>();
             { var run = new List<Vector3>(); for (int i = 0; i <= 120; i++) { float a = i * 3f; if (InSector(a)) { if (run.Count > 1) Sweep(gv, gt, run, 0.05f, false, 8); run = new List<Vector3>(); continue; } run.Add(Polar(6.07f, a, b0 + 0.69f)); } if (run.Count > 1) Sweep(gv, gt, run, 0.05f, false, 8); }
             ext.Glow.Add(MeshObject("RimGlow", SaveMesh(SmoothFinish(gv, gt), "Saucer_Ext_RimGlow" + ExtSfx), rim, saucer, false).GetComponent<Renderer>());

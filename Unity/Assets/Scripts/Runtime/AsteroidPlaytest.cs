@@ -123,6 +123,8 @@ namespace Seven
                 if (BossFight.Active != null && !BossFight.Active.Over && d.Seven.InFight) { FightPad(BossFight.Active, d.Seven); continue; }
                 _held = 0u;
                 if (d.InCutscene) { _stick = Vector2.zero; _rt = 0f; continue; }
+                // QF43 (15): the climb to the control is driven by ClimbSection's human-timed bot - the pad stays still meanwhile
+                if (ClimbSection.BotActive) { _stick = Vector2.zero; _rt = 0f; continue; }
                 var seven = d.Seven.transform.position;
                 // a security machine rolling at her: the blades if drawn and close, else telekinesis
                 if (d.Security != null && !d.Riding)

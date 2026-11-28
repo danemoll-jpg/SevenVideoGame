@@ -128,6 +128,7 @@ namespace Seven
         public static float RawHeight(float x, float z)
         {
             if (VenusLayout.InRootPit(x, z)) return VenusLayout.RootPitHeight(z) - 0.05f;   // Round 12: the root pit, a slot cut into the hill
+            if (VenusLayout.InRootCut(x, z)) return VenusLayout.RootCutHeight(x, z) - 0.05f;   // QF43 (14): the root wall's slot beside it
             OnRoute(x, z, out float dP, out float s, out float lat, out float rz);
             float hp = PathHeight(rz, s);
             // exact inside a feature (built floors: just under them)

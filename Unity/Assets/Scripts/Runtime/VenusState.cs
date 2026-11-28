@@ -254,6 +254,8 @@ namespace Seven
         {
             var suf = id.Substring(id.LastIndexOf('_') + 1);
             if (int.TryParse(suf, out var n)) return n;
+            // QF43: an inserted line "VEN_C05_00b" / "VEN_C06_00a" = number 0 (plays in file order with the others of its number)
+            if (suf.Length > 1 && char.IsLower(suf[suf.Length - 1]) && int.TryParse(suf.Substring(0, suf.Length - 1), out var ins)) return ins;
             int k = int.TryParse(suf.Substring(1), out var m) ? m : 0;
             return (suf[0] == 'E' ? 950 : 900) + k;
         }

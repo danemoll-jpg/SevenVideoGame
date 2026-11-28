@@ -53,11 +53,12 @@ def main():
                 if rest: cur["cues"].append(rest); in_cam = False
             elif in_cam and l.startswith("- "): cur["cues"].append(l[2:].strip())
             elif in_cam and l and not l.startswith("- "): in_cam = False
-        m = re.match(r"^(VEN_[BC]\d\d)_([A-Z]?\d+) \| (.+?)\s*$", l)
+        m = re.match(r"^(VEN_[BC]\d\d)_([A-Z]?\d+[a-z]?) \| (.+?)\s*$", l)
         if m:
             # Round 13: VEN_C13 has branch lines (VEN_C13_M1.. / VEN_C13_E1..) after the player's choice
             sid, suf, who = m.group(1), m.group(2), m.group(3)
-            n = int(suf) if suf.isdigit() else 900 + int(suf[1:])
+            # QF43: "00b" = an inserted line (number 0, its id kept); "P1" = 900+
+            n = int(suf) if suf.isdigit() else (int(suf[:-1]) if suf[-1].islower() else 900 + int(suf[1:]))
             j = i + 1
             while j < len(lines) and not lines[j].strip(): j += 1
             t = lines[j].strip().strip("“”\"")
@@ -79,12 +80,12 @@ def main():
         i += 1
     # C02's trigger moved into the ride (VEN_B03); C01 cues on its first lines (presentation only)
     first_cue = {"VEN_C01_01": "over 7's shoulder toward the gardens", "VEN_C01_02": "medium two-shot of 7 and Cat",
-                 "VEN_C01_04": "landscape insert", "VEN_C01_05": "cat head tracking flying creatures",
+                 "VEN_C01_05": "cat head tracking flying creatures",
                  "VEN_C03_01": "wide two-shot at temple entrance", "VEN_C03_03": "insert of dodecahedron",
                  "VEN_C03_04": "over 7's shoulder toward guardian", "VEN_C03_10": "close view of object between them",
                  "VEN_C04_01": "over 7's shoulder toward cube", "VEN_C04_02": "matching inserts of related markings",
                  "VEN_C04_05": "brief eye close-up", "VEN_C04_07": "falling dust insert",
-                 "VEN_B01_01": "wide - saucer and landscape", "VEN_B01_05": "low three-quarter on the bike",
+                 "VEN_B01_01": "over her shoulder to the distant temple", "VEN_B01_05": "low three-quarter on the bike",
                  "VEN_B01_19": "side medium - 7 mounting"}
     for o in out:
         o["cue"] = first_cue.get(o["id"], "")

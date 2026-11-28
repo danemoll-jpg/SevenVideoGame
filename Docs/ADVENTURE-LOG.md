@@ -93,7 +93,7 @@ The signal came from a chamber full of machines below the gardens. The Wormmaste
 ### The record
 `ven_record` · unlock `venus>=RecordReceived`
 
-At the cube, 7 saw the first planting on Venus, and someone holding out a seed for her to take. The guardian said that moment is not in their record. He gave her a copy of the record to carry; the original stays in the temple.
+At the cube, 7 saw the first planting on Venus, and someone holding out a seed for her to take. The guardian said that moment is not in their record. The cage opened and she took the Elarim’s cube with her: he wanted someone to carry it, and to know they had been there.
 
 ### Back aboard
 `ven_aboard` · unlock `venus>=Complete`

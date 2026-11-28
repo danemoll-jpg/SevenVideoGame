@@ -855,7 +855,7 @@ namespace Seven
                 Bike.transform.rotation = Quaternion.Euler(0f, y0, 0f); Cam.SnapBehind();
                 yield return Wait(0.3f);
                 Log($"guide marker (QF13 9) facing the light: marker {UI.MarkerState}");
-                yield return Shot("qf13_09_light_ahead_marker_on_it");
+                { float cd = Cam.Distance; Cam.Distance = 4.6f; Cam.SnapBehind(); yield return Wait(0.2f); yield return Shot("qf13_09_light_ahead_marker_on_it"); Cam.Distance = cd; Cam.SnapBehind(); }   // QF43: closer (5.3 % edges in the white fog at 7.4 m)
             }
             yield return Until(() => Bike.transform.position.z > EuropaLayout.Descent[0].z - 4f, "into the great chamber", 60f, "Ride on into the great chamber", EuropaLayout.Descent[0], () => PlaceRiding(EuropaLayout.Descent[0]));
             HideGuide();
@@ -877,7 +877,7 @@ namespace Seven
                 yield return Shot("e06_the_huge_one_beneath_the_bike");
                 Log($"the huge Cetacean passes beneath the bike: {Vector3.Distance(HugeOne.transform.position, Bike.transform.position):0} m away, length 26 m vs the 3 m bike");
             }
-            yield return Say("EUR_03", 5, 5);                   // I think one of the people we came to meet.
+            yield return Say("EUR_03", 5, 5);                   // I think it's who we came to meet.
             if (HugeOne != null) HugeOne.Call("europa_call_deep", 1f, 600f);
             yield return Wait(1.5f);
             StartCoroutine(StopBike(1.2f));

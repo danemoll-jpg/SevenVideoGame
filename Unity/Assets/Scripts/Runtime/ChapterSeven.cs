@@ -12,7 +12,11 @@ namespace Seven
     {
         public ChapterInput Input;
         public Transform CameraTransform;
-        public float WalkSpeed = 1.7f, RunSpeed = 3.9f, SneakSpeed = 1.25f;
+        // QF43 (23): a faster on-foot pace (Dan) - walk 1.7 -> 2.0 m/s, run 3.9 -> 4.6 m/s (+18 %); the walk / run clips play
+        // faster by the same factor (Pace) so the stride still matches the ground speed (no foot sliding)
+        public float WalkSpeed = 2.0f, RunSpeed = 4.6f, SneakSpeed = 1.25f;
+        public const float OldWalk = 1.7f, OldRun = 3.9f;
+        public float Pace(string clip) => clip == "run" ? RunSpeed / OldRun : clip == "walk" ? WalkSpeed / OldWalk : 1f;
         [Tooltip("Telekinesis clip frame held for the 'touch' pose (arm forward, open hand).")]
         public float TouchFrame = 0.45f;
 
@@ -270,7 +274,7 @@ namespace Seven
                     }
                 }
                 string clip = run && !sneak ? "run" : sneak && HasState("sneak_walk") ? "sneak_walk" : "walk";
-                float animSpeed = sneak && clip == "walk" ? 0.62f : 1f;
+                float animSpeed = sneak && clip == "walk" ? 0.62f : Pace(clip);
                 _idleFor = 0f;
                 if (State != clip) Play(clip, 0.15f, animSpeed, false);
                 FaceTowards(transform.position + v, 540f);

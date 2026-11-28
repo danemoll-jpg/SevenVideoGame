@@ -199,15 +199,25 @@ namespace Seven.EditorTools
             // ---- open space while travelling: stars all round, far away
             {
                 var g = new GameObject("Outside_Space").transform; g.SetParent(root, false);
-                var v = new List<Vector3>(); var t = new List<int>();
-                for (int i = 0; i < 900; i++)
+                // QF43 (5): Dan saw flat grey with chunky white hexagons. The stars were 900 square quads 2.4-8.8 m across at 1400 m,
+                // emissive 2.2 - bloom turned each into a blob. Now: small round points (12-sided discs, 0.5-1.7 m across: 1-3 px),
+                // in three brightness groups (most faint, a few bright), facing the ship; the sky behind them is near-black
+                // (SaucerOutside sets the camera's clear colour for open space)
+                var vs = new[] { new List<Vector3>(), new List<Vector3>(), new List<Vector3>() }; var sts = new[] { new List<int>(), new List<int>(), new List<int>() };
+                for (int i = 0; i < 1800; i++)
                 {
-                    var d = UnityEngine.Random.onUnitSphere; float r = 1400f, sz = 1.2f + 3.2f * R() * R();
+                    var d = UnityEngine.Random.onUnitSphere; float r = 1400f, k = R(), sz = 0.25f + 0.6f * k * k;
+                    int grp = k < 0.62f ? 0 : k < 0.92f ? 1 : 2;
                     var c = d * r; var side = Vector3.Cross(d, Mathf.Abs(d.y) > 0.9f ? Vector3.right : Vector3.up).normalized; var up = Vector3.Cross(side, d);
-                    Quad(v, t, c - side * sz - up * sz, c - side * sz + up * sz, c + side * sz + up * sz, c + side * sz - up * sz);
+                    var v = vs[grp]; var t = sts[grp];
+                    for (int s = 0; s < 12; s++) { float b0 = s / 12f * Mathf.PI * 2f, b1 = (s + 1) / 12f * Mathf.PI * 2f; int o = v.Count; v.Add(c); v.Add(c + (side * Mathf.Cos(b0) + up * Mathf.Sin(b0)) * sz); v.Add(c + (side * Mathf.Cos(b1) + up * Mathf.Sin(b1)) * sz); t.Add(o); t.Add(o + 1); t.Add(o + 2); }
                 }
-                var sm = Lit("Outside_stars", Gray(1f), 0f); Emissive(sm, 2.2f); sm.SetFloat("_Cull", 0f); EditorUtility.SetDirty(sm);
-                Obj("Outside_Stars", Finish(v, t), sm, g, false);
+                float[] sglow = { 0.55f, 1.1f, 2.0f };
+                for (int grp = 0; grp < 3; grp++)
+                {
+                    var sm = Lit("Outside_stars" + (grp == 0 ? "" : "_" + grp), Gray(1f), 0f); Emissive(sm, sglow[grp]); sm.SetFloat("_Cull", 0f); EditorUtility.SetDirty(sm);
+                    Obj(grp == 0 ? "Outside_Stars" : "Outside_Stars" + grp, Finish(vs[grp], sts[grp]), sm, g, false);
+                }
                 so.Space = g.gameObject;
             }
             // ---- Round 16: the asteroid (AST_01 / AST_10) - irregular dark rock with silver structures built into it, rings

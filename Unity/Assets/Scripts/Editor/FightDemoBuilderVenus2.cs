@@ -52,7 +52,9 @@ namespace Seven.EditorTools
 
             // ---- the root gate (a grown root door; it sinks into the ground after C05) + the railing split for the pit
             Block("Obs_RailS_W", new Vector3(64f, -6f, 133.6f), new Vector3(66.5f, -5f, 134f), m.stone, world);
-            Block("Obs_RailS_E", new Vector3(71.5f, -6f, 133.6f), new Vector3(88f, -5f, 134f), m.stone, world);
+            // QF43 (14): the railing east of the gate has a gap where the root wall goes down (the way round the jammed gate)
+            Block("Obs_RailS_E", new Vector3(71.5f, -6f, 133.6f), new Vector3(73.6f, -5f, 134f), m.stone, world);
+            Block("Obs_RailS_E2", new Vector3(76.6f, -6f, 133.6f), new Vector3(88f, -5f, 134f), m.stone, world);
             var gate = new GameObject("RootGate").transform; gate.SetParent(world, false);
             Block("Door", new Vector3(66.5f, -6f, 133.75f), new Vector3(71.5f, -1.2f, 134.25f), m.stoneDark, gate);
             { var v = new List<Vector3>(); var t = new List<int>();
@@ -68,6 +70,7 @@ namespace Seven.EditorTools
             for (float z = V.RootPitBotZ - 4.6f; z < V.RootPitTopZ; z += 1.8f)
                 foreach (var (x0, x1, xs) in new[] { (64.9f, 66.5f, 65.2f), (71.5f, 73.1f, 72.8f) })
                 {
+                    if (x0 > 70f && z + 1.85f > 117.8f && z < 120.2f) continue;      // QF43 (14): the opening onto the sill (the root wall's slot -> the pit)
                     float top = Mathf.Max(VenusTerrain.RawHeight(xs - 1.5f, z), VenusTerrain.RawHeight(xs - 1.5f, z + 1.8f), VenusTerrain.RawHeight(xs + 1.5f, z), VenusTerrain.RawHeight(xs + 1.5f, z + 1.8f)) + 0.6f;
                     float bot = (z < V.RootPitBotZ ? V.RootPitBotY - 3f : V.RootPitHeight(z)) - 1.2f;
                     Block($"Pit_Wall_{x0:0}_{z:0}", new Vector3(x0, bot, z), new Vector3(x1, top, z + 1.85f), rock, root);
@@ -75,6 +78,25 @@ namespace Seven.EditorTools
             { var v = new List<Vector3>(); var t = new List<int>();
               for (float z = V.RootPitBotZ + 0.3f; z < V.RootLandZ + 0.6f; z += 0.62f) AddBox(v, t, new Vector3(69f, V.RootPitHeight(z) + 0.06f, z), new Vector3(4.8f, 0.12f, 0.36f));
               MeshObject("Pit_Steps", SaveMesh(Finish(v, t), "Venus_PitSteps"), m.stoneMid, root, false); }
+            // QF43 (14): the root wall's slot east of the pit: its walls, the faces of its steps (the shelf, the chasm, the ledge, the
+            // burrow floor) as rock blocks, roots hanging over the chasm (they sway on every pulse: VenusDirectorDescent)
+            {
+                float Top(float x, float z) => Mathf.Max(VenusTerrain.RawHeight(x + 1.6f, z), VenusTerrain.RawHeight(x + 1.6f, z + 1.8f)) + 0.6f;
+                for (float z = V.CutZ0 - 1.6f; z < V.CutZ1 + 0.4f; z += 1.8f)
+                    Block($"Cut_WallE_{z:0}", new Vector3(V.CutX1, -18.6f, z), new Vector3(V.CutX1 + 1.6f, Mathf.Max(Top(V.CutX1, z), -5.4f), z + 1.85f), rock, root);
+                Block("Cut_WallS", new Vector3(V.CutX0 - 0.1f, -15.2f, V.CutZ0 - 1.6f), new Vector3(V.CutX1 + 1.6f, Mathf.Max(VenusTerrain.RawHeight(75f, V.CutZ0 - 2.5f) + 0.6f, -5.4f), V.CutZ0), rock, root);
+                Block("Cut_WallN", new Vector3(V.CutX0 - 0.6f, -18.6f, V.CutZ1), new Vector3(V.CutX1 + 0.6f, -6.02f, V.CutZ1 + 1.1f), rock, root);     // the lip: its top is the lookout floor over the cells left out at the edge
+                Block("Cut_Shelf", new Vector3(V.CutX0, -18.6f, V.ShelfZ0), new Vector3(V.ShelfX1, V.ShelfY - 0.02f, V.CutZ1), rock, root);
+                Block("Cut_Ledge", new Vector3(V.CutX0, -18.6f, V.LedgeZ0), new Vector3(V.CutX1, V.CutLedgeY - 0.02f, V.ChasmZ0), rock, root);
+                Block("Cut_Floor", new Vector3(V.CutX0, -15.2f, V.CutZ0), new Vector3(V.CutX1, V.CutBotY - 0.02f, V.LedgeZ0), rock, root);
+                Block("Cut_ChasmFloor", new Vector3(V.CutX0, -19.2f, V.ChasmZ0), new Vector3(V.CutX1, -18.06f, V.CutZ1), rock, root);
+                Block("Cut_Sill", new Vector3(71.3f, -15.2f, 117.8f), new Vector3(V.CutX0 + 0.1f, V.SillY - 0.02f, 120.2f), rock, root);     // the sill into the pit (level with the slab step)
+                Block("Cut_SillLintel", new Vector3(71.5f, -9.6f, 117.8f), new Vector3(V.CutX0, Mathf.Max(VenusTerrain.RawHeight(72.3f, 119f), VenusTerrain.RawHeight(72.3f, 117.8f)) + 0.6f, 120.2f), rock, root);
+                var hv = new List<Vector3>(); var ht = new List<int>();
+                for (int i = 0; i < 9; i++) { float x = V.CutX0 + 0.4f + i * 0.48f, z = V.ChasmZ0 + 0.5f + (i % 3) * 0.55f, top = -5.8f;
+                    Tube(hv, ht, new[] { new Vector3(x, top, z), new Vector3(x + 0.1f, -7.4f, z + 0.15f), new Vector3(x - 0.08f, -8.7f - (i % 4) * 0.35f, z - 0.1f) }, 0.07f, 0.03f, 6); }
+                MeshObject("Cut_HangingRoots", SaveMesh(SmoothFinish(hv, ht), "Venus_CutHangingRoots"), rootMat, root, false);
+            }
             // roots spilling down the pit walls
             { var v = new List<Vector3>(); var t = new List<int>();
               for (int i = 0; i < 18; i++) { float z = V.RootPitBotZ + (float)rnd.NextDouble() * 16f; float x = i % 2 == 0 ? 66.55f : 71.45f; float top = VenusTerrain.RawHeight(x + (x < 69f ? -1.5f : 1.5f), z);

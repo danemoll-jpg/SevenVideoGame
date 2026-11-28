@@ -16,7 +16,7 @@ namespace Seven
         public Animator Anim;
         public Camera Cam;
         public float StrideSpeed = 0.16f;            // ground speed of the walk clip at speed 1 (scale 1)
-        public float StrollSpeed = 0.9f, TrotSpeed = 2.4f, SprintSpeed = 4.4f;
+        public float StrollSpeed = 0.9f, TrotSpeed = 2.8f, SprintSpeed = 5.1f;     // QF43 (23): keeps up with her faster pace (+16 %)
         public float FollowDistance = 1.7f, CatchUpDistance = 8f, BodyRadius = 0.16f;
 
         public enum Mode { Follow, GoTo, Hold, Lead, Hop, Perched, Scripted, Route }

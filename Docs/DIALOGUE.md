@@ -162,7 +162,7 @@ The vision ends.
 
 **CAT:** You weren’t answering.
 
-**7:** There were people here.
+**7:** There were others here.
 
 **CAT:** When?
 
@@ -336,7 +336,7 @@ Cat notices her fork has stopped.
 
 **CAT:** You’re letting it get cold.
 
-**7:** Those people…
+**7:** Those others…
 
 One of his ears turns toward her.
 
@@ -601,7 +601,7 @@ Let his choice stand without explaining his affection aloud.
 
 **7:** The place. Before it was ruined.
 
-**CAT:** And the people?
+**CAT:** And the others?
 
 **7:** I saw them. I don’t know who they were.
 

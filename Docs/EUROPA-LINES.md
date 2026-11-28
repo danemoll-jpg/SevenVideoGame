@@ -35,7 +35,7 @@ Voices: 7 = Seven (Eleven v3, directions as audio tags) · Panther = Cat (telepa
 | `EUR_03_02` | Panther | What is it? |  |
 | `EUR_03_03` | 7 | They’re beneath me. |  |
 | `EUR_03_04` | Panther | Who? |  |
-| `EUR_03_05` | 7 | I think one of the people we came to meet. | an astonished breath |
+| `EUR_03_05` | 7 | I think it’s who we came to meet. | an astonished breath |
 | `EUR_03_06` | 7 | Did you hear that? |  |
 | `EUR_03_07` | Panther | Through your connection. A little. |  |
 | `EUR_03_08` | 7 | I wish you could see this. |  |

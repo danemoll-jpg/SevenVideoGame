@@ -151,7 +151,7 @@ namespace Seven
             yield return ShotV("c11_03_insert_both_objects");
             // the table-height two-shot
             Cut(TableCentre - TableOut * 2.0f + Up * (TableTopY + 0.32f) + TableAlong * 0.1f, TableCentre + Up * (TableTopY + 0.35f) + TableAlong * 0.1f, 46f);
-            yield return SayV("VEN_C11", 3, 5);                                  // And the people you saw? / less certain / something else
+            yield return SayV("VEN_C11", 3, 5);                                  // And the others you saw? / less certain / something else
             yield return ShotV("c11_04_table_height_two_shot");
             yield return SayV("VEN_C11", 6, 7);                                  // What did you see? / Someone giving me a seed.
             // open-hand insert: her hand open, palm up on the table
@@ -488,7 +488,7 @@ namespace Seven
             yield return Wait(1.0f);
             yield return ShotV("c11_03_insert_both_objects");
             CutPilot("side");
-            yield return SayV("VEN_C11", 3, 5);                                  // And the people you saw? / ...
+            yield return SayV("VEN_C11", 3, 5);                                  // And the others you saw? / ...
             yield return ShotV("c11_04_side_two_shot");
             yield return SayV("VEN_C11", 6, 7);                                  // What did you see? / Someone giving me a seed.
             // open-hand insert: her right hand open, palm up on the chair's arm (in the chair staging; on the sofa: her face)

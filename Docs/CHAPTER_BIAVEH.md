@@ -243,7 +243,7 @@ As the bridge settles, waiting residents cross. One struggles with a container o
 | ID | Speaker | Dialogue | Performance / camera |
 |---|---|---|---|
 | BIA_06_N1 | Guide | That relay also held our bridge in line. Without it the span drifted apart, and our people are stranded on the far side. | Concerned. *(QF23, new - Dan to review)* |
-| BIA_06_N2 | Guide | The bridge's service controls are at the chasm's edge. Bring the segments back together. | Precise. *(QF23, new - Dan to review)* |
+| BIA_06_N2 | Guide | The bridge's service controls are up on the relay housing, above the junction. Bring the segments back together. | Precise. *(QF23, new - Dan to review)* |
 | BIA_06_01 | Resident | Thank you. We thought we might be here all day. | Adjusts the container. |
 | BIA_06_02 | 7 | What are you carrying? | Looks at the overflowing tray (the camera shows the tray). *(QF24 11: replaces "Are those all yours?")* |
 | BIA_06_02a | Resident | Seedlings for the upper gardens. Every district grows a few for the others. | Explains them - the connected people. *(QF24 11, new)* |

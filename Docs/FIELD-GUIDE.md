@@ -28,7 +28,7 @@ Keeper of the Elarim temple on Venus and its cube. Asked to see the shape before
 
 *From `venus>=HelpAccepted`:* Asked me to remember that the creatures were being driven.
 
-*From `venus>=RecordReceived`:* Gave me a copy of their record; the original stays in the temple.
+*From `venus>=RecordReceived`:* Gave me the Elarim’s cube to carry, so someone would know they had been here.
 
 ## The attendant
 `elarim_attendant` · unlock `venus>=HelpAccepted` · portrait `elarim_attendant`

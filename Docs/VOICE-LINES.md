@@ -59,7 +59,7 @@ never shown in subtitles); cat lines have none.
 | `s06_02_cat` | 6 | CAT | Can you hear me? |  | 0.45 |
 | `s06_03_7` | 6 | 7 | Yes. | dazed | 0.45 |
 | `s06_04_cat` | 6 | CAT | You weren't answering. |  | 0.45 |
-| `s06_05_7` | 6 | 7 | There were people here. | awed, quiet | 0.45 |
+| `s06_05_7` | 6 | 7 | There were others here. | awed, quiet | 0.45 |
 | `s06_06_cat` | 6 | CAT | When? |  | 0.45 |
 | `s06_07_7` | 6 | 7 | I don't know. | softly, uncertain | 0.45 |
 | `s06_08_7` | 6 | 7 | But I think I know how this opens. | thoughtful, determined | 0.45 |
@@ -94,7 +94,7 @@ never shown in subtitles); cat lines have none.
 | `s10_03_cat` | 10 | CAT | Having experienced confinement, I feel strongly about it. |  | 1.4 |
 | `s10_04_7` | 10 | 7 | I'll see what we have. | warm, amused | 6.0 |
 | `s10_05_cat` | 10 | CAT | You're letting it get cold. |  | 0.45 |
-| `s10_06_7` | 10 | 7 | Those people… | quiet, distant | 0.45 |
+| `s10_06_7` | 10 | 7 | Those others… | quiet, distant | 0.45 |
 | `s10_07_cat` | 10 | CAT | At the door? |  | 0.45 |
 | `s10_08_7` | 10 | 7 | They were just going somewhere. Like it was an ordinary day. | thoughtful, soft | 0.45 |
 | `s10_09_cat` | 10 | CAT | Perhaps it was. |  | 0.45 |

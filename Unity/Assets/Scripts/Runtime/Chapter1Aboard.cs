@@ -697,7 +697,7 @@ namespace Seven
             AutoCut = true;
             yield return Say("s10_05_cat");                       // You're letting it get cold.
             _catPose.Eat = 1f; _catPose.Chewing = true;
-            yield return Say("s10_06_7");                         // Those people...
+            yield return Say("s10_06_7");                         // Those others...
             // "One of his ears turns toward her."
             _catPose.EarToward = Mouth();
             _focus.Set(false); _lastCut = Time.time;

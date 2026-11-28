@@ -40,11 +40,20 @@ namespace Seven.EditorTools
         static int PitCellsCut;
         static bool MixedPitCell(float x, float z, float c)
         {
-            if (z + c < Seven.VenusLayout.RootPitBotZ - 0.01f || z > Seven.VenusLayout.RootLandZ) return false;   // the landing end stays (same height)
+            if (z + c < Seven.VenusLayout.RootPitBotZ - 0.01f || z > Seven.VenusLayout.RootLandZ && !(x + c >= Seven.VenusLayout.CutX0 && x <= Seven.VenusLayout.CutX1 && z <= Seven.VenusLayout.CutZ1 + 0.5f)) return false;   // the landing end stays (same height)
             int n = 0;
-            if (Seven.VenusLayout.InRootPit(x, z)) n++; if (Seven.VenusLayout.InRootPit(x + c, z)) n++;
-            if (Seven.VenusLayout.InRootPit(x, z + c)) n++; if (Seven.VenusLayout.InRootPit(x + c, z + c)) n++;
-            return n > 0 && n < 4;
+            bool In(float a, float b) => Seven.VenusLayout.InRootPit(a, b) || Seven.VenusLayout.InRootCut(a, b);
+            if (In(x, z)) n++; if (In(x + c, z)) n++;
+            if (In(x, z + c)) n++; if (In(x + c, z + c)) n++;
+            if (n > 0 && n < 4) return true;
+            // QF43 (14): inside the root wall's slot its floors change height in steps (the shelf, the chasm, the ledge, the burrow
+            // floor): a cell across a step is left out too - the faces are built as rock blocks
+            if (n == 4 && Seven.VenusLayout.InRootCut(x + c * 0.5f, z + c * 0.5f))
+            {
+                float h0 = Seven.VenusLayout.RootCutHeight(x, z), h1 = Seven.VenusLayout.RootCutHeight(x + c, z + c), h2 = Seven.VenusLayout.RootCutHeight(x + c, z), h3 = Seven.VenusLayout.RootCutHeight(x, z + c);
+                return Mathf.Max(h0, h1, h2, h3) - Mathf.Min(h0, h1, h2, h3) > 0.3f;
+            }
+            return false;
         }
 
         /// <summary>The fine ground: the valley plus the hills seen from it (beyond, the coarse ground is lost in the fog).</summary>

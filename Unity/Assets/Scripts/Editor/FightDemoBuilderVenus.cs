@@ -502,8 +502,9 @@ namespace Seven.EditorTools
                 MeshObject("Chips", SaveMesh(SmoothFinish(rv2, rt2), "Venus_FallenSlabChips"), m.stoneMid, slab);
             }
             slab.gameObject.SetActive(false);
-            // Round 13 (0d): the stone aprons at both ends of the laid slab - ramps from the ground up to its top (no lip);
-            // shown when the bridge is down
+            // Round 13 (0d): the stone aprons at both ends of the laid slab - ramps from the ground up to its top (no lip).
+            // QF43 (10): part of the banks from the start (Dan's screenshot: they popped in beside the span as it dropped) - the
+            // worn stone lips of the old walkway's abutments, there before the quake and after it; nothing appears with the span
             var ramps = new GameObject("BridgeRamps"); ramps.transform.SetParent(world, false);
             {
                 float halfW = 3.8f, sEnd = V.SlabBridge.z - V.SlabSize.x * 0.5f, nEnd = V.SlabBridge.z + V.SlabSize.x * 0.5f;
@@ -527,7 +528,7 @@ namespace Seven.EditorTools
                 Apron("BridgeRampS", sEnd + 0.6f, 112.4f);   // P3 (2): 0.6 m under the slab (at 0.3 a 10 cm corner beside the slab was open: HOLES CHECK)
                 Apron("BridgeRampN", nEnd - 0.6f, 132.6f);
             }
-            ramps.SetActive(false);
+            ramps.SetActive(true);
             // dust for the landing thud
             var slabDust = new GameObject("SlabDust").AddComponent<ParticleSystem>(); slabDust.transform.position = V.SlabBridge + Vector3.up * 0.2f;
             { var mn = slabDust.main; mn.playOnAwake = false; mn.loop = false; mn.duration = 1.2f; mn.startColor = new Color(0.75f, 0.75f, 0.75f, 0.45f); mn.startSize = new ParticleSystem.MinMaxCurve(1.2f, 2.6f); mn.startLifetime = new ParticleSystem.MinMaxCurve(1.6f, 2.8f); mn.startSpeed = new ParticleSystem.MinMaxCurve(0.6f, 2.2f); mn.gravityModifier = -0.02f;
@@ -564,14 +565,18 @@ namespace Seven.EditorTools
                 }
             MeshObject("Temple_GrownRibs", SaveMesh(SmoothFinish(tv, tt), "Venus_TempleRibs"), m.stone, world);
             // the protected structure around the original cube: a cage of pale stems, the cube inside on its pedestal
-            var cv = new List<Vector3>(); var ct = new List<int>();
+            // QF43 (19/20): eight separate stems, each pivoting at its root (the cage opens: the stems part outward), turned 22.5 deg so
+            // an opening faces where she stands (-z) - the cube drifted out straight through the south stem before
+            var cage = new GameObject("Cube_ProtectedStructure"); cage.transform.SetParent(world, false); cage.transform.position = new Vector3(V.CubeAt.x, 0f, V.CubeAt.z);
             for (int i = 0; i < 8; i++)
             {
-                float a = i / 8f * Mathf.PI * 2f;
+                var cv = new List<Vector3>(); var ct = new List<int>();
+                float a = (i + 0.5f) / 8f * Mathf.PI * 2f;
                 var b = V.CubeAt + new Vector3(Mathf.Cos(a) * 1.5f, -V.CubeAt.y, Mathf.Sin(a) * 1.5f);
-                Tube(cv, ct, new[] { b, b + new Vector3(-Mathf.Cos(a) * 0.3f, 1.6f, -Mathf.Sin(a) * 0.3f), b + new Vector3(-Mathf.Cos(a) * 1.2f, 3.1f, -Mathf.Sin(a) * 1.2f), V.CubeAt + Vector3.up * 2.2f }, 0.12f, 0.06f);
+                Tube(cv, ct, new[] { Vector3.zero, new Vector3(-Mathf.Cos(a) * 0.3f, 1.6f, -Mathf.Sin(a) * 0.3f), new Vector3(-Mathf.Cos(a) * 1.2f, 3.1f, -Mathf.Sin(a) * 1.2f), V.CubeAt + Vector3.up * 2.2f - b }, 0.12f, 0.06f);
+                var stem = MeshObject("Stem" + i, SaveMesh(SmoothFinish(cv, ct), "Venus_CubeCageStem" + i), m.stone, cage.transform);
+                stem.transform.position = b;
             }
-            var cage = MeshObject("Cube_ProtectedStructure", SaveMesh(SmoothFinish(cv, ct), "Venus_CubeCage"), m.stone, world);
             MeshObject("Cube_Pedestal", SaveMesh(Lathe(new[] { new Vector2(0f, 0f), new Vector2(0.7f, 0f), new Vector2(0.5f, 0.2f), new Vector2(0.32f, V.CubeAt.y - 0.42f), new Vector2(0.55f, V.CubeAt.y - 0.32f), new Vector2(0f, V.CubeAt.y - 0.32f) }, 0f, 360f, 24, null, new Vector3(V.CubeAt.x, 0f, V.CubeAt.z)), "Venus_CubePedestal"), m.stoneMid, world);
             var em = ElarimMaterials(false);
             var cube = BuildVenusCube(world, m, em);

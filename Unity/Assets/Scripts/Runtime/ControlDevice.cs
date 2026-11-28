@@ -16,6 +16,11 @@ namespace Seven
         public Transform Ring;         // the expanding pulse ring
         public Light Lamp;
         public float Period = 5.5f, Phase;
+        /// <summary>QF43 (13): the director drives the pulse (one clock for every device and the whole level); the device only
+        /// shows it (ring, glow) when told, never on its own timer.</summary>
+        public bool Driven;
+        float _strength = 1f;
+        public void PulseNow(float strength) { if (!On) return; _strength = strength; _t = Period * 0.001f; Pulses++; Pulsed?.Invoke(this); }
         public bool On { get; private set; } = true;
         public int Pulses { get; private set; }
         public event System.Action<ControlDevice> Pulsed;
@@ -55,8 +60,8 @@ namespace Seven
                 return;
             }
             _t += Time.deltaTime;
-            float u = (_t % Period) / Period;
-            if (_t - Time.deltaTime >= 0f && Mathf.Floor((_t - Time.deltaTime) / Period) != Mathf.Floor(_t / Period))
+            float u = Driven ? Mathf.Clamp01(_t / Period) : (_t % Period) / Period;
+            if (!Driven && _t - Time.deltaTime >= 0f && Mathf.Floor((_t - Time.deltaTime) / Period) != Mathf.Floor(_t / Period))
             {
                 Pulses++;
                 AudioKit.Play("signal_pulse", transform.position + Vector3.up * 2f, 0.55f, 0.04f, AudioKit.Bus.Sfx, 45f);
@@ -64,7 +69,8 @@ namespace Seven
             }
             float ring = u < 0.45f ? 1f - u / 0.45f : 0f;
             if (Ring != null) Ring.localScale = Vector3.one * Mathf.Lerp(0.4f, 5.5f, Mathf.Clamp01(u / 0.45f));
-            Apply(0.45f + 0.55f * Mathf.Exp(-u * 8f), ring * 0.9f);
+            float k = Driven ? _strength : 1f;
+            Apply(0.45f + 0.55f * k * Mathf.Exp(-u * 8f), ring * 0.9f * k);
         }
     }
 }

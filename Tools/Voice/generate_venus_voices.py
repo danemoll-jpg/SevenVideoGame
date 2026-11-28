@@ -29,7 +29,11 @@ SET = {
 # Round 13 (Dan's B01 rewrite, VEN_B01_06-20): the delivery directions become Eleven v3 audio tags (the laughs / chuckle /
 # hum are part of the lines). Lines with a direction - and every Panther line in B01, so his takes match - use v3.
 TAGS = {
-    "VEN_B01_06": "[casually] What should I call you?",
+    "VEN_B01_06": "[curious] [lightly] By the way, what should I call you?",          # QF43 6
+    "VEN_B01_01": "[looking into the distance] The temple's all the way over there. That's a long walk.",   # QF43 6
+    "VEN_C01_03": "[quietly] [in awe] After all that dust and machinery... I'd forgotten a place could look like this.",
+    "VEN_C01_08": "[amused] Mm-hmm.",
+    "VEN_C05_00": "[quietly] Hear that?",                                           # QF43 13
     "VEN_B01_08": "[a small, surprised laugh] Panther?",
     "VEN_B01_09": "[dryly] Ahem. You could say it without looking down at me.",
     "VEN_B01_10": "[teasing] I'd have to lie on the floor.",

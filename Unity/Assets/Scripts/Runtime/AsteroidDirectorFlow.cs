@@ -354,9 +354,26 @@ namespace Seven
         IEnumerator Junction(int i)
         {
             var ctl = L.JunctionControls[i];
-            // QF21 (4): worked from the bike; on foot the prompt says so, Panther once, the marker back to the bike
-            yield return Interact(ctl, "Align the rails", $"align junction {i + 1}", "Ride up to the lever at the edge of the causeway, just before the turntable, and press X from the bike", null, null, 1.8f, true, 5.5f, "Use the junction from your bike", _junctionLine ? null : "AST_03_P3");
-            _junctionLine = true;
+            var cs = ClimbSection.Current;
+            bool climb = i == 1 && cs != null && cs.Placed && cs.S.Lever && cs.gameObject.scene == gameObject.scene;
+            if (climb)
+            {
+                // QF43 (15): the climb with a purpose - junction 2's lever is jammed; its control cab is up on the stalled gantry by
+                // the workstations. On foot: she climbs it and throws the lever there, then back on the bike for the ride on.
+                Objective($"Junction 2's lever is jammed - climb the stalled gantry to its control cab\nJunctions {AsteroidState.StepsDone("junction")} / 3");
+                cs.Arm();
+                if (Auto || DemoBoot.PlayerSim) StartCoroutine(cs.RunBot(DemoBoot.PlayerSim));
+                yield return Until(() => cs.LeverPulled, "climb the stalled gantry and throw junction 2's lever", 150f,
+                    "Get off the bike: the stalled gantry by the workstations - jump up to its ledge (A), shimmy, climb up, up the step; the lever is on top (X)", cs.LeverAt, () => cs.StartCoroutine(cs.Pull()));
+                while (ClimbSection.BotActive) yield return null;
+                StartCoroutine(cs.SayDone());
+            }
+            else
+            {
+                // QF21 (4): worked from the bike; on foot the prompt says so, Panther once, the marker back to the bike
+                yield return Interact(ctl, "Align the rails", $"align junction {i + 1}", "Ride up to the lever at the edge of the causeway, just before the turntable, and press X from the bike", null, null, 1.8f, true, 5.5f, "Use the junction from your bike", _junctionLine ? null : "AST_03_P3");
+                _junctionLine = true;
+            }
             // the payoff: the lever throws, the turntable turns into line, the route lights run ahead, its lamp turns white
             yield return Cutscene(true);
             if (Riding) { Bike.ScriptThrottle = 0f; }
@@ -374,6 +391,13 @@ namespace Seven
             yield return Shot($"a13_junction{i + 1}_aligned_route_lights_ahead");
             UI.Hint($"Junctions {n} / 3", 2.5f);
             yield return Cutscene(false);
+            if (climb && !Riding)
+            {
+                // mount before the ride on (the bike where she left it)
+                Objective($"Back on the bike\nJunctions {n} / 3");
+                if (Auto && !DemoBoot.PlayerSim) { yield return WalkSeven(Bike.transform.position - Bike.transform.right * 1.1f, 20f); PlaceRiding(Bike.transform.position); }
+                yield return Until(() => Riding, "back on the bike after the gantry", 60f, "Walk back to the bike and press X", Bike.transform.position, () => PlaceRiding(Bike.transform.position));
+            }
         }
         /// <summary>The optional inspection: the little mechanical bird at a workstation beside the causeway (X "Look").</summary>
         IEnumerator BirdWatch()

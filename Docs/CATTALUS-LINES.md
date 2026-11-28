@@ -236,7 +236,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `CAT_12_07` | Panther | Above it. This is farther down. |  |
 | `CAT_12_09` | 7 | All those different places… and they lead back here. | Reflective |
 | `CAT_12_10` | Panther | There’s something in that chamber the pieces are meant to open. | Measured inference |
-| `CAT_12_11` | 7 | The people in the visions. Their lives aren’t all in these records. |  |
+| `CAT_12_11` | 7 | The others in the visions. Their lives aren’t all in these records. |  |
 | `CAT_12_12` | Panther | No. | Quietly |
 | `CAT_12_13` | 7 | But I remember things. |  |
 | `CAT_12_14` | Panther | You do. |  |

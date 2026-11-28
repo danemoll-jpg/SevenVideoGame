@@ -442,10 +442,14 @@ namespace Seven.EditorTools
             Sweep(rv, rt, Enumerable.Range(0, 49).Select(i => Polar(6.3f, Mathf.Lerp(WinA0, WinA1, i / 48f), -0.01f)).ToList(), 0.03f, false);
             foreach (var a in new[] { WinA0, WinA1 }) Sweep(rv, rt, new[] { Polar(6.3f, a, -0.01f), Polar(WallR, a, -0.01f) }, 0.03f, false);
             Obj("GlassFloorRim", SmoothFinish(rv, rt), m.frame, deck);
-            // Soft floor cove light along the base of the wall.
-            var fv = new List<Vector3>(); var ft = new List<int>();
-            Sweep(fv, ft, Enumerable.Range(0, 180).Select(i => Polar(WallR - 0.05f, i * 2f, 0.03f)).ToList(), 0.018f, true, 6);
-            Obj("FloorCove", SmoothFinish(fv, ft), m.cove, deck, false);
+            // QF43 (4): the floor light ring is a real light channel set INTO the floor (Dan's screenshot: the old cove was a 3.6 cm tube
+            // lying ON the floor - right round, also across the nook mouths - so it ran through the galley table's and the stools' thin
+            // feet and showed above them, and through 7's boots: parts glowing over the furniture, parts hidden). Now a frosted emissive
+            // strip flush with the walkway (3 mm proud, never higher than any foot or sole) between two dark channel lips: everything
+            // standing on it covers it (ordinary depth test, opaque Geometry queue); the soft pool round it is the bloom and the
+            // polished walkway's reflection.
+            Obj("FloorCove", Lathe(new[] { new Vector2(WallR - 0.085f, -0.009f), new Vector2(WallR - 0.025f, -0.009f) }, 0f, 360f, 180), m.cove, deck, false);
+            Obj("FloorCoveChannel", Lathe(new[] { new Vector2(WallR - 0.115f, -0.0095f), new Vector2(WallR - 0.085f, -0.0095f), new Vector2(WallR - 0.085f, -0.02f), new Vector2(WallR - 0.025f, -0.02f), new Vector2(WallR - 0.025f, -0.0095f), new Vector2(WallR + 0.005f, -0.0095f) }, 0f, 360f, 180), m.frame, deck, false);
 
             // Walls: curved polished panels with a window band and two nook openings.
             var walls = new GameObject("Walls").transform; walls.SetParent(ship, false);

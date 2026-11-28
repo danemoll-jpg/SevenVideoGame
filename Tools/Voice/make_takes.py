@@ -44,6 +44,13 @@ TAKES = {
         ("laughs, urgent", "[laughs] [urgent] Get in!", V3),
         ("short laugh, shouting", "[short laugh] [shouting] Get in!", V3),
     ], gaps=[], laugh=True),
+    # QF43 12 (Venus): "Then I'll find him." - resolute, a quiet fierceness, weight on "find", a clean final "him" (not shouty)
+    "VEN_C04_14": dict(variants=[
+        ("determined", "[determined] Then I'll find him.", V3N),
+        ("resolute, quietly fierce", "[resolute] [quietly fierce] Then I'll find him.", V3),
+        ("determined, firm promise", "[determined] [firmly] Then I'll... find him.", V3),
+        ("steady, a promise", "[quiet determination] Then I'll find him.", V3),
+    ], gaps=[], out="qf42"),
 }
 
 
@@ -113,10 +120,12 @@ def voiced_before(x, t, sr=16000):
 def main():
     lid = sys.argv[1]
     cfg = TAKES[lid]
-    lines = json.load(open(os.path.join(ROOT, "Unity/Assets/Audio/Voice/voice_lines.json"), encoding="utf-8"))["lines"]
+    venus = lid.startswith("VEN_")       # QF43: Venus lines come from venus_dialogue.json and live in Resources/VenusVoice
+    src = "Unity/Assets/Resources/Venus/venus_dialogue.json" if venus else "Unity/Assets/Audio/Voice/voice_lines.json"
+    lines = json.load(open(os.path.join(ROOT, src), encoding="utf-8"))["lines"]
     line = next(l for l in lines if l["id"] == lid)
     vid = {v["name"].strip().lower(): v["voice_id"] for v in req("/voices")["voices"]}["seven"]
-    out = os.path.join(ROOT, "Docs", "Previews", "qf40", lid + "_takes"); os.makedirs(out, exist_ok=True)
+    out = os.path.join(ROOT, "Docs", "Previews", cfg.get("out", "qf40"), lid + "_takes"); os.makedirs(out, exist_ok=True)
     rep = [f"# Takes for {lid}: \"{line['text']}\" (subtitle unchanged)", ""]
     best = None
     for n, (label, text, settings) in enumerate(cfg["variants"], 1):
@@ -147,7 +156,7 @@ def main():
     if best is None:
         rep.append("**No take passed every rule - the game keeps its current file.**")
     else:
-        dst = os.path.join(ROOT, "Unity/Assets/Audio/Voice", line["dir"], lid + ".mp3")
+        dst = os.path.join(ROOT, "Unity/Assets/Resources/VenusVoice", lid + ".mp3") if venus else os.path.join(ROOT, "Unity/Assets/Audio/Voice", line["dir"], lid + ".mp3")
         shutil.copyfile(best[2], dst)
         rep.append(f"**In the game now: take_{best[1]}** (the most energetic take that keeps every rule). To use another: copy it over `{os.path.relpath(dst, ROOT)}` and rebuild.")
     open(os.path.join(out, "takes.txt"), "w", encoding="utf-8", newline="\n").write("\n".join(rep) + "\n")

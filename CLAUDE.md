@@ -592,6 +592,22 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**QF43 (2026-11-28): 1.1.0-rc7 (build 2014, `game-2014`) PUBLISHED, Latest - Dan's playthrough list part 3 (23 items). Status, decisions and "For Dan to check
+(QF43)" in `TODO.md`.**
+- **Venus:** `VenusDirectorQF43.cs` (the pulse clock `AmbientPulses` / `PulseNow`, the holding cell `EnsureCell` / `LiftIntoCell` /
+  `CloseCell`, C12 re-staged at the cage with the projection), `VenusDirectorDescent.cs` (the way down round the jammed root gate:
+  `VenusLayout.CutX0..` slot, `CutLip` / `ChasmJump` / `CutLedgeDown` / `CutSlabStep`, the gate's inner release; `DescentBot`, logs
+  `DESCENT (QF43 14)`), `WormmasterFight` (all three devices in phase 1, any order; `PilotOrder`; he defends from his perch), the cage's
+  stems separate (`CageOpen`), she takes the real cube (`HoldPose`), `WarpToChamber` after C07, on the bike after C12.
+- **Shared:** `ElarimCape` = a 5 x 3 verlet cloth re-skinned at load (top edge on the shoulder line); `RuneHolderCheck` (`RUNE vs HOLDER
+  (QF43 19)`); `ClimbSection` specs with a `Lever` the story waits for (`Arm`, `LeverPulled`, `RunBot`, `BotActive` - the playtests pause
+  for it): Mars's drawbridge winch, the mothership's bridge controls, the asteroid's junction 2 cab (NOT placed: no free ground there - the bike junction stays) (the optional view-climbs are gone);
+  `MusicSystem.DuckFor`; `ControlDevice.Driven` / `PulseNow`; `ChapterSeven.Pace` (walk 2.0 / run 4.6 m/s, clips sped to match).
+- **Saucer:** the galley's long window (`FightDemoBuilderGalley` `GalWin*`), the floor light ring flush in a channel (`FloorCove`), the
+  exterior's glass band + glass floor panel (`Hull_WindowBand` / `Hull_GlassFloor`), small round stars in three brightness groups, the
+  camera's clear colour near-black while travelling between worlds (`SaucerOutside.Show`).
+- **Rule learned:** a `MoonTraversal.JumpLink` with `KeepLateral` (the default) needs a real `LateralClamp` - the default (0, 0) sends her
+  toward x = 0 (the descent's chasm jump failed until it was set).
 **QF42 (2026-11-28): 1.1.0-rc6 (build 2013, `game-2013`) PUBLISHED, Latest. The six ads have their DESIGNED voices (`Ad_Zoomies` …
 `Ad_Box`, saved in the ElevenLabs library; the key now has voice_generation). No channel-change glitch: `CatatronScreen.FinishAd` lets the
 running ad end, then the race ad (CAT_04) plays once (`race_ad_played` step). She keeps control while it finishes; Panther's CAT_04_P2

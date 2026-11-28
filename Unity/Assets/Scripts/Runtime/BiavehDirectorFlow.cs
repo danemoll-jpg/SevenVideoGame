@@ -369,8 +369,23 @@ namespace Seven
                 yield return Shot("b16_residents_stranded_on_the_far_side");
                 yield return SayIds("BIA_06_N2");                // the bridge's service controls are at the chasm's edge
                 yield return Cutscene(false);
-                Objective("Align the bridge - the service controls by the chasm (X)" + RelayLine);
-                yield return Interact(L.BridgeControlView, "Align the bridge", "align the bridge", "The service controls at the chasm's edge, north of the road", new[] { L.BridgeControlView });
+                // QF43 (15): the climb with a purpose - the alignment controls are up on the relay housing by the junction
+                var cs = ClimbSection.Current;
+                if (cs != null && cs.Placed && cs.S.Lever && cs.gameObject.scene == gameObject.scene)
+                {
+                    Objective("Align the bridge - climb the relay housing to its controls" + RelayLine);
+                    cs.Arm();
+                    if (Auto || DemoBoot.PlayerSim) StartCoroutine(cs.RunBot(DemoBoot.PlayerSim));
+                    yield return Until(() => cs.LeverPulled, "climb the relay housing and align the bridge", 150f,
+                        "The relay housing beside the junction: jump up to its ledge (A), shimmy along, climb up, up the step - the controls are on top (X)", cs.LeverAt, () => cs.StartCoroutine(cs.Pull()));
+                    while (ClimbSection.BotActive) yield return null;
+                    StartCoroutine(cs.SayDone());
+                }
+                else
+                {
+                    Objective("Align the bridge - the service controls by the chasm (X)" + RelayLine);
+                    yield return Interact(L.BridgeControlView, "Align the bridge", "align the bridge", "The service controls at the chasm's edge, north of the road", new[] { L.BridgeControlView });
+                }
                 yield return Cutscene(true);
                 Shoot(new Vector3(152f, 9f, -16f), new Vector3(170f, 0f, 0f), 54f, 0.01f);
                 if (BridgeLever != null) StartCoroutine(Swing(BridgeLever, -70f, 0.5f, true));

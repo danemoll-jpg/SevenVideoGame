@@ -16,6 +16,9 @@ namespace Seven
         AudioSource _aT, _bT;        // QF36: each slot's loop body (an intro + loop track: _a plays the intro once, _aT the body, scheduled)
         float _aW, _bW;              // fade weights
         float _duck = 1f;
+        static float _duckUntil;
+        /// <summary>QF43 (13): duck the music for a moment (a sound that must be heard over it: Venus's pulse).</summary>
+        public static void DuckFor(float seconds) { _duckUntil = Mathf.Max(_duckUntil, Time.unscaledTime + seconds); }
         public static string Current { get; private set; }
         public const float DuckLevel = 0.35f;
         /// <summary>QF31 (A3): a scene can play its track low (her grief: moon_transfer under her sobs). Reset to 1 on every scene load.</summary>
@@ -234,7 +237,7 @@ namespace Seven
                 }
                 else _quietFor = 0f;
             }
-            bool duckNow = DialoguePlayer.AnyBusy || Purr.Playing;   // QF23 (11): the music ducks under his purr too
+            bool duckNow = DialoguePlayer.AnyBusy || Purr.Playing || Time.unscaledTime < _duckUntil;   // QF23 (11): under his purr too; QF43 (13): under Venus's pulse
             _duck = Mathf.MoveTowards(_duck, duckNow ? DuckLevel : 1f, Time.unscaledDeltaTime * (duckNow ? 2.5f : 0.8f));
             float g = AudioKit.Gain(AudioKit.Bus.Music) * _duck * Mathf.Clamp01(Level);
             _a.volume = _aW * g; _b.volume = _bW * g; _aT.volume = _a.volume; _bT.volume = _b.volume;

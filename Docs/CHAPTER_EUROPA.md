@@ -104,7 +104,7 @@ Allow the player to ride without interruption.
 
 A Cetacean passes beneath the bike. Its scale becomes apparent as it continues beyond the frame.
 
-**7 — an astonished breath:** I think one of the people we came to meet.
+**7 — an astonished breath:** I think it’s who we came to meet.
 
 A low, complex call travels through the water.
 

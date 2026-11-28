@@ -88,7 +88,11 @@ namespace Seven.EditorTools
         }
 
         /// <summary>Galley nook back wall: skip the porthole's opening.</summary>
-        static bool PortholeSkip(float a, float y) => Mathf.Abs(Mathf.DeltaAngle(a, TableAngle)) < 1.95f && y > PortholeY - 0.31f && y < PortholeY + 0.31f;
+        // QF43 (3): the galley's window runs the whole length of the counter (Dan: it is a real window - leaving the Moon you could see
+        // it go), between the counter top (0.93) and the wall cabinets (1.55), framed like the main windows (same glass, frame bars and
+        // mullions); the live view behind it is the GalleyOutside set (dark space, stars, the world the saucer is at - SaucerOutside).
+        public const float GalWinA0 = 190.6f, GalWinA1 = 209.4f, GalWinY0 = 0.99f, GalWinY1 = 1.5f, GalWinR = 9.70f;
+        static bool PortholeSkip(float a, float y) => Mathf.DeltaAngle(GalWinA0, a) > 0f && Mathf.DeltaAngle(a, GalWinA1) > 0f && y > GalWinY0 && y < GalWinY1;
 
         static TableRefs BuildGalleyTable(Transform nook, ShipMats m, List<Vector3> obstacles)
         {
@@ -156,52 +160,45 @@ namespace Seven.EditorTools
             g.shape = BuildElarimShape("Dodecahedron", root, ElarimMaterials(true), "Galley_Dodecahedron");
             g.shape.transform.position = plateAt + outw * 0.2f + Vector3.up * (TableTopY + Seven.MoonLayout.ShapeRadius * 0.795f);
 
-            // ---- porthole in the nook wall behind the table, the Moon outside
-            var pc = Polar(9.70f, TableAngle, PortholeY);
-            var por = new GameObject("Porthole").transform; por.SetParent(nook, false); por.position = pc; por.rotation = Quaternion.LookRotation(outw);
+            // ---- QF43 (3): the long galley window along the whole counter (replaces the small square porthole panel)
+            float wMid = (GalWinA0 + GalWinA1) * 0.5f, wY = (GalWinY0 + GalWinY1) * 0.5f;
+            var pc = Polar(GalWinR, wMid, wY);
+            var por = new GameObject("GalleyWindow").transform; por.SetParent(nook, false); por.position = pc; por.rotation = Quaternion.LookRotation(Polar(1f, wMid, 0f));
             g.porthole = por;
-            var pv = new List<Vector3>(); var pt = new List<int>();
-            Vector3 side = along, up = Vector3.up;
-            const int N = 48;
-            for (int i = 0; i < N; i++)
             {
-                float a0 = i * Mathf.PI * 2f / N, a1 = (i + 1) * Mathf.PI * 2f / N;
-                Vector3 Dir(float a) => side * Mathf.Cos(a) + up * Mathf.Sin(a);
-                Vector3 Sq(float a) { var d = new Vector2(Mathf.Cos(a), Mathf.Sin(a)); float s = 0.34f / Mathf.Max(Mathf.Abs(d.x), Mathf.Abs(d.y)); return pc + (side * d.x + up * d.y) * s; }
-                Quad(pv, pt, pc + Dir(a0) * PortholeRad, Sq(a0), Sq(a1), pc + Dir(a1) * PortholeRad);
+                // the reveal (the wall's depth round the opening), the glass, the frame bars and mullions - the main windows' language
+                Obj("GalleyWindow_RevealTop", Lathe(new[] { new Vector2(GalWinR - 0.02f, GalWinY1), new Vector2(GalWinR + 0.32f, GalWinY1) }, GalWinA0, GalWinA1, 40), m.frame, por);
+                Obj("GalleyWindow_RevealBottom", Lathe(new[] { new Vector2(GalWinR + 0.32f, GalWinY0), new Vector2(GalWinR - 0.02f, GalWinY0) }, GalWinA0, GalWinA1, 40), m.frame, por);
+                Obj("GalleyWindow_RevealSides", Finish(SideReveal(GalWinA0, GalWinR, GalWinY0, GalWinY1).Item1, SideReveal(GalWinA0, GalWinR, GalWinY0, GalWinY1).Item2), m.frame, por);
+                Obj("GalleyWindow_RevealSides2", Finish(SideReveal(GalWinA1, GalWinR, GalWinY0, GalWinY1).Item1, SideReveal(GalWinA1, GalWinR, GalWinY0, GalWinY1).Item2), m.frame, por);
+                var glassR = Obj("GalleyWindow_Glass", Lathe(new[] { new Vector2(GalWinR + 0.16f, GalWinY0), new Vector2(GalWinR + 0.16f, GalWinY1) }, GalWinA0, GalWinA1, 40), m.glass, por, false);
+                var wfv = new List<Vector3>(); var wft = new List<int>();
+                foreach (var y in new[] { GalWinY0 + 0.02f, GalWinY1 - 0.02f })
+                    Sweep(wfv, wft, Enumerable.Range(0, 41).Select(i => Polar(GalWinR + 0.15f, Mathf.Lerp(GalWinA0, GalWinA1, i / 40f), y)).ToList(), 0.03f, false, 8);
+                for (int k = 1; k < 5; k++) { float a = Mathf.Lerp(GalWinA0, GalWinA1, k / 5f); Sweep(wfv, wft, new List<Vector3> { Polar(GalWinR + 0.15f, a, GalWinY0), Polar(GalWinR + 0.15f, a, GalWinY1) }, 0.022f, false, 8); }
+                Obj("GalleyWindow_Frame", SmoothFinish(wfv, wft), m.frame, por);
             }
-            Obj("Porthole_Plate", Finish(pv, pt), m.wall, por);
-            var sleeve = new List<Vector3>(); var st = new List<int>();
-            for (int i = 0; i < N; i++)
-            {
-                float a0 = i * Mathf.PI * 2f / N, a1 = (i + 1) * Mathf.PI * 2f / N;
-                Vector3 Dir(float a) => (side * Mathf.Cos(a) + up * Mathf.Sin(a)) * PortholeRad;
-                Quad(sleeve, st, pc + Dir(a0), pc + Dir(a0) + outw * 0.3f, pc + Dir(a1) + outw * 0.3f, pc + Dir(a1));
-            }
-            Obj("Porthole_Sleeve", Finish(sleeve, st), m.frame, por);
-            var rv = new List<Vector3>(); var rt = new List<int>();
-            Sweep(rv, rt, Enumerable.Range(0, 48).Select(i => pc - outw * 0.012f + (side * Mathf.Cos(i * Mathf.PI / 24f) + up * Mathf.Sin(i * Mathf.PI / 24f)) * (PortholeRad + 0.012f)).ToList(), 0.022f, true, 8);
-            Obj("Porthole_Ring", SmoothFinish(rv, rt), m.rib, por);
-            // outside: the dark and the Moon (not dissolvable: Chapter1Aboard hides them during the ship reveal)
+            // outside: the dark and the world (not dissolvable: Chapter1Aboard hides them during the ship reveal)
             var outside = new GameObject("GalleyOutside").transform; outside.SetParent(nook, false);
             var dark = Lit("Galley_space", Gray(0.0f), 0f);
             dark.SetFloat("_Cull", 0f); dark.doubleSidedGI = true; EditorUtility.SetDirty(dark);       // seen from inside the ship
-            // the dark and the Moon sit just behind the porthole, so the fog pass barely touches them
-            Obj("Space", Lathe(new[] { new Vector2(10.55f, PortholeY - 1.2f), new Vector2(10.55f, PortholeY + 1.2f) }, TableAngle - 8f, TableAngle + 8f, 16), dark, outside, false);
+            // the dark and the world sit just behind the window, so the fog pass barely touches them
+            Obj("Space", Lathe(new[] { new Vector2(10.55f, wY - 1.3f), new Vector2(10.55f, wY + 1.3f) }, GalWinA0 - 6f, GalWinA1 + 6f, 40), dark, outside, false);
             var sv2 = new List<Vector3>(); var st2 = new List<int>();
             var srnd = new System.Random(3);
-            for (int i = 0; i < 26; i++)
+            for (int i = 0; i < 90; i++)
             {
-                float a = TableAngle + ((float)srnd.NextDouble() - 0.5f) * 9f, y = PortholeY + ((float)srnd.NextDouble() - 0.5f) * 1.4f, sz = 0.004f + 0.006f * (float)srnd.NextDouble();
-                var c = Polar(10.53f, a, y);
-                Quad(sv2, st2, c - along * sz - Vector3.up * sz, c - along * sz + Vector3.up * sz, c + along * sz + Vector3.up * sz, c + along * sz - Vector3.up * sz);
+                // small round soft points (octagons) of varied brightness - never chunky squares
+                float a = Mathf.Lerp(GalWinA0 - 4f, GalWinA1 + 4f, (float)srnd.NextDouble()), y = wY + ((float)srnd.NextDouble() - 0.5f) * 1.6f, sz = 0.0025f + 0.004f * (float)(srnd.NextDouble() * srnd.NextDouble());
+                var c = Polar(10.53f, a, y); var al = new Vector3(-Mathf.Sin(a * Mathf.Deg2Rad), 0f, Mathf.Cos(a * Mathf.Deg2Rad));
+                for (int s = 0; s < 8; s++) { float b0 = s / 8f * Mathf.PI * 2f, b1 = (s + 1) / 8f * Mathf.PI * 2f; int tb0 = sv2.Count; sv2.Add(c); sv2.Add(c + (al * Mathf.Cos(b1) + Vector3.up * Mathf.Sin(b1)) * sz); sv2.Add(c + (al * Mathf.Cos(b0) + Vector3.up * Mathf.Sin(b0)) * sz); st2.Add(tb0); st2.Add(tb0 + 1); st2.Add(tb0 + 2); }
             }
             Obj("Stars", Finish(sv2, st2), m.cove, outside, false);
             var moon = GameObject.CreatePrimitive(PrimitiveType.Sphere); moon.name = "Moon";
             Object.DestroyImmediate(moon.GetComponent<Collider>());
             moon.transform.SetParent(outside, false);
-            moon.transform.position = Polar(10.35f, TableAngle + 0.35f, PortholeY + 0.04f);
-            moon.transform.localScale = Vector3.one * 0.19f;
+            moon.transform.position = Polar(10.35f, wMid + 3.2f, wY + 0.03f);
+            moon.transform.localScale = Vector3.one * 0.3f;
             moon.transform.rotation = Quaternion.Euler(8f, TableAngle + 120f, 12f);
             var mm = Lit("Galley_moon", Gray(0.7f), 0.05f);
             var mt = MoonTexture();
@@ -210,11 +207,19 @@ namespace Seven.EditorTools
             moon.GetComponent<MeshRenderer>().sharedMaterial = mm;
             moon.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
             g.moon = moon.transform; g.outside = outside;
-            // a faint pale light from the porthole onto the table
+            // a faint pale light from the window onto the counter and the table
             var pl = new GameObject("PortholeLight").AddComponent<Light>(); pl.transform.SetParent(por, false);
-            pl.transform.position = pc - outw * 0.25f; pl.transform.rotation = Quaternion.LookRotation(-outw + Vector3.down * 0.5f);
-            pl.type = LightType.Spot; pl.spotAngle = 70f; pl.range = 3.5f; pl.intensity = 0.7f; pl.shadows = LightShadows.None;
+            pl.transform.position = pc - Polar(1f, wMid, 0f) * 0.25f; pl.transform.rotation = Quaternion.LookRotation(-Polar(1f, wMid, 0f) + Vector3.down * 0.5f);
+            pl.type = LightType.Spot; pl.spotAngle = 100f; pl.range = 4f; pl.intensity = 0.7f; pl.shadows = LightShadows.None;
             return g;
+        }
+        /// <summary>QF43 (3): a side reveal of the galley window (the wall's depth at one end of the opening).</summary>
+        static (List<Vector3>, List<int>) SideReveal(float a, float r, float y0, float y1)
+        {
+            var v = new List<Vector3>(); var t = new List<int>();
+            Quad(v, t, Polar(r - 0.02f, a, y0), Polar(r - 0.02f, a, y1), Polar(r + 0.32f, a, y1), Polar(r + 0.32f, a, y0));
+            Quad(v, t, Polar(r + 0.32f, a, y0), Polar(r + 0.32f, a, y1), Polar(r - 0.02f, a, y1), Polar(r - 0.02f, a, y0));
+            return (v, t);
         }
 
         /// <summary>Round 10 camera: the close-up depth-of-field Volume (a profile asset in the scene keeps URP's DOF

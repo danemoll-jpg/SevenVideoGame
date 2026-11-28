@@ -53,7 +53,7 @@ namespace Seven
             if (VenusState.SceneDone("VEN_C11")) { yield return ReturnVisit(); yield break; }
             if (!VenusState.SceneDone("VEN_C06")) { yield return WayDown(); yield return C06(); if (ReloadCheck("VEN_C06")) yield break; }
             if (!VenusState.SceneDone("VEN_C07")) { yield return Encounter(); if (_reloading) yield break; yield return C07(); if (ReloadCheck("VEN_C07")) yield break; }
-            if (!VenusState.SceneDone("VEN_B06")) { yield return B06(); if (ReloadCheck("VEN_B06")) yield break; }
+            if (!VenusState.SceneDone("VEN_B06")) { yield return WarpToChamber(); if (ReloadCheck("VEN_B06")) yield break; }   // QF43 (18): no ride / walk back
             if (!VenusState.SceneDone("VEN_C08")) yield return C08();
             if (!VenusState.SceneDone("VEN_C10")) { yield return C09C10(); if (ReloadCheck("VEN_C10")) yield break; }
             if (!VenusState.SceneDone("VEN_C12")) { yield return C12(); if (ReloadCheck("VEN_C12")) yield break; }     // Round 13 (0m)
@@ -68,25 +68,27 @@ namespace Seven
             // scene never carried it: they used the basin's height (-12) and swam 18 m above the chamber, inside the rock -
             // invisible to the player while they still "lunged" and knocked her back.
             if (ChamberWorms != null) foreach (var w in ChamberWorms) if (w != null) { w.BaseY = VenusLayout.ControlY; var p = w.transform.position; p.y = VenusLayout.ControlY - w.Depth; w.transform.position = p; }
-            bool c05 = VenusState.SceneDone("VEN_C05");
-            SetZone("RootLanding", c05); SetZone("RootPit", c05);
-            if (RootGate != null) RootGate.SetActive(!c05);
+            RestoreDescent();                                            // QF43 (14): the root gate stays shut until her release; the slot after C05
             if (Devices != null) foreach (var d in Devices) if (d != null && VenusState.IsDisabled(d.Id)) { d.SetOff(); if (d.Id == "dev_crystal" && Crystal != null) Crystal.position = CrystalRest; }
             if (ChamberWorms != null) foreach (var w in ChamberWorms) if (w != null && (VenusState.IsDisabled(w.Group) || VenusState.WormmasterContained)) w.gameObject.SetActive(false);
-            if (Barrier != null) Barrier.position = BarrierPos(VenusState.WormmasterContained ? 1f : 0f);
-            if (BarrierGlow != null) Glow(BarrierGlow, VenusState.WormmasterContained ? 1.4f : 0f);
             if (Wormmaster != null) Wormmaster.Current = VenusState.WormmasterContained ? WormmasterRig.Pose.Contained : WormmasterRig.Pose.Dominant;
+            RestoreCell();                                              // QF43 (17): the holding cell (him inside + the closed dome, or empty)
             if (VenusState.AtLeast(VenusState.Stage.ThreatStopped)) ApplyThreatStopped(false);
             if (Cat != null && VenusState.SceneDone("VEN_B02")) Cat.gameObject.SetActive(false);   // spec: by B02 Panther is back inside, normal size
             if (RecordCopy != null) RecordCopy.gameObject.SetActive(false);
+            // QF43 (19/20): the cage - closed until her touch; once she has taken the cube it stands open and empty (a soft glow)
+            bool taken = VenusState.SceneDone("VEN_C10");
+            CageOpen(taken || VenusState.SceneDone("VEN_C09") ? 1f : 0f);
+            if (Cube != null) Cube.gameObject.SetActive(!taken);
+            if (taken) EmptyCageGlow();
             // where she is
             if (VenusState.SceneDone("VEN_C11")) { at = VenusLayout.StepOut + Vector3.forward * 2.5f; face = Vector3.forward; Bike.Place(VenusLayout.BikeUnpacked, 0f); Bike.gameObject.SetActive(true); }
-            else if (VenusState.SceneDone("VEN_C10")) { at = VenusLayout.ParkSpot - Vector3.right * 1.7f; face = Vector3.forward; }
-            else if (VenusState.SceneDone("VEN_B06")) { at = VenusLayout.ParkSpot - Vector3.right * 1.7f + Vector3.forward * 2f; face = Vector3.forward; }
+            else if (VenusState.SceneDone("VEN_C12")) { at = VenusLayout.ParkSpot - Vector3.right * 1.7f; face = Vector3.forward; }
+            else if (VenusState.SceneDone("VEN_B06")) { at = VenusLayout.CubeView; face = Vector3.forward; }     // QF43 (18): the save is at the chamber
             else if (VenusState.SceneDone("VEN_C07")) { at = (VenusState.BikeKnown ? VenusState.BikeAt : VenusLayout.ObsPark) - Vector3.right * 1.4f; face = Vector3.forward; }
             else if (VenusState.SceneDone("VEN_C06")) { at = VenusLayout.ControlEntry; face = Vector3.right; }
-            if (VenusState.SceneDone("VEN_B06") && Guardian != null && !VenusState.SceneDone("VEN_C08")) { Guardian.transform.position = VenusLayout.MeetSpot + Vector3.forward * 1.6f; }
-            if (VenusState.SceneDone("VEN_C08") && Guardian != null) Guardian.transform.position = VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f);
+            if (VenusState.SceneDone("VEN_B06") && Guardian != null) Guardian.transform.position = VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f);
+            if (VenusState.SceneDone("VEN_B06") && !VenusState.SceneDone("VEN_C12")) { Bike.Place(VenusLayout.ParkSpot, 180f); Bike.gameObject.SetActive(true); }
         }
 
         static Vector3 CrystalRest => VenusLayout.DeviceUse[2] + new Vector3(1.2f, 0.12f, 0.6f);
@@ -146,21 +148,7 @@ namespace Seven
             }
         }
 
-        bool _pulsesOn;
-        /// <summary>Before the threat is stopped the gardens stay under pressure: the signal sounds from below every ~25 s
-        /// and the basin creatures turn toward the foundations.</summary>
-        IEnumerator AmbientPulses()
-        {
-            _pulsesOn = true;
-            while (_pulsesOn)
-            {
-                for (float t = 0f; t < 25f && _pulsesOn; t += Time.deltaTime) yield return null;
-                if (!_pulsesOn || VenusState.AtLeast(VenusState.Stage.ThreatStopped)) break;
-                if (_under > 0.5f) continue;
-                AudioKit.Play("signal_pulse", VenusLayout.BasinCentre, 0.5f, 0.05f, AudioKit.Bus.Sfx, 160f);
-                if (Worms != null) foreach (var w in Worms) if (w != null) w.Drive(VenusLayout.Foundations, 8f);
-            }
-        }
+        bool _pulsesOn;          // QF43 (13): the pulse clock itself is AmbientPulses in VenusDirectorQF43.cs
 
         // ------------------------------------------------------------------------------------------ the way down (B2)
         IEnumerator OpenRootGate(bool animate)
@@ -177,19 +165,7 @@ namespace Seven
             Log("the root gate opened (after C05): the way down - the root pit, the tunnels, the root chamber");
         }
 
-        IEnumerator WayDown()
-        {
-            Objective(VenusState.Objectives[(int)VenusState.Stage.ControlDiscovered]);
-            yield return OpenRootGate(true);
-            if (Shots) { var wb = CameraOccluders.WalkBlockers(out int nb); Log($"walk blockers (QF12 7) after the root gate opened: {nb} blocked samples in the walkable ground - {wb}"); }
-            if (Shots) { Shoot(VenusLayout.RootGateIn + new Vector3(-4.5f, 4.2f, 9f), VenusLayout.RootGateIn + new Vector3(0f, -3f, -5f), 50f, 0.01f); yield return Wait(0.3f); yield return Shot("w01_root_gate_open"); FollowCamera(); }
-            if (Auto) StartCoroutine(AutoWalkPath(new[] { new Vector3(69f, -6f, 137f), new Vector3(69f, -6f, 132.5f), new Vector3(69f, -14f, 117.4f), new Vector3(69f, -18f, 107f), new Vector3(69f, -22f, 95f), new Vector3(71f, -22f, 89f), new Vector3(80f, -22f, 89f), new Vector3(96f, -27.4f, 89f), VenusLayout.ControlEntry }));
-            if (Shots) StartCoroutine(WayDownShots());
-            StartCoroutine(WayDownHarass());                             // Round 13 (0f)
-            yield return Until(() => P7.x > 104.5f && P7.y < -28f, "the control chamber (C06)", 120f,
-                "Through the root gate below the lookout, down the root pit and along the tunnels to the east", VenusLayout.ControlEntry,
-                () => Seven.Place(VenusLayout.ControlEntry, Vector3.right));
-        }
+        // QF43 (14): WayDown (the route round the jammed gate) lives in VenusDirectorDescent.cs
         IEnumerator WayDownShots()
         {
             // QF13 (19): Dan's screenshot - halfway down the stairs, the follow camera behind her right shoulder looking down
@@ -206,6 +182,7 @@ namespace Seven
         }
 
         // ------------------------------------------------------------------------------------------ C06
+        Vector3 WmPos => Wormmaster != null ? Wormmaster.transform.position : VenusLayout.DaisAt;
         Vector3 WmHead => Wormmaster != null ? Wormmaster.transform.position + Vector3.up * 3.4f : VenusLayout.WormmasterAt + Vector3.up * 3.4f;
         void LowOnWormmaster(float ease = 0.01f, float push = 0f)
         {
@@ -220,13 +197,13 @@ namespace Seven
         }
         void LevelOn7(float ease = 0.01f)
         {
-            var toHim = Flat(VenusLayout.DaisAt - P7).normalized; var r = Vector3.Cross(Vector3.up, toHim);
+            var toHim = Flat(WmPos - P7).normalized; var r = Vector3.Cross(Vector3.up, toHim);
             Shoot(Head7 + toHim * 1.9f + r * 0.9f, Head7 - Vector3.up * 0.1f, 40f, ease);
         }
         void LevelOnHim(float ease = 0.01f)
         {
             // C07: level angles - the camera at his eye height from her side of the barrier, no looking up
-            var toHim = Flat(VenusLayout.DaisAt - P7).normalized; var r = Vector3.Cross(Vector3.up, toHim);
+            var toHim = Flat(WmPos - P7).normalized; var r = Vector3.Cross(Vector3.up, toHim);
             var eye = WmHead - Vector3.up * 0.3f;
             var cam = new Vector3(P7.x, eye.y, P7.z) + toHim * 2.5f + r * 1.4f; cam.y = eye.y;
             Shoot(cam, eye, 44f, ease);
@@ -248,6 +225,7 @@ namespace Seven
             LowOnWormmaster();
             yield return Wait(0.6f);
             yield return Shot("c06_02_low_angle_above_his_machinery");
+            yield return CellIntro();              // QF43 (17): the holding cell shown and named before he speaks
             yield return SayC6(1, "low");          // They sent someone down at last.
             yield return SayC6(2, "level");        // You're bringing their gardens down.
             yield return SayC6(3, "ots");          // They can leave.
@@ -326,27 +304,11 @@ namespace Seven
             Knockdowns += _wmFight.Knockdowns;
             for (int i = 0; i < 3; i++) if (Devices[i] != null && Devices[i].On) DisableDevice(i, true);
             yield return Shot("enc_all_three_devices_off");
-            // subdued: he drags himself back onto his dais, his dominance gone; the creatures withdraw (alive, into the burrows)
-            yield return Cutscene(true);
-            if (Wormmaster != null) Wormmaster.Current = WormmasterRig.Pose.Contained;
-            { var a = Wormmaster.transform.position; var side = Vector3.Cross(Vector3.up, Flat(a - P7).normalized);
-              Shoot((a + P7) * 0.5f + side * 7f + Vector3.up * 3f, a + Vector3.up * 1.6f, 50f, 0.01f);
-              yield return Wait(0.8f);
-              yield return Shot("enc_he_is_subdued");
-              for (float t = 0f; t < 1f; t += Time.deltaTime / 2.4f) { float u = Mathf.SmoothStep(0f, 1f, t); Wormmaster.transform.position = Vector3.Lerp(a, VenusLayout.WormmasterAt, u) + Vector3.up * Mathf.Sin(u * Mathf.PI) * 0.8f; yield return null; } }
-            Wormmaster.transform.rotation = Quaternion.LookRotation(Vector3.left);
+            // QF43 (17): subdued, he stays down where she beat him (he never rises by himself); the creatures withdraw (alive, into the
+            // burrows); Panther: the holding cell - and she lifts him into it with telekinesis, the field closes into a dome
             AudioKit.Play("creatures_withdraw", VenusLayout.ControlCentre, 0.9f, 0f, AudioKit.Bus.Sfx, 80f);
             foreach (var w in ChamberWorms) if (w != null && w.gameObject.activeSelf) w.Withdraw(NearestBurrow(w.transform.position));
-            Seven.Release();
-            yield return Cutscene(false);
-            Objective("Close the containment barrier");
-            if (ConsoleGlow != null) Glow(ConsoleGlow, 1.6f);
-            _consoleHit = false;
-            if (Auto) yield return AutoConsole();
-            StartCoroutine(ConsoleWatch());
-            yield return Until(() => _consoleHit, "close the containment barrier (the console)", 90f, "The console in front of his dais: X closes the barrier", VenusLayout.ConsoleAt, () => _consoleHit = true);
-            _encPrompt = null;
-            yield return CloseBarrier();
+            yield return LiftIntoCell();
             if (DemoBoot.BossCheck && DemoBoot.CaptureDir != null) { Cap.Finish("boss check (QF17): the Wormmaster's fight done - " + _wmFight.Summary()); yield break; }
         }
         WormmasterFight _wmFight;
@@ -769,12 +731,12 @@ namespace Seven
             yield return Cutscene(true);
             Seven.Lock(true);
             if (Wormmaster != null) Wormmaster.Current = WormmasterRig.Pose.Contained;
-            if (Barrier != null) Barrier.position = BarrierPos(1f);
-            // level angles: his dominance gone (no low angles any more)
-            var stand = VenusLayout.DaisAt - Vector3.right * (VenusLayout.BarrierRadius + 2.6f) + Vector3.forward * 2.8f;
+            RestoreCell();
+            // level angles: his dominance gone (no low angles any more); she stands outside the closed cell
+            var stand = VenusLayout.CellAt + Vector3.right * (VenusLayout.CellPylonR + 2.2f) + Vector3.forward * 1.6f;
             if (Flat(stand - P7).magnitude > 1f) yield return WalkSeven(stand, 5f);
             Seven.Lock(true);
-            for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(VenusLayout.DaisAt - P7)), 400f * Time.deltaTime); yield return null; }
+            for (float t = 0f; t < 0.4f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(VenusLayout.CellAt - P7)), 400f * Time.deltaTime); yield return null; }
             _c6Scene = "VEN_C07";
             yield return SayC6(1, "levelhim");     // You don't know what you're interfering with.
             yield return SayC6(2, "level");        // I know what was standing above it.
@@ -784,20 +746,67 @@ namespace Seven
             if (_machineHum != null) StartCoroutine(AudioKit.Fade(_machineHum, 0f, 2.5f, true));
             _machineHum = null;
             for (float t = 0f; t < 1f; t += Time.deltaTime / 2f) { if (UnderLights != null) foreach (var l in UnderLights) if (l != null) l.intensity = Mathf.Lerp(2.2f, 0.6f, t); yield return null; }
-            Shoot(VenusLayout.ControlCentre + new Vector3(-10f, 1.7f, 9f), VenusLayout.DaisAt + Vector3.up * 2.2f, 50f, 0.01f);
+            Shoot(VenusLayout.ControlCentre + new Vector3(-10f, 1.7f, 9f), VenusLayout.CellAt + Vector3.up * 2.2f, 50f, 0.01f);
             yield return Wait(1.2f);
             yield return Shot("c07_level_wide_machinery_silent");
             Complete("VEN_C07", VenusState.Stage.ThreatStopped);
             ApplyThreatStopped(true);
             Objective(VenusState.Objectives[(int)VenusState.Stage.ThreatStopped]);
-            // she makes her way back up to the bike (a cut: the tunnels are the same way back, and still open)
-            yield return UI.Fade(1f, 1.0f);
-            var bikeAt = VenusState.BikeKnown ? VenusState.BikeAt : VenusLayout.ObsPark;
-            Seven.Place(bikeAt - Vector3.right * 1.4f + Vector3.forward * 1.5f, Vector3.forward);
+            // QF43 (18): no walk / ride back - the warp is WarpToChamber (the next step; a reload resumes there)
+        }
+
+        /// <summary>QF43 (18): after C07 straight to the cube chamber: a fade, a short "later" beat (the bike parked in the quiet
+        /// temple court), then she stands before the cube with the guardian - C08 there. The bike is left at the court for the ride
+        /// to the saucer; Panther is aboard. Saved here (B06 done = the chamber).</summary>
+        IEnumerator WarpToChamber()
+        {
+            yield return Cutscene(true);
+            if (UI.FadeAlpha < 0.99f) yield return UI.Fade(1f, 1.0f);
+            if (Bike.Riding) Bike.Dismount(true);
+            Bike.Place(VenusLayout.ParkSpot, 180f); Bike.gameObject.SetActive(true);
+            VenusState.SaveBike(VenusLayout.ParkSpot, 180f, false);
+            Seven.Place(VenusLayout.CubeView, Vector3.forward);
+            if (Guardian != null) { Guardian.Stop(); Guardian.transform.position = VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f); Guardian.Face(P7); }
+            // the "later" beat: the court, quiet, the bike parked outside
+            Shoot(VenusLayout.ParkSpot + new Vector3(9f, 3.2f, -7f), VenusLayout.ParkSpot + new Vector3(-4f, 1.2f, 10f), 52f, 0.01f);
+            ImageGate.Expect(Bike.transform, "the bike parked in the quiet temple court", 0f, "qf43_18a");
+            yield return UI.Fade(0f, 0.9f);
+            yield return Wait(1.6f);
+            yield return Shot("qf43_18a_later_the_quiet_court");
+            yield return UI.Fade(1f, 0.6f);
+            Complete("VEN_B06");
+            Log("WARP (QF43 18): after C07 straight to the cube chamber (no return ride, no walk through the gardens / the halls); the bike parked at the temple court for the ride to the saucer");
             FollowCamera(); Cam.SnapBehind();
-            yield return Wait(0.4f);
-            yield return UI.Fade(0f, 1.2f);
+            yield return UI.Fade(0f, 0.8f);
             yield return Cutscene(false);
+        }
+
+        /// <summary>QF43 (19/20): the cage's stems part (k = 1: open) - each tilts outward about its root.</summary>
+        void CageOpen(float k)
+        {
+            if (CubeCage == null) return;
+            var c = new Vector3(VenusLayout.CubeAt.x, 0f, VenusLayout.CubeAt.z);
+            foreach (Transform s in CubeCage)
+            {
+                if (!s.name.StartsWith("Stem")) continue;
+                var outDir = Flat(s.position - c).normalized; if (outDir.sqrMagnitude < 0.5f) continue;
+                s.rotation = Quaternion.AngleAxis(32f * k, Vector3.Cross(Vector3.up, outDir));
+            }
+            _cageK = k;
+        }
+        float _cageK;
+        IEnumerator OpenCage(float seconds)
+        {
+            AudioKit.Play("stone_door", VenusLayout.CubeAt, 0.5f, 0.05f, AudioKit.Bus.Sfx, 30f);
+            float k0 = _cageK;
+            for (float t = 0f; t < 1f; t += Time.deltaTime / seconds) { CageOpen(Mathf.Lerp(k0, 1f, Mathf.SmoothStep(0f, 1f, t))); yield return null; }
+            CageOpen(1f);
+        }
+        void EmptyCageGlow()
+        {
+            if (GameObject.Find("QF43_EmptyCageGlow") != null) return;
+            var l = new GameObject("QF43_EmptyCageGlow").AddComponent<Light>();
+            l.type = LightType.Point; l.color = Color.white; l.range = 2.2f; l.intensity = 0.9f; l.shadows = LightShadows.None; l.transform.position = VenusLayout.CubeAt;
         }
 
         // ------------------------------------------------------------------------------------------ B06 (the return ride)
@@ -830,12 +839,9 @@ namespace Seven
         bool _talkHit;
         IEnumerator C08()
         {
-            Objective("Speak with the guardian");
-            _talkHit = false;
-            if (Auto) { yield return AutoWalkPath(new[] { VenusLayout.MeetSpot - Vector3.forward * 1.4f }); _talkHit = true; }
-            _talkPrompt = "Speak with the guardian";
-            yield return Until(() => _talkHit, "speak with the guardian (C08)", 90f, "The guardian waits in the temple garden: walk up and X", VenusLayout.MeetSpot, () => _talkHit = true);
-            _talkPrompt = null;
+            // QF43 (18): she is already in the cube chamber with him (the warp) - the talk plays there at once
+            if (P7.z < VenusLayout.CubeRoomZ) Seven.Place(VenusLayout.CubeView, Vector3.forward);
+            if (Guardian != null) Guardian.transform.position = VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f);
             yield return Cutscene(true);
             Seven.Lock(true);
             _coverage = true; _lastSpeaker = null;
@@ -844,9 +850,9 @@ namespace Seven
             yield return Say("VEN_C08", 1, 4);
             yield return Shot("c08_you_came_with_a_question");
             _coverage = false;
-            if (Guardian != null) Guardian.WalkTo(VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f));
+            if (Guardian != null) Guardian.Face(VenusLayout.CubeAt);
             Complete("VEN_C08");
-            Objective("Follow the guardian to the cube");
+            Objective("Touch the cube");                                          // from "You came with a question."
             yield return Cutscene(false);
         }
         string _talkPrompt;
@@ -855,9 +861,8 @@ namespace Seven
         bool _cubeHit;
         IEnumerator C09C10()
         {
-            Objective("Follow the guardian to the cube");
-            if (Auto) yield return AutoWalkPath(new[] { new Vector3(30f, 0f, 230f), new Vector3(30f, 0f, 248f), VenusLayout.CubeView });
-            yield return Until(() => P7.z > VenusLayout.CubeRoomZ, "the cube chamber (C09)", 90f, "Into the temple, to the cube chamber", new Vector3(30f, 0f, VenusLayout.CubeRoomZ), () => Seven.Place(VenusLayout.CubeView, Vector3.forward));
+            Objective("Touch the cube");
+            if (P7.z < VenusLayout.CubeRoomZ) Seven.Place(VenusLayout.CubeView, Vector3.forward);
             if (Guardian != null) { Guardian.Stop(); Guardian.transform.position = VenusLayout.CubeView + new Vector3(1.8f, 0f, 2f); Guardian.Face(P7); }
             _cubeHit = false;
             if (Auto) { yield return AutoWalkPath(new[] { CubeTouchSpot }); _cubeHit = true; }
@@ -882,8 +887,11 @@ namespace Seven
             yield return Shot("c09_02_hand_touches");
             // QF18 (20): the shared touch -> vision lead-in (the cube answers, light up her arm, the forehead point, the push-in
             // to her eyes, the bloom to white); the return is Dan's match cut to her open palm below
-            // QF23 (22): the cube's real face (0.21 m - QF18 passed a "radius" 1.2 m out, so her fingers never met it); she stands
-            // outside its cage, so the cube drifts out between the stems to meet her fingertips, and goes back under the white
+            // QF23 (22): the cube's real face (0.21 m); she stands outside its cage, so the cube drifts out to meet her fingertips.
+            // QF43 (19): the cage opens for her touch first (its stems part, an opening faces her), so the cube never passes through a
+            // stem; RuneHolderCheck measures the cube against the stems every frame of the touch.
+            yield return OpenCage(1.1f);
+            var rhc = Cube != null && CubeCage != null ? RuneHolderCheck.Watch(Cube, CubeCage, "Venus: the cube vs its cage") : null;
             yield return VisionTouch.Into("venus", Seven, Cam, UI, Cube != null ? Cube.position : VenusLayout.CubeAt, 0.21f, null, true, p => { if (Cube != null) Cube.position = p; });
             if (Cube != null) Cube.position = VenusLayout.CubeAt;
             // the vision: full screen (skippable; a still if the video can't play). Under it her hand comes back and opens,
@@ -917,128 +925,53 @@ namespace Seven
             yield return Shot("c09_05_two_shot_i_think_i_knew_them");
             if (probe != null) Log(probe.Report());
             Complete("VEN_C09");
-            // C10: the guardian offers the small cube; the original stays in its protected structure
-            if (Guardian != null && RecordCopy != null)
+            // QF43 (20): like every other rune, she takes the cube she touched - the cage is open; she lifts it out in both hands
+            // (the QF28 hold: palms on its faces, never through it), and the guardian lets her ("Take it with you." ...)
+            if (rhc != null) rhc.Stop();
+            ik.RightW = 0f; ik.LeftW = 0f;
+            var fwC = Flat(Seven.transform.forward).normalized;
+            var heldAt = P7 + Vector3.up * 1.12f + fwC * 0.42f;
+            var hold = HoldPose.On(Seven.gameObject);
+            if (Cube != null)
             {
-                Guardian.Face(P7); Guardian.Play(Guardian.HasState("point") ? "point" : "lift");
-                RecordCopy.gameObject.SetActive(true);
-                var hand = Guardian.Anim != null && Guardian.Anim.isHuman ? Guardian.Anim.GetBoneTransform(HumanBodyBones.RightHand) : null;
-                StartCoroutine(HoldRecordIn(() => hand != null ? hand.position + Vector3.up * 0.05f : Guardian.transform.position + Vector3.up * 2.2f + Guardian.transform.forward * 0.6f, 3.0f));
+                for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(VenusLayout.CubeAt - P7)), 300f * Time.deltaTime); yield return null; }
+                hold.Hold(Cube, true, true, "the Elarim cube");
+                var c0 = Cube.position; var rhc2 = CubeCage != null ? RuneHolderCheck.Watch(Cube, CubeCage, "Venus: the cube lifted out of its cage") : null;
+                for (float t = 0f; t < 1f; t += Time.deltaTime / 1.4f) { Cube.position = Vector3.Lerp(c0, heldAt, Mathf.SmoothStep(0f, 1f, t)); yield return null; }
+                if (rhc2 != null) rhc2.Stop();
+                ImageGate.Expect(Cube, "the cube in her hands", 0f, "qf43_20");
+                Shoot(Head7 + fwC * 1.6f + Seven.transform.right * 0.9f + Vector3.up * 0.1f, Vector3.Lerp(heldAt, Head7, 0.35f), 40f, 0.01f);
+                yield return Wait(0.5f);
+                yield return Shot("qf43_20_c10_she_lifts_the_cube_out");
             }
-            yield return Say("VEN_C10", 1, 4);
-            yield return Shot("c10_01_take_this_record");
+            StartCoroutine(KeepCubeAt(heldAt, 30f));
+            yield return Say("VEN_C10", 1, 2);                                     // Take it with you. / It belongs to your temple.
             if (Guardian != null) Guardian.Face(new Vector3(60f, 0f, 200f));       // he looks toward the gardens
             _coverage = false;
             if (Guardian != null) LowOn(Guardian, P7, _side);
-            yield return Say("VEN_C10", 5, 6, false);
+            yield return Say("VEN_C10", 3, 4, false);                              // You saw how close he came. / If this place were lost...
             yield return Shot("c10_02_he_looks_toward_the_gardens");
-            // she takes it; insert: she secures the small cube beside the dodecahedron
-            ik.RightPos = RecordCopy != null ? RecordCopy.position : P7 + Vector3.up; ik.RightW = 1f; ik.LookPos = ik.RightPos; ik.LookW = 0.8f;
-            yield return Wait(0.8f);
             bool first = VenusState.AwardRecord();
-            if (RecordCopy != null && _carry != null)
-            {
-                var from = RecordCopy.position;
-                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.6f) { RecordCopy.position = Vector3.Lerp(from, _carry.Palm, t); yield return null; }
-                // insert: in front of her at chest height, the dodecahedron out of her pocket in her hand, the small cube set
-                // beside it - then both go into her pocket together (the camera on her hands, from above and in front)
-                var fw2 = Flat(Seven.transform.forward).normalized;
-                var held = P7 + Vector3.up * 1.18f + fw2 * 0.36f;
-                ik.RightPos = held; ik.LookPos = held; ik.LookW = 0.9f;
-                _carry.Set(CarriedShape.Where.Hand, 0.3f);
-                for (float t = 0f; t < 1f; t += Time.deltaTime / 0.8f) { RecordCopy.position = Vector3.Lerp(RecordCopy.position, _carry.Palm + Seven.transform.right * -0.13f + Vector3.up * 0.04f, t); yield return null; }
-                // from straight above her hands, tight: the dodecahedron and the cube side by side (never her body)
-                Shoot(_carry.Palm + Vector3.up * 0.7f + fw2 * 0.14f + Seven.transform.right * -0.06f, _carry.Palm + Seven.transform.right * -0.06f, 26f, 0.01f);
-                for (float t = 0f; t < 0.6f; t += Time.deltaTime) { RecordCopy.position = _carry.Palm + Seven.transform.right * -0.13f + Vector3.up * 0.04f; yield return null; }
-                yield return Shot("c10_03_insert_secures_it_beside_the_dodecahedron");
-                _carry.Set(CarriedShape.Where.Pocket, 0.3f);
-                RecordCopy.gameObject.SetActive(false);
-            }
+            // insert: the cube in her hands, close (she secures it with the dodecahedron)
+            if (Cube != null) { Shoot(heldAt + fwC * 1.1f + Seven.transform.right * 0.55f + Vector3.up * 0.3f, heldAt + Vector3.up * 0.1f, 40f, 0.01f); yield return Wait(0.6f); yield return Shot("c10_03_insert_the_cube_in_her_hands"); }
+            _keepCube = false;
+            hold.Release("C10: she secures the cube");
+            yield return Wait(0.4f);
+            if (Cube != null) Cube.gameObject.SetActive(false);                    // secured (with the dodecahedron)
+            EmptyCageGlow();
             // QF38 (2): the end of the shared touch -> vision -> return (Venus returns through its own match cut, so Back never ran):
             // release everything the touch set - the lean toward the cube (it stayed on: she stood bent forward for the rest of Venus),
             // her head life (switched off for the touch), the palm / elbow targets
             VisionTouch.Finish("venus", Seven);
-            Log($"C10: the record copy awarded {(first ? "now (first time)" : "ALREADY (no second award)")} - awards {VenusState.RecordAwards} (must be 1); the original cube still in its protected structure: {(Cube != null && Cube.gameObject.activeInHierarchy ? "yes" : "NO")}");
+            Log($"C10 (QF43 20): she took the Elarim cube itself out of its open cage - awarded {(first ? "now (first time)" : "ALREADY (no second award)")}, awards {VenusState.RecordAwards} (must be 1); the cage stands open and empty");
             Complete("VEN_C10", VenusState.Stage.RecordReceived);
             Objective(VenusState.Objectives[(int)VenusState.Stage.RecordReceived]);
             yield return Cutscene(false);
         }
         // ------------------------------------------------------------------------------------------ C12: two locations (Round 13, 0m)
-        /// <summary>VEN_C12 (Dan, 2026-11-19): right after C10, before she leaves the temple. The guardian wakes an ancient
-        /// display - Mars and Europa - and sends both to her ship. Result: Mars and Europa on the saucer's star map.</summary>
-        IEnumerator C12()
-        {
-            yield return Cutscene(true);
-            _coverage = true; _lastSpeaker = null;
-            Seven.Lock(true);
-            var ik = Seven.gameObject.GetComponent<SevenTableIK>() ?? Seven.gameObject.AddComponent<SevenTableIK>();
-            ik.enabled = true; ik.Alive = true;
-            if (Vector3.Distance(P7, VenusLayout.CubeView) > 3f) Seven.Place(VenusLayout.CubeView, Vector3.forward);
-            if (Guardian != null) { Guardian.Stop(); Guardian.Face(P7); }
-            // she secures the cube beside the dodecahedron, then pauses
-            yield return Wait(0.8f);
-            yield return Say("VEN_C12", 1, 3);
-            // the guardian approaches the ancient display; two locations appear
-            var dispAt = LocationsDisplay != null ? LocationsDisplay.position : VenusLayout.CubeAt + new Vector3(4.3f, 0f, -2.5f);
-            if (Guardian != null) { var gTo = dispAt + new Vector3(-1.1f, 0f, 2.0f); var gd = Flat(gTo - Guardian.transform.position); if (gd.magnitude > 2.6f) { Guardian.transform.position = gTo - gd.normalized * 2.4f; Log("WALK CUT (QF23 9): VEN_C12 - the guardian is already near the display"); } Guardian.WalkTo(gTo); /* beside the display, never between it and her */ for (float t = 0f; t < 2.2f && Guardian.Walking; t += Time.deltaTime) yield return null; Guardian.Face(dispAt + Vector3.up * 1.8f); }
-            for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(dispAt - P7)), 300f * Time.deltaTime); yield return null; }
-            AudioKit.Play("energy_point", dispAt + Vector3.up * 1.8f, 0.8f);
-            Renderer mars = null, europa = null;
-            var locs = new List<Renderer>();
-            if (LocationsDisplay != null) foreach (var r in LocationsDisplay.GetComponentsInChildren<Renderer>(true)) { if (r.name == "Loc_Mars") mars = r; if (r.name == "Loc_Europa") europa = r; if (r.name.StartsWith("Loc_")) locs.Add(r); }
-            for (float t = 0f; t < 1f; t += Time.deltaTime / 1.4f)
-            {
-                foreach (var r in locs) Glow(r, Mathf.Lerp(0f, r.name.EndsWith("Ring") ? 0.8f : 1.6f, t));
-                yield return null;
-            }
-            Shoot(dispAt + new Vector3(-5.2f, 2.4f, -3.0f), dispAt + Vector3.up * 1.7f, 46f, 0.8f);
-            yield return Wait(0.9f);
-            yield return Shot("c12_01_the_display_two_locations");
-            yield return Say("VEN_C12", 4, 4);
-            // over her shoulder - the display; she studies Mars first
-            {
-                var h = P7 + Vector3.up * 1.55f; var f = Flat(dispAt - P7).normalized; var rr = Vector3.Cross(Vector3.up, f);
-                Shoot(h - f * 1.3f + rr * 0.55f, dispAt + Vector3.up * 1.9f, 40f, 0.6f);
-            }
-            if (mars != null) { ik.LookPos = mars.transform.position; ik.LookW = 0.9f; Glow(mars, 2.6f); }
-            yield return Wait(0.6f);
-            yield return Shot("c12_02_over_her_shoulder_mars");
-            yield return Say("VEN_C12", 5, 8, false);
-            // her attention shifts to Europa
-            if (mars != null) Glow(mars, 1.4f);
-            if (europa != null) { ik.LookPos = europa.transform.position; Glow(europa, 2.6f); }
-            yield return Say("VEN_C12", 9, 11, false);
-            yield return Shot("c12_03_europa");
-            if (Guardian != null) TwoShot(Guardian, _side, 6.0f, 0.8f);
-            yield return Wait(0.8f);                                       // the guardian pauses
-            yield return Say("VEN_C12", 12, 14, false);
-            yield return Wait(0.6f);                                       // 7 considers the two locations
-            yield return Say("VEN_C12", 15, 16, false);
-            // a soft tone confirms the transfer; Panther from the ship
-            AudioKit.Play("console_select", dispAt + Vector3.up * 1.8f, 0.9f);
-            for (float t = 0f; t < 0.8f; t += Time.deltaTime) { float k = 1f + Mathf.Sin(t * 14f) * 0.5f; if (mars != null) Glow(mars, 1.6f * k); if (europa != null) Glow(europa, 1.6f * k); yield return null; }
-            yield return Say("VEN_C12", 17, 18, false);
-            // she turns to the guardian
-            if (Guardian != null)
-            {
-                for (float t = 0f; t < 0.5f; t += Time.deltaTime) { Seven.transform.rotation = Quaternion.RotateTowards(Seven.transform.rotation, Quaternion.LookRotation(Flat(Guardian.transform.position - P7)), 300f * Time.deltaTime); yield return null; }
-                ik.LookPos = HeadOf(Guardian);
-            }
-            yield return Say("VEN_C12", 19, 19);
-            // her hand rests briefly over the secured cube (in her pocket)
-            if (_carry != null) { ik.RightPos = _carry.HipPoint; ik.RightW = 0.8f; }
-            yield return Say("VEN_C12", 20, 20, false);
-            yield return Shot("c12_04_thank_you");
-            ik.RightW = 0f;
-            // 7 inclines her head and leaves
-            if (Guardian != null) { ik.LookPos = HeadOf(Guardian) + Vector3.down * 0.5f; yield return Wait(0.7f); }
-            ik.LookW = 0f;
-            _coverage = false;
-            Complete("VEN_C12");
-            Log("C12 (0m): Mars and Europa sent to the ship - available on the star map from now on");
-            yield return Cutscene(false);
-        }
-
+        // QF43 (21/22): VEN_C12 lives in VenusDirectorQF43.cs (re-staged at the cage, the projection, then straight to her bike)
+        bool _keepCube;
+        IEnumerator KeepCubeAt(Vector3 at, float max) { _keepCube = true; for (float t = 0f; t < max && _keepCube && Cube != null; t += Time.deltaTime) { Cube.position = at; yield return null; } }
         static Vector3 CubeTouchSpot => VenusLayout.CubeAt + new Vector3(0f, -VenusLayout.CubeAt.y, -1.98f);
         bool _autoRideStop;
         IEnumerator PalmUpLater(SevenTableIK ik, Vector3 at, float delay) { yield return Wait(delay); ik.RightPos = at; ik.RightW = 1f; ik.LookW = 0f; }

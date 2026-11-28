@@ -1,5 +1,407 @@
 # Active Development Plan — 7: The Observer
 
+## QF43 — in plain words (Code, 2026-11-28): 1.1.0-rc7 (build 2014, `game-2014`) PUBLISHED, Latest (every earlier release kept)
+- **Your take picks ship** ("Go on!" take_1, the two laughs). Lines about the people in her visions now say "others"
+  (and the Cetacean line is "I think it's who we came to meet."); one more was found in Cattalus.
+- **The saucer:** the galley has a long window along the whole counter, showing where the saucer really is. The floor light ring is
+  now a strip set into the floor, so furniture and boots cover it. There is one glass design (the window band plus the glass floor in
+  front of it, the ceiling solid), and the outside of the saucer now shows the same glass. Deep space is dark, with small round
+  stars.
+- **Venus, the start:** the arrival talk is your rewrite, and "By the way, what should I call you?". Her arm no longer hangs
+  reaching for the bike while Panther grows (it was reaching for the bike's fairing). The Elarim capes sit on the shoulders and flow
+  like cloth.
+- **Venus, the bridge:** you now see the walkway crack and fall in a short cutscene; then she lifts the slab back with telekinesis.
+  Nothing pops in beside the span any more.
+- **Venus, the Guardian scenes:**
+  - She holds the dodecahedron up before "I found this on the Moon."
+  - "Then I'll find him." has four new takes for you to pick from.
+  - You hear and feel the pulse before she talks about it. It is a deep throb every 9 s with a tremor, and the creatures surge with it.
+- **Venus, the way down:** the gate stays shut, and she goes round it down the root wall. The route is a hang and a shimmy, then a
+  jump over the chasm (only between pulses), then a drop. She makes a slab step with telekinesis, then pulls the gate's release
+  behind her.
+- **Venus, the Wormmaster fight:**
+  - He stays up and defends all three devices, in any order, until the third is off. He used to come down after the second
+    because of the old phase design.
+  - The holding cell is shown and named before the fight. She lifts him into it with telekinesis, and it closes into a full dome.
+- **Venus, after the fight:**
+  - She goes straight to the cube with the Guardian. The cage opens and she takes the cube herself.
+  - The Mars / Europa talk is staged at the cage, with the two places projected over it and every speaker in frame.
+  - Then she is on her bike.
+- **Climbs with a purpose:** the optional climbing blocks are gone.
+  - Mars: she climbs the old wall to the drawbridge's winch lever.
+  - The asteroid: NOT done. There is no free ground beside its junctions, so junction 2 keeps its from-the-bike lever (see "For Dan to
+    check").
+  - The mothership: she climbs the relay housing to the bridge alignment controls.
+- **7 walks and runs about 18 % faster.** Her animations are sped up to match, and Panther keeps up.
+
+## QF43 — status (Code, 2026-11-28)
+### What changed, item by item (QF42's old numbers in Dan's text: subtract 2)
+1. **Take picks:** "Go on!… Before somebody sees you!" ships as take_1 (it was already the game's file, committed in QF42); the two laugh
+   picks were already in. Nothing re-generated.
+2. **"others":** re-voiced with the same voices / delivery: `s06_05_7` "There were others here.", `s10_06_7` "Those others…",
+   `VEN_C03_06` "When I touched it, I saw others.", `VEN_C11_03` (Panther, the Venus debrief) "And the others you saw?", `EUR_03_05`
+   "I think it's who we came to meet.", and one more the search found: `CAT_12_11` "The others in the visions." The old galley line
+   "And the people?" (`Docs/DIALOGUE.md` ~604) is in the replaced old scene 12 (not in the game) - changed in the text too. Kept:
+   "There are people living all the way up there.", "My people", "They aren't attacking the people." (the Elarim living there now),
+   Mars's "the people here", the Biavians' "our people", "Most people insist...". Docs + line lists + subtitles regenerated.
+3. **The galley window:** the square porthole panel is gone; a framed window (the main windows' glass, frame bars and four mullions,
+   a 32 cm reveal) runs the whole counter (190.6-209.4 deg, between the counter top and the wall cabinets). Behind it the live view:
+   a wider dark strip, 90 small round stars and the disc of the world the saucer is at (SaucerOutside switches it), bigger. Nothing
+   interactive. NOT done: a dedicated "Moon falling away through it" animation when leaving (the disc switches with the location).
+4. **The floor light ring:** the 3.6 cm glowing tube lying on the floor (it ran round the whole deck, through the galley table's and
+   stools' 2.5 cm feet and through 7's boots - that is why parts glowed over them) is replaced by a frosted emissive strip set flush
+   in the floor between two dark channel lips (3 mm proud at most: every foot, sole and base covers it; opaque, normal depth test).
+   The soft pool is the bloom + the polished walkway. There was no window-reflection effect on it (the floor reflections are the
+   cabin's reflection probe).
+5. **Glass + space:** one design - the window band (52-128 deg) and the glass floor ring in front of it; the ceiling solid (it always
+   was). The exterior saucer now matches: a smoked-glass band on the upper hull over the window's arc with five mullions, and a glass
+   panel in the underside under the glass floor (it had no glass at all). Deep space: the saucer camera's clear colour (0.62 grey - the
+   lit worlds' sky behind their haze) is near-black (0.012) while travelling between worlds (the arrival compositions keep their haze - see the gate); the stars (900 square quads 2.4-8.8 m
+   across, emissive 2.2 = bloom blobs) are now 1800 small round 12-sided points (0.5-1.7 m at 1400 m: 1-3 px) in three brightness groups.
+   The "hexagons" in the pre-warp shot were the passage's rings of her records (icosahedra / dodecahedra) seen on grey - they stay (they
+   are her solids) and now read against a dark sky. NOT done: a distant disc of the world being left in the main windows while travelling.
+6. **Venus arrival:** VEN_C01 + VEN_B01_01 / _06 rewritten as proposed (C01_04 cut, C01_08 "Mm-hmm." new, B01_01 "The temple's all the
+   way over there. That's a long walk.", B01_06 "By the way, what should I call you?"); she turns to the temple first and the line is
+   framed over her shoulder with the temple's spires in shot. VEN_C03_06 "...I saw others." Re-voiced; spec + line lists updated.
+7. **Her arm as Panther grows:** it still happened on the current build. Cause: the beat put her left hand on the bike's fairing
+   ("catching the fairing") at full weight and only released it three lines later; after her step back the fairing was out of reach,
+   so the arm hung raised and bent. Now no hand target at all: a small step back, looking up at him, arms relaxed. Logged:
+   `QF43 (7) ... hand targets left 0.00 / right 0.00`.
+8. **The Elarim capes:** `ElarimCape` rewritten. At load the cape (the vertices on CapeA/B/A2/B2) is re-skinned onto a 5 x 3 cloth grid
+   of its own; the whole cape is lifted so its top edge sits ON the shoulder line (+0.23 m on the workers), the top row pinned to the
+   upper spine; the four rows below are a verlet cloth (gravity, damping, a slow breeze, the body's motion) pushed out of capsules round
+   the torso, thighs, shins and feet and kept above the ground. Every Elarim (the guardian, the attendant, the workers).
+9. **The bridge collapse:** a cutscene the moment she rides up: control taken, the bike eases to a stop; the tremor (the vessel and the
+   worker); a wide of the walkway: cracks racing in from both ends (dust bursts + a crack sound), the shudder, the middle falls first in
+   stages with the slab, a heavy crash below; the shot holds 2 s on the gap; back to her at the edge for "Something's wrong here." /
+   "I felt that from here."; control back facing it. The objectives come from it ("The walkway is gone - get off and find a way
+   across", "Lift the fallen slab back across the gap (telekinesis)"). Fixed seeds, no physics; the repaired bridge persists (as before).
+10. **No pop-in beside the span:** the two stone ramps were built hidden and switched on with the span. They are now part of the banks
+    (the old walkway's abutments) from the start, always walkable; only the span appears.
+11. **"I found this on the Moon.":** she takes the dodecahedron out and holds it up toward him, over her shoulder in frame, BEFORE the
+    line (it stayed in her pocket until after it). The every-chapter audit of "this / here / look" lines was not done this round.
+12. **"Then I'll find him.":** 4 takes in `Docs/Previews/qf42/VEN_C04_14_takes/` (`takes.txt`); take_3 ("[determined] [firmly] Then
+    I'll... find him.") is in until Dan picks. She turns toward the gardens on the line, her face framed.
+13. **The pulse:** one clock for the level: every 9 s the devices throb (new ElevenLabs sound `venus_pulse`, a deep booming hum), a small
+    tremor, the vessel's water ripples, a ring of light from the devices and a glow from the root gate, the basin creatures surge toward
+    the foundations; the music ducks under it. From C04 (when the guardian names the trouble) to C07; each device off makes it weaker.
+    At the overlook a full pulse plays before any line; then "Hear that?" / "Felt it." and the next pulse comes as she says "Every
+    time that pulse comes, they move."; "There." is framed on the root gate glowing with it.
+14. **The way down:** the root gate stays shut. Panther "That's not opening from this side." / 7 "The root wall beside it goes down.
+    I'll go around." The route (a new slot cut beside the pit): climb down into a hang at the gap in the railing, shimmy, drop to the
+    shelf; jump the root chasm - only between pulses (on each pulse the hanging roots thrash, grit pours, the jump is off; Panther:
+    "Wait for the next one… now."); hang and drop into the burrows; lift a fallen slab into place with telekinesis as a step onto the
+    sill; pull the gate's inner release - the gate at the top sinks open (the stairs = the short way back) - "Good. Now you have a way
+    back." Then the tunnels as before.
+15. **Climbs with a purpose:** QF40's optional view-climbs are gone (Venus, Mars, the asteroid, the mothership). `ClimbSection` takes a
+    lever on its top tier that the story waits for: Mars - the drawbridge is chained up from the crumbled fortress wall south of the span;
+    climb it, pull the winch lever, the drawbridge lowers (replaces the telekinesis on the lock); the mothership - the bridge's
+    alignment controls are on the relay housing by the junction (Nela's line re-voiced: "...up on the relay housing, above the
+    junction."); the asteroid - junction 2's lever is jammed, its control cab is up on the stalled gantry by the workstations (on foot,
+    then back on the bike). Panther's lines re-voiced. If a chapter cannot place its block (no free ground) the beat falls back to its
+    old interaction and the log says so - **the asteroid's was NOT placed** (no free ground beside junction 2: see Proof). The finale's climb (the old route's wall) stays.
+16. **Wormmaster comes down only after the third device:** cause - QF17's design: phase 1's objective was the north + ledge devices
+    (2), the crystal was phase 2's objective, so he came down after the second. Now all three in phase 1, any order; on his perch he
+    moves toward the device she is nearest and attacks from there; the third off -> his perch loses power and he comes down. The pilot
+    takes a random order each run (logged). Every other boss: Viper's pylons (3 in phase 1), the Machinist / Ratwing / Tunneler phases
+    have one objective each - their phase changes wait on it (BOSS OBJECTIVES build check: 0 problems).
+17. **The holding cell:** a sunken ring with six old Elarim pylons in the chamber floor, shown before he speaks: Panther "That ring in the
+    floor. It looks like an old holding cell. The Elarim must have used it for the creatures." / "Big enough for him." / "Keep that in
+    mind." Beaten, he stays down; Panther "The holding cell. Get him into it."; RT lifts him (her telekinesis, his body hanging heavy,
+    struggling feebly) through the air into the ring; the pylons light, the field rises and arcs over into a closed dome (open share 0);
+    his claws scrape it. The old barrier round his dais and the console are gone from the flow. Other containments not re-examined.
+18. **The warp after the fight:** after C07 a fade, a short "later" shot of the quiet court with the bike, then she stands at the cube
+    with the guardian: C08 there, then the touch. No return ride, no walk. Saved at the chamber; the bike at the court. B06's ride lines
+    are not heard any more (the ride is gone). Other chapters not re-checked for post-boss walks.
+19. **The cube vs its cage:** the cage's eight stems are separate pieces, turned so an opening faces her; they part (tilt outward) before
+    her touch. New check `RUNE vs HOLDER (QF43 19)`: physics penetration of the rune against every mesh of its holder each frame of the
+    touch and the lift - Venus 0 frames overlapping. Only the cube has it this round (not the asteroid's gimbal, the mothership's
+    structure, the trophy, the finale's sockets).
+20. **She takes the cube:** the cage is open; she lifts the cube out in both hands (the QF28 hold), the guardian: "Take it with you." /
+    "It belongs to your temple." / "You saw how close he came." / "If this place were lost, I would want someone to carry it. And to
+    know we had been here." The Log and Field Guide say "the Elarim's cube". Revisits: the cage open and empty with a soft glow.
+21. **C12:** staged at the cage; the guardian raises a hand and two places are projected over it (a planet with a canyon band, an icy
+    moon with cracks), each lighting as named. Why the check missed the blank wall: the old staging sent him to the display panel on
+    the east wall; her lines' framing put the camera 1.7 m from her toward him, right at / behind that panel - built without a collider,
+    so neither CameraOccluders nor the coverage ray saw it ("in frame, clear" over the panel's back). Now every C12 framing must sit
+    inside the chamber's walls, see the speaker's head and keep the guardian off her line of view; logged `C12 FRAMING (QF43 21)`.
+22. **Back at the bike:** after C12 a fade and she is ON her bike in the temple court, ready to ride to the saucer.
+23. **Pace:** walk 1.7 -> 2.0 m/s, run 3.9 -> 4.6 m/s (+18 %) - the walk / run clips play 18 % faster with it (no sliding); aboard 1.6
+    -> 1.9 m/s; Panther's trot 2.4 -> 2.8, sprint 4.4 -> 5.1 m/s.
+
+### Proof
+- **Whole game from a new save, both orders** (`Tools/Run-WholeGame.ps1`, `Builds/WholeGame/qf43/`):
+  - A (Mars first, the asteroid first, the race won): `WHOLE GAME (QF38): PASS - pieces 9 / 9; soft-locks 0; skips taken 5; 114.4
+    game-min; the credits rolled`.
+  - B (Europa first, the mothership first, the race lost): `PASS - pieces 9 / 9; soft-locks 0; skips taken 4; 117.0 game-min; the
+    credits rolled`. Run B is on the final build; run A was before the last two bot-only fixes (the climb bot's camera and its walk
+    round the block).
+- **In both runs:**
+  - DESCENT (QF43 14) (human-timed bot): done in 41 s, retries 0, 23 pulses during it.
+  - PHASE CHANGE (QF43 16): all three devices off (3 / 3), in a different order each run (1-3-2, 2-3-1; 2-1-3 and 1-2-3 in the
+    Venus check runs). He moved along his perch to defend a device 4x.
+  - CONTAINMENT (QF43 17): closed on every side and over the top, open share 0.00.
+  - RUNE vs HOLDER (QF43 19): 598 + 36 frames, 0 overlapping.
+  - C12 (QF43 21): 19 lines framed, 0 out of frame / blocked / outside the chamber.
+  - WARP (QF43 18) and BACK AT THE BIKE (QF43 22) as planned.
+  - QF43 (7): hand targets 0.00 / 0.00 as Panther grows.
+  - CLIMB TEST (QF43 15) Mars [human-timed bot, in the story]: PASS, retries 0, 7 hidden 0 of 581 frames (run B).
+  - CLIMB TEST (QF43 15) Biaveh: PASS, retries 0, 7 hidden 0 of 874 frames (run B). In run A it failed at the first jump: the bot
+    walked straight at the block from behind, so a walk round it was added.
+  - Shared counters: VOICE OVERLAP 0 (1111 / 1098 lines), HAND IK LEFT ON 0, NO NEXT STEP 0, AUDIO CARRY 0.
+- **Not done / open:**
+  - **The asteroid's climb was NOT placed in either run.** "No free spot within 18 m of junction 2": the causeway decks are 7 m bike
+    lanes and the workstation area is full of benches. Junction 2 keeps its from-the-bike lever this round. The asteroid has no
+    on-route climb yet; the purposeless block is gone.
+  - The finale's climb is not placed either. That predates QF43 and is not in this list.
+  - TK AUDIT has 1 miss, "secure the swinging span section" (the asteroid). It was in QF42's runs too.
+  - BODY vs PROPS: 16 / 15 of about 1075 captures, which was already the case.
+  - Venus's own coverage measure missed one framing: VEN_C04_15, the guardian, just after her "Then I'll find him." turn.
+- **Item 21's re-run of the empty-shot check over every dialogue:** DIALOGUE FRAMING (QF18 7) over the whole game checked 645
+  cutscene lines. The speaker was visible in 479, reframed in 166, and still blocked in 0. Telepathic lines (211) had 7 or the cutaway
+  in frame. Shots rejected for a big body over half the frame: 98. The check now also catches the camera behind a wall with no
+  collider in C12's chamber.
+- **Check runs:**
+  - `Builds/Checks/qf43_venus_auto` (the autopilot, Venus to the ship). This run found the chasm jump's lateral-clamp bug, the C12
+    framings and the shots fixed above.
+  - `qf43_venusplay2b` (player-style part 2): `VENUS PLAYTEST 2: 1/1, soft-locks 0`.
+  - `qf43_aboard` (the galley window, the floor ring, the passage on a dark sky). Its white frames 29-31 (s10_13 / x02 / control
+    back) were white in QF40's run too: the end-of-scene fade, not new.
+- **Captures I looked at:**
+  - The long galley window (stars, the Moon disc), and the galley meal with no ring glow over the bases.
+  - The passage through the window on a near-black sky.
+  - The capes hanging from the shoulders and swinging as the guardian walks.
+  - The dodecahedron held up in frame.
+  - The dome closed round him (now fainter so he stays visible), him carried through the air, the projection over the cage.
+  - The cube in her hands, the root wall, the gate opening up the pit, Mars's climb with the winch lever.
+- **Release gate** `Builds/ImageGate/gate_1.1.0-rc7.txt`: **PASS** - no new or worse failure, NaN 0, Cattalus 28 / 28, baseline 12. The
+  first pass failed 10 new shots, and they were fixed rather than baselined:
+  - Mars: the drawbridge declared as the subject of its shots, the climb's top and lever framed from the side.
+  - The dark space limited to the journeys: the asteroid's and the finale's arrival compositions keep their haze looks; darkening
+    them broke 4 shots.
+  - The Moon's 6b two-shot: a little more key light (range was 0.2996).
+  - Europa's marker shot: taken with the follow camera closer.
+  - The final exe differs from run B's only in those capture-side / framing changes and the space colour's scope.
+- **Published: 1.1.0-rc7, `game-2014`, Latest. rc6 and every earlier release are kept.**
+
+**For Dan to check (QF43)**
+1. Pick a take of "Then I'll find him." (`Docs/Previews/qf42/VEN_C04_14_takes/takes.txt`; take_3 is in).
+2. Confirm or change the proposed lines (all voiced):
+   - VEN_C01 / B01;
+   - C05_00 / 00b / 03 and the descent's lines C05_P1-P4;
+   - C06_00a-c and C06_P1;
+   - C10 1-4;
+   - the climbs' lines;
+   - Nela's BIA_06_N2: "...up on the relay housing, above the junction."
+3. Play the way down (is ~1 minute right? The jump waits for the pulses) and the Wormmaster fight (three devices, any order, him
+   defending from his perch).
+4. The capes: enough flow, or too much swing when they walk? The knobs are `ElarimCape.Damping` / `Breeze`.
+5. The saucer: the galley window, the floor ring, the exterior glass band, the dark space.
+6. The asteroid: is a climb wanted somewhere else on its route? There is no room beside the junctions. A spot would need open ground
+   (or a level change).
+
+## Quick fix QF43: Dan's playthrough list, part 3 (the take picks, "others", the saucer, Venus) (Dan, 2026-11-28) — done (status above; items 1–23; moved from QF42, which shipped its first two items as rc6)
+Item numbers inside the text ("item 9", "item 15", "item 16") refer to QF42's old numbering: subtract 2.
+
+1. **Dan's take picks (2026-11-28):** "Go on!… Before somebody sees you!" = **take_1** (urgent hushed; copied over
+   `Unity/Assets/Audio/Voice/s01_first_contact/s01_02_7.mp3` by the planning chat); the cart-joke laugh = take_2 and the abduction laugh
+   = take_1 (both already in the game). Rebuild so take_1 ships; don't re-generate these three lines.
+2. **"People" → "others" for the ones in her visions; and not "people" for the Cetaceans** (Dan, 2026-11-28; he asked in a Code
+   window by mistake, do it in this update). Keep "people" for those living there now (the city reveal "There are people living all
+   the way up there." stays; Panther's "My people" stays). Change (re-voice 7's / Panther's lines with the same voice and delivery):
+   - `s06_05_7` (right after the first vision): "There were people here." → **"There were others here."**
+   - `s10_06_7` (the galley): "Those people…" → **"Those others…"** (Panther's "At the door?" still follows).
+   - Panther's "And the people?" (the galley / debrief talk, `Docs/DIALOGUE.md` ~line 604) → **"And the others?"**
+   - `EUR_03_05` (Europa, sensing the Cetacean below her): "I think one of the people we came to meet." → **"I think it's who we came
+     to meet."**
+   Check every other line that calls the vision figures or a non-humanoid species "people" (keep it where a species calls itself that,
+   e.g. "My people"). Update `Docs/DIALOGUE.md`, `EUROPA-LINES.md`, the line lists and subtitles.
+3. **The galley's star panel becomes a real window along the whole counter** (Dan, revised 2026-11-28: it isn't a picture; when they
+   left the Moon you could see it leaving through it). Replace the small square panel above the kitchen counter with **a long window
+   spanning the full length of the counter** (framed like the main windows, same glass and mullion style), showing the live view
+   outside: always the saucer's real location (the world being approached / left, deep space between, QF38 7's rule), moving with the
+   saucer. Nothing points at it as a destination picker (choices stay at the console). Before / after captures of the galley, and one
+   leaving the Moon through it.
+4. **The saucer's floor light ring shines through the furniture** (screenshot `Docs/Previews/qf42/dan_floor_ring.png`, the galley
+   meal: bright arcs of the floor ring glow on top of the table's and stools' bases and through 7's boots, while other parts are
+   hidden: inconsistent). Make it **a real light ring built into the saucer floor** (Dan likes the idea): a recessed channel round the
+   cabin floor with a frosted emissive strip in it (Kyle's soft glow, monochrome), properly depth-tested so the table, stools, chairs,
+   7 and Panther **cover it** where they stand on it (no glow drawn over them; check its shader / render queue / ZTest, or a decal or
+   bloom pass bleeding through), with a soft pool of light on the floor round it and gentle bloom. Consistent in every aboard scene and
+   camera (the one interior prefab). If anything was a window-reflection effect, remove it. Captures: the galley meal from Dan's angle,
+   the egg chair, the console, a wide of the cabin.
+5. **The saucer's glass and the view outside must be consistent** (screenshot `Docs/Previews/qf42/dan_prewarp_view.png`: after choosing a
+   destination, before the warp). Dan isn't sure whether there's glass above the main windows as well as in the floor. Decide **one**
+   design and apply it everywhere (every aboard scene, the hull-away views, and the **saucer's exterior model**, which must match): e.g.
+   the main window band + the floor's glass ring (the light ring of item 6 sits at its edge), the ceiling solid; or glass above too, if
+   it reads well. No stars showing through a surface that's meant to be solid. Also in that shot: space looks **flat grey with chunky
+   white hexagons** for stars. Deep space must be dark (near-black, a faint haze at most), stars small, round, soft points of varied
+   brightness (no polygons), with distant planets / the world being left where they really are. Check every pre-warp / in-flight /
+   arrival view. Captures of each, plus the exterior matching the interior's glass.
+6. **Venus arrival dialogue doesn't make sense (VEN_C01 + VEN_B01_01).** "After the Moon… / It's beautiful." reads oddly; "Land somewhere
+   with a roof." / "Why?" / "Experience." is a non-sequitur; and "That's a walk." doesn't follow from it. Replace (proposed, Dan to
+   confirm; use them unless he changes them; same shots: over her shoulder to the gardens, the two-shot, the landscape, Panther's head
+   tracking the flying creatures, then the beam down and the distant temple):
+   - VEN_C01_01 **7:** "Someone still lives here." · VEN_C01_02 **Cat:** "You sound surprised." (keep)
+   - VEN_C01_03 **7** (quietly, the view taking her in): "After all that dust and machinery… I'd forgotten a place could look like this."
+   - (cut VEN_C01_04 "It's beautiful.")
+   - VEN_C01_05 **Cat** (his head tracking the flying creatures, tail twitching): "Hm."
+   - VEN_C01_06 **7:** "Don't even think about it."
+   - VEN_C01_07 **Cat:** "I was admiring the wildlife." · new VEN_C01_08 **7** (amused): "Mm-hmm."
+   - VEN_B01_01 **7** (down the beam, looking out to the temple far across the gardens): "The temple's all the way over there. That's
+     a long walk." → then VEN_B01_02 "You have a vehicle." / "I know." / "I'm establishing that my advice is useful." as written.
+   - VEN_B01_06 **7:** "What should I call you?" → **"By the way, what should I call you?"** (Dan; a light, curious aside as she turns
+     back to him from the bike).
+   Frame VEN_B01_01 so the distant temple is in shot. Also, per item 4: VEN_C03_06 "When I touched it, I saw people." → **"When I
+   touched it, I saw others."** Re-voice with Seven / Cat; update `Docs/VENUS-LINES.md`, `CHAPTER2_VENUS.md`, the line lists.
+7. **Venus naming scene (VEN_B01, "There. Saved you the trouble."): her arm stays stuck in a raised, bent pose for a few seconds as
+   Panther grows** (screenshot `Docs/Previews/qf42/dan_arm_after_grow.png`, from an older recording, before QF38's hand audit: check
+   it on the current build first and say whether it still happens). If it does: find what holds the arm (the gesture / point clip,
+   an IK target left on, the bike-reach), release it with a blend as the gesture ends, and let her react to him growing (a small step
+   back, looking up, arms relaxed). Capture the moment from this angle on the current build either way.
+8. **The Elarim capes (Venus) still look awkward: they hang below the shoulders and are very rigid** (Dan: the legs work now). The cape is
+    a separate part on two bones (CapeA / CapeB, `ElarimCape.cs`, cut off the Tripo model by `cleanup_r11.py elarim`). Fix both:
+    - **Attach it at the shoulders:** the cape's top edge sits on the shoulders / round the neck (a collar line across the upper back,
+      no gap, no sag below the shoulder line), weighted to the upper spine / shoulder bones so it moves with the body.
+    - **Make it flow:** more bones down the cape (a chain of ~4–6 rows, or a cloth simulation: Unity Cloth or a spring-bone chain)
+      so it sways with walking, turning, gestures and a little breeze, settles when they stand, and never passes through the body or
+      legs (colliders on the spine / legs). Same on the Guardian and every Elarim.
+    Before / after captures (standing, walking, turning, from behind and the side) and a short clip of one walking.
+9. **Venus: the earthquake must visibly collapse the bridge / walkway** (VEN_B03 + VEN_C02, `CollapseWatch`). Dan doesn't see it happen,
+    so the player doesn't know why the way is broken. Make it **a short cutscene** the moment she rides up (control taken, the bike eases
+    to a stop by itself, never into the gap):
+    1. The tremor hits: camera shake, a deep rumble, dust falling, water shaking in a vessel, a worker steadying it (the spec's beat).
+    2. **Cut to a wide shot of the bridge ahead:** cracks race across it, the middle spans buckle and fall into the gap in stages
+       (a few big pieces, rubble and dust, a heavy crash echoing below), the ends left jagged; hold on it 2–3 s.
+    3. Back to 7 braking on the bike at the edge: VEN_C02_01 "Something's wrong here." / VEN_C02_02 Panther "I felt that from here."
+    4. Control returns facing the broken bridge; the objective from the story leads to **the repair she already does with telekinesis**
+       (the existing B03 telekinesis bridge: she lifts the fallen spans / slabs back into place), the guide light (QF40 6) on it.
+       Seeing it fall first is what makes the repair make sense.
+    The collapse is the same every time (no physics randomness); once she has repaired it, **the repaired bridge** persists on revisits
+    and saves (never shown broken again). Captures of each beat (the collapse, then the repair) and a short clip.
+10. **Venus: flat rectangles pop in on either side of the bridge when she lifts the span** (screenshot `Docs/Previews/qf42/dan_bridge_aprons.png`,
+    "Ride across": plain slabs appear out of nowhere at the span's sides / ends before it drops). Probably the `BridgeRamps` aprons /
+    `BridgeRampS/N` zones (added so the bike doesn't hang up on the span). Dan: **only the span across, nothing else appears.** Remove the
+    pop-in pieces; if the bike still needs a smooth way on and off, build that into **the span itself** (tapered, ramped ends that are
+    part of the slab she lifts, visible the whole time it's in the air) or into the existing banks (shaped earth / stone, present from
+    the start, never appearing). No plain boxes. Re-prove QF-0d's "the bike never hangs up on the telekinesis bridge" at any reasonable
+    approach angle. Captures: the lift, the drop, the ride across.
+11. **Venus, meeting the Guardian (VEN_C03): "I found this on the Moon." but the dodecahedron isn't visible.** Before / as she says the line,
+    she **takes it out and holds it up in her open hand(s) toward him**, clearly in frame (the shot over her shoulder or a two-shot with
+    the shape between them), then VEN_C03_03 "May I see it?" with the insert of the dodecahedron as written. Held with the QF28 hold
+    solver (palm under it, fingers on its faces, never through it); she keeps holding it until she hands it / sets it down, then the
+    hand is released. Same check for every line that refers to an object she's showing ("this", "here", "look") in every chapter: the
+    object is in her hand and in frame when the line plays.
+12. **"Then I'll find him." (`VEN_C04_14`, Venus) is flat** (Dan: it needs more oomph). Re-voice: resolute and determined, a quiet
+    fierceness: she's decided, steady and firm, a little lift and weight on "find" and a clean, final "him" (not shouty; a promise).
+    Delivery note "determined, resolute, quietly fierce"; Eleven v3 tags (e.g. `[determined]`); 3–4 takes saved to
+    `Docs/Previews/qf42/VEN_C04_14_takes/` with `takes.txt` (as QF40) for Dan to pick; the most energetic that stays in character goes in
+    until he picks. Frame her face for it (she turns from the Guardian toward the gardens on the line).
+13. **Venus, VEN_C05 "Every time that sound starts, they move." — there's no sound** (Dan: nothing was heard or mentioned; isn't it
+    another tremor?). Make the signal real and tie it to the tremors (it's what's been shaking the gardens):
+    - **The pulse:** the control devices emit a deep, throbbing pulse every ~8–10 s (a low booming hum rising and falling, felt more than
+      heard), each with a **small tremor** (camera shake, dust from the roots, water rippling), a ripple of light from the device, and
+      the burrowing creatures **surging in the same direction** on every pulse, then milling until the next. Audible across the
+      observation area (not drowned by music; duck the music on each pulse).
+    - **Let the player experience it before the line:** at least one full pulse plays as she reaches the overlook, then (proposed, Dan to
+      confirm; use them unless he changes them):
+      **VEN_C05_00 7:** "Hear that?" · **VEN_C05_00b Panther:** "Felt it." (calling back to "I felt that from here.")
+      VEN_C05_01 "They aren't attacking the people." · VEN_C05_02 "What are they doing?" ·
+      **VEN_C05_03 7** (changed, on the next pulse as the creatures surge): "Following something. Every time that pulse comes, they move."
+      · VEN_C05_04 "There." (framed on the nearest device glowing with the pulse) · VEN_C05_05 "Then find what's calling them."
+    - The pulses continue (and are the same sound) through VEN_C06 / the encounter until each device is shut down (each one off makes
+      the pulse weaker), and stop for good at VEN_C07. Make the pulse with ElevenLabs Sound Effects.
+14. **Venus: after VEN_C05 a gate just lowers by itself, then it's a straight walk to Wormmaster** (Dan: she should find an open path or
+    a switch; better, the way to the villain should be an obstacle course). Replace the self-opening gate and the straight walk with **a
+    required traversal route down to the control chamber**, using the Chapter 1 moves (QF40 3's rules: camera never blocked, chalk-glow
+    lips, the guide light, two bots incl. human timing, no soft-locks, a fall puts her back at the section start), ~2–3 minutes:
+    - The gate stays **shut** (jammed by roots / locked from below); Panther: "That's not opening from this side." The way on is around /
+      under it: a climb down the root-wall beside it (ledges, a shimmy along a carved channel), a jump across the root chasm, a hang-and-
+      drop into the burrows, a slab she shifts with telekinesis to make a step, and **timing with the pulses** (each pulse's tremor shakes
+      loose debris / sways the hanging roots: cross between pulses).
+    - At the bottom she reaches the gate's **inner release** (a lever / wheel she pulls), opening it behind her so the route back up is
+      short (no one-way soft-lock), then on into VEN_C06's control chamber.
+    - Panther comments once or twice (telepathic: "Wait for the next one… now."). Objectives from the story ("Find a way down to the
+      source").
+    (QF40 3's standalone blocks: see item 17.)
+15. **Every climbing section must have a purpose: replace QF40 3's standalone climbing blocks** (Dan: "I want them to have purpose").
+    Remove the optional ruin / machine blocks (Venus by the temple court, Mars by the bridge-head, the asteroid by the hall plaza, the
+    mothership by the junction) and give each world **an on-route traversal that the story needs** (QF40 3's rules apply). In the
+    bike-heavy worlds, **an obstacle course on foot to make the way passable for the bike** (Dan's idea):
+    - **Venus:** item 16 (the way down to Wormmaster).
+    - **Mars:** the ride is blocked by the ravine: the bridge / drawbridge is raised from the far side's gatehouse. She parks, climbs the
+      crumbled fortress wall beside the gorge (handholds in the fallen stonework, a ledge traverse above the drop, a jump onto a broken
+      pier, a mantle into the gatehouse), lowers the drawbridge (the winch / lever), and rides across.
+    - **The asteroid:** the causeway's span is retracted; she climbs the stalled machinery / service gantries (ladders, a hang along a pipe
+      run, a jump between gantries) to the control cab and extends the span, then rides on.
+    - **The mothership:** a relay district's bridge segments are out of line; she climbs the curving architecture (ledges round the shell,
+      a shimmy along a light channel) to the alignment controls above, swings the segments into line, then rides across.
+    Panther / the guide (Nela) gives the story reason each time ("The drawbridge is up. The winch is on the other side."). Each with its
+    objective from the story, the guide light, both bots passing, no soft-locks, the camera never blocked. Make sure they don't duplicate
+    puzzles that are already there (BIA_06's bridge, Mars's drawbridge if one exists): fold the climb into the existing beat instead.
+16. **Venus's Wormmaster fight: he comes down to the ground too early** (Dan corrected: the three devices and the counter are right; the
+    problem is that Wormmaster drops to the ground after the **second** device). Fix the order:
+    - **The device phase:** while any device is still running he stays **up on his raised platform / the machinery**, and **defends the
+      devices**: he moves along his perch toward whichever device she heads for and attacks from above (telegraphed, dodgeable: the
+      boss-fight rules), so shutting each one down is a fight under pressure. All three highlighted from the start, **any order** (none
+      waits on another), QF19's single press + big effect each, the pulse weakening with each (item 15), the switch press always wins
+      (QF39 1).
+    - **Only when the third is off** does he come down to the ground (his platform loses power / sinks), and the next phase begins
+      (stun, close in, containment → VEN_C07).
+    Find why he came down after two (a phase threshold off by one, a "2 of 3" left from QF19?). Check every boss fight: each phase change
+    happens on its real condition (all required objectives done), with the bot doing them in a different order each run.
+17. **Venus: containing Wormmaster makes no sense yet** (Dan): he just floats up into the "containment barrier" by himself; nobody explains
+    what it is; and when it closes, **its top is wide open**. Fix all three:
+    - **Set it up before the fight** (proposed lines, Dan to confirm; use them unless he changes them): as she enters the control chamber
+      (VEN_C06, before Wormmaster speaks), the camera finds a sunken ring in the floor with old Elarim pylons round it.
+      **VEN_C06_00a Panther:** "That ring in the floor. It looks like an old holding cell. The Elarim must have used it for the creatures."
+      **VEN_C06_00b 7:** "Big enough for him."  **VEN_C06_00c Panther:** "Keep that in mind."
+    - **She puts him in it with telekinesis:** when he's beaten (stunned, down), **VEN_C06_P1 Panther:** "The holding cell. Get him into
+      it." Prompt "Telekinesis: lift him into the cell" (RT, button glyph only). 7 raises her hand, strains, and **lifts him** with her
+      telekinesis (her telekinesis effect round him, his body hanging heavy, struggling feebly), carries him through the air and sets him
+      down in the ring. He never rises by himself.
+    - **A real enclosure:** the barrier closes **on every side and over the top**: the pylons light, panels / a field of light rise and
+      **arc over into a closed dome** (or a cylinder with a lid that slides shut), humming, his drill / claws scraping against it. Nothing
+      open. Then VEN_C07 ("You don't know what you're interfering with." / "I know what was standing above it.").
+    Check the same in every containment (Ratwing's compartment, Tunneler's barrier, any other): fully closed, explained beforehand, the
+    villain moved in by a cause the player sees.
+18. **Venus after the fight: skip the long walk back** (Dan: it already warps ahead; warp all the way). After VEN_C07, fade to black and
+    bring her **straight to the cube chamber, standing in front of the rune with the Guardian** (a short "later" beat: the bike parked
+    outside, the ground quiet), and play **VEN_C08's conversation there** ("The ground is quiet." …), then the rune touch → vision →
+    return as written. No walk back through the gardens / the temple halls. Keep the save / checkpoint at the chamber, and make sure the
+    bike and Panther are where the next scene needs them (the bike back at the temple court for the ride to the saucer). Check the other
+    chapters for the same long post-boss walk back to a conversation and warp those too (only where nothing is left to do on the way).
+19. **Venus: the cube clips through its cage when she touches it** (the cube rune in its cage / frame in the temple). The cube must sit
+    **inside** the cage with clearance on every side at all times: when it turns, glows, rises or reacts to her touch, scale / move it so
+    no corner passes through the bars; and her hand reaches it **through an opening** in the cage (or the cage opens / its bars part
+    for her touch), never through a bar. Add a check: for every rune in a holder (the cube's cage, the asteroid's gimbal rings, the
+    mothership's structures, the trophy's cradle, the finale's sockets), no intersection between the rune and its holder at any frame of
+    its animation and the touch. Close-up captures of each touch.
+20. **Venus: she should take the cube she touched, like every other rune** (Dan: everywhere else she takes the rune; here the Guardian
+    gives her a separate copy, which feels different). Make it consistent: after the vision (VEN_C09), **the cage opens and she lifts the
+    cube out** (the hold solver, QF28), and VEN_C10 becomes (proposed, Dan to confirm; use them unless he changes them):
+    - **VEN_C10_01 Guardian:** "Take it with you."
+    - **VEN_C10_02 7:** "It belongs to your temple."
+    - **VEN_C10_03 Guardian:** "You saw how close he came."
+    - **VEN_C10_04 Guardian:** "If this place were lost, I would want someone to carry it. And to know we had been here."
+    (cut the old "You still have it here?" / "Yes." / "Then why give me another?"). She keeps the cube (the inventory / the saucer's
+    display ring / the finale's Venus socket all use this same cube; check the finale places it). On revisits the cage stands **empty**,
+    open, a soft glow where the cube sat. Re-voice the Guardian and 7; update `VENUS-LINES.md`, `CHAPTER2_VENUS.md`, the Field Guide /
+    Log wording ("the Elarim's cube", not "a copy of their record").
+21. **Venus, VEN_C12 (the talk about Mars and Europa): it shows a blank wall, usually on 7's lines** (Dan: not the whole time, mostly when 7 talks: her lines are probably framed on the empty side of the two-shot or the camera faces away from her). A repeat of the "no empty shots" rule (QF21 6,
+    QF24 13): say why the check missed it. Re-stage the talk in the cube chamber: the speaker in frame for every line (the Guardian /
+    7, over-the-shoulder two-shots), and for "Two locations survive in our records. Mars—and Europa." **show them**: the Guardian
+    raises a hand and the temple's record projects two glowing places on the chamber wall / in the air above the cube's cage (a red-
+    grey planet with a canyon, an icy moon), each lighting as it's named. Then the saucer's star map unlocks them as written. Re-run the
+    empty-shot check over every dialogue in every chapter on the current build and list any it now catches.
+22. **After the Mars / Europa talk, put her back at her bike** (Dan: no long walk out of the temple). Fade, and she's at the bike in the temple
+    court, ready to ride to the saucer (Panther's line about heading back, if any, plays there). Same rule everywhere: after a
+    conversation that ends a chapter's business, don't make her walk back through places she's done with.
+23. **A faster on-foot pace** (Dan). Raise 7's walk / run speed a bit (e.g. +15–25 %: a brisk jog as the default run, the walk for
+    cutscene approaches), keeping the animation matched to the speed (no foot sliding: stride / playback rate scaled together), Panther's
+    trot keeping up, and every on-foot route / timing / climbing section re-checked (no overshooting ledges, the human-timed bot still
+    passing). Report the old and new speeds.
+
 ## QF42 — in plain words (Code, 2026-11-28): 1.1.0-rc6 (build 2013, `game-2013`) PUBLISHED, Latest (every earlier release kept)
 - **The six ads now have their own designed voices.** With Voice Generation enabled, the script designed and saved Ad_Zoomies,
   Ad_Bowl, Ad_Tuna, Ad_Gravity, Ad_Birds and Ad_Box in the ElevenLabs library. Then it re-voiced every ad line with them and
@@ -62,191 +464,6 @@
 2. **The six new ad voices are waiting on Dan** (QF41 status): the ElevenLabs key lacks the "voice_generation" permission, so each ad
    uses a premade library voice no story character uses (Harry, Alice, Laura, George, Roger, Brian). When Dan enables it: run
    `python Tools/Audio/make_catatron_ads.py --force` and rebuild.
-3. **Dan's take picks (2026-11-28):** "Go on!… Before somebody sees you!" = **take_1** (urgent hushed; copied over
-   `Unity/Assets/Audio/Voice/s01_first_contact/s01_02_7.mp3` by the planning chat); the cart-joke laugh = take_2 and the abduction laugh
-   = take_1 (both already in the game). Rebuild so take_1 ships; don't re-generate these three lines.
-4. **"People" → "others" for the ones in her visions; and not "people" for the Cetaceans** (Dan, 2026-11-28; he asked in a Code
-   window by mistake, do it in this update). Keep "people" for those living there now (the city reveal "There are people living all
-   the way up there." stays; Panther's "My people" stays). Change (re-voice 7's / Panther's lines with the same voice and delivery):
-   - `s06_05_7` (right after the first vision): "There were people here." → **"There were others here."**
-   - `s10_06_7` (the galley): "Those people…" → **"Those others…"** (Panther's "At the door?" still follows).
-   - Panther's "And the people?" (the galley / debrief talk, `Docs/DIALOGUE.md` ~line 604) → **"And the others?"**
-   - `EUR_03_05` (Europa, sensing the Cetacean below her): "I think one of the people we came to meet." → **"I think it's who we came
-     to meet."**
-   Check every other line that calls the vision figures or a non-humanoid species "people" (keep it where a species calls itself that,
-   e.g. "My people"). Update `Docs/DIALOGUE.md`, `EUROPA-LINES.md`, the line lists and subtitles.
-5. **The galley's star panel becomes a real window along the whole counter** (Dan, revised 2026-11-28: it isn't a picture; when they
-   left the Moon you could see it leaving through it). Replace the small square panel above the kitchen counter with **a long window
-   spanning the full length of the counter** (framed like the main windows, same glass and mullion style), showing the live view
-   outside: always the saucer's real location (the world being approached / left, deep space between, QF38 7's rule), moving with the
-   saucer. Nothing points at it as a destination picker (choices stay at the console). Before / after captures of the galley, and one
-   leaving the Moon through it.
-6. **The saucer's floor light ring shines through the furniture** (screenshot `Docs/Previews/qf42/dan_floor_ring.png`, the galley
-   meal: bright arcs of the floor ring glow on top of the table's and stools' bases and through 7's boots, while other parts are
-   hidden: inconsistent). Make it **a real light ring built into the saucer floor** (Dan likes the idea): a recessed channel round the
-   cabin floor with a frosted emissive strip in it (Kyle's soft glow, monochrome), properly depth-tested so the table, stools, chairs,
-   7 and Panther **cover it** where they stand on it (no glow drawn over them; check its shader / render queue / ZTest, or a decal or
-   bloom pass bleeding through), with a soft pool of light on the floor round it and gentle bloom. Consistent in every aboard scene and
-   camera (the one interior prefab). If anything was a window-reflection effect, remove it. Captures: the galley meal from Dan's angle,
-   the egg chair, the console, a wide of the cabin.
-7. **The saucer's glass and the view outside must be consistent** (screenshot `Docs/Previews/qf42/dan_prewarp_view.png`: after choosing a
-   destination, before the warp). Dan isn't sure whether there's glass above the main windows as well as in the floor. Decide **one**
-   design and apply it everywhere (every aboard scene, the hull-away views, and the **saucer's exterior model**, which must match): e.g.
-   the main window band + the floor's glass ring (the light ring of item 6 sits at its edge), the ceiling solid; or glass above too, if
-   it reads well. No stars showing through a surface that's meant to be solid. Also in that shot: space looks **flat grey with chunky
-   white hexagons** for stars. Deep space must be dark (near-black, a faint haze at most), stars small, round, soft points of varied
-   brightness (no polygons), with distant planets / the world being left where they really are. Check every pre-warp / in-flight /
-   arrival view. Captures of each, plus the exterior matching the interior's glass.
-8. **Venus arrival dialogue doesn't make sense (VEN_C01 + VEN_B01_01).** "After the Moon… / It's beautiful." reads oddly; "Land somewhere
-   with a roof." / "Why?" / "Experience." is a non-sequitur; and "That's a walk." doesn't follow from it. Replace (proposed, Dan to
-   confirm; use them unless he changes them; same shots: over her shoulder to the gardens, the two-shot, the landscape, Panther's head
-   tracking the flying creatures, then the beam down and the distant temple):
-   - VEN_C01_01 **7:** "Someone still lives here." · VEN_C01_02 **Cat:** "You sound surprised." (keep)
-   - VEN_C01_03 **7** (quietly, the view taking her in): "After all that dust and machinery… I'd forgotten a place could look like this."
-   - (cut VEN_C01_04 "It's beautiful.")
-   - VEN_C01_05 **Cat** (his head tracking the flying creatures, tail twitching): "Hm."
-   - VEN_C01_06 **7:** "Don't even think about it."
-   - VEN_C01_07 **Cat:** "I was admiring the wildlife." · new VEN_C01_08 **7** (amused): "Mm-hmm."
-   - VEN_B01_01 **7** (down the beam, looking out to the temple far across the gardens): "The temple's all the way over there. That's
-     a long walk." → then VEN_B01_02 "You have a vehicle." / "I know." / "I'm establishing that my advice is useful." as written.
-   - VEN_B01_06 **7:** "What should I call you?" → **"By the way, what should I call you?"** (Dan; a light, curious aside as she turns
-     back to him from the bike).
-   Frame VEN_B01_01 so the distant temple is in shot. Also, per item 4: VEN_C03_06 "When I touched it, I saw people." → **"When I
-   touched it, I saw others."** Re-voice with Seven / Cat; update `Docs/VENUS-LINES.md`, `CHAPTER2_VENUS.md`, the line lists.
-9. **Venus naming scene (VEN_B01, "There. Saved you the trouble."): her arm stays stuck in a raised, bent pose for a few seconds as
-   Panther grows** (screenshot `Docs/Previews/qf42/dan_arm_after_grow.png`, from an older recording, before QF38's hand audit: check
-   it on the current build first and say whether it still happens). If it does: find what holds the arm (the gesture / point clip,
-   an IK target left on, the bike-reach), release it with a blend as the gesture ends, and let her react to him growing (a small step
-   back, looking up, arms relaxed). Capture the moment from this angle on the current build either way.
-10. **The Elarim capes (Venus) still look awkward: they hang below the shoulders and are very rigid** (Dan: the legs work now). The cape is
-    a separate part on two bones (CapeA / CapeB, `ElarimCape.cs`, cut off the Tripo model by `cleanup_r11.py elarim`). Fix both:
-    - **Attach it at the shoulders:** the cape's top edge sits on the shoulders / round the neck (a collar line across the upper back,
-      no gap, no sag below the shoulder line), weighted to the upper spine / shoulder bones so it moves with the body.
-    - **Make it flow:** more bones down the cape (a chain of ~4–6 rows, or a cloth simulation: Unity Cloth or a spring-bone chain)
-      so it sways with walking, turning, gestures and a little breeze, settles when they stand, and never passes through the body or
-      legs (colliders on the spine / legs). Same on the Guardian and every Elarim.
-    Before / after captures (standing, walking, turning, from behind and the side) and a short clip of one walking.
-11. **Venus: the earthquake must visibly collapse the bridge / walkway** (VEN_B03 + VEN_C02, `CollapseWatch`). Dan doesn't see it happen,
-    so the player doesn't know why the way is broken. Make it **a short cutscene** the moment she rides up (control taken, the bike eases
-    to a stop by itself, never into the gap):
-    1. The tremor hits: camera shake, a deep rumble, dust falling, water shaking in a vessel, a worker steadying it (the spec's beat).
-    2. **Cut to a wide shot of the bridge ahead:** cracks race across it, the middle spans buckle and fall into the gap in stages
-       (a few big pieces, rubble and dust, a heavy crash echoing below), the ends left jagged; hold on it 2–3 s.
-    3. Back to 7 braking on the bike at the edge: VEN_C02_01 "Something's wrong here." / VEN_C02_02 Panther "I felt that from here."
-    4. Control returns facing the broken bridge; the objective from the story leads to **the repair she already does with telekinesis**
-       (the existing B03 telekinesis bridge: she lifts the fallen spans / slabs back into place), the guide light (QF40 6) on it.
-       Seeing it fall first is what makes the repair make sense.
-    The collapse is the same every time (no physics randomness); once she has repaired it, **the repaired bridge** persists on revisits
-    and saves (never shown broken again). Captures of each beat (the collapse, then the repair) and a short clip.
-12. **Venus: flat rectangles pop in on either side of the bridge when she lifts the span** (screenshot `Docs/Previews/qf42/dan_bridge_aprons.png`,
-    "Ride across": plain slabs appear out of nowhere at the span's sides / ends before it drops). Probably the `BridgeRamps` aprons /
-    `BridgeRampS/N` zones (added so the bike doesn't hang up on the span). Dan: **only the span across, nothing else appears.** Remove the
-    pop-in pieces; if the bike still needs a smooth way on and off, build that into **the span itself** (tapered, ramped ends that are
-    part of the slab she lifts, visible the whole time it's in the air) or into the existing banks (shaped earth / stone, present from
-    the start, never appearing). No plain boxes. Re-prove QF-0d's "the bike never hangs up on the telekinesis bridge" at any reasonable
-    approach angle. Captures: the lift, the drop, the ride across.
-13. **Venus, meeting the Guardian (VEN_C03): "I found this on the Moon." but the dodecahedron isn't visible.** Before / as she says the line,
-    she **takes it out and holds it up in her open hand(s) toward him**, clearly in frame (the shot over her shoulder or a two-shot with
-    the shape between them), then VEN_C03_03 "May I see it?" with the insert of the dodecahedron as written. Held with the QF28 hold
-    solver (palm under it, fingers on its faces, never through it); she keeps holding it until she hands it / sets it down, then the
-    hand is released. Same check for every line that refers to an object she's showing ("this", "here", "look") in every chapter: the
-    object is in her hand and in frame when the line plays.
-14. **"Then I'll find him." (`VEN_C04_14`, Venus) is flat** (Dan: it needs more oomph). Re-voice: resolute and determined, a quiet
-    fierceness: she's decided, steady and firm, a little lift and weight on "find" and a clean, final "him" (not shouty; a promise).
-    Delivery note "determined, resolute, quietly fierce"; Eleven v3 tags (e.g. `[determined]`); 3–4 takes saved to
-    `Docs/Previews/qf42/VEN_C04_14_takes/` with `takes.txt` (as QF40) for Dan to pick; the most energetic that stays in character goes in
-    until he picks. Frame her face for it (she turns from the Guardian toward the gardens on the line).
-15. **Venus, VEN_C05 "Every time that sound starts, they move." — there's no sound** (Dan: nothing was heard or mentioned; isn't it
-    another tremor?). Make the signal real and tie it to the tremors (it's what's been shaking the gardens):
-    - **The pulse:** the control devices emit a deep, throbbing pulse every ~8–10 s (a low booming hum rising and falling, felt more than
-      heard), each with a **small tremor** (camera shake, dust from the roots, water rippling), a ripple of light from the device, and
-      the burrowing creatures **surging in the same direction** on every pulse, then milling until the next. Audible across the
-      observation area (not drowned by music; duck the music on each pulse).
-    - **Let the player experience it before the line:** at least one full pulse plays as she reaches the overlook, then (proposed, Dan to
-      confirm; use them unless he changes them):
-      **VEN_C05_00 7:** "Hear that?" · **VEN_C05_00b Panther:** "Felt it." (calling back to "I felt that from here.")
-      VEN_C05_01 "They aren't attacking the people." · VEN_C05_02 "What are they doing?" ·
-      **VEN_C05_03 7** (changed, on the next pulse as the creatures surge): "Following something. Every time that pulse comes, they move."
-      · VEN_C05_04 "There." (framed on the nearest device glowing with the pulse) · VEN_C05_05 "Then find what's calling them."
-    - The pulses continue (and are the same sound) through VEN_C06 / the encounter until each device is shut down (each one off makes
-      the pulse weaker), and stop for good at VEN_C07. Make the pulse with ElevenLabs Sound Effects.
-16. **Venus: after VEN_C05 a gate just lowers by itself, then it's a straight walk to Wormmaster** (Dan: she should find an open path or
-    a switch; better, the way to the villain should be an obstacle course). Replace the self-opening gate and the straight walk with **a
-    required traversal route down to the control chamber**, using the Chapter 1 moves (QF40 3's rules: camera never blocked, chalk-glow
-    lips, the guide light, two bots incl. human timing, no soft-locks, a fall puts her back at the section start), ~2–3 minutes:
-    - The gate stays **shut** (jammed by roots / locked from below); Panther: "That's not opening from this side." The way on is around /
-      under it: a climb down the root-wall beside it (ledges, a shimmy along a carved channel), a jump across the root chasm, a hang-and-
-      drop into the burrows, a slab she shifts with telekinesis to make a step, and **timing with the pulses** (each pulse's tremor shakes
-      loose debris / sways the hanging roots: cross between pulses).
-    - At the bottom she reaches the gate's **inner release** (a lever / wheel she pulls), opening it behind her so the route back up is
-      short (no one-way soft-lock), then on into VEN_C06's control chamber.
-    - Panther comments once or twice (telepathic: "Wait for the next one… now."). Objectives from the story ("Find a way down to the
-      source").
-    (QF40 3's standalone blocks: see item 17.)
-17. **Every climbing section must have a purpose: replace QF40 3's standalone climbing blocks** (Dan: "I want them to have purpose").
-    Remove the optional ruin / machine blocks (Venus by the temple court, Mars by the bridge-head, the asteroid by the hall plaza, the
-    mothership by the junction) and give each world **an on-route traversal that the story needs** (QF40 3's rules apply). In the
-    bike-heavy worlds, **an obstacle course on foot to make the way passable for the bike** (Dan's idea):
-    - **Venus:** item 16 (the way down to Wormmaster).
-    - **Mars:** the ride is blocked by the ravine: the bridge / drawbridge is raised from the far side's gatehouse. She parks, climbs the
-      crumbled fortress wall beside the gorge (handholds in the fallen stonework, a ledge traverse above the drop, a jump onto a broken
-      pier, a mantle into the gatehouse), lowers the drawbridge (the winch / lever), and rides across.
-    - **The asteroid:** the causeway's span is retracted; she climbs the stalled machinery / service gantries (ladders, a hang along a pipe
-      run, a jump between gantries) to the control cab and extends the span, then rides on.
-    - **The mothership:** a relay district's bridge segments are out of line; she climbs the curving architecture (ledges round the shell,
-      a shimmy along a light channel) to the alignment controls above, swings the segments into line, then rides across.
-    Panther / the guide (Nela) gives the story reason each time ("The drawbridge is up. The winch is on the other side."). Each with its
-    objective from the story, the guide light, both bots passing, no soft-locks, the camera never blocked. Make sure they don't duplicate
-    puzzles that are already there (BIA_06's bridge, Mars's drawbridge if one exists): fold the climb into the existing beat instead.
-18. **Venus's Wormmaster fight: he comes down to the ground too early** (Dan corrected: the three devices and the counter are right; the
-    problem is that Wormmaster drops to the ground after the **second** device). Fix the order:
-    - **The device phase:** while any device is still running he stays **up on his raised platform / the machinery**, and **defends the
-      devices**: he moves along his perch toward whichever device she heads for and attacks from above (telegraphed, dodgeable: the
-      boss-fight rules), so shutting each one down is a fight under pressure. All three highlighted from the start, **any order** (none
-      waits on another), QF19's single press + big effect each, the pulse weakening with each (item 15), the switch press always wins
-      (QF39 1).
-    - **Only when the third is off** does he come down to the ground (his platform loses power / sinks), and the next phase begins
-      (stun, close in, containment → VEN_C07).
-    Find why he came down after two (a phase threshold off by one, a "2 of 3" left from QF19?). Check every boss fight: each phase change
-    happens on its real condition (all required objectives done), with the bot doing them in a different order each run.
-19. **Venus: containing Wormmaster makes no sense yet** (Dan): he just floats up into the "containment barrier" by himself; nobody explains
-    what it is; and when it closes, **its top is wide open**. Fix all three:
-    - **Set it up before the fight** (proposed lines, Dan to confirm; use them unless he changes them): as she enters the control chamber
-      (VEN_C06, before Wormmaster speaks), the camera finds a sunken ring in the floor with old Elarim pylons round it.
-      **VEN_C06_00a Panther:** "That ring in the floor. It looks like an old holding cell. The Elarim must have used it for the creatures."
-      **VEN_C06_00b 7:** "Big enough for him."  **VEN_C06_00c Panther:** "Keep that in mind."
-    - **She puts him in it with telekinesis:** when he's beaten (stunned, down), **VEN_C06_P1 Panther:** "The holding cell. Get him into
-      it." Prompt "Telekinesis: lift him into the cell" (RT, button glyph only). 7 raises her hand, strains, and **lifts him** with her
-      telekinesis (her telekinesis effect round him, his body hanging heavy, struggling feebly), carries him through the air and sets him
-      down in the ring. He never rises by himself.
-    - **A real enclosure:** the barrier closes **on every side and over the top**: the pylons light, panels / a field of light rise and
-      **arc over into a closed dome** (or a cylinder with a lid that slides shut), humming, his drill / claws scraping against it. Nothing
-      open. Then VEN_C07 ("You don't know what you're interfering with." / "I know what was standing above it.").
-    Check the same in every containment (Ratwing's compartment, Tunneler's barrier, any other): fully closed, explained beforehand, the
-    villain moved in by a cause the player sees.
-20. **Venus after the fight: skip the long walk back** (Dan: it already warps ahead; warp all the way). After VEN_C07, fade to black and
-    bring her **straight to the cube chamber, standing in front of the rune with the Guardian** (a short "later" beat: the bike parked
-    outside, the ground quiet), and play **VEN_C08's conversation there** ("The ground is quiet." …), then the rune touch → vision →
-    return as written. No walk back through the gardens / the temple halls. Keep the save / checkpoint at the chamber, and make sure the
-    bike and Panther are where the next scene needs them (the bike back at the temple court for the ride to the saucer). Check the other
-    chapters for the same long post-boss walk back to a conversation and warp those too (only where nothing is left to do on the way).
-21. **Venus: the cube clips through its cage when she touches it** (the cube rune in its cage / frame in the temple). The cube must sit
-    **inside** the cage with clearance on every side at all times: when it turns, glows, rises or reacts to her touch, scale / move it so
-    no corner passes through the bars; and her hand reaches it **through an opening** in the cage (or the cage opens / its bars part
-    for her touch), never through a bar. Add a check: for every rune in a holder (the cube's cage, the asteroid's gimbal rings, the
-    mothership's structures, the trophy's cradle, the finale's sockets), no intersection between the rune and its holder at any frame of
-    its animation and the touch. Close-up captures of each touch.
-22. **Venus: she should take the cube she touched, like every other rune** (Dan: everywhere else she takes the rune; here the Guardian
-    gives her a separate copy, which feels different). Make it consistent: after the vision (VEN_C09), **the cage opens and she lifts the
-    cube out** (the hold solver, QF28), and VEN_C10 becomes (proposed, Dan to confirm; use them unless he changes them):
-    - **VEN_C10_01 Guardian:** "Take it with you."
-    - **VEN_C10_02 7:** "It belongs to your temple."
-    - **VEN_C10_03 Guardian:** "You saw how close he came."
-    - **VEN_C10_04 Guardian:** "If this place were lost, I would want someone to carry it. And to know we had been here."
-    (cut the old "You still have it here?" / "Yes." / "Then why give me another?"). She keeps the cube (the inventory / the saucer's
-    display ring / the finale's Venus socket all use this same cube; check the finale places it). On revisits the cage stands **empty**,
-    open, a soft glow where the cube sat. Re-voice the Guardian and 7; update `VENUS-LINES.md`, `CHAPTER2_VENUS.md`, the Field Guide /
-    Log wording ("the Elarim's cube", not "a copy of their record").
 
 ## QF41 — in plain words (Code, 2026-11-28): 1.1.0-rc5 (build 2012, `game-2012`) PUBLISHED, Latest (every earlier release kept)
 - **The Cat-a-tron plays Dan's six commercials**, each with sound: Midnight Zoomies, The Empty Bowl Crisis, Eau de Tuna, The Gravity

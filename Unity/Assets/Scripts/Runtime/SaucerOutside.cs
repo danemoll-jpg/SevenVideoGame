@@ -98,6 +98,7 @@ namespace Seven
             foreach (var g in new[] { Venus, Europa, Mars, Moon, City, Asteroid, Space, _bia })
                 if (g != null && g.activeInHierarchy) { ImageGate.Expect(g.transform, $"the view outside ({Showing})", 0f, "window_view"); return; }
         }
+        Color _bg; bool _bgSet;
         /// <summary>Show the world (or space) now.</summary>
         public void Apply() => Show(SaucerLocation.Current);
         public void Show(string w)
@@ -121,6 +122,17 @@ namespace Seven
             // "space" (travelling) inside Veyra's system - so every journey from the asteroid / Cattalus / to the Moon had the
             // mothership outside the window. Between worlds the window shows deep space (stars) only.
             ShowBiavehSpace(w == "biaveh");
+            // QF43 (5): deep space is dark - the saucer camera's clear colour (0.62 grey: the lit worlds' sky behind their haze) is
+            // near-black whenever the window shows open space (travelling, the asteroid, the mothership's system)
+            {
+                var cam = Camera.main;
+                if (cam != null)
+                {
+                    if (!_bgSet) { _bg = cam.backgroundColor; _bgSet = true; }
+                    bool space = w == "space" && SaucerLocation.Travelling;     // between worlds (the journeys, the warp); the arrival compositions keep their haze looks
+                    cam.backgroundColor = space ? new Color(0.012f, 0.012f, 0.012f, 1f) : _bg;
+                }
+            }
             if (Atmo != null)
             {
                 if (!_savedSet) { _saved = Read(Atmo); _savedSet = true; }
