@@ -592,6 +592,10 @@ Dan: "So far every boss 'fight' is me pushing buttons and the boss just standing
   Bold (SIL OFL) only if a font must ship.
 
 ## Where things stand
+**QF42 (2026-11-28): 1.1.0-rc6 (build 2013, `game-2013`) PUBLISHED, Latest. The six ads have their DESIGNED voices (`Ad_Zoomies` …
+`Ad_Box`, saved in the ElevenLabs library; the key now has voice_generation). No channel-change glitch: `CatatronScreen.FinishAd` lets the
+running ad end, then the race ad (CAT_04) plays once (`race_ad_played` step). She keeps control while it finishes; Panther's CAT_04_P2
+calls her back if she is over 9 m away. Status in `TODO.md`.**
 **QF41 (2026-11-28): 1.1.0-rc5 (build 2012, `game-2012`) PUBLISHED: the Cat-a-tron commercials. Status in `TODO.md`.**
 - `Tools/Audio/make_catatron_ads.py` makes each ad's sound: its own voice (Voice Design; blocked until the key has
   voice_generation, so premade stand-ins for now), the timed lines, effects, a music bed and the mix.

@@ -32,8 +32,7 @@ namespace Seven.EditorTools
                 Log($"QF41: the Cat-a-tron ad '{f}' ({vc.length:0.0} s, {vc.width}x{vc.height}) + its track {(ac != null ? $"({ac.length:0.0} s)" : "MISSING")}");
             }
             screen.Ads = clips.ToArray(); screen.AdAudio = audio.ToArray(); screen.AdNames = names.ToArray();
-            screen.Glitch = AssetDatabase.LoadAssetAtPath<AudioClip>("Assets/Resources/Catatron/channel_glitch.ogg");
-            Log($"CAT-A-TRON ADS (QF41): {clips.Count} / {CatatronAdFiles.Length} commercials on the screen, glitch sound {(screen.Glitch != null ? "in" : "MISSING")}");
+            Log($"CAT-A-TRON ADS (QF41): {clips.Count} / {CatatronAdFiles.Length} commercials on the screen, no channel-change glitch (QF42: the running ad finishes, then the race ad)");
         }
     }
 }

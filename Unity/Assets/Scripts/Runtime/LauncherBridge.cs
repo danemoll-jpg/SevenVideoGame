@@ -19,9 +19,9 @@ namespace Seven
     public sealed class LauncherBridge : MonoBehaviour
     {
         /// <summary>Release version of this build: 0.&lt;round&gt;.&lt;fix&gt;. Raise it every round before the final build.</summary>
-        public const string Version = "1.1.0-rc5";
+        public const string Version = "1.1.0-rc6";
         /// <summary>Release build number: round * 100 + fix (0.8.0 = 800). Must rise with every published release.</summary>
-        public const int Build = 2012;   // QF41: the Cat-a-tron commercials (QF40 = 2011: Dan's playthrough list part 1; QF39 = 2010): boss switches always take the press, Viper's three pylons (QF38 = 2009): Dan's full playthrough fixes (P3 = 2008) (QF37 = 2007, Round 22 = 2006)
+        public const int Build = 2013;   // QF42: the race ad without a glitch + the six designed ad voices (QF41 = 2012: the Cat-a-tron commercials; QF40 = 2011: Dan's playthrough list part 1; QF39 = 2010): boss switches always take the press, Viper's three pylons (QF38 = 2009): Dan's full playthrough fixes (P3 = 2008) (QF37 = 2007, Round 22 = 2006)
 
         const string ReadyArg = "-sevenLauncherReady", NonceArg = "-sevenLauncherNonce";
 

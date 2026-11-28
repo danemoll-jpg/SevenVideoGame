@@ -202,15 +202,16 @@ namespace Seven
             if (Cat != null) Cat.Follow();
             Objective("Walk on to the square with the big screen");
             yield return GuideWalk(P7.z > 100f ? new[] { L.ScreenView } : P7.z > 66f ? new[] { new Vector3(0f, 0f, 110f), L.ScreenView } : L.WalkToSquare, "to the Cat-a-tron square", 3f);
-            yield return Cutscene(true);
-            Seven.Place(L.ScreenView, Vector3.forward); Seven.Lock(true);
-            if (Cat != null) { Cat.Place(L.ScreenView + new Vector3(1.0f, 0f, 0.3f), Vector3.forward); Cat.Hold(L.ScreenAt, "sit"); }
-            // QF41: the screen is running its commercials; as she arrives the ad is cut by a channel change and the RACE AD starts
-            // (the announcer, the trophy with the sphere, the mark, the Deluxe Retreat - no race highlights: Dan)
+            // QF42 (Dan: no glitch): the screen is running its commercials; she keeps control while the ad on now plays to its end
+            // (no new one starts), THEN the race ad plays once - the announcer, the trophy with the sphere, the mark, the Deluxe
+            // Retreat (no race highlights: Dan) - and the CAT_04 scene starts with it. If she has wandered off, the race ad still
+            // plays and Panther calls her back ("Seven. The screen."); the scene picks her up either way (never a soft-lock).
             if (Screen != null) Screen.Show(CatatronScreen.Mode.Ads);
             if (Shots && Screen != null && Screen.Ads != null)
             {
                 // check runs: every commercial on the screen, framed close (the screen filling the frame)
+                yield return Cutscene(true);
+                Seven.Place(L.ScreenView, Vector3.forward); Seven.Lock(true);
                 Shoot(L.ScreenView + new Vector3(0.4f, 1.6f, -2f), L.ScreenAt, 17f, 0.01f);
                 for (int i = 0; i < Screen.Ads.Length; i++)
                 {
@@ -220,23 +221,49 @@ namespace Seven
                 }
                 Log($"CAT-A-TRON ADS (QF41): {Screen.Ads.Length} commercials on the screen, each with its own track ({(Screen.AdAudio != null ? Screen.AdAudio.Length : 0)} mixed tracks); played so far: {string.Join(", ", CatatronScreen.Played)}");
                 Screen.Show(CatatronScreen.Mode.Idle); Screen.Show(CatatronScreen.Mode.Ads);   // back to the shuffled rotation
+                // QF42: wait until a fresh ad is really on (as a player finds it) so the run shows one playing to its end
+                for (float t = 0f; t < 4f && Screen.AdLeft <= 0f; t += Time.deltaTime) yield return null;
+                yield return Cutscene(false);
             }
-            Shoot(L.ScreenView + new Vector3(-3f, 1.2f, -6f), L.ScreenAt + Vector3.down * 2f, 50f, 0.01f);
-            yield return Wait(1.2f);
-            ImageGate.ExpectPoint(L.ScreenAt, "a commercial on the Cat-a-tron as she arrives", 0f, "c11a_");
-            yield return Shot("c11a_a_commercial_as_she_arrives");
+            bool jingled = false;
             if (Screen != null)
             {
-                var cc = StartCoroutine(Screen.ChannelChange(CatatronScreen.Mode.Announcer));
-                yield return Wait(0.18f);
-                ImageGate.ExpectPoint(L.ScreenAt, "the channel-change glitch on the Cat-a-tron", 0f, "c11b_");
-                yield return Shot("c11b_the_channel_change_glitch");
-                yield return cc;
-                Log($"CAT-A-TRON (QF41): the running ad was cut by a channel change ({CatatronScreen.Glitches} glitch) -> the race ad");
+                Objective(null);                                                // she is there: the walk is done (the screen holds her)
+                QF30Watch.Free("the ad on the Cat-a-tron playing to its end (QF42)");
+                float t0 = Time.time, left0 = Screen.AdLeft; string ad = Screen.CurrentAd ?? "(loading)";
+                var fin = StartCoroutine(Screen.FinishAd(13f));
+                bool shotEnd = false, shotArrive = false;
+                while (Screen.Rotating)
+                {
+                    if (Shots && !shotArrive && Time.time - t0 > 0.6f)
+                    { shotArrive = true; ImageGate.ExpectPoint(L.ScreenAt, "a commercial on the Cat-a-tron as she arrives", 0f, "c11a_");
+                      yield return Cap.ShotFrom("c11a_a_commercial_as_she_arrives", L.ScreenView + new Vector3(-3f, 1.2f, -6f), L.ScreenAt + Vector3.down * 2f, 50f); }
+                    if (Shots && !shotEnd && Screen.AdLeft > 0f && Screen.AdLeft < 0.9f)
+                    { shotEnd = true; ImageGate.ExpectPoint(L.ScreenAt, "the commercial's last moment on the Cat-a-tron", 0f, "c11b_");
+                      yield return Cap.ShotFrom("c11b_the_commercial_finishing", L.ScreenView + new Vector3(0.4f, 1.6f, -2f), L.ScreenAt, 24f); }
+                    yield return null;
+                }
+                yield return fin;
+                QF30Watch.EndFree();
+                float waited = Time.time - t0, away = Flat(P7 - L.ScreenView).magnitude;
+                Screen.Show(CatatronScreen.Mode.Announcer);
+                Log($"CAT-A-TRON (QF42): ad '{ad}' had {left0:0.0} s left as she arrived, played to its end ({waited:0.0} s, she kept control) -> the race ad, no glitch; she was {away:0.0} m from the screen");
+                if (away > 9f)
+                {
+                    AudioKit.Play("cat_screen_jingle", L.ScreenAt, 0.8f); jingled = true;
+                    yield return SayIds("CAT_04_P2");                                   // Seven. The screen.
+                    for (float t = 0f; t < 5f && Flat(P7 - L.ScreenView).magnitude > 7f; t += Time.deltaTime) yield return null;
+                    Log($"CAT-A-TRON (QF42): Panther called her back - {Flat(P7 - L.ScreenView).magnitude:0.0} m from the screen when the scene picked her up");
+                }
             }
-            AudioKit.Play("cat_screen_jingle", L.ScreenAt, 0.8f);
+            yield return Cutscene(true);
+            Seven.Place(L.ScreenView, Vector3.forward); Seven.Lock(true);
+            if (Cat != null) { Cat.Place(L.ScreenView + new Vector3(1.0f, 0f, 0.3f), Vector3.forward); Cat.Hold(L.ScreenAt, "sit"); }
+            if (Screen != null && Screen.Now != CatatronScreen.Mode.Announcer) Screen.Show(CatatronScreen.Mode.Announcer);
+            Shoot(L.ScreenView + new Vector3(-3f, 1.2f, -6f), L.ScreenAt + Vector3.down * 2f, 50f, 0.01f);
+            if (!jingled) AudioKit.Play("cat_screen_jingle", L.ScreenAt, 0.8f);
             yield return Wait(0.8f);
-            yield return Shot("c11_the_race_ad_the_announcer");
+            yield return Shot("c11_the_race_ad_starts_the_announcer");
             yield return DialogueFraming.Over("the Cat-a-tron screen (the announcer)", SayIds("CAT_04_01"));   // The Cattalus Grand Circuit! Registration closes this afternoon!
             if (Screen != null) Screen.Show(CatatronScreen.Mode.Trophy);
             Shoot(L.ScreenView + new Vector3(1.2f, 1.0f, -3f), L.ScreenAt, 34f, 0.4f);
@@ -279,6 +306,7 @@ namespace Seven
             if (pose != null) pose.LookAt = null;
             yield return SayIds("CAT_04_P1");                    // Registration is at the steward's desk, under the screen.
             if (Screen != null) Screen.Show(CatatronScreen.Mode.Ads);           // QF41: the commercials resume (ducked under every line)
+            CattalusState.DoStep("race_ad_played");                             // QF42: the race ad plays once, ever (never again on a revisit)
             if (Cat != null) Cat.Follow();
             Complete("CAT_04");
             yield return Cutscene(false);

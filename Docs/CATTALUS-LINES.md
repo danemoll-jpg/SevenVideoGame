@@ -79,6 +79,7 @@ Voices: 7 = Seven (Eleven v3, performance notes as audio tags) · Panther = Cat 
 | `CAT_04_11` | 7 | Panther. The sphere. |  |
 | `CAT_04_12` | Panther | Yes. Of course. |  |
 | `CAT_04_13` | 7 | Heh. Come on. |  |
+| `CAT_04_P2` | Panther | Seven. The screen. |  |
 | `CAT_04_P1` | Panther | Registration is at the steward's desk, under the screen. |  |
 
 ## CAT_05 — Registration

@@ -211,12 +211,12 @@ Voice"), the Machinist, Nela (the "Biavian Guide").
 ## The Cat-a-tron commercials (QF41) — voice names `Ad_Zoomies`, `Ad_Bowl`, `Ad_Tuna`, `Ad_Gravity`, `Ad_Birds`, `Ad_Box`
 One NEW voice per ad, never a story voice. All of them are made by `Tools/Audio/make_catatron_ads.py`: the Voice Design API, the
 lines, the effects, the music bed and the mix.
-**Status (2026-11-27): NOT designed yet.** The API key is missing the `voice_generation` permission (ElevenLabs → the key's
-permissions → Voice Generation). Until it is enabled, each ad uses a premade library voice that no story character uses (below).
-After enabling it, run `python Tools/Audio/make_catatron_ads.py --force`: it designs and saves each `Ad_` voice, re-voices
-the lines and remixes everything. Then rebuild.
+**Status (2026-11-28, QF42): DESIGNED.** Dan enabled Voice Generation on the key; the script designed and saved all six `Ad_`
+voices in the ElevenLabs library (the first of three previews kept), re-voiced every line with them (`--force`) and remixed the
+six tracks. The premade stand-ins (last column) are no longer used. To redo one: `python Tools/Audio/make_catatron_ads.py --only <key> --force`
+(it reuses the saved `Ad_` voice; delete it in the library first to design it again).
 
-| Ad | Voice name | Description (the Voice Design prompt) | Stand-in until designed |
+| Ad | Voice name | Description (the Voice Design prompt) | Stand-in before QF42 (no longer used) |
 |---|---|---|---|
 | Midnight Zoomies | `Ad_Zoomies` | A hyped-up male sports-promo announcer, booming, gravelly, over-the-top monster-truck energy. | Harry (premade) |
 | The Empty Bowl Crisis | `Ad_Bowl` | A gentle, sorrowful middle-aged British woman, soft charity-appeal delivery, earnest and slightly over-sentimental. | Alice (premade) |

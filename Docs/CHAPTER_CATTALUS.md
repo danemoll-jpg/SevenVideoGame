@@ -772,6 +772,7 @@ noted). Race call-outs (`_CALL`) may repeat (a restart, a second crash).
 | CAT_01_P1 | Panther | The public berths are below the transit tower. Bring us in slowly. | Before guiding the saucer down (the objective). |
 | CAT_01_P2 | 7 | Slowly. Got it. | Takes the controls. |
 | CAT_02_P1 | Panther | The square with the big screen is that way. Everyone ends up there eventually. | After the gate joke: where to go (exploring is free). |
+| CAT_04_P2 | Panther | Seven. The screen. | QF42: the race ad starts while she has wandered away from the square: draws her back. |
 | CAT_04_P1 | Panther | Registration is at the steward's desk, under the screen. | After CAT_04_13: the objective "Register for the Grand Circuit". |
 | CAT_05_P1 | Steward | The course is open for a practice lap, if you'd like one. Same gates, nobody to beat. | After CAT_05_13: the optional practice lap. |
 | CAT_05_P2 | Steward | Your vehicle will be brought to the start line, beside the square. Whenever you're ready. | Points to the start (why the bike is waiting there). |
